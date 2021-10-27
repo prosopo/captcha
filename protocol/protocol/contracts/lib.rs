@@ -963,6 +963,8 @@ mod prosopo {
         }
 
         /// Get a dapp user
+        ///
+        /// Returns an error if the user does not exist
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, ProsopoError> {
             if !self.dapp_users.contains_key(&dapp_user_id) {
                 ink_env::debug_println!("{}", "DappUserDoesNotExist");
@@ -979,6 +981,8 @@ mod prosopo {
         }
 
         /// Get a single provider's details
+        ///
+        /// Returns an error if the user does not exist
         #[ink(message)]
         pub fn get_provider_details(
             &self,
@@ -1000,6 +1004,8 @@ mod prosopo {
         }
 
         /// Get a single dapps details
+        ///
+        /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, ProsopoError> {
             if !self.dapps.contains_key(&contract) {
@@ -1022,8 +1028,10 @@ mod prosopo {
         /// Returns `0` if the account is non-existent.
         #[ink(message)]
         pub fn get_dapp_balance(&self, dapp: AccountId) -> Balance {
-            let dapp = self.get_dapp_details(dapp).unwrap();
-            dapp.balance
+            return match self.get_dapp_details(dapp) {
+                Ok(v) => { v.balance }
+                Err(_e) => Balance::from(0_u32)
+            }
         }
 
         /// Returns the account balance for the specified `provider`.
@@ -1031,8 +1039,10 @@ mod prosopo {
         /// Returns `0` if the account is non-existent.
         #[ink(message)]
         pub fn get_provider_balance(&self, provider: AccountId) -> Balance {
-            let provider = self.get_provider_details(provider).unwrap();
-            provider.balance
+            return match self.get_provider_details(provider) {
+                Ok(v) => { v.balance }
+                Err(_e) => Balance::from(0_u32)
+            }
         }
     }
 
@@ -1799,6 +1809,26 @@ mod prosopo {
             assert_eq!(result, false);
         }
 
+        /// Test non-existent dapp account has zero balance
+        #[ink::test]
+        fn test_non_existent_dapp_account_has_zero_balance() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let dapp_account = AccountId::from([0x2; 32]);
+            // initialise the contract
+            let mut contract = Prosopo::default(operator_account);
+            assert_eq!(0, contract.get_dapp_balance(dapp_account));
+        }
+
+        /// Test non-existent provider account has zero balance
+        #[ink::test]
+        fn test_non_existent_provider_account_has_zero_balance() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let provider_account = AccountId::from([0x2; 32]);
+            // initialise the contract
+            let mut contract = Prosopo::default(operator_account);
+            assert_eq!(0, contract.get_provider_balance(provider_account));
+        }
+
         /// Helper function for converting string to Hash
         fn str_to_hash(str: String) -> Hash {
             let mut result = Hash::default();
@@ -1811,3 +1841,4 @@ mod prosopo {
         }
     }
 }
+
