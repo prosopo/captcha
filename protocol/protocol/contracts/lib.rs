@@ -1025,7 +1025,7 @@ mod prosopo {
 
         /// Returns the account balance for the specified `dapp`.
         ///
-        /// Returns `0` if the account is non-existent.
+        /// Returns `0` if the account does not exist.
         #[ink(message)]
         pub fn get_dapp_balance(&self, dapp: AccountId) -> Balance {
             return match self.get_dapp_details(dapp) {
@@ -1036,7 +1036,7 @@ mod prosopo {
 
         /// Returns the account balance for the specified `provider`.
         ///
-        /// Returns `0` if the account is non-existent.
+        /// Returns `0` if the account does not exist.
         #[ink(message)]
         pub fn get_provider_balance(&self, provider: AccountId) -> Balance {
             return match self.get_provider_details(provider) {
