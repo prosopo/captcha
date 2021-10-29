@@ -30,18 +30,35 @@ mod prosopo {
     }
 
     #[derive(
+    PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, SpreadLayout, PackedLayout,
+    )]
+    #[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    )]
+    pub enum Payee {
+        Provider,
+        Dapp,
+        None,
+    }
+
+    #[derive(
     PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, Copy,
     )]
     #[cfg_attr(
     feature = "std",
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
     )]
-    pub struct CaptchaProvider {
+    pub struct Provider {
         // TODO how is the Status updated if the staked amount drops below the allowed minimum?
-        //    Should Status instead be a function that returns Active if staked > captcha_provider_stake_default
+        //    Should Status instead be a function that returns Active if staked > provider_stake_default
         status: Status,
-        staked: Balance,
+        // TODO should Providers have separate balances for paying/receiving fees?
+        // TODO should balances be stored in self.balances under an owner, as per ERC20?
+        balance: Balance,
+        // an amount in the base unit of the default parachain token (e.g. Planck on chains using DOT)
         fee: u32,
+        payee: Payee,
         service_origin: Hash,
         captcha_dataset_id: Hash,
     }
@@ -54,7 +71,7 @@ mod prosopo {
     derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
     )]
     pub struct CaptchaData {
-        captcha_provider: AccountId,
+        provider: AccountId,
         merkle_tree_root: Hash,
         captcha_type: u16,
     }
@@ -69,7 +86,7 @@ mod prosopo {
     pub struct CaptchaSolutionCommitment {
         // the Dapp User Account
         account: AccountId,
-        // The captcha dataset id (merkle_tree_root in CaptchaProvider / CaptchaData)
+        // The captcha dataset id (merkle_tree_root in Provider / CaptchaData)
         captcha_dataset_id: Hash,
         // Status of this solution - correct / incorrect?
         status: Status,
@@ -86,6 +103,7 @@ mod prosopo {
     )]
     pub struct Dapp {
         status: Status,
+        // TODO should balances be stored in self.balances under an owner, as per ERC20?
         balance: Balance,
         owner: AccountId,
         min_difficulty: u16,
@@ -113,7 +131,7 @@ mod prosopo {
     pub enum DisputeType {
         BadCaptchaData,
         UnresolvedCaptchaSolution,
-        BotsFromCaptchaProvider,
+        BotsFromProvider,
         DappContractRegisteredByUnknown,
     }
 
@@ -128,10 +146,10 @@ mod prosopo {
     #[ink(storage)]
     pub struct Prosopo {
         //tokenContract: AccountId,
-        captcha_providers: InkHashmap<AccountId, CaptchaProvider>,
+        providers: InkHashmap<AccountId, Provider>,
         captcha_data: InkHashmap<Hash, CaptchaData>,
         captcha_solution_commitments: InkHashmap<Hash, CaptchaSolutionCommitment>,
-        captcha_provider_stake_default: u128,
+        provider_stake_default: u128,
         dapps: InkHashmap<AccountId, Dapp>,
         dapps_owners: InkHashmap<AccountId, AccountId>,
         operators: InkHashmap<AccountId, bool>,
@@ -142,61 +160,61 @@ mod prosopo {
         dapp_users: InkHashmap<AccountId, User>,
     }
 
-    // Event emitted when a new captcha provider registers
+    // Event emitted when a new provider registers
     #[ink(event)]
-    pub struct CaptchaProviderRegister {
+    pub struct ProviderRegister {
         #[ink(topic)]
         account: AccountId,
     }
 
-    // Event emitted when a new captcha provider deregisters
+    // Event emitted when a new provider deregisters
     #[ink(event)]
-    pub struct CaptchaProviderDeregister {
+    pub struct ProviderDeregister {
         #[ink(topic)]
         account: AccountId,
     }
 
-    // Event emitted when a new captcha provider is updated
+    // Event emitted when a new provider is updated
     #[ink(event)]
-    pub struct CaptchaProviderUpdate {
+    pub struct ProviderUpdate {
         #[ink(topic)]
         account: AccountId,
     }
 
-    // Event emitted when a captcha provider stakes
+    // Event emitted when a provider stakes
     #[ink(event)]
-    pub struct CaptchaProviderStake {
+    pub struct ProviderStake {
         #[ink(topic)]
         account: AccountId,
         value: Balance,
     }
 
-    // Event emitted when a captcha provider adds a data set
+    // Event emitted when a provider adds a data set
     #[ink(event)]
-    pub struct CaptchaProviderAddDataset {
+    pub struct ProviderAddDataset {
         #[ink(topic)]
         account: AccountId,
         merkle_tree_root: Hash,
     }
 
-    // Event emitted when a captcha provider unstakes
+    // Event emitted when a provider unstakes
     #[ink(event)]
-    pub struct CaptchaProviderUnstake {
+    pub struct ProviderUnstake {
         #[ink(topic)]
         account: AccountId,
         value: Balance,
     }
 
-    // Event emitted when a captcha provider approves a solution
+    // Event emitted when a provider approves a solution
     #[ink(event)]
-    pub struct CaptchaProviderApprove {
+    pub struct ProviderApprove {
         #[ink(topic)]
         captcha_solution_commitment_id: Hash,
     }
 
-    // Event emitted when a captcha provider disapproves a solution
+    // Event emitted when a provider disapproves a solution
     #[ink(event)]
-    pub struct CaptchaProviderDisapprove {
+    pub struct ProviderDisapprove {
         #[ink(topic)]
         captcha_solution_commitment_id: Hash,
     }
@@ -257,14 +275,14 @@ mod prosopo {
         InsufficientBalance,
         /// Returned if not enough allowance to fulfill a request is available.
         InsufficientAllowance,
-        /// Returned if captcha provider exists when it shouldn't
-        CaptchaProviderExists,
-        /// Returned if captcha provider does not exist when it should
-        CaptchaProviderDoesNotExist,
-        /// Returned if captcha provider has no funds
-        CaptchaProviderInsufficientFunds,
-        /// Returned if captcha provider is inactive and trying to use the service
-        CaptchaProviderInactive,
+        /// Returned if provider exists when it shouldn't
+        ProviderExists,
+        /// Returned if provider does not exist when it should
+        ProviderDoesNotExist,
+        /// Returned if provider has no funds
+        ProviderInsufficientFunds,
+        /// Returned if provider is inactive and trying to use the service
+        ProviderInactive,
         /// Returned if requested captcha data id is unavailable
         DuplicateCaptchaDataId,
         /// Returned if dapp exists when it shouldn't
@@ -292,10 +310,10 @@ mod prosopo {
             Self {
                 operators,
                 captcha_data: InkHashmap::new(),
-                captcha_providers: InkHashmap::new(),
+                providers: InkHashmap::new(),
                 status: Status::Active,
                 // TODO is this the default top-up amount or the minimum in order to remain Active?
-                captcha_provider_stake_default: 10,
+                provider_stake_default: 10,
                 operator_stake_default: 0,
                 // TODO find a way to use the balancer contract address
                 operator_fee_currency: Hash::default(),
@@ -308,12 +326,13 @@ mod prosopo {
 
         /// Setup phase messages
 
-        // Register a captcha provider, their service origin and fee
+        // Register a provider, their service origin and fee
         #[ink(message)]
-        pub fn captcha_provider_register(
+        pub fn provider_register(
             &mut self,
             service_origin: Hash,
             fee: u32,
+            payee: Payee,
             provider_account: AccountId,
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
@@ -321,34 +340,36 @@ mod prosopo {
             if !self.operators.contains_key(&caller) {
                 return Err(ProsopoError::NotAuthorised);
             }
-            let staked: u128 = 0;
+            let balance: u128 = 0;
             // this function is for registration only
-            if self.captcha_providers.contains_key(&provider_account) {
-                return Err(ProsopoError::CaptchaProviderExists);
+            if self.providers.contains_key(&provider_account) {
+                return Err(ProsopoError::ProviderExists);
             }
-            // add a new captcha provider
-            let provider = CaptchaProvider {
+            // add a new provider
+            let provider = Provider {
                 status: Status::Deactivated,
-                staked,
+                balance,
                 fee,
                 service_origin,
                 captcha_dataset_id: Hash::default(),
+                payee,
             };
-            self.captcha_providers.insert(provider_account, provider);
-            // Trigger the captcha provider register event
-            self.env().emit_event(CaptchaProviderRegister {
+            self.providers.insert(provider_account, provider);
+            // Trigger the provider register event
+            self.env().emit_event(ProviderRegister {
                 account: provider_account,
             });
             Ok(())
         }
 
-        // // Update an existing captcha provider, their service origin, fee
+        // // Update an existing provider, their service origin, fee
         #[ink(message)]
         //TODO test this
-        pub fn captcha_provider_update(
+        pub fn provider_update(
             &mut self,
             service_origin: Hash,
             fee: u32,
+            payee: Payee,
             provider_account: AccountId,
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
@@ -358,51 +379,52 @@ mod prosopo {
             }
 
             // this function is for updating only, not registering
-            if !self.captcha_providers.contains_key(&provider_account) {
-                return Err(ProsopoError::CaptchaProviderDoesNotExist);
+            if !self.providers.contains_key(&provider_account) {
+                return Err(ProsopoError::ProviderDoesNotExist);
             }
 
             let existing = self
-                .get_captcha_provider_details(provider_account)
+                .get_provider_details(provider_account)
                 .unwrap();
             let transferred = self.env().transferred_balance();
-            let staked: u128 = existing.staked + transferred;
+            let balance: u128 = existing.balance + transferred;
 
-            // update an existing captcha provider
-            let provider = CaptchaProvider {
+            // update an existing provider
+            let provider = Provider {
                 status: Status::Deactivated,
-                staked,
+                balance,
                 fee,
                 service_origin,
                 captcha_dataset_id: existing.captcha_dataset_id,
+                payee,
             };
-            self.captcha_providers.insert(provider_account, provider);
+            self.providers.insert(provider_account, provider);
 
-            // Trigger the captcha provider register event
-            self.env().emit_event(CaptchaProviderUpdate {
+            // Trigger the provider register event
+            self.env().emit_event(ProviderUpdate {
                 account: provider_account,
             });
             Ok(())
         }
 
-        // De-Register a captcha provider by setting their status to Deactivated
+        // De-Register a provider by setting their status to Deactivated
         #[ink(message)]
-        pub fn captcha_provider_deregister(&mut self, provider_account: AccountId) {
+        pub fn provider_deregister(&mut self, provider_account: AccountId) {
             let caller = self.env().caller();
             if self.operators.contains_key(&caller) {
-                let provider = self.captcha_providers.get_mut(&provider_account).unwrap();
+                let provider = self.providers.get_mut(&provider_account).unwrap();
                 (*provider).status = Status::Deactivated;
-                // Trigger the captcha provider register event
-                self.env().emit_event(CaptchaProviderDeregister {
+                // Trigger the provider register event
+                self.env().emit_event(ProviderDeregister {
                     account: provider_account,
                 });
             }
         }
 
-        // Stake and activate the captcha provider's service
+        // Stake and activate the provider's service
         #[ink(message)]
         #[ink(payable)]
-        pub fn captcha_provider_stake(&mut self) -> Result<(), ProsopoError> {
+        pub fn provider_stake(&mut self) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             let transferred = self.env().transferred_balance();
             if transferred == 0 {
@@ -410,61 +432,60 @@ mod prosopo {
             }
 
             // TODO should the operators be able to do this ?
-            if self.captcha_providers.contains_key(&caller) {
-                let provider = self.captcha_providers.get_mut(&caller).unwrap();
-                let total_staked = (*provider).staked + transferred;
-                (*provider).staked = total_staked;
-                if total_staked >= self.captcha_provider_stake_default {
+            if self.providers.contains_key(&caller) {
+                let provider = self.providers.get_mut(&caller).unwrap();
+                let total_balance = (*provider).balance + transferred;
+                (*provider).balance = total_balance;
+                if total_balance >= self.provider_stake_default {
                     (*provider).status = Status::Active;
                 }
-                // Trigger the captcha provider staked event
-                self.env().emit_event(CaptchaProviderStake {
+                self.env().emit_event(ProviderStake {
                     account: caller,
-                    value: total_staked,
+                    value: total_balance,
                 });
             } else {
                 self.env().transfer(caller, transferred).ok();
-                return Err(ProsopoError::CaptchaProviderDoesNotExist);
+                return Err(ProsopoError::ProviderDoesNotExist);
             }
             Ok(())
         }
 
-        // Unstake and deactivate the captcha provider's service, returning stake
+        // Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
-        pub fn captcha_provider_unstake(&mut self) -> Result<(), ProsopoError> {
+        //TODO allow Provider to unstake(withdraw) less than they have staked
+        pub fn provider_unstake(&mut self) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             // TODO should the operators be able to do this ?
-            if self.captcha_providers.contains_key(&caller) {
-                let provider = self.get_captcha_provider_details(caller)?;
-                let balance = provider.staked;
+            if self.providers.contains_key(&caller) {
+                let provider = self.get_provider_details(caller)?;
+                let balance = provider.balance;
                 if balance > 0 {
                     self.env().transfer(caller, balance).ok();
-                    self.captcha_provider_deregister(caller);
-                    // Trigger the captcha provider staked event
-                    self.env().emit_event(CaptchaProviderUnstake {
+                    self.provider_deregister(caller);
+                    self.env().emit_event(ProviderUnstake {
                         account: caller,
                         value: balance,
                     });
                 }
             } else {
-                return Err(ProsopoError::CaptchaProviderDoesNotExist);
+                return Err(ProsopoError::ProviderDoesNotExist);
             }
             Ok(())
         }
 
         // Add a new data set
         #[ink(message)]
-        pub fn captcha_provider_add_data_set(
+        pub fn provider_add_data_set(
             &mut self,
             merkle_tree_root: Hash,
         ) -> Result<(), ProsopoError> {
-            let captcha_provider_id = self.env().caller();
-            // the calling account must belong to the captcha provider
-            // TODO add Prosopo operators? Currently, only a captcha provider can add a data set for themselves.
-            self.validate_captcha_provider(captcha_provider_id)?;
+            let provider_id = self.env().caller();
+            // the calling account must belong to the provider
+            // TODO add Prosopo operators? Currently, only a provider can add a data set for themselves.
+            self.validate_provider(provider_id)?;
 
             let dataset = CaptchaData {
-                captcha_provider: captcha_provider_id,
+                provider: provider_id,
                 merkle_tree_root,
                 captcha_type: 0,
             };
@@ -472,16 +493,16 @@ mod prosopo {
             // create a new id and insert details of the new captcha data set
             self.captcha_data.insert(merkle_tree_root, dataset);
 
-            // set the captcha data id on the captcha provider
+            // set the captcha data id on the provider
             let provider = self
-                .captcha_providers
-                .get_mut(&captcha_provider_id)
+                .providers
+                .get_mut(&provider_id)
                 .unwrap();
             (*provider).captcha_dataset_id = merkle_tree_root;
 
             // emit event
-            self.env().emit_event(CaptchaProviderAddDataset {
-                account: captcha_provider_id,
+            self.env().emit_event(ProviderAddDataset {
+                account: provider_id,
                 merkle_tree_root,
             });
 
@@ -618,7 +639,6 @@ mod prosopo {
                 ink_env::debug_println!("Dapp Balance: {}", dapp.balance);
                 self.env().transfer(caller, dapp.balance).ok();
                 self.dapp_deregister(contract);
-                // Trigger the captcha provider staked event
                 self.env().emit_event(DappCancel {
                     contract,
                     value: balance,
@@ -693,39 +713,38 @@ mod prosopo {
 
         // Approve a solution commitment, add reputation, and refund the users tx fee
         #[ink(message)]
-        // TODO - should captcha providers be prevented from later changing the status?
-        pub fn captcha_provider_approve(
+        // TODO - should providers be prevented from later changing the status?
+        pub fn provider_approve(
             &mut self,
             captcha_solution_commitment_id: Hash,
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
-            self.validate_captcha_provider(caller)?;
-            let provider = self.get_captcha_provider_details(caller)?;
-
+            self.validate_provider(caller)?;
+            let provider = self.providers.get(&caller).unwrap();
             // Guard against incorrect solution id
             let commitment = self.get_captcha_solution_commitment(
                 captcha_solution_commitment_id,
                 provider.captcha_dataset_id,
             )?;
-            let dapp_user_id = commitment.account;
+            self.validate_dapp(commitment.contract);
+            // Check the user exists
+            self.get_dapp_user(commitment.account)?;
 
-            //get the user and modify their score
-            self.get_dapp_user(dapp_user_id)?;
 
-            let user = self.dapp_users.get_mut(&dapp_user_id).unwrap();
-            (*user).correct_captchas += 1;
-
-            // get mutable commitment
+            // get the mutables
             let commitment_mut = self
                 .captcha_solution_commitments
                 .get_mut(&captcha_solution_commitment_id)
                 .unwrap();
+            let user = self.dapp_users.get_mut(&commitment.account).unwrap();
 
-            // only allow changing status if pending
+            // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == Status::Pending {
                 (*commitment_mut).status = Status::Approved;
-                // Trigger the CaptchaProviderApprove event
-                self.env().emit_event(CaptchaProviderApprove {
+                (*user).correct_captchas += 1;
+                self.pay_fee(&caller, &commitment.contract)?;
+                // Trigger the ProviderApprove event
+                self.env().emit_event(ProviderApprove {
                     captcha_solution_commitment_id,
                 });
             }
@@ -735,43 +754,64 @@ mod prosopo {
 
         // Disapprove a solution commitment and subtract reputation
         #[ink(message)]
-        pub fn captcha_provider_disapprove(
+        pub fn provider_disapprove(
             &mut self,
             captcha_solution_commitment_id: Hash,
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
-            self.validate_captcha_provider(caller)?;
-            let provider = self.get_captcha_provider_details(caller)?;
-
+            self.validate_provider(caller)?;
+            let provider = self.providers.get(&caller).unwrap();
             // Guard against incorrect solution id
             let commitment = self.get_captcha_solution_commitment(
                 captcha_solution_commitment_id,
                 provider.captcha_dataset_id,
             )?;
-            let dapp_user_id = commitment.account;
-
-            //get the user and modify their score
+            self.validate_dapp(commitment.contract);
+            // Check the user exists
             self.get_dapp_user(commitment.account)?;
-            let user = self.dapp_users.get_mut(&commitment.account).unwrap();
-            (*user).incorrect_captchas = 1;
 
-            // get mutable commitment
+
+            // get the mutables
             let commitment_mut = self
                 .captcha_solution_commitments
                 .get_mut(&captcha_solution_commitment_id)
                 .unwrap();
+            let user = self.dapp_users.get_mut(&commitment.account).unwrap();
 
-            // only allow changing status if pending
+            // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == Status::Pending {
                 (*commitment_mut).status = Status::Disapproved;
-                // Trigger the CaptchaProviderDisapprove event
-                self.env().emit_event(CaptchaProviderDisapprove {
+                (*user).incorrect_captchas += 1;
+                self.pay_fee(&caller, &commitment.contract)?;
+                self.env().emit_event(ProviderDisapprove {
                     captcha_solution_commitment_id,
                 });
             }
 
             Ok(())
         }
+
+        // Transfer a balance from a provider to a dapp or from a dapp to a provider,
+        fn pay_fee(&mut self, provider: &AccountId, dapp: &AccountId) -> Result<(), ProsopoError> {
+            let prov = self.providers.get_mut(provider).unwrap();
+            if prov.fee != 0 {
+                let dap = self.dapps.get_mut(dapp).unwrap();
+
+                let fee = Balance::from(prov.fee);
+                if prov.payee == Payee::Provider {
+                    // add the fee to the provider's balance
+                    prov.balance = prov.balance + fee;
+                    dap.balance = dap.balance - fee;
+                }
+                if prov.payee == Payee::Dapp {
+                    // take the fee from the provider's balance
+                    prov.balance = prov.balance - fee;
+                    dap.balance = dap.balance + fee;
+                }
+            }
+            Ok(())
+        }
+
 
         // Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
         // Threshold is decided by the calling user
@@ -810,14 +850,13 @@ mod prosopo {
             }
         }
 
-        // Report a captcha provider that has allowed bots to access
+        // Report a provider that has allowed bots to access
         #[ink(message)]
-        pub fn dapp_operator_report_captcha_provider(
+        pub fn dapp_operator_report_provider(
             &mut self,
-            captcha_provider_id: AccountId,
+            provider_id: AccountId,
             bot_users: ink_prelude::vec::Vec<AccountId>,
-        ) {
-        }
+        ) {}
 
         // Reports poor quality or nonsensical captcha data
         #[ink(message)]
@@ -825,19 +864,17 @@ mod prosopo {
             &mut self,
             captcha_dataset_id: u64,
             merkle_path: ink_prelude::vec::Vec<Hash>,
-        ) {
-        }
+        ) {}
 
-        // Disputes a solution that was given to a user by a captcha provider
+        // Disputes a solution that was given to a user by a provider
         #[ink(message)]
         pub fn dapp_user_dispute_solution(
             &mut self,
             captcha_solution_committment_id: u64,
             merkle_proof: ink_prelude::vec::Vec<Hash>,
-        ) {
-        }
+        ) {}
 
-        // Administrate a captcha provider's solution based on report(s) from users or dapp operators
+        // Administrate a provider's solution based on report(s) from users or dapp operators
         #[ink(message)]
         pub fn operators_dispute_solution(&mut self, captcha_dataset_id: u64) {}
 
@@ -846,27 +883,26 @@ mod prosopo {
         pub fn operators_update_operators(
             &mut self,
             new_operators: ink_prelude::vec::Vec<AccountId>,
-        ) {
-        }
+        ) {}
 
         /// Informational / Validation functions
 
-        fn validate_captcha_provider(
+        fn validate_provider(
             &self,
-            captcha_provider_id: AccountId,
+            provider_id: AccountId,
         ) -> Result<(), ProsopoError> {
-            if !self.captcha_providers.contains_key(&captcha_provider_id) {
-                ink_env::debug_println!("{}", "CaptchaProviderDoesNotExist");
-                return Err(ProsopoError::CaptchaProviderDoesNotExist);
+            if !self.providers.contains_key(&provider_id) {
+                ink_env::debug_println!("{}", "ProviderDoesNotExist");
+                return Err(ProsopoError::ProviderDoesNotExist);
             }
-            let captcha_provider = self.get_captcha_provider_details(captcha_provider_id)?;
-            if captcha_provider.status != Status::Active {
-                ink_env::debug_println!("{}", "CaptchaProviderInactive");
-                return Err(ProsopoError::CaptchaProviderInactive);
+            let provider = self.get_provider_details(provider_id)?;
+            if provider.status != Status::Active {
+                ink_env::debug_println!("{}", "ProviderInactive");
+                return Err(ProsopoError::ProviderInactive);
             }
-            if captcha_provider.staked <= 0 {
-                ink_env::debug_println!("{}", "CaptchaProviderInsufficientFunds");
-                return Err(ProsopoError::CaptchaProviderInsufficientFunds);
+            if provider.balance <= 0 {
+                ink_env::debug_println!("{}", "ProviderInsufficientFunds");
+                return Err(ProsopoError::ProviderInsufficientFunds);
             }
             Ok(())
         }
@@ -884,7 +920,7 @@ mod prosopo {
                 return Err(ProsopoError::DappInactive);
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
-            // captcha provider, if their fee > 0
+            // provider, if their fee > 0
             if dapp.balance <= 0 {
                 ink_env::debug_println!("{}", "DappInsufficientFunds");
                 return Err(ProsopoError::DappInsufficientFunds);
@@ -908,14 +944,16 @@ mod prosopo {
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
                 .unwrap();
-            // The captcha provider must own the captcha data to modify the commitment
+            // The provider must own the captcha data to modify the commitment
             if commitment.captcha_dataset_id != captcha_dataset_id {
                 return Err(ProsopoError::NotAuthorised);
             }
             Ok(*commitment)
         }
 
-        // Get a dapp user
+        /// Get a dapp user
+        ///
+        /// Returns an error if the user does not exist
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, ProsopoError> {
             if !self.dapp_users.contains_key(&dapp_user_id) {
                 ink_env::debug_println!("{}", "DappUserDoesNotExist");
@@ -924,35 +962,39 @@ mod prosopo {
             Ok(*self.dapp_users.get(&dapp_user_id).unwrap())
         }
 
-        // Get captcha provider accounts as a vector
+        /// Get provider accounts as a vector
         #[ink(message)]
-        pub fn get_captcha_providers(&self) -> ink_prelude::vec::Vec<AccountId> {
-            let providers = self.captcha_providers.keys().cloned().collect();
+        pub fn get_providers(&self) -> ink_prelude::vec::Vec<AccountId> {
+            let providers = self.providers.keys().cloned().collect();
             return providers;
         }
 
-        // Get a single captcha provider's details
+        /// Get a single provider's details
+        ///
+        /// Returns an error if the user does not exist
         #[ink(message)]
-        pub fn get_captcha_provider_details(
+        pub fn get_provider_details(
             &self,
             accountid: AccountId,
-        ) -> Result<CaptchaProvider, ProsopoError> {
-            if !self.captcha_providers.contains_key(&accountid) {
-                ink_env::debug_println!("{}", "CaptchaProviderDoesNotExist");
-                return Err(ProsopoError::CaptchaProviderDoesNotExist);
+        ) -> Result<Provider, ProsopoError> {
+            if !self.providers.contains_key(&accountid) {
+                ink_env::debug_println!("{}", "ProviderDoesNotExist");
+                return Err(ProsopoError::ProviderDoesNotExist);
             }
-            let provider = self.captcha_providers.get(&accountid);
+            let provider = self.providers.get(&accountid);
             Ok(*provider.unwrap())
         }
 
-        // Get a dapp accounts as a vector
+        /// Get a dapp accounts as a vector
         #[ink(message)]
         pub fn get_dapps(&self) -> ink_prelude::vec::Vec<AccountId> {
             let dapps = self.dapps.keys().cloned().collect();
             return dapps;
         }
 
-        // Get a single dapps details
+        /// Get a single dapps details
+        ///
+        /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, ProsopoError> {
             if !self.dapps.contains_key(&contract) {
@@ -963,11 +1005,33 @@ mod prosopo {
             Ok(*dapp.unwrap())
         }
 
-        // Get operators as a vector
+        /// Get operators as a vector
         #[ink(message)]
         pub fn get_operators(&self) -> ink_prelude::vec::Vec<AccountId> {
             let operators = self.operators.keys().cloned().collect();
             return operators;
+        }
+
+        /// Returns the account balance for the specified `dapp`.
+        ///
+        /// Returns `0` if the account does not exist.
+        #[ink(message)]
+        pub fn get_dapp_balance(&self, dapp: AccountId) -> Balance {
+            return match self.get_dapp_details(dapp) {
+                Ok(v) => { v.balance }
+                Err(_e) => Balance::from(0_u32)
+            }
+        }
+
+        /// Returns the account balance for the specified `provider`.
+        ///
+        /// Returns `0` if the account does not exist.
+        #[ink(message)]
+        pub fn get_provider_balance(&self, provider: AccountId) -> Balance {
+            return match self.get_provider_details(provider) {
+                Ok(v) => { v.balance }
+                Err(_e) => Balance::from(0_u32)
+            }
         }
     }
 
@@ -977,11 +1041,11 @@ mod prosopo {
     #[cfg(not(feature = "ink-experimental-engine"))]
     #[cfg(test)]
     mod tests {
+        use ink_env::{call, test};
         /// Imports `ink_lang` so we can use `#[ink::test]`.
         use ink_env::hash::Blake2x256;
         use ink_env::hash::CryptoHash;
         use ink_env::hash::HashOutput;
-        use ink_env::{call, test};
         use ink_lang as ink;
 
         /// Imports all the definitions from the outer scope so we can use them here.
@@ -995,30 +1059,30 @@ mod prosopo {
             assert!(contract.operators.contains_key(&operator_account));
         }
 
-        /// Test captcha provider register
+        /// Test provider register
         #[ink::test]
-        fn test_captcha_provider_register() {
+        fn test_provider_register() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
-            contract.captcha_provider_register(service_origin, fee, provider_account);
-            assert!(contract.captcha_providers.contains_key(&provider_account));
+            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            assert!(contract.providers.contains_key(&provider_account));
         }
 
-        /// Test captcha provider deregister
+        /// Test provider deregister
         #[ink::test]
-        fn test_captcha_provider_deregister() {
+        fn test_provider_deregister() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
-            contract.captcha_provider_register(service_origin, fee, provider_account);
-            assert!(contract.captcha_providers.contains_key(&provider_account));
-            contract.captcha_provider_deregister(provider_account);
-            let provider_record = contract.captcha_providers.get(&provider_account).unwrap();
+            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            assert!(contract.providers.contains_key(&provider_account));
+            contract.provider_deregister(provider_account);
+            let provider_record = contract.providers.get(&provider_account).unwrap();
             assert!(provider_record.status == Status::Deactivated);
         }
 
@@ -1042,15 +1106,15 @@ mod prosopo {
         use ink_env::hash::HashOutput;
         use ink_lang as ink;
 
-        use crate::prosopo::ProsopoError::CaptchaProviderInactive;
+        use crate::prosopo::ProsopoError::ProviderInactive;
 
         use super::*;
 
         type Event = <Prosopo as ::ink_lang::BaseEvent>::Type;
 
-        /// Test captcha provider stake
+        /// Test provider stake
         #[ink::test]
-        fn test_captcha_provider_stake() {
+        fn test_provider_stake() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
             let provider_account = AccountId::from([0x02; 32]);
@@ -1059,7 +1123,7 @@ mod prosopo {
             let balance: u128 = 10;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
             contract
-                .captcha_provider_register(service_origin, fee, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
             ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(
                 provider_account,
@@ -1067,7 +1131,7 @@ mod prosopo {
             );
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.captcha_provider_stake();
+            contract.provider_stake();
 
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
 
@@ -1081,41 +1145,41 @@ mod prosopo {
                 <Event as scale::Decode>::decode(&mut &event_register.data[..])
                     .expect("encountered invalid contract event data buffer");
 
-            if let Event::CaptchaProviderRegister(CaptchaProviderRegister { account }) =
+            if let Event::ProviderRegister(ProviderRegister { account }) =
             decoded_event_register
             {
                 assert_eq!(
                     account, provider_account,
-                    "encountered invalid CaptchaProviderStake.account"
+                    "encountered invalid ProviderStake.account"
                 );
             } else {
                 panic!(
-                    "encountered unexpected event kind: expected a CaptchaProviderRegister event"
+                    "encountered unexpected event kind: expected a ProviderRegister event"
                 );
             }
 
             let decoded_event_stake = <Event as scale::Decode>::decode(&mut &event_stake.data[..])
                 .expect("encountered invalid contract event data buffer");
 
-            if let Event::CaptchaProviderStake(CaptchaProviderStake { account, value }) =
+            if let Event::ProviderStake(ProviderStake { account, value }) =
             decoded_event_stake
             {
                 assert_eq!(
                     account, provider_account,
-                    "encountered invalid CaptchaProviderStake.account"
+                    "encountered invalid ProviderStake.account"
                 );
                 assert_eq!(
                     value, balance,
-                    "encountered invalid CaptchaProviderStake.value"
+                    "encountered invalid ProviderStake.value"
                 );
             } else {
-                panic!("encountered unexpected event kind: expected a CaptchaProviderStake event");
+                panic!("encountered unexpected event kind: expected a ProviderStake event");
             }
         }
 
-        /// Test captcha provider unstake
+        /// Test provider unstake
         #[ink::test]
-        fn test_captcha_provider_unstake() {
+        fn test_provider_unstake() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
             let provider_account = AccountId::from([0x02; 32]);
@@ -1124,7 +1188,7 @@ mod prosopo {
             let balance: u128 = 10;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
             contract
-                .captcha_provider_register(service_origin, fee, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
             ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(
                 provider_account,
@@ -1132,8 +1196,8 @@ mod prosopo {
             );
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.captcha_provider_stake();
-            contract.captcha_provider_unstake().ok();
+            contract.provider_stake();
+            contract.provider_unstake().ok();
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
 
             // events are the register event, stake event, and the unstake event
@@ -1144,26 +1208,26 @@ mod prosopo {
                 <Event as scale::Decode>::decode(&mut &event_unstake.data[..])
                     .expect("encountered invalid contract event data buffer");
 
-            if let Event::CaptchaProviderUnstake(CaptchaProviderUnstake { account, value }) =
+            if let Event::ProviderUnstake(ProviderUnstake { account, value }) =
             decoded_event_unstake
             {
                 assert_eq!(
                     account, provider_account,
-                    "encountered invalid CaptchaProviderUnstake.account"
+                    "encountered invalid ProviderUnstake.account"
                 );
                 assert_eq!(
                     value, balance,
-                    "encountered invalid CaptchaProviderUnstake.value"
+                    "encountered invalid ProviderUnstake.value"
                 );
             } else {
-                panic!("encountered unexpected event kind: expected a CaptchaProviderStake event");
+                panic!("encountered unexpected event kind: expected a ProviderStake event");
             }
         }
 
-        /// Test captcha provider add data set
+        /// Test provider add data set
         #[ink::test]
         //TODO off-chain environment does not yet support `block_timestamp`
-        fn test_captcha_provider_add_data_set() {
+        fn test_provider_add_data_set() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
             let provider_account = AccountId::from([0x02; 32]);
@@ -1172,7 +1236,7 @@ mod prosopo {
             let balance: u128 = 10;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
             contract
-                .captcha_provider_register(service_origin, fee, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
             ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(
                 provider_account,
@@ -1180,9 +1244,9 @@ mod prosopo {
             );
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.captcha_provider_stake();
+            contract.provider_stake();
             let root = str_to_hash("merkle tree".to_string());
-            contract.captcha_provider_add_data_set(root).ok();
+            contract.provider_add_data_set(root).ok();
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
 
             // events are the register, stake, add data set
@@ -1193,29 +1257,29 @@ mod prosopo {
                 <Event as scale::Decode>::decode(&mut &event_unstake.data[..])
                     .expect("encountered invalid contract event data buffer");
 
-            if let Event::CaptchaProviderAddDataset(CaptchaProviderAddDataset {
-                                                        account,
-                                                        merkle_tree_root,
-                                                    }) = decoded_event_unstake
+            if let Event::ProviderAddDataset(ProviderAddDataset {
+                                                 account,
+                                                 merkle_tree_root,
+                                             }) = decoded_event_unstake
             {
                 assert_eq!(
                     account, provider_account,
-                    "encountered invalid CaptchaProviderAddDataset.account"
+                    "encountered invalid ProviderAddDataset.account"
                 );
                 assert_eq!(
                     merkle_tree_root, root,
-                    "encountered invalid CaptchaProviderAddDataset.merkle_tree_root"
+                    "encountered invalid ProviderAddDataset.merkle_tree_root"
                 );
             } else {
                 panic!(
-                    "encountered unexpected event kind: expected a CaptchaProviderAddDataset event"
+                    "encountered unexpected event kind: expected a ProviderAddDataset event"
                 );
             }
         }
 
-        /// Test captcha provider cannot add data set if inactive
+        /// Test provider cannot add data set if inactive
         #[ink::test]
-        fn test_captcha_provider_cannot_add_data_set_if_inactive() {
+        fn test_provider_cannot_add_data_set_if_inactive() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
             let provider_account = AccountId::from([0x02; 32]);
@@ -1224,7 +1288,7 @@ mod prosopo {
             let balance: u128 = 10;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
             contract
-                .captcha_provider_register(service_origin, fee, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
             ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(
                 provider_account,
@@ -1233,8 +1297,8 @@ mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             let root = str_to_hash("merkle tree".to_string());
-            let result = contract.captcha_provider_add_data_set(root).unwrap_err();
-            assert_eq!(CaptchaProviderInactive, result)
+            let result = contract.provider_add_data_set(root).unwrap_err();
+            assert_eq!(ProviderInactive, result)
         }
 
         /// Test dapp register with zero balance transfer
@@ -1422,23 +1486,23 @@ mod prosopo {
             // initialise the contract
             let mut contract = Prosopo::default(operator_account);
 
-            // Register the captcha provider
-            let captcha_provider_account = AccountId::from([0x2; 32]);
+            // Register the provider
+            let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
             contract
-                .captcha_provider_register(service_origin, fee, captcha_provider_account)
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(captcha_provider_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("blah".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.captcha_provider_stake();
+            contract.provider_stake();
             // can only add data set after staking
             // TODO test scenario where dataset is added before staking
-            contract.captcha_provider_add_data_set(root).ok();
+            contract.provider_add_data_set(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1467,31 +1531,31 @@ mod prosopo {
             assert!(contract.captcha_solution_commitments.contains_key(&user_root));
         }
 
-        /// Test captcha provider approve
+        /// Test provider approve
         #[ink::test]
         // TODO move the common stuff to a setup function
-        fn test_captcha_provider_approve() {
+        fn test_provider_approve() {
             let operator_account = AccountId::from([0x1; 32]);
 
             // initialise the contract
             let mut contract = Prosopo::default(operator_account);
 
-            // Register the captcha provider
-            let captcha_provider_account = AccountId::from([0x2; 32]);
+            // Register the provider
+            let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
+            let fee: u32 = 1;
             contract
-                .captcha_provider_register(service_origin, fee, captcha_provider_account)
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(captcha_provider_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.captcha_provider_stake();
+            contract.provider_stake();
             // can only add data set after staking
-            contract.captcha_provider_add_data_set(root).ok();
+            contract.provider_add_data_set(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1513,50 +1577,59 @@ mod prosopo {
                 .ok();
 
             // Call from the provider account to mark the solution as approved
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(captcha_provider_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.captcha_provider_approve(solution_id);
+            contract.provider_approve(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
                 .unwrap();
             assert_eq!(commitment.status, Status::Approved);
+            let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account);
+            let new_provider_balance = contract.get_provider_balance(provider_account);
+            ink_env::debug_println!("\nDapp Balance: {}", new_dapp_balance);
+            ink_env::debug_println!("Provider Balance: {}", new_provider_balance);
+            assert_eq!(balance - Balance::from(fee), new_dapp_balance);
+            assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
-            // Now make sure that the captcha provider cannot later set the solution to disapproved
-            contract.captcha_provider_disapprove(solution_id);
+            // Now make sure that the provider cannot later set the solution to disapproved and make
+            // sure that the dapp balance is unchanged
+            contract.provider_disapprove(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
                 .unwrap();
             assert_eq!(commitment.status, Status::Approved);
+            assert_eq!(balance - Balance::from(fee), contract.get_dapp_balance(dapp_contract_account));
+            assert_eq!(balance + Balance::from(fee), contract.get_provider_balance(provider_account));
         }
 
-        /// Test captcha provider cannot approve invalid solution id
+        /// Test provider cannot approve invalid solution id
         #[ink::test]
-        fn test_captcha_provider_approve_invalid_id() {
+        fn test_provider_approve_invalid_id() {
             let operator_account = AccountId::from([0x1; 32]);
 
             // initialise the contract
             let mut contract = Prosopo::default(operator_account);
 
-            // Register the captcha provider
-            let captcha_provider_account = AccountId::from([0x2; 32]);
-            let captcha_provider_account = AccountId::from([0x2; 32]);
+            // Register the provider
+            let provider_account = AccountId::from([0x2; 32]);
+            let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
             contract
-                .captcha_provider_register(service_origin, fee, captcha_provider_account)
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(captcha_provider_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.captcha_provider_stake();
+            contract.provider_stake();
             // can only add data set after staking
             // TODO test scenario where dataset is added before staking
-            contract.captcha_provider_add_data_set(root).ok();
+            contract.provider_add_data_set(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1578,40 +1651,40 @@ mod prosopo {
                 .ok();
 
             // Call from the provider account to mark the wrong solution as approved
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(captcha_provider_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let solution_id = str_to_hash("id that does not exist".to_string());
-            let result = contract.captcha_provider_approve(solution_id);
+            let result = contract.provider_approve(solution_id);
             assert_eq!(
                 ProsopoError::CaptchaSolutionCommitmentDoesNotExist,
                 result.unwrap_err()
             );
         }
 
-        /// Test captcha provider disapprove
+        /// Test provider disapprove
         #[ink::test]
         // TODO move the common stuff to a setup function
-        fn test_captcha_provider_disapprove() {
+        fn test_provider_disapprove() {
             let operator_account = AccountId::from([0x1; 32]);
 
             // initialise the contract
             let mut contract = Prosopo::default(operator_account);
 
-            // Register the captcha provider
-            let captcha_provider_account = AccountId::from([0x2; 32]);
+            // Register the provider
+            let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
+            let fee: u32 = 1;
             contract
-                .captcha_provider_register(service_origin, fee, captcha_provider_account)
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(captcha_provider_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.captcha_provider_stake();
+            contract.provider_stake();
             // can only add data set after staking
-            contract.captcha_provider_add_data_set(root).ok();
+            contract.provider_add_data_set(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1633,23 +1706,31 @@ mod prosopo {
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(captcha_provider_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.captcha_provider_disapprove(solution_id);
+            contract.provider_disapprove(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
                 .unwrap();
             assert_eq!(commitment.status, Status::Disapproved);
+            let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account);
+            let new_provider_balance = contract.get_provider_balance(provider_account);
+            ink_env::debug_println!("\nDapp Balance: {}", new_dapp_balance);
+            ink_env::debug_println!("Provider Balance: {}", new_provider_balance);
+            assert_eq!(balance - Balance::from(fee), new_dapp_balance);
+            assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
-            // Now make sure that the captcha provider cannot later set the solution to approved
-            contract.captcha_provider_approve(solution_id);
+            // Now make sure that the provider cannot later set the solution to approved
+            contract.provider_approve(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
                 .unwrap();
             assert_eq!(commitment.status, Status::Disapproved);
-            //ink_env::debug_println!("{:?}", contract.captcha_providers.values());
+            assert_eq!(balance - Balance::from(fee), contract.get_dapp_balance(dapp_contract_account));
+            assert_eq!(balance + Balance::from(fee), contract.get_provider_balance(provider_account));
+            //ink_env::debug_println!("{:?}", contract.providers.values());
         }
 
         /// Test dapp user is human
@@ -1661,22 +1742,22 @@ mod prosopo {
             // initialise the contract
             let mut contract = Prosopo::default(operator_account);
 
-            // Register the captcha provider
-            let captcha_provider_account = AccountId::from([0x2; 32]);
+            // Register the provider
+            let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
             contract
-                .captcha_provider_register(service_origin, fee, captcha_provider_account)
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(captcha_provider_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            contract.captcha_provider_stake();
+            contract.provider_stake();
             // can only add data set after staking
-            contract.captcha_provider_add_data_set(root).ok();
+            contract.provider_add_data_set(root).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1700,9 +1781,9 @@ mod prosopo {
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(captcha_provider_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.captcha_provider_disapprove(solution_id);
+            contract.provider_disapprove(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(&solution_id)
@@ -1714,6 +1795,26 @@ mod prosopo {
                 .dapp_operator_is_human_user(dapp_user_account, 80)
                 .unwrap();
             assert_eq!(result, false);
+        }
+
+        /// Test non-existent dapp account has zero balance
+        #[ink::test]
+        fn test_non_existent_dapp_account_has_zero_balance() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let dapp_account = AccountId::from([0x2; 32]);
+            // initialise the contract
+            let mut contract = Prosopo::default(operator_account);
+            assert_eq!(0, contract.get_dapp_balance(dapp_account));
+        }
+
+        /// Test non-existent provider account has zero balance
+        #[ink::test]
+        fn test_non_existent_provider_account_has_zero_balance() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let provider_account = AccountId::from([0x2; 32]);
+            // initialise the contract
+            let mut contract = Prosopo::default(operator_account);
+            assert_eq!(0, contract.get_provider_balance(provider_account));
         }
 
         /// Helper function for converting string to Hash
@@ -1728,3 +1829,4 @@ mod prosopo {
         }
     }
 }
+
