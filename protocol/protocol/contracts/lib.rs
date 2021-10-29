@@ -737,7 +737,7 @@ mod prosopo {
                 captcha_solution_commitment_id,
                 provider.captcha_dataset_id,
             )?;
-            self.validate_dapp(commitment.contract);
+            self.validate_dapp(commitment.contract)?;
             // Check the user exists
             self.get_dapp_user(commitment.account)?;
 
@@ -777,7 +777,7 @@ mod prosopo {
                 captcha_solution_commitment_id,
                 provider.captcha_dataset_id,
             )?;
-            self.validate_dapp(commitment.contract);
+            self.validate_dapp(commitment.contract)?;
             // Check the user exists
             self.get_dapp_user(commitment.account)?;
 
