@@ -11,8 +11,11 @@ env:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2
@@ -20,10 +23,16 @@ jobs:
       run: |
         cd contracts
         rustup update stable
-        cargo build --release --locked --verbose
+        rustup update nightly
+        rustup target add wasm32-unknown-unknown --toolchain nightly
+        cargo build --release --verbose
     - name: Run tests
       run: |
         cd contracts
         rustup update stable
+        rustup update nightly
+        rustup target add wasm32-unknown-unknown --toolchain nightly
         cargo +nightly test --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture
+        cargo +nightly test --no-default-features --features std --verbose -- --nocapture
+
 
