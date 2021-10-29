@@ -88,8 +88,6 @@ mod prosopo {
         account: AccountId,
         // The captcha dataset id (merkle_tree_root in Provider / CaptchaData)
         captcha_dataset_id: Hash,
-        // Merkle tree root of request package
-        user_merkle_tree_root: Hash,
         // Status of this solution - correct / incorrect?
         status: Status,
         // The Dapp Contract AccountId that the Dapp User wants to interact with
@@ -150,8 +148,7 @@ mod prosopo {
         //tokenContract: AccountId,
         providers: InkHashmap<AccountId, Provider>,
         captcha_data: InkHashmap<Hash, CaptchaData>,
-        captcha_solution_commitments: InkHashmap<u64, CaptchaSolutionCommitment>,
-        captcha_solution_commitments_max_index: u64,
+        captcha_solution_commitments: InkHashmap<Hash, CaptchaSolutionCommitment>,
         provider_stake_default: u128,
         dapps: InkHashmap<AccountId, Dapp>,
         dapps_owners: InkHashmap<AccountId, AccountId>,
@@ -212,14 +209,14 @@ mod prosopo {
     #[ink(event)]
     pub struct ProviderApprove {
         #[ink(topic)]
-        captcha_solution_commitment_id: u64,
+        captcha_solution_commitment_id: Hash,
     }
 
     // Event emitted when a provider disapproves a solution
     #[ink(event)]
     pub struct ProviderDisapprove {
         #[ink(topic)]
-        captcha_solution_commitment_id: u64,
+        captcha_solution_commitment_id: Hash,
     }
 
     // Event emitted when a dapp registers
@@ -266,7 +263,6 @@ mod prosopo {
         merkle_tree_root: Hash,
         contract: AccountId,
         captcha_dataset_id: Hash,
-        captcha_solution_commitment_id: u64,
     }
 
     /// The Prosopo error types
@@ -324,7 +320,6 @@ mod prosopo {
                 dapps: InkHashmap::new(),
                 dapps_owners: InkHashmap::new(),
                 captcha_solution_commitments: InkHashmap::new(),
-                captcha_solution_commitments_max_index: 0,
                 dapp_users: InkHashmap::new(),
             }
         }
@@ -685,7 +680,6 @@ mod prosopo {
             let commitment = CaptchaSolutionCommitment {
                 account: caller,
                 captcha_dataset_id,
-                user_merkle_tree_root,
                 status: Status::Pending,
                 contract,
             };
@@ -693,12 +687,8 @@ mod prosopo {
             // Add a new dapp user
             self.create_new_dapp_user(caller);
 
-            // initial max index is 0, meaning we start inserting at 1
-            self.captcha_solution_commitments_max_index += 1;
-
             // insert the new solution commitment with next key
-            self.captcha_solution_commitments
-                .insert(self.captcha_solution_commitments_max_index, commitment);
+            self.captcha_solution_commitments.insert(user_merkle_tree_root, commitment);
 
             // Trigger the dapp user commit event
             self.env().emit_event(DappUserCommit {
@@ -706,7 +696,6 @@ mod prosopo {
                 merkle_tree_root: user_merkle_tree_root,
                 contract,
                 captcha_dataset_id,
-                captcha_solution_commitment_id: self.captcha_solution_commitments_max_index,
             });
             Ok(())
         }
@@ -727,7 +716,7 @@ mod prosopo {
         // TODO - should providers be prevented from later changing the status?
         pub fn provider_approve(
             &mut self,
-            captcha_solution_commitment_id: u64,
+            captcha_solution_commitment_id: Hash,
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             self.validate_provider(caller)?;
@@ -767,7 +756,7 @@ mod prosopo {
         #[ink(message)]
         pub fn provider_disapprove(
             &mut self,
-            captcha_solution_commitment_id: u64,
+            captcha_solution_commitment_id: Hash,
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             self.validate_provider(caller)?;
@@ -942,7 +931,7 @@ mod prosopo {
 
         pub fn get_captcha_solution_commitment(
             &self,
-            captcha_solution_commitment_id: u64,
+            captcha_solution_commitment_id: Hash,
             captcha_dataset_id: Hash,
         ) -> Result<CaptchaSolutionCommitment, ProsopoError> {
             if !self
@@ -1536,11 +1525,10 @@ mod prosopo {
 
             // check that the data is in the captcha_solution_commitments hashmap
             ink_env::debug_println!("{}", contract.captcha_solution_commitments.len());
-            ink_env::debug_println!("{}", contract.captcha_solution_commitments_max_index);
             assert_eq!(contract.captcha_solution_commitments.len(), 1);
 
             // check we have the correct max solution index
-            assert_eq!(contract.captcha_solution_commitments_max_index, 1);
+            assert!(contract.captcha_solution_commitments.contains_key(&user_root));
         }
 
         /// Test provider approve
@@ -1590,7 +1578,7 @@ mod prosopo {
 
             // Call from the provider account to mark the solution as approved
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            let solution_id = contract.captcha_solution_commitments_max_index;
+            let solution_id = user_root;
             contract.provider_approve(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
@@ -1664,8 +1652,8 @@ mod prosopo {
 
             // Call from the provider account to mark the wrong solution as approved
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            let solution_id = contract.captcha_solution_commitments_max_index;
-            let result = contract.provider_approve(solution_id + 1);
+            let solution_id = str_to_hash("id that does not exist".to_string());
+            let result = contract.provider_approve(solution_id);
             assert_eq!(
                 ProsopoError::CaptchaSolutionCommitmentDoesNotExist,
                 result.unwrap_err()
@@ -1719,7 +1707,7 @@ mod prosopo {
 
             // Call from the provider account to mark the solution as disapproved
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            let solution_id = contract.captcha_solution_commitments_max_index;
+            let solution_id = user_root;
             contract.provider_disapprove(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
@@ -1794,7 +1782,7 @@ mod prosopo {
 
             // Call from the provider account to mark the solution as disapproved
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            let solution_id = contract.captcha_solution_commitments_max_index;
+            let solution_id = user_root;
             contract.provider_disapprove(solution_id);
             let commitment = contract
                 .captcha_solution_commitments

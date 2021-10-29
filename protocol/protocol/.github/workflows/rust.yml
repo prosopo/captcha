@@ -35,4 +35,3 @@ jobs:
         cargo +nightly test --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture
         cargo +nightly test --no-default-features --features std --verbose -- --nocapture
 
-
