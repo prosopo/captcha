@@ -36,6 +36,7 @@ jobs:
         cargo +nightly test --no-default-features --features std --verbose -- --nocapture
     - name: Get Coverage for badge
       run: |
+        cargo install cargo-tarpaulin
         SUMMARY="$(cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture | tail -1)"
         echo "COVERAGE=$(echo ${SUMMARY:0:5})" >> $GITHUB_ENV
         # var REF = 'refs/pull/27/merge.json';
