@@ -954,6 +954,7 @@ mod prosopo {
         /// Get a dapp user
         ///
         /// Returns an error if the user does not exist
+        #[ink(message)]
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, ProsopoError> {
             if !self.dapp_users.contains_key(&dapp_user_id) {
                 ink_env::debug_println!("{}", "DappUserDoesNotExist");
