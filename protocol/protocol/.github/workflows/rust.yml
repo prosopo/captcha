@@ -34,4 +34,29 @@ jobs:
         rustup target add wasm32-unknown-unknown --toolchain nightly
         cargo +nightly test --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture
         cargo +nightly test --no-default-features --features std --verbose -- --nocapture
-
+    - name: Get Coverage for badge
+      run: |
+        SUMMARY="$(cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture | tail -1)"
+        echo "COVERAGE=$(echo ${SUMMARY:0:5})" >> $GITHUB_ENV
+        # var REF = 'refs/pull/27/merge.json';
+        REF=${{ github.ref }}
+        # console.log('github.ref: ' + REF);
+        echo "github.ref: $REF"
+        # var PATHS = REF.split('/');
+        IFS='/' read -ra PATHS <<< "$REF"
+        # var BRANCH_NAME = PATHS[1] + PATHS[2];
+        BRANCH_NAME="${PATHS[1]}_${PATHS[2]}"
+        # console.log(BRANCH_NAME); // 'pull_27'
+        echo $BRANCH_NAME
+        # process.env.BRANCH = 'pull_27';
+        echo "BRANCH=$(echo ${BRANCH_NAME})" >> $GITHUB_ENV
+    - name: Create the Badge
+      uses: schneegans/dynamic-badges-action@v1.0.0
+      with:
+        auth: ${{ secrets.GIST_SECRET }}
+        gistID: 7d4c25ef2e97e8de523ef7c1fee26e8e
+        filename: protocol__${{ env.BRANCH }}.json
+        label: Test Coverage
+        message: ${{ env.COVERAGE }}
+        color: green
+        namedLogo: jest
