@@ -19,14 +19,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Build
-      run: |
-        cd contracts
-        rustup update stable
-        rustup update nightly
-        rustup target add wasm32-unknown-unknown --toolchain nightly
-        cargo build --release --verbose
-    - name: Run tests
+    - name: Build and Run tests
       run: |
         cd contracts
         rustup update stable
@@ -65,4 +58,9 @@ jobs:
 
     - name: Update the Badge URL in the pull request body
       run: |
-        curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} | jq .body | sed -En "s/protocol__pull_##.json/protocol__pull_${{ github.event.pull_request.number }}.json/p"
+        body=$(curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} | jq .body | sed -En "s/protocol__pull_##.json/protocol__pull_${{ github.event.pull_request.number }}.json/p")
+        curl \
+          -X PATCH \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} \
+          -d '{"body":"$body"}'
