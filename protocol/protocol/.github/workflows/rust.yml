@@ -18,18 +18,12 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build and Run tests
+    - name: Run tests and get coverage value
       run: |
         cd contracts
         rustup update stable
         rustup update nightly
         rustup target add wasm32-unknown-unknown --toolchain nightly
-        cargo +nightly test --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture
-        cargo +nightly test --no-default-features --features std --verbose -- --nocapture
-    - name: Get Coverage for badge
-      run: |
-        cd contracts
         cargo install cargo-tarpaulin
         SUMMARY="$(cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture | tail -1)"
         echo "COVERAGE=$(echo ${SUMMARY:0:5})" >> $GITHUB_ENV
