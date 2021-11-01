@@ -19,13 +19,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Get Coverage for badge
+    - name: Setup Environment
       run: |
         cd contracts
         rustup update stable
         rustup update nightly
         rustup target add wasm32-unknown-unknown --toolchain nightly
         cargo install cargo-tarpaulin
+    - name: Get Coverage for badge
+      run: |
         SUMMARY="$(cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture | tail -1)"
         echo "COVERAGE=$(echo ${SUMMARY:0:5})" >> $GITHUB_ENV
         REF=${{ github.ref }}
@@ -54,4 +56,4 @@ jobs:
           -X PATCH \
           -H "Authorization: token ${{ secrets.GIST_SECRET }}" \
           https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} \
-          -d '{"body":\"${BODY}\"}'
+          -d '{"body":"${BODY}"}'
