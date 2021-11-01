@@ -28,17 +28,12 @@ jobs:
         cargo install cargo-tarpaulin
         SUMMARY="$(cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture | tail -1)"
         echo "COVERAGE=$(echo ${SUMMARY:0:5})" >> $GITHUB_ENV
-        # var REF = 'refs/pull/27/merge.json';
         REF=${{ github.ref }}
-        # console.log('github.ref: ' + REF);
         echo "github.ref: $REF"
-        # var PATHS = REF.split('/');
+        # split by /
         IFS='/' read -ra PATHS <<< "$REF"
-        # var BRANCH_NAME = PATHS[1] + PATHS[2];
         BRANCH_NAME="${PATHS[1]}_${PATHS[2]}"
-        # console.log(BRANCH_NAME); // 'pull_27'
         echo $BRANCH_NAME
-        # process.env.BRANCH = 'pull_27';
         echo "BRANCH=$(echo ${BRANCH_NAME})" >> $GITHUB_ENV
     - name: Create the Badge
       uses: schneegans/dynamic-badges-action@v1.0.0
@@ -55,7 +50,7 @@ jobs:
       run: |
         body=$(curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} | jq .body | sed -En "s/protocol__pull_##.json/protocol__pull_${{ github.event.pull_request.number }}.json/p")
         curl \
-          -X PATCH \
+          -X POST \
           -H "Authorization: secrets.GIST_SECRET" \
           https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} \
           -d '{"body":"$body"}'
