@@ -54,4 +54,4 @@ jobs:
           -X PATCH \
           -H "Authorization: token ${{ secrets.GIST_SECRET }}" \
           https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} \
-          -d '{"body":"$body"}'
+          -d '{"body":"${{$body}}"}'
