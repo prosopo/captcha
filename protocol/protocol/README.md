@@ -1,5 +1,5 @@
 # Prosopo
-[![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/forgetso/GIST_SECRET/raw/protocol__heads_main.json)]
+![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/forgetso/GIST_SECRET/raw/protocol__heads_main.json)
 
 Prosopo smart contract planning repository.
 
