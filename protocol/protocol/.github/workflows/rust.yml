@@ -51,6 +51,7 @@ jobs:
     - name: Update the Badge URL in the pull request body
       run: |
         BODY=$(curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} | jq .body | sed -En "s/protocol__pull_##.json/protocol__pull_${{ github.event.pull_request.number }}.json/p")
-        JSON="{\"body\":\"$BODY\"}"
+        echo $BODY
+        JSON="{\"body\":$BODY}"
         echo $JSON
         curl -X PATCH -H "Authorization: token ${{ secrets.GIST_SECRET }}" https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} -d $JSON
