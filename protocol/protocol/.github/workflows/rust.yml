@@ -58,6 +58,6 @@ jobs:
             curl -X PATCH \
               -H "Authorization: token ${{ secrets.GIST_SECRET }}" \
               -H "Content-Type: application/json" \
-              -d $JSON \
+              -d "$JSON" \
               https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }};
           fi;
