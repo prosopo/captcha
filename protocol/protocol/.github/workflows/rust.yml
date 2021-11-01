@@ -28,6 +28,7 @@ jobs:
         cargo install cargo-tarpaulin
     - name: Get Coverage for badge
       run: |
+        cd contracts
         SUMMARY="$(cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture | tail -1)"
         echo "COVERAGE=$(echo ${SUMMARY:0:5})" >> $GITHUB_ENV
         REF=${{ github.ref }}
