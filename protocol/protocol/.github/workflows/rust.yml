@@ -55,7 +55,6 @@ jobs:
         JSON="{\"body\":$BODY}"
         echo ${JSON//$'\r\n'/}
         CMD="curl -X PATCH -H \"Authorization: token ${{ secrets.GIST_SECRET }}\"  -d '$JSON' https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }}"
-        echo $CMD
         curl -X PATCH \
           -H "Authorization: token ${{ secrets.GIST_SECRET }}" \
           -H "Content-Type: application/json" \
