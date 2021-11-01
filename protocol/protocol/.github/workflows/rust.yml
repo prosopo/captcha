@@ -18,7 +18,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Run tests and get coverage value
+    - uses: actions/checkout@v2
+    - name: Get Coverage for badge
       run: |
         cd contracts
         rustup update stable
