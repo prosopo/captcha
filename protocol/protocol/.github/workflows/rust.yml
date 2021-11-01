@@ -51,7 +51,7 @@ jobs:
         body=$(curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} | jq .body | sed -En "s/protocol__pull_##.json/protocol__pull_${{ github.event.pull_request.number }}.json/p")
         echo $body
         curl \
-          -X POST \
-          -H "Authorization: ${{ secrets.GIST_SECRET }}" \
+          -X PATCH \
+          -H "Authorization: token ${{ secrets.GIST_SECRET }}" \
           https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} \
           -d '{"body":"$body"}'
