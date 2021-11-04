@@ -1,8 +1,11 @@
 import {network, patract} from "redspot";
 import ProsopoDatabase from "../../provider/src/database";
-
-const {getContractFactory, getRandomSigner} = patract;
+const fs = require('fs');
+const {getContractFactory, getRandomSigner, buildTx} = patract;
 const {createSigner, keyring, api, getAddresses} = network;
+
+// config
+const SECRETS_FILE = './secrets.json'
 
 async function run() {
     await api.isReady;
@@ -13,29 +16,37 @@ async function run() {
     // const signer = (await getSigners())[0]
     const signerAddresses = await getAddresses();
     const Alice = signerAddresses[0];
-
+    const alicePair = keyring.getPair(Alice);
     const AliceBalance = await api.query.system.account(Alice);
-
-    console.log("Alice Balance: ", AliceBalance.toHuman());
-
-    const deployer = await getRandomSigner(Alice, "100000 UNIT");
-
-    //console.log("Deployer Address:", deployer.address);
+    console.log("Alice Address:", Alice);
+    console.log("Alice Balance: ", AliceBalance.data.free.toHuman());
+    const secrets = JSON.parse(fs.readFileSync(SECRETS_FILE, 'utf8'));
+    const mnemonic = secrets.seed_deployer;
+    const keyringPair = network.keyring.addFromUri(mnemonic);
+    const deployer = network.createSigner(keyringPair);
+    const balance = await api.query.system.account(deployer.address);
+    console.log("Deployer Address:", deployer.address);
+    console.log("Deployer Balance: ", balance.data.free.toHuman());
+    // send the deployer some tokens to deploy with
+    if (balance.data.free.toNumber() === 0) {
+        await buildTx(
+            api.registry,
+            api.tx.balances.transfer(keyringPair.address, 1e15),
+            Alice
+        );
+    }
 
     const contractFactory = await getContractFactory("prosopo", deployer.address);
-
-    const balance = await api.query.system.account(deployer.address);
-
-    //console.log("Balance: ", balance.toHuman());
 
     // The `deploy` method will attempt to deploy a new contract.
     // The `deployed` method will first find out if the same contract already exists based on the parameters.
     // If the contract exists, it will be returned, otherwise a new contract will be created.
     // const contract = await contractFactory.deploy("default", deployer.address);
 
-    const contract = await contractFactory.deploy("default", deployer.address, {
+    const contract = await contractFactory.deployed("default", deployer.address, {
         gasLimit: "400000000000",
-        value: "10000 UNIT",
+        value: 4e14,
+        salt: "0x01"
     });
 
     console.log("");

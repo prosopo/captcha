@@ -299,7 +299,7 @@ describe("PROSOPO", () => {
         await providerSigner.tx.providerApprove(dappUserSolutionHash);
         let user = contract.query.getDappUser(dappUser);
         expect(user).not.equal(null);
-        console.log(user.output?.toHuman());
+        console.log((await user).output?.toHuman());
     })
 
 });
