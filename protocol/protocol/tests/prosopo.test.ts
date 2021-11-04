@@ -285,4 +285,21 @@ describe("PROSOPO", () => {
 
     })
 
+    it.only("test get dapp user", async() => {
+        const {
+            Alice, contract, provider, providerServiceOrigin, providerFee, registry, dappOwner, dappServiceOrigin
+        } = await setup();
+        const {contractAccount} = await setupDapp(contract, dappOwner, dappServiceOrigin, registry);
+        const {dataSetHash} = await setupProvider(contract, provider, providerServiceOrigin, providerFee);
+        const dappUser = await getRandomSigner(Alice, "1 UNIT");
+        const dappUserSigner = contract.connect(dappUser.address);
+        const dappUserSolutionHash = blake2AsU8a("captcha solution JSON");
+        await dappUserSigner.tx.dappUserCommit(contractAccount.address, dataSetHash, dappUserSolutionHash);
+        const providerSigner = contract.connect(provider.address);
+        await providerSigner.tx.providerApprove(dappUserSolutionHash);
+        let user = contract.query.getDappUser(dappUser);
+        expect(user).not.equal(null);
+        console.log((await user).output?.toHuman());
+    })
+
 });
