@@ -1,4 +1,5 @@
 import {ProsopoConfig} from './src/types/config'
+
 //TODO create types folder and make a types file per category of types
 export default {
     defaultEnvironment: "development",

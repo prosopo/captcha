@@ -1,6 +1,7 @@
 {
+
     "compilerOptions": {
-        "target": "es2020",
+        "target": "ES2019",
         "module": "commonjs",
         "rootDir": "./",
         "outDir": "./build",
@@ -9,13 +10,23 @@
         "skipLibCheck": true,
         "noUnusedLocals": false,
         "noUnusedParameters": false,
-        "noImplicitAny": false
+        "noImplicitAny": false,
+        "declaration": true,
+        "resolveJsonModule": true,
+        "noImplicitReturns": false,
+        "noImplicitThis": false,
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "noEmitOnError": true
     },
     "include": [
         "**/*.ts"
     ],
     "exclude": [
-        "node_modules"
-    ],
-
+        "node_modules",
+        "artifacts",
+        ".cache",
+        "build/**/*",
+        "**/build/**/*",
+    ]
 }
