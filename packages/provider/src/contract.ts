@@ -1,4 +1,3 @@
-import {network, patract} from "redspot";
 
 //TODO bind network and api
 export async function getContract(network, patract, deployerAddress) {

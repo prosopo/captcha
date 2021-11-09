@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import {Environment} from './env'
 import express from 'express'
 const app = express();
@@ -5,6 +6,7 @@ const port = 3000;
 import {prosopoMiddleware} from './api';
 
 async function main() {
+    const args = argParse(process.argv);
     const env = new Environment();
     await env.contract;
     app.use(prosopoMiddleware(env.contract, env.db))
@@ -27,7 +29,12 @@ async function main() {
     // dapp cancel
     // dapp deregister
     // dappuser send solution
+    process.exit(1);
 
+}
+
+function argParse(args){
+    console.log(args);
 }
 
 main()

@@ -1,7 +1,6 @@
-import {MongoClient, TypedEventEmitter, MongoClientEvents, Db, Collection, UpdateResult, ObjectId} from "mongodb";
+import {Collection, Db, Document, MongoClient, UpdateResult} from "mongodb";
 import {ContractDetails, Database} from './types/db'
 import {ERRORS} from './errors'
-
 
 
 export class ProsopoDatabase implements Database {
@@ -23,22 +22,25 @@ export class ProsopoDatabase implements Database {
         this.collections.contract = db.collection("contract");
     }
 
-    async getContractDetails(name: string): Promise<ContractDetails> {
-        return new Promise<ContractDetails>((resolve, reject) => {
-                if (this.collections.contract !== undefined) {
-                    const collection = this.collections.contract;
-                    collection.findOne({"_id": name}, function (err, items) {
-                        if (err) {
-                            reject(err);
-                        }
-                        resolve(items);
-                    })
-                } else {
-                    reject(ERRORS.DATABASE.DATABASE_UNDEFINED);
-                }
-            }
-        )
-    }
+    // async getContractDetails(name: string): Promise<ContractDetails> {
+    //     return new Promise<ContractDetails>((resolve, reject) => {
+    //             if (this.collections.contract !== undefined) {
+    //                 const collection = this.collections.contract;
+    //                 collection.findOne({"_id": name}, function (err, item) {
+    //                     if (err) {
+    //                         reject(err);
+    //                     }
+    //                     if (item) {
+    //                         resolve(item);
+    //                     }
+    //                 })
+    //             } else {
+    //                 reject(ERRORS.DATABASE.DATABASE_UNDEFINED);
+    //             }
+    //         }
+    //     )
+    // }
+
     // TODO does this even need to be async?
     async updateContractDetails(contract, deployer, contractName) {
         // Store contract in local db
@@ -51,7 +53,7 @@ export class ProsopoDatabase implements Database {
                     "address": contract.address.toString(),
                     "owner": deployer.address.toString()
                 }
-                const updateResult = collection.updateOne({"_id": contractName}, {$set: doc}, function (err, result){
+                const updateResult = collection.updateOne({"_id": contractName}, {$set: doc}, function (err, result) {
                     if (err) {
                         reject(err);
                     }

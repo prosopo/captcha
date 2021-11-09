@@ -1,7 +1,7 @@
 import {Database, ProsopoConfig, ProsopoContract, ProsopoEnvironment} from './types';
 import findUp from 'find-up';
 import {ERRORS} from './errors'
-import {network, patract} from "redspot";
+import {network, patract} from "redspot"
 import {getContract} from './contract'
 import {ProsopoDatabase} from './db'
 

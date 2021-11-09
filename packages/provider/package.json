@@ -1,27 +1,32 @@
 {
   "name": "provider",
   "version": "0.1",
+  "private": true,
   "author": "Prosopo",
   "bin": "build/src/cli.js",
+  "module": "true",
   "scripts": {
     "build": "tsc --project ./",
-    "start": "yarn redspot run build/src/cli.js"
+    "start": "ts-node ./build/src/cli.js"
   },
   "dependencies": {
-    "redspot": "file:../../../.../../../redspot/build/redspot-core",
+    "redspot": "file:../../redspot/build/redspot-core",
     "typescript": "*",
-    "@redspot/chai": "file:../../../.../../../redspot/build/redspot-chai",
-    "@redspot/decimals": "file:../../../.../../../redspot/build/redspot-decimals",
-    "@redspot/explorer": "file:../../../.../../../redspot/build/redspot-explorer",
-    "@redspot/gas-reporter": "file:../../../.../../../redspot/build/redspot-gas-reporter",
-    "@redspot/known-types": "file:../../../.../../../redspot/build/redspot-known-types",
-    "@redspot/patract": "file:../../../.../../../redspot/build/redspot-patract",
-    "@redspot/watcher": "file:../../../.../../../redspot/build/redspot-watcher"
+    "@redspot/chai": "file:../../redspot/build/redspot-chai",
+    "@redspot/decimals": "file:../../redspot/build/redspot-decimals",
+    "@redspot/explorer": "file:../../redspot/build/redspot-explorer",
+    "@redspot/gas-reporter": "file:../../redspot/build/redspot-gas-reporter",
+    "@redspot/known-types": "file:../../redspot/build/redspot-known-types",
+    "@redspot/patract": "file:../../redspot/build/redspot-patract",
+    "@redspot/watcher": "file:../../redspot/build/redspot-watcher",
+    "express": "^4.17.1",
+    "mongodb": "^4.1.4",
+    "ts-node": "^10.0.0"
   },
   "resolutions": {
     "@polkadot/keyring": "7.8.2",
-    "@polkadot/types": "6.7.1",
-    "@polkadot/types-known": "6.7.1",
+    "@polkadot/types": "6.7.2",
+    "@polkadot/types-known": "6.7.2",
     "@polkadot/util": "7.8.2",
     "@polkadot/util-crypto": "7.8.2",
     "@polkadot/x-global": "7.8.2",
@@ -30,5 +35,9 @@
     "@polkadot/x-textencoder": "7.8.2",
     "@polkadot/x-randomvalues": "7.8.2",
     "bn.js": "4.12.0"
-  }
+  },
+  "files": [
+    "./redspot.config.ts",
+    "./prosopo.config.ts"
+  ]
 }
