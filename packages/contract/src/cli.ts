@@ -11,6 +11,23 @@ async function main() {
     app.listen(port, () => {
         console.log(`Prosopo app listening at http://localhost:${port}`)
     })
+
+    // RUN COMMANDS - which ones need to be exposed on CLI?
+    // provider register
+    // provider stake
+    // provider unstake
+    // provider update
+    // provider deregsiter
+    // provider add data set (blockchain)
+    // provider approve
+    // provider disapprove
+    // dapp register
+    // dapp update
+    // dapp fund
+    // dapp cancel
+    // dapp deregister
+    // dappuser send solution
+
 }
 
 main()

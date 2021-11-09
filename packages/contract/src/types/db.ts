@@ -15,4 +15,6 @@ export interface Database {
     connect(): Promise<void>;
     updateContractDetails(contract: Signer, deployer: Signer, contractName: string): Promise<UpdateResult>;
     getContractDetails(name: string): Promise<ContractDetails>;
+
+    
 }
