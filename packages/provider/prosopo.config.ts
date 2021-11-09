@@ -1,4 +1,5 @@
-import {ProsopoConfig} from './src/types/config'
+import { ProsopoConfig } from './src/types/config'
+//import { Payee } from './src/types/api'
 
 //TODO create types folder and make a types file per category of types
 export default {
@@ -10,7 +11,6 @@ export default {
                 address: "5C56RrFzD6DmghxW8LK5C9qPUEuvQYPrrKZCSzU9qBzGUJ5K",
                 deployer: "5CtZetFuv2LCehKzHs75czVUovSwVYWCP9zQeDnFZsBzWof5"
             },
-            secrets: "/home/chris/dev/prosopo/secrets.json"
         },
     },
     database : {
@@ -18,5 +18,12 @@ export default {
             endpoint: "127.0.0.1:27017",
             dbname: "prosopo"
         }
+    },
+    provider: {
+        address : "",
+        secret_file: "",
+        service_origin: "",
+        fee: 1,
+        payee: "Provider"
     }
 } as ProsopoConfig;

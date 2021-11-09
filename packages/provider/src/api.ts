@@ -1,6 +1,25 @@
 import express, {Router} from 'express';
 import {Captcha, CaptchaSolution, CaptchaSolutionResponse, Hash} from './types/api';
-
+import {
+    providerRegister,
+    providerUpdate,
+    providerDeregister,
+    providerStake,
+    providerUnstake,
+    providerAddDataSet,
+    dappRegister,
+    dappUpdate,
+    dappFund,
+    dappCancel,
+    dappDeregister,
+    dappUserCommit,
+    providerApprove,
+    providerDisapprove,
+    dappOperatorIsHumanUser,
+    dappOperatorCheckRecentSolution,
+    addProsopoOperator,
+    captchaSolutionCommitment
+} from './contract'
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
@@ -8,7 +27,7 @@ import {Captcha, CaptchaSolution, CaptchaSolutionResponse, Hash} from './types/a
  * @param {MongoClient} db - A mongodb client connected to a database with captcha data in the "ProsopoCaptchas" collection
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
  */
-export function prosopoMiddleware (contract, db): Router {
+export function prosopoMiddleware(env): Router {
     const router = express.Router();
     /**
      * Register a Provider
@@ -16,7 +35,11 @@ export function prosopoMiddleware (contract, db): Router {
      * @return ...
      */
     router.post('/v1/prosopo/provider_register/', async function (req, res, next) {
-        //TODO
+        const serviceOrigin: string = req.body.serviceOrigin;
+        const fee: number = req.body.fee;
+        const payee: string = req.body.payee;
+        const address: string = req.body.address;
+        providerRegister(serviceOrigin, fee, payee, address)
         next()
     });
 
@@ -206,8 +229,8 @@ export function prosopoMiddleware (contract, db): Router {
      * @return {Hash} - The Providers
      */
     router.get('/v1/prosopo/providers/', async function (req, res, next) {
-        console.log(contract.api.consts)
-        let result = await contract.query.getProviders();
+        console.log(env.contract.api.consts)
+        let result = await env.contract.query.getProviders();
         res.send(result.output);
     });
 
@@ -220,7 +243,7 @@ export function prosopoMiddleware (contract, db): Router {
     router.get('/v1/prosopo/provider/:provider_account', async function (req, res, next) {
         const provider_account = req.params.provider_account;
         console.log(provider_account);
-        let result = await contract.query.getProviderDetails(provider_account);
+        let result = await env.contract.query.getProviderDetails(provider_account);
         res.send(result.output);
     });
 

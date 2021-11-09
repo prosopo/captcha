@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 import {Environment} from './env'
 import express from 'express'
+import {prosopoMiddleware} from './api'
+import {TASK_NAMES} from './tasks/tasknames'
+
 const app = express();
 const port = 3000;
-import {prosopoMiddleware} from './api';
 
 async function main() {
     const args = argParse(process.argv);
+    console.log(args);
+    process.exit();
     const env = new Environment();
     await env.contract;
-    app.use(prosopoMiddleware(env.contract, env.db))
+    app.use(prosopoMiddleware(env))
     app.listen(port, () => {
         console.log(`Prosopo app listening at http://localhost:${port}`)
     })
@@ -33,8 +37,18 @@ async function main() {
 
 }
 
-function argParse(args){
-    console.log(args);
+//TODO use something sensible like yargs for arg parsing
+function argParse(args) {
+    const filt = args.filter(x => !x.startsWith("/"))
+    const taskIndices = filt.map((el, idx) => TASK_NAMES.indexOf(el) > -1 ? idx : undefined)
+        .filter(x => x !== undefined);
+    // create task names that directly relate to the API methods (provider_register, provider_stake, etc.)
+    const tasks = taskIndices
+        .map((el, idx) => filt.slice(el, taskIndices[idx + 1]))
+        .map(task_arr => task_arr.slice(1).map(el => task_arr[0] + "_" + el.replace("--", ""))).flat();
+    // TODO parameters for tasks should come from prosopo.config.ts 
+    return tasks
+
 }
 
 main()

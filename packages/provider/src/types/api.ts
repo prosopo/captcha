@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import {MongoClient} from "mongodb";
 
 export type Hash = string;
 
@@ -77,8 +77,22 @@ export type ProsopoError = {
         'DappUserDoesNotExist',]
 }
 
+export type Payee = {
+    _enum: [
+        'Provider',
+        'Dapp',
+        'None',
+    ]
+}
+export type User = {
+    correct_captchas: 'u64',
+    incorrect_captchas: 'u64',
+}
+
 export interface Prosopo {
     datasetGet(db: MongoClient): Promise<Hash>;
+
     captchaGet(db: MongoClient, userId: string, dappId: string): Promise<Captcha>;
+
     captchaSolution(db: MongoClient, userId: string, dappId: string, captchaSolution: CaptchaSolution): Promise<CaptchaSolutionResponse>
 }

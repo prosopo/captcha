@@ -4,6 +4,8 @@ import {ERRORS} from './errors'
 import {network, patract} from "redspot"
 import {getContract} from './contract'
 import {ProsopoDatabase} from './db'
+import { ArgumentParser } from 'argparse';
+
 
 const TS_CONFIG_FILENAME = "prosopo.config.ts"
 const JS_CONFIG_FILENAME = "prosopo.config.js"
