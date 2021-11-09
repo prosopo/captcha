@@ -43,19 +43,19 @@ export type Status = {
 export type Dapp = {
     // eslint-disable-next-line sort-keys
     status: 'Status',
-        balance: 'Balance',
-        owner: 'AccountId',
-        min_difficulty: 'u16',
-        client_origin: 'Hash',
+    balance: 'Balance',
+    owner: 'AccountId',
+    min_difficulty: 'u16',
+    client_origin: 'Hash',
 }
 
 export type CaptchaProvider = {
     // eslint-disable-next-line sort-keys
     status: 'Status',
-        staked: 'Balance',
-        fee: 'u32',
-        service_origin: 'Hash',
-        captcha_data_id: 'u64',
+    staked: 'Balance',
+    fee: 'u32',
+    service_origin: 'Hash',
+    captcha_data_id: 'u64',
 }
 
 export type ProsopoError = {

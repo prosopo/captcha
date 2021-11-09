@@ -1,5 +1,5 @@
 import express, {Router} from 'express';
-import {Captcha, CaptchaSolution, CaptchaSolutionResponse, Hash} from './prosopo.d';
+import {Captcha, CaptchaSolution, CaptchaSolutionResponse, Hash} from './types/api';
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -8,7 +8,7 @@ import {Captcha, CaptchaSolution, CaptchaSolutionResponse, Hash} from './prosopo
  * @param {MongoClient} db - A mongodb client connected to a database with captcha data in the "ProsopoCaptchas" collection
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
  */
-export default function (contract, db): Router {
+export function prosopoMiddleware (contract, db): Router {
     const router = express.Router();
     /**
      * Register a Provider
