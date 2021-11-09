@@ -21,7 +21,7 @@ export default {
     },
     provider: {
         address : "",
-        secret_file: "",
+        secret_file: "../secrets.json",
         service_origin: "",
         fee: 1,
         payee: "Provider"

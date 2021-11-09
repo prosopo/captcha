@@ -4,8 +4,8 @@ import {ERRORS} from './errors'
 import {network, patract} from "redspot"
 import {getContract} from './contract'
 import {ProsopoDatabase} from './db'
-import { ArgumentParser } from 'argparse';
 
+const fs = require('fs');
 
 const TS_CONFIG_FILENAME = "prosopo.config.ts"
 const JS_CONFIG_FILENAME = "prosopo.config.js"
@@ -46,12 +46,27 @@ export class Environment implements ProsopoEnvironment {
 
     private getConfig() {
         const filePath = this.getConfigPath();
-        return this.importCsjOrEsModule(filePath);
+        let config = this.importCsjOrEsModule(filePath);
+
+        if (config.hasOwnProperty("provider")) {
+            let seeds = JSON.parse(fs.readFileSync(config.provider.secret_file));
+            config.provider.seed = seeds.seed_provider;
+        }
+
+        if (config.hasOwnProperty("dapp")) {
+            let seeds = this.loadSeedFile(config.dapp.secret_file);
+            config.dapp.seed = seeds.seed_dapp;
+        }
+        return config
     }
 
     private importCsjOrEsModule(filePath: string): any {
         const imported = require(filePath);
         return imported.default !== undefined ? imported.default : imported;
+    }
+
+    private loadSeedFile(filePath) {
+        return JSON.parse(fs.readFileSync(filePath));
     }
 
 }

@@ -19,6 +19,7 @@ export interface ProsopoConfig {
     provider?: {
         address: string,
         secret_file: string,
+        seed?: string
         service_origin: string,
         fee: number,
         payee: string
@@ -26,6 +27,7 @@ export interface ProsopoConfig {
     dapp?: {
         contract: string,
         secret_file: string,
+        seed?: string
         client_origin: string,
         owner: string
         fee: number,
