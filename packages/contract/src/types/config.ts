@@ -7,8 +7,6 @@ export interface ProsopoConfig {
                 address: string,
                 deployer: string
             }
-            secrets: string
-
         }
     },
     database: {
@@ -17,8 +15,22 @@ export interface ProsopoConfig {
             dbname: string
         }
 
+    },
+    provider?: {
+        address: string,
+        secret_file: string,
+        service_origin: string,
+        fee: number,
+        payee: string
     }
+    dapp?: {
+        contract: string,
+        secret_file: string,
+        client_origin: string,
+        owner: string
+        fee: number,
+        payee: string
+    }
+
 }
-
-
 

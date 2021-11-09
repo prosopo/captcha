@@ -1,3 +1,4 @@
+import {Environment} from './env'
 
 //TODO bind network and api
 export async function getContract(network, patract, deployerAddress) {
@@ -18,4 +19,87 @@ export async function getContract(network, patract, deployerAddress) {
 
     return contract
 
+}
+
+export class contractInterface {
+
+    env: Environment
+
+    constructor(env) {
+        this.env = env;
+    }
+
+    // provider_register
+    async providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
+        let contract = await this.env.contract;
+        await contract.tx.providerRegister(providerServiceOrigin, providerFee, payee, address);
+    }
+
+    //provider_update
+    async providerUpdate() {
+    }
+
+    //provider_deregister
+    async providerDeregister() {
+    }
+
+    //provider_stake
+    async providerStake() {
+    }
+
+    //provider_unstake
+    async providerUnstake() {
+    }
+
+    //provider_add_data_set
+    async providerAddDataSet() {
+    }
+
+    //dapp_register
+    async dappRegister() {
+    }
+
+    //dapp_update
+    async dappUpdate() {
+    }
+
+    //dapp_fund
+    async dappFund() {
+    }
+
+    //dapp_cancel
+    async dappCancel() {
+    }
+
+    //dapp_deregister
+    async dappDeregister() {
+    }
+
+    //dapp_user_commit
+    async dappUserCommit() {
+    }
+
+    //provider_approve
+    async providerApprove() {
+    }
+
+    //provider_disapprove
+    async providerDisapprove() {
+    }
+
+    //dapp_operator_is_human_user
+    async dappOperatorIsHumanUser() {
+    }
+
+    //dapp_operator_check_recent_solution
+    async dappOperatorCheckRecentSolution() {
+    }
+
+    //add_prosopo_operator
+    async addProsopoOperator() {
+    }
+
+    //captcha_solution_commitment
+    async captchaSolutionCommitment() {
+    }
 }
