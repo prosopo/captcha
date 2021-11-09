@@ -10,7 +10,6 @@ const port = 3000;
 async function main() {
     const args = argParse(process.argv);
     console.log(args);
-    process.exit();
     const env = new Environment();
     await env.contract;
     app.use(prosopoMiddleware(env))
@@ -33,8 +32,7 @@ async function main() {
     // dapp cancel
     // dapp deregister
     // dappuser send solution
-    process.exit(1);
-
+    
 }
 
 //TODO use something sensible like yargs for arg parsing

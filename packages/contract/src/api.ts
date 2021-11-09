@@ -1,25 +1,6 @@
 import express, {Router} from 'express';
 import {Captcha, CaptchaSolution, CaptchaSolutionResponse, Hash} from './types/api';
-import {
-    providerRegister,
-    providerUpdate,
-    providerDeregister,
-    providerStake,
-    providerUnstake,
-    providerAddDataSet,
-    dappRegister,
-    dappUpdate,
-    dappFund,
-    dappCancel,
-    dappDeregister,
-    dappUserCommit,
-    providerApprove,
-    providerDisapprove,
-    dappOperatorIsHumanUser,
-    dappOperatorCheckRecentSolution,
-    addProsopoOperator,
-    captchaSolutionCommitment
-} from './contract'
+import {contractApiInterface} from './contract'
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
@@ -29,6 +10,7 @@ import {
  */
 export function prosopoMiddleware(env): Router {
     const router = express.Router();
+    const contractApi = new contractApiInterface(env);
     /**
      * Register a Provider
      *
@@ -39,7 +21,7 @@ export function prosopoMiddleware(env): Router {
         const fee: number = req.body.fee;
         const payee: string = req.body.payee;
         const address: string = req.body.address;
-        providerRegister(serviceOrigin, fee, payee, address)
+        contractApi.providerRegister(serviceOrigin, fee, payee, address)
         next()
     });
 

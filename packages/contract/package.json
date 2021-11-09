@@ -35,8 +35,7 @@
     "@polkadot/x-textdecoder": "7.8.2",
     "@polkadot/x-textencoder": "7.8.2",
     "@polkadot/x-randomvalues": "7.8.2",
-    "bn.js": "4.12.0",
-    "argparse": "2.0.1"
+    "bn.js": "4.12.0"
   },
   "files": [
     "./redspot.config.ts",

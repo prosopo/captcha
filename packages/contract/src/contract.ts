@@ -21,7 +21,7 @@ export async function getContract(network, patract, deployerAddress) {
 
 }
 
-export class contractInterface {
+export class contractApiInterface {
 
     env: Environment
 
@@ -32,7 +32,8 @@ export class contractInterface {
     // provider_register
     async providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
         let contract = await this.env.contract;
-        await contract.tx.providerRegister(providerServiceOrigin, providerFee, payee, address);
+        const signer = contract.connect(address)
+        await signer.tx.providerRegister(providerServiceOrigin, providerFee, payee, address);
     }
 
     //provider_update
