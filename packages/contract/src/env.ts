@@ -1,22 +1,28 @@
-import {Database, ProsopoConfig, ProsopoContract, ProsopoEnvironment} from './types';
+require('dotenv').config()
+import {Database, ProsopoConfig, ProsopoEnvironment} from './types';
 import findUp from 'find-up';
 import {ERRORS} from './errors'
-import {network, patract} from "redspot"
+import {network, patract} from "redspot";
 import {getContract} from './contract'
 import {ProsopoDatabase} from './db'
+import {AccountSigner, Signer} from 'redspot/provider'
+import Contract from "@redspot/patract/contract"
+
 
 const fs = require('fs');
-
 const TS_CONFIG_FILENAME = "prosopo.config.ts"
 const JS_CONFIG_FILENAME = "prosopo.config.js"
-
+const PERSONS = ["dapp", "provider"];
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
     network: typeof network
     patract: typeof patract
-    contract: ProsopoContract
+    contractPromise: Promise<Contract>
+    contract?: Contract
     db: Database
+    providerSigner?: Signer
+    dappSigner?: Signer
 
     constructor() {
         this.config = this.getConfig();
@@ -24,9 +30,31 @@ export class Environment implements ProsopoEnvironment {
         this.patract = patract;
         const defaultEnv = this.config.defaultEnvironment
         const deployerAddress = this.config.networks[defaultEnv].contract.deployer;
-        this.contract = getContract(network, patract, deployerAddress);
+        this.contractPromise = getContract(network, patract, deployerAddress);
         this.db = new ProsopoDatabase(this.config.networks[defaultEnv].endpoint,
             this.config.database[defaultEnv].dbname)
+
+    }
+
+    async isReady() {
+        this.contract = await this.contractPromise;
+        await this.getSigners();
+        console.log("env ready")
+    }
+
+    // utility functions
+    async getSigners() {
+        const signerClass = new AccountSigner();
+        // TODO this logic about having multiple people configured in the service at once is pretty confusing.
+        //  Maybe only one person should be allowed to sign at one time.
+        if (this.config.provider) {
+            if (this.config.provider.mnemonic) {
+                const keyringPair = this.network.keyring.addFromMnemonic(this.config.provider.mnemonic);
+                const signer = this.network.createSigner(keyringPair);
+                // @ts-ignore
+                this.providerSigner = signer;
+            }
+        }
     }
 
     private getConfigPath() {
@@ -47,16 +75,6 @@ export class Environment implements ProsopoEnvironment {
     private getConfig() {
         const filePath = this.getConfigPath();
         let config = this.importCsjOrEsModule(filePath);
-
-        if (config.hasOwnProperty("provider")) {
-            let seeds = JSON.parse(fs.readFileSync(config.provider.secret_file));
-            config.provider.seed = seeds.seed_provider;
-        }
-
-        if (config.hasOwnProperty("dapp")) {
-            let seeds = this.loadSeedFile(config.dapp.secret_file);
-            config.dapp.seed = seeds.seed_dapp;
-        }
         return config
     }
 

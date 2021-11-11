@@ -5,6 +5,7 @@ import {prosopoMiddleware} from './api'
 import {TASK_NAMES} from './tasks/tasknames'
 
 const app = express();
+app.use(express.json())
 const port = 3000;
 
 async function main() {
@@ -12,7 +13,7 @@ async function main() {
     console.log(args);
     const env = new Environment();
     await env.contract;
-    app.use(prosopoMiddleware(env))
+    app.use(prosopoMiddleware(env), errorHandler);
     app.listen(port, () => {
         console.log(`Prosopo app listening at http://localhost:${port}`)
     })
@@ -32,7 +33,17 @@ async function main() {
     // dapp cancel
     // dapp deregister
     // dappuser send solution
-    
+
+}
+
+function errorHandler(err, req, res, next) {
+    if (err.message)
+        return res.status(400).send(err.message);
+    else if (err) {
+        res.status(500).send(JSON.stringify(err));
+    } else {
+        res.status(200).send('Ok');
+    }
 }
 
 //TODO use something sensible like yargs for arg parsing

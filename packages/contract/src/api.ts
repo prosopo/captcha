@@ -1,6 +1,8 @@
 import express, {Router} from 'express';
 import {Captcha, CaptchaSolution, CaptchaSolutionResponse, Hash} from './types/api';
 import {contractApiInterface} from './contract'
+import {ERRORS} from './errors'
+
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
  *
@@ -17,12 +19,22 @@ export function prosopoMiddleware(env): Router {
      * @return ...
      */
     router.post('/v1/prosopo/provider_register/', async function (req, res, next) {
-        const serviceOrigin: string = req.body.serviceOrigin;
-        const fee: number = req.body.fee;
-        const payee: string = req.body.payee;
-        const address: string = req.body.address;
-        contractApi.providerRegister(serviceOrigin, fee, payee, address)
-        next()
+        if (req.body === undefined) {
+            return next(new Error(ERRORS.API.BODY_UNDEFINED.message));
+        }
+        try {
+            const serviceOrigin: string = req.body.serviceOrigin;
+            const fee: number = req.body.fee;
+            const payee: string = req.body.payee;
+            const address: string = req.body.address;
+            const result = await contractApi.providerRegister(serviceOrigin, fee, payee, address);
+            next(null);
+        } catch (err) {
+            // TODO properly handle errors
+            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
+            return next(new Error(msg));
+        }
+
     });
 
     /**

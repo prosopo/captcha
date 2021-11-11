@@ -1,16 +1,15 @@
 import {Environment} from './env'
+import Keyring from '@polkadot/keyring';
+import { AccountSigner } from 'redspot/provider'
+import Contract from "@redspot/patract/contract"
+const {blake2AsU8a} = require('@polkadot/util-crypto');
 
 //TODO bind network and api
-export async function getContract(network, patract, deployerAddress) {
+export async function getContract(network, patract, deployerAddress): Promise<Contract> {
     await network.api.isReady;
     const contractFactory = await patract.getContractFactory("prosopo", deployerAddress);
     const balance = await network.api.query.system.account(deployerAddress);
     console.log("Deployer Balance: ", balance.toHuman());
-    // The `deploy` method will attempt to deploy a new contract.
-    // The `deployed` method will first find out if the same contract already exists based on the parameters.
-    // If the contract exists, it will be returned, otherwise a new contract will be created.
-    // const contract = await contractFactory.deploy("default", deployer.address);
-
     const contract = await contractFactory.deployed("default", deployerAddress, {
         gasLimit: "400000000000",
         value: "1000000000000 UNIT",
@@ -20,6 +19,7 @@ export async function getContract(network, patract, deployerAddress) {
     return contract
 
 }
+
 
 export class contractApiInterface {
 
@@ -31,9 +31,22 @@ export class contractApiInterface {
 
     // provider_register
     async providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
-        let contract = await this.env.contract;
-        const signer = contract.connect(address)
-        await signer.tx.providerRegister(providerServiceOrigin, providerFee, payee, address);
+
+        await this.env.isReady();
+        let providerSigner = this.env.providerSigner;
+        if (providerSigner !== undefined && this.env.contract) {
+            const signedContract = this.env.contract.connect(providerSigner)
+            let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
+            let addressHash = blake2AsU8a(address);
+            const result = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, addressHash);
+            console.log(result.result.status.isFinalized , result.result.status.isInBlock)
+            console.log(JSON.stringify(result.result.events));
+        } else {
+            // TODO make this function available to operators
+            throw("unable to register provider: ProviderSigner and /  or Contract are undefined")
+        }
+        return
+
     }
 
     //provider_update
