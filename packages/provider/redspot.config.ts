@@ -5,7 +5,8 @@ import "@redspot/gas-reporter";
 import "@redspot/watcher";
 import "@redspot/explorer";
 import "@redspot/decimals";
-
+import definitions from "./src/types/contract"
+console.log(process.env.PROVIDER_MNEMONIC);
 export default {
     defaultNetwork: "development",
     contract: {
@@ -19,7 +20,16 @@ export default {
         development: {
             endpoint: "ws://127.0.0.1:9944",
             gasLimit: "400000000000",
-            types: {},
+            types: definitions,
+            accounts: [
+                "//Alice",
+                "//Bob",
+                "//Charlie",
+                "//Dave",
+                "//Eve",
+                "//Ferdie",
+                process.env.PROVIDER_MNEMONIC,
+            ]
         },
         jupiter: {
             endpoint: "wss://jupiter-poa.elara.patract.io",

@@ -8,8 +8,8 @@ export default {
         development: {
             endpoint: "ws://127.0.0.1:9944",
             contract: {
-                address: "5C56RrFzD6DmghxW8LK5C9qPUEuvQYPrrKZCSzU9qBzGUJ5K",
-                deployer: "5CtZetFuv2LCehKzHs75czVUovSwVYWCP9zQeDnFZsBzWof5"
+                address: process.env.CONTRACT_ADDRESS,
+                deployer: process.env.DEPLOYER_ADDRESS,
             },
         },
     },
@@ -21,8 +21,12 @@ export default {
     },
     provider: {
         address : "",
-        secret_file: "../secrets.json",
-        service_origin: "",
+        mnemonic: process.env.PROVIDER_MNEMONIC,
+        files: {
+            secrets: { path:  "../secrets.json", },
+            jsonseed: { path: "../provider.json" }
+        },
+        serviceOrigin: "",
         fee: 1,
         payee: "Provider"
     }

@@ -18,21 +18,35 @@ export interface ProsopoConfig {
     },
     provider?: {
         address: string,
-        secret_file: string,
-        seed?: string
-        service_origin: string,
+        mnemonic: string,
+        files: {
+            secrets: { path: string, json?: PasswordFile },
+            jsonseed: { path: string, json?: MnemonicFile }
+        }
+        serviceOrigin: string,
         fee: number,
         payee: string
     }
     dapp?: {
         contract: string,
-        secret_file: string,
-        seed?: string
+        mnemonic: string,
+        files: {
+            secrets: { path: string, json?: PasswordFile },
+            jsonseed: { path: string, json?: MnemonicFile }
+        }
         client_origin: string,
         owner: string
         fee: number,
         payee: string
     }
 
+}
+
+export interface MnemonicFile {
+    mnemonic: string
+}
+
+export interface PasswordFile {
+    password: string
 }
 

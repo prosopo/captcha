@@ -30,64 +30,6 @@ export type CaptchaSolutionResponse = {
     captchaProviderId: string
 }
 
-export type Status = {
-    _enum: [
-        'Active',
-        'Suspended',
-        'Deactivated',
-        'Pending',
-        'Approved',
-        'Disapproved'
-    ]
-}
-export type Dapp = {
-    // eslint-disable-next-line sort-keys
-    status: 'Status',
-    balance: 'Balance',
-    owner: 'AccountId',
-    min_difficulty: 'u16',
-    client_origin: 'Hash',
-}
-
-export type CaptchaProvider = {
-    // eslint-disable-next-line sort-keys
-    status: 'Status',
-    staked: 'Balance',
-    fee: 'u32',
-    service_origin: 'Hash',
-    captcha_data_id: 'u64',
-}
-
-export type ProsopoError = {
-    _enum: [
-        'NotAuthorised',
-        'InsufficientBalance',
-        'InsufficientAllowance',
-        'CaptchaProviderExists',
-        'CaptchaProviderDoesNotExist',
-        'CaptchaProviderInsufficientFunds',
-        'CaptchaProviderInactive',
-        'DuplicateCaptchaDataId',
-        'DappExists',
-        'DappDoesNotExist',
-        'DappInactive',
-        'DappInsufficientFunds',
-        'CaptchaDataDoesNotExist',
-        'CaptchaSolutionCommitmentDoesNotExist',
-        'DappUserDoesNotExist',]
-}
-
-export type Payee = {
-    _enum: [
-        'Provider',
-        'Dapp',
-        'None',
-    ]
-}
-export type User = {
-    correct_captchas: 'u64',
-    incorrect_captchas: 'u64',
-}
 
 export interface Prosopo {
     datasetGet(db: MongoClient): Promise<Hash>;
