@@ -71,10 +71,12 @@ describe("PROSOPO", () => {
 
         const dappSigner = contract.connect(dappOwner.address)
         const dappBalance = await api.query.system.account(dappOwner.address);
+        // @ts-ignore
         console.log("Dapp Balance: ", dappBalance.data.free.toHuman());
         // TODO contractAccount is just a random account, does not need balance.
         const contractAccount = await getRandomSigner();
         await dappSigner.tx.dappRegister(dappServiceOrigin, contractAccount.address, new Option(registry, Text, undefined));
+        // @ts-ignore
         console.log("Dapp Balance: ", dappBalance.data.free.toHuman());
         const value = 7;
         await dappSigner.tx.dappFund(contractAccount.address, {gasLimit: "400000000000", value: value});

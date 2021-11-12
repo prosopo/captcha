@@ -1,11 +1,10 @@
 import {network, patract} from "redspot";
-import ProsopoDatabase from "../../provider/src/database";
 const fs = require('fs');
 const {getContractFactory, getRandomSigner, buildTx} = patract;
 const {createSigner, keyring, api, getAddresses} = network;
 
 // config
-const SECRETS_FILE = './secrets.json'
+const SECRETS_FILE = '../deployer.json'
 
 async function run() {
     await api.isReady;
@@ -21,8 +20,8 @@ async function run() {
     console.log("Alice Address:", Alice);
     console.log("Alice Balance: ", AliceBalance.data.free.toHuman());
     const secrets = JSON.parse(fs.readFileSync(SECRETS_FILE, 'utf8'));
-    const mnemonic = secrets.seed_deployer;
-    const keyringPair = network.keyring.addFromUri(mnemonic);
+    const mnemonic = secrets.mnemonic;
+    const keyringPair = network.keyring.addFromMnemonic(mnemonic);
     const deployer = network.createSigner(keyringPair);
     const balance = await api.query.system.account(deployer.address);
     console.log("Deployer Address:", deployer.address);
@@ -46,7 +45,8 @@ async function run() {
     const contract = await contractFactory.deployed("default", deployer.address, {
         gasLimit: "400000000000",
         value: 4e14,
-        salt: "0x01"
+        salt: "0x01",
+        name: "prosopo"
     });
 
     console.log("");
@@ -54,12 +54,6 @@ async function run() {
         "Deploy successfully. The contract address: ",
         contract.address.toString()
     );
-
-    const db = new ProsopoDatabase(undefined, "prosopo")
-    await db.connect();
-    await db.updateContractDetails(contract, deployer, "prosopo");
-    let details = await db.getContractDetails("prosopo");
-    console.log("Details saved:\n", details)
 
     api.disconnect();
 

@@ -4,7 +4,6 @@ use ink_lang as ink;
 
 #[ink::contract]
 mod prosopo {
-    use ink_lang::static_assertions::_core::str::Bytes;
     use ink_prelude::string::String as InkString;
     #[cfg(not(feature = "ink-as-dependency"))]
     use ink_storage::{
@@ -1021,7 +1020,7 @@ mod prosopo {
             return match self.get_dapp_details(dapp) {
                 Ok(v) => { v.balance }
                 Err(_e) => Balance::from(0_u32)
-            }
+            };
         }
 
         /// Returns the account balance for the specified `provider`.
@@ -1032,7 +1031,7 @@ mod prosopo {
             return match self.get_provider_details(provider) {
                 Ok(v) => { v.balance }
                 Err(_e) => Balance::from(0_u32)
-            }
+            };
         }
     }
 
