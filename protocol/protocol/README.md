@@ -3,7 +3,7 @@
 # Prosopo
 ![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/forgetso/4e3350c273f5173afc45b6ce74a97cb2/raw/protocol__heads_main.json)
 
-Prosopo smart contract planning repository.
+Prosopo Protocol smart contract repository.
 
 Created using Ink using the official [Substrate Contracts Workshop](https://substrate.dev/substrate-contracts-workshop).
 
