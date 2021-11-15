@@ -54,7 +54,7 @@ PROVIDER_ADDRESS=...
 CONTRACT_ADDRESS=... <-------here
 ```
 
-## Symlink your Protcol artifacts to a folder called artifacts in Provider
+## Symlink your Protcol artifacts
 
 ```bash
 ln -s ../protocol/artifacts artifacts
@@ -80,8 +80,17 @@ curl --location --request POST '127.0.0.1:3000/v1/prosopo/provider_update/' \
 }'
 ```
 
-Verify that your provider was registered.
+Verify that your provider was registered by calling the `providers` endpoint or by checking in Polkadot Apps local node.
 
+### Curl 
 ```
 curl --location --request GET '127.0.0.1:3000/v1/prosopo/providers/'
+["YOUR PROVIDER ADDRESS"]
 ```
+
+### Polkadot Apps
+Using [Polkadot apps](https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/contracts)
+
+1. Click Add an existing contract
+2. Enter the contract address and click to select the `prosopo.json` file in the artifacts folder as the `contract ABI`
+3. Expand the contract to see the current value of `getProviders`. It should be `["YOUR PROVIDER ADDRESS"]`.
