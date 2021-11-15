@@ -13,7 +13,8 @@ yarn
 ```
 ## Setup contract node
 A specific version of the contract node is [required](https://stackoverflow.com/questions/69826769/how-can-i-query-contract-info-with-the-latest-polkadot-js-and-substrate-contract/69831057#69831057) to work with polkadotjs.
-```
+
+```bash
 git clone https://github.com/paritytech/substrate &&
 cd substrate &&
 git checkout 8d91b8e578065a7c06433cbd41ac059bf478a0bd &&
@@ -31,7 +32,7 @@ Generate a mnemonic and address:
 
 Put the deployer mnemonic and address in the `env` file.
 
-```
+```bash
 DEPLOYER_MNEMONIC=... <-------here
 DEPLOYER_ADDRESS=... <-------here
 PROVIDER_MNEMONIC=...
@@ -45,12 +46,18 @@ Deploy the contract.
 
 Copy the contract address to your `env` file.
 
-```
+```bash
 DEPLOYER_MNEMONIC=some very long set of words that equate to a mnemonic
 DEPLOYER_ADDRESS=0x123456123456123456123456123456123456
 PROVIDER_MNEMONIC=...
 PROVIDER_ADDRESS=...
 CONTRACT_ADDRESS=... <-------here
+```
+
+## Symlink your Protcol artifacts to a folder called artifacts in Provider
+
+```bash
+ln -s ../protocol/artifacts artifacts
 ```
 
 ## Run the Provider server
@@ -62,7 +69,7 @@ Start the server in dev mode
 
 Try using the API. Create a `POST` to register a `Provider`:
 
-```
+```bash
 curl --location --request POST '127.0.0.1:3000/v1/prosopo/provider_update/' \
 --header 'Content-Type: application/json' \
 --data-raw '{
