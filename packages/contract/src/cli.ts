@@ -10,10 +10,8 @@ const port = 3000;
 
 async function main() {
     const args = argParse(process.argv);
-    console.log(args);
     const env = new Environment();
-    await env.contract;
-    app.use(prosopoMiddleware(env), errorHandler);
+    app.use(prosopoMiddleware(env));
     app.listen(port, () => {
         console.log(`Prosopo app listening at http://localhost:${port}`)
     })
@@ -36,15 +34,19 @@ async function main() {
 
 }
 
-function errorHandler(err, req, res, next) {
-    if (err.message)
-        return res.status(400).send(err.message);
-    else if (err) {
-        res.status(500).send(JSON.stringify(err));
-    } else {
-        res.status(200).send('Ok');
-    }
-}
+// function errorHandler(err, req, res, next) {
+//     console.log("In error handler");
+//     if (err.message) {
+//         console.log("sending 400")
+//         return res.status(400).send(err.message);
+//     } else if (err) {
+//         console.log("sending 500")
+//         res.status(500).send(JSON.stringify(err));
+//     } else {
+//         console.log("sending 200")
+//         res.status(200).send('OK');
+//     }
+// }
 
 //TODO use something sensible like yargs for arg parsing
 function argParse(args) {

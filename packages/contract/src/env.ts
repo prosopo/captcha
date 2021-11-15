@@ -37,9 +37,10 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async isReady() {
-        this.contract = await this.contractPromise;
+        if (!this.contract)
+            this.contract = await this.contractPromise;
         await this.getSigners();
-        console.log("env ready")
+        console.log("Environment ready")
     }
 
     // utility functions
@@ -49,8 +50,10 @@ export class Environment implements ProsopoEnvironment {
         //  Maybe only one person should be allowed to sign at one time.
         if (this.config.provider) {
             if (this.config.provider.mnemonic) {
+                console.log("Provider mnemonic: ", this.config.provider.mnemonic);
                 const keyringPair = this.network.keyring.addFromMnemonic(this.config.provider.mnemonic);
                 const signer = this.network.createSigner(keyringPair);
+                console.log("Provider address: ", signer.address);
                 // @ts-ignore
                 this.providerSigner = signer;
             }

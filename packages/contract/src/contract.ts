@@ -1,7 +1,9 @@
 import {Environment} from './env'
-import Keyring from '@polkadot/keyring';
-import { AccountSigner } from 'redspot/provider'
 import Contract from "@redspot/patract/contract"
+
+const {decodeAddress, encodeAddress} = require('@polkadot/keyring');
+const {hexToU8a, isHex} = require('@polkadot/util');
+
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
 //TODO bind network and api
@@ -9,7 +11,7 @@ export async function getContract(network, patract, deployerAddress): Promise<Co
     await network.api.isReady;
     const contractFactory = await patract.getContractFactory("prosopo", deployerAddress);
     const balance = await network.api.query.system.account(deployerAddress);
-    console.log("Deployer Balance: ", balance.toHuman());
+    console.log("Deployer Balance: ", balance.data.free.toHuman());
     const contract = await contractFactory.deployed("default", deployerAddress, {
         gasLimit: "400000000000",
         value: "1000000000000 UNIT",
@@ -19,6 +21,21 @@ export async function getContract(network, patract, deployerAddress): Promise<Co
     return contract
 
 }
+
+export function encodeStringAddress(address: string) {
+    try {
+        let encoded = encodeAddress(
+            isHex(address)
+                ? hexToU8a(address)
+                : decodeAddress(address)
+        );
+
+        return encoded;
+    } catch (error) {
+        console.log("Failed to encode invalid address: ", address);
+        return null;
+    }
+};
 
 
 export class contractApiInterface {
@@ -34,23 +51,42 @@ export class contractApiInterface {
 
         await this.env.isReady();
         let providerSigner = this.env.providerSigner;
-        if (providerSigner !== undefined && this.env.contract) {
+        let success = false;
+        let encodedAddress = encodeStringAddress(address);
+        console.log("Provider Signer address: ", this.env.providerSigner!.address);
+        if (providerSigner !== undefined && this.env.contract && encodedAddress) {
             const signedContract = this.env.contract.connect(providerSigner)
             let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
-            let addressHash = blake2AsU8a(address);
-            const result = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, addressHash);
-            console.log(result.result.status.isFinalized , result.result.status.isInBlock)
-            console.log(JSON.stringify(result.result.events));
+            const response = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, encodedAddress);
+            success = response.result.events.filter(x => x["name"] == "ProviderRegister").length > 0;
+            console.log(response.result.events);
+            return success
         } else {
-            // TODO make this function available to operators
-            throw("unable to register provider: ProviderSigner and /  or Contract are undefined")
+            throw("unable to register provider: ProviderSigner, Contract and address must be defined")
         }
-        return
+        return success
 
     }
 
     //provider_update
-    async providerUpdate() {
+    async providerUpdate(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
+
+        await this.env.isReady();
+        let providerSigner = this.env.providerSigner;
+        let success = false;
+        let encodedAddress = encodeStringAddress(address);
+        console.log("Provider Signer address: ", this.env.providerSigner!.address);
+        if (providerSigner !== undefined && this.env.contract && encodedAddress) {
+            const signedContract = this.env.contract.connect(providerSigner)
+            let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
+            const response = await signedContract.tx.providerUpdate(providerServiceOriginHash, providerFee, payee, encodedAddress);
+            success = response.result.events.filter(x => x["name"] == "ProviderUpdate").length > 0;
+            console.log(JSON.stringify(response));
+            return success
+        } else {
+            throw("unable to update provider: ProviderSigner, Contract and address must be defined")
+        }
+        return success
     }
 
     //provider_deregister
