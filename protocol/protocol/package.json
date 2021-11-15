@@ -43,6 +43,7 @@
   "scripts": {
     "build": "yarn redspot compile",
     "test": "yarn redspot test",
-    "explorer": "yarn redspot explorer"
+    "explorer": "yarn redspot explorer",
+    "deploy": "npx --trace-warnings redspot run ./scripts/deploy.ts --release"
   }
 }
