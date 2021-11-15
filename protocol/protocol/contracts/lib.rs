@@ -336,9 +336,9 @@ mod prosopo {
         ) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             // TODO eventually remove operator checks to allow anyone to signup
-            if !self.operators.contains_key(&caller) {
-                return Err(ProsopoError::NotAuthorised);
-            }
+            // if !self.operators.contains_key(&caller) {
+            //     return Err(ProsopoError::NotAuthorised);
+            // }
             let balance: u128 = 0;
             // this function is for registration only
             if self.providers.contains_key(&provider_account) {
