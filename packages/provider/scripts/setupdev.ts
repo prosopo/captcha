@@ -12,7 +12,6 @@ async function run() {
     let registry = network.registry;
     const signerAddresses = await network.getAddresses();
     const Alice = signerAddresses[0];
-    console.log(signerAddresses);
     await env.isReady();
     const providerServiceOrigin = blake2AsU8a(env.config.provider!.serviceOrigin, 256);
     const providerFee = env.config.provider!.fee
@@ -20,18 +19,17 @@ async function run() {
     // Send the provider some funds
     if (process.env.PROVIDER_MNEMONIC) {
         const providerKeyringPair = network.keyring.addFromMnemonic(process.env.PROVIDER_MNEMONIC.toString());
-        const balance = await env.network.api.query.system.account(providerKeyringPair.address);
-        console.log("Provider Balance: ", balance.toHuman())
-        const abalance = await env.network.api.query.system.account(Alice);
-        console.log("Alice Balance: ", abalance.toHuman())
+        let providerBalance = await displayBalance(env, providerKeyringPair.address, "Provider");
+        await displayBalance(env, Alice, "Alice");
         // @ts-ignore
-        if (balance.data.free.toNumber() === 0) {
+        if (providerBalance.data.free.toNumber() === 0) {
             const alicePair = network.keyring.getPair(Alice);
             await patract.buildTx(
                 api.registry,
                 api.tx.balances.transfer(providerKeyringPair.address, 1e15),
                 alicePair.address // from
             );
+            await displayBalance(env, providerKeyringPair.address, "Provider");
         }
     }
 
@@ -49,6 +47,13 @@ async function run() {
 //     await dappSigner.tx.dappFund(contractAccount.address, {gasLimit: "400000000000", value: value});
 //     return {contractAccount};
 // }
+
+async function displayBalance(env, address, who) {
+    const balance = await env.network.api.query.system.account(address);
+    console.log(who , " Balance: ", balance.data.free.toHuman())
+    return balance
+}
+
 
 async function setupProvider(contract, providerSigner, providerServiceOrigin, providerFee, registry) {
     console.log("Registering provider");

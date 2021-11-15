@@ -28,11 +28,16 @@ export function prosopoMiddleware(env): Router {
             const payee: string = req.body.payee;
             const address: string = req.body.address;
             const result = await contractApi.providerRegister(serviceOrigin, fee, payee, address);
-            next(null);
+            if (result) {
+                res.status(200).send();
+            } else {
+                // TODO pass some message back
+                res.status(500).send();
+            }
         } catch (err) {
             // TODO properly handle errors
             let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
-            return next(new Error(msg));
+            next(new Error(msg));
         }
 
     });
@@ -43,8 +48,26 @@ export function prosopoMiddleware(env): Router {
      * @return ...
      */
     router.post('/v1/prosopo/provider_update/', async function (req, res, next) {
-        //TODO
-        next()
+        if (req.body === undefined) {
+            return next(new Error(ERRORS.API.BODY_UNDEFINED.message));
+        }
+        try {
+            const serviceOrigin: string = req.body.serviceOrigin;
+            const fee: number = req.body.fee;
+            const payee: string = req.body.payee;
+            const address: string = req.body.address;
+            const result = await contractApi.providerUpdate(serviceOrigin, fee, payee, address);
+            if (result) {
+                res.status(200).send();
+            } else {
+                // TODO pass some message back
+                res.status(500).send();
+            }
+        } catch (err) {
+            // TODO properly handle errors
+            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
+            next(new Error(msg));
+        }
     });
 
     /**
