@@ -246,6 +246,7 @@ export function prosopoMiddleware(env): Router {
      * @return {Hash} - The Providers
      */
     router.get('/v1/prosopo/providers/', async function (req, res, next) {
+        await env.isReady();
         console.log(env.contract.api.consts)
         let result = await env.contract.query.getProviders();
         res.send(result.output);
@@ -258,6 +259,7 @@ export function prosopoMiddleware(env): Router {
      * @return {Hash} - The Captcha Provider object
      */
     router.get('/v1/prosopo/provider/:provider_account', async function (req, res, next) {
+        await env.isReady();
         const provider_account = req.params.provider_account;
         console.log(provider_account);
         let result = await env.contract.query.getProviderDetails(provider_account);
