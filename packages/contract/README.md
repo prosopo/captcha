@@ -30,6 +30,14 @@ Generate a mnemonic and address:
 
 `yarn mnemonic`
 
+*NOTE - you can use the development mnemonics instead of generating a new mnemonic*
+- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Alice`
+- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Bob`
+- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Charlie`
+- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Dave`
+- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Ferdie`
+- `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Eve`
+
 Put the deployer mnemonic and address in the `env` file.
 
 ```bash
