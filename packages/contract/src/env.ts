@@ -2,12 +2,12 @@ require('dotenv').config()
 import {Database, ProsopoConfig, ProsopoEnvironment} from './types';
 import findUp from 'find-up';
 import {ERRORS} from './errors'
-import {network, patract} from "redspot";
-import {getContract} from './contract'
+// @ts-ignore
+import {network, patract} from 'redspot';
+import {Network} from "redspot/types"
 import {ProsopoDatabase} from './db'
 import {AccountSigner, Signer} from 'redspot/provider'
 import Contract from "@redspot/patract/contract"
-
 
 const fs = require('fs');
 const TS_CONFIG_FILENAME = "prosopo.config.ts"
@@ -16,35 +16,48 @@ const PERSONS = ["dapp", "provider"];
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
-    network: typeof network
-    patract: typeof patract
-    contractPromise: Promise<Contract>
+    network: Network
     contract?: Contract
     db: Database
     providerSigner?: Signer
     dappSigner?: Signer
+    deployerAddress: string
+    patract: any;
 
     constructor() {
         this.config = this.getConfig();
         this.network = network;
         this.patract = patract;
         const defaultEnv = this.config.defaultEnvironment
-        const deployerAddress = this.config.networks[defaultEnv].contract.deployer;
-        this.contractPromise = getContract(network, patract, deployerAddress);
+        this.deployerAddress = this.config.networks[defaultEnv].contract.deployer;
         this.db = new ProsopoDatabase(this.config.networks[defaultEnv].endpoint,
             this.config.database[defaultEnv].dbname)
-
     }
 
     async isReady() {
-        if (!this.contract)
-            this.contract = await this.contractPromise;
         await this.getSigners();
-        console.log("Environment ready")
+        await this.getContract();
+    }
+
+    async getContract() {
+        await this.network.api.isReadyOrError;
+        let network = this.network;
+        const contractFactory = await patract.getContractFactory("prosopo", this.deployerAddress);
+        const balance = await network.api.query.system.account(this.deployerAddress);
+        console.log("Deployer Balance: ", balance.data.free.toHuman());
+        const contract = await contractFactory.deployed("default", this.deployerAddress, {
+            gasLimit: "400000000000",
+            value: "1000000000000 UNIT",
+            salt: '0x01'
+        });
+
+        this.contract = contract;
+
     }
 
     // utility functions
     async getSigners() {
+        await this.network.api.isReadyOrError;
         const signerClass = new AccountSigner();
         // TODO this logic about having multiple people configured in the service at once is pretty confusing.
         //  Maybe only one person should be allowed to sign at one time.

@@ -1,18 +1,20 @@
-import {Option, Text} from "@polkadot/types";
 import {blake2AsU8a} from "@polkadot/util-crypto";
 import {Environment} from '../src/env'
+
 require('dotenv').config()
 
 async function run() {
+
     const env = new Environment();
-    await env.network.api.isReady;
-    let patract = env.patract;
+
+    await env.isReady();
+
     let network = env.network;
+    let patract = env.patract;
     let api = env.network.api;
     let registry = network.registry;
     const signerAddresses = await network.getAddresses();
     const Alice = signerAddresses[0];
-    await env.isReady();
     const providerServiceOrigin = blake2AsU8a(env.config.provider!.serviceOrigin, 256);
     const providerFee = env.config.provider!.fee
 
@@ -50,7 +52,7 @@ async function run() {
 
 async function displayBalance(env, address, who) {
     const balance = await env.network.api.query.system.account(address);
-    console.log(who , " Balance: ", balance.data.free.toHuman())
+    console.log(who, " Balance: ", balance.data.free.toHuman())
     return balance
 }
 
@@ -68,5 +70,5 @@ async function setupProvider(contract, providerSigner, providerServiceOrigin, pr
 }
 
 run().catch((err) => {
-    console.log(err);
+    console.log(`Setup dev error: ${err}`);
 });
