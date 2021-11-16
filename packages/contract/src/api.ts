@@ -76,9 +76,24 @@ export function prosopoMiddleware(env): Router {
      *
      * @return ...
      */
-    router.post('/v1/prosopo/provider_deregister/', async function (req, res, next) {
-        //TODO
-        next()
+    router.post('/v1/prosopo/provider_update/', async function (req, res, next) {
+        if (req.body === undefined) {
+            return next(new Error(ERRORS.API.BODY_UNDEFINED.message));
+        }
+        try {
+            const address: string = req.body.address;
+            const result = await contractApi.providerDeregister(address);
+            if (result) {
+                res.status(200).send();
+            } else {
+                // TODO pass some message back
+                res.status(500).send();
+            }
+        } catch (err) {
+            // TODO properly handle errors
+            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
+            next(new Error(msg));
+        }
     });
 
     /**

@@ -1,5 +1,5 @@
 import {Environment} from './env'
-import Contract from "@redspot/patract/contract"
+
 const {decodeAddress, encodeAddress} = require('@polkadot/keyring');
 const {hexToU8a, isHex} = require('@polkadot/util');
 const {blake2AsU8a} = require('@polkadot/util-crypto');
@@ -33,12 +33,10 @@ export class contractApiInterface {
     async providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
 
         await this.env.isReady();
-        let providerSigner = this.env.providerSigner;
         let success = false;
         let encodedAddress = encodeStringAddress(address);
-        console.log("Provider Signer address: ", this.env.providerSigner!.address);
-        if (providerSigner !== undefined && this.env.contract && encodedAddress) {
-            const signedContract = this.env.contract.connect(providerSigner)
+        if (encodedAddress) {
+            const signedContract = this.env.contract!.connect(this.env.providerSigner!)
             let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
             const response = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, encodedAddress);
             // @ts-ignore
@@ -46,7 +44,7 @@ export class contractApiInterface {
             console.log(response);
             return success
         } else {
-            throw("unable to register provider: ProviderSigner, Contract and address must be defined")
+            throw("address must be defined")
         }
         return success
 
@@ -54,14 +52,11 @@ export class contractApiInterface {
 
     //provider_update
     async providerUpdate(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
-
         await this.env.isReady();
-        let providerSigner = this.env.providerSigner;
         let success = false;
         let encodedAddress = encodeStringAddress(address);
-        console.log("Provider Signer address: ", this.env.providerSigner!.address);
-        if (providerSigner !== undefined && this.env.contract && encodedAddress) {
-            const signedContract = this.env.contract.connect(providerSigner)
+        if (encodedAddress) {
+            const signedContract = this.env.contract!.connect(this.env.providerSigner!)
             let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
             const response = await signedContract.tx.providerUpdate(providerServiceOriginHash, providerFee, payee, encodedAddress);
             // @ts-ignore
@@ -69,13 +64,28 @@ export class contractApiInterface {
             console.log(JSON.stringify(response));
             return success
         } else {
-            throw("unable to update provider: ProviderSigner, Contract and address must be defined")
+            throw("address must be defined")
         }
         return success
     }
 
     //provider_deregister
-    async providerDeregister() {
+    async providerDeregister(address: string) {
+        await this.env.isReady();
+        let success = false;
+        // TODO just throw inside encodeStringAddress if address invalid?
+        let encodedAddress = encodeStringAddress(address);
+        if (encodedAddress) {
+            const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+            const response = await signedContract.tx.providerDeregister(encodedAddress);
+            // @ts-ignore
+            success = response.events.filter(x => x["name"] == "ProviderDeregister").length > 0;
+            console.log(JSON.stringify(response));
+            return success
+        } else {
+            throw("address must be defined")
+        }
+        return success
     }
 
     //provider_stake
