@@ -15,7 +15,7 @@ yarn
 A specific version of the contract node is [required](https://stackoverflow.com/questions/69826769/how-can-i-query-contract-info-with-the-latest-polkadot-js-and-substrate-contract/69831057#69831057) to work with polkadotjs.
 
 ```bash
-git clone https://github.com/paritytech/substrate &&
+git clone https://github.com/paritytech/substrate-contracts-node &&
 cd substrate &&
 git checkout 8d91b8e578065a7c06433cbd41ac059bf478a0bd &&
 cargo build && 
