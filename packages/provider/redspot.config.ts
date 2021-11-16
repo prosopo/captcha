@@ -8,10 +8,6 @@ import "@redspot/explorer";
 import "@redspot/decimals";
 import contractDefinitions from "./src/types/contract"
 
-console.log("redspot.config.ts");
-console.log(process.env.PROVIDER_MNEMONIC);
-console.log(typeof(process.env.PROVIDER_MNEMONIC));
-
 export default {
     defaultNetwork: "development",
     contract: {

@@ -8,6 +8,8 @@ import {Network} from "redspot/types"
 import {ProsopoDatabase} from './db'
 import {AccountSigner, Signer} from 'redspot/provider'
 import Contract from "@redspot/patract/contract"
+import { strict as assert } from 'assert';
+
 
 const fs = require('fs');
 const TS_CONFIG_FILENAME = "prosopo.config.ts"
@@ -37,6 +39,8 @@ export class Environment implements ProsopoEnvironment {
     async isReady() {
         await this.getSigners();
         await this.getContract();
+        assert(this.providerSigner instanceof Signer);
+        assert(this.contract instanceof Contract);
     }
 
     async getContract() {
@@ -104,3 +108,4 @@ export class Environment implements ProsopoEnvironment {
     }
 
 }
+
