@@ -76,7 +76,7 @@ export function prosopoMiddleware(env): Router {
      *
      * @return ...
      */
-    router.post('/v1/prosopo/provider_update/', async function (req, res, next) {
+    router.post('/v1/prosopo/provider_deregister/', async function (req, res, next) {
         if (req.body === undefined) {
             return next(new Error(ERRORS.API.BODY_UNDEFINED.message));
         }
