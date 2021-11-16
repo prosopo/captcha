@@ -1,4 +1,4 @@
-const definitions = {
+const contractDefinitions = {
     Status: {
         _enum: [
             'Active',
@@ -57,4 +57,4 @@ const definitions = {
 
 }
 
-export default definitions;
+export default contractDefinitions;

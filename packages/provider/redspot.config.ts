@@ -1,3 +1,4 @@
+require('dotenv').config()
 import {RedspotUserConfig} from "redspot/types";
 import "@redspot/patract";
 import "@redspot/chai";
@@ -5,8 +6,12 @@ import "@redspot/gas-reporter";
 import "@redspot/watcher";
 import "@redspot/explorer";
 import "@redspot/decimals";
-import definitions from "./src/types/contract"
+import contractDefinitions from "./src/types/contract"
+
+console.log("redspot.config.ts");
 console.log(process.env.PROVIDER_MNEMONIC);
+console.log(typeof(process.env.PROVIDER_MNEMONIC));
+
 export default {
     defaultNetwork: "development",
     contract: {
@@ -20,7 +25,7 @@ export default {
         development: {
             endpoint: "ws://127.0.0.1:9944",
             gasLimit: "400000000000",
-            types: definitions,
+            types: contractDefinitions,
             accounts: [
                 "//Alice",
                 "//Bob",

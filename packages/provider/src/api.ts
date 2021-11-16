@@ -32,6 +32,7 @@ export function prosopoMiddleware(env): Router {
                 res.status(200).send();
             } else {
                 // TODO pass some message back
+                console.log("sending 500");
                 res.status(500).send();
             }
         } catch (err) {
