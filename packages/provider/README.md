@@ -56,6 +56,7 @@ CONTRACT_ADDRESS=... <-------here
 
 ## Symlink your Protcol artifacts
 
+Inside your `provider` folder run the following command.
 ```bash
 ln -s ../protocol/artifacts artifacts
 ```
