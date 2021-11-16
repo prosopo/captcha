@@ -69,6 +69,7 @@ Start the server in dev mode
 
 Try using the API. Create a `POST` to register a `Provider`:
 
+Paste this into a [Postman](https://www.postman.com/downloads/) request or run it on the command line.
 ```bash
 curl --location --request POST '127.0.0.1:3000/v1/prosopo/provider_update/' \
 --header 'Content-Type: application/json' \
