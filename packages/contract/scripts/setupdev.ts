@@ -15,8 +15,8 @@ async function run() {
     let registry = network.registry;
     const signerAddresses = await network.getAddresses();
     const Alice = signerAddresses[0];
-    const providerServiceOrigin = blake2AsU8a(env.config.provider!.serviceOrigin, 256);
-    const providerFee = env.config.provider!.fee
+    const providerServiceOrigin = blake2AsU8a(env.config.networks[env.defaultEnvironment].provider!.serviceOrigin, 256);
+    const providerFee = env.config.networks[env.defaultEnvironment].provider!.fee
 
     // Send the provider some funds
     if (process.env.PROVIDER_MNEMONIC) {
@@ -70,5 +70,5 @@ async function setupProvider(contract, providerSigner, providerServiceOrigin, pr
 }
 
 run().catch((err) => {
-    console.log(`Setup dev error: ${err}`);
+    throw new Error(`Setup dev error: ${err}`);
 });

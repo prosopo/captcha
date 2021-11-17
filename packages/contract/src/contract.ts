@@ -47,8 +47,10 @@ export class contractApiInterface {
         await this.env.isReady();
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+        console.log("here");
         const response = await signedContract.tx.providerDeregister(encodedAddress);
         // @ts-ignore
+        console.log(response.events);
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderDeregister")
         } else {

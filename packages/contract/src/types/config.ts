@@ -5,7 +5,22 @@ export interface ProsopoConfig {
             endpoint: string,
             contract: {
                 address: string,
-                deployer: string
+                deployer: { address: string }
+            }
+            provider?: {
+                address: string,
+                mnemonic: string,
+                serviceOrigin: string,
+                fee: number,
+                payee: string
+            }
+            dapp?: {
+                contract: string,
+                mnemonic: string,
+                client_origin: string,
+                owner: string
+                fee: number,
+                payee: string
             }
         }
     },
@@ -14,31 +29,8 @@ export interface ProsopoConfig {
             endpoint: string
             dbname: string
         }
-
     },
-    provider?: {
-        address: string,
-        mnemonic: string,
-        files: {
-            secrets: { path: string, json?: PasswordFile },
-            jsonseed: { path: string, json?: MnemonicFile }
-        }
-        serviceOrigin: string,
-        fee: number,
-        payee: string
-    }
-    dapp?: {
-        contract: string,
-        mnemonic: string,
-        files: {
-            secrets: { path: string, json?: PasswordFile },
-            jsonseed: { path: string, json?: MnemonicFile }
-        }
-        client_origin: string,
-        owner: string
-        fee: number,
-        payee: string
-    }
+
 
 }
 

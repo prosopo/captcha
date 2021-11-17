@@ -14,4 +14,7 @@ export interface ProsopoEnvironment {
     providerSigner?: Signer | undefined
     dappSigner?: Signer | undefined
     deployerAddress: string
+    contractAddress: string
+    providerAddress: string
+    defaultEnvironment: string
 }
