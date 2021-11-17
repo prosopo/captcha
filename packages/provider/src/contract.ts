@@ -15,8 +15,7 @@ export function encodeStringAddress(address: string) {
 
         return encoded;
     } catch (error) {
-        console.log("Failed to encode invalid address: ", address);
-        return null;
+        throw(`Failed to encode invalid address: ${address}`);
     }
 };
 
@@ -31,23 +30,14 @@ export class contractApiInterface {
 
     // provider_register
     async providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
-
         await this.env.isReady();
         let success = false;
         let encodedAddress = encodeStringAddress(address);
-        if (encodedAddress) {
-            const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-            let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
-            const response = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, encodedAddress);
-            // @ts-ignore
-            success = response.events.filter(x => x["name"] == "ProviderRegister").length > 0;
-            console.log(response);
-            return success
-        } else {
-            throw("address must be defined")
-        }
-        return success
-
+        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+        let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
+        const response = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, encodedAddress);
+        // @ts-ignore
+        return response.events.filter(x => x["name"] == "ProviderRegister");
     }
 
     //provider_update
@@ -55,49 +45,61 @@ export class contractApiInterface {
         await this.env.isReady();
         let success = false;
         let encodedAddress = encodeStringAddress(address);
-        if (encodedAddress) {
-            const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-            let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
-            const response = await signedContract.tx.providerUpdate(providerServiceOriginHash, providerFee, payee, encodedAddress);
-            // @ts-ignore
-            success = response.events.filter(x => x["name"] == "ProviderUpdate").length > 0;
-            console.log(JSON.stringify(response));
-            return success
-        } else {
-            throw("address must be defined")
-        }
-        return success
+        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+        let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
+        const response = await signedContract.tx.providerUpdate(providerServiceOriginHash, providerFee, payee, encodedAddress);
+        // @ts-ignore
+        return response.events.filter(x => x["name"] == "ProviderUpdate");
+
+
     }
 
     //provider_deregister
     async providerDeregister(address: string) {
         await this.env.isReady();
         let success = false;
-        // TODO just throw inside encodeStringAddress if address invalid?
         let encodedAddress = encodeStringAddress(address);
-        if (encodedAddress) {
-            const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-            const response = await signedContract.tx.providerDeregister(encodedAddress);
-            // @ts-ignore
-            success = response.events.filter(x => x["name"] == "ProviderDeregister").length > 0;
-            console.log(JSON.stringify(response));
-            return success
-        } else {
-            throw("address must be defined")
-        }
-        return success
+        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+        const response = await signedContract.tx.providerDeregister(encodedAddress);
+        // @ts-ignore
+        return response.events.filter(x => x["name"] == "ProviderDeregister");
     }
 
     //provider_stake
-    async providerStake() {
+    async providerStake(value: number) {
+        await this.env.isReady();
+        let success = false;
+        let encodedAddress = encodeStringAddress(address);
+        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+        const response = await signedContract.tx.providerStake({"value": value, "signer": this.env.providerSigner!})
+        // @ts-ignore
+        return response.events.filter(x => x["name"] == "ProviderStake");
+
+
     }
 
     //provider_unstake
-    async providerUnstake() {
+    async providerUnstake(value) {
+        await this.env.isReady();
+        let success = false;
+        let encodedAddress = encodeStringAddress(address);
+        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+        const response = await signedContract.tx.providerUnstake({"value": value, "signer": this.env.providerSigner!})
+        // @ts-ignore
+        return response.events.filter(x => x["name"] == "ProviderUnstake");
+
     }
 
     //provider_add_data_set
-    async providerAddDataSet() {
+    async providerAddDataSet(dataSetHash) {
+        await this.env.isReady();
+        let success = false;
+        let encodedAddress = encodeStringAddress(address);
+        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+        const response = await signedContract.tx.providerAddDataSet(dataSetHash, {"signer": this.env.providerSigner})
+        // @ts-ignore
+        return response.events.filter(x => x["name"] == "providerAddDataSet");
+
     }
 
     //dapp_register
