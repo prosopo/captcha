@@ -73,8 +73,8 @@ ln -s ../protocol/artifacts artifacts
 
 Populate the `env` file with `PROVIDER_MNEMONIC` and `PROVIDER_ADDRESS`
 
-Start the server in dev mode
-`yarn dev`
+Start the server in dev mode with the API enabled
+`yarn dev --api`
 
 Try using the API. Create a `POST` to register a `Provider`:
 
