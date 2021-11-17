@@ -1,24 +1,8 @@
 import {Environment} from './env'
 import {ERRORS} from './errors'
+import {encodeStringAddress} from './util'
 
-const {decodeAddress, encodeAddress} = require('@polkadot/keyring');
-const {hexToU8a, isHex} = require('@polkadot/util');
 const {blake2AsU8a} = require('@polkadot/util-crypto');
-
-export function encodeStringAddress(address: string) {
-    try {
-        let encoded = encodeAddress(
-            isHex(address)
-                ? hexToU8a(address)
-                : decodeAddress(address)
-        );
-
-        return encoded;
-    } catch (error) {
-        throw(`Failed to encode invalid address: ${address}`);
-    }
-};
-
 
 export class contractApiInterface {
 
