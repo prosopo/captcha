@@ -129,24 +129,25 @@ export function prosopoMiddleware(env): Router {
     });
 
     /**
-     * Dapp register
+     * Dapp register and Dapp update
      *
      * @return ...
      */
-    router.post('/v1/prosopo/dapp_register/', async function (req, res, next) {
-        //TODO
-        next()
+    router.post('/v1/prosopo/dapp_(register|update)/', async function (req, res, next) {
+        try {
+            const {address, dappServiceOrigin, dappContractAddress, dappOwner} = req.body;
+            if (!address || !dappServiceOrigin || !dappContractAddress) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+            }
+            const result = await contractApi.dappRegister(address, dappServiceOrigin, dappContractAddress, dappOwner);
+            res.json(result);
+        } catch (err: any) {
+            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            next(new BadRequest(msg));
+        }
     });
 
-    /**
-     * Dapp update
-     *
-     * @return ...
-     */
-    router.post('/v1/prosopo/dapp_update/', async function (req, res, next) {
-        //TODO
-        next()
-    });
+
 
     /**
      * Dapp fund

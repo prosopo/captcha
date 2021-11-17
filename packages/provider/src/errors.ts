@@ -21,10 +21,15 @@ export const ERRORS = {
         },
 
     },
-    TRANSACTION : {
+    TRANSACTION: {
         TX_ERROR: {
             message: 'Error making tx'
-        }    
+        }
+    },
+    CLI: {
+        PARAMETER_ERROR: {
+            message: 'Invalid parameter'
+        }
     }
 }
 
