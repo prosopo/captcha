@@ -25,15 +25,11 @@ export function prosopoMiddleware(env): Router {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
             const result = await contractApi.providerRegister(serviceOrigin, fee, payee, address);
-            if (result) {
-                res.status(200).send();
-            } else {
-                res.status(500).send();
-            }
+            res.json(result);
         } catch (err) {
             // TODO properly handle errors
             let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
-            next(new Error(msg));
+            throw new BadRequest(msg);
         }
 
     });
@@ -50,16 +46,11 @@ export function prosopoMiddleware(env): Router {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
             const result = await contractApi.providerUpdate(serviceOrigin, fee, payee, address);
-            if (result) {
-                res.status(200).send();
-            } else {
-                // TODO pass some message back
-                res.status(500).send();
-            }
+            res.json(result);
         } catch (err) {
             // TODO properly handle errors
             let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
-            next(new Error(msg));
+            throw new BadRequest(msg);
         }
     });
 
@@ -71,17 +62,15 @@ export function prosopoMiddleware(env): Router {
     router.post('/v1/prosopo/provider_deregister/', async function (req, res, next) {
         try {
             const address: string = req.body.address;
-            const result = await contractApi.providerDeregister(address);
-            if (result) {
-                res.status(200).send();
-            } else {
-                // TODO pass some message back
-                res.status(500).send();
+            if (!address) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
+            const result = await contractApi.providerDeregister(address);
+            res.json(result);
         } catch (err) {
             // TODO properly handle errors
             let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
-            next(new Error(msg));
+            throw new BadRequest(msg);
         }
     });
 
@@ -91,8 +80,18 @@ export function prosopoMiddleware(env): Router {
      * @return ...
      */
     router.post('/v1/prosopo/provider_stake/', async function (req, res, next) {
-        //TODO
-        next()
+        try {
+            const {address, value} = req.body;
+            if (!address || !value) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+            }
+            const result = await contractApi.providerStake(address, value);
+            res.json(result);
+        } catch (err) {
+            // TODO properly handle errors
+            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
+            throw new BadRequest(msg);
+        }
     });
 
     /**
