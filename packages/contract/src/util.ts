@@ -7,13 +7,11 @@ export function encodeStringAddress(address: string) {
         address = address.slice(2,)
     }
     try {
-        let encoded = encodeAddress(
+        return encodeAddress(
             isHex(address)
                 ? hexToU8a(address)
                 : decodeAddress(address)
         );
-
-        return encoded;
     } catch (error) {
         throw(`Failed to encode invalid address::${error}::${address}`);
     }

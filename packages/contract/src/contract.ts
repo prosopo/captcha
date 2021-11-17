@@ -1,6 +1,7 @@
 import {Environment} from './env'
 import {ERRORS} from './errors'
 import {encodeStringAddress} from './util'
+import {Option, Text} from '@polkadot/types';
 
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
@@ -47,7 +48,6 @@ export class contractApiInterface {
         await this.env.isReady();
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-        console.log("here");
         const response = await signedContract.tx.providerDeregister(encodedAddress);
         // @ts-ignore
         console.log(response.events);
@@ -101,11 +101,18 @@ export class contractApiInterface {
     }
 
     //dapp_register
-    async dappRegister() {
-    }
-
-    //dapp_update
-    async dappUpdate() {
+    async dappRegister(address: string, dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined) {
+        await this.env.isReady();
+        let encodedAddress = encodeStringAddress(address);
+        const signedContract = this.env.contract!.connect(this.env.dappSigner!)
+        const registry = this.env.network.api.registry;
+        const response = await signedContract.tx.dappRegister(dappServiceOrigin, dappContractAddress, new Option(registry, Text, dappOwner))
+        // @ts-ignore
+        if (response.events) {
+            return response.events.filter(x => (x["name"] == "DappRegister" || x["name"] == "DappUpdate"))
+        } else {
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
+        }
     }
 
     //dapp_fund

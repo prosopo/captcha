@@ -13,8 +13,6 @@
     "mnemonic": "yarn build && yarn ts-node ./build/scripts/generateMnemonic.js"
   },
   "dependencies": {
-    "redspot": "file:../../redspot/build/redspot-core",
-    "typescript": "^4.2.4",
     "@redspot/chai": "file:../../redspot/build/redspot-chai",
     "@redspot/decimals": "file:../../redspot/build/redspot-decimals",
     "@redspot/explorer": "file:../../redspot/build/redspot-explorer",
@@ -24,7 +22,9 @@
     "@redspot/watcher": "file:../../redspot/build/redspot-watcher",
     "express": "^4.17.1",
     "mongodb": "^4.1.4",
-    "ts-node": "^10.0.0"
+    "redspot": "file:../../redspot/build/redspot-core",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.2.4"
   },
   "resolutions": {
     "@polkadot/api": "^6.8.1",
@@ -40,5 +40,8 @@
   "files": [
     "./redspot.config.ts",
     "./prosopo.config.ts"
-  ]
+  ],
+  "main": "index.js",
+  "repository": "ssh://git@github.com/prosopo-io/provider",
+  "license": "MIT"
 }
