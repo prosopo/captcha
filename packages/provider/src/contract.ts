@@ -50,8 +50,6 @@ export class contractApiInterface {
         const response = await signedContract.tx.providerUpdate(providerServiceOriginHash, providerFee, payee, encodedAddress);
         // @ts-ignore
         return response.events.filter(x => x["name"] == "ProviderUpdate");
-
-
     }
 
     //provider_deregister
@@ -66,7 +64,7 @@ export class contractApiInterface {
     }
 
     //provider_stake
-    async providerStake(value: number) {
+    async providerStake(address: string, value: number) {
         await this.env.isReady();
         let success = false;
         let encodedAddress = encodeStringAddress(address);
@@ -74,8 +72,6 @@ export class contractApiInterface {
         const response = await signedContract.tx.providerStake({"value": value, "signer": this.env.providerSigner!})
         // @ts-ignore
         return response.events.filter(x => x["name"] == "ProviderStake");
-
-
     }
 
     //provider_unstake
@@ -87,7 +83,6 @@ export class contractApiInterface {
         const response = await signedContract.tx.providerUnstake({"value": value, "signer": this.env.providerSigner!})
         // @ts-ignore
         return response.events.filter(x => x["name"] == "ProviderUnstake");
-
     }
 
     //provider_add_data_set
