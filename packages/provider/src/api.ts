@@ -27,7 +27,7 @@ export function prosopoMiddleware(env): Router {
             const result = await contractApi.providerRegister(serviceOrigin, fee, payee, address);
             res.json(result);
         } catch (err: any) {
-            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
             next(new BadRequest(msg));
         }
 
@@ -47,7 +47,7 @@ export function prosopoMiddleware(env): Router {
             const result = await contractApi.providerUpdate(serviceOrigin, fee, payee, address);
             res.json(result);
         } catch (err: any) {
-            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
@@ -66,8 +66,7 @@ export function prosopoMiddleware(env): Router {
             const result = await contractApi.providerDeregister(address);
             res.json(result);
         } catch (err: any) {
-            console.log(err);
-            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
@@ -86,7 +85,7 @@ export function prosopoMiddleware(env): Router {
             const result = await contractApi.providerStake(address, value);
             res.json(result);
         } catch (err: any) {
-            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
@@ -105,7 +104,7 @@ export function prosopoMiddleware(env): Router {
             const result = await contractApi.providerUnstake(address, value);
             res.json(result);
         } catch (err: any) {
-            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
             next(new BadRequest(msg));
         }
     });
@@ -116,8 +115,17 @@ export function prosopoMiddleware(env): Router {
      * @return ...
      */
     router.post('/v1/prosopo/provider_add_data_set/', async function (req, res, next) {
-        //TODO
-        next()
+        try {
+            const {address, dataSetHash} = req.body;
+            if (!address || !dataSetHash) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+            }
+            const result = await contractApi.providerAddDataSet(address, dataSetHash);
+            res.json(result);
+        } catch (err: any) {
+            let msg = err.message ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            next(new BadRequest(msg));
+        }
     });
 
     /**

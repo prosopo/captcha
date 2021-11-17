@@ -39,7 +39,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderRegister")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR)
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
         }
     }
 
@@ -54,7 +54,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderUpdate")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR)
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
         }
     }
 
@@ -68,7 +68,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderDeregister")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR)
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
         }
     }
 
@@ -82,7 +82,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderStake")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR)
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
         }
     }
 
@@ -96,7 +96,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderUnstake")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR)
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
         }
     }
 
@@ -110,7 +110,7 @@ export class contractApiInterface {
         if (response.events) {
             return response.events.filter(x => x["name"] == "ProviderAddDataSet")
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR)
+            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
         }
     }
 
