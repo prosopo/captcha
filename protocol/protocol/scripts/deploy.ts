@@ -1,3 +1,4 @@
+require('dotenv').config()
 import {network, patract} from "redspot";
 const fs = require('fs');
 const {getContractFactory, getRandomSigner, buildTx} = patract;
@@ -19,9 +20,9 @@ async function run() {
     const AliceBalance = await api.query.system.account(Alice);
     console.log("Alice Address:", Alice);
     console.log("Alice Balance: ", AliceBalance.data.free.toHuman());
-    const secrets = JSON.parse(fs.readFileSync(SECRETS_FILE, 'utf8'));
-    const mnemonic = secrets.mnemonic;
-    const keyringPair = network.keyring.addFromMnemonic(mnemonic);
+    const mnemonic = process.env.DEPLOYER_MNEMONIC;
+    console.log(mnemonic)
+    const keyringPair = network.keyring.addFromMnemonic(mnemonic!);
     const deployer = network.createSigner(keyringPair);
     const balance = await api.query.system.account(deployer.address);
     console.log("Deployer Address:", deployer.address);
