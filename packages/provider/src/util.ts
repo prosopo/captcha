@@ -1,5 +1,6 @@
 const {decodeAddress, encodeAddress} = require('@polkadot/keyring');
 const {hexToU8a, isHex} = require('@polkadot/util');
+const fs = require('fs');
 
 export function encodeStringAddress(address: string) {
     if (address.startsWith("0x")) {
@@ -17,3 +18,7 @@ export function encodeStringAddress(address: string) {
         throw(`Failed to encode invalid address::${error}::${address}`);
     }
 };
+
+export function loadJSONFile(filePath) {
+    return JSON.parse(fs.readFileSync(filePath));
+}
