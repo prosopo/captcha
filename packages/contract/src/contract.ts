@@ -31,7 +31,6 @@ export class contractApiInterface {
     // provider_register
     async providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
         await this.env.isReady();
-        let success = false;
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
@@ -43,7 +42,6 @@ export class contractApiInterface {
     //provider_update
     async providerUpdate(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
         await this.env.isReady();
-        let success = false;
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
@@ -55,7 +53,6 @@ export class contractApiInterface {
     //provider_deregister
     async providerDeregister(address: string) {
         await this.env.isReady();
-        let success = false;
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerDeregister(encodedAddress);
@@ -66,7 +63,6 @@ export class contractApiInterface {
     //provider_stake
     async providerStake(address: string, value: number) {
         await this.env.isReady();
-        let success = false;
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerStake({"value": value, "signer": this.env.providerSigner!})
@@ -75,9 +71,8 @@ export class contractApiInterface {
     }
 
     //provider_unstake
-    async providerUnstake(value) {
+    async providerUnstake(address, value) {
         await this.env.isReady();
-        let success = false;
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerUnstake({"value": value, "signer": this.env.providerSigner!})
@@ -86,15 +81,13 @@ export class contractApiInterface {
     }
 
     //provider_add_data_set
-    async providerAddDataSet(dataSetHash) {
+    async providerAddDataSet(address, dataSetHash) {
         await this.env.isReady();
-        let success = false;
         let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerAddDataSet(dataSetHash, {"signer": this.env.providerSigner})
         // @ts-ignore
         return response.events.filter(x => x["name"] == "providerAddDataSet");
-
     }
 
     //dapp_register
