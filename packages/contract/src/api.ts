@@ -26,10 +26,9 @@ export function prosopoMiddleware(env): Router {
             }
             const result = await contractApi.providerRegister(serviceOrigin, fee, payee, address);
             res.json(result);
-        } catch (err) {
-            // TODO properly handle errors
-            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
-            throw new BadRequest(msg);
+        } catch (err: any) {
+            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            next(new BadRequest(msg));
         }
 
     });
@@ -47,10 +46,9 @@ export function prosopoMiddleware(env): Router {
             }
             const result = await contractApi.providerUpdate(serviceOrigin, fee, payee, address);
             res.json(result);
-        } catch (err) {
-            // TODO properly handle errors
-            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
-            throw new BadRequest(msg);
+        } catch (err: any) {
+            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            next(new BadRequest(msg));
         }
     });
 
@@ -67,10 +65,10 @@ export function prosopoMiddleware(env): Router {
             }
             const result = await contractApi.providerDeregister(address);
             res.json(result);
-        } catch (err) {
-            // TODO properly handle errors
-            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
-            throw new BadRequest(msg);
+        } catch (err: any) {
+            console.log(err);
+            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            next(new BadRequest(msg));
         }
     });
 
@@ -87,10 +85,9 @@ export function prosopoMiddleware(env): Router {
             }
             const result = await contractApi.providerStake(address, value);
             res.json(result);
-        } catch (err) {
-            // TODO properly handle errors
-            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
-            throw new BadRequest(msg);
+        } catch (err: any) {
+            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            next(new BadRequest(msg));
         }
     });
 
@@ -107,10 +104,9 @@ export function prosopoMiddleware(env): Router {
             }
             const result = await contractApi.providerUnstake(address, value);
             res.json(result);
-        } catch (err) {
-            // TODO properly handle errors
-            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
-            throw new BadRequest(msg);
+        } catch (err: any) {
+            let msg = err.hasOwnProperty("message") ? err.message : ERRORS.TRANSACTION.TX_ERROR.message;
+            next(new BadRequest(msg));
         }
     });
 
