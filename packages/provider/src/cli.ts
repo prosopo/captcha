@@ -5,8 +5,6 @@ import {prosopoMiddleware} from './api'
 import {handleErrors} from './errorHandler'
 import {processArgs} from './argv'
 import {contractApiInterface} from './contract'
-// @ts-ignore
-import yargs from 'yargs'
 
 const app = express();
 app.use(express.json())
