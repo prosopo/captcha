@@ -5,6 +5,16 @@
 - yarn
 - `git clone https://github.com/paritytech/substrate-contracts-node`
 - `git clone https://github.com/prosopo-io/protocol`
+- `git clone https://github.com/prosopo-io/redspot`
+
+A reasonable folder structure would be something like the following:
+```
+- redspot
+- substrate-contracts-node
+- prosopo
+    - protocol
+    - provider
+```
 
 ## Install packages
 
