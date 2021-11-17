@@ -2,26 +2,31 @@
 import {Environment} from './env'
 import express from 'express'
 import {prosopoMiddleware} from './api'
-import {BASE_TASKS} from './tasks/tasknames'
 import {handleErrors} from './errorHandler'
+import {encodeStringAddress} from './util'
+// @ts-ignore
+import yargs from 'yargs'
 
 const app = express();
 app.use(express.json())
 const port = 3000;
 
 async function main() {
-    const tasks = argParse(process.argv);
     const env = new Environment();
-    app.use(prosopoMiddleware(env));
-    app.use(handleErrors);
-    app.listen(port, () => {
-        console.log(`Prosopo app listening at http://localhost:${port}`)
-    })
+    const args = argParse(process.argv.slice(2), env.contract);
+    console.log(args);
+    if (args.api) {
+        app.use(prosopoMiddleware(env));
+        app.use(handleErrors);
+        app.listen(port, () => {
+            console.log(`Prosopo app listening at http://localhost:${port}`)
+        })
+    }
 
     // RUN COMMANDS - which ones need to be exposed on CLI?
 
     // provider register
-    
+
     // provider stake
     // provider unstake
     // provider update
@@ -38,21 +43,37 @@ async function main() {
 
 }
 
-
-//TODO use something sensible like yargs for arg parsing
-function argParse(args) {
-    const filt = args.filter(x => !x.startsWith("/"))
-    const taskIndices = filt.map((el, idx) => BASE_TASKS.indexOf(el) > -1 ? idx : undefined)
-        .filter(x => x !== undefined);
-    // create task names that directly relate to the API methods (provider_register, provider_stake, etc.)
-    const tasks = taskIndices
-        .map((el, idx) => filt.slice(el, taskIndices[idx + 1]))
-        .map(task_arr => task_arr.slice(1).map(el => task_arr[0] + "_" + el.replace("--", ""))).flat();
-    // TODO parameters for tasks should come from prosopo.config.ts 
-    return tasks
-
+const validateArgs = (argv) => {
+    let address
+    address = encodeStringAddress(argv.address)
+    let payee = argv.payee[0].toUpperCase() + argv.payee.slice(1,).toLowerCase();
+    payee = ["Provider", "Dapp"].indexOf(payee) > -1 ? payee : undefined;
+    return {address, payee}
 }
 
+function argParse(args, contract) {
+
+    function providerRegister(serviceOrigin, fee, payee, address) {
+        console.log("providerRegister triggered");
+    }
+
+    var argv = require('yargs')
+        .usage('Usage: $0 [options] <command> [options]')
+        .option('api', {demand: false, default: false, type: 'boolean'})
+        .command('provider_register', 'Register a Provider', (yargs) => {
+                return yargs
+                    .option('serviceOrigin', {type: 'string', demand: true,})
+                    .option('fee', {type: 'number', demand: true,})
+                    .option('payee', {type: 'string', demand: true,})
+                    .option('address', {type: 'string', demand: true,})
+            }, (argv) => {
+                providerRegister(argv.serviceOrigin, argv.fee, argv.payee, argv.address)
+            },
+            [validateArgs]
+        )
+        .argv;
+    return argv
+}
 
 
 main()
