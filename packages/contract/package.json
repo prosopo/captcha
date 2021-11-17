@@ -33,9 +33,11 @@
     "@polkadot/util": "^7.8.2",
     "@polkadot/keyring": "^7.8.2",
     "@polkadot/util-crypto": "^7.8.2",
+    "@types/yargs" : "^17.0.6",
     "bn.js": "^4.12",
     "dotenv": "10.0.0",
     "yargs": "^17.2.1"
+
   },
   "files": [
     "./redspot.config.ts",
@@ -43,5 +45,5 @@
   ],
   "main": "index.js",
   "repository": "ssh://git@github.com/prosopo-io/provider",
-  "license": "MIT"
+  "license": "GPLv3"
 }
