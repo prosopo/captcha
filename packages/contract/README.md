@@ -81,14 +81,16 @@ ln -s ../protocol/artifacts artifacts
 
 ## Run the Provider server
 
-Populate the `env` file with `PROVIDER_MNEMONIC` and `PROVIDER_ADDRESS`
+Populate the `env` file with `PROVIDER_MNEMONIC` and `PROVIDER_ADDRESS`. You can the register a provider either via the API or on the command line.
+
+### Option 1. Register using the API
 
 Start the server in dev mode with the API enabled
 `yarn dev --api`
 
 Try using the API. Create a `POST` to register a `Provider`:
 
-Paste this into a [Postman](https://www.postman.com/downloads/) request or run it on the command line.
+Paste this into a [Postman](https://www.postman.com/downloads/) request or use curl on the command line.
 ```bash
 curl --location --request POST '127.0.0.1:3000/v1/prosopo/provider_update/' \
 --header 'Content-Type: application/json' \
@@ -99,6 +101,18 @@ curl --location --request POST '127.0.0.1:3000/v1/prosopo/provider_update/' \
 "address": "YOUR PROVIDER ADDRESS"
 }'
 ```
+
+### 2. Register using the Command Line
+
+Try registering a provider on the command line.
+
+```bash
+yarn dev provider_register \
+--fee 10 \
+--serviceOrigin https://localhost:8282 \
+--payee Provider \
+--address YOUR_PROVIDER_ADDRESS
+````
 
 Verify that your provider was registered by calling the `providers` endpoint or by checking in Polkadot Apps local node.
 

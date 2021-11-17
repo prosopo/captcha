@@ -1,7 +1,8 @@
 import {encodeStringAddress} from './util'
 import BN from 'bn.js';
 import {ERRORS} from './errors'
-import yargs from 'yargs';
+// @ts-ignore
+import yargs from 'yargs'
 
 const {isHex} = require('@polkadot/util');
 
@@ -35,7 +36,7 @@ const validateDataSetHash = (argv) => {
 }
 
 export async function processArgs(args, contractApi) {
-    return require('yargs')
+    return yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .option('api', {demand: false, default: false, type: 'boolean'})
         .command('provider_register', 'Register a Provider', (yargs) => {
