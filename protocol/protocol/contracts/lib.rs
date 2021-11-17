@@ -408,16 +408,22 @@ mod prosopo {
 
         // De-Register a provider by setting their status to Deactivated
         #[ink(message)]
-        pub fn provider_deregister(&mut self, provider_account: AccountId) {
+        pub fn provider_deregister(&mut self, provider_account: AccountId) -> Result<(), ProsopoError> {
+            //TODO could get rid of provider_account parameter
             let caller = self.env().caller();
-            if self.operators.contains_key(&caller) {
+            if caller == provider_account {
+                //if self.operators.contains_key(&caller) {
                 let provider = self.providers.get_mut(&provider_account).unwrap();
                 (*provider).status = Status::Deactivated;
                 // Trigger the provider register event
                 self.env().emit_event(ProviderDeregister {
                     account: provider_account,
                 });
+                //}
+            } else {
+                return Err(ProsopoError::NotAuthorised);
             }
+            Ok(())
         }
 
         // Stake and activate the provider's service
@@ -968,6 +974,13 @@ mod prosopo {
             let providers = self.providers.keys().cloned().collect();
             return providers;
         }
+
+        // /// Get active provider accounts as a vector
+        // #[ink(message)]
+        // pub fn get_active_providers(&self) -> ink_prelude::vec::Vec<AccountId> {
+        //     let active_providers = self.providers.into_iter().filter(|prov| prov.status == Status::Active).keys().collect();
+        //     return active_providers;
+        // }
 
         /// Get a single provider's details
         ///
