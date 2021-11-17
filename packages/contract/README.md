@@ -102,7 +102,7 @@ curl --location --request POST '127.0.0.1:3000/v1/prosopo/provider_update/' \
 }'
 ```
 
-### 2. Register using the Command Line
+### Option 2. Register using the Command Line
 
 Try registering a provider on the command line.
 
