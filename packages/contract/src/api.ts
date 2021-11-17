@@ -1,7 +1,7 @@
 import express, {Router} from 'express';
 import {Captcha, CaptchaSolution, CaptchaSolutionResponse, Hash} from './types/api';
 import {contractApiInterface} from './contract'
-import {ERRORS} from './errors'
+import {BadRequest, ERRORS} from './errors'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -19,20 +19,15 @@ export function prosopoMiddleware(env): Router {
      * @return ...
      */
     router.post('/v1/prosopo/provider_register/', async function (req, res, next) {
-        if (req.body === undefined) {
-            return next(new Error(ERRORS.API.BODY_UNDEFINED.message));
-        }
         try {
-            const serviceOrigin: string = req.body.serviceOrigin;
-            const fee: number = req.body.fee;
-            const payee: string = req.body.payee;
-            const address: string = req.body.address;
+            const {serviceOrigin, fee, payee, address} = req.body;
+            if (!serviceOrigin || !fee || !payee || !address) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+            }
             const result = await contractApi.providerRegister(serviceOrigin, fee, payee, address);
             if (result) {
                 res.status(200).send();
             } else {
-                // TODO pass some message back
-                console.log("sending 500");
                 res.status(500).send();
             }
         } catch (err) {
@@ -49,14 +44,11 @@ export function prosopoMiddleware(env): Router {
      * @return ...
      */
     router.post('/v1/prosopo/provider_update/', async function (req, res, next) {
-        if (req.body === undefined) {
-            return next(new Error(ERRORS.API.BODY_UNDEFINED.message));
-        }
         try {
-            const serviceOrigin: string = req.body.serviceOrigin;
-            const fee: number = req.body.fee;
-            const payee: string = req.body.payee;
-            const address: string = req.body.address;
+            const {serviceOrigin, fee, payee, address} = req.body;
+            if (!serviceOrigin || !fee || !payee || !address) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+            }
             const result = await contractApi.providerUpdate(serviceOrigin, fee, payee, address);
             if (result) {
                 res.status(200).send();
@@ -77,9 +69,6 @@ export function prosopoMiddleware(env): Router {
      * @return ...
      */
     router.post('/v1/prosopo/provider_deregister/', async function (req, res, next) {
-        if (req.body === undefined) {
-            return next(new Error(ERRORS.API.BODY_UNDEFINED.message));
-        }
         try {
             const address: string = req.body.address;
             const result = await contractApi.providerDeregister(address);
