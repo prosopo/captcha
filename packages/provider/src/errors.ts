@@ -19,9 +19,12 @@ export const ERRORS = {
         PARAMETER_UNDEFINED: {
             message: 'Parameters must be defined in API POST call'
         },
+
+    },
+    TRANSACTION : {
         TX_ERROR: {
             message: 'Error making tx'
-        }
+        }    
     }
 }
 

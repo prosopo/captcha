@@ -1,9 +1,9 @@
 import {Environment} from './env'
+import {ERRORS} from './errors'
 
 const {decodeAddress, encodeAddress} = require('@polkadot/keyring');
 const {hexToU8a, isHex} = require('@polkadot/util');
 const {blake2AsU8a} = require('@polkadot/util-crypto');
-
 
 export function encodeStringAddress(address: string) {
     try {
@@ -36,7 +36,11 @@ export class contractApiInterface {
         let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
         const response = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, encodedAddress);
         // @ts-ignore
-        return response.events.filter(x => x["name"] == "ProviderRegister");
+        if (response.events) {
+            return response.events.filter(x => x["name"] == "ProviderRegister")
+        } else {
+            throw(ERRORS.TRANSACTION.TX_ERROR)
+        }
     }
 
     //provider_update
@@ -47,7 +51,11 @@ export class contractApiInterface {
         let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
         const response = await signedContract.tx.providerUpdate(providerServiceOriginHash, providerFee, payee, encodedAddress);
         // @ts-ignore
-        return response.events.filter(x => x["name"] == "ProviderUpdate");
+        if (response.events) {
+            return response.events.filter(x => x["name"] == "ProviderUpdate")
+        } else {
+            throw(ERRORS.TRANSACTION.TX_ERROR)
+        }
     }
 
     //provider_deregister
@@ -57,7 +65,11 @@ export class contractApiInterface {
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerDeregister(encodedAddress);
         // @ts-ignore
-        return response.events.filter(x => x["name"] == "ProviderDeregister");
+        if (response.events) {
+            return response.events.filter(x => x["name"] == "ProviderDeregister")
+        } else {
+            throw(ERRORS.TRANSACTION.TX_ERROR)
+        }
     }
 
     //provider_stake
@@ -67,7 +79,11 @@ export class contractApiInterface {
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerStake({"value": value, "signer": this.env.providerSigner!})
         // @ts-ignore
-        return response.events.filter(x => x["name"] == "ProviderStake");
+        if (response.events) {
+            return response.events.filter(x => x["name"] == "ProviderStake")
+        } else {
+            throw(ERRORS.TRANSACTION.TX_ERROR)
+        }
     }
 
     //provider_unstake
@@ -77,7 +93,11 @@ export class contractApiInterface {
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerUnstake({"value": value, "signer": this.env.providerSigner!})
         // @ts-ignore
-        return response.events.filter(x => x["name"] == "ProviderUnstake");
+        if (response.events) {
+            return response.events.filter(x => x["name"] == "ProviderUnstake")
+        } else {
+            throw(ERRORS.TRANSACTION.TX_ERROR)
+        }
     }
 
     //provider_add_data_set
@@ -87,7 +107,11 @@ export class contractApiInterface {
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerAddDataSet(dataSetHash, {"signer": this.env.providerSigner})
         // @ts-ignore
-        return response.events.filter(x => x["name"] == "providerAddDataSet");
+        if (response.events) {
+            return response.events.filter(x => x["name"] == "ProviderAddDataSet")
+        } else {
+            throw(ERRORS.TRANSACTION.TX_ERROR)
+        }
     }
 
     //dapp_register
