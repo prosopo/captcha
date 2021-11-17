@@ -100,8 +100,18 @@ export function prosopoMiddleware(env): Router {
      * @return ...
      */
     router.post('/v1/prosopo/provider_unstake/', async function (req, res, next) {
-        //TODO
-        next()
+        try {
+            const {address, value} = req.body;
+            if (!address || !value) {
+                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+            }
+            const result = await contractApi.providerUnstake(address, value);
+            res.json(result);
+        } catch (err) {
+            // TODO properly handle errors
+            let msg = err ? JSON.stringify(err) : ERRORS.API.TX_ERROR.message;
+            throw new BadRequest(msg);
+        }
     });
 
     /**
