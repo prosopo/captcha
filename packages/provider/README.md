@@ -48,11 +48,10 @@ Generate a mnemonic and address:
 - `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Ferdie`
 - `bottom drive obey lake curtain smoke basket hold race lonely fit walk//Eve`
 
-Put the deployer mnemonic and address in the `env` file.
+Put the deployer mnemonic in the `env` file.
 
 ```bash
 DEPLOYER_MNEMONIC=... <-------here
-DEPLOYER_ADDRESS=...  <-------here
 PROVIDER_MNEMONIC=...
 PROVIDER_ADDRESS=...
 CONTRACT_ADDRESS=...
@@ -66,7 +65,6 @@ Copy the contract address to your `env` file.
 
 ```bash
 DEPLOYER_MNEMONIC=some very long set of words that equate to a mnemonic
-DEPLOYER_ADDRESS=0x123456123456123456123456123456123456
 PROVIDER_MNEMONIC=...
 PROVIDER_ADDRESS=...
 CONTRACT_ADDRESS=... <-------here
