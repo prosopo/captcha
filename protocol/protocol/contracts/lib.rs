@@ -449,6 +449,7 @@ mod prosopo {
                     value: total_balance,
                 });
             } else {
+                //TODO is this necessary with the changes in ink? - returning an error SHOULD revert any changes but does it return funds?
                 self.env().transfer(caller, transferred).ok();
                 return Err(ProsopoError::ProviderDoesNotExist);
             }
@@ -456,8 +457,9 @@ mod prosopo {
         }
 
         // Unstake and deactivate the provider's service, returning stake
+        // TODO allow Provider to unstake(withdraw) less than they have staked
         #[ink(message)]
-        //TODO allow Provider to unstake(withdraw) less than they have staked
+        #[ink(payable)]
         pub fn provider_unstake(&mut self) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             // TODO should the operators be able to do this ?
@@ -1123,7 +1125,7 @@ mod prosopo {
 
         use super::*;
 
-        type Event = <Prosopo as ::ink_lang::BaseEvent>::Type;
+        type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
 
         /// Test provider stake
         #[ink::test]
