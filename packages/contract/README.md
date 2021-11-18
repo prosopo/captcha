@@ -114,6 +114,15 @@ yarn dev provider_register \
 --address YOUR_PROVIDER_ADDRESS
 ````
 
+Try staking on the command line.
+
+```bash
+yarn build \ 
+&& yarn ts-node ./build/src/cli.js provider_stake \
+--value 10 \
+--address YOUR_PROVIDER_ADDRESS
+```
+
 Verify that your provider was registered by calling the `providers` endpoint or by checking in Polkadot Apps local node.
 
 ### Curl 
