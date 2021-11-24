@@ -419,6 +419,7 @@ mod prosopo {
         /// Constructor
         #[ink(constructor)]
         pub fn default(operator: AccountId) -> Self {
+            ink_env::debug_println!("in the constructor!");
             ink_lang::codegen::initialize_contract(|contract| {
                 Self::new_init(contract, operator)
             })
