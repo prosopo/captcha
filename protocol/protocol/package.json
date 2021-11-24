@@ -42,7 +42,7 @@
     "build": "yarn redspot compile",
     "test": "yarn redspot test",
     "explorer": "yarn redspot explorer",
-    "deploy": "npx --trace-warnings redspot run ./scripts/deploy.ts --release"
+    "deploy": "npx --trace-warnings redspot run ./scripts/deploy.ts"
   },
   "main": "index.js",
   "repository": "git@github.com:prosopo-io/protocol.git",
