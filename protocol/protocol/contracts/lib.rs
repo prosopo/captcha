@@ -440,6 +440,7 @@ mod prosopo {
         fn new_init(&mut self, operator_account: AccountId) {
             let operator = Operator { status: Status::Active };
             self.operators.insert(operator_account, operator);
+            self.operator_accounts.push(operator_account);
         }
 
 
@@ -483,7 +484,6 @@ mod prosopo {
 
         // // Update an existing provider, their service origin, fee
         #[ink(message)]
-        //TODO test this
         pub fn provider_update(
             &mut self,
             service_origin: Hash,
@@ -506,7 +506,12 @@ mod prosopo {
                 .get_provider_details(provider_account)
                 .unwrap();
             let transferred = self.env().transferred_balance();
-            let balance: u128 = existing.balance + transferred;
+
+            let mut balance = existing.balance;
+            if transferred > 0 {
+                balance = existing.balance + transferred;
+                self.provider_stake();
+            }
 
             // update an existing provider
             let provider = Provider {
@@ -1123,6 +1128,7 @@ mod prosopo {
             let operator_account = AccountId::from([0x1; 32]);
             let contract = Prosopo::default(operator_account);
             assert!(contract.operators.get(&operator_account).is_some());
+            assert!(contract.operator_accounts.contains(&operator_account));
         }
 
         /// Test provider register
@@ -1180,6 +1186,56 @@ mod prosopo {
         use std::fmt::{Debug, Formatter};
 
         type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
+
+        /// Test provider register and update
+        #[ink::test]
+        fn test_provider_register_and_update() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let mut contract = Prosopo::default(operator_account);
+            let provider_account = AccountId::from([0x2; 32]);
+            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let fee: u32 = 0;
+            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            assert!(contract.providers.get(&provider_account).is_some());
+            assert!(contract.provider_accounts.contains(&provider_account));
+            let service_origin = str_to_hash("https://localhost:4242".to_string());
+            let fee: u32 = 100;
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            let balance = 1000;
+            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
+            let provider = contract.providers.get(&provider_account).unwrap();
+            assert_eq!(provider.service_origin, service_origin);
+            assert_eq!(provider.fee, fee);
+            assert_eq!(provider.payee, Payee::Dapp);
+            assert_eq!(provider.balance, balance);
+
+            let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
+
+            // first event is the register event, second event is the stake event, finally update
+            assert_eq!(3, emitted_events.len());
+
+            let event_provider_stake = &emitted_events[1];
+            let event_provider_update = &emitted_events[2];
+
+            let decoded_event_update =
+                <Event as scale::Decode>::decode(&mut &event_provider_update.data[..])
+                    .expect("encountered invalid contract event data buffer");
+
+            if let Event::ProviderUpdate(ProviderUpdate { account }) =
+            decoded_event_update
+            {
+                assert_eq!(
+                    account, provider_account,
+                    "encountered invalid ProviderUpdate.account"
+                );
+            } else {
+                panic!(
+                    "encountered unexpected event kind: expected a ProviderUpdate event: {:?}", decoded_event_update
+                );
+            }
+
+        }
 
         /// Test provider stake
         #[ink::test]
@@ -1484,6 +1540,8 @@ mod prosopo {
             assert_eq!(dapp.balance, balance_1 + balance_2);
             assert!(contract.dapp_accounts.contains(&dapp_contract_account));
         }
+
+
 
         /// Test dapp fund account
         #[ink::test]
