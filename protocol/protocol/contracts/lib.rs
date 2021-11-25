@@ -1135,6 +1135,7 @@ mod prosopo {
             let fee: u32 = 0;
             contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
             assert!(contract.providers.get(&provider_account).is_some());
+            assert!(contract.provider_accounts.contains(&provider_account));
         }
 
         /// Test provider deregister
@@ -1394,6 +1395,7 @@ mod prosopo {
             // account is marked as suspended as zero tokens have been paid
             assert_eq!(dapp.status, Status::Suspended);
             assert_eq!(dapp.balance, balance);
+            assert!(contract.dapp_accounts.contains(&dapp_contract));
         }
 
         /// Test dapp register with positive balance transfer
@@ -1425,6 +1427,7 @@ mod prosopo {
             // account is marked as active as balance is now positive
             assert_eq!(dapp.status, Status::Active);
             assert_eq!(dapp.balance, balance);
+            assert!(contract.dapp_accounts.contains(&dapp_contract));
         }
 
         /// Test dapp register and then update
@@ -1479,6 +1482,7 @@ mod prosopo {
             // account is marked as active as tokens have been paid
             assert_eq!(dapp.status, Status::Active);
             assert_eq!(dapp.balance, balance_1 + balance_2);
+            assert!(contract.dapp_accounts.contains(&dapp_contract_account));
         }
 
         /// Test dapp fund account
