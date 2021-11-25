@@ -115,7 +115,6 @@ mod prosopo {
     impl ProviderAccountMap
     {
         fn insert(&mut self, key: AccountId, value: Provider) {
-            ink_env::debug_println!("provider insert {:?}", key);
             self.0.insert(key, &value);
         }
         fn get(&self, key: &AccountId) -> Option<Provider> {
@@ -133,7 +132,6 @@ mod prosopo {
     impl DappAccountMap
     {
         fn insert(&mut self, key: AccountId, value: Dapp) {
-            ink_env::debug_println!("dapp insert {:?}", key);
             self.0.insert(key, &value);
         }
         fn get(&self, key: &AccountId) -> Option<Dapp> {
@@ -450,7 +448,7 @@ mod prosopo {
             // }
             let balance: u128 = 0;
             // this function is for registration only
-            if self.providers.get(&provider_account).is_none() {
+            if self.providers.get(&provider_account).is_some() {
                 return Err(ProsopoError::ProviderExists);
             }
             // add a new provider
@@ -462,7 +460,6 @@ mod prosopo {
                 captcha_dataset_id: Hash::default(),
                 payee,
             };
-            ink_env::debug_println!("just about to insert a provider");
             self.providers.insert(provider_account, provider);
             self.provider_accounts.push(provider_account);
             self.env().emit_event(ProviderRegister {
@@ -637,7 +634,8 @@ mod prosopo {
             let owner = optional_owner.unwrap_or(caller);
             let transferred = self.env().transferred_balance();
             // enforces a one to one relation between caller and dapp
-            if self.dapps.get(&contract).is_some() {
+            if self.dapps.get(&contract).is_none() {
+                ink_env::debug_println!("going to insert dapp");
                 // mark the account as suspended if it is new and no funds have been transferred
                 let status = if transferred > 0 {
                     Status::Active
@@ -677,8 +675,7 @@ mod prosopo {
             contract: AccountId,
             caller: AccountId,
         ) {
-            let dapp_exists = self.dapps.get(&contract).is_some();
-            if dapp_exists == true {
+            if self.dapps.get(&contract).is_some() {
                 let mut dapp = self.dapps.get(&contract).unwrap();
                 // only allow the owner to make changes to the dapp (including funding?!)
                 if dapp.owner == caller {
@@ -1193,6 +1190,8 @@ mod prosopo {
 
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
 
+            //ink_env::debug_println!("{:?}", emitted_events);
+
             // first event is the register event, second event is the stake event
             assert_eq!(2, emitted_events.len());
 
@@ -1260,12 +1259,6 @@ mod prosopo {
 
             // events are the register event, stake event, and the unstake event
 
-            // let e0 = &mut &emitted_events[0].data[..];
-            // let decoded_event_unstake_0 = <Event as scale::Decode>::decode(e0);
-            //
-            // let Event::ProviderUnstake(ProviderUnstake { account, value }) = decoded_event_unstake_0;
-            // let message = ink_prelude::format!("{:?}", account);
-            // ink_env::debug_println!("{}",&message);
             assert_eq!(3, emitted_events.len());
 
             let event_unstake = &emitted_events[2];
@@ -1380,7 +1373,6 @@ mod prosopo {
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             let client_origin = str_to_hash("https://localhost:2424".to_string());
             contract.dapp_register(client_origin, dapp_contract, None);
-            ink_env::debug_println!("{:?}",contract.dapps);
             assert!(contract.dapps.get(&dapp_contract).is_some());
             let dapp = contract.dapps.get(&dapp_contract).unwrap();
             assert_eq!(dapp.owner, caller);
@@ -1409,7 +1401,6 @@ mod prosopo {
 
             // register the dapp
             contract.dapp_register(client_origin, dapp_contract, None);
-            ink_env::debug_println!("{:?}",contract.dapps);
             // check the dapp exists in the hashmap
             assert!(contract.dapps.get(&dapp_contract).is_some());
 
