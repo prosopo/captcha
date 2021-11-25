@@ -723,7 +723,6 @@ mod prosopo {
             let transferred = self.env().transferred_balance();
             if self.dapps.get(&contract).is_some() {
                 let mut dapp = self.dapps.get(&contract).unwrap();
-                ink_env::debug_println!("{:?}", dapp);
                 let total = dapp.balance + transferred;
                 dapp.balance = total;
                 if dapp.balance > 0 {
@@ -761,14 +760,13 @@ mod prosopo {
             let balance = dapp.balance;
             // TODO ensure that the dapp has no outstanding payments due
             if dapp.balance > 0 {
-                ink_env::debug_println!("Dapp Balance: {}", dapp.balance);
                 self.env().transfer(caller, dapp.balance).ok();
-                self.dapp_deregister(contract);
-                self.env().emit_event(DappCancel {
-                    contract,
-                    value: balance,
-                });
             }
+            self.dapp_deregister(contract);
+            self.env().emit_event(DappCancel {
+                contract,
+                value: balance,
+            });
 
             Ok(())
         }
@@ -1540,7 +1538,6 @@ mod prosopo {
             let dapp = contract.dapps.get(&contract_account).unwrap();
             assert_eq!(dapp.status, Status::Deactivated);
 
-            //ink_env::debug_println!("{:?}", InkString::from("blablabh"));
             // Make sure the funds are returned to the caller
             assert_eq!(dapp.balance, 0);
             let callers_balance =
@@ -1655,8 +1652,6 @@ mod prosopo {
             assert_eq!(commitment.status, Status::Approved);
             let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account);
             let new_provider_balance = contract.get_provider_balance(provider_account);
-            ink_env::debug_println!("\nDapp Balance: {}", new_dapp_balance);
-            ink_env::debug_println!("Provider Balance: {}", new_provider_balance);
             assert_eq!(balance - Balance::from(fee), new_dapp_balance);
             assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
@@ -1784,8 +1779,6 @@ mod prosopo {
             assert_eq!(commitment.status, Status::Disapproved);
             let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account);
             let new_provider_balance = contract.get_provider_balance(provider_account);
-            ink_env::debug_println!("\nDapp Balance: {}", new_dapp_balance);
-            ink_env::debug_println!("Provider Balance: {}", new_provider_balance);
             assert_eq!(balance - Balance::from(fee), new_dapp_balance);
             assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
@@ -1798,7 +1791,6 @@ mod prosopo {
             assert_eq!(commitment.status, Status::Disapproved);
             assert_eq!(balance - Balance::from(fee), contract.get_dapp_balance(dapp_contract_account));
             assert_eq!(balance + Balance::from(fee), contract.get_provider_balance(provider_account));
-            //ink_env::debug_println!("{:?}", contract.providers.values());
         }
 
         /// Test dapp user is human
