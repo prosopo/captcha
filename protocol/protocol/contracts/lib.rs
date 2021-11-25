@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #![cfg_attr(not(feature = "std"), no_std)]
+
 use ink_lang as ink;
 
 #[ink::contract]
@@ -24,7 +25,7 @@ mod prosopo {
         traits::PackedLayout,
         traits::SpreadAllocate,
         traits::SpreadLayout,
-        traits::StorageLayout
+        traits::StorageLayout,
     };
 
     #[derive(
@@ -273,6 +274,7 @@ mod prosopo {
 
     // Event emitted when a new provider registers
     #[ink(event)]
+    #[derive(Debug)]
     pub struct ProviderRegister {
         #[ink(topic)]
         account: AccountId,
@@ -280,6 +282,7 @@ mod prosopo {
 
     // Event emitted when a new provider deregisters
     #[ink(event)]
+    #[derive(Debug)]
     pub struct ProviderDeregister {
         #[ink(topic)]
         account: AccountId,
@@ -287,6 +290,7 @@ mod prosopo {
 
     // Event emitted when a new provider is updated
     #[ink(event)]
+    #[derive(Debug)]
     pub struct ProviderUpdate {
         #[ink(topic)]
         account: AccountId,
@@ -303,6 +307,7 @@ mod prosopo {
 
     // Event emitted when a provider adds a data set
     #[ink(event)]
+    #[derive(Debug)]
     pub struct ProviderAddDataset {
         #[ink(topic)]
         account: AccountId,
@@ -311,6 +316,7 @@ mod prosopo {
 
     // Event emitted when a provider unstakes
     #[ink(event)]
+    #[derive(Debug)]
     pub struct ProviderUnstake {
         #[ink(topic)]
         account: AccountId,
@@ -319,6 +325,7 @@ mod prosopo {
 
     // Event emitted when a provider approves a solution
     #[ink(event)]
+    #[derive(Debug)]
     pub struct ProviderApprove {
         #[ink(topic)]
         captcha_solution_commitment_id: Hash,
@@ -326,6 +333,7 @@ mod prosopo {
 
     // Event emitted when a provider disapproves a solution
     #[ink(event)]
+    #[derive(Debug)]
     pub struct ProviderDisapprove {
         #[ink(topic)]
         captcha_solution_commitment_id: Hash,
@@ -333,6 +341,7 @@ mod prosopo {
 
     // Event emitted when a dapp registers
     #[ink(event)]
+    #[derive(Debug)]
     pub struct DappRegister {
         #[ink(topic)]
         contract: AccountId,
@@ -343,6 +352,7 @@ mod prosopo {
 
     // Event emitted when a dapp updates
     #[ink(event)]
+    #[derive(Debug)]
     pub struct DappUpdate {
         #[ink(topic)]
         contract: AccountId,
@@ -353,6 +363,7 @@ mod prosopo {
 
     // Event emitted when a dapp funds
     #[ink(event)]
+    #[derive(Debug)]
     pub struct DappFund {
         #[ink(topic)]
         contract: AccountId,
@@ -361,6 +372,7 @@ mod prosopo {
 
     // Event emitted when a dapp cancels
     #[ink(event)]
+    #[derive(Debug)]
     pub struct DappCancel {
         #[ink(topic)]
         contract: AccountId,
@@ -369,6 +381,7 @@ mod prosopo {
 
     // Event emitted when a dapp user commits a solution hash
     #[ink(event)]
+    #[derive(Debug)]
     pub struct DappUserCommit {
         #[ink(topic)]
         account: AccountId,
@@ -522,7 +535,7 @@ mod prosopo {
                 let mut provider = self.providers.get(&provider_account).unwrap();
                 provider.status = Status::Deactivated;
                 self.providers.insert(provider_account, provider);
-                self.provider_accounts.retain(|account: &AccountId| account != &provider_account);
+                //self.provider_accounts.retain(|account: &AccountId| account != &provider_account);
                 self.env().emit_event(ProviderDeregister {
                     account: provider_account,
                 });
@@ -635,7 +648,6 @@ mod prosopo {
             let transferred = self.env().transferred_balance();
             // enforces a one to one relation between caller and dapp
             if self.dapps.get(&contract).is_none() {
-                ink_env::debug_println!("going to insert dapp");
                 // mark the account as suspended if it is new and no funds have been transferred
                 let status = if transferred > 0 {
                     Status::Active
@@ -711,20 +723,20 @@ mod prosopo {
             let transferred = self.env().transferred_balance();
             if self.dapps.get(&contract).is_some() {
                 let mut dapp = self.dapps.get(&contract).unwrap();
-                if dapp.owner == caller {
-                    let total = dapp.balance + transferred;
-                    dapp.balance = total;
-                    if dapp.balance > 0 {
-                        dapp.status = Status::Active;
-                        self.env().emit_event(DappFund {
-                            contract,
-                            value: total,
-                        });
-                    } else {
-                        // Suspended as dapp has no funds
-                        dapp.status = Status::Suspended;
-                    }
+                ink_env::debug_println!("{:?}", dapp);
+                let total = dapp.balance + transferred;
+                dapp.balance = total;
+                if dapp.balance > 0 {
+                    dapp.status = Status::Active;
+                    self.env().emit_event(DappFund {
+                        contract,
+                        value: total,
+                    });
+                } else {
+                    // Suspended as dapp has no funds
+                    dapp.status = Status::Suspended;
                 }
+                self.dapps.insert(contract, dapp);
             } else {
                 //return the transferred balance to the caller
                 self.env().transfer(caller, transferred).ok();
@@ -767,7 +779,8 @@ mod prosopo {
             dapp.status = Status::Deactivated;
             dapp.balance = 0;
             self.dapps.insert(dapp_account, dapp);
-            self.dapp_accounts.retain(|account: &AccountId| account != &dapp_account);
+            // TODO should these be retained or not?
+            //self.dapp_accounts.retain(|account: &AccountId| account != &dapp_account);
         }
 
         /// Captcha reputation protocol messages
@@ -1164,6 +1177,8 @@ mod prosopo {
         use crate::prosopo::ProsopoError::ProviderInactive;
 
         use super::*;
+        use ink_env::test::EmittedEvent;
+        use std::fmt::{Debug, Formatter};
 
         type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
 
@@ -1257,11 +1272,11 @@ mod prosopo {
             contract.provider_unstake().ok();
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
 
-            // events are the register event, stake event, and the unstake event
+            // events are the register event (0), stake event(1), deregister(2) and the unstake event(3)
 
-            assert_eq!(3, emitted_events.len());
+            assert_eq!(4, emitted_events.len());
 
-            let event_unstake = &emitted_events[2];
+            let event_unstake = &emitted_events[3];
             let decoded_event_unstake =
                 <Event as scale::Decode>::decode(&mut &event_unstake.data[..])
                     .expect("encountered invalid contract event data buffer");
@@ -1278,7 +1293,7 @@ mod prosopo {
                     "encountered invalid ProviderUnstake.value"
                 );
             } else {
-                panic!("encountered unexpected event kind: expected a ProviderStake event");
+                panic!("encountered unexpected event kind: expected a ProviderUnstake event {:?}", decoded_event_unstake);
             }
         }
 
@@ -1582,7 +1597,6 @@ mod prosopo {
 
             // check that the data is in the captcha_solution_commitments hashmap
             assert!(contract.captcha_solution_commitments.get(&user_root).is_some());
-
         }
 
         /// Test provider approve

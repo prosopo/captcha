@@ -5,12 +5,12 @@ authors = ["Chris Taylor chris@prosopo.io"]
 edition = "2021"
 
 [dependencies]
-ink_primitives = { git = "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
-ink_metadata = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false, features = ["derive"], optional = true }
-ink_env = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
-ink_storage = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
-ink_lang = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
-ink_prelude = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
+ink_primitives = { path = "/home/chris/dev/ink/crates/primitives", default-features = false }
+ink_metadata = { path = "/home/chris/dev/ink/crates/metadata", default-features = false, features = ["derive"], optional = true }
+ink_env = { path = "/home/chris/dev/ink/crates/env", default-features = false }
+ink_storage = { path = "/home/chris/dev/ink/crates/storage", default-features = false }
+ink_lang = { path = "/home/chris/dev/ink/crates/lang", default-features = false }
+ink_prelude = { path = "/home/chris/dev/ink/crates/prelude", default-features = false }
 scale = { package = "parity-scale-codec", version = "2.1", default-features = false, features = ["derive"] }
 scale-info = { version = "1.0.0", default-features = false, features = ["derive"], optional = true }
 [lib]
