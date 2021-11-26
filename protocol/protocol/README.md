@@ -41,7 +41,7 @@ cargo install cargo-contract --vers ^0.16 --force --locked
 
 ## Build
 
-Use the release flag to minimise contract size.
+Note: Use the `--release` flag to minimise contract size if the contract is too large to put on-chain.
 
 ```bash
 cargo +nightly contract build
