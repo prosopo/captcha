@@ -36,7 +36,7 @@ sudo cp ./binaryen-version_101/bin/* /usr/bin
 ```
 5. Install the Ink CLI
 ```bash
-cargo install cargo-contract --vers ^0.15 --force --locked
+cargo install cargo-contract --vers ^0.16 --force --locked
 ```
 
 ## Build
@@ -44,7 +44,7 @@ cargo install cargo-contract --vers ^0.15 --force --locked
 Use the release flag to minimise contract size.
 
 ```bash
-cargo +nightly contract build --release
+cargo +nightly contract build
 ```
 
 ## Test
