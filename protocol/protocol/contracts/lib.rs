@@ -1118,6 +1118,17 @@ mod prosopo {
         use std::fmt::{Debug, Formatter};
 
         type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
+        /// Test add operator
+        #[ink::test]
+        fn test_add_operator() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let mut contract = Prosopo::default(operator_account);
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
+            let operator_account_new = AccountId::from([0x2; 32]);
+            contract.add_prosopo_operator(operator_account_new);
+            assert!(contract.operator_accounts.contains(&operator_account_new));
+            assert!(contract.operators.get(&operator_account_new).is_some());
+        }
 
         /// Test provider register and update
         #[ink::test]
