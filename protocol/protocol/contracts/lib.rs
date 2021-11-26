@@ -87,77 +87,6 @@ mod prosopo {
     }
 
 
-    // #[derive(Debug, scale::Encode, scale::Decode, SpreadLayout, SpreadAllocate)]
-    // #[cfg_attr(
-    // feature = "std",
-    // derive(scale_info::TypeInfo, StorageLayout)
-    // )]
-    // pub struct AccountMap<T>(Mapping<AccountId, T>)
-    //     where T: scale::Encode + scale::Decode + SpreadLayout + PackedLayout + scale_info::TypeInfo;
-    //
-    // impl<T> AccountMap<T>
-    //     where
-    //         T: PackedLayout + scale::Encode + scale::Decode + scale::EncodeLike + scale_info::TypeInfo
-    // {
-    //     fn insert(&mut self, key: AccountId, value: T) {
-    //         self.0.insert(key, &value);
-    //     }
-    //     fn get(&self, key: &AccountId) -> Option<T> {
-    //         return self.0.get(key);
-    //     }
-    // }
-    #[derive(Debug, SpreadLayout, SpreadAllocate)]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
-    pub struct ProviderAccountMap(Mapping<AccountId, Provider>);
-
-    impl ProviderAccountMap
-    {
-        fn insert(&mut self, key: AccountId, value: Provider) {
-            self.0.insert(key, &value);
-        }
-        fn get(&self, key: &AccountId) -> Option<Provider> {
-            return self.0.get(key);
-        }
-    }
-
-    #[derive(Debug, SpreadLayout, SpreadAllocate)]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
-    pub struct DappAccountMap(Mapping<AccountId, Dapp>);
-
-    impl DappAccountMap
-    {
-        fn insert(&mut self, key: AccountId, value: Dapp) {
-            self.0.insert(key, &value);
-        }
-        fn get(&self, key: &AccountId) -> Option<Dapp> {
-            return self.0.get(key);
-        }
-    }
-
-    #[derive(Debug, SpreadLayout, SpreadAllocate)]
-    #[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, StorageLayout)
-    )]
-    pub struct OperatorAccountMap(Mapping<AccountId, Operator>);
-
-    impl OperatorAccountMap
-    {
-        fn insert(&mut self, key: AccountId, value: Operator) {
-            self.0.insert(key, &value);
-        }
-        fn get(&self, key: &AccountId) -> Option<Operator> {
-            return self.0.get(key);
-        }
-    }
-
-
     #[derive(
     PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, SpreadLayout, PackedLayout, SpreadAllocate
     )]
@@ -254,15 +183,15 @@ mod prosopo {
     #[derive(SpreadAllocate)]
     pub struct Prosopo {
         //tokenContract: AccountId,
-        providers: ProviderAccountMap,
+        providers: Mapping<AccountId, Provider>,
         provider_accounts: Vec<AccountId>,
         captcha_data: Mapping<Hash, CaptchaData>,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>,
         provider_stake_default: u128,
-        dapps: DappAccountMap,
+        dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Vec<AccountId>,
         //dapps_owners: Mapping<AccountId, AccountId>,
-        operators: OperatorAccountMap,
+        operators: Mapping<AccountId, Operator>,
         operator_accounts: Vec<AccountId>,
         //disputes: Mapping<u64, Dispute>
         status: Status,
@@ -440,7 +369,7 @@ mod prosopo {
         /// Default initializes the contract with the specified initial supply.
         fn new_init(&mut self, operator_account: AccountId) {
             let operator = Operator { status: Status::Active };
-            self.operators.insert(operator_account, operator);
+            self.operators.insert(operator_account, &operator);
             self.operator_accounts.push(operator_account);
         }
 
@@ -477,7 +406,7 @@ mod prosopo {
                 captcha_dataset_id: Hash::default(),
                 payee,
             };
-            self.providers.insert(provider_account, provider);
+            self.providers.insert(provider_account, &provider);
             self.provider_accounts.push(provider_account);
             self.env().emit_event(ProviderRegister {
                 account: provider_account,
@@ -525,7 +454,7 @@ mod prosopo {
                 captcha_dataset_id: existing.captcha_dataset_id,
                 payee,
             };
-            self.providers.insert(provider_account, provider);
+            self.providers.insert(provider_account, &provider);
 
             self.env().emit_event(ProviderUpdate {
                 account: provider_account,
@@ -542,7 +471,7 @@ mod prosopo {
                 //if self.operators.get(&caller) {
                 let mut provider = self.providers.get(&provider_account).unwrap();
                 provider.status = Status::Deactivated;
-                self.providers.insert(provider_account, provider);
+                self.providers.insert(provider_account, &provider);
                 //self.provider_accounts.retain(|account: &AccountId| account != &provider_account);
                 self.env().emit_event(ProviderDeregister {
                     account: provider_account,
@@ -571,7 +500,7 @@ mod prosopo {
                 if total_balance >= self.provider_stake_default {
                     provider.status = Status::Active;
                 }
-                self.providers.insert(caller, provider);
+                self.providers.insert(caller, &provider);
                 self.env().emit_event(ProviderStake {
                     account: caller,
                     value: total_balance,
@@ -631,7 +560,7 @@ mod prosopo {
             // set the captcha data id on the provider
             let mut provider = self.providers.get(&provider_id).unwrap();
             provider.captcha_dataset_id = merkle_tree_root;
-            self.providers.insert(provider_id, provider);
+            self.providers.insert(provider_id, &provider);
 
             // emit event
             self.env().emit_event(ProviderAddDataset {
@@ -671,7 +600,7 @@ mod prosopo {
                     client_origin,
                 };
                 // keying on contract allows owners to own many contracts
-                self.dapps.insert(contract, dapp);
+                self.dapps.insert(contract,&dapp);
                 self.dapp_accounts.push(contract);
                 // emit event
                 self.env().emit_event(DappRegister {
@@ -708,7 +637,7 @@ mod prosopo {
                     } else {
                         dapp.status = Status::Suspended;
                     }
-                    self.dapps.insert(contract, dapp);
+                    self.dapps.insert(contract,&dapp);
                     // emit event
                     self.env().emit_event(DappUpdate {
                         contract,
@@ -743,7 +672,7 @@ mod prosopo {
                     // Suspended as dapp has no funds
                     dapp.status = Status::Suspended;
                 }
-                self.dapps.insert(contract, dapp);
+                self.dapps.insert(contract,&dapp);
             } else {
                 //return the transferred balance to the caller
                 self.env().transfer(caller, transferred).ok();
@@ -784,7 +713,7 @@ mod prosopo {
             let mut dapp = self.dapps.get(&dapp_account).unwrap();
             dapp.status = Status::Deactivated;
             dapp.balance = 0;
-            self.dapps.insert(dapp_account, dapp);
+            self.dapps.insert(dapp_account, &dapp);
             // TODO should these be retained or not?
             //self.dapp_accounts.retain(|account: &AccountId| account != &dapp_account);
         }
@@ -943,8 +872,8 @@ mod prosopo {
                     provider.balance = provider.balance - fee;
                     dapp.balance = dapp.balance + fee;
                 }
-                self.providers.insert(*provider_account, provider);
-                self.dapps.insert(*dapp_account, dapp);
+                self.providers.insert(*provider_account, &provider);
+                self.dapps.insert(*dapp_account, &dapp);
             }
             Ok(())
         }
@@ -974,7 +903,7 @@ mod prosopo {
             let caller = self.env().caller();
             if self.operators.get(&caller).is_some() {
                 let operator = Operator { status: Status::Active };
-                self.operators.insert(operator_account, operator);
+                self.operators.insert(operator_account, &operator);
                 self.operator_accounts.push(operator_account);
             }
         }
