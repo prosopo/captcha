@@ -21,8 +21,8 @@ rustup target add wasm32-unknown-unknown --toolchain nightly
 3. Setup contract node
 A specific version of the contract node is [required](https://stackoverflow.com/questions/69826769/how-can-i-query-contract-info-with-the-latest-polkadot-js-and-substrate-contract/69831057#69831057) to work with polkadotjs.
 ```
-git clone https://github.com/paritytech/substrate &&
-cd substrate &&
+git clone https://github.com/paritytech/substrate-contracts-node &&
+cd substrate-contracts-node &&
 git checkout 8d91b8e578065a7c06433cbd41ac059bf478a0bd &&
 cargo build && 
 ./target/debug/substrate-contracts-node --dev --tmp --version
