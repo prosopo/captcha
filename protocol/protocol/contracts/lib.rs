@@ -431,6 +431,7 @@ mod prosopo {
         #[ink(constructor)]
         pub fn default(operator: AccountId) -> Self {
             ink_env::debug_println!("in the constructor!");
+
             ink_lang::codegen::initialize_contract(|contract| {
                 Self::new_init(contract, operator)
             })
@@ -442,6 +443,8 @@ mod prosopo {
             self.operators.insert(operator_account, operator);
             self.operator_accounts.push(operator_account);
         }
+
+
 
 
         /// Setup phase messages
@@ -1234,7 +1237,6 @@ mod prosopo {
                     "encountered unexpected event kind: expected a ProviderUpdate event: {:?}", decoded_event_update
                 );
             }
-
         }
 
         /// Test provider stake
@@ -1540,7 +1542,6 @@ mod prosopo {
             assert_eq!(dapp.balance, balance_1 + balance_2);
             assert!(contract.dapp_accounts.contains(&dapp_contract_account));
         }
-
 
 
         /// Test dapp fund account
