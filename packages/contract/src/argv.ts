@@ -3,6 +3,7 @@ import BN from 'bn.js';
 import {ERRORS} from './errors'
 // @ts-ignore
 import yargs from 'yargs'
+import { Compact, u128} from '@polkadot/types';
 
 const {isHex} = require('@polkadot/util');
 
@@ -19,11 +20,12 @@ const validatePayee = (argv) => {
 }
 
 const validateValue = (argv) => {
-    try {
-        let value = new BN(argv.value);
+    if (typeof argv.value === 'number') {
+        let value: Compact<u128> = argv.value as Compact<u128>;
+        console.log(value);
         return {value}
-    } catch (err) {
-        throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${err}::${argv.value}`)
+    } else {
+        throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`)
     }
 }
 
@@ -70,13 +72,13 @@ export async function processArgs(args, contractApi) {
                     .option('value', {type: 'number', demand: true,})
             }, async (argv) => {
                 try {
-                    let result = await contractApi.providerStake(argv.address, argv.value);
+                    let result = await contractApi.providerStake(argv.value);
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);
                 }
             },
-            [validateAddress]
+            [validateValue]
         )
         .command('provider_unstake', 'Unstake funds as a Provider', (yargs) => {
                 return yargs
@@ -84,7 +86,7 @@ export async function processArgs(args, contractApi) {
                     .option('value', {type: 'number', demand: true,})
             }, async (argv) => {
                 try {
-                    let result = await contractApi.providerUnstake(argv.address, argv.value);
+                    let result = await contractApi.providerUnstake(argv.value);
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);
@@ -99,7 +101,7 @@ export async function processArgs(args, contractApi) {
             }, async (argv) => {
                 try {
                     //TODO add the data set to the database and then add the dataset to the blockchain
-                    let result = await contractApi.providerAddDataSet(argv.address, argv.value);
+                    let result = await contractApi.providerAddDataSet(argv.value);
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);

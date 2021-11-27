@@ -1,8 +1,7 @@
 import {Environment} from './env'
 import {ERRORS} from './errors'
 import {encodeStringAddress} from './util'
-import {Option, Text} from '@polkadot/types';
-
+import {Option, Text, Compact, u128} from '@polkadot/types';
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
 export class contractApiInterface {
@@ -20,8 +19,10 @@ export class contractApiInterface {
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
         const response = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, encodedAddress);
+        console.log(response);
         // @ts-ignore
         if (response.events) {
+
             return response.events.filter(x => x["name"] == "ProviderRegister")
         } else {
             throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
@@ -59,9 +60,8 @@ export class contractApiInterface {
     }
 
     //provider_stake
-    async providerStake(address: string, value: number) {
+    async providerStake(value: number) {
         await this.env.isReady();
-        let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerStake({"value": value, "signer": this.env.providerSigner!})
         // @ts-ignore
@@ -73,9 +73,8 @@ export class contractApiInterface {
     }
 
     //provider_unstake
-    async providerUnstake(address, value) {
+    async providerUnstake(value) {
         await this.env.isReady();
-        let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerUnstake({"value": value, "signer": this.env.providerSigner!})
         // @ts-ignore
@@ -87,9 +86,8 @@ export class contractApiInterface {
     }
 
     //provider_add_data_set
-    async providerAddDataSet(address, dataSetHash) {
+    async providerAddDataSet(dataSetHash) {
         await this.env.isReady();
-        let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
         const response = await signedContract.tx.providerAddDataSet(dataSetHash, {"signer": this.env.providerSigner})
         // @ts-ignore
@@ -101,9 +99,8 @@ export class contractApiInterface {
     }
 
     //dapp_register
-    async dappRegister(address: string, dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined) {
+    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined) {
         await this.env.isReady();
-        let encodedAddress = encodeStringAddress(address);
         const signedContract = this.env.contract!.connect(this.env.dappSigner!)
         const registry = this.env.network.api.registry;
         const response = await signedContract.tx.dappRegister(dappServiceOrigin, dappContractAddress, new Option(registry, Text, dappOwner))
