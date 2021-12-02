@@ -7,6 +7,6 @@ export const PROVIDER_SUBTASKS = [
     'deregister',
     'stake',
     'unstake',
-    'add_data_set'
+    'add_data_set',
 ]
 export const BASE_PARAMS = ['api']

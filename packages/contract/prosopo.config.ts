@@ -1,5 +1,4 @@
-import {ProsopoConfig} from './src/types/config'
-//import { Payee } from './src/types/api'
+import {ProsopoConfig} from './src/types'
 
 //TODO create types folder and make a types file per category of types
 export default {
@@ -25,7 +24,8 @@ export default {
     },
     database: {
         development: {
-            endpoint: "127.0.0.1:27017",
+            type: "mongo",
+            endpoint: "mongodb://127.0.0.1:27017",
             dbname: "prosopo"
         }
     },
