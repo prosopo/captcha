@@ -26,19 +26,12 @@ export interface ProsopoConfig {
     },
     database: {
         development: {
+            type: string,
             endpoint: string
             dbname: string
         }
     },
 
 
-}
-
-export interface MnemonicFile {
-    mnemonic: string
-}
-
-export interface PasswordFile {
-    password: string
 }
 

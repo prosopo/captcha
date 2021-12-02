@@ -1,6 +1,6 @@
 // TODO this should be implemented as a Mongoose Schema if mongoDB is to be used.
 //     or should it? https://www.mongodb.com/developer/article/mongoose-versus-nodejs-driver/
-import {Hash} from './api';
+export type Hash = string
 
 // may want to use IPFS or Hashlinks on files to have proof of integrity
 // https://datatracker.ietf.org/doc/html/draft-sporny-hashlink
@@ -26,3 +26,4 @@ type DatasetCollectionSchema = {
     datasetId: string,
     rootHash: MerkleLeaf
 }
+

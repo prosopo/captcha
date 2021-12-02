@@ -1,19 +1,20 @@
-import {Signer} from "redspot/types";
-import {MongoClient, TypedEventEmitter, MongoClientEvents, Collection, UpdateResult, ObjectId} from "mongodb";
-
-export interface ContractDetails {
-    _id: string,
-    address: string,
-    owner: string,
-}
+import {Collection} from "mongodb";
+import {Captcha, Dataset} from "./captcha";
 
 export interface Database {
     readonly url: string;
-    collections: { contract?: Collection }
+    tables: { captcha?: Table, dataset?: Table }
     dbname: string;
 
     connect(): Promise<void>;
-    updateContractDetails(contract: Signer, deployer: Signer, contractName: string): Promise<UpdateResult>;
-    // getContractDetails(name: string): Promise<typeof Document>;
-    
+
+    loadDataset(dataset: Dataset, hash: string): Promise<void>;
+
+    getCaptcha(solved: boolean, datasetId: string): Promise<Captcha | undefined>;
+
+    updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>;
+
 }
+
+// Other table types from other database engines go here
+export type Table = Collection | undefined

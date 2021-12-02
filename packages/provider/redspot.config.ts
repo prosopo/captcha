@@ -6,7 +6,7 @@ import "@redspot/gas-reporter";
 import "@redspot/watcher";
 import "@redspot/explorer";
 import "@redspot/decimals";
-import contractDefinitions from "./src/types/contract"
+import {contractDefinitions} from "./src/contract/definitions"
 
 export default {
     defaultNetwork: "development",

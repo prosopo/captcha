@@ -1,10 +1,11 @@
 import {Environment} from './env'
 import {ERRORS} from './errors'
-import {encodeStringAddress} from './util'
-import {Option, Text, Compact, u128} from '@polkadot/types';
+import {contractApiInterface} from "./types/contract";
+import {isU8a} from '@polkadot/util'
+
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
-export class contractApiInterface {
+export class prosopoContractApi implements contractApiInterface {
 
     env: Environment
 
@@ -12,143 +13,82 @@ export class contractApiInterface {
         this.env = env;
     }
 
-    // provider_register
-    async providerRegister(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
-        await this.env.isReady();
-        let encodedAddress = encodeStringAddress(address);
-        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-        let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
-        const response = await signedContract.tx.providerRegister(providerServiceOriginHash, providerFee, payee, encodedAddress);
-        console.log(response);
-        // @ts-ignore
-        if (response.events) {
-
-            return response.events.filter(x => x["name"] == "ProviderRegister")
-        } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
-        }
-    }
-
-    //provider_update
-    async providerUpdate(providerServiceOrigin: string, providerFee: number, payee: string, address: string) {
-        await this.env.isReady();
-        let encodedAddress = encodeStringAddress(address);
-        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-        let providerServiceOriginHash = blake2AsU8a(providerServiceOrigin);
-        const response = await signedContract.tx.providerUpdate(providerServiceOriginHash, providerFee, payee, encodedAddress);
-        // @ts-ignore
-        if (response.events) {
-            return response.events.filter(x => x["name"] == "ProviderUpdate")
-        } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
-        }
-    }
-
-    //provider_deregister
-    async providerDeregister(address: string) {
-        await this.env.isReady();
-        let encodedAddress = encodeStringAddress(address);
-        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-        const response = await signedContract.tx.providerDeregister(encodedAddress);
-        // @ts-ignore
-        console.log(response.events);
-        if (response.events) {
-            return response.events.filter(x => x["name"] == "ProviderDeregister")
-        } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
-        }
-    }
-
-    //provider_stake
-    async providerStake(value: number) {
+    /**
+     * Perform a contract call
+     *
+     * @return JSON result containing the contract event
+     */
+    async contractTx(contractMethodName: string, args: Array<any>, value?: number): Promise<Object> {
         await this.env.isReady();
         const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-        const response = await signedContract.tx.providerStake({"value": value, "signer": this.env.providerSigner!})
+        const encodedArgs = this.encodeArgs(contractMethodName, args);
+        let response;
+        if (value) {
+            response = await signedContract.tx[contractMethodName](...encodedArgs, {value: value});
+        } else {
+            response = await signedContract.tx[contractMethodName](...encodedArgs);
+        }
         // @ts-ignore
         if (response.events) {
-            return response.events.filter(x => x["name"] == "ProviderStake")
+            const eventName = this.getEventNameFromMethodName(contractMethodName);
+            return response.events.filter(x => x["name"] == eventName)
         } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
+            throw(ERRORS.CONTRACT.TX_ERROR); //TODO get the error information from response
         }
     }
 
-    //provider_unstake
-    async providerUnstake(value) {
+    /** Encodes arguments that should be hashes using blake2AsU8a
+
+     * @return encoded arguments
+     */
+    encodeArgs(contractFunction: string, args: any[], value?: number): any[] {
+        const methodObj = this.getContractMethod(contractFunction);
+        let encodedArgs: any[] = [];
+        // args must be in the same order as methodObj['args']
+        methodObj['args'].forEach(function (methodArg, idx) {
+            if (methodArg['type']['type'] === 'Hash' && !isU8a(args[idx])) {
+                encodedArgs.push(blake2AsU8a(args[idx]));
+            } else {
+                encodedArgs.push(args[idx]);
+            }
+        });
+        return encodedArgs
+    }
+
+    /** Get the contract method from the ABI
+     * @return the contract method object
+     */
+    getContractMethod(contractMethodName: string): Object {
+        const methodObj = this.env.contract?.abi.messages.filter(obj => obj['method'] === contractMethodName)[0];
+        if (methodObj) {
+            return methodObj
+        } else {
+            throw (ERRORS.CONTRACT.INVALID_METHOD);
+        }
+    }
+
+    /**
+     * Get the event name from the contract method name
+     * Each of the contract methods returns an event with a capitalised version of the method name
+     * @return {string} event name
+     */
+    getEventNameFromMethodName(contractMethodName: string): string {
+        return contractMethodName[0].toUpperCase() + contractMethodName.substring(1);
+    }
+
+
+    /**
+     * Get the data at specified storage key
+     * @return {any} data
+     */
+    async getStorage(key: string): Promise<any> {
         await this.env.isReady();
-        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-        const response = await signedContract.tx.providerUnstake({"value": value, "signer": this.env.providerSigner!})
-        // @ts-ignore
-        if (response.events) {
-            return response.events.filter(x => x["name"] == "ProviderUnstake")
-        } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
-        }
-    }
-
-    //provider_add_data_set
-    async providerAddDataSet(dataSetHash) {
-        await this.env.isReady();
-        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
-        const response = await signedContract.tx.providerAddDataSet(dataSetHash, {"signer": this.env.providerSigner})
-        // @ts-ignore
-        if (response.events) {
-            return response.events.filter(x => x["name"] == "ProviderAddDataSet")
-        } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
-        }
-    }
-
-    //dapp_register
-    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined) {
-        await this.env.isReady();
-        const signedContract = this.env.contract!.connect(this.env.dappSigner!)
-        const registry = this.env.network.api.registry;
-        const response = await signedContract.tx.dappRegister(dappServiceOrigin, dappContractAddress, new Option(registry, Text, dappOwner))
-        // @ts-ignore
-        if (response.events) {
-            return response.events.filter(x => (x["name"] == "DappRegister" || x["name"] == "DappUpdate"))
-        } else {
-            throw(ERRORS.TRANSACTION.TX_ERROR); //TODO get the error information from respons
-        }
-    }
-
-    //dapp_fund
-    async dappFund() {
-    }
-
-    //dapp_cancel
-    async dappCancel() {
-    }
-
-    //dapp_deregister
-    async dappDeregister() {
-    }
-
-    //dapp_user_commit
-    async dappUserCommit() {
-    }
-
-    //provider_approve
-    async providerApprove() {
-    }
-
-    //provider_disapprove
-    async providerDisapprove() {
-    }
-
-    //dapp_operator_is_human_user
-    async dappOperatorIsHumanUser() {
-    }
-
-    //dapp_operator_check_recent_solution
-    async dappOperatorCheckRecentSolution() {
-    }
-
-    //add_prosopo_operator
-    async addProsopoOperator() {
-    }
-
-    //captcha_solution_commitment
-    async captchaSolutionCommitment() {
+        const promiseresult = await this.env.network.api.rpc.contracts.getStorage(this.env.contractAddress, key);
+        const data = promiseresult.unwrapOrDefault();
+        let buffer = Buffer.from(data);
+        // data is returned here
+        console.log(buffer.readUInt8(0));
+        console.log(data.toHex());
     }
 }
+

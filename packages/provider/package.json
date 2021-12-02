@@ -1,16 +1,15 @@
 {
   "name": "provider",
   "version": "0.1",
-  "private": true,
   "author": "Prosopo",
-  "bin": "build/src/cli.js",
   "module": "true",
   "scripts": {
     "build": "tsc --project ./",
     "dev": "yarn build && yarn setup && yarn start",
-    "start": "ts-node ./build/src/cli.js",
+    "start": "ts-node ./build/src/cli/cli.js",
     "setup": "yarn ts-node ./build/scripts/setupdev.js",
-    "mnemonic": "yarn build && yarn ts-node ./build/scripts/generateMnemonic.js"
+    "mnemonic": "yarn build && yarn ts-node ./build/scripts/generateMnemonic.js",
+    "test": "npx redspot test"
   },
   "dependencies": {
     "@redspot/chai": "file:../../redspot/build/redspot-chai",
@@ -20,11 +19,18 @@
     "@redspot/known-types": "file:../../redspot/build/redspot-known-types",
     "@redspot/patract": "file:../../redspot/build/redspot-patract",
     "@redspot/watcher": "file:../../redspot/build/redspot-watcher",
+    "@types/mocha": "^9.0.0",
     "express": "^4.17.1",
     "mongodb": "^4.1.4",
     "redspot": "file:../../redspot/build/redspot-core",
     "ts-node": "^10.0.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.5.2",
+    "zod": "^3.11.6"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.14",
+    "chai": "^4.3.4",
+    "mocha": "8.4.0"
   },
   "resolutions": {
     "@polkadot/api": "^6.8.1",
@@ -33,17 +39,16 @@
     "@polkadot/util": "^7.8.2",
     "@polkadot/keyring": "^7.8.2",
     "@polkadot/util-crypto": "^7.8.2",
-    "@types/yargs" : "^17.0.6",
+    "@types/yargs": "^17.0.6",
     "bn.js": "^4.12",
-    "dotenv": "10.0.0",
-    "yargs": "^17.2.1"
-
+    "dotenv": "8.0.0",
+    "yargs": "^17.2.1",
+    "mocha": "8.4.0"
   },
   "files": [
     "./redspot.config.ts",
     "./prosopo.config.ts"
   ],
-  "main": "index.js",
   "repository": "ssh://git@github.com/prosopo-io/provider",
-  "license": "GPLv3"
+  "license": "GPL-3.0"
 }
