@@ -89,6 +89,7 @@ export class prosopoContractApi implements contractApiInterface {
         // data is returned here
         console.log(buffer.readUInt8(0));
         console.log(data.toHex());
+        throw "NotImplemented";
     }
 }
 
