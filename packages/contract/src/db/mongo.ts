@@ -9,6 +9,12 @@ import {Captcha, Dataset} from "../types/captcha";
 
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
 
+/**
+ * Returns the Database object through which Providers can put and get captchas
+ * @param {string} url          The database endpoint
+ * @param {string} dbname       The database name
+ * @return {ProsopoDatabase}    Database layer
+ */
 export class ProsopoDatabase implements Database {
     readonly url: string;
     tables: { captchas?: Collection, dataset?: Collection }
