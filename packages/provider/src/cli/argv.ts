@@ -51,7 +51,7 @@ export async function processArgs(args, env) {
                     .option('address', {type: 'string', demand: true,})
             }, async (argv) => {
                 try {
-                    let result = await tasks.contractApi.providerDeregister(argv.address);
+                    let result = await tasks.providerDeregister(argv.address);
                     console.log(JSON.stringify(result, null, 2));
                 } catch (err) {
                     console.log(err);

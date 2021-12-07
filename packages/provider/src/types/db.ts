@@ -8,13 +8,14 @@ export interface Database {
 
     connect(): Promise<void>;
 
-    loadDataset(dataset: Dataset, hash: string): Promise<void>;
+    loadDataset(dataset: Dataset): Promise<void>;
 
-    getCaptcha(solved: boolean, datasetId: string): Promise<Captcha | undefined>;
+    getCaptcha(solved: boolean, datasetId: string, size?: number): Promise<Captcha[] | undefined>;
 
     updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>;
 
+    getDatasetDetails(datasetId: string);
 }
 
 // Other table types from other database engines go here
-export type Table = Collection | undefined
+export type Table = Collection | undefined | Object

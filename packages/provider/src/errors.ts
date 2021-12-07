@@ -28,11 +28,11 @@ export const ERRORS = {
         DATASET_LOAD_FAILED: {
             message: 'Data set load failed'
         },
+        DATASET_GET_FAILED: {
+            message: 'Failed to get dataset'
+        },
         CAPTCHA_GET_FAILED: {
             message: 'Failed to get captcha'
-        },
-        CAPTCHA_UPDATE_FAILED: {
-            message: 'Failed to update captcha'
         },
         NO_CAPTCHAS_FOUND : {
             message: 'No captcha matching datasetId'

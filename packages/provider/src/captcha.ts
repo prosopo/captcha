@@ -1,24 +1,29 @@
-import {Captcha, Dataset, DatasetSchema} from "./types/captcha";
+import {Dataset, DatasetSchema} from "./types/captcha";
 import {ERRORS} from './errors'
+import {CaptchaMerkleTree} from "./merkle";
 
-const {u8aConcat, u8aToHex} = require('@polkadot/util');
-const {blake2AsU8a} = require('@polkadot/util-crypto');
+const {blake2AsU8a, blake2AsHex} = require('@polkadot/util-crypto');
 
-function hash(data: string): Uint8Array {
+function hash(data: string | Uint8Array): Uint8Array {
+
     return blake2AsU8a(data);
 }
 
-export function hashDataset(captchas: Captcha[]): Uint8Array {
+export function hexHash(data: string | Uint8Array): string {
+    return blake2AsHex(data);
+}
+
+export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): Dataset {
     try {
-        // each captcha is a leaf in a very wide merkle tree
-        const hashes = captchas.map(captcha => hash(captcha['id'] + captcha['solution'] + captcha['salt']));
-        return hash(u8aConcat(hashes))
+        dataset['captchas'] = dataset['captchas'].map((captcha, index) => (
+            {captchaId: tree.leaves[index].hash, ...captcha}
+        ))
+        return dataset
     } catch (err) {
         throw(`${ERRORS.DATASET.HASH_ERROR.message}:\n${err}`);
     }
 
 }
-
 
 export function parseCaptchaDataset(captchaJSON: JSON): Dataset {
     try {

@@ -14,8 +14,10 @@ export class prosopoContractApi implements contractApiInterface {
     }
 
     /**
-     * Perform a contract call
-     *
+     * Perform a contract transaction calling the specified method
+     * @param {string} contractMethodName
+     * @param {Array}  args
+     * @param {number} value    A value to send with the transaction, e.g. a stake
      * @return JSON result containing the contract event
      */
     async contractTx(contractMethodName: string, args: Array<any>, value?: number): Promise<Object> {
@@ -33,7 +35,7 @@ export class prosopoContractApi implements contractApiInterface {
             const eventName = this.getEventNameFromMethodName(contractMethodName);
             return response.events.filter(x => x["name"] == eventName)
         } else {
-            throw(ERRORS.CONTRACT.TX_ERROR); //TODO get the error information from response
+            throw(ERRORS.CONTRACT.TX_ERROR.message); //TODO get the error information from response
         }
     }
 
@@ -63,13 +65,13 @@ export class prosopoContractApi implements contractApiInterface {
         if (methodObj) {
             return methodObj
         } else {
-            throw (ERRORS.CONTRACT.INVALID_METHOD);
+            throw (ERRORS.CONTRACT.INVALID_METHOD.message);
         }
     }
 
     /**
      * Get the event name from the contract method name
-     * Each of the contract methods returns an event with a capitalised version of the method name
+     * Each of the ink contract methods returns an event with a capitalised version of the method name
      * @return {string} event name
      */
     getEventNameFromMethodName(contractMethodName: string): string {
