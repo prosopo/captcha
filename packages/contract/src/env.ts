@@ -22,7 +22,7 @@ export class Environment implements ProsopoEnvironment {
     deployerAddress: string
     patract: any;
     contractAddress: string
-    providerAddress: string
+    providerAddress: string | undefined
     defaultEnvironment: string
 
 
@@ -34,9 +34,11 @@ export class Environment implements ProsopoEnvironment {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address;
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address;
-            this.providerAddress = this.config.networks[this.defaultEnvironment].provider.address;
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`);
+        }
+        if (this.config.networks[this.defaultEnvironment].provider) {
+            this.providerAddress = this.config.networks[this.defaultEnvironment].provider.address;
         }
     }
 
@@ -52,10 +54,12 @@ export class Environment implements ProsopoEnvironment {
     async importDatabase() {
         try {
             let {ProsopoDatabase} = await import(`./db/${this.config.database[this.defaultEnvironment].type}`);
-            this.db = new ProsopoDatabase(this.config.database[this.defaultEnvironment].endpoint,
-                this.config.database[this.defaultEnvironment].dbname)
+            this.db = new ProsopoDatabase(
+                this.config.database[this.defaultEnvironment].endpoint,
+                this.config.database[this.defaultEnvironment].dbname
+            )
         } catch (err) {
-            throw new Error(`${ERRORS.DATABASE.DATABASE_IMPORT_FAILED.message}:${this.config.database[this.defaultEnvironment].type}`);
+            throw new Error(`${ERRORS.DATABASE.DATABASE_IMPORT_FAILED.message}:${this.config.database[this.defaultEnvironment].type}:${err}`);
         }
     }
 

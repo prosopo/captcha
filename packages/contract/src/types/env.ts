@@ -5,7 +5,7 @@ import {Signer} from 'redspot/provider'
 import {Network} from "redspot/types"
 
 export interface ProsopoEnvironment {
-    network: Network,
+    network: Network
     contract?: Contract
     config: ProsopoConfig,
     db: Database | undefined,
@@ -13,6 +13,6 @@ export interface ProsopoEnvironment {
     dappSigner?: Signer | undefined
     deployerAddress: string
     contractAddress: string
-    providerAddress: string
+    providerAddress?: string
     defaultEnvironment: string
 }

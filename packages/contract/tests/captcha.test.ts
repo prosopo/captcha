@@ -1,63 +1,64 @@
 import {expect} from "chai";
-import {hashDataset} from '../src/captcha'
-import {Captcha} from "../src/types/captcha";
-import {ERRORS} from "../src/errors";
-
-const {u8aToHex} = require('@polkadot/util');
+import {CaptchaTypes, Dataset} from "../src/types/captcha";
+import {addHashesToDataset} from "../src/captcha";
+import {CaptchaMerkleTree} from "../src/merkle";
 
 
-const captchaData = [
-    {
-        "captchaId": 1,
-        "solution": [],
-        "salt": "0x01",
-        "target": "bus",
-        "items": [
-            "/home/user/dev/prosopo/data/img/01.01.jpeg",
-            "/home/user/dev/prosopo/data/img/01.02.jpeg",
-            "/home/user/dev/prosopo/data/img/01.03.jpeg",
-            "/home/user/dev/prosopo/data/img/01.04.jpeg",
-            "/home/user/dev/prosopo/data/img/01.05.jpeg",
-            "/home/user/dev/prosopo/data/img/01.06.jpeg",
-            "/home/user/dev/prosopo/data/img/01.07.jpeg",
-            "/home/user/dev/prosopo/data/img/01.08.jpeg",
-            "/home/user/dev/prosopo/data/img/01.09.jpeg"
-        ]
-    },
-    {
-        "captchaId": 2,
-        "solution": [],
-        "salt": "0x01",
-        "target": "train",
-        "items": [
-            "/home/user/dev/prosopo/data/img/01.01.jpeg",
-            "/home/user/dev/prosopo/data/img/01.02.jpeg",
-            "/home/user/dev/prosopo/data/img/01.03.jpeg",
-            "/home/user/dev/prosopo/data/img/01.04.jpeg",
-            "/home/user/dev/prosopo/data/img/01.05.jpeg",
-            "/home/user/dev/prosopo/data/img/01.06.jpeg",
-            "/home/user/dev/prosopo/data/img/01.07.jpeg",
-            "/home/user/dev/prosopo/data/img/01.08.jpeg",
-            "/home/user/dev/prosopo/data/img/01.09.jpeg"
-        ]
-    }
-];
+const DATASET = {
+    "format": "SelectAll" as CaptchaTypes,
+    "captchas": [
+        {
+            "solution": [],
+            "salt": "0x01",
+            "target": "bus",
+            "items": [
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+
+            ]
+        },
+        {
+            "salt": "0x02",
+            "target": "train",
+            "items": [
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+                {"type": "text", "text": "blah"},
+            ]
+        }]
+};
 
 
-describe("PROVIDER", () => {
+describe("PROVIDER CAPTCHA", () => {
     after(() => {
         return
     });
 
     it("Captcha data set is hashed correctly", async () => {
-        const datasetHash =
-            hashDataset(captchaData as Captcha[]);
-        //todo manually check this is the correct value
-        expect(u8aToHex(datasetHash)).equal("0x9ee6dfb61a2fb903df487c401663825643bb825d41695e63df8af6162ab145a6");
+        const tree = new CaptchaMerkleTree();
+        await tree.build(DATASET['captchas']);
+        const dataset = addHashesToDataset(DATASET, tree);
+        expect(dataset.captchas[0]['captchaId']).equal("0x83f378619ef1d3cced90ad760b33d24995e81583b4cd269358fa53b690d560b5");
+        expect(dataset.captchas[1]['captchaId']).equal("0x0977061f4bca26f49f2657b582944ce7c549862a4be7e0fc8f9a9a6cdb788475");
     });
 
-    it("Empty data set fails", async () => {
-        expect(() => hashDataset({} as Captcha[])).to.throw(ERRORS.DATASET.HASH_ERROR.message);
+    it("Empty dataset and tree throws error", async () => {
+        expect(function () {
+            addHashesToDataset({} as Dataset, new CaptchaMerkleTree())
+        }).to.throw(/error hashing dataset/);
     })
 
 })
