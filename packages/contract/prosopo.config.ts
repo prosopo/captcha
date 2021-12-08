@@ -5,11 +5,11 @@ export default {
     defaultEnvironment: "development",
     networks: {
         development: {
-            endpoint: "ws://127.0.0.1:9944",
+            endpoint: "ws://substrate-node:9944",
             contract: {
                 address: process.env.CONTRACT_ADDRESS,
                 deployer: {
-                    address: process.env.DEPLOYER_ADDRESS
+                    address: "//Alice"
                 }
             },
             provider: {
@@ -25,7 +25,7 @@ export default {
     database: {
         development: {
             type: "mongo",
-            endpoint: "mongodb://127.0.0.1:27017",
+            endpoint: "mongodb://mongodb:27017",
             dbname: "prosopo"
         }
     },
