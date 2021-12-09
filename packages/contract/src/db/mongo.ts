@@ -1,7 +1,7 @@
 import {
     Collection,
     Db,
-    MongoClient, WithId,
+    MongoClient, ObjectId,
 } from "mongodb";
 import {Database} from '../types'
 import {ERRORS} from '../errors'
@@ -43,23 +43,27 @@ export class ProsopoDatabase implements Database {
      * @param {Dataset}  dataset
      */
     async loadDataset(dataset: Dataset): Promise<void> {
-        const datasetDoc = {
-            datasetId: dataset.datasetId,
-            format: dataset.format,
-            tree: dataset.tree
-        }
-        await this.tables.dataset?.updateOne({_id: dataset.datasetId}, {$set: datasetDoc}, {upsert: true})
-        // put the dataset id on each of the captcha docs
-        const captchaDocs = dataset.captchas.map((captcha, index) => ({
-            ...captcha,
-            datasetId: dataset.datasetId,
-            index: index
-        }));
+        if (dataset.datasetId) {
+            const datasetDoc = {
+                datasetId: dataset.datasetId,
+                format: dataset.format,
+                tree: dataset.tree
+            }
+            const datasetId = new ObjectId(dataset.datasetId)
+            await this.tables.dataset?.updateOne({_id: datasetId}, {$set: datasetDoc}, {upsert: true})
+            // put the dataset id on each of the captcha docs
+            const captchaDocs = dataset.captchas.map((captcha, index) => ({
+                ...captcha,
+                datasetId: dataset.datasetId,
+                index: index
+            }));
 
-        // create a bulk upsert operation and execute
-        await this.tables.captchas?.bulkWrite(captchaDocs.map(captchaDoc =>
-            ({updateOne: {filter: {_id: captchaDoc.captchaId}, update: {$set: captchaDoc}, upsert: true}})
-        ))
+
+            // create a bulk upsert operation and execute
+            await this.tables.captchas?.bulkWrite(captchaDocs.map(captchaDoc =>
+                ({updateOne: {filter: {_id: new ObjectId(captchaDoc.captchaId)}, update: {$set: captchaDoc}, upsert: true}})
+            ))
+        }
     }
 
     /**
