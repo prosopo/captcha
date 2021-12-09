@@ -19,7 +19,7 @@ export default {
     },
     networks: {
         development: {
-            endpoint: "ws://127.0.0.1:9944",
+            endpoint: "ws://0.0.0.0:9944",
             gasLimit: "400000000000",
             types: contractDefinitions,
             accounts: [
