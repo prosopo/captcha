@@ -485,6 +485,7 @@ mod prosopo {
 
         // Stake and activate the provider's service
         #[ink(message)]
+        #[ink(payable)]
         pub fn provider_stake(&mut self) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
             let transferred = self.env().transferred_balance();
