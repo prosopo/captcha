@@ -8,7 +8,7 @@ function mnemonic() {
         const mnemonic = mnemonicGenerate();
         const account = keyring.addFromMnemonic(mnemonic);
         console.log(`Address: ${account.address}`);
-        console.log(`Mnemonic: "${mnemonic}"`);
+        console.log(`Mnemonic: ${mnemonic}`);
     });
 }
 
