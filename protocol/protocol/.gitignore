@@ -118,3 +118,6 @@ build/
 
 secrets.json
 .env
+
+# Ingnore build target
+contracts/target/
