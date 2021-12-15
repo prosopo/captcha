@@ -74,6 +74,11 @@ export class prosopoContractApi implements contractApiInterface {
      * Each of the ink contract methods returns an event with a capitalised version of the method name
      * @return {string} event name
      */
+    //TODO use the `method` and `identifier` in the contract fragment (see redspot patract contract.ts)
+    // identifier: 'dapp_register',
+    // index: 6,
+    // method: 'dappRegister',
+
     getEventNameFromMethodName(contractMethodName: string): string {
         return contractMethodName[0].toUpperCase() + contractMethodName.substring(1);
     }
