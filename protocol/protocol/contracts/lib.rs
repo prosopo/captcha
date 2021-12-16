@@ -374,8 +374,6 @@ mod prosopo {
         }
 
 
-
-
         /// Setup phase messages
 
         // Register a provider, their service origin and fee
@@ -601,7 +599,7 @@ mod prosopo {
                     client_origin,
                 };
                 // keying on contract allows owners to own many contracts
-                self.dapps.insert(contract,&dapp);
+                self.dapps.insert(contract, &dapp);
                 self.dapp_accounts.push(contract);
                 // emit event
                 self.env().emit_event(DappRegister {
@@ -638,7 +636,7 @@ mod prosopo {
                     } else {
                         dapp.status = Status::Suspended;
                     }
-                    self.dapps.insert(contract,&dapp);
+                    self.dapps.insert(contract, &dapp);
                     // emit event
                     self.env().emit_event(DappUpdate {
                         contract,
@@ -673,7 +671,7 @@ mod prosopo {
                     // Suspended as dapp has no funds
                     dapp.status = Status::Suspended;
                 }
-                self.dapps.insert(contract,&dapp);
+                self.dapps.insert(contract, &dapp);
             } else {
                 //return the transferred balance to the caller
                 self.env().transfer(caller, transferred).ok();
@@ -691,6 +689,7 @@ mod prosopo {
             let dapp = self.get_dapp_details(contract)?;
 
             // TODO should the operators be authorised to do this ?
+            // TODO If an owner is not specified then the Dapp contract can never be cancelled
             if dapp.owner != caller {
                 return Err(ProsopoError::NotAuthorised);
             }
@@ -1881,6 +1880,8 @@ mod prosopo {
             assert_eq!(0, contract.get_provider_balance(provider_account));
         }
 
+
+
         /// Helper function for converting string to Hash
         fn str_to_hash(str: String) -> Hash {
             let mut result = Hash::default();
@@ -1891,6 +1892,18 @@ mod prosopo {
             result.as_mut()[0..copy_len].copy_from_slice(&hash_output[0..copy_len]);
             result
         }
+
+
+        // /// Openbrush timestamp stuff
+        // type DefEnv = ink_env::DefaultEnvironment;
+        //
+        // fn advance_block() {
+        //     ink_env::advance_block::<DefEnv>().expect("Cannot advance block");
+        // }
+        //
+        // fn day_blocks() -> u32 {
+        //     (60 * 60 * 24) / 5
+        // }
     }
 }
 
