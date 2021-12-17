@@ -6,7 +6,7 @@ use ink_lang as ink;
 pub mod dapp2 {
     #[ink(storage)]
     pub struct Dapp2 {
-        what: u8,
+        pub what: u8,
     }
 
     impl Dapp2 {

@@ -1,10 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use ink_lang as ink;
+use dapp2;
 
 #[ink::contract]
 pub mod dapp1 {
-    use dapp2::Dapp2 as Dapp2;
+    use dapp2::dapp2::Dapp2;
 
     #[ink(storage)]
     pub struct Dapp1 {
@@ -23,7 +24,7 @@ pub mod dapp1 {
 
         /// Calls the Dapp2 contract.
         #[ink(message)]
-        pub fn dapp2_do_something(&self) -> u8 {
+        pub fn dapp2_do_something(&mut self) -> u8 {
             self.dapp2_instance.do_something()
         }
     }
