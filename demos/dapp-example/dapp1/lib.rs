@@ -1,11 +1,10 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use ink_lang as ink;
-use dapp2;
 
 #[ink::contract]
 pub mod dapp1 {
-    use dapp2::dapp2::Dapp2;
+    use dapp2::Dapp2;
 
     #[ink(storage)]
     pub struct Dapp1 {
