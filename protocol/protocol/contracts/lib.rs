@@ -375,7 +375,6 @@ mod prosopo {
 
 
         /// Setup phase messages
-
         // Register a provider, their service origin and fee
         #[ink(message)]
         pub fn provider_register(
@@ -435,21 +434,25 @@ mod prosopo {
             let existing = self
                 .get_provider_details(provider_account)
                 .unwrap();
-            let transferred = self.env().transferred_balance();
+            let transferred = self.env().transferred_value();
 
             let mut balance = existing.balance;
+            let mut status = existing.status;
             if transferred > 0 {
                 balance = existing.balance + transferred;
+                status = Status::Active;
+                // TODO Provider is written in provider stake as well - prevent double write?
+                //  Perhaps staking should be performed via provider_update
                 self.provider_stake();
             }
 
             // update an existing provider
             let provider = Provider {
-                status: Status::Deactivated,
+                status,
                 balance,
                 fee,
                 service_origin,
-                captcha_dataset_id: existing.captcha_dataset_id,
+                captcha_dataset_id: existing.captcha_dataset_id, //TODO should this be update-able here??
                 payee,
             };
             self.providers.insert(provider_account, &provider);
@@ -486,7 +489,7 @@ mod prosopo {
         #[ink(payable)]
         pub fn provider_stake(&mut self) -> Result<(), ProsopoError> {
             let caller = self.env().caller();
-            let transferred = self.env().transferred_balance();
+            let transferred = self.env().transferred_value();
             if transferred == 0 {
                 return Err(ProsopoError::InsufficientBalance);
             }
@@ -581,7 +584,7 @@ mod prosopo {
             let caller = self.env().caller();
             // the caller can pass an owner or pass none and be made the owner
             let owner = optional_owner.unwrap_or(caller);
-            let transferred = self.env().transferred_balance();
+            let transferred = self.env().transferred_value();
             // enforces a one to one relation between caller and dapp
             if self.dapps.get(&contract).is_none() {
                 // mark the account as suspended if it is new and no funds have been transferred
@@ -656,7 +659,7 @@ mod prosopo {
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) {
             let caller = self.env().caller();
-            let transferred = self.env().transferred_balance();
+            let transferred = self.env().transferred_value();
             if self.dapps.get(&contract).is_some() {
                 let mut dapp = self.dapps.get(&contract).unwrap();
                 let total = dapp.balance + transferred;
@@ -1036,6 +1039,24 @@ mod prosopo {
                 Err(_e) => Balance::from(0_u32)
             };
         }
+
+        // Helper Functions
+
+        fn random_index(&self, start: u8, end: u8, seed: Option<&[u8]>) -> u8 {
+            fn max_index(array: &[u8]) -> usize {
+                let mut result = 0;
+
+                for (index, &value) in array.iter().enumerate() {
+                    if value > array[result] {
+                        result = index;
+                    }
+                }
+                result
+            }
+            let seed = seed.unwrap_or_default();
+            let arr = self.env().random(seed).0;
+            return max_index(&arr.as_ref()[start as usize..end as usize]).try_into().unwrap();
+        }
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -1118,6 +1139,7 @@ mod prosopo {
         use std::fmt::{Debug, Formatter};
 
         type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
+
         /// Test add operator
         #[ink::test]
         fn test_add_operator() {
@@ -1880,8 +1902,6 @@ mod prosopo {
             assert_eq!(0, contract.get_provider_balance(provider_account));
         }
 
-
-
         /// Helper function for converting string to Hash
         fn str_to_hash(str: String) -> Hash {
             let mut result = Hash::default();
@@ -1892,18 +1912,6 @@ mod prosopo {
             result.as_mut()[0..copy_len].copy_from_slice(&hash_output[0..copy_len]);
             result
         }
-
-
-        // /// Openbrush timestamp stuff
-        // type DefEnv = ink_env::DefaultEnvironment;
-        //
-        // fn advance_block() {
-        //     ink_env::advance_block::<DefEnv>().expect("Cannot advance block");
-        // }
-        //
-        // fn day_blocks() -> u32 {
-        //     (60 * 60 * 24) / 5
-        // }
     }
 }
 
