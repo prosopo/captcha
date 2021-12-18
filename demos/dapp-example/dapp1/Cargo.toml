@@ -3,6 +3,7 @@ name = "dapp1"
 version = "3.0.0-rc7"
 authors = ["Chris Taylor chris@prosopo.io"]
 edition = "2021"
+resolver = "2"
 
 [dependencies]
 ink_primitives = { git = "https://github.com/paritytech/ink", branch = "master", default-features = false }
@@ -21,6 +22,7 @@ path = "lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.
     "cdylib",
+    "rlib"
 ]
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.
 [profile.release]

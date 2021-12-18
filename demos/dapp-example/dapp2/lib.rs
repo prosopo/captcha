@@ -2,8 +2,10 @@
 
 use ink_lang as ink;
 
+pub use dapp2::Dapp2Ref;
+
 #[ink::contract]
-pub mod dapp2 {
+mod dapp2 {
     #[ink(storage)]
     pub struct Dapp2 {
         pub what: u8,

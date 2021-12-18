@@ -4,7 +4,7 @@ use ink_lang as ink;
 
 #[ink::contract]
 pub mod dapp1 {
-    use dapp2::Dapp2;
+    use dapp2::Dapp2Ref as Dapp2;
 
     #[ink(storage)]
     pub struct Dapp1 {
