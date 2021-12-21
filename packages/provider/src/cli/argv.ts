@@ -99,5 +99,19 @@ export async function processArgs(args, env) {
             },
             []
         )
+        .command('provider_accounts', 'List provider accounts', (yargs) => {
+                return yargs
+                    .option('providerId', {type: 'string', demand: false})
+                    .option('status', {type: 'string', demand: false})
+            }, async (argv) => {
+                try {
+                    let result = await tasks.providerAccounts(argv.providerId, argv.status)
+                    console.log(JSON.stringify(result, null, 2));
+                } catch (err) {
+                    console.log(err);
+                }
+            },
+            []
+        )
         .argv
 }

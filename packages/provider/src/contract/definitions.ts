@@ -53,5 +53,15 @@ export const contractDefinitions = {
     User: {
         correct_captchas: 'u64',
         incorrect_captchas: 'u64',
-    }
+    },
+    ProviderAccounts: 'Vec<AccountId>',
+    Provider: {
+        status: 'Status',
+        balance: 'Balance',
+        fee: 'u32',
+        payee: 'Payee',
+        service_origin: 'Hash',
+        captcha_dataset_id: 'Hash',
+    },
+    ProviderMap: '{"AccountId":"Provider"}',
 }

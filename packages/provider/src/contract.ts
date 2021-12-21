@@ -1,7 +1,8 @@
 import {Environment} from './env'
 import {ERRORS} from './errors'
 import {contractApiInterface} from "./types/contract";
-import {isU8a} from '@polkadot/util'
+import {isU8a} from '@polkadot/util';
+import { Registry } from "redspot/types/provider";
 
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
@@ -69,6 +70,20 @@ export class prosopoContractApi implements contractApiInterface {
         }
     }
 
+    /** Get the storage key from the ABI given a storage name
+     * @return the storage key
+     */
+    getStorageKey(storageName: string): string {
+        // TODO there has got to be a better way to get this info
+        // @ts-ignore
+        const storageEntry = this.env.contract?.abi.json!['V1']['storage']['struct']['fields'].filter(obj => obj['name'] === storageName)[0];
+        if (storageEntry) {
+            return storageEntry["layout"]["cell"]["key"];
+        } else {
+            throw (ERRORS.CONTRACT.INVALID_STORAGE_NAME.message);
+        }
+    }
+
     /**
      * Get the event name from the contract method name
      * Each of the ink contract methods returns an event with a capitalised version of the method name
@@ -88,15 +103,15 @@ export class prosopoContractApi implements contractApiInterface {
      * Get the data at specified storage key
      * @return {any} data
      */
-    async getStorage(key: string): Promise<any> {
+    async getStorage<T>(name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
         await this.env.isReady();
-        const promiseresult = await this.env.network.api.rpc.contracts.getStorage(this.env.contractAddress, key);
+        const storageKey = this.getStorageKey(name);
+        // const promiseresult = this.env.contract!.api.rpc.contracts.getStorage(this.env.contract!.address, storageKey);
+        const promiseresult = await this.env.network.api.rpc.contracts.getStorage(this.env.contract!.address, storageKey);
         const data = promiseresult.unwrapOrDefault();
-        let buffer = Buffer.from(data);
-        // data is returned here
-        console.log(buffer.readUInt8(0));
-        console.log(data.toHex());
-        throw "NotImplemented";
+        // console.log(data.toHex());
+        return decodingFn(this.env.network.registry, data);
+        // console.log(this.hex_to_string(data.toHex()));
     }
 }
 
