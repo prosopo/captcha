@@ -11,25 +11,26 @@ import {strict as assert} from 'assert';
 
 const TS_CONFIG_FILENAME = "prosopo.config.ts"
 const JS_CONFIG_FILENAME = "prosopo.config.js"
+const CONTRACT_NAME = "prosopo"
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
     network: Network
     contract?: Contract
     db: Database | undefined
-    providerSigner?: Signer
-    dappSigner?: Signer
+    mnemonic: string
+    signer?: Signer
     deployerAddress: string
     patract: any;
     contractAddress: string
-    providerAddress: string | undefined
     defaultEnvironment: string
 
 
-    constructor() {
+    constructor(mnemonic) {
         this.config = Environment.getConfig();
         this.network = network;
         this.patract = patract;
+        this.mnemonic = mnemonic;
         if (this.config.defaultEnvironment && this.config.networks.hasOwnProperty(this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address;
@@ -37,17 +38,13 @@ export class Environment implements ProsopoEnvironment {
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`);
         }
-        if (this.config.networks[this.defaultEnvironment].provider) {
-            this.providerAddress = this.config.networks[this.defaultEnvironment].provider.address;
-        }
     }
 
     async isReady() {
-        await this.getSigners();
+        await this.getSigner();
         await this.getContract();
         await this.importDatabase();
         await this.db?.connect();
-        assert(this.providerSigner instanceof Signer);
         assert(this.contract instanceof Contract);
     }
 
@@ -65,23 +62,24 @@ export class Environment implements ProsopoEnvironment {
 
     async getContract() {
         await this.network.api.isReadyOrError;
-        const contractFactory = await patract.getContractFactory("prosopo", this.providerAddress);
+        const contractFactory = await patract.getContractFactory(CONTRACT_NAME, this.signer);
         this.contract = await contractFactory.attach(this.contractAddress);
     }
 
-    // utility functions
-    async getSigners() {
+    async getSigner() {
         await this.network.api.isReadyOrError;
-        // TODO this logic about having multiple people configured in the service at once is pretty confusing.
-        //  Maybe only one person should be allowed to sign at one time.
-        if (this.providerAddress) {
-            let mnemonic = this.config.networks[this.defaultEnvironment].provider.mnemonic
-            if (mnemonic) {
-                const keyringPair = this.network.keyring.addFromMnemonic(mnemonic);
-                // @ts-ignore
-                this.providerSigner = this.network.createSigner(keyringPair);
-            }
+        let mnemonic = this.mnemonic;
+        if (mnemonic) {
+            const keyringPair = this.network.keyring.addFromMnemonic(mnemonic);
+            // @ts-ignore
+            this.signer = this.network.createSigner(keyringPair);
         }
+    }
+
+    async changeSigner(mnemonic: string) {
+        await this.network.api.isReadyOrError;
+        this.mnemonic = mnemonic;
+        await this.getSigner();
     }
 
     private static getConfigPath() {

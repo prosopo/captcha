@@ -9,10 +9,9 @@ export interface ProsopoEnvironment {
     contract?: Contract
     config: ProsopoConfig,
     db: Database | undefined,
-    providerSigner?: Signer | undefined
-    dappSigner?: Signer | undefined
+    mnemonic: string
+    signer?: Signer | undefined
     deployerAddress: string
     contractAddress: string
-    providerAddress?: string
     defaultEnvironment: string
 }

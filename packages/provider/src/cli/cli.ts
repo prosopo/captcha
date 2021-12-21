@@ -10,7 +10,7 @@ app.use(express.json())
 const port = 3000;
 
 async function main() {
-    const env = new Environment();
+    const env = new Environment(process.env.PROVIDER_MNEMONIC);
     await env.isReady();
     const args = await processArgs(process.argv.slice(2), env);
 

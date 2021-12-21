@@ -9,6 +9,7 @@ export const contractDefinitions = {
             'Disapproved'
         ]
     },
+    DappAccounts: 'Vec<AccountId>',
     Dapp: {
         // eslint-disable-next-line sort-keys
         status: 'Status',
@@ -16,14 +17,6 @@ export const contractDefinitions = {
         owner: 'AccountId',
         min_difficulty: 'u16',
         client_origin: 'Hash',
-    },
-    CaptchaProvider: {
-        // eslint-disable-next-line sort-keys
-        status: 'Status',
-        staked: 'Balance',
-        fee: 'u32',
-        service_origin: 'Hash',
-        captcha_data_id: 'u64',
     },
     ProsopoError: {
         _enum: [
