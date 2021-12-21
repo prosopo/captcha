@@ -56,6 +56,9 @@ export const ERRORS = {
         },
         INVALID_ADDRESS: {
             message: 'Failed to encode invalid address'
+        },
+        INVALID_STORAGE_NAME: {
+            message: 'Failed to find given storage name'
         }
     },
     CLI: {

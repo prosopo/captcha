@@ -1,4 +1,5 @@
 import {Environment} from "../env";
+import { Registry } from "redspot/types/provider";
 
 
 export interface contractApiInterface {
@@ -11,4 +12,6 @@ export interface contractApiInterface {
     getContractMethod(contractMethodName: string): Object
 
     getEventNameFromMethodName(contractMethodName: string): string
+
+    getStorage<T>(key: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T>
 }

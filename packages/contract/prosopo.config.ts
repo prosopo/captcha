@@ -19,7 +19,6 @@ export default {
                 fee: 1,
                 payee: "Provider"
             }
-
         },
     },
     database: {
