@@ -9,7 +9,10 @@
     "start": "ts-node ./build/src/cli/cli.js",
     "setup": "yarn ts-node ./build/scripts/setupdev.js",
     "mnemonic": "yarn ts-node ./scripts/generateMnemonic.ts",
-    "test": "npx redspot test"
+    "test": "npx redspot test",
+    "dev-provider-register": "yarn build && yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
+    "dev-provider-stake": "yarn build && yarn start provider_stake --value 10 --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
+    "dev-provider-add_data_set" : "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
   },
   "dependencies": {
     "@redspot/chai": "file:../redspot/build/redspot-chai",
@@ -33,12 +36,12 @@
     "mocha": "8.4.0"
   },
   "resolutions": {
-    "@polkadot/api": "^6.12.1",
-    "@polkadot/api-contract": "^6.12.1",
-    "@polkadot/types": "^6.12.1",
-    "@polkadot/util": "^8.1.2",
-    "@polkadot/keyring": "^8.1.2",
-    "@polkadot/util-crypto": "^8.1.2",
+    "@polkadot/api": "^7.0.2",
+    "@polkadot/api-contract": "^7.0.2",
+    "@polkadot/types": "^7.0.2",
+    "@polkadot/util": "^8.2.2",
+    "@polkadot/keyring": "^8.2.2",
+    "@polkadot/util-crypto": "^8.2.2",
     "@types/yargs": "^17.0.6",
     "bn.js": "^4.12",
     "dotenv": "8.0.0",

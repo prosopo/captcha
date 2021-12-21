@@ -7,6 +7,7 @@ import {Database} from '../types'
 import {ERRORS} from '../errors'
 import {Captcha, Dataset} from "../types/captcha";
 
+//mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
 
 /**
@@ -49,8 +50,9 @@ export class ProsopoDatabase implements Database {
                 format: dataset.format,
                 tree: dataset.tree
             }
-            const datasetId = new ObjectId(dataset.datasetId)
-            await this.tables.dataset?.updateOne({_id: datasetId}, {$set: datasetDoc}, {upsert: true})
+            //const datasetId = new ObjectId(dataset.datasetId)
+            // @ts-ignore
+            this.tables.dataset?.updateOne({_id: dataset.datasetId}, {$set: datasetDoc}, {upsert: true})
             // put the dataset id on each of the captcha docs
             const captchaDocs = dataset.captchas.map((captcha, index) => ({
                 ...captcha,
@@ -60,8 +62,9 @@ export class ProsopoDatabase implements Database {
 
 
             // create a bulk upsert operation and execute
+            // @ts-ignore
             await this.tables.captchas?.bulkWrite(captchaDocs.map(captchaDoc =>
-                ({updateOne: {filter: {_id: new ObjectId(captchaDoc.captchaId)}, update: {$set: captchaDoc}, upsert: true}})
+                ({updateOne: {filter: {_id: captchaDoc.captchaId}, update: {$set: captchaDoc}, upsert: true}})
             ))
         }
     }

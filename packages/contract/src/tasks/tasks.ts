@@ -49,11 +49,10 @@ export class Tasks {
         let dataset = parseCaptchaDataset(loadJSONFile(file));
         let tree = new CaptchaMerkleTree();
         await tree.build(dataset['captchas']);
-        let dataset_hashes = addHashesToDataset(dataset, tree);
-        dataset_hashes['datasetId'] = tree.root?.hash;
-        dataset_hashes['tree'] = tree.layers;
-        console.log(dataset_hashes);
-        await this.db?.loadDataset(dataset_hashes);
+        let datasetHashes = addHashesToDataset(dataset, tree);
+        datasetHashes['datasetId'] = tree.root?.hash;
+        datasetHashes['tree'] = tree.layers;
+        await this.db?.loadDataset(datasetHashes);
         return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
@@ -61,28 +60,26 @@ export class Tasks {
         return await this.contractApi.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
     }
 
-    //dapp_fund
-    async dappFund() {
+    async dappFund(contractAccount:string, value: number) {
+        return await this.contractApi.contractTx('dappFund', [contractAccount], value);
     }
 
-    //dapp_cancel
-    async dappCancel() {
+    async dappCancel(contractAccount: string) {
+        return await this.contractApi.contractTx('dappCancel', [contractAccount]);
     }
 
-    //dapp_deregister
-    async dappDeregister() {
-    }
-
-    //dapp_user_commit
-    async dappUserCommit() {
+    async dappUserCommit(contractAccount: string, captchaDatasetId: string, userMerkleTreeRoot: string) {
+        return await this.contractApi.contractTx('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot]);
     }
 
     //provider_approve
     async providerApprove() {
+        return await this.contractApi.contractTx('providerApprove', []);
     }
 
     //provider_disapprove
     async providerDisapprove() {
+        return await this.contractApi.contractTx('providerDisapprove', []);
     }
 
     //dapp_operator_is_human_user
@@ -134,12 +131,15 @@ export class Tasks {
         }
     }
 
-    async providerAccounts(providerId: string, status: GovernanceStatus): Promise<void> {
+    async providerAccounts(providerId: string, status: GovernanceStatus): Promise<AnyJson> {
         const providerAccountsList = await this.contractApi.getStorage("provider_accounts", buildDecodeVector('ProviderAccounts'));
         console.log(providerAccountsList);
+        return providerAccountsList
+    }
+
+    async dappAccounts(dappId: string, status: GovernanceStatus): Promise<AnyJson> {
+        const dappAccountsList = await this.contractApi.getStorage("dapp_accounts", buildDecodeVector('DappAccounts'));
+        console.log(dappAccountsList);
+        return dappAccountsList
     }
 }
-
-// async getProviderAccounts() {
-//     return await this.contractApi.getStorage("")
-// }

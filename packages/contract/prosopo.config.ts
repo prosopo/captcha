@@ -12,19 +12,12 @@ export default {
                     address: "//Alice"
                 }
             },
-            provider: {
-                address: process.env.PROVIDER_ADDRESS,
-                mnemonic: process.env.PROVIDER_MNEMONIC,
-                serviceOrigin: "",
-                fee: 1,
-                payee: "Provider"
-            }
         },
     },
     database: {
         development: {
             type: "mongo",
-            endpoint: "mongodb://mongodb:27017",
+            endpoint: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017`,
             dbname: "prosopo"
         }
     },

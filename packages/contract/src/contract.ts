@@ -23,7 +23,7 @@ export class prosopoContractApi implements contractApiInterface {
      */
     async contractTx(contractMethodName: string, args: Array<any>, value?: number): Promise<Object> {
         await this.env.isReady();
-        const signedContract = this.env.contract!.connect(this.env.providerSigner!)
+        const signedContract = this.env.contract!.connect(this.env.signer!)
         const encodedArgs = this.encodeArgs(contractMethodName, args);
         let response;
         if (value) {

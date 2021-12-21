@@ -4,7 +4,7 @@ require('dotenv').config()
 
 async function run() {
 
-    const env = new Environment();
+    const env = new Environment("//Alice");
 
     await env.isReady();
 

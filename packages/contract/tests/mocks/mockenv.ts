@@ -10,12 +10,11 @@ export class MockEnvironment implements ProsopoEnvironment {
     network: Network
     contract?: Contract
     db: Database | undefined
-    providerSigner?: Signer
-    dappSigner?: Signer
+    mnemonic: string
+    signer?: Signer
     deployerAddress: string
     patract: any;
     contractAddress: string
-    providerAddress: string | undefined
     defaultEnvironment: string
 
     constructor() {
@@ -28,6 +27,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 development: {type: "mockdb", endpoint: "", dbname: ""}
             }
         }
+        this.mnemonic = "\\Alice";
         this.network = network;
         this.patract = patract;
         if (this.config.defaultEnvironment && this.config.networks.hasOwnProperty(this.config.defaultEnvironment)) {
@@ -36,9 +36,6 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address;
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT.message}:${this.config.defaultEnvironment}`);
-        }
-        if (this.config.networks[this.defaultEnvironment].provider) {
-            this.providerAddress = this.config.networks[this.defaultEnvironment].provider.address;
         }
     }
 
