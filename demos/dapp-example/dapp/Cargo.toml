@@ -14,7 +14,7 @@ ink_lang = { git =  "https://github.com/prosopo-io/ink", branch = "enum_spread_a
 ink_prelude = { git =  "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
 scale = { package = "parity-scale-codec", version = "2.1", default-features = false, features = ["derive"] }
 scale-info = { version = "1.0.0", default-features = false, features = ["derive"], optional = true }
-prosopo = { version = "3.0.0-rc7", path ="../../protocol/contracts", default-features = false, features = ["ink-as-dependency"] }
+prosopo = { version = "3.0.0-rc7", git ="https://github.com/prosopo-io/protocol", default-features = false, features = ["ink-as-dependency"] }
 
 [lib]
 name = "dapp"
