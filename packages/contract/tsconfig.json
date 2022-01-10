@@ -1,6 +1,7 @@
 {
 
     "compilerOptions": {
+        "types": ["node"],
         "target": "ES2019",
         "module": "commonjs",
         "rootDir": "./",

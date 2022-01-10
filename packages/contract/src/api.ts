@@ -40,11 +40,11 @@ export function prosopoMiddleware(env): Router {
      */
     router.post('/v1/prosopo/provider_update/', async function (req, res, next) {
         try {
-            const {serviceOrigin, fee, payee, address} = req.body;
+            const {serviceOrigin, fee, payee, address, value} = req.body;
             if (!serviceOrigin || !fee || !payee || !address) {
                 throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
             }
-            const result = await tasks.providerUpdate(serviceOrigin, fee, payee, address);
+            const result = await tasks.providerUpdate(serviceOrigin, fee, payee, address, value);
             res.json(result);
         } catch (err: any) {
             let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
@@ -71,24 +71,6 @@ export function prosopoMiddleware(env): Router {
         }
     });
 
-    /**
-     * Provider stake
-     *
-     * @return JSON result showing ProviderStake event
-     */
-    router.post('/v1/prosopo/provider_stake/', async function (req, res, next) {
-        try {
-            const {value} = req.body;
-            if (!value) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
-            }
-            const result = tasks.providerStake(value);
-            res.json(result);
-        } catch (err: any) {
-            let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
-            next(new BadRequest(msg));
-        }
-    });
 
     /**
      * Provider unstake

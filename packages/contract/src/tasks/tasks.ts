@@ -2,7 +2,7 @@
 import {loadJSONFile} from "../util";
 import {addHashesToDataset, parseCaptchaDataset} from "../captcha";
 import {hexToU8a} from "@polkadot/util";
-import {contractApiInterface} from "../types/contract";
+import {contractApiInterface, Provider} from "../types/contract";
 import {prosopoContractApi} from "../contract";
 import {Database} from "../types";
 import {ERRORS} from "../errors";
@@ -11,6 +11,7 @@ import {CaptchaWithProof} from "../types/api";
 import {GovernanceStatus} from "../types/provider";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
+import {Hash} from "@polkadot/types/interfaces";
 
 export class Tasks {
 
@@ -26,23 +27,19 @@ export class Tasks {
 
     // TODO These functions could all be constructed automatically from the contract ABI
     async providerRegister(serviceOrigin: string, fee: number, payee: string, address: string): Promise<Object> {
-        return await this.contractApi.contractTx('providerRegister', [serviceOrigin, fee, payee, address]);
+        return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address]);
     }
 
-    async providerUpdate(serviceOrigin: string, fee: number, payee: string, address: string): Promise<Object> {
-        return await this.contractApi.contractTx('providerUpdate', [serviceOrigin, fee, payee, address]);
+    async providerUpdate(serviceOrigin: string, fee: number, payee: string, address: string, value: number | undefined): Promise<Object> {
+        return await this.contractApi.contractCall('providerUpdate', [serviceOrigin, fee, payee, address], value);
     }
 
     async providerDeregister(address: string): Promise<Object> {
-        return await this.contractApi.contractTx('providerDeregister', [address]);
-    }
-
-    async providerStake(value: number): Promise<Object> {
-        return await this.contractApi.contractTx('providerStake', [], value);
+        return await this.contractApi.contractCall('providerDeregister', [address]);
     }
 
     async providerUnstake(value: number): Promise<Object> {
-        return await this.contractApi.contractTx('providerUnstake', [], value);
+        return await this.contractApi.contractCall('providerUnstake', [], value);
     }
 
     async providerAddDataset(file: string): Promise<Object> {
@@ -53,33 +50,33 @@ export class Tasks {
         datasetHashes['datasetId'] = tree.root?.hash;
         datasetHashes['tree'] = tree.layers;
         await this.db?.loadDataset(datasetHashes);
-        return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)])
+        return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
     async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined): Promise<Object> {
-        return await this.contractApi.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
+        return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
     }
 
-    async dappFund(contractAccount:string, value: number) {
-        return await this.contractApi.contractTx('dappFund', [contractAccount], value);
+    async dappFund(contractAccount: string, value: number) {
+        return await this.contractApi.contractCall('dappFund', [contractAccount], value);
     }
 
     async dappCancel(contractAccount: string) {
-        return await this.contractApi.contractTx('dappCancel', [contractAccount]);
+        return await this.contractApi.contractCall('dappCancel', [contractAccount]);
     }
 
     async dappUserCommit(contractAccount: string, captchaDatasetId: string, userMerkleTreeRoot: string) {
-        return await this.contractApi.contractTx('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot]);
+        return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot]);
     }
 
     //provider_approve
-    async providerApprove() {
-        return await this.contractApi.contractTx('providerApprove', []);
+    async providerApprove(captchaSolutionCommitmentId) {
+        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId]);
     }
 
     //provider_disapprove
-    async providerDisapprove() {
-        return await this.contractApi.contractTx('providerDisapprove', []);
+    async providerDisapprove(captchaSolutionCommitmentId) {
+        return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId]);
     }
 
     //dapp_operator_is_human_user
@@ -106,7 +103,7 @@ export class Tasks {
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptchaWithProof(datasetId: string, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
+    async getCaptchaWithProof(datasetId: Hash | string | Uint8Array, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
 
         // TODO check that dataset is attached to a Provider before responding ???!!!
         //  Otherwise Providers could store any random data and have Dapp Users request it. Is there any advantage to
@@ -129,6 +126,15 @@ export class Tasks {
         } else {
             throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
         }
+    }
+
+    async getProviderDetails(accountId: string): Promise<Provider> {
+        return await this.contractApi.contractCall("getProviderDetails", [accountId])
+    }
+
+    async getCaptchaSolutionCommitment(solutionId: string, datasetId: string): Promise<Provider> {
+        //TODO rebuild contract now that this method is an [ink(message)]
+        return await this.contractApi.contractCall("getCaptchaSolutionCommitment", [solutionId, datasetId])
     }
 
     async providerAccounts(providerId: string, status: GovernanceStatus): Promise<AnyJson> {

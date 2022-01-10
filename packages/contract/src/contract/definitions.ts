@@ -1,9 +1,13 @@
 export const contractDefinitions = {
-    Status: {
+    GovernanceStatus: {
         _enum: [
             'Active',
             'Suspended',
             'Deactivated',
+        ]
+    },
+    CaptchaStatus: {
+        _enum: [
             'Pending',
             'Approved',
             'Disapproved'
@@ -12,13 +16,13 @@ export const contractDefinitions = {
     DappAccounts: 'Vec<AccountId>',
     Dapp: {
         // eslint-disable-next-line sort-keys
-        status: 'Status',
+        status: 'GovernanceStatus',
         balance: 'Balance',
         owner: 'AccountId',
         min_difficulty: 'u16',
         client_origin: 'Hash',
     },
-    ProsopoError: {
+    ProsopoProsopoError: {
         _enum: [
             'NotAuthorised',
             'InsufficientBalance',
@@ -48,8 +52,8 @@ export const contractDefinitions = {
         incorrect_captchas: 'u64',
     },
     ProviderAccounts: 'Vec<AccountId>',
-    Provider: {
-        status: 'Status',
+    ProsopoProvider: {
+        status: 'GovernanceStatus',
         balance: 'Balance',
         fee: 'u32',
         payee: 'Payee',
@@ -57,4 +61,11 @@ export const contractDefinitions = {
         captcha_dataset_id: 'Hash',
     },
     ProviderMap: '{"AccountId":"Provider"}',
-}
+    ProsopoCaptchaSolutionCommitment: {
+        account: 'AccountId',
+        captcha_dataset_id: 'Hash',
+        status: 'CaptchaStatus',
+        contract: 'AccountId',
+        provider: 'AccountId',
+    }
+};

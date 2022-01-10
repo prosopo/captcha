@@ -46,6 +46,21 @@ export async function processArgs(args, env) {
             },
             [validateAddress, validatePayee]
         )
+        .command('provider_update', 'Update a Provider', (yargs) => {
+                return yargs
+                    //TODO make all of these optional so that user only has to supply minimum information
+                    .option('serviceOrigin', {type: 'string', demand: true,})
+                    .option('fee', {type: 'number', demand: true,})
+                    .option('payee', {type: 'string', demand: true,})
+                    .option('address', {type: 'string', demand: true,})
+                    .option('value', {type: 'number', demand: false,})
+            }, async (argv) => {
+
+                let result = await tasks.providerUpdate(argv.serviceOrigin, argv.fee, argv.payee, argv.address, argv.value)
+                console.log(JSON.stringify(result, null, 2));
+            },
+            [validateAddress, validatePayee]
+        )
         .command('provider_deregister', 'Deregister a Provider', (yargs) => {
                 return yargs
                     .option('address', {type: 'string', demand: true,})
@@ -58,20 +73,6 @@ export async function processArgs(args, env) {
                 }
             },
             [validateAddress]
-        )
-        .command('provider_stake', 'Stake funds as a Provider', (yargs) => {
-                return yargs
-                    .option('address', {type: 'string', demand: true,})
-                    .option('value', {type: 'number', demand: true,})
-            }, async (argv) => {
-                try {
-                    let result = await tasks.providerStake(argv.value);
-                    console.log(JSON.stringify(result, null, 2));
-                } catch (err) {
-                    console.log(err);
-                }
-            },
-            [validateValue]
         )
         .command('provider_unstake', 'Unstake funds as a Provider', (yargs) => {
                 return yargs

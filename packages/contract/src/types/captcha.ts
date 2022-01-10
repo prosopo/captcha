@@ -1,8 +1,9 @@
 import {z} from "zod";
 import {MerkleNodeSchema} from './merkle'
+import {Hash} from "@polkadot/types/interfaces";
 
 export type Dataset = {
-    datasetId?: string,
+    datasetId?: Hash | string | Uint8Array,
     captchas: Captcha[],
     format: CaptchaTypes,
     tree?: string[][]
