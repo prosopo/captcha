@@ -1,22 +1,24 @@
 [package]
 name = "prosopo"
-version = "3.0.0-rc6"
+version = "3.0.0-rc7"
 authors = ["Chris Taylor chris@prosopo.io"]
 edition = "2021"
+resolver = "2"
 
 [dependencies]
-ink_primitives = { git = "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
-ink_metadata = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false, features = ["derive"], optional = true }
-ink_env = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
-ink_storage = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
-ink_lang = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
-ink_prelude = { git =  "https://github.com/prosopo-io/ink", branch = "spread_allocate_enum_default", default-features = false }
+ink_primitives = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
+ink_metadata = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false, features = ["derive"], optional = true }
+ink_env = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
+ink_storage = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
+ink_lang = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
+ink_prelude = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
 scale = { package = "parity-scale-codec", version = "2.1", default-features = false, features = ["derive"] }
 scale-info = { version = "1.0.0", default-features = false, features = ["derive"], optional = true }
 rand_chacha = { version = "0.3.1", default-features = false }
+num-traits = { version = "0.2.14", default-features = false }
 [lib]
 name = "prosopo"
-path =  "lib.rs"
+path = "lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.
     "cdylib",

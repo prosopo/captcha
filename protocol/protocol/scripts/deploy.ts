@@ -1,3 +1,4 @@
+// @ts-ignore
 import {network, patract} from "redspot";
 const {getContractFactory} = patract;
 const {api, getAddresses} = network;
@@ -13,6 +14,7 @@ async function run() {
     const Alice = signerAddresses[0];
     const AliceBalance = await api.query.system.account(Alice);
     console.log("Alice Address:", Alice);
+    // @ts-ignore
     console.log("Alice Balance: ", AliceBalance.data.free.toHuman());
 
     const contractFactory = await getContractFactory("prosopo", Alice);
@@ -35,7 +37,7 @@ async function run() {
         contract.address.toString()
     );
 
-    api.disconnect();
+    await api.disconnect();
 
     process.exit()
 }

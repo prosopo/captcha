@@ -1,28 +1,20 @@
 {
   "name": "prosopo-contract",
   "version": "1.0.0",
+  "engines": {
+    "node": ">=14.x"
+  },
   "resolutions": {
-    "@polkadot/api": "6.12.1",
-    "@polkadot/api-contract": "6.12.1",
-    "@polkadot/types": "6.12.1",
-    "@polkadot/util": "8.1.2",
-    "@polkadot/keyring": "8.1.2",
-    "@polkadot/types-known": "6.12.1",
-    "@polkadot/util-crypto": "8.1.2",
-    "@polkadot/x-randomvalues": "8.1.2",
-    "@polkadot/metadata": "4.17.1",
-    "@polkadot/x-textdecoder": "8.1.2",
-    "@polkadot/x-textencoder": "8.1.2",
-    "@polkadot/api-derive": "6.12.1",
-    "@polkadot/rpc-core": "6.12.1",
-    "@polkadot/rpc-provider": "6.12.1",
-    "@polkadot/x-global": "8.1.2",
-    "@polkadot/networks": "8.1.2",
-    "typescript": "^4.3.2"
+    "@polkadot/api": "7.2.1",
+    "@polkadot/api-contract": "7.2.1",
+    "@polkadot/types": "7.2.1",
+    "@polkadot/keyring": "8.2.2",
+    "@polkadot/util": "8.2.2",
+    "@polkadot/wasm-crypto": "4.5.1",
+    "@polkadot/util-crypto": "8.2.2",
+    "typescript": "4.5.4"
   },
   "dependencies": {
-    "@polkadot/types": "6.12.1",
-    "@polkadot/util": "8.1.2",
     "@redspot/chai": "file:../redspot/build/redspot-chai",
     "@redspot/decimals": "file:../redspot/build/redspot-decimals",
     "@redspot/explorer": "file:../redspot/build/redspot-explorer",
@@ -35,7 +27,7 @@
     "chai": "^4.2.0",
     "mongodb": "^4.1.2",
     "redspot": "file:../redspot/build/redspot-core",
-    "typescript": "^4.3.2"
+    "typescript": "^4.5.4"
   },
   "module": "true",
   "scripts": {
@@ -45,7 +37,7 @@
     "deploy": "npx --trace-warnings redspot run ./scripts/deploy.ts"
   },
   "main": "index.js",
-  "repository": "git@github.com:prosopo-io/protocol.git",
+  "repository": "ssh://git@github.com:prosopo-io/protocol.git",
   "author": "Prosopo",
   "license": "GPLv3"
 }
