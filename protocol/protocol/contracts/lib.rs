@@ -16,6 +16,8 @@
 
 use ink_lang as ink;
 
+pub use prosopo::ProsopoRef;
+
 #[ink::contract]
 mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
