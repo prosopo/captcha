@@ -6,6 +6,7 @@ import {
 import {Database} from '../types'
 import {ERRORS} from '../errors'
 import {Captcha, Dataset} from "../types/captcha";
+import {Hash} from "@polkadot/types/interfaces";
 
 //mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
@@ -75,7 +76,7 @@ export class ProsopoDatabase implements Database {
      * @param {string}   datasetId  the id of the data set
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptcha(solved: boolean, datasetId: string, size?: number): Promise<Captcha[] | undefined> {
+    async getCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
         const cursor = this.tables.captchas?.aggregate([
             {$match: {datasetId: datasetId, solution: {$exists: solved}}},
@@ -95,7 +96,7 @@ export class ProsopoDatabase implements Database {
      * @param {Captcha}  captcha
      * @param {string}   datasetId  the id of the data set
      */
-    async updateCaptcha(captcha: Captcha, datasetId: string): Promise<void> {
+    async updateCaptcha(captcha: Captcha, datasetId: Hash | string | Uint8Array): Promise<void> {
         await this.tables.captchas?.updateOne(
             {datasetId: datasetId},
             {$set: captcha},
@@ -108,7 +109,7 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Get a captcha that is solved or not solved
      */
-    async getDatasetDetails(datasetId: string) {
+    async getDatasetDetails(datasetId: Hash) {
         const doc = await this.tables.dataset?.findOne({datasetId: datasetId});
         if (doc) {
             return doc

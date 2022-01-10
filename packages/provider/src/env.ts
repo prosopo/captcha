@@ -1,4 +1,5 @@
 require('dotenv').config()
+import {contractDefinitions} from "./contract/definitions";
 import {Database, ProsopoConfig, ProsopoEnvironment} from './types';
 import findUp from 'find-up';
 import {ERRORS} from './errors'
@@ -45,6 +46,8 @@ export class Environment implements ProsopoEnvironment {
         await this.getContract();
         await this.importDatabase();
         await this.db?.connect();
+        // redspot will do this if using `npx redspot` commands. do it here anyway in case using `yarn ts-node ...`
+        await this.network.registry.register(contractDefinitions);
         assert(this.contract instanceof Contract);
     }
 

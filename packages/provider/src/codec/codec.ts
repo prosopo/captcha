@@ -1,4 +1,4 @@
-import {decodeU8a, decodeU8aVec, typeToConstructor} from "@polkadot/types/codec/utils";
+import {decodeU8a, decodeU8aVec, typeToConstructor} from "@polkadot/types-codec/utils";
 import { AnyJson } from "@polkadot/types/types/codec";
 import { Registry } from "redspot/types/provider";
 // const {encodeAddress} = require('@polkadot/util-crypto');

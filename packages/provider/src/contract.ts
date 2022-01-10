@@ -2,7 +2,10 @@ import {Environment} from './env'
 import {ERRORS} from './errors'
 import {contractApiInterface} from "./types/contract";
 import {isU8a} from '@polkadot/util';
-import { Registry } from "redspot/types/provider";
+import {Registry} from "redspot/types/provider";
+import {AbiMessage} from "@polkadot/api-contract/types";
+import Contract from "@redspot/patract/contract";
+import {Codec} from "@polkadot/types/types";
 
 const {blake2AsU8a} = require('@polkadot/util-crypto');
 
@@ -21,31 +24,81 @@ export class prosopoContractApi implements contractApiInterface {
      * @param {number} value    A value to send with the transaction, e.g. a stake
      * @return JSON result containing the contract event
      */
-    async contractTx(contractMethodName: string, args: Array<any>, value?: number): Promise<Object> {
+    async contractCall(contractMethodName: string, args: Array<any>, value?: number): Promise<any> {
         await this.env.isReady();
-        const signedContract = this.env.contract!.connect(this.env.signer!)
-        const encodedArgs = this.encodeArgs(contractMethodName, args);
+        const signedContract: Contract = this.env.contract!.connect(this.env.signer!)
+        const methodObj = this.getContractMethod(contractMethodName)
+        const encodedArgs = this.encodeArgs(methodObj, args);
+        if (methodObj.isMutating) {
+            return await this.contractTx(signedContract, contractMethodName, encodedArgs, value);
+        } else {
+            return await this.contractQuery(signedContract, contractMethodName, encodedArgs);
+        }
+
+    }
+
+    async contractTx(signedContract: Contract, contractMethodName: string, encodedArgs: any[], value: number | undefined): Promise<any> {
         let response;
         if (value) {
             response = await signedContract.tx[contractMethodName](...encodedArgs, {value: value});
         } else {
             response = await signedContract.tx[contractMethodName](...encodedArgs);
         }
-        // @ts-ignore
-        if (response.events) {
+        const property = 'events';
+
+        if (response.result.isInBlock) {
+            if (response.result.status.isRetracted) {
+                throw(response.status.asRetracted)
+            }
+            if (response.result.status.isInvalid) {
+                throw(response.status.asInvalid);
+            }
             const eventName = this.getEventNameFromMethodName(contractMethodName);
-            return response.events.filter(x => x["name"] == eventName)
-        } else {
-            throw(ERRORS.CONTRACT.TX_ERROR.message); //TODO get the error information from response
+            if (response[property]) {
+                return response[property].filter(x => x["name"] == eventName)
+            } else {
+                // TODO When a contract function returns a Result<Error> the contract execution is reverted and details
+                //  of this are passed back in a `flags` variable. `flags` does not seem to be available to polkadot-js
+                //  currently. So the lack of event here implies that the contract excution failed, which is fine
+                //  sometimes - e.g. the case where a Provider tries to register twice. This returns ProviderExists
+                //  https://github.com/polkadot-js/apps/issues/6465
+                //  https://github.com/polkadot-js/api/issues/4389
+                return {}
+            }
         }
+    }
+
+    /**
+     * Perform a contract query (non-mutating) calling the specified method
+     * @param {Contract} signedContract
+     * @param {string} contractMethodName
+     * @param {Array}  encodedArgs
+
+     * @return JSON result containing the contract event
+     */
+    async contractQuery(signedContract: Contract, contractMethodName: string, encodedArgs: any[]): Promise<any> {
+        const response = await signedContract.query[contractMethodName](...encodedArgs);
+        if (response.result.isOk && response.output) {
+            // @ts-ignore
+            return this.unwrap(response.output.toJSON());
+        } else {
+            throw(response.result.asErr);
+        }
+    }
+
+    unwrap(item: Codec) {
+        const prop = "ok";
+        if (prop in item) {
+            return item[prop]
+        }
+        return item
     }
 
     /** Encodes arguments that should be hashes using blake2AsU8a
 
      * @return encoded arguments
      */
-    encodeArgs(contractFunction: string, args: any[], value?: number): any[] {
-        const methodObj = this.getContractMethod(contractFunction);
+    encodeArgs(methodObj: object, args: any[], value?: number): any[] {
         let encodedArgs: any[] = [];
         // args must be in the same order as methodObj['args']
         methodObj['args'].forEach(function (methodArg, idx) {
@@ -61,7 +114,8 @@ export class prosopoContractApi implements contractApiInterface {
     /** Get the contract method from the ABI
      * @return the contract method object
      */
-    getContractMethod(contractMethodName: string): Object {
+    getContractMethod(contractMethodName: string): AbiMessage {
+        console.log("Looking for contract Method: ", contractMethodName);
         const methodObj = this.env.contract?.abi.messages.filter(obj => obj['method'] === contractMethodName)[0];
         if (methodObj) {
             return methodObj
