@@ -23,11 +23,12 @@ async function run() {
     // The `deployed` method will first find out if the same contract already exists based on the parameters.
     // If the contract exists, it will be returned, otherwise a new contract will be created.
     // const contract = await contractFactory.deploy("default", deployer.address);
+    let salt = Date.now().toString();
 
     const contract = await contractFactory.deployed("default", Alice, {
         gasLimit: "400000000000",
-        value: 4e14,
-        salt: "0x01",
+        value: "20000 UNIT",
+        salt: salt,
         name: "prosopo"
     });
 

@@ -20,6 +20,8 @@ Cargo.lock
 
 node_modules
 /.idea
+/.vscode
+.yarn
 *.tsbuildinfo
 .DS_Store
 
