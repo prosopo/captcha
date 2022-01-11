@@ -20,6 +20,8 @@ export default {
     networks: {
         development: {
             endpoint: "ws://substrate-node:9944",
+            // Use this to contact a localhost version of substrate
+            // qgit cendpoint: "ws://host.docker.internal:9944",
             gasLimit: "400000000000",
             types: contractDefinitions,
             accounts: [
