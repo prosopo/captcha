@@ -3,6 +3,7 @@ import {Environment} from '../src/env'
 import yargs from 'yargs'
 import {CaptchaMerkleTree} from "../src/merkle";
 import {Tasks} from "../src/tasks/tasks";
+import BN from "bn.js";
 
 require('dotenv').config()
 
@@ -46,7 +47,7 @@ function processArgs(env) {
             }, async (argv) => {
                 // @ts-ignore
                 const providerKeyringPair = env.network.keyring.addFromMnemonic(process.env.PROVIDER_MNEMONIC.toString());
-                await sendFunds(env, providerKeyringPair.address, 'Provider', 1e15);
+                await sendFunds(env, providerKeyringPair.address, 'Provider', new BN("100000000000000000"));
                 await setupProvider(env, providerKeyringPair.address)
             },
         )
@@ -77,10 +78,13 @@ async function displayBalance(env, address, who) {
 }
 
 async function sendFunds(env, address, who, amount) {
+    console.log(`Sending ${amount} to ${address}`);
+
     let balance = await displayBalance(env, address, who);
     const signerAddresses = await env.network.getAddresses();
     // @ts-ignore
     const Alice = signerAddresses[0];
+    await displayBalance(env, address, Alice);
     let api = env.network.api;
     if (balance.data.free.toNumber() === 0) {
         const alicePair = env.network.keyring.getPair(Alice);
@@ -134,11 +138,11 @@ async function setupDappUser(env) {
         const unsolved = await tasks.getCaptchaWithProof(provider.captcha_dataset_id, false, 1)
         solved[0].captcha.solution = [1];
         unsolved[0].captcha.solution = [1];
-        // TODO add salt to solution
+        // TODO add salt to solution https://github.com/prosopo-io/provider/issues/35
         console.log(" - build Merkle tree")
         let tree = new CaptchaMerkleTree();
         await tree.build([solved[0].captcha, unsolved[0].captcha]);
-        // TODO send solution to Provider database
+        // TODO send solution to Provider database https://github.com/prosopo-io/provider/issues/35
         await env.changeSigner(DAPP_USER.mnemonic);
         console.log(" - dappUserCommit")
         await tasks.dappUserCommit(DAPP.contractAccount, PROVIDER.datasetHash, tree.root!.hash);
@@ -155,7 +159,7 @@ async function approveOrDisapproveCommitment(env, solutionHash, approve: boolean
     // This stage would take place on the Provider node after checking the solution was correct
     // We need to assume that the Provider has access to the Dapp User's merkle tree root or can construct it from the
     // raw data that was sent to them
-    // TODO check solution is correct
+    // TODO check solution is correct https://github.com/prosopo-io/provider/issues/35
     await env.changeSigner(process.env.PROVIDER_MNEMONIC);
     console.log(" - getCaptchaSolutionCommitment")
     console.log(solutionHash);
