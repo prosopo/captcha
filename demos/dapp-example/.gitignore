@@ -20,6 +20,8 @@ Cargo.lock
 
 node_modules
 /.idea
+/.vscode
+.yarn
 *.tsbuildinfo
 .DS_Store
 
@@ -120,4 +122,4 @@ secrets.json
 .env
 
 # Ingnore build target
-*/target/
+contracts/target/
