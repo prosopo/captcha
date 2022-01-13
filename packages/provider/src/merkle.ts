@@ -1,6 +1,5 @@
 import {Captcha} from "./types/captcha";
-import {readFile} from "./util";
-import {hexHash} from './captcha'
+import {hexHash, readFile} from "./util";
 import {MerkleNodeInterface} from "./types/merkle";
 
 export class CaptchaMerkleTree {

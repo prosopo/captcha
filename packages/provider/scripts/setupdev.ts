@@ -3,7 +3,9 @@ import {Environment} from '../src/env'
 import yargs from 'yargs'
 import {CaptchaMerkleTree} from "../src/merkle";
 import {Tasks} from "../src/tasks/tasks";
+import {hexHash} from "../src/util"
 import BN from "bn.js";
+import {blake2AsHex, decodeAddress, encodeAddress} from "@polkadot/util-crypto";
 
 require('dotenv').config()
 
@@ -13,14 +15,14 @@ const PROVIDER = {
     payee: "Provider",
     stake: 10,
     datasetFile: '/usr/src/data/captchas.json',
-    datasetHash: ""
+    datasetHash: undefined
 }
 
 const DAPP = {
     serviceOrigin: "http://localhost:9393",
     mnemonic: "//Ferdie",
-    contractAccount: "",
-    optionalOwner: "",
+    contractAccount: process.env.DAPP_CONTRACT_ADDRESS,
+    optionalOwner: "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL", //Ferdie's address
     fundAmount: 100
 }
 
@@ -84,9 +86,9 @@ async function sendFunds(env, address, who, amount) {
     const signerAddresses = await env.network.getAddresses();
     // @ts-ignore
     const Alice = signerAddresses[0];
-    await displayBalance(env, address, Alice);
+    await displayBalance(env, address, "Alice");
     let api = env.network.api;
-    if (balance.data.free.toNumber() === 0) {
+    if (balance.data.free.isEmpty) {
         const alicePair = env.network.keyring.getPair(Alice);
         await env.patract.buildTx(
             api.registry,
@@ -102,12 +104,12 @@ async function setupProvider(env, address) {
     await env.changeSigner(process.env.PROVIDER_MNEMONIC);
     const tasks = new Tasks(env);
     console.log(" - providerRegister")
-    await tasks.providerRegister(PROVIDER.serviceOrigin, PROVIDER.fee, PROVIDER.payee, address);
+    await tasks.providerRegister(hexHash(PROVIDER.serviceOrigin), PROVIDER.fee, PROVIDER.payee, address);
     console.log(" - providerStake")
-    await tasks.providerUpdate(PROVIDER.serviceOrigin, PROVIDER.fee, PROVIDER.payee, address, PROVIDER.stake);
+    await tasks.providerUpdate(hexHash(PROVIDER.serviceOrigin), PROVIDER.fee, PROVIDER.payee, address, PROVIDER.stake);
     console.log(" - providerAddDataset")
     const datasetResult = await tasks.providerAddDataset(PROVIDER.datasetFile);
-    console.log(datasetResult);
+    console.log(JSON.stringify(datasetResult));
     PROVIDER.datasetHash = datasetResult[0]['args'][1];
 }
 
@@ -116,9 +118,16 @@ async function setupDapp(env) {
     const tasks = new Tasks(env);
     await env.changeSigner(DAPP.mnemonic);
     console.log(" - dappRegister")
-    await tasks.dappRegister(DAPP.serviceOrigin, DAPP.contractAccount, DAPP.optionalOwner)
-    console.log(" - dappFund")
-    await tasks.dappFund(DAPP.contractAccount, DAPP.fundAmount);
+    if (typeof (DAPP.contractAccount) === "string") {
+        let encodedAddress = encodeAddress(DAPP.optionalOwner);
+        console.log(blake2AsHex(decodeAddress(DAPP.optionalOwner)));
+        //let optionalOwner = new Option(env.network.registry, GenericAccountId,blake2AsHex(decodeAddress(DAPP.optionalOwner)))
+        await tasks.dappRegister(hexHash(DAPP.serviceOrigin), DAPP.contractAccount, blake2AsHex(decodeAddress(DAPP.optionalOwner)));
+        console.log(" - dappFund")
+        await tasks.dappFund(DAPP.contractAccount, DAPP.fundAmount);
+    } else {
+        throw("DAPP_CONTRACT_ACCOUNT not set in environment variables");
+    }
 }
 
 async function setupDappUser(env) {
@@ -144,9 +153,24 @@ async function setupDappUser(env) {
         await tree.build([solved[0].captcha, unsolved[0].captcha]);
         // TODO send solution to Provider database https://github.com/prosopo-io/provider/issues/35
         await env.changeSigner(DAPP_USER.mnemonic);
+        let captchaData = await tasks.getCaptchaData(provider.captcha_dataset_id.toString());
+        if (captchaData.merkle_tree_root !== provider.captcha_dataset_id.toString()) {
+            throw(`Cannot find captcha data id: ${provider.captcha_dataset_id.toString()}`);
+        }
+        let commitment_id = tree.root!.hash;
         console.log(" - dappUserCommit")
-        await tasks.dappUserCommit(DAPP.contractAccount, PROVIDER.datasetHash, tree.root!.hash);
-        return tree.root!.hash;
+        if (typeof (DAPP.contractAccount) === "string" && typeof (process.env.PROVIDER_ADDRESS) === "string") {
+            console.log(" -   Contract Account: ", DAPP.contractAccount);
+            console.log(" -   Captcha Dataset ID: ", provider.captcha_dataset_id);
+            console.log(" -   Solution Root Hash: ", commitment_id);
+            console.log(" -   Provider Address: ", process.env.PROVIDER_ADDRESS);
+            await tasks.dappUserCommit(DAPP.contractAccount, provider.captcha_dataset_id, commitment_id, process.env.PROVIDER_ADDRESS);
+            let commitment = await tasks.getCaptchaSolutionCommitment(commitment_id);
+            console.log("Commitment: ", commitment)
+        } else {
+            throw("Either DAPP_CONTRACT_ACCOUNT or PROVIDER_ADDRESS not set in environment variables");
+        }
+        return commitment_id
 
     } else {
         throw("Provider not found");
@@ -161,15 +185,12 @@ async function approveOrDisapproveCommitment(env, solutionHash, approve: boolean
     // raw data that was sent to them
     // TODO check solution is correct https://github.com/prosopo-io/provider/issues/35
     await env.changeSigner(process.env.PROVIDER_MNEMONIC);
-    console.log(" - getCaptchaSolutionCommitment")
-    console.log(solutionHash);
-    const commitment = await tasks.getCaptchaSolutionCommitment(solutionHash, PROVIDER.datasetHash);
-    console.log(commitment);
-    console.log(" - Captcha solution commitment \n", commitment);
     if (approve) {
-        await tasks.providerApprove(commitment);
+        console.log("-   Approving commitment")
+        await tasks.providerApprove(solutionHash);
     } else {
-        await tasks.providerDisapprove(commitment);
+        console.log("-   Disapproving commitment")
+        await tasks.providerDisapprove(solutionHash);
     }
 }
 

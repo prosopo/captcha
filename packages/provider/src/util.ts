@@ -2,7 +2,10 @@ import {ERRORS} from './errors'
 
 const {decodeAddress, encodeAddress} = require('@polkadot/keyring');
 const {hexToU8a, isHex} = require('@polkadot/util');
+const {blake2AsU8a, blake2AsHex} = require('@polkadot/util-crypto');
 const fs = require('fs');
+
+
 
 export function encodeStringAddress(address: string) {
     if (address.startsWith("0x")) {
@@ -51,4 +54,13 @@ export function shuffleArray(array) {
         [array[arrayIndex], array[randIndex]] = [array[randIndex], array[arrayIndex]];
     }
     return array
+}
+
+
+function hash(data: string | Uint8Array): Uint8Array {
+    return blake2AsU8a(data);
+}
+
+export function hexHash(data: string | Uint8Array): string {
+    return blake2AsHex(data);
 }

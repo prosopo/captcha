@@ -2,7 +2,7 @@
 import {loadJSONFile} from "../util";
 import {addHashesToDataset, parseCaptchaDataset} from "../captcha";
 import {hexToU8a} from "@polkadot/util";
-import {contractApiInterface, Provider} from "../types/contract";
+import {contractApiInterface, Dapp, Provider} from "../types/contract";
 import {prosopoContractApi} from "../contract";
 import {Database} from "../types";
 import {ERRORS} from "../errors";
@@ -11,7 +11,8 @@ import {CaptchaWithProof} from "../types/api";
 import {GovernanceStatus} from "../types/provider";
 import {buildDecodeVector} from "../codec/codec";
 import {AnyJson} from "@polkadot/types/types/codec";
-import {Hash} from "@polkadot/types/interfaces";
+import {AccountId, Hash} from "@polkadot/types/interfaces";
+import type { Option } from '@polkadot/types';
 
 export class Tasks {
 
@@ -50,10 +51,11 @@ export class Tasks {
         datasetHashes['datasetId'] = tree.root?.hash;
         datasetHashes['tree'] = tree.layers;
         await this.db?.loadDataset(datasetHashes);
+        console.log("Data set hash", tree.root?.hash);
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
-    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string | undefined): Promise<Object> {
+    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<Object> {
         return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
     }
 
@@ -65,33 +67,27 @@ export class Tasks {
         return await this.contractApi.contractCall('dappCancel', [contractAccount]);
     }
 
-    async dappUserCommit(contractAccount: string, captchaDatasetId: string, userMerkleTreeRoot: string) {
-        return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot]);
+    async dappUserCommit(contractAccount: string, captchaDatasetId: Hash, userMerkleTreeRoot: string, providerAddress: string) {
+        return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
     }
 
-    //provider_approve
     async providerApprove(captchaSolutionCommitmentId) {
         return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId]);
     }
 
-    //provider_disapprove
     async providerDisapprove(captchaSolutionCommitmentId) {
         return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId]);
     }
 
-    //dapp_operator_is_human_user
     async dappOperatorIsHumanUser() {
     }
 
-    //dapp_operator_check_recent_solution
     async dappOperatorCheckRecentSolution() {
     }
 
-    //add_prosopo_operator
     async addProsopoOperator() {
     }
 
-    //captcha_solution_commitment
     async captchaSolutionCommitment() {
     }
 
@@ -132,9 +128,16 @@ export class Tasks {
         return await this.contractApi.contractCall("getProviderDetails", [accountId])
     }
 
-    async getCaptchaSolutionCommitment(solutionId: string, datasetId: string): Promise<Provider> {
-        //TODO rebuild contract now that this method is an [ink(message)]
-        return await this.contractApi.contractCall("getCaptchaSolutionCommitment", [solutionId, datasetId])
+    async getDappDetails(accountId: string): Promise<Dapp> {
+        return await this.contractApi.contractCall("getDappDetails", [accountId])
+    }
+
+    async getCaptchaData(captchaDatasetId: string) {
+        return await this.contractApi.contractCall("getCaptchaData", [captchaDatasetId])
+    }
+
+    async getCaptchaSolutionCommitment(solutionId: string): Promise<Provider> {
+        return await this.contractApi.contractCall("getCaptchaSolutionCommitment", [solutionId])
     }
 
     async providerAccounts(providerId: string, status: GovernanceStatus): Promise<AnyJson> {
@@ -148,4 +151,5 @@ export class Tasks {
         console.log(dappAccountsList);
         return dappAccountsList
     }
+
 }

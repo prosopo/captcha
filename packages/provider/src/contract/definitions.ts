@@ -22,7 +22,7 @@ export const contractDefinitions = {
         min_difficulty: 'u16',
         client_origin: 'Hash',
     },
-    ProsopoProsopoError: {
+    ProsopoError: {
         _enum: [
             'NotAuthorised',
             'InsufficientBalance',
@@ -61,11 +61,21 @@ export const contractDefinitions = {
         captcha_dataset_id: 'Hash',
     },
     ProviderMap: '{"AccountId":"Provider"}',
+    ProsopoCaptchaData: {
+        provider: 'AccountId',
+        merkle_tree_root: 'Hash',
+        captcha_type: 'u16',
+    },
     ProsopoCaptchaSolutionCommitment: {
         account: 'AccountId',
         captcha_dataset_id: 'Hash',
         status: 'CaptchaStatus',
         contract: 'AccountId',
         provider: 'AccountId',
+    },
+    CaptchaData : {
+        provider: 'AccountId',
+        merkle_tree_root: 'Hash',
+        captcha_type: 'u16',
     }
 };
