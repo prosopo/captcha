@@ -1,7 +1,7 @@
 import {Environment} from "../env";
 import {Registry} from "redspot/types/provider";
-import {Balance, Hash} from "@polkadot/types/interfaces";
-import {u32} from "@polkadot/types";
+import {AccountId, Balance, Hash} from "@polkadot/types/interfaces";
+import {u16, u32} from "@polkadot/types";
 import Contract from "@redspot/patract/contract";
 
 export enum GovernanceStatus {
@@ -23,6 +23,14 @@ export interface Provider {
     payee: Payee,
     service_origin: Hash,
     captcha_dataset_id: Hash,
+}
+
+export interface Dapp {
+    status: GovernanceStatus,
+    balance: Balance,
+    owner: AccountId,
+    min_difficulty: u16,
+    client_origin: Hash,
 }
 
 export interface contractApiInterface {

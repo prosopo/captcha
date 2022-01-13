@@ -1,6 +1,6 @@
 import {CaptchaMerkleTree} from "../src/merkle";
 import {expect} from "chai";
-import {hexHash} from "../src/captcha";
+import {hexHash} from "../src/util";
 
 describe("PROVIDER MERKLE TREE", () => {
     after(() => {
