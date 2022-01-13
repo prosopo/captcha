@@ -389,7 +389,7 @@ mod prosopo {
     /// The Prosopo error types
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-    pub enum ProsopoError {
+    pub enum Error {
         /// Returned if calling account is not authorised to perform action
         NotAuthorised,
         /// Returned if not enough balance to fulfill a request is available.
@@ -418,6 +418,8 @@ mod prosopo {
         CaptchaDataDoesNotExist,
         /// Returned if solution commitment does not exist when it should
         CaptchaSolutionCommitmentDoesNotExist,
+        /// Returned if solution commitment already exists when it should not
+        CaptchaSolutionCommitmentExists,
         /// Returned if dapp user does not exist when it should
         DappUserDoesNotExist,
         /// Returned if there are no active providers
@@ -448,7 +450,7 @@ mod prosopo {
             fee: u32,
             payee: Payee,
             provider_account: AccountId,
-        ) -> Result<(), ProsopoError> {
+        ) -> Result<(), Error> {
             // let caller = self.env().caller();
             // TODO eventually remove operator checks to allow anyone to signup
             // if !self.operators.get(&caller) {
@@ -457,7 +459,7 @@ mod prosopo {
             let balance: u128 = 0;
             // this function is for registration only
             if self.providers.get(&provider_account).is_some() {
-                return Ok(())
+                return Ok(());
             }
             // add a new provider
             let provider = Provider {
@@ -491,17 +493,17 @@ mod prosopo {
             fee: u32,
             payee: Payee,
             provider_account: AccountId,
-        ) -> Result<(), ProsopoError> {
+        ) -> Result<(), Error> {
             let caller = self.env().caller();
 
             //TODO add operator check
             if !(caller == provider_account) {
-                return Err(ProsopoError::NotAuthorised);
+                return Err(Error::NotAuthorised);
             }
 
             // this function is for updating only, not registering
             if self.providers.get(&provider_account).is_none() {
-                return Err(ProsopoError::ProviderDoesNotExist);
+                return Err(Error::ProviderDoesNotExist);
             }
 
             let existing = self.get_provider_details(provider_account).unwrap();
@@ -569,7 +571,7 @@ mod prosopo {
         pub fn provider_deregister(
             &mut self,
             provider_account: AccountId,
-        ) -> Result<(), ProsopoError> {
+        ) -> Result<(), Error> {
             //TODO could get rid of provider_account parameter
             let caller = self.env().caller();
             if caller == provider_account {
@@ -588,7 +590,7 @@ mod prosopo {
                 });
                 //}
             } else {
-                return Err(ProsopoError::NotAuthorised);
+                return Err(Error::NotAuthorised);
             }
             Ok(())
         }
@@ -597,7 +599,7 @@ mod prosopo {
         /// Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
         #[ink(payable)]
-        pub fn provider_unstake(&mut self) -> Result<(), ProsopoError> {
+        pub fn provider_unstake(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
             // TODO should the operators be able to do this ?
             if self.providers.get(&caller).is_some() {
@@ -612,14 +614,14 @@ mod prosopo {
                     });
                 }
             } else {
-                return Err(ProsopoError::ProviderDoesNotExist);
+                return Err(Error::ProviderDoesNotExist);
             }
             Ok(())
         }
 
         /// Add a new data set
         #[ink(message)]
-        pub fn provider_add_dataset(&mut self, merkle_tree_root: Hash) -> Result<(), ProsopoError> {
+        pub fn provider_add_dataset(&mut self, merkle_tree_root: Hash) -> Result<(), Error> {
             let provider_id = self.env().caller();
             // the calling account must belong to the provider
             // TODO add Prosopo operators? Currently, only a provider can add a data set for themselves.
@@ -631,8 +633,10 @@ mod prosopo {
                 captcha_type: 0,
             };
 
-            // create a new id and insert details of the new captcha data set
-            self.captcha_data.insert(merkle_tree_root, &dataset);
+            // create a new id and insert details of the new captcha data set if it doesn't exist
+            if self.captcha_data.get(merkle_tree_root).is_none() {
+                self.captcha_data.insert(merkle_tree_root, &dataset);
+            }
 
             // set the captcha data id on the provider
             let mut provider = self.providers.get(&provider_id).unwrap();
@@ -758,18 +762,18 @@ mod prosopo {
 
         /// Cancel services as a dapp, returning remaining tokens
         #[ink(message)]
-        pub fn dapp_cancel(&mut self, contract: AccountId) -> Result<(), ProsopoError> {
+        pub fn dapp_cancel(&mut self, contract: AccountId) -> Result<(), Error> {
             let caller = self.env().caller();
 
             if self.dapps.get(&contract).is_none() {
-                return Err(ProsopoError::DappDoesNotExist);
+                return Err(Error::DappDoesNotExist);
             }
             let dapp = self.get_dapp_details(contract)?;
 
             // TODO should the operators be authorised to do this ?
             // TODO If an owner is not specified then the Dapp contract can never be cancelled
             if dapp.owner != caller {
-                return Err(ProsopoError::NotAuthorised);
+                return Err(Error::NotAuthorised);
             }
 
             let balance = dapp.balance;
@@ -804,14 +808,19 @@ mod prosopo {
             captcha_dataset_id: Hash,
             user_merkle_tree_root: Hash,
             provider: AccountId,
-        ) -> Result<(), ProsopoError> {
+        ) -> Result<(), Error> {
             let caller = self.env().caller();
             // Guard against incorrect data being submitted
-            if self.captcha_data.get(&captcha_dataset_id).is_none() {
-                return Err(ProsopoError::CaptchaDataDoesNotExist);
+            self.get_captcha_data(captcha_dataset_id)?;
+            // Guard against solution commitment being submitted more than once
+            if self.captcha_solution_commitments.get(user_merkle_tree_root).is_some() {
+                ink_env::debug_println!("{}", "CaptchaSolutionCommitmentExists");
+                //return Err(Error::CaptchaSolutionCommitmentExists);
+                return Ok(())
             }
 
             self.validate_dapp(contract)?;
+            self.validate_provider(provider)?;
 
             let commitment = CaptchaSolutionCommitment {
                 account: caller,
@@ -856,14 +865,14 @@ mod prosopo {
         pub fn provider_approve(
             &mut self,
             captcha_solution_commitment_id: Hash,
-        ) -> Result<(), ProsopoError> {
+        ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider(caller)?;
             // Guard against incorrect solution id
             let commitment =
                 self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
             if commitment.provider != caller {
-                return Err(ProsopoError::NotAuthorised);
+                return Err(Error::NotAuthorised);
             }
             self.validate_dapp(commitment.contract)?;
 
@@ -897,14 +906,14 @@ mod prosopo {
         pub fn provider_disapprove(
             &mut self,
             captcha_solution_commitment_id: Hash,
-        ) -> Result<(), ProsopoError> {
+        ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider(caller)?;
             // Guard against incorrect solution id
             let commitment =
                 self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
             if commitment.provider != caller {
-                return Err(ProsopoError::NotAuthorised);
+                return Err(Error::NotAuthorised);
             }
             self.validate_dapp(commitment.contract)?;
             // Check the user exists
@@ -938,7 +947,7 @@ mod prosopo {
             &mut self,
             provider_account: &AccountId,
             dapp_account: &AccountId,
-        ) -> Result<(), ProsopoError> {
+        ) -> Result<(), Error> {
             let mut provider = self.providers.get(provider_account).unwrap();
             if provider.fee != 0 {
                 let mut dapp = self.dapps.get(dapp_account).unwrap();
@@ -967,7 +976,7 @@ mod prosopo {
             &mut self,
             user: AccountId,
             threshold: u8,
-        ) -> Result<bool, ProsopoError> {
+        ) -> Result<bool, Error> {
             let user = self.get_dapp_user(user)?;
             // determine if correct captchas is greater than or equal to threshold
             Ok(
@@ -993,43 +1002,55 @@ mod prosopo {
 
         /// Informational / Validation functions
 
-        fn validate_provider(&self, provider_id: AccountId) -> Result<(), ProsopoError> {
+        fn validate_provider(&self, provider_id: AccountId) -> Result<(), Error> {
             if self.providers.get(&provider_id).is_none() {
                 ink_env::debug_println!("{}", "ProviderDoesNotExist");
-                return Err(ProsopoError::ProviderDoesNotExist);
+                return Err(Error::ProviderDoesNotExist);
             }
             let provider = self.get_provider_details(provider_id)?;
             if provider.status != GovernanceStatus::Active {
                 ink_env::debug_println!("{}", "ProviderInactive");
-                return Err(ProsopoError::ProviderInactive);
+                return Err(Error::ProviderInactive);
             }
             if provider.balance <= 0 {
                 ink_env::debug_println!("{}", "ProviderInsufficientFunds");
-                return Err(ProsopoError::ProviderInsufficientFunds);
+                return Err(Error::ProviderInsufficientFunds);
             }
             Ok(())
         }
 
-        fn validate_dapp(&self, contract: AccountId) -> Result<(), ProsopoError> {
+        fn validate_dapp(&self, contract: AccountId) -> Result<(), Error> {
             // Guard against dapps using service that are not registered
             if self.dapps.get(&contract).is_none() {
                 ink_env::debug_println!("{}", "DappDoesNotExist");
-                return Err(ProsopoError::DappDoesNotExist);
+                return Err(Error::DappDoesNotExist);
             }
             // Guard against dapps using service that are Suspended or Deactivated
             let dapp = self.get_dapp_details(contract)?;
             if dapp.status != GovernanceStatus::Active {
                 ink_env::debug_println!("{}", "DappInactive");
-                return Err(ProsopoError::DappInactive);
+                return Err(Error::DappInactive);
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
             if dapp.balance <= 0 {
                 ink_env::debug_println!("{}", "DappInsufficientFunds");
-                return Err(ProsopoError::DappInsufficientFunds);
+                return Err(Error::DappInsufficientFunds);
             }
-            //ink_env::debug_println!("{}","dapp has validated");
             Ok(())
+        }
+
+        /// Get a single captcha dataset
+        ///
+        /// Returns an error if the dapp does not exist
+        #[ink(message)]
+        pub fn get_captcha_data(&self, captcha_dataset_id: Hash) -> Result<CaptchaData, Error> {
+            if self.captcha_data.get(&captcha_dataset_id).is_none() {
+                ink_env::debug_println!("{}", "CaptchaDatasetDoesNotExist");
+                return Err(Error::CaptchaDataDoesNotExist);
+            }
+            let captcha_data = self.captcha_data.get(&captcha_dataset_id);
+            Ok(captcha_data.unwrap())
         }
 
         /// Get a solution commitment
@@ -1039,13 +1060,13 @@ mod prosopo {
         pub fn get_captcha_solution_commitment(
             &self,
             captcha_solution_commitment_id: Hash,
-        ) -> Result<CaptchaSolutionCommitment, ProsopoError> {
+        ) -> Result<CaptchaSolutionCommitment, Error> {
             if self
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
                 .is_none()
             {
-                return Err(ProsopoError::CaptchaSolutionCommitmentDoesNotExist);
+                return Err(Error::CaptchaSolutionCommitmentDoesNotExist);
             }
             let commitment = self
                 .captcha_solution_commitments
@@ -1059,10 +1080,10 @@ mod prosopo {
         ///
         /// Returns an error if the user does not exist
         #[ink(message)]
-        pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, ProsopoError> {
+        pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
             if self.dapp_users.get(&dapp_user_id).is_none() {
                 ink_env::debug_println!("{}", "DappUserDoesNotExist");
-                return Err(ProsopoError::DappUserDoesNotExist);
+                return Err(Error::DappUserDoesNotExist);
             }
             Ok(self.dapp_users.get(&dapp_user_id).unwrap())
         }
@@ -1071,10 +1092,10 @@ mod prosopo {
         ///
         /// Returns an error if the user does not exist
         #[ink(message)]
-        pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, ProsopoError> {
+        pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
             if self.providers.get(&accountid).is_none() {
                 ink_env::debug_println!("{}", "ProviderDoesNotExist");
-                return Err(ProsopoError::ProviderDoesNotExist);
+                return Err(Error::ProviderDoesNotExist);
             }
             let provider = self.providers.get(&accountid);
             Ok(provider.unwrap())
@@ -1084,10 +1105,10 @@ mod prosopo {
         ///
         /// Returns an error if the dapp does not exist
         #[ink(message)]
-        pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, ProsopoError> {
+        pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
             if self.dapps.get(&contract).is_none() {
                 ink_env::debug_println!("{}", "DappDoesNotExist");
-                return Err(ProsopoError::DappDoesNotExist);
+                return Err(Error::DappDoesNotExist);
             }
             let dapp = self.dapps.get(&contract);
             Ok(dapp.unwrap())
@@ -1152,14 +1173,14 @@ mod prosopo {
         ///
         /// Returns error if no active providers is found
         #[ink(message)]
-        pub fn get_random_active_provider(&self) -> Result<Provider, ProsopoError> {
+        pub fn get_random_active_provider(&self) -> Result<Provider, Error> {
             let active_providers = self
                 .provider_accounts
                 .get(GovernanceStatus::Active)
                 .unwrap();
             let max = active_providers.len();
             if max == 0 {
-                return Err(ProsopoError::NoActiveProviders);
+                return Err(Error::NoActiveProviders);
             }
             let index = self.get_random_number(0, (max - 1) as u64);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
@@ -1853,7 +1874,7 @@ mod prosopo {
             let solution_id = str_to_hash("id that does not exist".to_string());
             let result = contract.provider_approve(solution_id);
             assert_eq!(
-                ProsopoError::CaptchaSolutionCommitmentDoesNotExist,
+                Error::CaptchaSolutionCommitmentDoesNotExist,
                 result.unwrap_err()
             );
         }
