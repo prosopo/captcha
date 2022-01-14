@@ -1,5 +1,6 @@
 // @ts-ignore
 import {network, patract} from "redspot";
+
 const {getContractFactory} = patract;
 const {api, getAddresses} = network;
 
@@ -25,12 +26,21 @@ async function run() {
     // const contract = await contractFactory.deploy("default", deployer.address);
     let salt = Date.now().toString();
 
-    const contract = await contractFactory.deployed("new", process.env.CONTRACT_ADDRESS, {
-        gasLimit: "400000000000",
-        value: "20000 UNIT",
-        salt: salt,
-        name: "dapp-example"
-    });
+    const contract = await contractFactory.deployed("new",
+        // initial_supply
+        "1000000000000000000000",
+        // faucet_amount
+        "1000000",
+        // prosopo_account
+        process.env.CONTRACT_ADDRESS,
+        // human_threshold
+        80,
+        {
+            gasLimit: "400000000000",
+            value: "20000 UNIT",
+            salt: salt,
+            name: "dapp-example"
+        });
 
     console.log("");
     console.log(
