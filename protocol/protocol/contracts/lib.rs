@@ -969,8 +969,8 @@ mod prosopo {
             Ok(())
         }
 
-        // Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
-        // Threshold is decided by the calling user
+        /// Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
+        /// Threshold is decided by the calling user
         #[ink(message)]
         pub fn dapp_operator_is_human_user(
             &mut self,
@@ -985,9 +985,9 @@ mod prosopo {
             )
         }
 
-        /// Disputes and governance messages
+        // Disputes and governance messages
 
-        // Add an operator
+        /// Add an operator
         #[ink(message)]
         pub fn add_prosopo_operator(&mut self, operator_account: AccountId) {
             let caller = self.env().caller();
@@ -1000,7 +1000,7 @@ mod prosopo {
             }
         }
 
-        /// Informational / Validation functions
+        // Informational / Validation functions
 
         fn validate_provider(&self, provider_id: AccountId) -> Result<(), Error> {
             if self.providers.get(&provider_id).is_none() {
