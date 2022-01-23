@@ -1,5 +1,4 @@
-import {Captcha} from "./types/captcha";
-import {hexHash, readFile} from "./util";
+import {hexHash} from "./util";
 import {MerkleNodeInterface} from "./types/merkle";
 
 export class CaptchaMerkleTree {
@@ -12,34 +11,20 @@ export class CaptchaMerkleTree {
         this.layers = [];
     }
 
-    async build(captchas: Captcha[]) {
 
+    build(leaves: string[]) {
+        // allow rebuild
+        if (this.layers.length) {
+            this.layers = [];
+        }
         let layerZero: string[] = []
-        for (let captcha of captchas) {
-            let node = new MerkleNode(await this.computeCaptchaHash(captcha))
+        for (let leaf of leaves) {
+            let node = new MerkleNode(leaf)
             this.leaves.push(node)
             layerZero.push(node.hash);
         }
         this.layers.push(layerZero);
         this.root = this.buildMerkleTree(this.leaves)
-    }
-
-    async computeCaptchaHash(captcha: Captcha) {
-        let itemHashes: string[] = [];
-        for (let item of captcha['items']) {
-            if (item['type'] === 'image') {
-                // data must remain in the same order so load images synchronously
-                const fileBuffer = await readFile(item['path']);
-                itemHashes.push(hexHash(fileBuffer));
-            } else if (item['type'] === 'text') {
-                itemHashes.push(hexHash(item['text']));
-            } else {
-                throw('NotImplemented: only image and text item types allowed')
-            }
-        }
-        //TODO what about target? Salt should avoid collisions but...
-        return hexHash([captcha['solution'], captcha['salt'], itemHashes].join())
-
     }
 
 

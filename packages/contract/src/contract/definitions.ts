@@ -14,7 +14,7 @@ export const contractDefinitions = {
         ]
     },
     DappAccounts: 'Vec<AccountId>',
-    Dapp: {
+    ProsopoDapp: {
         // eslint-disable-next-line sort-keys
         status: 'GovernanceStatus',
         balance: 'Balance',

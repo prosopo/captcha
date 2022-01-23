@@ -2,7 +2,7 @@
 import {Tasks} from "../src/tasks/tasks";
 require('dotenv').config()
 import {Environment} from '../src/env'
-import {GovernanceStatus} from "../src/types/provider";
+import {GovernanceStatus} from "../src/types/contract";
 
 async function main() {
     const env = new Environment("//Alice");

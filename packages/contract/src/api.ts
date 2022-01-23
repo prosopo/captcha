@@ -2,6 +2,8 @@ import express, {Router} from 'express';
 import {Tasks} from './tasks/tasks'
 import {BadRequest, ERRORS} from './errors'
 import {shuffleArray} from "./util";
+import {parseCaptchas} from "./captcha";
+import {CaptchaSolutionBody} from "./types/api";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -159,6 +161,7 @@ export function prosopoMiddleware(env): Router {
         //TODO
         next()
     });
+
 
     /**
      * Dapp User Commit
@@ -324,16 +327,12 @@ export function prosopoMiddleware(env): Router {
      * @return {Captcha} - The Captcha data
      */
     router.get('/v1/prosopo/provider/captcha/:datasetId', async function (req, res, next) {
+        const {datasetId, userAccount} = req.params;
+        if (!datasetId || !userAccount) {
+            throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
+        }
         try {
-            const {datasetId} = req.params;
-            if (!datasetId) {
-                throw new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message);
-            }
-            //return one solved and one unsolved
-            const solved = await tasks.getCaptchaWithProof(datasetId, true, 1)
-            const unsolved = await tasks.getCaptchaWithProof(datasetId, false, 1)
-            let result = shuffleArray([solved[0], unsolved[0]]);
-            res.json(result);
+            res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount));
         } catch (err: any) {
             let msg = `${ERRORS.CONTRACT.TX_ERROR.message}:${err}`;
             next(new BadRequest(msg));
@@ -341,17 +340,33 @@ export function prosopoMiddleware(env): Router {
     });
 
     /**
-     * Receives a solved Captcha and verifies the solution of against the database and the on-chain merkle tree hash of the user
+     * Receives solved Captchas, store to database, and check against solution commitment
      *
-     * @param {string} userId - Dapp User id
-     * @param {string} dappId - Dapp Contract AccountId
-     * @param {CaptchaSolution} captchaSolution - The Captcha solution
+     * @param {string} userAccount - Dapp User id
+     * @param {string} dappAccount - Dapp Contract AccountId
+     * @param {Captcha[]} captchas - The Captcha solutions
      * @return {CaptchaSolutionResponse} - The Captcha solution result and proof
      */
-    router.post('/v1/prosopo/provider/captcha', function (req, res, next) {
-        // TODO
-        next();
+    router.post('/v1/prosopo/provider/solution', async function (req, res, next) {
+        try {
+            CaptchaSolutionBody.parse(req.body);
+        } catch (err) {
+            throw new BadRequest(err);
+        }
+        const {userAccount, dappAccount, captchas, requestHash} = req.body;
+        try {
+            const result = await tasks.dappUserSolution(userAccount, dappAccount, requestHash, captchas)
+            if (result.length === 0) {
+                res.json({status: ERRORS.API.CAPTCHA_FAILED.message, captchas: []})
+            } else {
+                res.json({status: ERRORS.API.CAPTCHA_PASSED.message, captchas: result});
+            }
+        } catch (err: any) {
+            console.log(err);
+            let msg = ERRORS.API.BAD_REQUEST.message;
+            next(new BadRequest(msg));
+        }
     });
 
     return router;
-};
+}

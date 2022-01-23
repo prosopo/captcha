@@ -6,9 +6,6 @@ import {Registry} from "redspot/types/provider";
 import {AbiMessage} from "@polkadot/api-contract/types";
 import Contract from "@redspot/patract/contract";
 import {Codec} from "@polkadot/types/types";
-import {decodeAddress} from "@polkadot/util-crypto";
-
-const {blake2AsU8a} = require('@polkadot/util-crypto');
 
 export class prosopoContractApi implements contractApiInterface {
 
@@ -82,7 +79,7 @@ export class prosopoContractApi implements contractApiInterface {
             // @ts-ignore
             return this.unwrap(response.output.toJSON());
         } else {
-            throw(response.result.asErr);
+            throw(new Error(response.result.asErr.asModule.message.unwrap().toString()));
         }
     }
 
@@ -96,16 +93,16 @@ export class prosopoContractApi implements contractApiInterface {
 
 
     /** Encodes arguments that should be hashes using blake2AsU8a
-
      * @return encoded arguments
      */
     encodeArgs(methodObj: object, args: any[], value?: number): any[] {
         let encodedArgs: any[] = [];
         // args must be in the same order as methodObj['args']
+        const createTypes = ['Hash'];
         methodObj['args'].forEach((methodArg, idx) => {
             let argVal = args[idx]
             // hash values that have been passed as strings
-            if (methodArg['type']['type'] === 'Hash' && !(isU8a(args[idx]) || isHex(args[idx]))) {
+            if (createTypes.indexOf(methodArg['type']['type']) > -1 && !(isU8a(args[idx]) || isHex(args[idx]))) {
                 argVal = this.env.network.api.registry.createType(methodArg['type']['type'], args[idx])
             }
             encodedArgs.push(argVal);

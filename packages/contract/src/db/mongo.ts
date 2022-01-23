@@ -1,12 +1,13 @@
 import {
     Collection,
     Db,
-    MongoClient, ObjectId,
+    MongoClient, ObjectId, WithId,
 } from "mongodb";
-import {Database} from '../types'
+import {Database, Tables} from '../types'
 import {ERRORS} from '../errors'
-import {Captcha, Dataset} from "../types/captcha";
+import {Captcha, CaptchaSolution, Dataset} from "../types/captcha";
 import {Hash} from "@polkadot/types/interfaces";
+import {CaptchaSolutionResponse} from "../types/api";
 
 //mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
@@ -19,7 +20,7 @@ const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017"
  */
 export class ProsopoDatabase implements Database {
     readonly url: string;
-    tables: { captchas?: Collection, dataset?: Collection }
+    tables: Tables
     dbname: string
 
 
@@ -38,13 +39,15 @@ export class ProsopoDatabase implements Database {
         const db: Db = client.db(this.dbname);
         this.tables.dataset = db.collection("dataset");
         this.tables.captchas = db.collection("captchas");
+        this.tables.solutions = db.collection("solutions");
+        this.tables.responses = db.collection("responses");
     }
 
     /**
      * @description Load a dataset to the database
      * @param {Dataset}  dataset
      */
-    async loadDataset(dataset: Dataset): Promise<void> {
+    async storeDataset(dataset: Dataset): Promise<void> {
         if (dataset.datasetId) {
             const datasetDoc = {
                 datasetId: dataset.datasetId,
@@ -71,17 +74,33 @@ export class ProsopoDatabase implements Database {
     }
 
     /**
-     * @description Get a captcha that is solved or not solved
+     * @description Get random captchas that are solved or not solved
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {string}   datasetId  the id of the data set
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
+    async getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
         const cursor = this.tables.captchas?.aggregate([
             {$match: {datasetId: datasetId, solution: {$exists: solved}}},
-            {$sample: {size: sampleSize}}
+            {$sample: {size: sampleSize}},
+            {$project: {datasetId: 1, captchaId: 1, items: 1, target: 1}}
         ])
+        const docs = await cursor?.toArray();
+        if (docs) {
+            // drop the _id field
+            return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
+        } else {
+            throw(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
+        }
+    }
+
+    /**
+     * @description Get captchas by id
+     * @param {string[]} captchaId
+     */
+    async getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
+        const cursor = this.tables.captchas?.find({_id: {$in: captchaId}});
         const docs = await cursor?.toArray();
         if (docs) {
             // drop the _id field
@@ -102,14 +121,13 @@ export class ProsopoDatabase implements Database {
             {$set: captcha},
             {upsert: false}
         )
-
     }
 
 
     /**
      * @description Get a captcha that is solved or not solved
      */
-    async getDatasetDetails(datasetId: Hash) {
+    async getDatasetDetails(datasetId: Hash): Promise<any> {
         const doc = await this.tables.dataset?.findOne({datasetId: datasetId});
         if (doc) {
             return doc
@@ -118,6 +136,63 @@ export class ProsopoDatabase implements Database {
         }
     }
 
+    /**
+     * @description Store a Dapp User's captcha solution
+     */
+    async storeDappUserSolution(captchas: CaptchaSolution[], treeRoot: string) {
+        // create a bulk upsert operation and execute
+        // @ts-ignore
+        await this.tables.solutions?.bulkWrite(captchas.map(captchaDoc =>
+            ({
+                updateOne: {
+                    filter: {_id: captchaDoc.captchaId},
+                    update: {
+                        $set:
+                            {
+                                solution: captchaDoc.solution,
+                                salt: captchaDoc.salt,
+                                treeRoot: treeRoot
+                            }
+                    },
+                    upsert: true
+                }
+            })
+        ))
+    }
+
+    /**
+     * @description Store a Dapp User's pending record
+     */
+    async storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void> {
+        await this.tables.pending?.updateOne(
+            {_id: requestHash},
+            {$set: {accountId: userAccount, pending: true, salt: salt}},
+            {upsert: true}
+        )
+    }
+
+    /**
+     * @description Get a Dapp user's pending record
+     */
+    async getDappUserPending(requestHash: string): Promise<any> {
+        const doc = await this.tables.pending?.findOne({_id: requestHash});
+        if (doc) {
+            return doc
+        } else {
+            throw(ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message)
+        }
+    }
+
+    /**
+     * @description Update a Dapp User's pending record
+     */
+    async updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void> {
+        await this.tables.pending?.updateOne(
+            {_id: requestHash},
+            {$set: {accountId: userAccount, pending: false, approved: approve}},
+            {upsert: true}
+        )
+    }
 }
 
 

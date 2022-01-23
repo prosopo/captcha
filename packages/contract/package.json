@@ -9,7 +9,7 @@
     "start": "ts-node ./build/src/cli/cli.js",
     "setup": "yarn ts-node ./build/scripts/setupdev.js",
     "mnemonic": "yarn ts-node ./scripts/generateMnemonic.ts",
-    "test": "npx redspot test",
+    "test": "yarn redspot test",
     "dev-provider-register": "yarn build && yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
     "dev-provider-stake": "yarn build && yarn start provider_stake --value 10 --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
     "dev-provider-dataset": "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
@@ -23,6 +23,8 @@
     "@redspot/patract": "file:../redspot/build/redspot-patract",
     "@redspot/watcher": "file:../redspot/build/redspot-watcher",
     "@types/mocha": "^9.0.0",
+    "c8": "^7.11.0",
+    "chai-as-promised": "^7.1.1",
     "express": "^4.17.1",
     "mongodb": "^4.1.4",
     "redspot": "file:../redspot/build/redspot-core",
