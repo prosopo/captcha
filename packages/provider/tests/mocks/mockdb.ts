@@ -1,178 +1,293 @@
-import {Database, Table} from "../../src/types";
-import {Captcha, Dataset} from "../../src/types/captcha";
+import {Database, Tables} from "../../src/types";
+import {Captcha, CaptchaSolution, Dataset} from "../../src/types/captcha";
+import {Hash} from "@polkadot/types/interfaces";
+import {CaptchaSolutionResponse} from "../../src/types/api";
 
 const DEFAULT_ENDPOINT = "test"
 
-const SOLVED_CAPTCHA = {
-    //"_id" : "0x9e7ef7b1093e1a9a74a6384a773d4e7ee25575d4fecc8a6fd7c9fe3357cbfad3",
-    "captchaId" : "0x9e7ef7b1093e1a9a74a6384a773d4e7ee25575d4fecc8a6fd7c9fe3357cbfad3",
-    "datasetId" : "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
-    "index" : 0,
-    "items" : [
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.01.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.02.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.03.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.04.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.05.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.06.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.07.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.08.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.09.jpeg",
-            "type" : "image"
-        }
-    ],
-    "salt" : "0x01",
-    "solution" : [
-        2,
-        3,
-        4
-    ],
-    "target" : "bus"
-};
+export const SOLVED_CAPTCHAS = [
+    {
+        //"_id" : "0x73f15c36e0600922aed7d0ea1f4580c188c087e5d8be5470a4ca8382c792e6b9",
+        "captchaId": "0x73f15c36e0600922aed7d0ea1f4580c188c087e5d8be5470a4ca8382c792e6b9",
+        "datasetId": "0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605",
+        "index": 0,
+        "items": [
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.01.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.02.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.03.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.04.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.05.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.06.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.07.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.08.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.09.jpeg",
+                "type": "image"
+            }
+        ],
+        "salt": "0x01",
+        "solution": [
+            2,
+            3,
+            4
+        ],
+        "target": "bus"
+    },
+    {
+        //"_id": "0x894d733d37d2df738deba781cf6d5b66bd5b2ef1041977bf27908604e7b3e604",
+        "captchaId": "0x894d733d37d2df738deba781cf6d5b66bd5b2ef1041977bf27908604e7b3e604",
+        "solution": [
+            1,
+            8,
+            9
+        ],
+        "salt": "0x02",
+        "target": "train",
+        "items": [
+            {
+                "path": "/usr/src/data/img/01.01.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/usr/src/data/img/01.02.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/usr/src/data/img/01.03.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/usr/src/data/img/01.04.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/usr/src/data/img/01.05.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/usr/src/data/img/01.06.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/usr/src/data/img/01.07.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/usr/src/data/img/01.08.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/usr/src/data/img/01.09.jpeg",
+                "type": "image"
+            }
+        ]
+    }
+];
 
 
+const UNSOLVED_CAPTCHAS = [
+    {
+        //"_id" : "0x1b3336e2e69ca56f44e44cef13cc96e87972175a2d48068cb72327c73ca22268",
+        "captchaId": "0x1b3336e2e69ca56f44e44cef13cc96e87972175a2d48068cb72327c73ca22268",
+        "datasetId": "0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605",
+        "index": 1,
+        "items": [
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.01.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.02.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.03.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.04.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.05.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.06.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.07.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.08.jpeg",
+                "type": "image"
+            },
+            {
+                "path": "/home/user/dev/prosopo/data/img/01.09.jpeg",
+                "type": "image"
+            }
+        ],
+        "salt": "0x02",
+        "target": "train"
+    }
+]
 
-
-
-const UNSOLVED_CAPTCHA = {
-    //"_id" : "0x1b3336e2e69ca56f44e44cef13cc96e87972175a2d48068cb72327c73ca22268",
-    "captchaId" : "0x1b3336e2e69ca56f44e44cef13cc96e87972175a2d48068cb72327c73ca22268",
-    "datasetId" : "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
-    "index" : 1,
-    "items" : [
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.01.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.02.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.03.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.04.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.05.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.06.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.07.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.08.jpeg",
-            "type" : "image"
-        },
-        {
-            "path" : "/home/user/dev/prosopo/data/img/01.09.jpeg",
-            "type" : "image"
-        }
-    ],
-    "salt" : "0x02",
-    "target" : "train"
-};
-
-const DATASET = {
-    "_id": "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
-    "datasetId": "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a",
+export const DATASET = {
+    "_id": "0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605",
+    "datasetId": "0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605",
     "format": "SelectAll",
     "tree": [
         [
-            "0x9e7ef7b1093e1a9a74a6384a773d4e7ee25575d4fecc8a6fd7c9fe3357cbfad3",
-            "0x1b3336e2e69ca56f44e44cef13cc96e87972175a2d48068cb72327c73ca22268",
-            "0xc0876a31d2b5be752acb3f09bf0dc6b33a39f542d195af422711e0a08b87cd69",
-            "0xd31b224ecbc65cbc7b549e0cb0740d8d849be9a2049cb95a45b006dfb0535b39",
-            "0xb2a2894868a830b1da6af894f5997598186e81fa55f194bde09e7eb191ec7cd5",
-            "0xc835b3e0c2245b89bef457abee55418619345831eb05dff4a841a810a26c690e",
-            "0x649c325903b5bb57276591e502e008e725d48c31482db555f722a439c58c8106"
+            "0x73f15c36e0600922aed7d0ea1f4580c188c087e5d8be5470a4ca8382c792e6b9",
+            "0x894d733d37d2df738deba781cf6d5b66bd5b2ef1041977bf27908604e7b3e604",
+            "0xaeffcc3d1f9f461f43b1db75e366ac8fc231c19d9fdf4a4dbbe6dcb561e9936c",
+            "0x51f1f4f0077cf4d5bccbb5bfd6b07bb4d8544cfed3fefb5a4d2a4e0b217b6fbc",
+            "0x17ba2bbf5926bdf709f01c822288efa53bb516bd1ba5b13eae807da6505c85a0",
+            "0x8a1aa5c298c4d0f7f8d3cc7dd983427a271fb6a5db35e3ea8c47039138af4ea1",
+            "0x79bd0f5c97a7098e9784035dae92656b09b2312d1a03ca487e2569f730815212"
         ],
         [
-            "0xbda6440fa88b657669511c43c3a65785846e636e9d4f7a3dc06c2ce2450cc71a",
-            "0xaec652d7269399a55204e0c9a65e31292ddbf5d53e171529aac216cf1d582e3e",
-            "0x410eac62fd0ab595c18b3a963f357d97b0a8adbb931e6f9c9efedabf4448ab06",
-            "0x4242d290d454a58c66ecbe521da7dbdf640b3a1e1982b2ae5d7e34e3b6de22e5"
+            "0x40ccd7d86bb18860c660a211496e525a3cacc4b506440e56ac85ac824a253378",
+            "0x76cb07140a3c9e1108e392386b286d60dd5e302dc59dfa8c049045107f8db854",
+            "0x34194f72bedca1ce8edf70d8525517f2d7eb1ee69ab76e235fbf996e8c07fcc3",
+            "0xb730f53e3008da99fd51ee3ecf8cc6e974c5da1cf5e94958314025e39a491948"
         ],
         [
-            "0x8fa71c22d584c37c5229629ff2ef11719738979593fbb932c80043f80e146843",
-            "0xfcbb80f9cfd73111e50f0317813b4d4ae845d7ce3ecb10f5c5cce0e364b1380c"
+            "0x8b12abef36bfa970211495a826922d99f8a01a66f2e633fff4874061f637d814",
+            "0xe52b9fc3595ec17f3ad8d7a8095e1b730c9c4f6be21f16a5d5c9ced6b1ef8903"
         ],
         [
-            "0x0282715bd2de51935c8ed3bf101ad150861d91b2af0e6c50281740a0c072650a"
+            "0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605"
         ]
     ]
 }
 
 
-export class ProsopoDatabase implements Database {
+interface mockDatabase extends Database {
+    solved: Captcha[]
+    unsolved: Captcha[]
+}
+
+export class ProsopoDatabase implements mockDatabase {
     dbname: string;
-    tables: { captcha?: Table; dataset?: Table };
+    tables: Tables
     readonly url: string;
+    solved: Captcha[]
+    unsolved: Captcha[]
 
     constructor(url, dbname) {
         this.url = url || DEFAULT_ENDPOINT;
         this.tables = {};
         this.dbname = dbname;
+        this.solved = SOLVED_CAPTCHAS;
+        this.unsolved = UNSOLVED_CAPTCHAS;
     }
 
     connect(): Promise<void> {
+        // @ts-ignore
+        this.tables.responses = {};
+        // @ts-ignore
+        this.tables.dataset = {};
+        this.tables.dataset![DATASET.datasetId] = DATASET;
+        // @ts-ignore
+        this.tables.pending = {};
+
         return Promise.resolve(undefined);
     }
 
     getCaptcha(solved: boolean, datasetId: string, size?: number): Promise<Captcha[] | undefined> {
-        if (size && size > 1) {
-            throw("NotImplemented");
+        // @ts-ignore
+        if (size && size > this.solved.length) {
+            throw(new Error("NotImplemented"));
         }
+
         if (solved) {
-            return Promise.resolve([SOLVED_CAPTCHA]);
+            // We clone because `solution` is deleted from the object in the code
+            let clonedSolved = {...this.solved[0]};
+            return Promise.resolve([clonedSolved]);
         } else {
-            return Promise.resolve([UNSOLVED_CAPTCHA]);
+            let clonedUnsolved = {...this.unsolved[0]};
+            return Promise.resolve([clonedUnsolved]);
         }
     }
 
     getDatasetDetails(datasetId: string) {
-        return Promise.resolve(DATASET);
+        let matching = this.tables.dataset![datasetId];
+        return Promise.resolve(matching)
     }
 
-    loadDataset(dataset: Dataset): Promise<void> {
+    storeDataset(dataset: Dataset): Promise<void> {
+        this.tables.dataset![dataset.datasetId!.toString()] = {
+            datasetId: dataset.datasetId,
+            format: dataset.format,
+            tree: dataset.tree
+        };
         return Promise.resolve(undefined);
     }
 
     updateCaptcha(captcha: Captcha, datasetId: string): Promise<void> {
         return Promise.resolve(undefined);
+    }
+
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
+        let clonedSolved = {...this.solved[0]};
+        return Promise.resolve([clonedSolved]);
+    }
+
+    getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
+        let matching = captchaId.map(id => ({...(this.solved.filter(captcha => captcha.captchaId === id)[0])}))
+        return Promise.resolve(matching)
+    }
+
+    storeDappUserSolution(captchas: CaptchaSolution[], treeRoot: string) {
+        return Promise.resolve(undefined);
+    }
+
+    storeDappUserPending(userAccount: string, responseHash: string, salt: string) {
+        this.tables.pending![responseHash] = {
+            accountId: userAccount,
+            pending: true,
+            salt: salt
+        }
+        return Promise.resolve(undefined);
+    }
+
+    updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean) {
+        let pendingRequest = this.tables.pending![requestHash];
+        pendingRequest.accountId = userAccount;
+        pendingRequest.pending = false;
+        pendingRequest.approved = approve;
+        return Promise.resolve(undefined);
+    }
+
+    getDappUserPending(requestHash: string): Promise<any> {
+        return Promise.resolve(this.tables.pending![requestHash]);
     }
 
 }

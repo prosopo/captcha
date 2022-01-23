@@ -10,6 +10,8 @@ import {Signer} from 'redspot/provider'
 import Contract from "@redspot/patract/contract"
 import {strict as assert} from 'assert';
 
+const {mnemonicGenerate} = require('@polkadot/util-crypto');
+
 const TS_CONFIG_FILENAME = "prosopo.config.ts"
 const JS_CONFIG_FILENAME = "prosopo.config.js"
 const CONTRACT_NAME = "prosopo"
@@ -51,7 +53,7 @@ export class Environment implements ProsopoEnvironment {
         assert(this.contract instanceof Contract);
     }
 
-    async importDatabase() {
+    async importDatabase(): Promise<void> {
         try {
             let {ProsopoDatabase} = await import(`./db/${this.config.database[this.defaultEnvironment].type}`);
             this.db = new ProsopoDatabase(
@@ -63,13 +65,13 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
-    async getContract() {
+    async getContract(): Promise<void> {
         await this.network.api.isReadyOrError;
         const contractFactory = await patract.getContractFactory(CONTRACT_NAME, this.signer);
         this.contract = await contractFactory.attach(this.contractAddress);
     }
 
-    async getSigner() {
+    async getSigner(): Promise<void> {
         await this.network.api.isReadyOrError;
         let mnemonic = this.mnemonic;
         if (mnemonic) {
@@ -79,32 +81,38 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
-    async changeSigner(mnemonic: string) {
+    async changeSigner(mnemonic: string): Promise<void> {
         await this.network.api.isReadyOrError;
         this.mnemonic = mnemonic;
         await this.getSigner();
     }
 
-    private static getConfigPath() {
+    async createAccountAndAddToKeyring(): Promise<string[]> {
+        const mnemonic: string = mnemonicGenerate();
+        const account = this.network.keyring.addFromMnemonic(mnemonic);
+        const address: string = account.address;
+        return [mnemonic, address]
+    }
+
+    private static getConfigPath(): string {
         const tsConfigPath = findUp.sync(TS_CONFIG_FILENAME);
-        if (tsConfigPath !== null) {
+        if (tsConfigPath !== undefined) {
             return tsConfigPath;
         }
 
         const pathToConfigFile = findUp.sync(JS_CONFIG_FILENAME);
 
-        if (pathToConfigFile === null) {
+        if (pathToConfigFile === undefined) {
             throw new Error(ERRORS.GENERAL.CANNOT_FIND_CONFIG_FILE.message);
         }
 
         return pathToConfigFile;
     }
 
-    private static getConfig() {
+    private static getConfig(): ProsopoConfig {
         const filePath = Environment.getConfigPath();
-        if (filePath) {
-            return Environment.importCsjOrEsModule(filePath)
-        }
+        return Environment.importCsjOrEsModule(filePath)
+
     }
 
     private static importCsjOrEsModule(filePath: string): any {

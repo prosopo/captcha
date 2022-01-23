@@ -34,8 +34,11 @@ export const ERRORS = {
         CAPTCHA_GET_FAILED: {
             message: 'Failed to get captcha'
         },
-        NO_CAPTCHAS_FOUND : {
+        NO_CAPTCHAS_FOUND: {
             message: 'No captcha matching datasetId'
+        },
+        PENDING_RECORD_NOT_FOUND: {
+            message: 'No pending record found'
         }
     },
     API: {
@@ -45,6 +48,15 @@ export const ERRORS = {
         PARAMETER_UNDEFINED: {
             message: 'Parameters must be defined in API POST call'
         },
+        CAPTCHA_FAILED: {
+            message: 'You answered one or more captchas incorrectly. Please try again'
+        },
+        CAPTCHA_PASSED: {
+            message: 'You correctly answered the captchas'
+        },
+        BAD_REQUEST: {
+            message: 'BadRequest'
+        }
 
     },
     CONTRACT: {
@@ -59,6 +71,12 @@ export const ERRORS = {
         },
         INVALID_STORAGE_NAME: {
             message: 'Failed to find given storage name'
+        },
+        CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST : {
+            message: 'Captcha solution commitment does not exist'
+        },
+        DAPP_NOT_ACTIVE: {
+            message: 'Dapp is not active'
         }
     },
     CLI: {
@@ -73,6 +91,14 @@ export const ERRORS = {
         HASH_ERROR: {
             message: 'error hashing dataset'
         }
+    },
+    CAPTCHA: {
+        PARSE_ERROR: {
+            message: 'error parsing captcha'
+        },
+        INVALID_CAPTCHA_ID: {
+            message: 'invalid captcha id'
+        },
     }
 }
 

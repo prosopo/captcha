@@ -5,9 +5,7 @@ import {u16, u32} from "@polkadot/types";
 import Contract from "@redspot/patract/contract";
 
 export enum GovernanceStatus {
-    Active,
-    Suspended,
-    Deactivated
+    Active = "Active", Inactive = "Inactive", Deactivated = "Deactivated"
 }
 
 export enum Payee {

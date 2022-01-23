@@ -1,11 +1,8 @@
 import {ERRORS} from './errors'
-
 const {decodeAddress, encodeAddress} = require('@polkadot/keyring');
 const {hexToU8a, isHex} = require('@polkadot/util');
 const {blake2AsU8a, blake2AsHex} = require('@polkadot/util-crypto');
 const fs = require('fs');
-
-
 
 export function encodeStringAddress(address: string) {
     if (address.startsWith("0x")) {
@@ -63,4 +60,10 @@ function hash(data: string | Uint8Array): Uint8Array {
 
 export function hexHash(data: string | Uint8Array): string {
     return blake2AsHex(data);
+}
+
+export async function imageHash(path: string) {
+    // data must remain in the same order so load images synchronously
+    const fileBuffer = await readFile(path);
+    return hexHash(fileBuffer);
 }
