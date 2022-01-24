@@ -6,6 +6,7 @@ import { Codec } from '@polkadot/types/types'
 import { ContractApiInterface, ContractTxResponse } from './types'
 import { ERRORS } from './errors'
 import { Environment } from './env'
+import { AnyJson } from '@polkadot/types/types/codec'
 
 export class ProsopoContractApi implements ContractApiInterface {
     env: Environment
@@ -81,15 +82,17 @@ export class ProsopoContractApi implements ContractApiInterface {
     async contractQuery (signedContract: Contract, contractMethodName: string, encodedArgs: any[]): Promise<any> {
         const response = await signedContract.query[contractMethodName](...encodedArgs)
         if (response.result.isOk && response.output) {
-            return this.unwrap(response.output)
+            return this.unwrap(response.output.toHuman())
         }
         throw (new Error(response.result.asErr.asModule.message.unwrap().toString()))
     }
 
-    unwrap (item: Codec) {
-        const prop = 'ok'
-        if (prop in item) {
-            return item[prop]
+    unwrap (item: AnyJson) {
+        const prop = 'Ok'
+        if (item && typeof (item) === 'object') {
+            if (prop in item) {
+                return item[prop]
+            }
         }
         return item
     }

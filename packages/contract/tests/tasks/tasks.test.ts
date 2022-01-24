@@ -4,7 +4,7 @@ import { CaptchaMerkleTree } from '../../src/merkle'
 import { PROVIDER, DAPP_USER, DAPP, TestProvider, TestDapp } from '../mocks/accounts'
 import { ERRORS } from '../../src/errors'
 import { SOLVED_CAPTCHAS, DATASET } from '../mocks/mockdb'
-import { CaptchaSolution, CaptchaStatus } from '../../src/types/captcha'
+import { CaptchaSolution } from '../../src/types'
 import { computeCaptchaSolutionHash, computePendingRequestHash } from '../../src/captcha'
 import { sendFunds, setupDapp, setupProvider } from '../mocks/setup'
 import { randomAsHex } from '@polkadot/util-crypto'
@@ -161,14 +161,18 @@ describe('PROVIDER TASKS', () => {
         const { mockEnv, tasks, captchaSolutions, requestHash } = await setup()
         const captchaSolutionsBad = captchaSolutions.map(original => ({ ...original, solution: [3] }))
         const tree = new CaptchaMerkleTree()
+        const salt = randomAsHex()
+        // Have to salt the solutions with random salt each time otherwise we end up with the same commitment for
+        // multiple users
+        const captchaSolutionsSalted = captchaSolutionsBad.map(captcha => ({ ...captcha, salt: salt }))
         const captchasHashed = captchaSolutionsBad.map(captcha => computeCaptchaSolutionHash(captcha))
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
         await tasks.dappUserCommit(dapp.contractAccount as string, datasetId as string, commitmentId, provider.address as string)
         // next part contains internal contract calls that must be run by provider
         await mockEnv.changeSigner(provider.mnemonic as string)
-        // console.log("commitmentId", commitmentId);
-        const result = await tasks.dappUserSolution(DAPP_USER.address, dapp.contractAccount as string, requestHash, JSON.parse(JSON.stringify(captchaSolutionsBad)) as JSON)
+        // console.log('commitmentId', commitmentId)
+        const result = await tasks.dappUserSolution(DAPP_USER.address, dapp.contractAccount as string, requestHash, JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON)
         expect(result.length).to.be.eq(0)
     })
 })
