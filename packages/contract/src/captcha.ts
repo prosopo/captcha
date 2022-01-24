@@ -5,59 +5,75 @@ import {
     CaptchasSchema,
     CaptchaSolutionSchema,
     CaptchaSolution, CaptchaWithoutId, DatasetWithIds
-} from "./types/captcha";
-import {ERRORS} from './errors'
-import {CaptchaMerkleTree} from "./merkle";
-import {hexHash, imageHash, readFile} from "./util";
+} from './types'
+import { ERRORS } from './errors'
+import { CaptchaMerkleTree } from './merkle'
+import { hexHash, imageHash } from './util'
 
-
-export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): DatasetWithIds {
+export function addHashesToDataset (dataset: Dataset, tree: CaptchaMerkleTree): DatasetWithIds {
     try {
-        dataset['captchas'] = dataset['captchas'].map((captcha, index) => (
-                {...captcha, captchaId: tree.leaves[index].hash} as Captcha
-            )
-        ) as Captcha[]
+        dataset.captchas = dataset.captchas.map((captcha, index) => (
+            { ...captcha, captchaId: tree.leaves[index].hash } as Captcha
+        ))
         return <DatasetWithIds>dataset
     } catch (err) {
-        throw(`${ERRORS.DATASET.HASH_ERROR.message}:\n${err}`);
+        throw new Error(`${ERRORS.DATASET.HASH_ERROR.message}:\n${err}`)
     }
-
 }
 
-export function parseCaptchaDataset(datasetJSON: JSON): Dataset {
+/**
+ * Parse a dataset
+ * @return {JSON} captcha dataset, stored in JSON
+ * @param datasetJSON
+ */
+export function parseCaptchaDataset (datasetJSON: JSON): Dataset {
     try {
         return DatasetSchema.parse(datasetJSON)
     } catch (err) {
-        throw(`${ERRORS.DATASET.PARSE_ERROR.message}:\n${err}`);
+        throw new Error(`${ERRORS.DATASET.PARSE_ERROR.message}:\n${err}`)
     }
 }
 
-
-export function parseCaptchas(captchaJSON: JSON): CaptchaWithoutId[] {
+/**
+ * Make sure captchas are in the correct format
+ * @param {JSON} captchaJSON captchas that have been passed in via dataset file
+ * @return {CaptchaWithoutId[]} an array of parsed captchas that have not yet been hashed and have no IDs
+ */
+export function parseCaptchas (captchaJSON: JSON): CaptchaWithoutId[] {
     try {
         return CaptchasSchema.parse(captchaJSON)
     } catch (err) {
-        throw(`${ERRORS.CAPTCHA.PARSE_ERROR.message}:\n${err}`);
+        throw new Error(`${ERRORS.CAPTCHA.PARSE_ERROR.message}:\n${err}`)
     }
 }
 
-export function parseCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
+/**
+ * Make sure captcha solutions are in the correct format
+ * @param {JSON} captchaJSON captcha solutions received from the api
+ * @return {CaptchaSolution[]} an array of parsed captcha solutions
+ */
+export function parseCaptchaSolutions (captchaJSON: JSON): CaptchaSolution[] {
     try {
         return CaptchaSolutionSchema.parse(captchaJSON)
     } catch (err) {
-        throw(`${ERRORS.CAPTCHA.PARSE_ERROR.message}:\n${err}`);
+        throw new Error(`${ERRORS.CAPTCHA.PARSE_ERROR.message}:\n${err}`)
     }
 }
 
-export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Captcha[]): boolean {
+/**
+ * Take an array of CaptchaSolutions and Captchas and check if the solutions are the same for each pair
+ * @param  {CaptchaSolution[]} received
+ * @param  {Captcha[]} stored
+ * @return {boolean}
+ */
+export function compareCaptchaSolutions (received: CaptchaSolution[], stored: Captcha[]): boolean {
     if (received.length && stored.length && received.length === stored.length) {
-        let arr1Sorted = received.sort((a, b) => a.captchaId > b.captchaId ? 1 : -1);
-        let arr2Sorted = stored.sort((a, b) => a.captchaId! > b.captchaId! ? 1 : -1);
-        let successArr = arr1Sorted.map((captcha, idx) => compareCaptcha(captcha, arr2Sorted[idx]));
-        return successArr.every(val => val)
-    } else {
-        return false
+        const arr1Sorted = received.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1))
+        const arr2Sorted = stored.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1))
+        const successArr = arr1Sorted.map((captcha, idx) => compareCaptcha(captcha, arr2Sorted[idx]))
+        return successArr.every((val) => val)
     }
+    return false
 }
 
 /**
@@ -66,16 +82,15 @@ export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Cap
  * @param  {Captcha} stored
  * @return {boolean}
  */
-export function compareCaptcha(received: CaptchaSolution, stored: Captcha): boolean {
+export function compareCaptcha (received: CaptchaSolution, stored: Captcha): boolean {
     if (stored.solution && stored.solution.length > 0) {
-        // this is a captcha we know the solution for
-        let arr1 = received.solution.sort();
-        let arr2 = stored.solution.sort();
-        return arr1.every((value, index) => value === arr2[index]) && received.captchaId === stored.captchaId;
-    } else {
-        // we don't know the solution so just assume it's correct
-        return true
+    // this is a captcha we know the solution for
+        const arr1 = received.solution.sort()
+        const arr2 = stored.solution.sort()
+        return arr1.every((value, index) => value === arr2[index]) && received.captchaId === stored.captchaId
     }
+    // we don't know the solution so just assume it's correct
+    return true
 }
 
 /**
@@ -83,18 +98,18 @@ export function compareCaptcha(received: CaptchaSolution, stored: Captcha): bool
  * @param  {Captcha} captcha
  * @return {string} the hex string hash
  */
-export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
-    let itemHashes: string[] = [];
-    for (let item of captcha['items']) {
-        if (item['type'] === 'image') {
-            itemHashes.push(await imageHash(item['path']))
-        } else if (item['type'] === 'text') {
-            itemHashes.push(hexHash(item['text']));
+export async function computeCaptchaHash (captcha: CaptchaWithoutId) {
+    const itemHashes: string[] = []
+    for (const item of captcha.items) {
+        if (item.type === 'image') {
+            itemHashes.push(await imageHash(item.path as string))
+        } else if (item.type === 'text') {
+            itemHashes.push(hexHash(item.text as string))
         } else {
-            throw(new Error('NotImplemented: only image and text item types allowed'))
+            throw (new Error('NotImplemented: only image and text item types allowed'))
         }
     }
-    return hexHash([captcha['target'], captcha['solution'], captcha['salt'], itemHashes].join())
+    return hexHash([captcha.target, captcha.solution, captcha.salt, itemHashes].join())
 }
 
 /**
@@ -102,8 +117,8 @@ export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
  * @param  {CaptchaSolution} captcha
  * @return {string} the hex string hash
  */
-export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    return hexHash([captcha['captchaId'], captcha['solution'], captcha['salt']].join())
+export function computeCaptchaSolutionHash (captcha: CaptchaSolution) {
+    return hexHash([captcha.captchaId, captcha.solution, captcha.salt].join())
 }
 
 /**
@@ -111,13 +126,13 @@ export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
  * @param  {Captcha[]} captchas
  * @return {Promise<CaptchaSolution[]>} captchasWithHashes
  */
-export async function computeCaptchaHashes(captchas: CaptchaWithoutId[]): Promise<CaptchaSolution[]> {
-    let captchasWithHashes: CaptchaSolution[] = []
-    for (let captcha of captchas) {
-        let captchaId = await computeCaptchaHash(captcha)
-        let captchaWithId: Captcha = {captchaId: captchaId, ...captcha}
-        let captchaSol = convertCaptchaToCaptchaSolution(captchaWithId);
-        captchasWithHashes.push(captchaSol);
+export async function computeCaptchaHashes (captchas: CaptchaWithoutId[]): Promise<CaptchaSolution[]> {
+    const captchasWithHashes: CaptchaSolution[] = []
+    for (const captcha of captchas) {
+        const captchaId = await computeCaptchaHash(captcha)
+        const captchaWithId: Captcha = { captchaId, ...captcha }
+        const captchaSol = convertCaptchaToCaptchaSolution(captchaWithId)
+        captchasWithHashes.push(captchaSol)
     }
     return captchasWithHashes
 }
@@ -125,11 +140,10 @@ export async function computeCaptchaHashes(captchas: CaptchaWithoutId[]): Promis
 /**
  * Map a Captcha to a Captcha solution (drop items, target, etc.)
  * @param  {Captcha} captcha
- * @param  {string} captchaId
  * @return {CaptchaSolution}
  */
-export function convertCaptchaToCaptchaSolution(captcha: Captcha): CaptchaSolution {
-    return {captchaId: captcha.captchaId, salt: captcha.salt, solution: captcha.solution}
+export function convertCaptchaToCaptchaSolution (captcha: Captcha): CaptchaSolution {
+    return { captchaId: captcha.captchaId, salt: captcha.salt, solution: captcha.solution }
 }
 
 /**
@@ -139,6 +153,6 @@ export function convertCaptchaToCaptchaSolution(captcha: Captcha): CaptchaSoluti
  * @param  {string} salt
  * @return {string}
  */
-export function computePendingRequestHash(captchaIds: string[], userAccount: string, salt: string): string {
+export function computePendingRequestHash (captchaIds: string[], userAccount: string, salt: string): string {
     return hexHash([...captchaIds.sort(), userAccount, salt].join())
 }
