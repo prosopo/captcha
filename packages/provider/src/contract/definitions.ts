@@ -3,7 +3,7 @@ export const contractDefinitions = {
         _enum: [
             'Active',
             'Suspended',
-            'Deactivated',
+            'Deactivated'
         ]
     },
     CaptchaStatus: {
@@ -15,12 +15,12 @@ export const contractDefinitions = {
     },
     DappAccounts: 'Vec<AccountId>',
     ProsopoDapp: {
-        // eslint-disable-next-line sort-keys
+    // eslint-disable-next-line sort-keys
         status: 'GovernanceStatus',
         balance: 'Balance',
         owner: 'AccountId',
         min_difficulty: 'u16',
-        client_origin: 'Hash',
+        client_origin: 'Hash'
     },
     ProsopoError: {
         _enum: [
@@ -38,18 +38,18 @@ export const contractDefinitions = {
             'DappInsufficientFunds',
             'CaptchaDataDoesNotExist',
             'CaptchaSolutionCommitmentDoesNotExist',
-            'DappUserDoesNotExist',]
+            'DappUserDoesNotExist']
     },
     Payee: {
         _enum: [
             'Provider',
             'Dapp',
-            'None',
+            'None'
         ]
     },
     User: {
         correct_captchas: 'u64',
-        incorrect_captchas: 'u64',
+        incorrect_captchas: 'u64'
     },
     ProviderAccounts: 'Vec<AccountId>',
     ProsopoProvider: {
@@ -58,24 +58,24 @@ export const contractDefinitions = {
         fee: 'u32',
         payee: 'Payee',
         service_origin: 'Hash',
-        captcha_dataset_id: 'Hash',
+        captcha_dataset_id: 'Hash'
     },
     ProviderMap: '{"AccountId":"Provider"}',
     ProsopoCaptchaData: {
         provider: 'AccountId',
         merkle_tree_root: 'Hash',
-        captcha_type: 'u16',
+        captcha_type: 'u16'
     },
     ProsopoCaptchaSolutionCommitment: {
         account: 'AccountId',
         captcha_dataset_id: 'Hash',
         status: 'CaptchaStatus',
         contract: 'AccountId',
-        provider: 'AccountId',
+        provider: 'AccountId'
     },
-    CaptchaData : {
+    CaptchaData: {
         provider: 'AccountId',
         merkle_tree_root: 'Hash',
-        captcha_type: 'u16',
+        captcha_type: 'u16'
     }
-};
+}

@@ -1,7 +1,8 @@
-import {ProsopoConfig} from './config'
-import {Database} from './db'
-import Contract from "@redspot/patract/contract"
-import {Network, Signer} from "redspot/types"
+import Contract from '@redspot/patract/contract'
+import { Network, Signer } from 'redspot/types'
+import { ProsopoConfig } from './config'
+import { Database } from './db'
+import { KeyringPair } from '@polkadot/keyring/types'
 
 export interface ProsopoEnvironment {
     network: Network
@@ -13,4 +14,12 @@ export interface ProsopoEnvironment {
     deployerAddress: string
     contractAddress: string
     defaultEnvironment: string
+
+    isReady (): Promise<void>
+    importDatabase (): Promise<void>
+    getContract (): Promise<void>
+    getSigner (): Promise<void>
+    changeSigner (mnemonic: string): Promise<void>
+    createAccountAndAddToKeyring (): [string, string]
+
 }

@@ -1,115 +1,123 @@
-import {encodeStringAddress} from '../util'
-import {ERRORS} from '../errors'
-// @ts-ignore
 import yargs from 'yargs'
-import {Compact, u128} from '@polkadot/types';
-import {Tasks} from '../tasks/tasks'
-
+import { Compact, u128 } from '@polkadot/types'
+import { encodeStringAddress } from '../util'
+import { ERRORS } from '../errors'
+import { Tasks } from '../tasks/tasks'
+import { Payee } from '../types'
 
 const validateAddress = (argv) => {
-    let address
-    address = encodeStringAddress(argv.address)
-    return {address}
+    const address = encodeStringAddress(argv.address as string)
+    return { address }
 }
 
 // TODO use zod for this
 const validatePayee = (argv) => {
-    let payee = argv.payee[0].toUpperCase() + argv.payee.slice(1,).toLowerCase();
-    payee = ["Provider", "Dapp"].indexOf(payee) > -1 ? payee : undefined;
-    return {payee}
+    const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
+    const payee = ['Provider', 'Dapp'].indexOf(payeeArg) > -1 ? payeeArg : undefined
+    return { payee }
 }
 
 // TODO use zod for this
 const validateValue = (argv) => {
     if (typeof argv.value === 'number') {
-        let value: Compact<u128> = argv.value as Compact<u128>;
-        return {value}
-    } else {
-        throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`)
+        const value: Compact<u128> = argv.value as Compact<u128>
+        return { value }
     }
+    throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`)
 }
 
-export async function processArgs(args, env) {
-    const tasks = new Tasks(env);
+export function processArgs (args, env) {
+    const tasks = new Tasks(env)
     return yargs
         .usage('Usage: $0 [global options] <command> [options]')
-        .option('api', {demand: false, default: false, type: 'boolean'})
-        .command('provider_register', 'Register a Provider', (yargs) => {
-                return yargs
-                    .option('serviceOrigin', {type: 'string', demand: true,})
-                    .option('fee', {type: 'number', demand: true,})
-                    .option('payee', {type: 'string', demand: true,})
-                    .option('address', {type: 'string', demand: true,})
-            }, async (argv) => {
-                let result = await tasks.providerRegister(argv.serviceOrigin, argv.fee, argv.payee, argv.address)
-                console.log(JSON.stringify(result, null, 2));
+        .option('api', { demand: false, default: false, type: 'boolean' })
+        .command(
+            'provider_register',
+            'Register a Provider',
+            (yargs) => yargs
+                .option('serviceOrigin', { type: 'string', demand: true })
+                .option('fee', { type: 'number', demand: true })
+                .option('payee', { type: 'string', demand: true })
+                .option('address', { type: 'string', demand: true }),
+            async (argv) => {
+                const result = await tasks.providerRegister(argv.serviceOrigin as string, argv.fee as number, argv.payee as Payee, argv.address as string)
+                console.log(JSON.stringify(result, null, 2))
             },
             [validateAddress, validatePayee]
         )
-        .command('provider_update', 'Update a Provider', (yargs) => {
-                return yargs
-                    //TODO make all of these optional so that user only has to supply minimum information
-                    .option('serviceOrigin', {type: 'string', demand: true,})
-                    .option('fee', {type: 'number', demand: true,})
-                    .option('payee', {type: 'string', demand: true,})
-                    .option('address', {type: 'string', demand: true,})
-                    .option('value', {type: 'number', demand: false,})
-            }, async (argv) => {
-
-                let result = await tasks.providerUpdate(argv.serviceOrigin, argv.fee, argv.payee, argv.address, argv.value)
-                console.log(JSON.stringify(result, null, 2));
+        .command(
+            'provider_update',
+            'Update a Provider',
+            (yargs) => yargs
+            // TODO make all of these optional so that user only has to supply minimum information
+                .option('serviceOrigin', { type: 'string', demand: true })
+                .option('fee', { type: 'number', demand: true })
+                .option('payee', { type: 'string', demand: true })
+                .option('address', { type: 'string', demand: true })
+                .option('value', { type: 'number', demand: false }),
+            async (argv) => {
+                const result = await tasks.providerUpdate(argv.serviceOrigin as string, argv.fee as number, argv.payee as Payee, argv.address as string, argv.value as number)
+                console.log(JSON.stringify(result, null, 2))
             },
             [validateAddress, validatePayee]
         )
-        .command('provider_deregister', 'Deregister a Provider', (yargs) => {
-                return yargs
-                    .option('address', {type: 'string', demand: true,})
-            }, async (argv) => {
+        .command(
+            'provider_deregister',
+            'Deregister a Provider',
+            (yargs) => yargs
+                .option('address', { type: 'string', demand: true }),
+            async (argv) => {
                 try {
-                    let result = await tasks.providerDeregister(argv.address);
-                    console.log(JSON.stringify(result, null, 2));
+                    const result = await tasks.providerDeregister(argv.address as string)
+                    console.log(JSON.stringify(result, null, 2))
                 } catch (err) {
-                    console.log(err);
+                    console.log(err)
                 }
             },
             [validateAddress]
         )
-        .command('provider_unstake', 'Unstake funds as a Provider', (yargs) => {
-                return yargs
-                    .option('value', {type: 'number', demand: true,})
-            }, async (argv) => {
+        .command(
+            'provider_unstake',
+            'Unstake funds as a Provider',
+            (yargs) => yargs
+                .option('value', { type: 'number', demand: true }),
+            async (argv) => {
                 try {
-                    let result = await tasks.providerUnstake(argv.value);
-                    console.log(JSON.stringify(result, null, 2));
+                    const result = await tasks.providerUnstake(argv.value as number)
+                    console.log(JSON.stringify(result, null, 2))
                 } catch (err) {
-                    console.log(err);
+                    console.log(err)
                 }
             },
             [validateValue]
         )
-        .command('provider_add_data_set', 'Add a dataset as a Provider', (yargs) => {
-                return yargs
-                    .option('file', {type: 'string', demand: true})
-            }, async (argv) => {
+        .command(
+            'provider_add_data_set',
+            'Add a dataset as a Provider',
+            (yargs) => yargs
+                .option('file', { type: 'string', demand: true }),
+            async (argv) => {
                 try {
-                    let result = await tasks.providerAddDataset(argv.file)
-                    console.log(JSON.stringify(result, null, 2));
+                    const result = await tasks.providerAddDataset(argv.file as string)
+                    console.log(JSON.stringify(result, null, 2))
                 } catch (err) {
-                    console.log(err);
+                    console.log(err)
                 }
             },
             []
         )
-        .command('provider_accounts', 'List provider accounts', (yargs) => {
-                return yargs
-                    .option('providerId', {type: 'string', demand: false})
-                    .option('status', {type: 'string', demand: false})
-            }, async (argv) => {
+        .command(
+            'provider_accounts',
+            'List provider accounts',
+            (yargs) => yargs
+                .option('providerId', { type: 'string', demand: false })
+                .option('status', { type: 'string', demand: false }),
+            async () => {
                 try {
-                    let result = await tasks.providerAccounts(argv.providerId, argv.status)
-                    console.log(JSON.stringify(result, null, 2));
+                    const result = await tasks.providerAccounts()
+                    console.log(JSON.stringify(result, null, 2))
                 } catch (err) {
-                    console.log(err);
+                    console.log(err)
                 }
             },
             []

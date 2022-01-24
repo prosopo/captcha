@@ -1,121 +1,125 @@
-import {loadJSONFile, shuffleArray} from "../util";
+import { hexToU8a } from '@polkadot/util'
+import { AnyJson } from '@polkadot/types/types/codec'
+import { Hash } from '@polkadot/types/interfaces'
+import { randomAsHex } from '@polkadot/util-crypto'
+import { loadJSONFile, shuffleArray } from '../util'
 import {
     addHashesToDataset,
-    compareCaptchaSolutions, computeCaptchaHash,
-    computeCaptchaHashes, computeCaptchaSolutionHash, computePendingRequestHash,
+    compareCaptchaSolutions,
+    computeCaptchaHash,
+    computeCaptchaSolutionHash,
+    computePendingRequestHash,
     parseCaptchaDataset,
     parseCaptchaSolutions
-} from "../captcha";
-import {hexToU8a} from "@polkadot/util";
-import {contractApiInterface, Dapp, Provider} from "../types/contract";
-import {prosopoContractApi} from "../contract";
-import {Database} from "../types";
-import {ERRORS} from "../errors";
-import {CaptchaMerkleTree} from "../merkle";
-import {CaptchaSolutionResponse, CaptchaWithProof} from "../types/api";
-import {GovernanceStatus} from "../types/contract";
-import {buildDecodeVector} from "../codec/codec";
-import {AnyJson} from "@polkadot/types/types/codec";
-import {Hash} from "@polkadot/types/interfaces";
-import {Captcha, CaptchaSolution, CaptchaSolutionCommitment, CaptchaStatus} from "../types/captcha";
-import {randomAsHex} from "@polkadot/util-crypto";
-
+} from '../captcha'
+import {
+    Captcha,
+    CaptchaSolution,
+    CaptchaSolutionCommitment,
+    CaptchaSolutionResponse,
+    CaptchaStatus,
+    CaptchaWithProof,
+    ContractApiInterface,
+    Dapp,
+    Database, DatasetRecord,
+    GovernanceStatus, Payee,
+    Provider
+} from '../types'
+import { ProsopoContractApi } from '../contract'
+import { ERRORS } from '../errors'
+import { CaptchaMerkleTree } from '../merkle'
+import { buildDecodeVector } from '../codec/codec'
 
 /**
  * @description Tasks that are shared by the API and CLI
  */
 export class Tasks {
+    contractApi: ContractApiInterface
 
-    contractApi: contractApiInterface
     db: Database
 
-    constructor(env) {
-        this.contractApi = new prosopoContractApi(env);
+    constructor (env) {
+        this.contractApi = new ProsopoContractApi(env)
         this.db = env.db
     }
 
     // Contract tasks
 
     // TODO These functions could all be constructed automatically from the contract ABI
-    async providerRegister(serviceOrigin: string, fee: number, payee: string, address: string): Promise<Object> {
-        return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address]);
+    async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<Record<string, unknown>> {
+        return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address])
     }
 
-    async providerUpdate(serviceOrigin: string, fee: number, payee: string, address: string, value: number | undefined): Promise<Object> {
-        return await this.contractApi.contractCall('providerUpdate', [serviceOrigin, fee, payee, address], value);
+    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value: number | undefined): Promise<Record<string, unknown>> {
+        return await this.contractApi.contractCall('providerUpdate', [serviceOrigin, fee, payee, address], value)
     }
 
-    async providerDeregister(address: string): Promise<Object> {
-        return await this.contractApi.contractCall('providerDeregister', [address]);
+    async providerDeregister (address: string): Promise<Record<string, unknown>> {
+        return await this.contractApi.contractCall('providerDeregister', [address])
     }
 
-    async providerUnstake(value: number): Promise<Object> {
-        return await this.contractApi.contractCall('providerUnstake', [], value);
+    async providerUnstake (value: number): Promise<Record<string, unknown>> {
+        return await this.contractApi.contractCall('providerUnstake', [], value)
     }
 
-    async providerAddDataset(file: string): Promise<Object> {
-        let dataset = parseCaptchaDataset(loadJSONFile(file));
-        let tree = new CaptchaMerkleTree();
-        let captchaHashes = await Promise.all(dataset['captchas'].map(computeCaptchaHash));
-        await tree.build(captchaHashes);
-        let datasetHashes = addHashesToDataset(dataset, tree);
-        datasetHashes['datasetId'] = tree.root?.hash;
-        datasetHashes['tree'] = tree.layers;
-        await this.db?.storeDataset(datasetHashes);
+    async providerAddDataset (file: string): Promise<Record<string, unknown>> {
+        const dataset = parseCaptchaDataset(loadJSONFile(file) as JSON)
+        const tree = new CaptchaMerkleTree()
+        const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash))
+        tree.build(captchaHashes)
+        const datasetHashes = addHashesToDataset(dataset, tree)
+        datasetHashes.datasetId = tree.root?.hash
+        datasetHashes.tree = tree.layers
+        await this.db?.storeDataset(datasetHashes)
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
-    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<Object> {
-        return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
+    async dappRegister (dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<Record<string, unknown>> {
+        return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
     }
 
-    async dappFund(contractAccount: string, value: number) {
-        return await this.contractApi.contractCall('dappFund', [contractAccount], value);
+    async dappFund (contractAccount: string, value: number) {
+        return await this.contractApi.contractCall('dappFund', [contractAccount], value)
     }
 
-    async dappCancel(contractAccount: string) {
-        return await this.contractApi.contractCall('dappCancel', [contractAccount]);
+    async dappCancel (contractAccount: string) {
+        return await this.contractApi.contractCall('dappCancel', [contractAccount])
     }
 
-    async dappUserCommit(contractAccount: string, captchaDatasetId: Hash, userMerkleTreeRoot: string, providerAddress: string) {
-        return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
+    async dappUserCommit (contractAccount: string, captchaDatasetId: Hash | string, userMerkleTreeRoot: string, providerAddress: string) {
+        return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress])
     }
 
-    async providerApprove(captchaSolutionCommitmentId) {
-        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId]);
+    async providerApprove (captchaSolutionCommitmentId) {
+        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId])
     }
 
-    async providerDisapprove(captchaSolutionCommitmentId) {
-        return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId]);
+    async providerDisapprove (captchaSolutionCommitmentId) {
+        return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId])
     }
 
-    async dappOperatorIsHumanUser() {
+    async getProviderDetails (accountId: string): Promise<Provider> {
+        return await this.contractApi.contractCall('getProviderDetails', [accountId]) as unknown as Provider
     }
 
-    async getProviderDetails(accountId: string): Promise<Provider> {
-        return await this.contractApi.contractCall("getProviderDetails", [accountId])
+    async getDappDetails (accountId: string): Promise<Dapp> {
+        return await this.contractApi.contractCall('getDappDetails', [accountId]) as unknown as Dapp
     }
 
-    async getDappDetails(accountId: string): Promise<Dapp> {
-        return await this.contractApi.contractCall("getDappDetails", [accountId])
+    async getCaptchaData (captchaDatasetId: string) {
+        return await this.contractApi.contractCall('getCaptchaData', [captchaDatasetId])
     }
 
-    async getCaptchaData(captchaDatasetId: string) {
-        return await this.contractApi.contractCall("getCaptchaData", [captchaDatasetId])
+    async getCaptchaSolutionCommitment (solutionId: string): Promise<CaptchaSolutionCommitment> {
+        return await this.contractApi.contractCall('getCaptchaSolutionCommitment', [solutionId]) as unknown as CaptchaSolutionCommitment
     }
 
-    async getCaptchaSolutionCommitment(solutionId: string): Promise<CaptchaSolutionCommitment> {
-        return await this.contractApi.contractCall("getCaptchaSolutionCommitment", [solutionId])
+    async providerAccounts (): Promise<AnyJson> {
+        return await this.contractApi.getStorage('provider_accounts', buildDecodeVector('ProviderAccounts'))
     }
 
-    async providerAccounts(providerId: string, status: GovernanceStatus): Promise<AnyJson> {
-        const providerAccountsList = await this.contractApi.getStorage("provider_accounts", buildDecodeVector('ProviderAccounts'));
-        return providerAccountsList
-    }
-
-    async dappAccounts(dappId: string, status: GovernanceStatus): Promise<AnyJson> {
-        const dappAccountsList = await this.contractApi.getStorage("dapp_accounts", buildDecodeVector('DappAccounts'));
-        return dappAccountsList
+    async dappAccounts (): Promise<AnyJson> {
+        return await this.contractApi.getStorage('dapp_accounts', buildDecodeVector('DappAccounts'))
     }
 
     // Other tasks
@@ -126,58 +130,55 @@ export class Tasks {
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptchaWithProof(datasetId: Hash | string | Uint8Array, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
-
+    async getCaptchaWithProof (datasetId: Hash | string | Uint8Array, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
         // TODO check that dataset is attached to a Provider before responding ???!!!
         //  Otherwise Providers could store any random data and have Dapp Users request it. Is there any advantage to
         //  this?
 
-        const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size);
+        const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size)
         if (captchaDocs) {
-            let captchas: CaptchaWithProof[] = [];
-            for (let captcha of captchaDocs) {
-                let captcha = captchaDocs[0];
-                const datasetDetails = await this.db.getDatasetDetails(datasetId);
-                const tree = new CaptchaMerkleTree();
-                tree.layers = datasetDetails['tree'];
-                let proof = tree.proof(captcha.captchaId!);
+            const captchas: CaptchaWithProof[] = []
+            for (const captcha of captchaDocs) {
+                const datasetDetails: DatasetRecord = await this.db.getDatasetDetails(datasetId)
+                const tree = new CaptchaMerkleTree()
+                tree.layers = datasetDetails.tree
+                const proof = tree.proof(captcha.captchaId)
                 // cannot pass solution to dapp user as they are required to solve the captcha!
-                delete captcha.solution;
-                captchas.push({captcha: captcha, proof: proof});
+                delete captcha.solution
+                captchas.push({ captcha, proof })
             }
             return captchas
-        } else {
-            throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
         }
+        throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
     }
 
     /**
      * Validate and store the clear text captcha solution(s) from the Dapp User
      * @param {string} userAccount
      * @param {string} dappAccount
-     * @param {string} pendingHash  The hash associated with the DApp User's request
+     * @param {string} requestHash
      * @param {JSON} captchas
      * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
      */
-    async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
+    async dappUserSolution (userAccount: string, dappAccount: string, requestHash: string, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
         if (!await this.dappIsActive(dappAccount)) {
-            throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message);
+            throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message)
         }
 
-        let response: CaptchaSolutionResponse[] = [];
-        const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas);
-        const {tree, commitment, commitmentId} = await this.buildTreeAndGetCommitment(receivedCaptchas);
+        let response: CaptchaSolutionResponse[] = []
+        const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
+        const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
 
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
-            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId);
+            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 // TODO refund their tx fee
-                await this.providerApprove(commitmentId);
-                response = captchaIds.map(id => ({captchaId: id, proof: tree.proof(id)}))
+                await this.providerApprove(commitmentId)
+                response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
             } else {
-                await this.providerDisapprove(commitmentId);
+                await this.providerDisapprove(commitmentId)
             }
         }
 
@@ -187,30 +188,30 @@ export class Tasks {
     /**
      * Validate that the dapp is active in the contract
      */
-    async dappIsActive(dappAccount: string): Promise<boolean> {
-        let dapp = await this.getDappDetails(dappAccount)
+    async dappIsActive (dappAccount: string): Promise<boolean> {
+        const dapp = await this.getDappDetails(dappAccount)
         return dapp.status === GovernanceStatus.Active
     }
 
     /**
      * Validate that the provider is active in the contract
      */
-    async providerIsActive(providerAccount: string): Promise<boolean> {
-        let provider = await this.getProviderDetails(providerAccount)
+    async providerIsActive (providerAccount: string): Promise<boolean> {
+        const provider = await this.getProviderDetails(providerAccount)
         return provider.status === GovernanceStatus.Active
     }
 
     /**
      * Validate length of received captchas array matches length of captchas found in database
      */
-    async validateCaptchasLength(captchas: JSON): Promise<{ storedCaptchas: Captcha[], receivedCaptchas: CaptchaSolution[], captchaIds: string[] }> {
-        const receivedCaptchas = parseCaptchaSolutions(captchas);
-        const captchaIds = receivedCaptchas.map(captcha => captcha.captchaId);
-        const storedCaptchas = await this.db.getCaptchaById(captchaIds);
+    async validateCaptchasLength (captchas: JSON): Promise<{ storedCaptchas: Captcha[], receivedCaptchas: CaptchaSolution[], captchaIds: string[] }> {
+        const receivedCaptchas = parseCaptchaSolutions(captchas)
+        const captchaIds = receivedCaptchas.map((captcha) => captcha.captchaId)
+        const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
             throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
         }
-        return {storedCaptchas, receivedCaptchas, captchaIds}
+        return { storedCaptchas, receivedCaptchas, captchaIds }
     }
 
     /**
@@ -218,16 +219,16 @@ export class Tasks {
      * @param {CaptchaSolution[]} captchas
      * @returns {Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }>}
      */
-    async buildTreeAndGetCommitment(captchas: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }> {
-        let tree = new CaptchaMerkleTree();
-        let solutionsHashed = captchas.map(captcha => computeCaptchaSolutionHash(captcha));
-        tree.build(solutionsHashed);
-        let commitmentId = tree.root!.hash
-        let commitment = await this.getCaptchaSolutionCommitment(commitmentId);
+    async buildTreeAndGetCommitment (captchas: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }> {
+        const tree = new CaptchaMerkleTree()
+        const solutionsHashed = captchas.map((captcha) => computeCaptchaSolutionHash(captcha))
+        tree.build(solutionsHashed)
+        const commitmentId = tree.root!.hash
+        const commitment = await this.getCaptchaSolutionCommitment(commitmentId)
         if (!commitment) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
         }
-        return {tree, commitment, commitmentId}
+        return { tree, commitment, commitmentId }
     }
 
     /**
@@ -236,10 +237,10 @@ export class Tasks {
      * @param {string} userAccount
      * @param {string[]} captchaIds
      */
-    async validateDappUserSolutionRequestIsPending(requestHash: string, userAccount: string, captchaIds: string[]): Promise<boolean> {
-        const pendingRecord = await this.db.getDappUserPending(requestHash);
+    async validateDappUserSolutionRequestIsPending (requestHash: string, userAccount: string, captchaIds: string[]): Promise<boolean> {
+        const pendingRecord = await this.db.getDappUserPending(requestHash)
         if (pendingRecord) {
-            const pendingHashComputed = computePendingRequestHash(captchaIds, userAccount, pendingRecord.salt);
+            const pendingHashComputed = computePendingRequestHash(captchaIds, userAccount, pendingRecord.salt)
             return requestHash === pendingHashComputed
         }
         return false
@@ -250,26 +251,25 @@ export class Tasks {
      * @param {string} datasetId
      * @param {string} userAccount
      */
-    async getRandomCaptchasAndRequestHash(datasetId: string, userAccount: string): Promise<{ captchas: Captcha[], requestHash: string }> {
+    async getRandomCaptchasAndRequestHash (datasetId: string, userAccount: string): Promise<{ captchas: Captcha[], requestHash: string }> {
         // TODO Config the number, style, and state of captchas sent back. For now return one solved and one unsolved
-        const solved = await this.getCaptchaWithProof(datasetId, true, 1);
-        const unsolved = await this.getCaptchaWithProof(datasetId, false, 1);
-        const captchas: Captcha[] = shuffleArray([solved[0], unsolved[0]]);
-        const salt = randomAsHex();
-        const requestHash = computePendingRequestHash(captchas.map(c => c.captchaId), userAccount, salt);
+        const solved = await this.getCaptchaWithProof(datasetId, true, 1)
+        const unsolved = await this.getCaptchaWithProof(datasetId, false, 1)
+        const captchas: Captcha[] = shuffleArray([solved[0], unsolved[0]])
+        const salt = randomAsHex()
+        const requestHash = computePendingRequestHash(captchas.map((c) => c.captchaId), userAccount, salt)
         // TODO Should this be committed to contract? What are the downsides if not?
         //   - Provider could lie about having a pending request and Dapp User would not be able to prove otherwise
         await this.db.storeDappUserPending(userAccount, requestHash, salt)
-        return {captchas, requestHash: requestHash}
+        return { captchas, requestHash }
     }
 
     /**
      * Apply new captcha solutions to captcha dataset and recalculate merkle tree
      * @param {string} datasetId
      */
-    async calculateCaptchaSolutions(datasetId: string) {
-        //TODO run this on a predefined schedule as updating the dataset requires committing an updated
+    async calculateCaptchaSolutions (datasetId: string) {
+        // TODO run this on a predefined schedule as updating the dataset requires committing an updated
         // captcha_dataset_id to the blockchain
     }
-
 }

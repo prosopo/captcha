@@ -1,7 +1,7 @@
 export const ERRORS = {
     GENERAL: {
         CANNOT_FIND_CONFIG_FILE: {
-            message: 'prosopo.config.js / prosopo.config.ts cannot be found.',
+            message: 'prosopo.config.js / prosopo.config.ts cannot be found.'
         },
         JSON_LOAD_FAILED: {
             message: 'Failed to load JSON file'
@@ -17,13 +17,13 @@ export const ERRORS = {
     },
     DATABASE: {
         DATABASE_IMPORT_FAILED: {
-            message: 'Failed to import database engine',
+            message: 'Failed to import database engine'
         },
         DATABASE_UNDEFINED: {
-            message: 'Database client is not connected',
+            message: 'Database client is not connected'
         },
         COLLECTION_UNDEFINED: {
-            message: 'Database collection is not available',
+            message: 'Database collection is not available'
         },
         DATASET_LOAD_FAILED: {
             message: 'Data set load failed'
@@ -72,11 +72,14 @@ export const ERRORS = {
         INVALID_STORAGE_NAME: {
             message: 'Failed to find given storage name'
         },
-        CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST : {
+        CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST: {
             message: 'Captcha solution commitment does not exist'
         },
         DAPP_NOT_ACTIVE: {
             message: 'Dapp is not active'
+        },
+        CONTRACT_UNDEFINED: {
+            message: 'Contract undefined'
         }
     },
     CLI: {
@@ -98,24 +101,24 @@ export const ERRORS = {
         },
         INVALID_CAPTCHA_ID: {
             message: 'invalid captcha id'
-        },
+        }
     }
 }
 
 export class GeneralError extends Error {
-    constructor(message) {
-        super();
-        this.message = message;
+    constructor (message) {
+        super()
+        this.message = message
     }
 
-    getCode() {
+    getCode () {
         if (this instanceof BadRequest) {
-            return 400;
+            return 400
         }
         if (this instanceof NotFound) {
-            return 404;
+            return 404
         }
-        return 500;
+        return 500
     }
 }
 
