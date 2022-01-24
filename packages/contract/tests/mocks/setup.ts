@@ -46,7 +46,7 @@ export async function setupProvider (env, address:string, provider: TestProvider
     return datasetResult[0].args[1] as Hash
 }
 
-export async function yarnsetupDapp (env, dapp: TestDapp): Promise<void> {
+export async function setupDapp (env, dapp: TestDapp): Promise<void> {
     console.log('\n---------------\nSetup Dapp\n---------------')
     const tasks = new Tasks(env)
     await env.changeSigner(dapp.mnemonic)
