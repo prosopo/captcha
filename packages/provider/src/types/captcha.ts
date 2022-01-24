@@ -3,6 +3,10 @@ import { AccountId, Hash } from '@polkadot/types/interfaces'
 
 export enum CaptchaTypes { SelectAll = 'SelectAll'}
 
+export enum CaptchaItemTypes {Text = 'text', Image = 'image'}
+
+const CaptchaItemTypesZod = z.nativeEnum(CaptchaItemTypes)
+
 export type CaptchaWithoutId = {
     salt: string,
     items: any[],
@@ -58,12 +62,17 @@ export const CaptchaWithIdAndSolutionSchema = z.object({
 
 export const CaptchaImageSchema = z.object({
     path: z.string(),
-    type: z.string()
+    type: CaptchaItemTypesZod
+})
+
+export const CaptchaTextSchema = z.object({
+    text: z.string(),
+    type: CaptchaItemTypesZod
 })
 
 export const SelectAllCaptchaSchema = CaptchaSchema.extend({
     solution: z.number().array().optional(),
-    items: z.union([z.array(CaptchaImageSchema), z.string().array()]),
+    items: z.union([z.array(CaptchaImageSchema), z.array(CaptchaTextSchema)]),
     target: z.string()
 })
 

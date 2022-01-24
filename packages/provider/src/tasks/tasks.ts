@@ -190,6 +190,7 @@ export class Tasks {
      */
     async dappIsActive (dappAccount: string): Promise<boolean> {
         const dapp = await this.getDappDetails(dappAccount)
+        console.log(dapp)
         return dapp.status === GovernanceStatus.Active
     }
 
