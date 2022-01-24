@@ -46,18 +46,14 @@ export async function setupProvider (env, address:string, provider: TestProvider
     return datasetResult[0].args[1] as Hash
 }
 
-export async function setupDapp (env, dapp: TestDapp): Promise<void> {
+export async function yarnsetupDapp (env, dapp: TestDapp): Promise<void> {
     console.log('\n---------------\nSetup Dapp\n---------------')
     const tasks = new Tasks(env)
     await env.changeSigner(dapp.mnemonic)
     console.log(' - dappRegister')
-    if (typeof (dapp.contractAccount) === 'string') {
-        await tasks.dappRegister(hexHash(dapp.serviceOrigin), dapp.contractAccount, blake2AsHex(decodeAddress(dapp.optionalOwner)))
-        console.log(' - dappFund')
-        await tasks.dappFund(dapp.contractAccount, dapp.fundAmount)
-    } else {
-        throw new Error('DAPP_CONTRACT_ACCOUNT not set in environment variables')
-    }
+    await tasks.dappRegister(hexHash(dapp.serviceOrigin), dapp.contractAccount, blake2AsHex(decodeAddress(dapp.optionalOwner)))
+    console.log(' - dappFund')
+    await tasks.dappFund(dapp.contractAccount, dapp.fundAmount)
 }
 
 export async function setupDappUser (env, dappUser: TestAccount, provider: TestProvider, dapp: TestDapp): Promise<string | undefined> {

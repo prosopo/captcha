@@ -80,6 +80,9 @@ export const ERRORS = {
         },
         CONTRACT_UNDEFINED: {
             message: 'Contract undefined'
+        },
+        SIGNER_UNDEFINED: {
+            message: 'Signer undefined'
         }
     },
     CLI: {

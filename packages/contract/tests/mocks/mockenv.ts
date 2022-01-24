@@ -5,7 +5,6 @@ import { ERRORS } from '../../src/errors'
 import { network, patract } from 'redspot'
 import { contractDefinitions } from '../../src/contract/definitions'
 import { strict as assert } from 'assert'
-import { KeyringPair } from '@polkadot/keyring/types'
 
 const { mnemonicGenerate } = require('@polkadot/util-crypto')
 

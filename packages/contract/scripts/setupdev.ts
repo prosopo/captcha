@@ -4,7 +4,7 @@ import yargs from 'yargs'
 import BN from 'bn.js'
 import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, setupProvider } from '../tests/mocks/setup'
 import { Payee } from '../src/types'
-import { KeyringInstance, KeyringPair } from '@polkadot/keyring/types'
+import { KeyringPair } from '@polkadot/keyring/types'
 
 require('dotenv').config()
 

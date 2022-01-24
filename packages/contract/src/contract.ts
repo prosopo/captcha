@@ -23,7 +23,13 @@ export class ProsopoContractApi implements ContractApiInterface {
      */
     async contractCall (contractMethodName: string, args: Array<any>, value?: number): Promise<any> {
         await this.env.isReady()
-        const signedContract: Contract = this.env.contract!.connect(this.env.signer!)
+        if (!this.env.contract) {
+            throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
+        }
+        if (!this.env.signer) {
+            throw new Error(ERRORS.CONTRACT.SIGNER_UNDEFINED.message)
+        }
+        const signedContract: Contract = this.env.contract.connect(this.env.signer)
         const methodObj = this.getContractMethod(contractMethodName)
         const encodedArgs = this.encodeArgs(methodObj, args)
         if (methodObj.isMutating) {
@@ -59,12 +65,7 @@ export class ProsopoContractApi implements ContractApiInterface {
             if (response[property]) {
                 return response[property].filter((x) => x.name === eventName)
             }
-            // TODO When a contract function returns a Result<Error> the contract execution is reverted and details
-            //  of this are passed back in a `flags` variable. `flags` does not seem to be available to polkadot-js
-            //  currently. So the lack of event here implies that the contract excution failed, which is fine
-            //  sometimes - e.g. the case where a Provider tries to register twice. This returns ProviderExists
-            //  https://github.com/polkadot-js/apps/issues/6465
-            //  https://github.com/polkadot-js/api/issues/4389
+            // TODO Is there a way to get the Error enum index from ink?
         }
         return []
     }
