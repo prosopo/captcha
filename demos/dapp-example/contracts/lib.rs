@@ -51,7 +51,7 @@ pub mod dapp {
     impl Dapp {
         /// Creates a new contract with the specified initial supply and loads an instance of the
         /// `prosopo` contract
-        #[ink(constructor)]
+        #[ink(constructor, payable)]
         pub fn new(initial_supply: Balance, faucet_amount: Balance, prosopo_account: AccountId, human_threshold: u8) -> Self {
             ink_lang::codegen::initialize_contract(|contract| Self::new_init(contract, initial_supply, faucet_amount, prosopo_account, human_threshold))
         }
