@@ -428,7 +428,7 @@ mod prosopo {
 
     impl Prosopo {
         /// Constructor
-        #[ink(constructor)]
+        #[ink(constructor, payable)]
         pub fn default(operator: AccountId) -> Self {
             ink_lang::codegen::initialize_contract(|contract| Self::new_init(contract, operator))
         }
