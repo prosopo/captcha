@@ -19,7 +19,7 @@ use ink_lang as ink;
 pub use prosopo::ProsopoRef;
 
 #[ink::contract]
-mod prosopo {
+pub mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
     use ink_prelude::vec::Vec;
     use rand_chacha::rand_core::RngCore;
@@ -497,7 +497,7 @@ mod prosopo {
             let caller = self.env().caller();
 
             //TODO add operator check
-            if !(caller == provider_account) {
+            if caller != provider_account {
                 return Err(Error::NotAuthorised);
             }
 
