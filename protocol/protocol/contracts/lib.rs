@@ -497,7 +497,7 @@ pub mod prosopo {
             let caller = self.env().caller();
 
             //TODO add operator check
-            if !(caller == provider_account) {
+            if caller != provider_account {
                 return Err(Error::NotAuthorised);
             }
 

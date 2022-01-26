@@ -1,6 +1,6 @@
 [package]
 name = "prosopo"
-version = "3.0.0-rc7"
+version = "3.0.0-rc8"
 authors = ["Chris Taylor chris@prosopo.io"]
 edition = "2021"
 resolver = "2"
