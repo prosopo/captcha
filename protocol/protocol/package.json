@@ -5,13 +5,13 @@
     "node": ">=14.x"
   },
   "resolutions": {
-    "@polkadot/api": "7.2.1",
-    "@polkadot/api-contract": "7.2.1",
-    "@polkadot/types": "7.2.1",
-    "@polkadot/keyring": "8.2.2",
-    "@polkadot/util": "8.2.2",
+    "@polkadot/api": "7.5.1",
+    "@polkadot/api-contract": "7.5.1",
+    "@polkadot/types": "7.5.1",
+    "@polkadot/keyring": "8.3.3",
+    "@polkadot/util": "8.3.3",
     "@polkadot/wasm-crypto": "4.5.1",
-    "@polkadot/util-crypto": "8.2.2",
+    "@polkadot/util-crypto": "8.3.3",
     "typescript": "4.5.4"
   },
   "dependencies": {
