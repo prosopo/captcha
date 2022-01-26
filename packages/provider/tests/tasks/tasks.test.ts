@@ -157,7 +157,7 @@ describe('PROVIDER TASKS', () => {
         solutionPromise.catch(e => e.message.should.match(`/${ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message}/`))
     })
 
-    it.only('No proofs are returned if commitment found and solution is incorrect', async () => {
+    it('No proofs are returned if commitment found and solution is incorrect', async () => {
         const { mockEnv, tasks, captchaSolutions, requestHash } = await setup()
         const captchaSolutionsBad = captchaSolutions.map(original => ({ ...original, solution: [3] }))
         const tree = new CaptchaMerkleTree()
