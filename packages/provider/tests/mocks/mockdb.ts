@@ -1,3 +1,18 @@
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of provider <https://github.com/prosopo-io/provider>.
+//
+// provider is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// provider is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Database, DatasetRecord, DatasetWithIds, Tables } from '../../src/types'
 import { Captcha, CaptchaSolution, Dataset } from '../../src/types/captcha'
 import { Hash } from '@polkadot/types/interfaces'
@@ -223,15 +238,14 @@ export class ProsopoDatabase implements mockDatabase {
         if (size && size > this.solved.length) {
             throw (new Error('NotImplemented'))
         }
-
+        let cloned
         if (solved) {
             // We clone because `solution` is deleted from the object in the code
-            const clonedSolved = { ...this.solved[0] }
-            return Promise.resolve([clonedSolved])
+            cloned = { ...this.solved[0] }
         } else {
-            const clonedUnsolved = { ...this.unsolved[0] }
-            return Promise.resolve([clonedUnsolved])
+            cloned = { ...this.unsolved[0] }
         }
+        return Promise.resolve([cloned])
     }
 
     getDatasetDetails (datasetId: string): Promise<DatasetRecord> {
@@ -253,8 +267,11 @@ export class ProsopoDatabase implements mockDatabase {
     }
 
     getRandomCaptcha (solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
-        const clonedSolved = { ...this.solved[0] }
-        return Promise.resolve([clonedSolved])
+        const collection = solved ? this.solved : this.unsolved
+        if (size && size > collection.length) {
+            throw (new Error('Not Implmented'))
+        }
+        return Promise.resolve([{ ...collection[0] }])
     }
 
     getCaptchaById (captchaId: string[]): Promise<Captcha[] | undefined> {

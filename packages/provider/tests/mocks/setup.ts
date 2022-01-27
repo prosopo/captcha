@@ -1,10 +1,24 @@
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of provider <https://github.com/prosopo-io/provider>.
+//
+// provider is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// provider is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Tasks } from '../../src/tasks/tasks'
 import { hexHash } from '../../src/util'
-import { blake2AsHex, decodeAddress, encodeAddress } from '@polkadot/util-crypto'
+import { blake2AsHex, decodeAddress } from '@polkadot/util-crypto'
 import { CaptchaMerkleTree } from '../../src/merkle'
 import { computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution } from '../../src/captcha'
 import { Hash } from '@polkadot/types/interfaces'
-import { DatasetWithIds, Provider } from '../../src/types'
 import { TestAccount, TestDapp, TestProvider } from './accounts'
 
 export async function displayBalance (env, address, who) {

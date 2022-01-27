@@ -1,12 +1,26 @@
-import { isU8a, isHex } from '@polkadot/util'
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of provider <https://github.com/prosopo-io/provider>.
+//
+// provider is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// provider is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Registry } from 'redspot/types/provider'
 import { AbiMessage } from '@polkadot/api-contract/types'
 import Contract from '@redspot/patract/contract'
-import { Codec } from '@polkadot/types/types'
-import { ContractApiInterface, ContractTxResponse } from './types'
-import { ERRORS } from './errors'
-import { Environment } from './env'
-import { AnyJson } from '@polkadot/types/types/codec'
+import { ContractApiInterface, ContractTxResponse } from '../types'
+import { ERRORS } from '../errors'
+import { Environment } from '../env'
+import { AbiMetadata } from 'redspot/types'
+import { unwrap, encodeStringArgs, getEventNameFromMethodName } from './helpers'
 
 export class ProsopoContractApi implements ContractApiInterface {
     env: Environment
@@ -22,7 +36,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {number} value    A value to send with the transaction, e.g. a stake
      * @return JSON result containing the contract event
      */
-    async contractCall (contractMethodName: string, args: Array<any>, value?: number): Promise<any> {
+    async contractCall<T> (contractMethodName: string, args: T[], value?: number): Promise<any> {
         await this.env.isReady()
         if (!this.env.contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
@@ -32,7 +46,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         }
         const signedContract: Contract = this.env.contract.connect(this.env.signer)
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs = this.encodeArgs(methodObj, args)
+        const encodedArgs = encodeStringArgs(methodObj, args)
         if (methodObj.isMutating) {
             return await this.contractTx(signedContract, contractMethodName, encodedArgs, value)
         }
@@ -47,7 +61,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx (signedContract: Contract, contractMethodName: string, encodedArgs: any[], value: number | undefined): Promise<ContractTxResponse[]> {
+    async contractTx <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | undefined): Promise<ContractTxResponse[]> {
         let response
         if (value) {
             response = await signedContract.tx[contractMethodName](...encodedArgs, { value })
@@ -55,14 +69,17 @@ export class ProsopoContractApi implements ContractApiInterface {
             response = await signedContract.tx[contractMethodName](...encodedArgs)
         }
         const property = 'events'
-        if (response.result.isInBlock) {
+
+        // TODO add a poller that waits for transaction success and then acts accordingly
+
+        if (response.result.isInBlock || response.result.isFinalized) {
             if (response.result.status.isRetracted) {
                 throw (response.status.asRetracted)
             }
             if (response.result.status.isInvalid) {
                 throw (response.status.asInvalid)
             }
-            const eventName = this.getEventNameFromMethodName(contractMethodName)
+            const eventName = getEventNameFromMethodName(contractMethodName)
             if (response[property]) {
                 return response[property].filter((x) => x.name === eventName)
             }
@@ -79,40 +96,12 @@ export class ProsopoContractApi implements ContractApiInterface {
 
      * @return JSON result containing the contract event
      */
-    async contractQuery (signedContract: Contract, contractMethodName: string, encodedArgs: any[]): Promise<any> {
+    async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[]): Promise<any> {
         const response = await signedContract.query[contractMethodName](...encodedArgs)
         if (response.result.isOk && response.output) {
-            return this.unwrap(response.output.toHuman())
+            return unwrap(response.output.toHuman())
         }
         throw (new Error(response.result.asErr.asModule.message.unwrap().toString()))
-    }
-
-    unwrap (item: AnyJson) {
-        const prop = 'Ok'
-        if (item && typeof (item) === 'object') {
-            if (prop in item) {
-                return item[prop]
-            }
-        }
-        return item
-    }
-
-    /** Encodes arguments that should be hashes using blake2AsU8a
-     * @return encoded arguments
-     */
-    encodeArgs (methodObj: AbiMessage, args: any[]): any[] {
-        const encodedArgs: any[] = []
-        // args must be in the same order as methodObj['args']
-        const createTypes = ['Hash']
-        methodObj.args.forEach((methodArg, idx) => {
-            let argVal = args[idx]
-            // hash values that have been passed as strings
-            if (createTypes.indexOf(methodArg.type.type) > -1 && !(isU8a(args[idx]) || isHex(args[idx]))) {
-                argVal = this.env.network.api.registry.createType(methodArg.type.type, args[idx])
-            }
-            encodedArgs.push(argVal)
-        })
-        return encodedArgs
     }
 
     /** Get the contract method from the ABI
@@ -130,28 +119,28 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @return the storage key
      */
     getStorageKey (storageName: string): string {
-        // TODO there has got to be a better way to get this info
-        const json: Record<string, unknown> | undefined = this.env.contract?.abi.json
-        // @ts-ignore
-        const storageEntry = json.V2.storage.struct.fields.filter((obj) => obj.name === storageName)[0]
+        if (!this.env.contract) {
+            throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
+        }
+        const json: AbiMetadata = this.env.contract.abi.json as AbiMetadata
+
+        // Find the different metadata version key, V1, V2, V3, etc.
+        const storageKey = Object.keys(json).filter(key => key.search(/V\d/) > -1)
+
+        let data
+        if (storageKey.length) {
+            data = json[storageKey[0]]
+        } else {
+            // The metadata version is not present and its the old AbiMetadata
+            data = json
+        }
+
+        const storageEntry = data.storage.struct.fields.filter((obj) => obj.name === storageName)[0]
+
         if (storageEntry) {
             return storageEntry.layout.cell.key
         }
         throw (ERRORS.CONTRACT.INVALID_STORAGE_NAME.message)
-    }
-
-    /**
-     * Get the event name from the contract method name
-     * Each of the ink contract methods returns an event with a capitalised version of the method name
-     * @return {string} event name
-     */
-    // TODO use the `method` and `identifier` in the contract fragment (see redspot patract contract.ts)
-    // identifier: 'dapp_register',
-    // index: 6,
-    // method: 'dappRegister',
-
-    getEventNameFromMethodName (contractMethodName: string): string {
-        return contractMethodName[0].toUpperCase() + contractMethodName.substring(1)
     }
 
     /**
@@ -161,11 +150,11 @@ export class ProsopoContractApi implements ContractApiInterface {
     async getStorage<T> (name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
         await this.env.isReady()
         const storageKey = this.getStorageKey(name)
-        if (this.env.contract === undefined) {
+        if (!this.env.contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
-        const promiseresult = await this.env.network.api.rpc.contracts.getStorage(this.env.contract.address, storageKey)
-        const data = promiseresult.unwrapOrDefault()
+        const promiseResult = await this.env.network.api.rpc.contracts.getStorage(this.env.contract.address, storageKey)
+        const data = promiseResult.unwrapOrDefault()
         return decodingFn(this.env.network.registry, data)
     }
 }
