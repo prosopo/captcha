@@ -3,17 +3,16 @@
 
 - nodejs
 - yarn
-- `git clone https://github.com/paritytech/substrate-contracts-node`
+- choose a Substrate node of your choice (e.g. contracts node)
 - `git clone https://github.com/prosopo-io/protocol`
 - `git clone https://github.com/prosopo-io/redspot`
 
 A reasonable folder structure would be something like the following:
 ```
 - redspot
-- substrate-contracts-node
-- prosopo
-    - protocol
-    - provider
+- substrate
+- protocol
+- provider
 ```
 
 ## Install packages
@@ -22,14 +21,9 @@ A reasonable folder structure would be something like the following:
 yarn
 ```
 ## Setup contract node
-A specific version of the contract node is [required](https://stackoverflow.com/questions/69826769/how-can-i-query-contract-info-with-the-latest-polkadot-js-and-substrate-contract/69831057#69831057) to work with polkadotjs.
-
 ```bash
-git clone https://github.com/paritytech/substrate-contracts-node &&
 cd substrate &&
-git checkout 8d91b8e578065a7c06433cbd41ac059bf478a0bd &&
-cargo build && 
-./target/debug/substrate-contracts-node --dev --tmp --version
+cargo run --release -- --dev --tmp -lerror,runtime::contracts=debug
 ```
 
 ## Deploy contract node
