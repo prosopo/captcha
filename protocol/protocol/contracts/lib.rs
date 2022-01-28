@@ -1224,8 +1224,7 @@ pub mod prosopo {
         }
 
         fn get_random_number(&self, min: u64, max: u64) -> u64 {
-            let additional_randomness = self.env().caller().as_ref();
-            let random_seed = self.env().random(additional_randomness);
+            let random_seed = self.env().random(self.env().caller().as_ref());
             let mut seed_converted: [u8; 32] = Default::default();
             seed_converted.copy_from_slice(random_seed.0.as_ref());
             let mut rng = ChaChaRng::from_seed(seed_converted);
