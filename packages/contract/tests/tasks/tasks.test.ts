@@ -159,6 +159,34 @@ describe('CONTRACT TASKS', () => {
         }
     })
 
+    it('Inactive Provider cannot add dataset', async () => {
+        const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
+        await mockEnv.changeSigner('//Alice')
+        await sendFunds(
+            mockEnv,
+            providerAddress,
+            'Provider',
+            '10000000000000000000'
+        )
+        const inactiveProvider = { ...PROVIDER } as TestProvider
+        inactiveProvider.mnemonic = providerMnemonic
+        inactiveProvider.address = providerAddress
+        inactiveProvider.serviceOrigin = inactiveProvider.serviceOrigin + randomAsHex().slice(0, 8)
+        await mockEnv.changeSigner(inactiveProvider.mnemonic)
+        const providerTasks = new Tasks(mockEnv)
+        await providerTasks.providerRegister(
+            inactiveProvider.serviceOrigin,
+            inactiveProvider.fee,
+            inactiveProvider.payee,
+            inactiveProvider.address
+        )
+        const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json')
+        const datasetPromise = providerTasks.providerAddDataset(captchaFilePath)
+        datasetPromise.catch((e) =>
+            e.message.should.match('/ProviderInactive/')
+        )
+    })
+
     it('Provider approve', async () => {
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash()
         await mockEnv.changeSigner(dappUser.mnemonic)
