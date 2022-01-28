@@ -60,7 +60,6 @@ export class Tasks {
 
     // Contract tasks
 
-    // TODO These functions could all be constructed automatically from the contract ABI
     async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address])
     }
@@ -150,10 +149,6 @@ export class Tasks {
      * @param {number}   size       the number of records to be returned
      */
     async getCaptchaWithProof (datasetId: Hash | string | Uint8Array, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
-        // TODO check that dataset is attached to a Provider before responding ???!!!
-        //  Otherwise Providers could store any random data and have Dapp Users request it. Is there any advantage to
-        //  this?
-
         const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size)
         if (captchaDocs) {
             const captchas: CaptchaWithProof[] = []
@@ -193,7 +188,6 @@ export class Tasks {
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-                // TODO refund their tx fee
                 await this.providerApprove(commitmentId)
                 response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
             } else {
@@ -284,8 +278,6 @@ export class Tasks {
         const salt = randomAsHex()
 
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)
-        // TODO Should this be committed to contract? What are the downsides if not?
-        //   - Provider could lie about having a pending request and Dapp User would not be able to prove otherwise
         await this.db.storeDappUserPending(userAccount, requestHash, salt)
         return { captchas, requestHash }
     }

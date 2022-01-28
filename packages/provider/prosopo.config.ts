@@ -15,7 +15,6 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { ProsopoConfig } from './src/types'
 
-// TODO create types folder and make a types file per category of types
 export default {
     defaultEnvironment: 'development',
     networks: {
