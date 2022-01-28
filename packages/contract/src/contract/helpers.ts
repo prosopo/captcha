@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { AbiMessage } from '@polkadot/api-contract/types'
+import { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types'
 import { isHex, isU8a } from '@polkadot/util'
 import { blake2AsU8a } from '@polkadot/util-crypto'
 import { AnyJson } from '@polkadot/types/types/codec'
@@ -30,7 +30,7 @@ export function getEventNameFromMethodName (contractMethodName: string): string 
 /** Encodes arguments that should be hashes using blake2AsU8a
  * @return encoded arguments
  */
-export function encodeStringArgs <T> (methodObj: AbiMessage, args: T[]): T[] {
+export function encodeStringArgs<T> (methodObj: AbiMessage, args: T[]): T[] {
     const encodedArgs: T[] = []
     // args must be in the same order as methodObj['args']
     const typesToHash = ['Hash']
@@ -57,4 +57,17 @@ export function unwrap (item: AnyJson): AnyJson {
         }
     }
     return item
+}
+
+/** Handle errors returned from contract queries by throwing them
+ * @return {ContractCallOutcome} response
+ */
+export function handleContractCallOutcomeErrors (response: ContractCallOutcome): ContractCallOutcome {
+    const errorKey = 'Err'
+    if (response !== null) {
+        if (typeof (response) === 'object' && Object.prototype.hasOwnProperty.call(response, errorKey)) {
+            throw new Error(response[errorKey] as string)
+        }
+    }
+    return response
 }

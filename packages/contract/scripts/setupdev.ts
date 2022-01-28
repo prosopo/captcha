@@ -73,7 +73,7 @@ function processArgs (env) {
         }, async () => {
             const providerKeyringPair: KeyringPair = env.network.keyring.addFromMnemonic(PROVIDER.mnemonic)
             await sendFunds(env, providerKeyringPair.address, 'Provider', new BN('100000000000000000'))
-            await setupProvider(env, providerKeyringPair.address, PROVIDER)
+            await setupProvider(env, PROVIDER)
         }
         )
         .command('dapp', 'Setup a Dapp', (yargs) => {

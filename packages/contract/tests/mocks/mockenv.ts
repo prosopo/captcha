@@ -70,8 +70,13 @@ export class MockEnvironment implements ProsopoEnvironment {
     async isReady (): Promise<void> {
         await this.getSigner()
         await this.getContract()
-        await this.importDatabase()
-        await this.db?.connect()
+        // Persist database state for tests
+        if (!this.db) {
+            await this.importDatabase()
+            // @ts-ignore
+            await this.db?.connect()
+        }
+
         this.network.registry.register(contractDefinitions)
         assert(this.contract instanceof Contract)
     }
