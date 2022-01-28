@@ -20,6 +20,7 @@ import Contract from '@redspot/patract/contract'
 import { Environment } from '../env'
 import { AbiMessage } from '@polkadot/api-contract/types'
 import { TypeDef } from '@polkadot/types-create/types'
+import { AnyJson } from '@polkadot/types/types/codec'
 
 export enum GovernanceStatus {
     Active = 'Active', Inactive = 'Inactive', Deactivated = 'Deactivated'
@@ -48,6 +49,12 @@ export interface Dapp {
     clientOrigin: Hash,
 }
 
+export interface CaptchaData {
+    provider: AccountId,
+    merkleTreeRoot: Hash,
+    captchaType: u16
+}
+
 export interface ContractTxResponse {
     args: string[],
     event: {
@@ -71,11 +78,11 @@ export interface ContractTxResponse {
 export interface ContractApiInterface {
     env: Environment
 
-    contractCall(contractFunction: string, args: any[], value?: number): Promise<Record<string, unknown>>
+    contractCall<T>(contractFunction: string, args: T[], value?: number): Promise<AnyJson>
 
-    contractTx (signedContract: Contract, contractMethodName: string, encodedArgs: any[], value: number | undefined): Promise<ContractTxResponse[]>
+    contractTx<T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | undefined): Promise<AnyJson>
 
-    contractQuery(signedContract: Contract, contractMethodName: string, encodedArgs: any[]): Promise<any>
+    contractQuery<T>(signedContract: Contract, contractMethodName: string, encodedArgs: T[]): Promise<AnyJson>
 
     getContractMethod(contractMethodName: string): AbiMessage
 

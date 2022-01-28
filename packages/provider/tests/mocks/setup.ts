@@ -45,14 +45,14 @@ export async function sendFunds (env, address, who, amount): Promise<void> {
     }
 }
 
-export async function setupProvider (env, address:string, provider: TestProvider): Promise<Hash> {
+export async function setupProvider (env, provider: TestProvider): Promise<Hash> {
     console.log('\n---------------\nSetup Provider\n---------------')
     await env.changeSigner(provider.mnemonic)
     const tasks = new Tasks(env)
     console.log(' - providerRegister')
     await tasks.providerRegister(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address)
     console.log(' - providerStake')
-    await tasks.providerUpdate(hexHash(provider.serviceOrigin), provider.fee, provider.payee, address, provider.stake)
+    await tasks.providerUpdate(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address, provider.stake)
     console.log(' - providerAddDataset')
     const datasetResult = await tasks.providerAddDataset(provider.datasetFile)
     console.log(JSON.stringify(datasetResult))
@@ -98,7 +98,7 @@ export async function setupDappUser (env, dappUser: TestAccount, provider: TestP
         tree.build(captchaSolHashes)
         await env.changeSigner(dappUser.mnemonic)
         const captchaData = await tasks.getCaptchaData(providerOnChain.captchaDatasetId.toString())
-        if (captchaData.merkle_tree_root !== providerOnChain.captchaDatasetId.toString()) {
+        if (captchaData.merkleTreeRoot.toHuman() !== providerOnChain.captchaDatasetId.toString()) {
             throw new Error(`Cannot find captcha data id: ${providerOnChain.captchaDatasetId.toString()}`)
         }
         const commitmentId = tree.root?.hash

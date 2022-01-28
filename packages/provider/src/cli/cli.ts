@@ -18,12 +18,14 @@ import { Environment } from '../env'
 import { prosopoMiddleware } from '../api'
 import { handleErrors } from '../errorHandler'
 import { processArgs } from './argv'
+import { mnemonicValidate } from '@polkadot/util-crypto'
 
 const app = express()
 app.use(express.json())
 const port = 3000
 
 async function main () {
+    mnemonicValidate(process.env.PROVIDER_MNEMONIC as string)
     const env = new Environment(process.env.PROVIDER_MNEMONIC)
     await env.isReady()
     const args = await processArgs(process.argv.slice(2), env)

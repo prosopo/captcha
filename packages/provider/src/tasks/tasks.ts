@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { hexToU8a } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
-import { Hash } from '@polkadot/types/interfaces'
+import { AccountId, Hash } from '@polkadot/types/interfaces'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { loadJSONFile, shuffleArray } from '../util'
 import {
@@ -28,7 +28,7 @@ import {
     parseCaptchaSolutions
 } from '../captcha'
 import {
-    Captcha,
+    Captcha, CaptchaData,
     CaptchaSolution,
     CaptchaSolutionCommitment,
     CaptchaSolutionResponse,
@@ -61,23 +61,23 @@ export class Tasks {
     // Contract tasks
 
     // TODO These functions could all be constructed automatically from the contract ABI
-    async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<Record<string, unknown>> {
+    async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address])
     }
 
-    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value: number | undefined): Promise<Record<string, unknown>> {
+    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value: number | undefined): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerUpdate', [serviceOrigin, fee, payee, address], value)
     }
 
-    async providerDeregister (address: string): Promise<Record<string, unknown>> {
+    async providerDeregister (address: string): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerDeregister', [address])
     }
 
-    async providerUnstake (value: number): Promise<Record<string, unknown>> {
+    async providerUnstake (value: number): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerUnstake', [], value)
     }
 
-    async providerAddDataset (file: string): Promise<Record<string, unknown>> {
+    async providerAddDataset (file: string): Promise<AnyJson> {
         const dataset = parseCaptchaDataset(loadJSONFile(file) as JSON)
         const tree = new CaptchaMerkleTree()
         const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash))
@@ -89,7 +89,7 @@ export class Tasks {
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
-    async dappRegister (dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<Record<string, unknown>> {
+    async dappRegister (dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<AnyJson> {
         return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
     }
 
@@ -113,6 +113,10 @@ export class Tasks {
         return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId])
     }
 
+    async getRandomProvider (): Promise<Provider> {
+        return await this.contractApi.contractCall('getRandomActiveProvider', []) as unknown as Provider
+    }
+
     async getProviderDetails (accountId: string): Promise<Provider> {
         return await this.contractApi.contractCall('getProviderDetails', [accountId]) as unknown as Provider
     }
@@ -121,19 +125,19 @@ export class Tasks {
         return await this.contractApi.contractCall('getDappDetails', [accountId]) as unknown as Dapp
     }
 
-    async getCaptchaData (captchaDatasetId: string) {
-        return await this.contractApi.contractCall('getCaptchaData', [captchaDatasetId])
+    async getCaptchaData (captchaDatasetId: string): Promise<CaptchaData> {
+        return await this.contractApi.contractCall('getCaptchaData', [captchaDatasetId]) as unknown as CaptchaData
     }
 
     async getCaptchaSolutionCommitment (solutionId: string): Promise<CaptchaSolutionCommitment> {
         return await this.contractApi.contractCall('getCaptchaSolutionCommitment', [solutionId]) as unknown as CaptchaSolutionCommitment
     }
 
-    async providerAccounts (): Promise<AnyJson> {
-        return await this.contractApi.getStorage('provider_accounts', buildDecodeVector('ProviderAccounts'))
+    async getProviderAccounts (): Promise<AnyJson> {
+        return await this.contractApi.contractCall('getAllProviderIds', [])
     }
 
-    async dappAccounts (): Promise<AnyJson> {
+    async getDappAccounts (): Promise<AnyJson> {
         return await this.contractApi.getStorage('dapp_accounts', buildDecodeVector('DappAccounts'))
     }
 
@@ -259,7 +263,6 @@ export class Tasks {
         const pendingRecord = await this.db.getDappUserPending(requestHash)
         if (pendingRecord) {
             const pendingHashComputed = computePendingRequestHash(captchaIds, userAccount, pendingRecord.salt)
-            console.log(pendingHashComputed, requestHash)
             return requestHash === pendingHashComputed
         }
         return false
@@ -271,11 +274,15 @@ export class Tasks {
      * @param {string} userAccount
      */
     async getRandomCaptchasAndRequestHash (datasetId: string, userAccount: string): Promise<{ captchas: CaptchaWithProof[], requestHash: string }> {
-        // TODO Config the number, style, and state of captchas sent back. For now return one solved and one unsolved
+        const dataset = await this.db.getDatasetDetails(datasetId)
+        if (!dataset) {
+            throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED.message))
+        }
         const solved = await this.getCaptchaWithProof(datasetId, true, 1)
         const unsolved = await this.getCaptchaWithProof(datasetId, false, 1)
         const captchas: CaptchaWithProof[] = shuffleArray([solved[0], unsolved[0]])
         const salt = randomAsHex()
+
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)
         // TODO Should this be committed to contract? What are the downsides if not?
         //   - Provider could lie about having a pending request and Dapp User would not be able to prove otherwise

@@ -21,8 +21,8 @@ async function main () {
     const env = new Environment('//Alice')
     await env.isReady()
     const tasks = new Tasks(env)
-    await tasks.providerAccounts()
-    await tasks.dappAccounts()
+    await tasks.getProviderAccounts()
+    await tasks.getDappAccounts()
     process.exit()
 }
 

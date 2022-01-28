@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { GeneralError } from './errors'
 
-export const handleErrors = (err, req, res) => {
+export const handleErrors = (err, req, res, next) => {
     if (err instanceof GeneralError) {
         return res.status(err.getCode()).json({
             status: 'error',

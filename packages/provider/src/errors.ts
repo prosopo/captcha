@@ -81,6 +81,9 @@ export const ERRORS = {
         TX_ERROR: {
             message: 'Error making tx'
         },
+        QUERY_ERROR: {
+            message: 'Error making query'
+        },
         INVALID_ADDRESS: {
             message: 'Failed to encode invalid address'
         },

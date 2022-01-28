@@ -25,14 +25,13 @@ const validateAddress = (argv) => {
     return { address }
 }
 
-// TODO use zod for this
+// TODO use zod to validate CLI arguments
 const validatePayee = (argv) => {
     const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
     const payee = ['Provider', 'Dapp'].indexOf(payeeArg) > -1 ? payeeArg : undefined
     return { payee }
 }
 
-// TODO use zod for this
 const validateValue = (argv) => {
     if (typeof argv.value === 'number') {
         const value: Compact<u128> = argv.value as Compact<u128>
@@ -129,7 +128,7 @@ export function processArgs (args, env) {
                 .option('status', { type: 'string', demand: false }),
             async () => {
                 try {
-                    const result = await tasks.providerAccounts()
+                    const result = await tasks.getProviderAccounts()
                     console.log(JSON.stringify(result, null, 2))
                 } catch (err) {
                     console.log(err)

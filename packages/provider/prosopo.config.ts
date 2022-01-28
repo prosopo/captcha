@@ -13,28 +13,28 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {ProsopoConfig} from './src/types'
+import { ProsopoConfig } from './src/types'
 
-//TODO create types folder and make a types file per category of types
+// TODO create types folder and make a types file per category of types
 export default {
-    defaultEnvironment: "development",
+    defaultEnvironment: 'development',
     networks: {
         development: {
-            endpoint: "ws://substrate-node:9944",
+            endpoint: 'ws://substrate-node:9944',
             contract: {
                 address: process.env.CONTRACT_ADDRESS,
                 deployer: {
-                    address: "//Alice"
+                    address: '//Alice'
                 }
-            },
-        },
+            }
+        }
     },
     database: {
         development: {
-            type: "mongo",
+            type: 'mongo',
             endpoint: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017`,
-            dbname: "prosopo"
+            dbname: 'prosopo'
         }
-    },
+    }
 
-} as ProsopoConfig;
+} as ProsopoConfig
