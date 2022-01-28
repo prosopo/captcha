@@ -20,26 +20,26 @@ use ink_lang as ink;
 pub mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
     use ink_prelude::vec::Vec;
-    use rand_chacha::rand_core::RngCore;
-    use rand_chacha::rand_core::SeedableRng;
-    use rand_chacha::ChaChaRng;
     use ink_storage::{
         lazy::Mapping, traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout,
         traits::StorageLayout,
     };
+    use rand_chacha::rand_core::RngCore;
+    use rand_chacha::rand_core::SeedableRng;
+    use rand_chacha::ChaChaRng;
 
     #[derive(
-    Default,
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    Copy,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
+        Default,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
@@ -50,17 +50,17 @@ pub mod prosopo {
     }
 
     #[derive(
-    Default,
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    Copy,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
+        Default,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum CaptchaStatus {
@@ -70,19 +70,18 @@ pub mod prosopo {
         Disapproved,
     }
 
-
     #[derive(
-    Default,
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    Copy,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
+        Default,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Payee {
@@ -93,18 +92,17 @@ pub mod prosopo {
         None,
     }
 
-
     #[derive(
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
-    Copy,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
+        Copy,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Provider {
@@ -122,16 +120,16 @@ pub mod prosopo {
     }
 
     #[derive(
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    Copy,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Operator {
@@ -139,16 +137,16 @@ pub mod prosopo {
     }
 
     #[derive(
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    Copy,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaData {
@@ -158,16 +156,16 @@ pub mod prosopo {
     }
 
     #[derive(
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    Copy,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        Copy,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaSolutionCommitment {
@@ -184,16 +182,16 @@ pub mod prosopo {
     }
 
     #[derive(
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
-    Copy,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
+        Copy,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Dapp {
@@ -207,16 +205,16 @@ pub mod prosopo {
     }
 
     #[derive(
-    PartialEq,
-    Debug,
-    Eq,
-    Clone,
-    scale::Encode,
-    scale::Decode,
-    SpreadLayout,
-    PackedLayout,
-    SpreadAllocate,
-    Copy,
+        PartialEq,
+        Debug,
+        Eq,
+        Clone,
+        scale::Encode,
+        scale::Decode,
+        SpreadLayout,
+        PackedLayout,
+        SpreadAllocate,
+        Copy,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
@@ -564,10 +562,8 @@ pub mod prosopo {
                     .provider_accounts
                     .get(current_provider_status)
                     .unwrap_or_default();
-                let mut new_status_provider_accounts = self
-                    .provider_accounts
-                    .get(new_status)
-                    .unwrap_or_default();
+                let mut new_status_provider_accounts =
+                    self.provider_accounts.get(new_status).unwrap_or_default();
 
                 // Move provider to the correct index
                 current_status_provider_accounts.remove(&provider_account);
@@ -576,19 +572,14 @@ pub mod prosopo {
                 // Store mapping
                 self.provider_accounts
                     .insert(current_provider_status, &current_status_provider_accounts);
-                self.provider_accounts.insert(
-                    new_status,
-                    &new_status_provider_accounts,
-                );
+                self.provider_accounts
+                    .insert(new_status, &new_status_provider_accounts);
             }
         }
 
         /// De-Register a provider by setting their status to Deactivated
         #[ink(message)]
-        pub fn provider_deregister(
-            &mut self,
-            provider_account: AccountId,
-        ) -> Result<(), Error> {
+        pub fn provider_deregister(&mut self, provider_account: AccountId) -> Result<(), Error> {
             //TODO could get rid of provider_account parameter
             let caller = self.env().caller();
             if caller == provider_account {
@@ -598,7 +589,11 @@ pub mod prosopo {
                 let mut provider = self.providers.get(&provider_account).unwrap();
 
                 // Update provider status
-                self.provider_change_status(provider_account, provider.status, GovernanceStatus::Deactivated);
+                self.provider_change_status(
+                    provider_account,
+                    provider.status,
+                    GovernanceStatus::Deactivated,
+                );
                 provider.status = GovernanceStatus::Deactivated;
                 self.providers.insert(provider_account, &provider);
 
@@ -830,10 +825,14 @@ pub mod prosopo {
             // Guard against incorrect data being submitted
             self.get_captcha_data(captcha_dataset_id)?;
             // Guard against solution commitment being submitted more than once
-            if self.captcha_solution_commitments.get(user_merkle_tree_root).is_some() {
+            if self
+                .captcha_solution_commitments
+                .get(user_merkle_tree_root)
+                .is_some()
+            {
                 ink_env::debug_println!("{}", "CaptchaSolutionCommitmentExists");
                 //return Err(Error::CaptchaSolutionCommitmentExists);
-                return Ok(())
+                return Ok(());
             }
 
             self.validate_dapp(contract)?;
@@ -1204,7 +1203,11 @@ pub mod prosopo {
             Ok(self.providers.get(provider_id).unwrap())
         }
 
-        fn get_all_provider_ids(&self) -> Vec<AccountId> {
+        /// Get the AccountIds of all Providers ever registered
+        ///
+        /// Returns {Vec<AccountId>}
+        #[ink(message)]
+        pub fn get_all_provider_ids(&self) -> Vec<AccountId> {
             let mut provider_ids = Vec::<AccountId>::new();
             for status in [
                 GovernanceStatus::Active,
@@ -1221,7 +1224,8 @@ pub mod prosopo {
         }
 
         fn get_random_number(&self, min: u64, max: u64) -> u64 {
-            let random_seed = self.env().random(self.env().caller().as_ref());
+            let additional_randomness = self.env().caller().as_ref();
+            let random_seed = self.env().random(additional_randomness);
             let mut seed_converted: [u8; 32] = Default::default();
             seed_converted.copy_from_slice(random_seed.0.as_ref());
             let mut rng = ChaChaRng::from_seed(seed_converted);
@@ -1361,7 +1365,9 @@ pub mod prosopo {
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
-            contract.provider_register(service_origin, fee, Payee::Provider, provider_account).unwrap();
+            contract
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .unwrap();
             assert!(contract.providers.get(&provider_account).is_some());
             assert!(contract
                 .provider_accounts
@@ -1403,10 +1409,7 @@ pub mod prosopo {
                     "encountered invalid ProviderUpdate.account"
                 );
             } else {
-                panic!(
-                    "encountered unexpected event kind" // "encountered unexpected event kind: expected a ProviderUpdate event: {:?}",
-                                                        // decoded_event_update
-                );
+                panic!("encountered unexpected event kind: expected a ProviderUpdate event");
             }
         }
 
@@ -1522,7 +1525,7 @@ pub mod prosopo {
                     .expect("encountered invalid contract event data buffer");
 
             if let Event::ProviderUnstake(ProviderUnstake { account, value }) =
-            decoded_event_unstake
+                decoded_event_unstake
             {
                 assert_eq!(
                     account, provider_account,
@@ -1530,10 +1533,7 @@ pub mod prosopo {
                 );
                 assert_eq!(value, balance, "encountered invalid ProviderUnstake.value");
             } else {
-                panic!(
-                    "encountered unexpected event kind" // "encountered unexpected event kind: expected a ProviderUnstake event {:?}",
-                                                        // decoded_event_unstake
-                );
+                panic!("encountered unexpected event kind: expected a ProviderUnstake event");
             }
         }
 
@@ -1571,9 +1571,9 @@ pub mod prosopo {
                     .expect("encountered invalid contract event data buffer");
 
             if let Event::ProviderAddDataset(ProviderAddDataset {
-                                                 account,
-                                                 merkle_tree_root,
-                                             }) = decoded_event_unstake
+                account,
+                merkle_tree_root,
+            }) = decoded_event_unstake
             {
                 assert_eq!(
                     account, provider_account,
