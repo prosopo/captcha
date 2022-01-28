@@ -49,28 +49,35 @@ describe('CONTRACT TASKS', () => {
     const mockEnv = new MockEnvironment()
 
     before(async () => {
-        // Register the dapp
-        await mockEnv.isReady()
+        try {
+            // Register the dapp
+            await mockEnv.isReady()
 
-        // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
-        const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
-        await mockEnv.changeSigner('//Alice')
-        await sendFunds(
-            mockEnv,
-            providerAddress,
-            'Provider',
-            '10000000000000000000'
-        )
-        provider = { ...PROVIDER } as TestProvider
-        provider.mnemonic = providerMnemonic
-        provider.address = providerAddress
-        datasetId = await setupProvider(mockEnv, provider as TestProvider)
-        const [dappMnemonic, dappAddress] = mockEnv.createAccountAndAddToKeyring()
-        dapp = { ...DAPP } as TestDapp
-        await sendFunds(mockEnv, dappAddress, 'Dapp', '1000000000000000000')
-        dapp.mnemonic = dappMnemonic
-        dapp.address = dappAddress
-        await setupDapp(mockEnv, dapp as TestDapp)
+            // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
+            const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
+            await mockEnv.changeSigner('//Alice')
+            await sendFunds(
+                mockEnv,
+                providerAddress,
+                'Provider',
+                '10000000000000000000'
+            )
+            provider = { ...PROVIDER } as TestProvider
+            provider.mnemonic = providerMnemonic
+            provider.address = providerAddress
+            // Service origins cannot be duplicated
+            provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8)
+            console.log('Service origin', provider.serviceOrigin)
+            datasetId = await setupProvider(mockEnv, provider as TestProvider)
+            const [dappMnemonic, dappAddress] = mockEnv.createAccountAndAddToKeyring()
+            dapp = { ...DAPP } as TestDapp
+            await sendFunds(mockEnv, dappAddress, 'Dapp', '1000000000000000000')
+            dapp.mnemonic = dappMnemonic
+            dapp.address = dappAddress
+            await setupDapp(mockEnv, dapp as TestDapp)
+        } catch (err) {
+            throw new Error(err as string)
+        }
     })
 
     /** Gets some static solved captchas and constructions captcha solutions from them
@@ -113,11 +120,11 @@ describe('CONTRACT TASKS', () => {
             )
             expect(result).to.be.an('array')
         } catch (error) {
-            throw new Error(`Error in regestering provider: ${error}`)
+            throw new Error(`Error in registering provider: ${error}`)
         }
     })
 
-    it('Provider updation', async () => {
+    it('Provider update', async () => {
         await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const value = 1
@@ -514,10 +521,10 @@ describe('CONTRACT TASKS', () => {
             ...captcha,
             salt: salt
         }))
-        const captchasHashed = captchaSolutionsBad.map((captcha) =>
+        const solutionsHashed = captchaSolutionsSalted.map((captcha) =>
             computeCaptchaSolutionHash(captcha)
         )
-        tree.build(captchasHashed)
+        tree.build(solutionsHashed)
         const commitmentId = tree.root!.hash
         await mockEnv.changeSigner(dappUser.mnemonic)
         const dappUserTasks = new Tasks(mockEnv)
