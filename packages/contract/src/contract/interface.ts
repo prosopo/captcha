@@ -75,8 +75,6 @@ export class ProsopoContractApi implements ContractApiInterface {
         }
         const property = 'events'
 
-        // TODO add a poller that waits for transaction success and then acts accordingly
-
         if (response.result.isInBlock || response.result.isFinalized) {
             if (response.result.status.isRetracted) {
                 throw (response.status.asRetracted)
@@ -88,7 +86,6 @@ export class ProsopoContractApi implements ContractApiInterface {
             if (response[property]) {
                 return response[property].filter((x) => x.name === eventName)
             }
-            // TODO Is there a way to get the Error enum index from ink?
         }
         return []
     }

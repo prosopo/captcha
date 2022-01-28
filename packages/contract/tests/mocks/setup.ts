@@ -86,7 +86,6 @@ export async function setupDappUser (env, dappUser: TestAccount, provider: TestP
         unsolved[0].captcha.solution = [1]
         solved[0].captcha.salt = '0xuser1'
         unsolved[0].captcha.salt = '0xuser2'
-        // TODO add salt to solution https://github.com/prosopo-io/provider/issues/35
         console.log('   - build Merkle tree')
         const tree = new CaptchaMerkleTree()
         const captchas = [solved[0].captcha, unsolved[0].captcha]

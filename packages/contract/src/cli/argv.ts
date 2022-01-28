@@ -25,7 +25,6 @@ const validateAddress = (argv) => {
     return { address }
 }
 
-// TODO use zod to validate CLI arguments
 const validatePayee = (argv) => {
     const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
     const payee = ['Provider', 'Dapp'].indexOf(payeeArg) > -1 ? payeeArg : undefined
@@ -63,7 +62,6 @@ export function processArgs (args, env) {
             'provider_update',
             'Update a Provider',
             (yargs) => yargs
-            // TODO make all of these optional so that user only has to supply minimum information
                 .option('serviceOrigin', { type: 'string', demand: true })
                 .option('fee', { type: 'number', demand: true })
                 .option('payee', { type: 'string', demand: true })
