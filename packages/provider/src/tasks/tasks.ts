@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { hexToU8a } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
-import { AccountId, Hash } from '@polkadot/types/interfaces'
+import { Hash } from '@polkadot/types/interfaces'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { loadJSONFile, shuffleArray } from '../util'
 import {

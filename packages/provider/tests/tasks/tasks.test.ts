@@ -67,7 +67,6 @@ describe('CONTRACT TASKS', () => {
             provider.address = providerAddress
             // Service origins cannot be duplicated
             provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8)
-            console.log('Service origin', provider.serviceOrigin)
             datasetId = await setupProvider(mockEnv, provider as TestProvider)
             const [dappMnemonic, dappAddress] = mockEnv.createAccountAndAddToKeyring()
             dapp = { ...DAPP } as TestDapp
