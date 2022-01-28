@@ -17,7 +17,7 @@ const definitions = {
         min_difficulty: 'u16',
         client_origin: 'Hash',
     },
-    CaptchaProvider: {
+    Provider: {
         // eslint-disable-next-line sort-keys
         status: 'Status',
         staked: 'Balance',
@@ -30,10 +30,11 @@ const definitions = {
             'NotAuthorised',
             'InsufficientBalance',
             'InsufficientAllowance',
-            'CaptchaProviderExists',
-            'CaptchaProviderDoesNotExist',
-            'CaptchaProviderInsufficientFunds',
-            'CaptchaProviderInactive',
+            'ProviderExists',
+            'ProviderDoesNotExist',
+            'ProviderInsufficientFunds',
+            'ProviderInactive',
+            'ProviderServiceOriginUsed',
             'DuplicateCaptchaDataId',
             'DappExists',
             'DappDoesNotExist',

@@ -16,8 +16,6 @@
 
 use ink_lang as ink;
 
-pub use prosopo::ProsopoRef;
-
 #[ink::contract]
 pub mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
@@ -252,6 +250,7 @@ pub mod prosopo {
         //tokenContract: AccountId,
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<GovernanceStatus, BTreeSet<AccountId>>,
+        service_origins: Mapping<Hash, ()>,
         captcha_data: Mapping<Hash, CaptchaData>,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>,
         provider_stake_default: u128,
@@ -404,6 +403,8 @@ pub mod prosopo {
         ProviderInsufficientFunds,
         /// Returned if provider is inactive and trying to use the service
         ProviderInactive,
+        /// Returned if service_origin is already used by another provider
+        ProviderServiceOriginUsed,
         /// Returned if requested captcha data id is unavailable
         DuplicateCaptchaDataId,
         /// Returned if dapp exists when it shouldn't
@@ -461,6 +462,10 @@ pub mod prosopo {
             if self.providers.get(&provider_account).is_some() {
                 return Ok(());
             }
+            // prevent duplicate service origins
+            if self.service_origins.get(&service_origin).is_some() {
+                return Err(Error::ProviderServiceOriginUsed);
+            }
             // add a new provider
             let provider = Provider {
                 status: GovernanceStatus::Deactivated,
@@ -471,6 +476,7 @@ pub mod prosopo {
                 payee,
             };
             self.providers.insert(provider_account, &provider);
+            self.service_origins.insert(service_origin, &());
             let mut provider_accounts_map = self
                 .provider_accounts
                 .get(GovernanceStatus::Deactivated)
@@ -507,6 +513,17 @@ pub mod prosopo {
             }
 
             let existing = self.get_provider_details(provider_account).unwrap();
+
+            // prevent duplicate service origins
+            if existing.service_origin != service_origin {
+                if self.service_origins.get(service_origin).is_some() {
+                    return Err(Error::ProviderServiceOriginUsed);
+                } else {
+                    self.service_origins.remove(existing.service_origin);
+                    self.service_origins.insert(service_origin, &());
+                }
+            }
+
             let old_status = existing.status;
             let mut new_status = existing.status;
             let balance = existing.balance + self.env().transferred_value();
@@ -1317,7 +1334,7 @@ pub mod prosopo {
         use ink_env::hash::HashOutput;
         use ink_lang as ink;
 
-        use crate::prosopo::ProsopoError::ProviderInactive;
+        use crate::prosopo::Error::ProviderInactive;
 
         use super::*;
         use ink_env::test::EmittedEvent;
@@ -1387,12 +1404,90 @@ pub mod prosopo {
                 );
             } else {
                 panic!(
-                    "encountered unexpected event kind: expected a ProviderUpdate event: {:?}",
-                    decoded_event_update
+                    "encountered unexpected event kind" // "encountered unexpected event kind: expected a ProviderUpdate event: {:?}",
+                                                        // decoded_event_update
                 );
             }
         }
 
+        fn generate_provider_data(id: u8, port: &str, fee: u32) -> (AccountId, Hash, u32) {
+            let provider_account = AccountId::from([id; 32]);
+            let service_origin = str_to_hash(format!("https://localhost:{}", port));
+
+            (provider_account, service_origin, fee)
+        }
+
+        /// Test provider register with service_origin error
+        #[ink::test]
+        fn test_provider_register_with_service_origin_error() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let mut contract = Prosopo::default(operator_account);
+
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+
+            contract
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .unwrap();
+
+            // try creating the second provider and make sure the error is correct and that it doesn't exist
+            let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
+            match contract.provider_register(service_origin, fee, Payee::Provider, provider_account)
+            {
+                Result::Err(Error::ProviderServiceOriginUsed) => {
+                    assert!(true);
+                }
+                _ => {
+                    assert!(false);
+                }
+            }
+            assert!(contract.providers.get(&provider_account).is_none());
+            assert!(!contract
+                .provider_accounts
+                .get(GovernanceStatus::Deactivated)
+                .unwrap()
+                .contains(&provider_account));
+        }
+
+        /// Test provider update with service_origin error
+        #[ink::test]
+        fn test_provider_update_with_service_origin_error() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let mut contract = Prosopo::default(operator_account);
+
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+
+            contract
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .unwrap();
+
+            let (provider_account, service_origin, fee) = generate_provider_data(0x3, "2424", 0);
+
+            contract
+                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .unwrap();
+
+            let (_, service_origin, fee) = generate_provider_data(0x3, "4242", 100);
+
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            let balance = 1000;
+            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+
+            // try updating the second provider and make sure the error is correct and that it didn't change
+            match contract.provider_update(service_origin, fee, Payee::Dapp, provider_account) {
+                Result::Err(Error::ProviderServiceOriginUsed) => {
+                    assert!(true);
+                }
+                _ => {
+                    assert!(false);
+                }
+            }
+
+            let provider = contract.providers.get(&provider_account).unwrap();
+            assert_ne!(provider.service_origin, service_origin);
+            assert_ne!(provider.fee, fee);
+            assert_ne!(provider.balance, balance);
+            assert_ne!(provider.status, GovernanceStatus::Active);
+        }
 
         /// Test provider unstake
         #[ink::test]
@@ -1436,8 +1531,8 @@ pub mod prosopo {
                 assert_eq!(value, balance, "encountered invalid ProviderUnstake.value");
             } else {
                 panic!(
-                    "encountered unexpected event kind: expected a ProviderUnstake event {:?}",
-                    decoded_event_unstake
+                    "encountered unexpected event kind" // "encountered unexpected event kind: expected a ProviderUnstake event {:?}",
+                                                        // decoded_event_unstake
                 );
             }
         }
