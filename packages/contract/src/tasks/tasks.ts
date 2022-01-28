@@ -235,12 +235,12 @@ export class Tasks {
 
     /**
      * Build merkle tree and get commitment from contract, returning the tree, commitment, and commitmentId
-     * @param {CaptchaSolution[]} captchas
+     * @param {CaptchaSolution[]} captchaSolutions
      * @returns {Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }>}
      */
-    async buildTreeAndGetCommitment (captchas: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }> {
+    async buildTreeAndGetCommitment (captchaSolutions: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }> {
         const tree = new CaptchaMerkleTree()
-        const solutionsHashed = captchas.map((captcha) => computeCaptchaSolutionHash(captcha))
+        const solutionsHashed = captchaSolutions.map((captcha) => computeCaptchaSolutionHash(captcha))
         tree.build(solutionsHashed)
         const commitmentId = tree.root?.hash
         if (!commitmentId) {

@@ -64,9 +64,10 @@ export function unwrap (item: AnyJson): AnyJson {
  */
 export function handleContractCallOutcomeErrors (response: ContractCallOutcome): ContractCallOutcome {
     const errorKey = 'Err'
-    if (response !== null) {
-        if (typeof (response) === 'object' && Object.prototype.hasOwnProperty.call(response, errorKey)) {
-            throw new Error(response[errorKey] as string)
+    if (response.output) {
+        const humanOutput = response.output?.toHuman()
+        if (humanOutput && typeof (humanOutput) === 'object' && errorKey in humanOutput) {
+            throw new Error(humanOutput[errorKey] as string)
         }
     }
     return response
