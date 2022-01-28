@@ -1,0 +1,304 @@
+{
+  "format": "SelectAll",
+  "captchas": [
+    {
+      "solution": [
+        2,
+        3,
+        4
+      ],
+      "salt": "0x01",
+      "target": "bus",
+      "items": [
+        {
+          "path": "/usr/src/data/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.09.jpeg",
+          "type": "image"
+        }
+      ]
+    },
+    {
+      "salt": "0x02",
+      "target": "train",
+      "items": [
+        {
+          "path": "/usr/src/data/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.09.jpeg",
+          "type": "image"
+        }
+      ]
+    },
+    {
+      "salt": "0x03",
+      "target": "car",
+      "items": [
+        {
+          "path": "/usr/src/data/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.09.jpeg",
+          "type": "image"
+        }
+      ]
+    },
+    {
+      "salt": "0x04",
+      "target": "car",
+      "items": [
+        {
+          "path": "/usr/src/data/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.09.jpeg",
+          "type": "image"
+        }
+      ]
+    },
+    {
+      "salt": "0x05",
+      "target": "car",
+      "items": [
+        {
+          "path": "/usr/src/data/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.09.jpeg",
+          "type": "image"
+        }
+      ]
+    },
+    {
+      "salt": "0x06",
+      "target": "car",
+      "items": [
+        {
+          "path": "/usr/src/data/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.09.jpeg",
+          "type": "image"
+        }
+      ]
+    },
+    {
+      "salt": "0x07",
+      "target": "car",
+      "items": [
+        {
+          "path": "/usr/src/data/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "path": "/usr/src/data/img/01.09.jpeg",
+          "type": "image"
+        }
+      ]
+    }
+  ]
+}
