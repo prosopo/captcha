@@ -23,7 +23,9 @@ import { TypeDef } from '@polkadot/types-create/types'
 import { AnyJson } from '@polkadot/types/types/codec'
 
 export enum GovernanceStatus {
-    Active = 'Active', Inactive = 'Inactive', Deactivated = 'Deactivated'
+    Active = 'Active',
+    Inactive = 'Inactive',
+    Deactivated = 'Deactivated'
 }
 
 export enum Payee {
@@ -37,22 +39,23 @@ export interface Provider {
     balance: Balance,
     fee: u32,
     payee: Payee,
-    serviceOrigin: Hash | string,
-    captchaDatasetId: Hash | string,
+    // rust name style, hence snake case
+    service_origin: Hash | string,
+    captcha_dataset_id: Hash | string,
 }
 
 export interface Dapp {
     status: GovernanceStatus,
     balance: Balance,
     owner: AccountId,
-    minDifficulty: u16,
-    clientOrigin: Hash,
+    min_difficulty: u16,
+    client_origin: Hash,
 }
 
 export interface CaptchaData {
     provider: AccountId,
-    merkleTreeRoot: Hash,
-    captchaType: u16
+    merkle_tree_root: Hash,
+    captcha_type: u16
 }
 
 export interface ContractTxResponse {

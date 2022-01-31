@@ -80,35 +80,34 @@ export async function setupDappUser (env, dappUser: TestAccount, provider: TestP
     console.log('   - getCaptchaWithProof')
     const providerOnChain = await tasks.getProviderDetails(provider.address)
     if (providerOnChain) {
-        const solved = await tasks.getCaptchaWithProof(providerOnChain.captchaDatasetId, true, 1)
-        const unsolved = await tasks.getCaptchaWithProof(providerOnChain.captchaDatasetId, false, 1)
+        const solved = await tasks.getCaptchaWithProof(providerOnChain.captcha_dataset_id, true, 1)
+        const unsolved = await tasks.getCaptchaWithProof(providerOnChain.captcha_dataset_id, false, 1)
         solved[0].captcha.solution = [2, 3, 4]
         unsolved[0].captcha.solution = [1]
         solved[0].captcha.salt = '0xuser1'
         unsolved[0].captcha.salt = '0xuser2'
-        console.log('   - build Merkle tree')
         const tree = new CaptchaMerkleTree()
         const captchas = [solved[0].captcha, unsolved[0].captcha]
         const captchaSols = captchas.map(captcha => convertCaptchaToCaptchaSolution(captcha))
         const captchaSolHashes = captchaSols.map(computeCaptchaSolutionHash)
         tree.build(captchaSolHashes)
         await env.changeSigner(dappUser.mnemonic)
-        const captchaData = await tasks.getCaptchaData(providerOnChain.captchaDatasetId.toString())
-        if (captchaData.merkleTreeRoot.toHuman() !== providerOnChain.captchaDatasetId.toString()) {
-            throw new Error(`Cannot find captcha data id: ${providerOnChain.captchaDatasetId.toString()}`)
+        const captchaData = await tasks.getCaptchaData(providerOnChain.captcha_dataset_id.toString())
+        if (captchaData.merkle_tree_root.toString() !== providerOnChain.captcha_dataset_id.toString()) {
+            throw new Error(`Cannot find captcha data id: ${providerOnChain.captcha_dataset_id.toString()}`)
         }
         const commitmentId = tree.root?.hash
         console.log('   - dappUserCommit')
         if (typeof (commitmentId) === 'string') {
             console.log('   -   Contract Account: ', dapp.contractAccount)
-            console.log('   -   Captcha Dataset ID: ', providerOnChain.captchaDatasetId)
+            console.log('   -   Captcha Dataset ID: ', providerOnChain.captcha_dataset_id)
             console.log('   -   Solution Root Hash: ', commitmentId)
             console.log('   -   Provider Address: ', provider.address)
             console.log('   -   Captchas: ', captchas)
-            await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captchaDatasetId, commitmentId, provider.address)
+            await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id, commitmentId, provider.address)
             const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
         } else {
-            throw new Error('Either DAPP_CONTRACT_ACCOUNT not set or commitmentId not generated')
+            throw new Error('commitmentId missing')
         }
         return commitmentId
     } else {

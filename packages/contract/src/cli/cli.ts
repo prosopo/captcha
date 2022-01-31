@@ -16,7 +16,7 @@
 import express from 'express'
 import { Environment } from '../env'
 import { prosopoMiddleware } from '../api'
-import { handleErrors } from '../errorHandler'
+import { handleErrors } from '../errors'
 import { processArgs } from './argv'
 import { mnemonicValidate } from '@polkadot/util-crypto'
 
