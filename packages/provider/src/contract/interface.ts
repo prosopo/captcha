@@ -16,7 +16,7 @@
 import { Registry } from 'redspot/types/provider'
 import { AbiMessage } from '@polkadot/api-contract/types'
 import Contract from '@redspot/patract/contract'
-import { ContractApiInterface, ContractTxResponse } from '../types'
+import { ContractApiInterface } from '../types'
 import { ERRORS } from '../errors'
 import { Environment } from '../env'
 import { AbiMetadata } from 'redspot/types'
