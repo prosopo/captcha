@@ -63,6 +63,15 @@ export type CaptchaSolution = {
     solution: number[]
 }
 
+export type CaptchaConfig = {
+    solved: {
+        count: number
+    },
+    unsolved: {
+        count: number
+    }
+}
+
 export const CaptchaSchema = z.object({
     captchaId: z.union([z.string(), z.undefined()]),
     salt: z.string(),

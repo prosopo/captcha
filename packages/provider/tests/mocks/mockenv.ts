@@ -51,6 +51,14 @@ export class MockEnvironment implements ProsopoEnvironment {
                     }
                 }
             },
+            captchas: {
+                solved: {
+                    count: 1
+                },
+                unsolved: {
+                    count: 1
+                }
+            },
             database: {
                 development: { type: 'mockdb', endpoint: '', dbname: '' }
             }

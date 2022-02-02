@@ -28,6 +28,9 @@ export const ERRORS = {
     CONFIG: {
         UNKNOWN_ENVIRONMENT: {
             message: 'Unknown environment requested'
+        },
+        INVALID_CAPTCHA_NUMBER: {
+            message: 'Please configure captchas configurations correctly'
         }
     },
     DATABASE: {
