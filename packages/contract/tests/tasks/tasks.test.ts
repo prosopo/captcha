@@ -651,9 +651,11 @@ describe('CONTRACT TASKS', () => {
     it('Get random captchas and request hash', async () => {
         await mockEnv.changeSigner(dappUser.mnemonic)
         const dappTasks = new Tasks(mockEnv)
+        const solvedCaptchaCount = mockEnv.config.captchas.solved.count
+        const unsolvedCaptchaCount = mockEnv.config.captchas.unsolved.count
         const { captchas, requestHash } =
             await dappTasks.getRandomCaptchasAndRequestHash(datasetId as string, mockEnv.signer!.address)
-        expect(captchas.length).to.equal(2)
+        expect(captchas.length).to.equal(solvedCaptchaCount + unsolvedCaptchaCount)
         const pendingRequest = mockEnv.db?.getDappUserPending(requestHash)
         return expect(pendingRequest).to.not.be.null
     })

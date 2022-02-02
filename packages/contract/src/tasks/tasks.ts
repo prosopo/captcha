@@ -28,7 +28,7 @@ import {
     parseCaptchaSolutions
 } from '../captcha'
 import {
-    Captcha, CaptchaData,
+    Captcha, CaptchaConfig, CaptchaData,
     CaptchaSolution,
     CaptchaSolutionCommitment,
     CaptchaSolutionResponse,
@@ -38,6 +38,7 @@ import {
     Dapp,
     Database, DatasetRecord,
     GovernanceStatus, Payee,
+    ProsopoEnvironment,
     Provider
 } from '../types'
 import { ProsopoContractApi } from '../contract/interface'
@@ -53,9 +54,12 @@ export class Tasks {
 
     db: Database
 
-    constructor (env) {
+    captchaConfig: CaptchaConfig
+
+    constructor (env: ProsopoEnvironment) {
         this.contractApi = new ProsopoContractApi(env)
-        this.db = env.db
+        this.db = env.db as Database
+        this.captchaConfig = env.config.captchas
     }
 
     // Contract tasks
@@ -272,9 +276,20 @@ export class Tasks {
         if (!dataset) {
             throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED.message))
         }
-        const solved = await this.getCaptchaWithProof(datasetId, true, 1)
-        const unsolved = await this.getCaptchaWithProof(datasetId, false, 1)
-        const captchas: CaptchaWithProof[] = shuffleArray([solved[0], unsolved[0]])
+
+        const unsolvedCount: number = Math.abs(Math.trunc(this.captchaConfig.unsolved.count))
+        const solvedCount: number = Math.abs(Math.trunc(this.captchaConfig.solved.count))
+
+        if (!solvedCount) {
+            throw (new Error(ERRORS.CONFIG.INVALID_CAPTCHA_NUMBER.message))
+        }
+
+        const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount)
+        let unsolved:CaptchaWithProof[] = []
+        if (unsolvedCount) {
+            unsolved = await this.getCaptchaWithProof(datasetId, false, unsolvedCount)
+        }
+        const captchas: CaptchaWithProof[] = shuffleArray([...solved, ...unsolved])
         const salt = randomAsHex()
 
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)

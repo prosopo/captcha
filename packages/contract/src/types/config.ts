@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+
 export interface ProsopoConfig {
     defaultEnvironment: string
     networks: {
@@ -24,6 +25,14 @@ export interface ProsopoConfig {
             }
         }
     },
+    captchas: {
+        solved: {
+            count: number
+        },
+        unsolved: {
+            count: number
+        }
+    }
     database: {
         development: {
             type: string,
