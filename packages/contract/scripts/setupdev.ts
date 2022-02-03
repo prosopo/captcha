@@ -19,24 +19,26 @@ import BN from 'bn.js'
 import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, setupProvider } from '../tests/mocks/setup'
 import { Payee } from '../src/types'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { TestAccount, TestDapp, TestProvider } from '../tests/mocks/accounts'
 
 require('dotenv').config()
 
 const ENVVARS = ['PROVIDER_MNEMONIC', 'PROVIDER_ADDRESS', 'DAPP_CONTRACT_ADDRESS']
 
-export const PROVIDER = {
+// Some default accounts that are setup in the contract for development purposes
+
+export const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: Payee.Provider,
     stake: 10,
     datasetFile: '/usr/src/data/captchas.json',
-    datasetHash: undefined,
     mnemonic: process.env.PROVIDER_MNEMONIC || '',
     address: process.env.PROVIDER_ADDRESS || '',
     captchaDatasetId: ''
 }
 
-export const DAPP = {
+export const DAPP: TestDapp = {
     serviceOrigin: 'http://localhost:9393',
     mnemonic: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
@@ -44,7 +46,7 @@ export const DAPP = {
     fundAmount: 100
 }
 
-export const DAPP_USER = {
+export const DAPP_USER: TestAccount = {
     mnemonic: '//Charlie',
     address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y'
 }
@@ -97,6 +99,5 @@ function processArgs (env) {
 }
 
 run().catch((err) => {
-    console.log(err)
-    throw new Error('Setup dev error')
+    throw new Error(`Setup dev error: ${err}`)
 })

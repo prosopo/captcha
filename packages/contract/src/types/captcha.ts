@@ -47,6 +47,10 @@ export type DatasetWithIds = {
     tree?: string[][]
 }
 
+export interface DatasetWithIdsAndTree extends DatasetWithIds {
+    tree: string[][]
+}
+
 export enum CaptchaStatus { Pending = 'Pending', Approved = 'Approved', Disapproved = 'Disapproved' }
 
 export interface CaptchaSolutionCommitment {
@@ -74,6 +78,12 @@ export type CaptchaConfig = {
 
 export const CaptchaSchema = z.object({
     captchaId: z.union([z.string(), z.undefined()]),
+    salt: z.string(),
+    solution: z.number().array().optional()
+})
+
+export const CaptchaWithIdSchema = z.object({
+    captchaId: z.string(),
     salt: z.string(),
     solution: z.number().array().optional()
 })
@@ -108,6 +118,8 @@ export const SelectAllSolvedCaptchaSchema = CaptchaWithIdAndSolutionSchema.exten
 
 export const CaptchasSchema = z.array(SelectAllCaptchaSchema)
 
+export const CaptchasWithIdSchema = z.array(CaptchaWithIdSchema)
+
 export const CaptchaSolution = z.object({
     captchaId: z.string(),
     solution: z.number().array(),
@@ -123,4 +135,15 @@ export const DatasetSchema = z.object({
     captchas: CaptchasSchema,
     format: z.nativeEnum(CaptchaTypes),
     tree: z.array(z.array(z.string())).optional()
+})
+
+export const DatasetWithIdsSchema = z.object({
+    datasetId: z.string(),
+    captchas: CaptchasWithIdSchema,
+    format: z.nativeEnum(CaptchaTypes),
+    tree: z.array(z.array(z.string())).optional()
+})
+
+export const DatasetWithIdsAndTreeSchema = DatasetWithIdsSchema.extend({
+    tree: z.array(z.array(z.string()))
 })

@@ -46,7 +46,7 @@ export interface Database {
 
     storeDataset(dataset: Dataset): Promise<void>;
 
-    getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined>;
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>;
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>;
 

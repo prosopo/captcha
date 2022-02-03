@@ -62,7 +62,7 @@ export class Tasks {
         this.captchaConfig = env.config.captchas
     }
 
-    // Contract tasks
+    // Contract transactions potentially involving database writes
 
     async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerRegister', [serviceOrigin, fee, payee, address])
@@ -96,11 +96,11 @@ export class Tasks {
         return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
     }
 
-    async dappFund (contractAccount: string, value: number) {
+    async dappFund (contractAccount: string, value: number): Promise<AnyJson> {
         return await this.contractApi.contractCall('dappFund', [contractAccount], value)
     }
 
-    async dappCancel (contractAccount: string) {
+    async dappCancel (contractAccount: string): Promise<AnyJson> {
         return await this.contractApi.contractCall('dappCancel', [contractAccount])
     }
 
@@ -108,13 +108,15 @@ export class Tasks {
         return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress])
     }
 
-    async providerApprove (captchaSolutionCommitmentId) {
+    async providerApprove (captchaSolutionCommitmentId): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId])
     }
 
-    async providerDisapprove (captchaSolutionCommitmentId) {
+    async providerDisapprove (captchaSolutionCommitmentId): Promise<AnyJson> {
         return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId])
     }
+
+    // Contract queries
 
     async getRandomProvider (): Promise<Provider> {
         return await this.contractApi.contractCall('getRandomActiveProvider', []) as unknown as Provider
@@ -152,7 +154,7 @@ export class Tasks {
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptchaWithProof (datasetId: Hash | string | Uint8Array, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
+    async getCaptchaWithProof (datasetId: Hash | string, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
         const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size)
         if (captchaDocs) {
             const captchas: CaptchaWithProof[] = []

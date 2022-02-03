@@ -13,9 +13,17 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Database, DatasetRecord, DatasetWithIds, Tables } from '../../src/types'
-import { Captcha, CaptchaSolution, Dataset } from '../../src/types/captcha'
+import {
+    Database,
+    DatasetRecord,
+    DatasetWithIdsAndTreeSchema,
+    Tables,
+    Captcha,
+    CaptchaSolution,
+    Dataset
+} from '../../src/types'
 import { Hash } from '@polkadot/types/interfaces'
+import { ERRORS } from '../../src/errors'
 
 const DEFAULT_ENDPOINT = 'test'
 
@@ -254,12 +262,17 @@ export class ProsopoDatabase implements mockDatabase {
     }
 
     storeDataset (dataset: Dataset): Promise<void> {
-        this.tables.dataset![dataset.datasetId!.toString()] = {
-            datasetId: dataset.datasetId,
-            format: dataset.format,
-            tree: dataset.tree
+        try {
+            const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset)
+            this.tables.dataset![parsedDataset.datasetId.toString()] = {
+                datasetId: parsedDataset.datasetId,
+                format: parsedDataset.format,
+                tree: parsedDataset.tree
+            }
+            return Promise.resolve(undefined)
+        } catch (err) {
+            throw new Error(`${ERRORS.DATABASE.DATASET_LOAD_FAILED.message}:\n${err}`)
         }
-        return Promise.resolve(undefined)
     }
 
     updateCaptcha (captcha: Captcha, datasetId: string): Promise<void> {
@@ -269,7 +282,7 @@ export class ProsopoDatabase implements mockDatabase {
     getRandomCaptcha (solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
         const collection = solved ? this.solved : this.unsolved
         if (size && size > collection.length) {
-            throw (new Error('Not Implmented'))
+            throw (new Error('Not Implemented'))
         }
         return Promise.resolve([{ ...collection[0] }])
     }
