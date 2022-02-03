@@ -20,8 +20,9 @@ import { Network } from 'redspot/types'
 import { Signer } from 'redspot/provider'
 import Contract from '@redspot/patract/contract'
 import { strict as assert } from 'assert'
+import { ZodError } from 'zod'
 import { ERRORS } from './errors'
-import { Database, ProsopoConfig, ProsopoEnvironment } from './types'
+import { Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment } from './types'
 import { contractDefinitions } from './contract/definitions'
 
 require('dotenv').config()
@@ -134,8 +135,17 @@ export class Environment implements ProsopoEnvironment {
     }
 
     private static getConfig (): ProsopoConfig {
-        const filePath = Environment.getConfigPath()
-        return Environment.importCsjOrEsModule(filePath)
+        try {
+            const filePath = Environment.getConfigPath()
+            const config = Environment.importCsjOrEsModule(filePath)
+            return ProsopoConfigSchema.parse(config)
+        } catch (error) {
+            if (error instanceof ZodError) {
+                const { path, message } = error.issues[0]
+                throw new Error(`${path.join('.')} ${message}`)
+            }
+            throw new Error(ERRORS.CONFIG.CONFIGURATIONS_LOAD_FAILED.message)
+        }
     }
 
     private static importCsjOrEsModule (filePath: string): any {
