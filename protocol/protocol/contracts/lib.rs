@@ -377,15 +377,15 @@ pub mod prosopo {
     pub enum Error {
         /// Returned if calling account is not authorised to perform action
         NotAuthorised,
-        /// Returned if not enough balance to fulfill a request is available.
-        InsufficientBalance,
-        /// Returned if not enough allowance to fulfill a request is available.
-        InsufficientAllowance,
+        /// Returned if not enough contract balance to fulfill a request is available.
+        ContractInsufficientFunds,
+        /// Returned when the contract to address transfer fails
+        ContractTransferFailed,
         /// Returned if provider exists when it shouldn't
         ProviderExists,
         /// Returned if provider does not exist when it should
         ProviderDoesNotExist,
-        /// Returned if provider has no funds
+        /// Returned if provider has insufficient funds to operate
         ProviderInsufficientFunds,
         /// Returned if provider is inactive and trying to use the service
         ProviderInactive,
@@ -399,7 +399,7 @@ pub mod prosopo {
         DappDoesNotExist,
         /// Returned if dapp is inactive and trying to use the service
         DappInactive,
-        /// Returned if dapp has no funds
+        /// Returned if dapp has insufficient funds to operate
         DappInsufficientFunds,
         /// Returned if captcha data does not exist
         CaptchaDataDoesNotExist,
@@ -869,6 +869,7 @@ pub mod prosopo {
         pub fn provider_approve(
             &mut self,
             captcha_solution_commitment_id: Hash,
+            transaction_fee: Balance,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider(caller)?;
@@ -897,6 +898,7 @@ pub mod prosopo {
                     .insert(captcha_solution_commitment_id, &commitment_mut);
                 self.dapp_users.insert(&commitment.account, &user);
                 self.pay_fee(&caller, &commitment.contract)?;
+                self.refund_transaction_fee(commitment, transaction_fee)?;
                 self.env().emit_event(ProviderApprove {
                     captcha_solution_commitment_id,
                 });
@@ -958,17 +960,48 @@ pub mod prosopo {
 
                 let fee = Balance::from(provider.fee);
                 if provider.payee == Payee::Provider {
-                    // add the fee to the provider's balance
-                    provider.balance = provider.balance + fee;
-                    dapp.balance = dapp.balance - fee;
+                    provider.balance += fee;
+                    dapp.balance -= fee;
                 }
                 if provider.payee == Payee::Dapp {
-                    // take the fee from the provider's balance
-                    provider.balance = provider.balance - fee;
-                    dapp.balance = dapp.balance + fee;
+                    provider.balance -= fee;
+                    dapp.balance += fee;
                 }
                 self.providers.insert(*provider_account, &provider);
                 self.dapps.insert(*dapp_account, &dapp);
+            }
+            Ok(())
+        }
+
+        /// Transfer a refund fee from payer account to user account
+        /// Payee == Provider => Dapp pays solve fee and Dapp pays Dapp User tx fee
+        /// Payee == Dapp => Provider pays solve fee and Provider pays Dapp Use
+        fn refund_transaction_fee(
+            &mut self,
+            commitment: CaptchaSolutionCommitment,
+            amount: Balance,
+        ) -> Result<(), Error> {
+            if self.env().balance() < amount {
+                return Err(Error::ContractInsufficientFunds);
+            }
+
+            let mut provider = self.providers.get(&commitment.provider).unwrap();
+            let mut dapp = self.dapps.get(&commitment.contract).unwrap();
+            if provider.payee == Payee::Provider {
+                if dapp.balance < amount {
+                    return Err(Error::DappInsufficientFunds);
+                }
+                dapp.balance -= amount;
+                self.dapps.insert(commitment.contract, &dapp);
+            } else {
+                if provider.balance < amount {
+                    return Err(Error::ProviderInsufficientFunds);
+                }
+                provider.balance -= amount;
+                self.providers.insert(commitment.provider, &provider);
+            }
+            if self.env().transfer(commitment.account, amount).is_err() {
+                return Err(Error::ContractTransferFailed);
             }
             Ok(())
         }
