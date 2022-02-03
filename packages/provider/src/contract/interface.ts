@@ -73,18 +73,20 @@ export class ProsopoContractApi implements ContractApiInterface {
         } else {
             response = await signedContract.tx[contractMethodName](...encodedArgs)
         }
-        const property = 'events'
+        const eventsProperty = 'events'
+
+        if (response.result.status.isRetracted) {
+            throw (response.status.asRetracted)
+        }
+        if (response.result.status.isInvalid) {
+            throw (response.status.asInvalid)
+        }
 
         if (response.result.isInBlock || response.result.isFinalized) {
-            if (response.result.status.isRetracted) {
-                throw (response.status.asRetracted)
-            }
-            if (response.result.status.isInvalid) {
-                throw (response.status.asInvalid)
-            }
             const eventName = getEventNameFromMethodName(contractMethodName)
-            if (response[property]) {
-                return response[property].filter((x) => x.name === eventName)
+            // Most contract transactions should return an event
+            if (response[eventsProperty]) {
+                return response[eventsProperty].filter((x) => x.name === eventName)
             }
         }
         return []
@@ -107,7 +109,7 @@ export class ProsopoContractApi implements ContractApiInterface {
                 return
             }
         }
-        throw (new Error(response.result.asErr.asModule.message.unwrap().toString()))
+        throw new Error(response.result.asErr.asModule.message.unwrap().toString())
     }
 
     /** Get the contract method from the ABI
@@ -118,7 +120,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         if (methodObj) {
             return methodObj
         }
-        throw (ERRORS.CONTRACT.INVALID_METHOD.message)
+        throw new Error(ERRORS.CONTRACT.INVALID_METHOD.message)
     }
 
     /** Get the storage key from the ABI given a storage name
@@ -146,7 +148,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         if (storageEntry) {
             return storageEntry.layout.cell.key
         }
-        throw (ERRORS.CONTRACT.INVALID_STORAGE_NAME.message)
+        throw new Error(ERRORS.CONTRACT.INVALID_STORAGE_NAME.message)
     }
 
     /**

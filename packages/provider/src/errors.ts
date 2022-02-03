@@ -37,6 +37,9 @@ export const ERRORS = {
         }
     },
     DATABASE: {
+        CONNECT_ERROR: {
+            message: 'Failed to connect'
+        },
         DATABASE_IMPORT_FAILED: {
             message: 'Failed to import database engine'
         },
@@ -60,6 +63,9 @@ export const ERRORS = {
         },
         PENDING_RECORD_NOT_FOUND: {
             message: 'No pending record found'
+        },
+        INVALID_HASH: {
+            message: 'Invalid hash'
         }
     },
     API: {

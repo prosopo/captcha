@@ -48,10 +48,10 @@ export function processArgs (args, env) {
             'provider_register',
             'Register a Provider',
             (yargs) => yargs
-                .option('serviceOrigin', { type: 'string', demand: true })
-                .option('fee', { type: 'number', demand: true })
-                .option('payee', { type: 'string', demand: true })
-                .option('address', { type: 'string', demand: true }),
+                .option('serviceOrigin', { type: 'string', demand: true, desc: 'The provider service origin (URI)' })
+                .option('fee', { type: 'number', demand: true, desc: 'The fee to pay per solved captcha' })
+                .option('payee', { type: 'string', demand: true, desc: 'The person who receives the fee (`Provider` or `Dapp`)' })
+                .option('address', { type: 'string', demand: true, desc: 'The AccountId of the Provider' }),
             async (argv) => {
                 const result = await tasks.providerRegister(argv.serviceOrigin as string, argv.fee as number, argv.payee as Payee, argv.address as string)
                 console.log(JSON.stringify(result, null, 2))
@@ -62,11 +62,11 @@ export function processArgs (args, env) {
             'provider_update',
             'Update a Provider',
             (yargs) => yargs
-                .option('serviceOrigin', { type: 'string', demand: true })
-                .option('fee', { type: 'number', demand: true })
-                .option('payee', { type: 'string', demand: true })
-                .option('address', { type: 'string', demand: true })
-                .option('value', { type: 'number', demand: false }),
+                .option('serviceOrigin', { type: 'string', demand: true, desc: 'The provider service origin (URI)' })
+                .option('fee', { type: 'number', demand: true, desc: 'The fee to pay per solved captcha' })
+                .option('payee', { type: 'string', demand: true, desc: 'The person who receives the fee (`Provider` or `Dapp`)' })
+                .option('address', { type: 'string', demand: true, desc: 'The AccountId of the Provider' })
+                .option('value', { type: 'number', demand: false, desc: 'The value to stake in the contract' }),
             async (argv) => {
                 const result = await tasks.providerUpdate(argv.serviceOrigin as string, argv.fee as number, argv.payee as Payee, argv.address as string, argv.value as number)
                 console.log(JSON.stringify(result, null, 2))
@@ -77,7 +77,7 @@ export function processArgs (args, env) {
             'provider_deregister',
             'Deregister a Provider',
             (yargs) => yargs
-                .option('address', { type: 'string', demand: true }),
+                .option('address', { type: 'string', demand: true, desc: 'The AccountId of the Provider' }),
             async (argv) => {
                 try {
                     const result = await tasks.providerDeregister(argv.address as string)
@@ -92,7 +92,7 @@ export function processArgs (args, env) {
             'provider_unstake',
             'Unstake funds as a Provider',
             (yargs) => yargs
-                .option('value', { type: 'number', demand: true }),
+                .option('value', { type: 'number', demand: true, desc: 'The value to unstake from the contract' }),
             async (argv) => {
                 try {
                     const result = await tasks.providerUnstake(argv.value as number)
@@ -107,7 +107,7 @@ export function processArgs (args, env) {
             'provider_add_data_set',
             'Add a dataset as a Provider',
             (yargs) => yargs
-                .option('file', { type: 'string', demand: true }),
+                .option('file', { type: 'string', demand: true, desc: 'The file path of a JSON dataset file' }),
             async (argv) => {
                 try {
                     const result = await tasks.providerAddDataset(argv.file as string)
@@ -120,10 +120,8 @@ export function processArgs (args, env) {
         )
         .command(
             'provider_accounts',
-            'List provider accounts',
-            (yargs) => yargs
-                .option('providerId', { type: 'string', demand: false })
-                .option('status', { type: 'string', demand: false }),
+            'List all provider accounts',
+            (yargs) => yargs,
             async () => {
                 try {
                     const result = await tasks.getProviderAccounts()
@@ -133,6 +131,50 @@ export function processArgs (args, env) {
                 }
             },
             []
+        )
+        .command(
+            'dapp_accounts',
+            'List all dapp accounts',
+            (yargs) => yargs,
+            async () => {
+                try {
+                    const result = await tasks.getDappAccounts()
+                    console.log(JSON.stringify(result, null, 2))
+                } catch (err) {
+                    console.log(err)
+                }
+            },
+            []
+        )
+        .command(
+            'provider_details',
+            'List details of a single Provider',
+            (yargs) => yargs
+                .option('address', { type: 'string', demand: true, desc: 'The AccountId of the Provider' }),
+            async (argv) => {
+                try {
+                    const result = await tasks.getProviderDetails(argv.address as string)
+                    console.log(JSON.stringify(result, null, 2))
+                } catch (err) {
+                    console.log(err)
+                }
+            },
+            [validateAddress]
+        )
+        .command(
+            'dapp_details',
+            'List details of a single Dapp',
+            (yargs) => yargs
+                .option('address', { type: 'string', demand: true, desc: 'The AccountId of the Dapp' }),
+            async (argv) => {
+                try {
+                    const result = await tasks.getDappDetails(argv.address as string)
+                    console.log(JSON.stringify(result, null, 2))
+                } catch (err) {
+                    console.log(err)
+                }
+            },
+            [validateAddress]
         )
         .argv
 }
