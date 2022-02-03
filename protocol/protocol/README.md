@@ -1,7 +1,4 @@
-
-
-# Prosopo
-![Coverage Badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/forgetso/4e3350c273f5173afc45b6ce74a97cb2/raw/protocol__heads_main.json)
+# Prosopo Protocol
 
 Prosopo Protocol smart contract repository.
 
@@ -49,10 +46,17 @@ cargo +nightly contract build
 
 ## Test
 
-There are two sets of unit tests. Some use the standard test engine but most use the experimental engine.
+There are two sets of unit tests. Some use the standard test engine but most use the experimental engine. You can run the tests using the following commmands.
 
 ```bash
 cargo +nightly tarpaulin --no-default-features --features std --verbose -- --nocapture
 cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture
 ```
 
+## Deploy
+
+The protocol repository is implemented as a [redspot](https://github.com/patractlabs/redspot) project. You can install dependencies and then run a script to deploy the contract.
+
+```bash
+yarn && yarn deploy
+```

@@ -26,38 +26,3 @@ jobs:
           rustup update nightly
           rustup target add wasm32-unknown-unknown --toolchain nightly
           cargo install cargo-tarpaulin
-      - name: Get Coverage for badge
-        run: |
-          cd contracts
-          SUMMARY="$(cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture | tail -1)"
-          echo "COVERAGE=$(echo ${SUMMARY:0:5})" >> $GITHUB_ENV
-          REF=${{ github.ref }}
-          echo "github.ref: $REF"
-          # split by /
-          IFS='/' read -ra PATHS <<< "$REF"
-          BRANCH_NAME="${PATHS[1]}_${PATHS[2]}"
-          echo $BRANCH_NAME
-          echo "BRANCH=$(echo ${BRANCH_NAME})" >> $GITHUB_ENV
-      - name: Create the Badge
-        uses: schneegans/dynamic-badges-action@v1.0.0
-        with:
-          auth: ${{ secrets.GIST_SECRET }}
-          gistID: 4e3350c273f5173afc45b6ce74a97cb2
-          filename: protocol__${{ env.BRANCH }}.json
-          label: Test Coverage
-          message: ${{ env.COVERAGE }}
-          color: green
-          namedLogo: jest
-
-      - name: Update the Badge URL in the pull request body
-        run: |
-          BODY=$(curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }} | jq .body | sed -En "s/protocol__pull_##.json/protocol__pull_${{ github.event.pull_request.number }}.json/p")
-          if [[ ${#BODY} != 0 ]];
-          then
-            JSON="{\"body\":$(echo $BODY | jq -sR .)}"
-            curl -X PATCH \
-              -H "Authorization: token ${{ secrets.GIST_SECRET }}" \
-              -H "Content-Type: application/json" \
-              -d $JSON \
-              https://api.github.com/repos/prosopo-io/protocol/pulls/${{ github.event.pull_request.number }};
-          fi;

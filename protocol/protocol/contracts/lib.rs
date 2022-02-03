@@ -1,16 +1,18 @@
-// Copyright 2021 Prosopo (UK) Ltd.
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of provider <https://github.com/prosopo-io/provider>.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// provider is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-//     http://www.apache.org/licenses/LICENSE-2.0
+// provider is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// You should have received a copy of the GNU General Public License
+// along with provider.  If not, see <http://www.gnu.org/licenses/>.
 #![feature(derive_default_enum)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -225,20 +227,6 @@ pub mod prosopo {
         // updated: Timestamp,
         //last_correct_captcha: Timestamp,
         //last_correct_captcha_dapp_id: AccountId,
-    }
-
-    pub enum DisputeType {
-        BadCaptchaData,
-        UnresolvedCaptchaSolution,
-        BotsFromProvider,
-        DappContractRegisteredByUnknown,
-    }
-
-    pub struct Dispute {
-        account: AccountId,
-        status: CaptchaStatus,
-        dispute_type: DisputeType,
-        proof: Hash,
     }
 
     // Contract storage
@@ -536,7 +524,7 @@ pub mod prosopo {
                 balance,
                 fee,
                 service_origin,
-                captcha_dataset_id: existing.captcha_dataset_id, //TODO should this be update-able here??
+                captcha_dataset_id: existing.captcha_dataset_id, //TODO should this be update-able here?? No, because inactive providers cannot add datasets
                 payee,
             };
 
@@ -619,7 +607,7 @@ pub mod prosopo {
                 let balance = provider.balance;
                 if balance > 0 {
                     self.env().transfer(caller, balance).ok();
-                    self.provider_deregister(caller);
+                    self.provider_deregister(caller)?;
                     self.env().emit_event(ProviderUnstake {
                         account: caller,
                         value: balance,
@@ -1344,6 +1332,14 @@ pub mod prosopo {
 
         type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
 
+        /// Provider Register Helper
+        fn generate_provider_data(id: u8, port: &str, fee: u32) -> (AccountId, Hash, u32) {
+            let provider_account = AccountId::from([id; 32]);
+            let service_origin = str_to_hash(format!("https://localhost:{}", port));
+
+            (provider_account, service_origin, fee)
+        }
+
         /// Test add operator
         #[ink::test]
         fn test_add_operator() {
@@ -1361,9 +1357,7 @@ pub mod prosopo {
         fn test_provider_register_and_update() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
-            let provider_account = AccountId::from([0x2; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "2424", 0);
             contract
                 .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .unwrap();
@@ -1410,13 +1404,6 @@ pub mod prosopo {
             } else {
                 panic!("encountered unexpected event kind: expected a ProviderUpdate event");
             }
-        }
-
-        fn generate_provider_data(id: u8, port: &str, fee: u32) -> (AccountId, Hash, u32) {
-            let provider_account = AccountId::from([id; 32]);
-            let service_origin = str_to_hash(format!("https://localhost:{}", port));
-
-            (provider_account, service_origin, fee)
         }
 
         /// Test provider register with service_origin error
@@ -1496,9 +1483,7 @@ pub mod prosopo {
         fn test_provider_unstake() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
-            let provider_account = AccountId::from([0x02; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
             contract
@@ -1542,9 +1527,7 @@ pub mod prosopo {
         fn test_provider_add_dataset() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
-            let provider_account = AccountId::from([0x02; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
             contract
@@ -1592,9 +1575,7 @@ pub mod prosopo {
         fn test_provider_cannot_add_dataset_if_inactive() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
-            let provider_account = AccountId::from([0x02; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
             contract
@@ -1850,12 +1831,10 @@ pub mod prosopo {
             let mut contract = Prosopo::default(operator_account);
 
             // Register the provider
-            let provider_account = AccountId::from([0x2; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 1;
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             contract
                 .provider_register(service_origin, fee, Payee::Provider, provider_account)
-                .ok();
+                .unwrap();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
@@ -1863,6 +1842,8 @@ pub mod prosopo {
             let root = str_to_hash("merkle tree root".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+
+            let provider = contract.providers.get(&provider_account).unwrap();
             // can only add data set after staking
             contract.provider_add_dataset(root).ok();
 
@@ -1926,13 +1907,10 @@ pub mod prosopo {
             let mut contract = Prosopo::default(operator_account);
 
             // Register the provider
-            let provider_account = AccountId::from([0x2; 32]);
-            let provider_account = AccountId::from([0x2; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             contract
                 .provider_register(service_origin, fee, Payee::Provider, provider_account)
-                .ok();
+                .unwrap();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
@@ -1983,12 +1961,10 @@ pub mod prosopo {
             let mut contract = Prosopo::default(operator_account);
 
             // Register the provider
-            let provider_account = AccountId::from([0x2; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 1;
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             contract
                 .provider_register(service_origin, fee, Payee::Provider, provider_account)
-                .ok();
+                .unwrap();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
@@ -2059,12 +2035,10 @@ pub mod prosopo {
             let mut contract = Prosopo::default(operator_account);
 
             // Register the provider
-            let provider_account = AccountId::from([0x2; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
-            let fee: u32 = 0;
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             contract
                 .provider_register(service_origin, fee, Payee::Provider, provider_account)
-                .ok();
+                .unwrap();
 
             // Call from the provider account to add data and stake tokens
             let balance = 100;
