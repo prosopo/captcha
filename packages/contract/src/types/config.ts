@@ -14,31 +14,36 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 
-export interface ProsopoConfig {
-    defaultEnvironment: string
-    networks: {
-        development: {
-            endpoint: string,
-            contract: {
-                address: string,
-                deployer: { address: string }
-            }
-        }
-    },
-    captchas: {
-        solved: {
-            count: number
-        },
-        unsolved: {
-            count: number
-        }
-    }
-    database: {
-        development: {
-            type: string,
-            endpoint: string
-            dbname: string
-        }
-    },
+import { z } from 'zod'
 
-}
+export const ProsopoConfigSchema = z.object({
+    defaultEnvironment: z.string(),
+    networks: z.object({
+        development: z.object({
+            endpoint: z.string().url(),
+            contract: z.object({
+                address: z.string(),
+                deployer: z.object({
+                    address: z.string()
+                })
+            })
+        })
+    }),
+    captchas: z.object({
+        solved: z.object({
+            count: z.number().positive()
+        }),
+        unsolved: z.object({
+            count: z.number().nonnegative()
+        })
+    }),
+    database: z.object({
+        development: z.object({
+            type: z.string(),
+            endpoint: z.string().url(),
+            dbname: z.string()
+        })
+    })
+})
+
+export type ProsopoConfig = z.infer<typeof ProsopoConfigSchema>

@@ -31,6 +31,9 @@ export const ERRORS = {
         },
         INVALID_CAPTCHA_NUMBER: {
             message: 'Please configure captchas configurations correctly'
+        },
+        CONFIGURATIONS_LOAD_FAILED: {
+            message: 'Prosopo configurations load failed'
         }
     },
     DATABASE: {
