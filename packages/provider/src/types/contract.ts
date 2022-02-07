@@ -44,6 +44,11 @@ export interface Provider {
     captcha_dataset_id: Hash | string,
 }
 
+export interface RandomProvider {
+    provider: Provider,
+    block_number: string,
+}
+
 export interface Dapp {
     status: GovernanceStatus,
     balance: Balance,
@@ -81,7 +86,7 @@ export interface ContractTxResponse {
 export interface ContractApiInterface {
     env: Environment
 
-    contractCall<T>(contractFunction: string, args: T[], value?: number): Promise<AnyJson>
+    contractCall<T>(contractFunction: string, args: T[], value?: number, atBlock?: string | Uint8Array): Promise<AnyJson>
 
     contractTx<T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | undefined): Promise<AnyJson>
 

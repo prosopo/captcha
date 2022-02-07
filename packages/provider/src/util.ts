@@ -65,3 +65,36 @@ export async function imageHash (path: string) {
     const fileBuffer = await readFile(path)
     return hexHash(fileBuffer)
 }
+
+type PromiseQueueRes<T> = {
+    data?: T;
+    error?: Error;
+}[];
+
+/**
+ * Executes promises in order
+ * @param array - array of promises
+ * @returns PromiseQueueRes\<T\>
+ */
+export async function promiseQueue<T>(
+    array: (() => Promise<T>)[]
+): Promise<PromiseQueueRes<T>> {
+    const ret: PromiseQueueRes<T> = [];
+
+    await [...array, () => Promise.resolve(undefined)].reduce((promise, curr, i) => {
+        return promise
+            .then((res) => {
+                // first iteration has no res (initial reduce result)
+                if (res) {
+                    ret.push({ data: res });
+                }
+                return curr();
+            })
+            .catch((err) => {
+                ret.push({ data: err }); 
+                return curr();
+            });
+    }, Promise.resolve<T | undefined>(undefined));
+
+    return ret;
+}
