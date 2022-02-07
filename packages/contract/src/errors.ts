@@ -126,6 +126,9 @@ export const ERRORS = {
         },
         HASH_ERROR: {
             message: 'error hashing dataset'
+        },
+        INVALID_DATASET_ID: {
+            message: 'invalid dataset id'
         }
     },
     CAPTCHA: {

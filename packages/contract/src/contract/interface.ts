@@ -37,7 +37,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {number} value    A value to send with the transaction, e.g. a stake
      * @return JSON result containing the contract event
      */
-    async contractCall<T> (contractMethodName: string, args: T[], value?: number): Promise<AnyJson> {
+    async contractCall<T> (contractMethodName: string, args: T[], value?: number, atBlock?: string | Uint8Array): Promise<AnyJson> {
         await this.env.isReady()
         if (!this.env.contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
@@ -50,7 +50,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         const encodedArgs = encodeStringArgs(methodObj, args)
 
         // Always query first as errors are passed back from a dry run but not from a transaction
-        let result = await this.contractQuery(signedContract, contractMethodName, encodedArgs)
+        let result = await this.contractQuery(signedContract, contractMethodName, encodedArgs, atBlock)
 
         if (methodObj.isMutating) {
             result = await this.contractTx(signedContract, contractMethodName, encodedArgs, value)
@@ -99,8 +99,9 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {Array}  encodedArgs
      * @return JSON result containing the contract event
      */
-    async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[]): Promise<AnyJson> {
-        const response = await signedContract.query[contractMethodName](...encodedArgs)
+    async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[],  atBlock?: string | Uint8Array): Promise<AnyJson> {
+        const query = !atBlock ? signedContract.query[contractMethodName] : signedContract.queryAt(atBlock, signedContract.abi.findMessage(contractMethodName));
+        const response = await query(...encodedArgs)
         handleContractCallOutcomeErrors(response)
         if (response.result.isOk) {
             if (response.output) {

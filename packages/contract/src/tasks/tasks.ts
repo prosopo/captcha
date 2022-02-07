@@ -38,8 +38,9 @@ import {
     Dapp,
     Database, DatasetRecord,
     GovernanceStatus, Payee,
-    ProsopoEnvironment,
-    Provider
+    Provider,
+    RandomProvider,
+    ProsopoEnvironment
 } from '../types'
 import { ProsopoContractApi } from '../contract/interface'
 import { ERRORS } from '../errors'
@@ -116,10 +117,8 @@ export class Tasks {
         return await this.contractApi.contractCall('providerDisapprove', [captchaSolutionCommitmentId])
     }
 
-    // Contract queries
-
-    async getRandomProvider (): Promise<Provider> {
-        return await this.contractApi.contractCall('getRandomActiveProvider', []) as unknown as Provider
+    async getRandomProvider (userAccount: string, at?: string | Uint8Array): Promise<RandomProvider> {
+        return await this.contractApi.contractCall('getRandomActiveProvider', [userAccount], undefined, at) as unknown as RandomProvider
     }
 
     async getProviderDetails (accountId: string): Promise<Provider> {
@@ -306,5 +305,25 @@ export class Tasks {
     async calculateCaptchaSolutions (datasetId: string) {
         // TODO run this on a predefined schedule as updating the dataset requires committing an updated
         // captcha_dataset_id to the blockchain
+    }
+
+    /**
+     * Validate that provided `datasetId` was a result of calling `get_random_provider` method
+     * @param {string} userAccount - Same user that called `get_random_provider`
+     * @param {string} datasetId - `captcha_dataset_id` from the result of `get_random_provider`
+     * @param {string} blockNo - Block on which `get_random_provider` was called
+     */
+    async validateProviderWasRandomlyChosen(userAccount: string, datasetId: string | Hash, blockNo: string) {
+        const contract = this.contractApi.env.contract;
+        if (!contract) {
+            throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message);
+        }
+        const block = await contract.api.rpc.chain.getBlockHash(blockNo);
+        const res = await this.getRandomProvider(userAccount, block);
+        // TODO: create mappers/transformations for fields
+        // @ts-ignore
+        if (datasetId.localeCompare(res.provider.captcha_dataset_id)) {
+            throw new Error(ERRORS.DATASET.INVALID_DATASET_ID.message);
+        }
     }
 }

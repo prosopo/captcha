@@ -32,20 +32,14 @@ export function prosopoMiddleware (env): Router {
 
     /**
      * Returns a random provider using the account that is currently the env signer
-     *
+     * @param {string} userAccount - Dapp User AccountId
      * @return {Provider} - A Provider
      */
-    router.get('/v1/prosopo/random_provider/', async (req, res, next) => {
+    router.get('/v1/prosopo/random_provider/:userAccount', async (req, res, next) => {
+        const { userAccount } = req.params
         try {
-            await env.isReady()
-            const provider = await tasks.getRandomProvider()
-            const lastHeader = await env.network.api.rpc.chain.getHeader()
-            return res.json({
-                blockNumber: lastHeader.number,
-                blockHash: lastHeader.hash,
-                provider: provider,
-                callingAccount: env.signer.address
-            })
+            const provider = await tasks.getRandomProvider(userAccount)
+            return res.json(provider)
         } catch (err: unknown) {
             const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`
             return next(new BadRequest(msg))
@@ -118,16 +112,17 @@ export function prosopoMiddleware (env): Router {
      * Provides a Captcha puzzle to a Dapp User
      * @param {string} datasetId - Provider datasetId
      * @param {string} userAccount - Dapp User AccountId
+     * @param {string} blockNumber - Block number
      * @return {Captcha} - The Captcha data
      */
-    router.get('/v1/prosopo/provider/captcha/:datasetId/:userAccount', async (req, res, next) => {
-        const { datasetId, userAccount } = req.params
-        if (!datasetId || !userAccount) {
+    router.get('/v1/prosopo/provider/captcha/:datasetId/:userAccount/:blockNumber', async (req, res, next) => {
+        const { datasetId, userAccount, blockNumber } = req.params
+        if (!datasetId || !userAccount || !blockNumber) {
             return next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message))
         }
         try {
             validateAddress(userAccount as string)
-            // validateProviderWasRandomlyChosen(userAccount, providerAccount, blockNo)
+            await tasks.validateProviderWasRandomlyChosen(userAccount, datasetId, blockNumber);
             return res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId as string, userAccount as string))
         } catch (err: unknown) {
             const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`

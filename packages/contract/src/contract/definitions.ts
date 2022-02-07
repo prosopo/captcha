@@ -76,6 +76,10 @@ export const contractDefinitions = {
         service_origin: 'Hash',
         captcha_dataset_id: 'Hash'
     },
+    ProsopoRandomProvider: {
+        provider: 'ProsopoProvider',
+        block_number: 'u32',
+    },
     ProviderMap: '{"AccountId":"Provider"}',
     ProsopoCaptchaData: {
         provider: 'AccountId',

@@ -34,6 +34,7 @@ import {
 import { sendFunds, setupDapp, setupProvider } from '../mocks/setup'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { AnyJson } from '@polkadot/types/types/codec'
+import { promiseQueue } from '../../src/util'
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -658,6 +659,100 @@ describe('CONTRACT TASKS', () => {
         expect(captchas.length).to.equal(solvedCaptchaCount + unsolvedCaptchaCount)
         const pendingRequest = mockEnv.db?.getDappUserPending(requestHash)
         return expect(pendingRequest).to.not.be.null
+    })
+
+    it('Validate provided captcha dataset', async () => {
+        const tasks = new Tasks(mockEnv);
+        const queueRes = await promiseQueue(
+            new Array(4).fill(0).map(
+                (_, index) => async () => {
+                    const [providerMnemonic, providerAddress] =
+                        mockEnv.createAccountAndAddToKeyring();
+                    await mockEnv.changeSigner("//Alice");
+                    await sendFunds(
+                        mockEnv,
+                        providerAddress,
+                        "Provider",
+                        "10000000000000000000"
+                    );
+                    const provider = { ...PROVIDER } as TestProvider;
+                    provider.mnemonic = providerMnemonic;
+                    provider.address = providerAddress;
+                    provider.serviceOrigin =
+                        provider.serviceOrigin + randomAsHex().slice(0, 8);
+                    await mockEnv.changeSigner(providerMnemonic);
+                    await tasks.providerRegister(
+                        provider.serviceOrigin,
+                        provider.fee,
+                        provider.payee,
+                        provider.address
+                    );
+                    await tasks.providerUpdate(
+                        provider.serviceOrigin,
+                        provider.fee,
+                        provider.payee,
+                        provider.address,
+                        1
+                    );
+                    const captchaFilePath = path.resolve(
+                        __dirname,
+                        `../mocks/data/captchas${index + 1}.json`
+                    );
+                    tasks.providerAddDataset(captchaFilePath);
+                }
+            )
+        );
+
+        queueRes.forEach(res => {
+            expect(res.error).to.not.exist;
+        })
+
+        const res = await tasks.getRandomProvider(dappUser.address);
+        // @ts-ignore
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id, res.block_number).then(() => true).catch(() => false);
+        expect(valid).to.be.true;
+    })
+
+    it('Validate provided captcha dataset - fail', async () => {
+        const tasks = new Tasks(mockEnv);
+        const [providerMnemonic, providerAddress] =
+            mockEnv.createAccountAndAddToKeyring();
+        await mockEnv.changeSigner("//Alice");
+        await sendFunds(
+            mockEnv,
+            providerAddress,
+            "Provider",
+            "10000000000000000000"
+        );
+        const provider = { ...PROVIDER } as TestProvider;
+        provider.mnemonic = providerMnemonic;
+        provider.address = providerAddress;
+        provider.serviceOrigin =
+            provider.serviceOrigin + randomAsHex().slice(0, 8);
+        await mockEnv.changeSigner(providerMnemonic);
+        await tasks.providerRegister(
+            provider.serviceOrigin,
+            provider.fee,
+            provider.payee,
+            provider.address
+        );
+        await tasks.providerUpdate(
+            provider.serviceOrigin,
+            provider.fee,
+            provider.payee,
+            provider.address,
+            1
+        );
+        const captchaFilePath = path.resolve(
+            __dirname,
+            `../mocks/data/captchas.json`
+        );
+        tasks.providerAddDataset(captchaFilePath);        
+
+        const res = await tasks.getRandomProvider(dappUser.address);
+        // @ts-ignore
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, "0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a", res.block_number).then(() => true).catch(() => false);
+        expect(valid).to.be.false;
     })
 
     it('Provider unstake', async () => {
