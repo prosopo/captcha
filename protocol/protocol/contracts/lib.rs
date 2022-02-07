@@ -122,6 +122,16 @@ pub mod prosopo {
     }
 
     #[derive(
+        scale::Encode,
+        scale::Decode,
+    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub struct RandomProvider {
+        provider: Provider,
+        block_number: u32,
+    }
+
+    #[derive(
         PartialEq,
         Debug,
         Eq,
@@ -1210,7 +1220,7 @@ pub mod prosopo {
         ///
         /// Returns error if no active providers is found
         #[ink(message)]
-        pub fn get_random_active_provider(&self) -> Result<Provider, Error> {
+        pub fn get_random_active_provider(&self, user_account: AccountId) -> Result<RandomProvider, Error> {
             let active_providers = self
                 .provider_accounts
                 .get(GovernanceStatus::Active)
@@ -1219,9 +1229,12 @@ pub mod prosopo {
             if max == 0 {
                 return Err(Error::NoActiveProviders);
             }
-            let index = self.get_random_number(0, (max - 1) as u64);
+            let index = self.get_random_number(0, (max - 1) as u64, user_account);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
-            Ok(self.providers.get(provider_id).unwrap())
+            Ok(RandomProvider {
+                provider: self.providers.get(provider_id).unwrap(),
+                block_number: self.env().block_number()
+            })
         }
 
         /// Get the AccountIds of all Providers ever registered
@@ -1244,8 +1257,8 @@ pub mod prosopo {
             provider_ids
         }
 
-        fn get_random_number(&self, min: u64, max: u64) -> u64 {
-            let random_seed = self.env().random(self.env().caller().as_ref());
+        fn get_random_number(&self, min: u64, max: u64, user_account: AccountId) -> u64 {
+            let random_seed = self.env().random(user_account.as_ref());
             let mut seed_converted: [u8; 32] = Default::default();
             seed_converted.copy_from_slice(random_seed.0.as_ref());
             let mut rng = ChaChaRng::from_seed(seed_converted);
@@ -1329,11 +1342,11 @@ pub mod prosopo {
         fn test_get_random_number() {
             let operator_account = AccountId::from([0x1; 32]);
             let contract = Prosopo::default(operator_account);
-            let mut number = contract.get_random_number(1, 128);
+            let mut number = contract.get_random_number(1, 128, operator_account);
             ink_env::debug_println!("{}", number);
             assert!((1 <= number) && (number <= 128));
 
-            number = contract.get_random_number(0, 1);
+            number = contract.get_random_number(0, 1, operator_account);
             ink_env::debug_println!("{}", number);
             assert!(number == 0 || number == 1);
         }
