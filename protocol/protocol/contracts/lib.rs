@@ -16,6 +16,8 @@
 #![feature(derive_default_enum)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use self::prosopo::{Prosopo, ProsopoRef};
+
 use ink_lang as ink;
 
 #[ink::contract]
@@ -23,8 +25,8 @@ pub mod prosopo {
     use ink_prelude::collections::btree_set::BTreeSet;
     use ink_prelude::vec::Vec;
     use ink_storage::{
-        lazy::Mapping, traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout,
-        traits::StorageLayout,
+        traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout, traits::StorageLayout,
+        Mapping,
     };
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
@@ -121,10 +123,7 @@ pub mod prosopo {
         captcha_dataset_id: Hash,
     }
 
-    #[derive(
-        scale::Encode,
-        scale::Decode,
-    )]
+    #[derive(scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct RandomProvider {
         provider: Provider,
@@ -1220,7 +1219,10 @@ pub mod prosopo {
         ///
         /// Returns error if no active providers is found
         #[ink(message)]
-        pub fn get_random_active_provider(&self, user_account: AccountId) -> Result<RandomProvider, Error> {
+        pub fn get_random_active_provider(
+            &self,
+            user_account: AccountId,
+        ) -> Result<RandomProvider, Error> {
             let active_providers = self
                 .provider_accounts
                 .get(GovernanceStatus::Active)
@@ -1233,7 +1235,7 @@ pub mod prosopo {
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             Ok(RandomProvider {
                 provider: self.providers.get(provider_id).unwrap(),
-                block_number: self.env().block_number()
+                block_number: self.env().block_number(),
             })
         }
 
