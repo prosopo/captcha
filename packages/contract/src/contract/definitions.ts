@@ -78,7 +78,7 @@ export const contractDefinitions = {
     },
     ProsopoRandomProvider: {
         provider: 'ProsopoProvider',
-        block_number: 'u32',
+        block_number: 'u32'
     },
     ProviderMap: '{"AccountId":"Provider"}',
     ProsopoCaptchaData: {

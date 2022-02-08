@@ -18,7 +18,7 @@ import { Compact, u128 } from '@polkadot/types'
 import { encodeStringAddress } from '../util'
 import { ERRORS } from '../errors'
 import { Tasks } from '../tasks/tasks'
-import { Payee } from '../types'
+import { Payee, PayeeSchema, ProsopoEnvironment } from '../types'
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)
@@ -26,9 +26,13 @@ const validateAddress = (argv) => {
 }
 
 const validatePayee = (argv) => {
-    const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
-    const payee = ['Provider', 'Dapp'].indexOf(payeeArg) > -1 ? payeeArg : undefined
-    return { payee }
+    try {
+        const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
+        const payee = PayeeSchema.parse(payeeArg)
+        return { payee }
+    } catch (error) {
+        throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.payee}`)
+    }
 }
 
 const validateValue = (argv) => {
@@ -39,7 +43,7 @@ const validateValue = (argv) => {
     throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`)
 }
 
-export function processArgs (args, env) {
+export function processArgs (args, env: ProsopoEnvironment) {
     const tasks = new Tasks(env)
     return yargs
         .usage('Usage: $0 [global options] <command> [options]')
