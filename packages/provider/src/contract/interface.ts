@@ -37,7 +37,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {number} value    A value to send with the transaction, e.g. a stake
      * @return JSON result containing the contract event
      */
-    async contractCall<T> (contractMethodName: string, args: T[], value?: number, atBlock?: string | Uint8Array): Promise<AnyJson> {
+    async contractCall<T> (contractMethodName: string, args: T[], value?: number | string, atBlock?: string | Uint8Array): Promise<AnyJson> {
         await this.env.isReady()
         if (!this.env.contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
@@ -66,7 +66,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | undefined): Promise<AnyJson> {
+    async contractTx <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | string | undefined): Promise<AnyJson> {
         let response
         if (value) {
             response = await signedContract.tx[contractMethodName](...encodedArgs, { value })
