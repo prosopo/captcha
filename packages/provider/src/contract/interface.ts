@@ -99,8 +99,8 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {Array}  encodedArgs
      * @return JSON result containing the contract event
      */
-    async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[],  atBlock?: string | Uint8Array): Promise<AnyJson> {
-        const query = !atBlock ? signedContract.query[contractMethodName] : signedContract.queryAt(atBlock, signedContract.abi.findMessage(contractMethodName));
+    async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], atBlock?: string | Uint8Array): Promise<AnyJson> {
+        const query = !atBlock ? signedContract.query[contractMethodName] : signedContract.queryAt(atBlock, signedContract.abi.findMessage(contractMethodName))
         const response = await query(...encodedArgs)
         handleContractCallOutcomeErrors(response)
         if (response.result.isOk) {

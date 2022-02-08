@@ -76,25 +76,25 @@ type PromiseQueueRes<T> = {
  * @param array - array of promises
  * @returns PromiseQueueRes\<T\>
  */
-export async function promiseQueue<T>(
+export async function promiseQueue<T> (
     array: (() => Promise<T>)[]
 ): Promise<PromiseQueueRes<T>> {
-    const ret: PromiseQueueRes<T> = [];
+    const ret: PromiseQueueRes<T> = []
 
     await [...array, () => Promise.resolve(undefined)].reduce((promise, curr, i) => {
         return promise
             .then((res) => {
                 // first iteration has no res (initial reduce result)
                 if (res) {
-                    ret.push({ data: res });
+                    ret.push({ data: res })
                 }
-                return curr();
+                return curr()
             })
             .catch((err) => {
-                ret.push({ data: err }); 
-                return curr();
-            });
-    }, Promise.resolve<T | undefined>(undefined));
+                ret.push({ data: err })
+                return curr()
+            })
+    }, Promise.resolve<T | undefined>(undefined))
 
-    return ret;
+    return ret
 }
