@@ -85,7 +85,7 @@ export interface ContractTxResponse {
 export interface ContractApiInterface {
     env: Environment
 
-    contractCall<T>(contractFunction: string, args: T[], value?: number, atBlock?: string | Uint8Array): Promise<AnyJson>
+    contractCall<T>(contractFunction: string, args: T[], value?: number | string, atBlock?: string | Uint8Array): Promise<AnyJson>
 
     contractTx<T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | undefined): Promise<AnyJson>
 

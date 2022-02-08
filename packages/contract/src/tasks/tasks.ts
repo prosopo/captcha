@@ -97,7 +97,7 @@ export class Tasks {
         return await this.contractApi.contractCall('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
     }
 
-    async dappFund (contractAccount: string, value: number): Promise<AnyJson> {
+    async dappFund (contractAccount: string, value: number | string): Promise<AnyJson> {
         return await this.contractApi.contractCall('dappFund', [contractAccount], value)
     }
 
