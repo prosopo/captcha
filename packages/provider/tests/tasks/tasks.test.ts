@@ -35,6 +35,7 @@ import { sendFunds, setupDapp, setupProvider } from '../mocks/setup'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { promiseQueue } from '../../src/util'
+import { BN } from '@polkadot/util'
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -326,13 +327,17 @@ describe('CONTRACT TASKS', () => {
     it('Dapp fund', async () => {
         await mockEnv.changeSigner(dapp.mnemonic as string)
         const dappTasks = new Tasks(mockEnv)
+
         const value = 10
         try {
-            const result: any = await dappTasks.dappFund(
+            const result: AnyJson = await dappTasks.dappFund(
                 dapp.contractAccount as string,
                 value
             )
-            expect(result[0].args[0]).to.equal(dapp.contractAccount)
+            const decoded = result![0].args.map(arg => arg.toHuman())
+            expect(decoded[0]).to.equal(dapp.contractAccount)
+            const dappStruct = await dappTasks.getDappDetails(dapp.contractAccount as string)
+            expect(result![0].args[1].toHuman()).to.equal(dappStruct.balance)
         } catch (error) {
             throw new Error(`Error in dapp fund: ${error}`)
         }
@@ -662,97 +667,94 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Validate provided captcha dataset', async () => {
-        const tasks = new Tasks(mockEnv);
+        const tasks = new Tasks(mockEnv)
         const queueRes = await promiseQueue(
             new Array(4).fill(0).map(
-                (_, index) => async () => {
-                    const [providerMnemonic, providerAddress] =
-                        mockEnv.createAccountAndAddToKeyring();
-                    await mockEnv.changeSigner("//Alice");
+                (_, datasetIndex) => async () => {
+                    const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
+                    await mockEnv.changeSigner('//Alice')
                     await sendFunds(
                         mockEnv,
                         providerAddress,
-                        "Provider",
-                        "10000000000000000000"
-                    );
-                    const provider = { ...PROVIDER } as TestProvider;
-                    provider.mnemonic = providerMnemonic;
-                    provider.address = providerAddress;
+                        'Provider',
+                        '10000000000000000000'
+                    )
+                    const provider = { ...PROVIDER } as TestProvider
+                    provider.mnemonic = providerMnemonic
+                    provider.address = providerAddress
                     provider.serviceOrigin =
-                        provider.serviceOrigin + randomAsHex().slice(0, 8);
-                    await mockEnv.changeSigner(providerMnemonic);
+                        provider.serviceOrigin + randomAsHex().slice(0, 8)
+                    await mockEnv.changeSigner(providerMnemonic)
                     await tasks.providerRegister(
                         provider.serviceOrigin,
                         provider.fee,
                         provider.payee,
                         provider.address
-                    );
+                    )
                     await tasks.providerUpdate(
                         provider.serviceOrigin,
                         provider.fee,
                         provider.payee,
                         provider.address,
                         1
-                    );
+                    )
                     const captchaFilePath = path.resolve(
                         __dirname,
-                        `../mocks/data/captchas${index + 1}.json`
-                    );
-                    tasks.providerAddDataset(captchaFilePath);
+                        `../mocks/data/captchas${datasetIndex + 1}.json`
+                    )
+                    await tasks.providerAddDataset(captchaFilePath)
                 }
             )
-        );
+        )
 
         queueRes.forEach(res => {
-            expect(res.error).to.not.exist;
+            const _ = expect(res.error).to.not.exist
         })
 
-        const res = await tasks.getRandomProvider(dappUser.address);
-        // @ts-ignore
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id, res.block_number).then(() => true).catch(() => false);
-        expect(valid).to.be.true;
+        const res = await tasks.getRandomProvider(dappUser.address)
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id, res.block_number).then(() => true).catch(() => false)
+        return expect(valid).to.be.true
     })
 
     it('Validate provided captcha dataset - fail', async () => {
-        const tasks = new Tasks(mockEnv);
+        const tasks = new Tasks(mockEnv)
         const [providerMnemonic, providerAddress] =
-            mockEnv.createAccountAndAddToKeyring();
-        await mockEnv.changeSigner("//Alice");
+            mockEnv.createAccountAndAddToKeyring()
+        await mockEnv.changeSigner('//Alice')
         await sendFunds(
             mockEnv,
             providerAddress,
-            "Provider",
-            "10000000000000000000"
-        );
-        const provider = { ...PROVIDER } as TestProvider;
-        provider.mnemonic = providerMnemonic;
-        provider.address = providerAddress;
+            'Provider',
+            '10000000000000000000'
+        )
+        const provider = { ...PROVIDER } as TestProvider
+        provider.mnemonic = providerMnemonic
+        provider.address = providerAddress
         provider.serviceOrigin =
-            provider.serviceOrigin + randomAsHex().slice(0, 8);
-        await mockEnv.changeSigner(providerMnemonic);
+            provider.serviceOrigin + randomAsHex().slice(0, 8)
+        await mockEnv.changeSigner(providerMnemonic)
         await tasks.providerRegister(
             provider.serviceOrigin,
             provider.fee,
             provider.payee,
             provider.address
-        );
+        )
         await tasks.providerUpdate(
             provider.serviceOrigin,
             provider.fee,
             provider.payee,
             provider.address,
             1
-        );
+        )
         const captchaFilePath = path.resolve(
             __dirname,
-            `../mocks/data/captchas.json`
-        );
-        tasks.providerAddDataset(captchaFilePath);        
+            '../mocks/data/captchas.json'
+        )
+        await tasks.providerAddDataset(captchaFilePath)
 
-        const res = await tasks.getRandomProvider(dappUser.address);
-        // @ts-ignore
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, "0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a", res.block_number).then(() => true).catch(() => false);
-        expect(valid).to.be.false;
+        const res = await tasks.getRandomProvider(dappUser.address)
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', res.block_number).then(() => true).catch(() => false)
+        return expect(valid).to.be.false
     })
 
     it('Provider unstake', async () => {
