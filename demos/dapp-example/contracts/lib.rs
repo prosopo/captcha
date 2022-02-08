@@ -19,12 +19,9 @@ use ink_lang as ink;
 
 #[ink::contract]
 pub mod dapp {
-    use prosopo::ProsopoRef as Prosopo;
+    use prosopo::ProsopoRef;
     use ink_storage::{
-        lazy::{
-            Lazy,
-            Mapping,
-        },
+        Mapping,
         traits::SpreadAllocate,
     };
 
@@ -32,7 +29,7 @@ pub mod dapp {
     #[derive(SpreadAllocate)]
     pub struct Dapp {
         /// Total token supply.
-        total_supply: Lazy<Balance>,
+        total_supply: Balance,
         /// Mapping from owner to number of owned token.
         balances: Mapping<AccountId, Balance>,
         /// Amount of tokens to drip feed via the faucet function
@@ -75,7 +72,7 @@ pub mod dapp {
         fn new_init(&mut self, initial_supply: Balance, faucet_amount: Balance, prosopo_account: AccountId, human_threshold: u8) {
             let caller = Self::env().caller();
             self.balances.insert(&caller, &initial_supply);
-            Lazy::set(&mut self.total_supply, initial_supply);
+            self.total_supply = initial_supply;
             self.faucet_amount = faucet_amount;
             self.token_holder = caller;
             self.human_threshold = human_threshold;
@@ -100,7 +97,7 @@ pub mod dapp {
         /// Calls the `Prosopo` contract to check if `accountid` is human
         #[ink(message)]
         pub fn is_human(&self, accountid: AccountId, threshold: u8) -> bool {
-            let mut prosopo_instance: Prosopo = ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
+            let mut prosopo_instance: ProsopoRef = ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
             prosopo_instance.dapp_operator_is_human_user(accountid, threshold).unwrap()
         }
 

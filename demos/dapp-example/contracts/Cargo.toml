@@ -3,7 +3,6 @@ name = "dapp"
 version = "3.0.0-rc8"
 authors = ["Chris Taylor chris@prosopo.io"]
 edition = "2021"
-resolver = "2"
 
 [dependencies]
 ink_primitives = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
