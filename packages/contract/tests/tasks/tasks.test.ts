@@ -712,7 +712,9 @@ describe('CONTRACT TASKS', () => {
         })
 
         const res = await tasks.getRandomProvider(dappUser.address)
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id, res.block_number).then(() => true).catch(() => false)
+        const blockNumber = parseInt(res.block_number.replace(/,/g, ''))
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id, blockNumber)
+            .then(() => true).catch(() => false)
         return expect(valid).to.be.true
     })
 

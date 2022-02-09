@@ -313,16 +313,16 @@ export class Tasks {
      * @param {string} datasetId - `captcha_dataset_id` from the result of `get_random_provider`
      * @param {string} blockNo - Block on which `get_random_provider` was called
      */
-    async validateProviderWasRandomlyChosen (userAccount: string, datasetId: string | Hash, blockNo: string) {
+    async validateProviderWasRandomlyChosen (userAccount: string, datasetId: string | Hash, blockNo: number) {
         const contract = this.contractApi.env.contract
         if (!contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
         const block = await contract.api.rpc.chain.getBlockHash(blockNo)
-        const res = await this.getRandomProvider(userAccount, block)
+        const randomProviderAndBlockNo = await this.getRandomProvider(userAccount, block)
         // TODO: create mappers/transformations for fields
         // @ts-ignore
-        if (datasetId.localeCompare(res.provider.captcha_dataset_id)) {
+        if (datasetId.localeCompare(randomProviderAndBlockNo.provider.captcha_dataset_id)) {
             throw new Error(ERRORS.DATASET.INVALID_DATASET_ID.message)
         }
     }
