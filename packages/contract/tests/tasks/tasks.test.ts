@@ -755,7 +755,8 @@ describe('CONTRACT TASKS', () => {
         await tasks.providerAddDataset(captchaFilePath)
 
         const res = await tasks.getRandomProvider(dappUser.address)
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', res.block_number).then(() => true).catch(() => false)
+        const blockNumber = parseInt(res.block_number.replace(/,/g, ''))
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', blockNumber).then(() => true).catch(() => false)
         return expect(valid).to.be.false
     })
 
