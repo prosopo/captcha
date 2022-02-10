@@ -36,6 +36,7 @@ import { randomAsHex } from '@polkadot/util-crypto'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { promiseQueue } from '../../src/util'
 import { BN } from '@polkadot/util'
+import { getEventsFromMethodName } from '../../src/contract/helpers'
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -119,7 +120,8 @@ describe('CONTRACT TASKS', () => {
                 provider.payee as Payee,
                 provider.address as string
             )
-            expect(result).to.be.an('array')
+            const eventData = getEventsFromMethodName(result, 'providerRegister')
+            expect(eventData).to.be.an('array')
         } catch (error) {
             throw new Error(`Error in registering provider: ${error}`)
         }
@@ -138,7 +140,8 @@ describe('CONTRACT TASKS', () => {
                 provider.address as string,
                 value
             )
-            expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
+            const eventData = getEventsFromMethodName(result, 'providerUpdate')
+            expect(eventData ? eventData[0].args[0] : undefined).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in updating provider: ${error}`)
         }
@@ -155,7 +158,8 @@ describe('CONTRACT TASKS', () => {
             const result: AnyJson = await providerTasks.providerAddDataset(
                 captchaFilePath
             )
-            return expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
+            const eventData = getEventsFromMethodName(result, 'providerAddDataset')
+            return expect(eventData ? eventData[0].args[0] : undefined).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in adding dataset: ${error}`)
         }
@@ -217,8 +221,9 @@ describe('CONTRACT TASKS', () => {
         await mockEnv.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
-            const result: any = await providerTasks.providerApprove(commitmentId)
-            expect(result[0].args[0]).to.equal(commitmentId)
+            const result: any = await providerTasks.providerApprove(commitmentId, 0)
+            const events = getEventsFromMethodName(result, 'providerApprove')
+            expect(events ? events[0].args[0] : undefined).to.equal(commitmentId)
         } catch (error) {
             throw new Error(`Error in provider approve: ${error}`)
         }
@@ -253,7 +258,8 @@ describe('CONTRACT TASKS', () => {
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: AnyJson = await providerTasks.providerDisapprove(commitmentId)
-            expect(result ? result[0].args[0] : undefined).to.equal(commitmentId)
+            const events = getEventsFromMethodName(result, 'providerDisapprove');
+            expect(events ? events[0].args[0] : undefined).to.equal(commitmentId)
         } catch (error) {
             throw new Error(`Error in provider disapprove: ${error}`)
         }
@@ -374,7 +380,8 @@ describe('CONTRACT TASKS', () => {
             if (!result) {
                 throw new Error('Result is null')
             }
-            expect(result[0].args[2]).to.equal(dapp.contractAccount)
+            const events = getEventsFromMethodName(result, 'dappUserCommit')
+            expect(events ? events[0].args[2] : undefined).to.equal(dapp.contractAccount)
         } catch (error) {
             throw new Error(`Error in dapp user commit: ${error}`)
         }
@@ -473,11 +480,11 @@ describe('CONTRACT TASKS', () => {
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
-        await dappUserTasks.dappUserCommit(
+        const response = await dappUserTasks.dappUserCommit(
             dapp.contractAccount as string,
             datasetId as string,
             commitmentId,
-            provider.address as string
+            provider.address as string,
         )
 
         // next part contains internal contract calls that must be run by provider
@@ -487,7 +494,9 @@ describe('CONTRACT TASKS', () => {
             dappUser.address,
             dapp.contractAccount as string,
             requestHash,
-            JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON
+            JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
+            (response ? response['blockHash'] : "") as string,
+            (response ? response['result']['txHash'] : "") as string,
         )
         expect(result.length).to.be.eq(2)
         const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId)
@@ -507,17 +516,22 @@ describe('CONTRACT TASKS', () => {
             computeCaptchaSolutionHash(captcha)
         )
         tree.build(captchasHashed)
+        // TODO: Change the test to send a tx, but then tamper the request hash
         const solutionPromise = providerTasks.dappUserSolution(
             dappUser.address,
             dapp.contractAccount as string,
             requestHash,
-            JSON.parse(JSON.stringify(captchaSolutions)) as JSON
+            JSON.parse(JSON.stringify(captchaSolutions)) as JSON,
+            "",
+            ""
         )
         solutionPromise.catch((e) =>
             e.message.should.match(`/${ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message}/`)
         )
     })
 
+    // TODO: Maybe the test needs to be removed or changed in purpose, as now blockHash and txHash
+    // are required so it would be impossible to not commit the solution to blockchain
     it('Dapp User sending solutions without committing to blockchain causes error', async () => {
         const { captchaSolutions, requestHash } = await createMockCaptchaSolutionsAndRequestHash()
         await mockEnv.changeSigner(provider.mnemonic as string)
@@ -531,7 +545,9 @@ describe('CONTRACT TASKS', () => {
             dappUser.address,
             dapp.contractAccount as string,
             requestHash,
-            JSON.parse(JSON.stringify(captchaSolutions)) as JSON
+            JSON.parse(JSON.stringify(captchaSolutions)) as JSON,
+            "",
+            "",
         )
         solutionPromise.catch((e) =>
             e.message.should.match(
@@ -574,7 +590,9 @@ describe('CONTRACT TASKS', () => {
             dappUser.address,
             dapp.contractAccount as string,
             requestHash,
-            JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON
+            JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
+            "",
+            ""
         )
         expect(result.length).to.be.eq(0)
     })
@@ -766,7 +784,8 @@ describe('CONTRACT TASKS', () => {
         const value = 1
         try {
             const result: AnyJson = await providerTasks.providerUnstake(value)
-            expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
+            const events = getEventsFromMethodName(result, 'providerUnstake');
+            expect(events ? events[0].args[0] : undefined).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in unstake provider: ${error}`)
         }
