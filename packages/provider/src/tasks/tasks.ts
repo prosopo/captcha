@@ -109,8 +109,8 @@ export class Tasks {
         return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress])
     }
 
-    async providerApprove (captchaSolutionCommitmentId): Promise<AnyJson> {
-        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId])
+    async providerApprove (captchaSolutionCommitmentId, refundFee): Promise<AnyJson> {
+        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId, refundFee])
     }
 
     async providerDisapprove (captchaSolutionCommitmentId): Promise<AnyJson> {
@@ -179,9 +179,24 @@ export class Tasks {
      * @param {JSON} captchas
      * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
      */
-    async dappUserSolution (userAccount: string, dappAccount: string, requestHash: string, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
+    async dappUserSolution (userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse[]> {
         if (!await this.dappIsActive(dappAccount)) {
             throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message)
+        }
+
+        // Validate block and transaction, checking that the signer matches the userAccount
+        const signedBlock = await this.contractApi.env.network.api.rpc.chain.getBlock(blockHash);
+        if (!signedBlock) {
+            throw new Error(ERRORS.API.BAD_REQUEST.message)
+        }
+        const extrinsic = signedBlock.block.extrinsics.find(extrinsic => extrinsic.hash.toString() === txHash);
+        if (!extrinsic || extrinsic.signer.toString() !== userAccount) {
+            throw new Error(ERRORS.API.BAD_REQUEST.message)
+        }
+        // Retrieve tx fee for extrinsic
+        const paymentInfo = await this.contractApi.env.network.api.rpc.payment.queryInfo(extrinsic.toHex(), blockHash);
+        if (!paymentInfo) {
+            throw new Error(ERRORS.API.BAD_REQUEST.message)
         }
 
         let response: CaptchaSolutionResponse[] = []
@@ -193,7 +208,7 @@ export class Tasks {
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-                await this.providerApprove(commitmentId)
+                await this.providerApprove(commitmentId, paymentInfo.partialFee)
                 response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
             } else {
                 await this.providerDisapprove(commitmentId)

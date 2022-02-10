@@ -20,7 +20,7 @@ import { ContractApiInterface } from '../types'
 import { ERRORS } from '../errors'
 import { Environment } from '../env'
 import { AbiMetadata } from 'redspot/types'
-import { unwrap, encodeStringArgs, getEventNameFromMethodName, handleContractCallOutcomeErrors } from './helpers'
+import { unwrap, encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
 import { AnyJson } from '@polkadot/types/types/codec'
 
 export class ProsopoContractApi implements ContractApiInterface {
@@ -73,7 +73,6 @@ export class ProsopoContractApi implements ContractApiInterface {
         } else {
             response = await signedContract.tx[contractMethodName](...encodedArgs)
         }
-        const eventsProperty = 'events'
 
         if (response.result.status.isRetracted) {
             throw (response.status.asRetracted)
@@ -83,11 +82,13 @@ export class ProsopoContractApi implements ContractApiInterface {
         }
 
         if (response.result.isInBlock || response.result.isFinalized) {
-            const eventName = getEventNameFromMethodName(contractMethodName)
-            // Most contract transactions should return an event
-            if (response[eventsProperty]) {
-                return response[eventsProperty].filter((x) => x.name === eventName)
+            if (response.result.status.isRetracted) {
+                throw (response.status.asRetracted)
             }
+            if (response.result.status.isInvalid) {
+                throw (response.status.asInvalid)
+            }
+            return response
         }
         return []
     }
