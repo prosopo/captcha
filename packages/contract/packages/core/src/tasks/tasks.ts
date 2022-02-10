@@ -41,8 +41,8 @@ import {
     Provider,
     RandomProvider,
     ProsopoEnvironment
-} from '../types'
-import { ProsopoContractApi } from '../contract/interface'
+} from '@prosopo/protocoljs/types'
+import { ProsopoContractApi } from '@prosopo/protocoljs/contract/interface'
 import { ERRORS } from '../errors'
 import { CaptchaMerkleTree } from '../merkle'
 import { buildDecodeVector } from '../codec/codec'

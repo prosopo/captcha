@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { encodeStringArgs, unwrap } from '../../src/contract/helpers'
+import { encodeStringArgs, unwrap } from '@prosopo/protocoljs/contract/helpers'
 import { TypeDefInfo } from '@polkadot/types-create'
 import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { ContractSelector } from '@polkadot/types/interfaces'

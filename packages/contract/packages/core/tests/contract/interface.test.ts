@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { MockEnvironment } from '../mocks/mockenv'
-import { ProsopoContractApi } from '../../src/contract/interface'
+import { ProsopoContractApi } from '@prosopo/protocoljs/contract/interface'
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')

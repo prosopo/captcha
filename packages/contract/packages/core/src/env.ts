@@ -23,7 +23,7 @@ import { strict as assert } from 'assert'
 import { ZodError } from 'zod'
 import { ERRORS } from './errors'
 import { Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment } from './types'
-import { contractDefinitions } from './contract/definitions'
+import { contractDefinitions } from '@prosopo/protocoljs/contract/definitions'
 
 require('dotenv').config()
 

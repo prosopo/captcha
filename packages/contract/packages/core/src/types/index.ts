@@ -16,7 +16,6 @@
 export * from './api'
 export * from './captcha'
 export * from './config'
-export * from './contract'
 export * from './db'
 export * from './env'
 export * from './merkle'
