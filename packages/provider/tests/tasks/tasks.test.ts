@@ -120,8 +120,7 @@ describe('CONTRACT TASKS', () => {
                 provider.payee as Payee,
                 provider.address as string
             )
-            const eventData = getEventsFromMethodName(result, 'providerRegister')
-            expect(eventData).to.be.an('array')
+            expect(result!['txHash']).to.not.be.empty
         } catch (error) {
             throw new Error(`Error in registering provider: ${error}`)
         }
@@ -141,7 +140,7 @@ describe('CONTRACT TASKS', () => {
                 value
             )
             const eventData = getEventsFromMethodName(result, 'providerUpdate')
-            expect(eventData ? eventData[0].args[0] : undefined).to.equal(provider.address)
+            expect(eventData![0].args[0]).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in updating provider: ${error}`)
         }
@@ -159,7 +158,7 @@ describe('CONTRACT TASKS', () => {
                 captchaFilePath
             )
             const eventData = getEventsFromMethodName(result, 'providerAddDataset')
-            return expect(eventData ? eventData[0].args[0] : undefined).to.equal(provider.address)
+            return expect(eventData![0].args[0]).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in adding dataset: ${error}`)
         }
@@ -223,7 +222,7 @@ describe('CONTRACT TASKS', () => {
         try {
             const result: any = await providerTasks.providerApprove(commitmentId, 0)
             const events = getEventsFromMethodName(result, 'providerApprove')
-            expect(events ? events[0].args[0] : undefined).to.equal(commitmentId)
+            expect(events![0].args[0]).to.equal(commitmentId)
         } catch (error) {
             throw new Error(`Error in provider approve: ${error}`)
         }
@@ -258,8 +257,8 @@ describe('CONTRACT TASKS', () => {
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: AnyJson = await providerTasks.providerDisapprove(commitmentId)
-            const events = getEventsFromMethodName(result, 'providerDisapprove');
-            expect(events ? events[0].args[0] : undefined).to.equal(commitmentId)
+            const events = getEventsFromMethodName(result, 'providerDisapprove')
+            expect(events![0].args[0]).to.equal(commitmentId)
         } catch (error) {
             throw new Error(`Error in provider disapprove: ${error}`)
         }
@@ -298,7 +297,7 @@ describe('CONTRACT TASKS', () => {
                 dapp.contractAccount as string,
                 dapp.optionalOwner as string
             )
-            expect(result).to.be.an('array')
+            expect(result!['txHash']).to.not.be.empty
         } catch (error) {
             throw new Error(`Error in registering dapp: ${error}`)
         }
@@ -331,6 +330,7 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp fund', async () => {
+        console.log(dapp)
         await mockEnv.changeSigner(dapp.mnemonic as string)
         const dappTasks = new Tasks(mockEnv)
 
@@ -340,10 +340,11 @@ describe('CONTRACT TASKS', () => {
                 dapp.contractAccount as string,
                 value
             )
-            const decoded = result![0].args.map(arg => arg.toHuman())
+            const events = getEventsFromMethodName(result, 'dappFund')
+            const decoded = events![0].args.map(arg => arg.toHuman())
             expect(decoded[0]).to.equal(dapp.contractAccount)
             const dappStruct = await dappTasks.getDappDetails(dapp.contractAccount as string)
-            expect(result![0].args[1].toHuman()).to.equal(dappStruct.balance)
+            expect(events![0].args[1].toHuman()).to.equal(dappStruct.balance)
         } catch (error) {
             throw new Error(`Error in dapp fund: ${error}`)
         }
@@ -381,7 +382,7 @@ describe('CONTRACT TASKS', () => {
                 throw new Error('Result is null')
             }
             const events = getEventsFromMethodName(result, 'dappUserCommit')
-            expect(events ? events[0].args[2] : undefined).to.equal(dapp.contractAccount)
+            expect(events![0].args[2]).to.equal(dapp.contractAccount)
         } catch (error) {
             throw new Error(`Error in dapp user commit: ${error}`)
         }
@@ -784,8 +785,8 @@ describe('CONTRACT TASKS', () => {
         const value = 1
         try {
             const result: AnyJson = await providerTasks.providerUnstake(value)
-            const events = getEventsFromMethodName(result, 'providerUnstake');
-            expect(events ? events[0].args[0] : undefined).to.equal(provider.address)
+            const events = getEventsFromMethodName(result, 'providerUnstake')
+            expect(events![0].args[0]).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in unstake provider: ${error}`)
         }
@@ -798,7 +799,8 @@ describe('CONTRACT TASKS', () => {
             const result: AnyJson = await providerTasks.providerDeregister(
                 provider.address as string
             )
-            expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
+            const events = getEventsFromMethodName(result, 'providerDeregister')
+            expect(events![0].args[0]).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in deregestering provider: ${error}`)
         }
