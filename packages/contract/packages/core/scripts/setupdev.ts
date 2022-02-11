@@ -17,7 +17,7 @@ import { Environment } from '../src/env'
 import yargs from 'yargs'
 import BN from 'bn.js'
 import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, setupProvider } from '../tests/mocks/setup'
-import { Payee } from '@prosopo/protocoljs'
+import { Payee } from '@prosopo/contract'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { TestAccount, TestDapp, TestProvider } from '../tests/mocks/accounts'
 
