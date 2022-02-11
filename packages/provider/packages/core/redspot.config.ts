@@ -20,7 +20,7 @@ import '@redspot/gas-reporter'
 import '@redspot/watcher'
 import '@redspot/explorer'
 import '@redspot/decimals'
-import { contractDefinitions } from '@prosopo/protocoljs/contract/definitions'
+import { contractDefinitions } from '@prosopo/contract'
 require('dotenv').config()
 
 export default {

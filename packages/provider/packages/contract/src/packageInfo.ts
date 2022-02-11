@@ -14,4 +14,4 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 
-export const packageInfo = { name: '@prosopo/procaptcha', path: 'auto', type: 'auto', version: '0.1' };
+export const packageInfo = { name: '@prosopo/contract', path: 'auto', type: 'auto', version: '1.0.0' };
