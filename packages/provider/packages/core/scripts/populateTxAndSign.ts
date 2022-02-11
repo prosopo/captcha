@@ -1,10 +1,10 @@
-#!/usr/bin/env node
-import { hexToString, hexToU8a, u8aToHex } from '@polkadot/util'
-import { Environment } from '../src/env'
-import { blake2AsU8a, encodeAddress } from '@polkadot/util-crypto'
-import { Option, GenericAccountId } from '@polkadot/types'
-
-require('dotenv').config()
+// #!/usr/bin/env node
+// import { hexToString, hexToU8a, u8aToHex } from '@polkadot/util'
+// import { Environment } from '../src/env'
+// import { blake2AsU8a, encodeAddress } from '@polkadot/util-crypto'
+// import { Option, GenericAccountId } from '@polkadot/types'
+//
+// require('dotenv').config()
 
 // async function main () {
 //     const env = new Environment(undefined)

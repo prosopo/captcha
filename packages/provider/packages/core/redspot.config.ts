@@ -29,7 +29,7 @@ export default {
         ink: {
             docker: false,
             toolchain: 'nightly',
-            sources: ['contracts/**/*']
+            sources: ['/usr/src/app/provider/artifacts']
         }
     },
     networks: {

@@ -2,21 +2,11 @@
   "name": "@prosopo/provider-core",
   "version": "1.0.0",
   "author": "Prosopo",
-  "type": "module",
   "private": true,
-  "scripts": {
-    "build": "tsc --build ./",
-    "dev": "yarn build && yarn setup && yarn start",
-    "start": "node ../../build/src/cli/cli.js",
-    "setup": "node ../../build/scripts/setupdev.js",
-    "mnemonic": "node ../../build/scripts/generateMnemonic.js",
-    "test": "yarn redspot test",
-    "dev-provider-register": "yarn build && yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
-    "dev-provider-stake": "yarn build && yarn start provider_stake --value 10 --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
-    "dev-provider-dataset": "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
-  },
+  "main": "index.js",
+  "type": "module",
   "dependencies": {
-    "@prosopo/contract": "1.0.0",
+    "@prosopo/contract": "workspace:*",
     "@redspot/chai": "file:../../../redspot/build/redspot-chai",
     "@redspot/decimals": "file:../../../redspot/build/redspot-decimals",
     "@redspot/explorer": "file:../../../redspot/build/redspot-explorer",
@@ -32,7 +22,6 @@
     "mongodb": "^4.1.4",
     "redspot": "file:../../../redspot/build/redspot-core",
     "ts-node": "^10.0.0",
-    "typescript": "^4.5.5",
     "zod": "^3.11.6"
   },
   "devDependencies": {
@@ -52,21 +41,6 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-promise": "^6.0.0",
-    "mocha": "8.4.0"
-  },
-  "resolutions": {
-    "@polkadot/api": "7.5.1",
-    "@polkadot/api-contract": "7.5.1",
-    "@polkadot/types": "7.5.1",
-    "@polkadot/types-known": "7.5.1",
-    "@polkadot/keyring": "8.3.3",
-    "@polkadot/util": "8.3.3",
-    "@polkadot/wasm-crypto": "4.5.1",
-    "@polkadot/util-crypto": "8.3.3",
-    "@types/yargs": "^17.0.6",
-    "bn.js": "^4.12",
-    "dotenv": "^14.3.2",
-    "yargs": "^17.3.1",
     "mocha": "8.4.0"
   },
   "files": [

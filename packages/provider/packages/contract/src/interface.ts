@@ -16,13 +16,14 @@
 import { network, patract } from 'redspot'
 import { Registry } from 'redspot/types/provider'
 import { AbiMessage } from '@polkadot/api-contract/types'
-import { Contract } from '@redspot/patract/contract'
-import { ContractApiInterface } from './types/contract'
+import Contract from '@redspot/patract/contract'
+import { ContractApiInterface } from './types'
 import { Signer } from 'redspot/provider'
 import { ERRORS } from './errors'
 import {AbiMetadata, Network} from 'redspot/types'
 import { unwrap, encodeStringArgs, getEventNameFromMethodName, handleContractCallOutcomeErrors } from './helpers'
 import { AnyJson } from '@polkadot/types/types/codec'
+import {DecodedEvent} from "@redspot/patract/types";
 const { mnemonicGenerate } = require('@polkadot/util-crypto')
 
 export class ProsopoContractApi implements ContractApiInterface {
@@ -79,9 +80,10 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {string} contractMethodName
      * @param {Array}  args
      * @param {number} value    A value to send with the transaction, e.g. a stake
+     * @param atBlock
      * @return JSON result containing the contract event
      */
-    async contractCall<T> (contractMethodName: string, args: T[], value?: number | string, atBlock?: string | Uint8Array): Promise<AnyJson> {
+    async contractCall<T> (contractMethodName: string, args: T[], value?: number | string, atBlock?: string | Uint8Array): Promise<DecodedEvent[]|AnyJson> {
         await this.getContract()
         if (!this.contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
@@ -94,7 +96,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         const encodedArgs = encodeStringArgs(methodObj, args)
 
         // Always query first as errors are passed back from a dry run but not from a transaction
-        let result = await this.contractQuery(signedContract, contractMethodName, encodedArgs, atBlock)
+        let result: AnyJson | DecodedEvent[] = await this.contractQuery(signedContract, contractMethodName, encodedArgs, atBlock)
 
         if (methodObj.isMutating) {
             result = await this.contractTx(signedContract, contractMethodName, encodedArgs, value)
@@ -110,7 +112,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | string | undefined): Promise<AnyJson> {
+    async contractTx <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | string | undefined): Promise<DecodedEvent[]> {
         let response
         if (value) {
             response = await signedContract.tx[contractMethodName](...encodedArgs, { value })
@@ -120,17 +122,17 @@ export class ProsopoContractApi implements ContractApiInterface {
         const eventsProperty = 'events'
 
         if (response.result.status.isRetracted) {
-            throw (response.status.asRetracted)
+            throw (response.result.status.asRetracted)
         }
         if (response.result.status.isInvalid) {
-            throw (response.status.asInvalid)
+            throw new Error('isInvalid')
         }
 
         if (response.result.isInBlock || response.result.isFinalized) {
             const eventName = getEventNameFromMethodName(contractMethodName)
             // Most contract transactions should return an event
-            if (response[eventsProperty]) {
-                return response[eventsProperty].filter((x) => x.name === eventName)
+            if (response[eventsProperty] !== undefined) {
+                return response[eventsProperty]!.filter((x) => x.name === eventName)
             }
         }
         return []
@@ -141,6 +143,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {Contract} signedContract
      * @param {string} contractMethodName
      * @param {Array}  encodedArgs
+     * @param atBlock
      * @return JSON result containing the contract event
      */
     async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], atBlock?: string | Uint8Array): Promise<AnyJson> {
@@ -151,7 +154,7 @@ export class ProsopoContractApi implements ContractApiInterface {
             if (response.output) {
                 return unwrap(response.output.toHuman())
             } else {
-                return
+                return []
             }
         }
         throw new Error(response.result.asErr.asModule.message.unwrap().toString())
@@ -182,13 +185,14 @@ export class ProsopoContractApi implements ContractApiInterface {
 
         let data
         if (storageKey.length) {
+            // @ts-ignore
             data = json[storageKey[0]]
         } else {
             // The metadata version is not present and its the old AbiMetadata
             data = json
         }
 
-        const storageEntry = data.storage.struct.fields.filter((obj) => obj.name === storageName)[0]
+        const storageEntry = data.storage.struct.fields.filter((obj: { name: string }) => obj.name === storageName)[0]
 
         if (storageEntry) {
             return storageEntry.layout.cell.key

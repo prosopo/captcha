@@ -121,13 +121,13 @@ export class Environment implements ProsopoEnvironment {
 
     private static getConfigPath (): string {
         const tsConfigPath = findUp.sync(TS_CONFIG_FILENAME)
-        if (tsConfigPath !== undefined) {
+        if (tsConfigPath !== null) {
             return tsConfigPath
         }
 
         const pathToConfigFile = findUp.sync(JS_CONFIG_FILENAME)
 
-        if (pathToConfigFile === undefined) {
+        if (pathToConfigFile === null) {
             throw new Error(ERRORS.GENERAL.CANNOT_FIND_CONFIG_FILE.message)
         }
 
