@@ -40,9 +40,9 @@ import {
     GovernanceStatus, Payee,
     Provider,
     RandomProvider,
-    ProsopoEnvironment
-} from '@prosopo/protocoljs/types'
-import { ProsopoContractApi } from '@prosopo/protocoljs/contract/interface'
+    ProsopoEnvironment,
+    ProsopoContractApi
+} from '@prosopo/contract'
 import { ERRORS } from '../errors'
 import { CaptchaMerkleTree } from '../merkle'
 import { buildDecodeVector } from '../codec/codec'

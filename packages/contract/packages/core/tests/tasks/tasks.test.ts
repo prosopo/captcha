@@ -26,7 +26,7 @@ import {
 } from '../mocks/accounts'
 import { ERRORS } from '../../src/errors'
 import { SOLVED_CAPTCHAS, DATASET } from '../mocks/mockdb'
-import { CaptchaSolution, Payee, Provider } from '../../src/types'
+import { CaptchaSolution, Payee, Provider } from '@prosopo/contract/types'
 import {
     computeCaptchaSolutionHash,
     computePendingRequestHash

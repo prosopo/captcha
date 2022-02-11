@@ -8,6 +8,7 @@
 /design/
 /artifacts
 
+
 # Ignore backup files creates by cargo fmt.
 **/*.rs.bk
 
@@ -19,6 +20,7 @@ Cargo.lock
 **/.history/**
 
 node_modules
+**/node_modules
 /.idea
 *.tsbuildinfo
 .DS_Store
@@ -108,6 +110,7 @@ typings/
 .dynamodb/
 
 build/
+**/build
 
 /.yarn/cache
 # This is the Yarn build state; it's local to each clone

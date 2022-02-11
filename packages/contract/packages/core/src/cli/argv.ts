@@ -18,7 +18,7 @@ import { Compact, u128 } from '@polkadot/types'
 import { encodeStringAddress } from '../util'
 import { ERRORS } from '../errors'
 import { Tasks } from '../tasks/tasks'
-import { Payee, PayeeSchema, ProsopoEnvironment } from '@prosopo/protocoljs/types'
+import { Payee, PayeeSchema, ProsopoEnvironment } from '@prosopo/contract/types'
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)

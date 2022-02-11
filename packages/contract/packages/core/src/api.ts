@@ -16,7 +16,8 @@
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'
 import { BadRequest, ERRORS } from './errors'
-import { CaptchaSolutionBody, Payee, AccountsResponse } from '@prosopo/protocoljs/types'
+import { AccountsResponse } from '@prosopo/contract/types'
+import {CaptchaSolutionBody} from './types/api'
 import type { AnyJson } from '@polkadot/types/types'
 import { validateAddress } from '@polkadot/util-crypto'
 
