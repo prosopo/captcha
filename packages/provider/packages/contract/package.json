@@ -5,7 +5,8 @@
   "packageManager": "yarn@3.0.1",
   "private": true,
   "sideEffects": false,
-  "type": "commonjs",
+  "module": "true",
+  "type": "module",
   "version": "1.0.0",
   "scripts": {
     "build": "tsc --build ./"
