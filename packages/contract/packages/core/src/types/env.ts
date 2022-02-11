@@ -17,7 +17,6 @@ import Contract from '@redspot/patract/contract'
 import { Network, Signer } from 'redspot/types'
 import { ProsopoConfig } from './config'
 import { Database } from './db'
-import { KeyringPair } from '@polkadot/keyring/types'
 
 export interface ProsopoEnvironment {
     network: Network
