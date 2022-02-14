@@ -24,7 +24,8 @@
       "@prosopo/contract": ["./packages/contract/src"],
       "@prosopo/contract/*": ["./packages/contract/src/*"],
       "@prosopo/provider-core": ["./packages/core/src"],
-      "@prosopo/provider-core/*": ["./packages/core/src/*"]
+      "@prosopo/provider-core/*": ["./packages/core/src/*"],
+
     }
   },
   "include": [
