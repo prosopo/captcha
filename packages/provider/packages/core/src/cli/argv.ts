@@ -18,7 +18,8 @@ import { Compact, u128 } from '@polkadot/types'
 import { encodeStringAddress } from '../util'
 import { ERRORS } from '../errors'
 import { Tasks } from '../tasks/tasks'
-import { Payee, PayeeSchema, ProsopoEnvironment } from '@prosopo/contract/types'
+import { Payee, PayeeSchema } from '@prosopo/contract/types'
+import {ProsopoEnvironment} from "@prosopo/provider-core/types";
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)
@@ -42,6 +43,7 @@ const validateValue = (argv) => {
     }
     throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`)
 }
+
 
 export function processArgs (args, env: ProsopoEnvironment) {
     const tasks = new Tasks(env)

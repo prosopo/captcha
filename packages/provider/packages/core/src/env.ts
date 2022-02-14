@@ -15,19 +15,19 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import findUp from 'find-up'
 // @ts-ignore
-import { network, patract } from 'redspot'
-import { Network } from 'redspot/types'
-import { Signer } from 'redspot/provider'
+import {network, patract} from 'redspot'
+import {Network} from 'redspot/types'
+import {Signer} from 'redspot/provider'
 import Contract from '@redspot/patract/contract'
-import { strict as assert } from 'assert'
-import { ZodError } from 'zod'
-import { ERRORS } from './errors'
-import { Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment } from './types'
-import { contractDefinitions } from '@prosopo/contract'
+import {strict as assert} from 'assert'
+import {ZodError} from 'zod'
+import {ERRORS} from './errors'
+import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment} from './types'
+import {ContractApiInterface, contractDefinitions, ProsopoContractApi} from '@prosopo/contract'
 
 require('dotenv').config()
 
-const { mnemonicGenerate } = require('@polkadot/util-crypto')
+const {mnemonicGenerate} = require('@polkadot/util-crypto')
 
 const TS_CONFIG_FILENAME = 'prosopo.config.ts'
 const JS_CONFIG_FILENAME = 'prosopo.config.js'
@@ -54,7 +54,9 @@ export class Environment implements ProsopoEnvironment {
 
     defaultEnvironment: string
 
-    constructor (mnemonic) {
+    contractName: string
+
+    constructor(mnemonic) {
         this.config = Environment.getConfig()
         this.network = network
         this.patract = patract
@@ -63,14 +65,13 @@ export class Environment implements ProsopoEnvironment {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
+            this.contractName = this.config.networks[this.defaultEnvironment].contract.name
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`)
         }
     }
 
-    async isReady () {
-        await this.getSigner()
-        await this.getContract()
+    async isReady() {
         await this.importDatabase()
         await this.db?.connect()
         // redspot will do this if using `npx redspot` commands. do it here anyway in case using `yarn ts-node ...`
@@ -78,9 +79,9 @@ export class Environment implements ProsopoEnvironment {
         assert(this.contract instanceof Contract)
     }
 
-    async importDatabase (): Promise<void> {
+    async importDatabase(): Promise<void> {
         try {
-            const { ProsopoDatabase } = await import(`./db/${this.config.database[this.defaultEnvironment].type}`)
+            const {ProsopoDatabase} = await import(`./db/${this.config.database[this.defaultEnvironment].type}`)
             this.db = new ProsopoDatabase(
                 this.config.database[this.defaultEnvironment].endpoint,
                 this.config.database[this.defaultEnvironment].dbname
@@ -90,36 +91,21 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
-    async getContract (): Promise<void> {
-        await this.network.api.isReadyOrError
-        const contractFactory = await patract.getContractFactory(CONTRACT_NAME, this.signer)
-        this.contract = contractFactory.attach(this.contractAddress)
-    }
-
-    async getSigner (): Promise<void> {
-        await this.network.api.isReadyOrError
-        const { mnemonic } = this
-        if (mnemonic) {
-            const keyringPair = this.network.keyring.addFromMnemonic(mnemonic)
-            // @ts-ignore
-            this.signer = this.network.createSigner(keyringPair)
-        }
-    }
-
-    async changeSigner (mnemonic: string): Promise<void> {
+    async changeSigner(mnemonic: string): Promise<void> {
         await this.network.api.isReadyOrError
         this.mnemonic = mnemonic
-        await this.getSigner()
+        const contractApi = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName)
+        await contractApi.changeSigner(this.mnemonic)
     }
 
-    createAccountAndAddToKeyring (): [string, string] {
+    createAccountAndAddToKeyring(): [string, string] {
         const mnemonic: string = mnemonicGenerate()
         const account = this.network.keyring.addFromMnemonic(mnemonic)
-        const { address } = account
+        const {address} = account
         return [mnemonic, address]
     }
 
-    private static getConfigPath (): string {
+    private static getConfigPath(): string {
         const tsConfigPath = findUp.sync(TS_CONFIG_FILENAME)
         if (tsConfigPath !== null) {
             return tsConfigPath
@@ -134,21 +120,21 @@ export class Environment implements ProsopoEnvironment {
         return pathToConfigFile
     }
 
-    private static getConfig (): ProsopoConfig {
+    private static getConfig(): ProsopoConfig {
         try {
             const filePath = Environment.getConfigPath()
             const config = Environment.importCsjOrEsModule(filePath)
             return ProsopoConfigSchema.parse(config)
         } catch (error) {
             if (error instanceof ZodError) {
-                const { path, message } = error.issues[0]
+                const {path, message} = error.issues[0]
                 throw new Error(`${path.join('.')} ${message}`)
             }
             throw new Error(ERRORS.CONFIG.CONFIGURATIONS_LOAD_FAILED.message)
         }
     }
 
-    private static importCsjOrEsModule (filePath: string): any {
+    private static importCsjOrEsModule(filePath: string): any {
         const imported = require(filePath)
         return imported.default !== undefined ? imported.default : imported
     }

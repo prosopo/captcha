@@ -16,10 +16,12 @@
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'
 import { BadRequest, ERRORS } from './errors'
-import { AccountsResponse } from '@prosopo/contract/types'
-import {CaptchaSolutionBody} from './types/api'
+import {CaptchaSolutionBody, AccountsResponse} from './types/api'
 import type { AnyJson } from '@polkadot/types/types'
 import { validateAddress } from '@polkadot/util-crypto'
+import {Environment} from "@prosopo/provider-core/env";
+import {parseBlockNumber} from "@prosopo/provider-core/util";
+import {ProsopoContractApi} from "@prosopo/contract";
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -27,9 +29,11 @@ import { validateAddress } from '@polkadot/util-crypto'
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
  * @param {Environment} env - The Prosopo environment
  */
-export function prosopoMiddleware (env): Router {
+export function prosopoMiddleware (env: Environment): Router {
     const router = express.Router()
     const tasks = new Tasks(env)
+    const contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName)
+
 
     /**
      * Returns a random provider using the account that is currently the env signer
@@ -101,7 +105,8 @@ export function prosopoMiddleware (env): Router {
         }
         try {
             validateAddress(providerAccount as string)
-            const result = await env.contract.query.getProviderDetails(providerAccount)
+            const contract = await contractApi.getContract()
+            const result = await contract.query.getProviderDetails(providerAccount)
             return res.json(result.output)
         } catch (err: unknown) {
             const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
@@ -123,7 +128,8 @@ export function prosopoMiddleware (env): Router {
         }
         try {
             validateAddress(userAccount as string)
-            await tasks.validateProviderWasRandomlyChosen(userAccount, datasetId, blockNumber)
+            const blockNumberParsed = parseBlockNumber(blockNumber)
+            await tasks.validateProviderWasRandomlyChosen(userAccount, datasetId, blockNumberParsed)
             return res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId as string, userAccount as string))
         } catch (err: unknown) {
             const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`

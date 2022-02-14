@@ -98,3 +98,7 @@ export async function promiseQueue<T> (
 
     return ret
 }
+
+export function parseBlockNumber(blockNumberString: string) {
+    return parseInt(blockNumberString.replace(/,/g, ''))
+}

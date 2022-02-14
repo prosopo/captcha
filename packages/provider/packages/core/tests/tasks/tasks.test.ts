@@ -34,7 +34,7 @@ import {
 import { sendFunds, setupDapp, setupProvider } from '../mocks/setup'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { AnyJson } from '@polkadot/types/types/codec'
-import { promiseQueue } from '../../src/util'
+import {parseBlockNumber, promiseQueue} from '../../src/util'
 import { BN } from '@polkadot/util'
 
 const chai = require('chai')
@@ -712,8 +712,8 @@ describe('CONTRACT TASKS', () => {
         })
 
         const res = await tasks.getRandomProvider(dappUser.address)
-        const blockNumber = parseInt(res.block_number.replace(/,/g, ''))
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id, blockNumber)
+        const blockNumberParsed = parseBlockNumber(res.block_number)
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id, blockNumberParsed)
             .then(() => true).catch(() => false)
         return expect(valid).to.be.true
     })
@@ -755,7 +755,7 @@ describe('CONTRACT TASKS', () => {
         await tasks.providerAddDataset(captchaFilePath)
 
         const res = await tasks.getRandomProvider(dappUser.address)
-        const blockNumber = parseInt(res.block_number.replace(/,/g, ''))
+        const blockNumberParsed = parseBlockNumber(res.block_number)
         const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', blockNumber).then(() => true).catch(() => false)
         return expect(valid).to.be.false
     })
