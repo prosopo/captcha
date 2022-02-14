@@ -28,7 +28,7 @@ export function getEventNameFromMethodName (contractMethodName: string): string 
 }
 
 /**
- * Extract events givent the contract method name
+ * Extract events given the contract method name
  * 
  * @return {AnyJson} array of events filtered by calculated event name
  */

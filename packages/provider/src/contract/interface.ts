@@ -82,12 +82,6 @@ export class ProsopoContractApi implements ContractApiInterface {
         }
 
         if (response.result.isInBlock || response.result.isFinalized) {
-            if (response.result.status.isRetracted) {
-                throw (response.status.asRetracted)
-            }
-            if (response.result.status.isInvalid) {
-                throw (response.status.asInvalid)
-            }
             return response
         }
         return []
