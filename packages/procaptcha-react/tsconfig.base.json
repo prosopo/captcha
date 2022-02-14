@@ -1,0 +1,14 @@
+{
+  "extends": "./devops/tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@prosopo/contract": ["../provider/packages/contract/src"],
+      "@prosopo/contract/*": ["../provider/packages/contract/src/*"],
+      "@prosopo/provider-core": ["../provider/packages/core/src"],
+      "@prosopo/provider-core/*": ["../provider/packages/core/src/*"]
+    },
+    "skipLibCheck": true
+  }
+}
