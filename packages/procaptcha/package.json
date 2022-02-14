@@ -1,0 +1,24 @@
+{
+  "author": "Chris Taylor <chris@prosopo.io>",
+  "contributors": ["Sinisa Canak"],
+  "license": "GPL-3.0",
+  "packageManager": "yarn@3.0.1",
+  "private": true,
+  "sideEffects": false,
+  "type": "commonjs",
+  "version": "0.1",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b ./ --verbose"
+
+  },
+  "dependencies": {
+    "@prosopo/contract": "workspace:*"
+
+  },
+  "resolutions": {
+    "typescript": "^4.5.5"
+  }
+}
