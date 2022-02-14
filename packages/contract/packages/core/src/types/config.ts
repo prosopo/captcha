@@ -25,7 +25,8 @@ export const ProsopoConfigSchema = z.object({
                 address: z.string(),
                 deployer: z.object({
                     address: z.string()
-                })
+                }),
+                name: z.string()
             })
         })
     }),

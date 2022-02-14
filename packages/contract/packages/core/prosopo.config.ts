@@ -24,7 +24,8 @@ export default {
                 address: process.env.CONTRACT_ADDRESS,
                 deployer: {
                     address: '//Alice'
-                }
+                },
+                name: 'prosopo'
             }
         }
     },

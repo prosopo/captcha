@@ -18,7 +18,7 @@ import { Registry } from 'redspot/types/provider'
 import { AbiMessage } from '@polkadot/api-contract/types'
 import Contract from '@redspot/patract/contract'
 import { ContractApiInterface } from './types'
-import { Signer } from 'redspot/provider'
+import { Signer } from 'redspot/types'
 import { ERRORS } from './errors'
 import {AbiMetadata, Network} from 'redspot/types'
 import { unwrap, encodeStringArgs, getEventNameFromMethodName, handleContractCallOutcomeErrors } from './helpers'
@@ -30,7 +30,7 @@ export class ProsopoContractApi implements ContractApiInterface {
     contract?: Contract
     network: Network
     mnemonic?: string
-    signer?: Signer | undefined
+    signer?: Signer
     deployerAddress: string
     contractAddress: string
     patract: any;
@@ -45,27 +45,36 @@ export class ProsopoContractApi implements ContractApiInterface {
         this.contractName = contractName
     }
 
-    async getSigner (): Promise<void> {
+    async getSigner(): Promise<Signer> {
         await this.network.api.isReadyOrError
         const { mnemonic } = this
-        if (mnemonic) {
-            const keyringPair = this.network.keyring.addFromMnemonic(mnemonic)
-            // @ts-ignore
-            this.signer = this.network.createSigner(keyringPair)
+        if (!mnemonic) {
+            throw new Error(ERRORS.CONTRACT.SIGNER_UNDEFINED.message)
         }
+        const keyringPair = this.network.keyring.addFromMnemonic(mnemonic)
+        const signer = this.network.createSigner(keyringPair)
+        this.signer = signer
+        return signer
+
     }
 
-    async changeSigner (mnemonic: string): Promise<void> {
+    async changeSigner (mnemonic: string): Promise<Signer> {
         await this.network.api.isReadyOrError
         this.mnemonic = mnemonic
-        await this.getSigner()
+        return await this.getSigner()
     }
 
 
-    async getContract (): Promise<void> {
+    async getContract (): Promise<Contract> {
         await this.network.api.isReadyOrError
         const contractFactory = await patract.getContractFactory(this.contractName, this.signer)
-        this.contract = contractFactory.attach(this.contractAddress)
+        let contract = contractFactory.attach(this.contractAddress)
+        if (!this.contract) {
+            throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
+        }
+
+        this.contract = contract
+        return contract
     }
 
     createAccountAndAddToKeyring (): [string, string] {
@@ -76,43 +85,31 @@ export class ProsopoContractApi implements ContractApiInterface {
     }
 
     /**
-     * Perform a contract transaction calling the specified method
-     * @param {string} contractMethodName
-     * @param {Array}  args
-     * @param {number} value    A value to send with the transaction, e.g. a stake
-     * @param atBlock
-     * @return JSON result containing the contract event
+     * Operations to carry out before calling contract
      */
-    async contractCall<T> (contractMethodName: string, args: T[], value?: number | string, atBlock?: string | Uint8Array): Promise<DecodedEvent[]|AnyJson> {
-        await this.getContract()
-        if (!this.contract) {
-            throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
-        }
+    async beforeCall<T> (contractMethodName: string, args: T[]): Promise<{ encodedArgs: T[]; signedContract: Contract }> {
+        const contract = await this.getContract()
         if (!this.signer) {
             throw new Error(ERRORS.CONTRACT.SIGNER_UNDEFINED.message)
         }
-        const signedContract: Contract = this.contract.connect(this.signer)
+        const signedContract: Contract = contract.connect(this.signer)
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs = encodeStringArgs(methodObj, args)
-
-        // Always query first as errors are passed back from a dry run but not from a transaction
-        let result: AnyJson | DecodedEvent[] = await this.contractQuery(signedContract, contractMethodName, encodedArgs, atBlock)
-
-        if (methodObj.isMutating) {
-            result = await this.contractTx(signedContract, contractMethodName, encodedArgs, value)
-        }
-        return result
+        const encodedArgs: T[] = encodeStringArgs(methodObj, args)
+        return { signedContract, encodedArgs }
     }
+
 
     /**
      * Perform a contract tx (mutating) calling the specified method
-     * @param {Contract} signedContract
      * @param {string} contractMethodName
-     * @param {Array}  encodedArgs
+     * @param args
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], value: number | string | undefined): Promise<DecodedEvent[]> {
+    async contractTx<T>(contractMethodName: string, args: T[], value?: number | string): Promise<DecodedEvent[]> {
+        // Always query first as errors are passed back from a dry run but not from a transaction
+        await this.contractQuery(contractMethodName, args)
+        const {encodedArgs, signedContract } = await this.beforeCall(contractMethodName, args)
         let response
         if (value) {
             response = await signedContract.tx[contractMethodName](...encodedArgs, { value })
@@ -140,13 +137,13 @@ export class ProsopoContractApi implements ContractApiInterface {
 
     /**
      * Perform a contract query (non-mutating) calling the specified method
-     * @param {Contract} signedContract
      * @param {string} contractMethodName
-     * @param {Array}  encodedArgs
+     * @param args
      * @param atBlock
      * @return JSON result containing the contract event
      */
-    async contractQuery <T> (signedContract: Contract, contractMethodName: string, encodedArgs: T[], atBlock?: string | Uint8Array): Promise<AnyJson> {
+    async contractQuery <T> (contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson> {
+        const {encodedArgs, signedContract } = await this.beforeCall(contractMethodName, args)
         const query = !atBlock ? signedContract.query[contractMethodName] : signedContract.queryAt(atBlock, signedContract.abi.findMessage(contractMethodName))
         const response = await query(...encodedArgs)
         handleContractCallOutcomeErrors(response)

@@ -18,7 +18,7 @@ import { Network, Signer } from 'redspot/types'
 import Contract from '@redspot/patract/contract'
 import { ERRORS } from '../../src/errors'
 import { network, patract } from 'redspot'
-import { contractDefinitions } from '../../src/contract/definitions'
+import { contractDefinitions, ContractApiInterface } from '@prosopo/contract'
 import { strict as assert } from 'assert'
 
 const { mnemonicGenerate } = require('@polkadot/util-crypto')
@@ -28,14 +28,13 @@ const CONTRACT_NAME = 'prosopo'
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
     network: Network
-    contract?: Contract
     db: Database | undefined
     mnemonic: string
-    signer?: Signer
     deployerAddress: string
     patract: any;
     contractAddress: string
     defaultEnvironment: string
+    contractName: string
 
     constructor () {
         this.config = {
@@ -75,7 +74,10 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
     }
 
+
+
     async isReady (): Promise<void> {
+        const contractApi = new ContractApiInterface
         await this.getSigner()
         await this.getContract()
         // Persist database state for tests
@@ -101,35 +103,4 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
     }
 
-    /*
-        Direct copy of functions from env.ts as contract is not currently mocked
-    */
-    async getContract (): Promise<void> {
-        await this.network.api.isReadyOrError
-        const contractFactory = await patract.getContractFactory(CONTRACT_NAME, this.signer)
-        this.contract = contractFactory.attach(this.contractAddress)
-    }
-
-    async getSigner (): Promise<void> {
-        await this.network.api.isReadyOrError
-        const mnemonic = this.mnemonic
-        if (mnemonic) {
-            const keyringPair = this.network.keyring.addFromMnemonic(mnemonic)
-            // @ts-ignore
-            this.signer = this.network.createSigner(keyringPair)
-        }
-    }
-
-    async changeSigner (mnemonic: string): Promise<void> {
-        await this.network.api.isReadyOrError
-        this.mnemonic = mnemonic
-        await this.getSigner()
-    }
-
-    createAccountAndAddToKeyring (): [string, string] {
-        const mnemonic: string = mnemonicGenerate()
-        const account = this.network.keyring.addFromMnemonic(mnemonic)
-        const { address } = account
-        return [mnemonic, address]
-    }
 }
