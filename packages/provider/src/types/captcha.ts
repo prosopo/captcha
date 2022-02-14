@@ -20,6 +20,8 @@ export enum CaptchaTypes { SelectAll = 'SelectAll'}
 
 export enum CaptchaItemTypes {Text = 'text', Image = 'image'}
 
+export enum CaptchaStates {Solved = 'solved', Unsolved = 'unsolved'}
+
 const CaptchaItemTypesZod = z.nativeEnum(CaptchaItemTypes)
 
 export type CaptchaWithoutId = {
@@ -27,6 +29,11 @@ export type CaptchaWithoutId = {
     items: any[],
     target: string,
     solution?: any
+}
+
+export type UpdateCaptchaSolution = {
+    captchaId: string,
+    solution: any
 }
 
 export interface Captcha extends CaptchaWithoutId {
@@ -74,6 +81,12 @@ export type CaptchaConfig = {
     unsolved: {
         count: number
     }
+}
+
+export type CaptchaSolutionConfig = {
+    requiredNumberOfSolutions: number,
+    solutionWinningPercentage: number,
+    captchaStoragePath: string
 }
 
 export const CaptchaSchema = z.object({

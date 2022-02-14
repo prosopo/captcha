@@ -36,6 +36,11 @@ export default {
             count: 1
         }
     },
+    captchaSolutions: {
+        requiredNumberOfSolutions: 3,
+        solutionWinningPercentage: 80,
+        captchaStoragePath: '/usr/src/data'
+    },
     database: {
         development: {
             type: 'mongo',

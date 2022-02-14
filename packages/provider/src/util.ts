@@ -39,6 +39,14 @@ export function loadJSONFile (filePath) {
     }
 }
 
+export function createJSONFile (filePath, jsonData) {
+    try {
+        return fs.writeFileSync(filePath, JSON.stringify(jsonData), 'utf8')
+    } catch (err) {
+        throw new Error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
+    }
+}
+
 export async function readFile (filePath): Promise<Buffer> {
     return new Promise((resolve, reject) => {
         fs.readFile(filePath, (err, data) => {
