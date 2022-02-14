@@ -180,5 +180,15 @@ export function processArgs (args, env: ProsopoEnvironment) {
             },
             [validateAddress]
         )
+        .command(
+            'calculate_captcha_solutions',
+            'Calculate captacha solutions',
+            (yargs) => yargs
+                .option(''),
+            async (argv) => {
+                await tasks.calculateCaptchaSolutions()
+            },
+            []
+        )
         .argv
 }

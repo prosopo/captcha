@@ -17,7 +17,7 @@ import { hexToU8a } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { Hash } from '@polkadot/types/interfaces'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { loadJSONFile, shuffleArray } from '../util'
+import { createJSONFile, loadJSONFile, shuffleArray } from '../util'
 import {
     addHashesToDataset,
     compareCaptchaSolutions,
@@ -40,7 +40,11 @@ import {
     GovernanceStatus, Payee,
     Provider,
     RandomProvider,
-    ProsopoEnvironment
+    ProsopoEnvironment,
+    UpdateCaptchaSolution,
+    CaptchaStates,
+    CaptchaWithoutId,
+    CaptchaSolutionConfig
 } from '../types'
 import { ProsopoContractApi } from '../contract/interface'
 import { ERRORS } from '../errors'
@@ -56,11 +60,14 @@ export class Tasks {
     db: Database
 
     captchaConfig: CaptchaConfig
+    
+    captchaSolutionConfig: CaptchaSolutionConfig
 
     constructor (env: ProsopoEnvironment) {
         this.contractApi = new ProsopoContractApi(env)
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
+        this.captchaSolutionConfig = env.config.captchaSolutions
     }
 
     // Contract transactions potentially involving database writes
@@ -300,11 +307,78 @@ export class Tasks {
 
     /**
      * Apply new captcha solutions to captcha dataset and recalculate merkle tree
-     * @param {string} datasetId
      */
-    async calculateCaptchaSolutions (datasetId: string) {
-        // TODO run this on a predefined schedule as updating the dataset requires committing an updated
-        // captcha_dataset_id to the blockchain
+    async calculateCaptchaSolutions () {
+        try {
+            const unsolvedCaptchas = await this.db.getAllCaptchas(CaptchaStates.Unsolved)
+
+            const totalNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
+            const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
+            const captchaStoragePath = this.captchaSolutionConfig.captchaStoragePath
+            const winningNumberOfSolutions = Math.round(totalNumberOfSolutions * (winningPercentage / 100))
+
+            if (unsolvedCaptchas && unsolvedCaptchas.length > 0) {
+                for (let i = 0; i < unsolvedCaptchas.length; i++) {
+                    const solutions = await this.db.getAllSolutions(unsolvedCaptchas[i].captchaId)
+                    if (solutions && solutions.length >= totalNumberOfSolutions) {
+                        const solutionsWithCount = {}
+                        for (let i = 0; i < solutions.length; i++) {
+                            const previousCount = solutionsWithCount[JSON.stringify(solutions[i].solution)]?.solutionCount || 0
+                            solutionsWithCount[JSON.stringify(solutions[i].solution)] = {
+                                captchaId: solutions[i].captchaId,
+                                solution: solutions[i].solution,
+                                solutionCount: previousCount + 1
+                            }
+                        }
+
+                        const solutionsToUpdate: UpdateCaptchaSolution[] =
+                          Object.values(solutionsWithCount)
+                              .filter(({ solutionCount }: any) => solutionCount >= winningNumberOfSolutions)
+                              .map(({ solutionCount, ...otherAttributes }: any) => otherAttributes)
+
+                        if (solutionsToUpdate.length > 0) {
+                            await this.db.updateCaptchaSolution(solutionsToUpdate)
+
+                            const filePath = `${captchaStoragePath}/captchas_${Date.now()}.json`
+
+                            await this.generateCaptchasJSON(filePath)
+
+                            await this.providerAddDataset(filePath)
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            throw new Error(`${ERRORS.GENERAL.CALCULATE_CAPTCHA_SOLUTION.message}:${error}`)
+        }
+    }
+
+    /**
+     * Validate that provided `datasetId` was a result of calling `get_random_provider` method
+     */
+    async generateCaptchasJSON (filePath: string) {
+        try {
+            const captchas = await this.db.getAllCaptchas()
+
+            const jsonData = {
+                format: 'SelectAll',
+                captchas: captchas?.map((item) => {
+                    const captcha: CaptchaWithoutId = {
+                        salt: item.salt,
+                        target: item.target,
+                        items: item.items
+                    }
+                    if ('solution' in item) {
+                        captcha.solution = item.solution
+                    }
+                    return captcha
+                })
+            }
+
+            createJSONFile(filePath, jsonData)
+        } catch (error) {
+            throw new Error(`${ERRORS.GENERAL.GENERATE_CPATCHAS_JSON_FAILED.message}:${error}`)
+        }
     }
 
     /**
