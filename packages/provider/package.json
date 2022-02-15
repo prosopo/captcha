@@ -1,7 +1,7 @@
 {
-  "name": "provider",
-  "version": "1.0.0",
-  "stableVersion": "1.0.0",
+  "name": "@prosopo/provider",
+  "version": "0.0.0",
+  "stableVersion": "0.0.0",
   "author": "Prosopo",
   "repository": {
     "type": "git",
