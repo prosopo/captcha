@@ -32,6 +32,12 @@ module.exports = {
                 '@typescript-eslint/restrict-template-expressions': 'off',
                 'indent': ['error', 4]
             }
+        },
+        {
+            files: ["*.test.ts", "*.spec.ts"],
+            rules: {
+                'no-unused-expressions': 'off',
+            }
         }
     ],
     parser: require.resolve('@typescript-eslint/parser'),
