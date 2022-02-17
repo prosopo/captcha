@@ -23,7 +23,7 @@ import {strict as assert} from 'assert'
 import {ZodError} from 'zod'
 import {ERRORS} from './errors'
 import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment} from './types'
-import {ContractApiInterface, contractDefinitions, ProsopoContractApi} from '@prosopo/contract'
+import {contractDefinitions, ProsopoContractApi} from '@prosopo/contract'
 
 require('dotenv').config()
 
@@ -31,7 +31,6 @@ const {mnemonicGenerate} = require('@polkadot/util-crypto')
 
 const TS_CONFIG_FILENAME = 'prosopo.config.ts'
 const JS_CONFIG_FILENAME = 'prosopo.config.js'
-const CONTRACT_NAME = 'prosopo'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig

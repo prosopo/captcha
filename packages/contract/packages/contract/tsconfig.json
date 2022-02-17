@@ -1,6 +1,5 @@
 {
   "extends": "../../tsconfig.json",
-
   "compilerOptions": {
     "baseUrl": "..",
     "outDir": "./build",
@@ -12,7 +11,5 @@
   "include": [
     "src"
   ],
-  "references": [
-
-  ]
+  "references": []
 }

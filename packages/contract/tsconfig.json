@@ -1,12 +1,13 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "composite": false
+    "composite": true
   },
   "include": [
     "packages/**/src/**/*"
   ],
   "exclude": [
     "**/node_modules/**/*"
-  ]
+  ],
+  "references": []
 }
