@@ -1,10 +1,16 @@
 {
-
   "compilerOptions": {
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "target": "ES2019",
     "module": "commonjs",
-    "rootDir": "./",
+    "rootDirs": [
+      ".",
+      "./src",
+      "./tests",
+      "./scripts"
+    ],
     "outDir": "./build",
     "esModuleInterop": true,
     "strict": true,
@@ -21,15 +27,23 @@
     "noEmitOnError": true,
     "baseUrl": "../..",
     "paths": {
-      "@prosopo/contract": ["./packages/contract/src"],
-      "@prosopo/contract/*": ["./packages/contract/src/*"],
-      "@prosopo/provider-core": ["./packages/core/src"],
-      "@prosopo/provider-core/*": ["./packages/core/src/*"],
-
+      "@prosopo/contract": [
+        "./packages/contract/src"
+      ],
+      "@prosopo/contract/*": [
+        "./packages/contract/src/*"
+      ],
+      "@prosopo/provider-core": [
+        "./packages/core/src"
+      ],
+      "@prosopo/provider-core/*": [
+        "./packages/core/src/*"
+      ]
     }
   },
   "include": [
-    "**/*.ts"
+    "**/*.ts",
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
@@ -37,9 +51,12 @@
     ".cache",
     "build/**/*",
     "**/build/**/*",
+    "**/*.test.ts",
+    "**/*mock*.ts"
   ],
   "references": [
-    { "path": "../contract/tsconfig.build.json" },
+    {
+      "path": "../contract"
+    }
   ]
-
 }

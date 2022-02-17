@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { network, patract } from 'redspot'
 import { Registry } from 'redspot/types/provider'
-import { AbiMessage } from '@polkadot/api-contract/types'
+import type { AbiMessage } from '@polkadot/api-contract/types'
 import Contract from '@redspot/patract/contract'
 import { ContractApiInterface } from './types'
 import { Signer } from 'redspot/types'
@@ -146,6 +146,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         const {encodedArgs, signedContract } = await this.beforeCall(contractMethodName, args)
         const query = !atBlock ? signedContract.query[contractMethodName] : signedContract.queryAt(atBlock, signedContract.abi.findMessage(contractMethodName))
         const response = await query(...encodedArgs)
+        // @ts-ignore
         handleContractCallOutcomeErrors(response)
         if (response.result.isOk) {
             if (response.output) {
@@ -161,9 +162,9 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @return the contract method object
      */
     getContractMethod (contractMethodName: string): AbiMessage {
-        const methodObj = this.contract?.abi.messages.filter((obj) => obj.method === contractMethodName)[0] as AbiMessage
-        if (methodObj) {
-            return methodObj
+        const methodObj = this.contract?.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
+        if (methodObj !== undefined) {
+            return methodObj as unknown as AbiMessage
         }
         throw new Error(ERRORS.CONTRACT.INVALID_METHOD.message)
     }
