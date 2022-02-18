@@ -196,18 +196,18 @@ export class Tasks {
         let response: CaptchaSolutionResponse[] = []
         const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
         const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
-        // const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
+        const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
 
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
-        // if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
-        await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
-        if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-            await this.providerApprove(commitmentId)
-            response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
-        } else {
-            await this.providerDisapprove(commitmentId)
+        if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
+            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
+            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+                await this.providerApprove(commitmentId)
+                response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
+            } else {
+                await this.providerDisapprove(commitmentId)
+            }
         }
-        // }
 
         return response
     }
@@ -254,14 +254,6 @@ export class Tasks {
         if (!commitmentId) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
         }
-
-        await this.dappUserCommit(
-            '5DPEcuBK23Hume855tKoyyKLGCHhjM9BJPHr6ebhbAQ5QE7G',
-            '0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605',
-            commitmentId,
-            '5EX3imTdVSxuBWsusTUMJYpBwNKJtnFYLZzT4FsLjmZA1wob'
-        )
-
         const commitment = await this.getCaptchaSolutionCommitment(commitmentId)
         if (!commitment) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
@@ -351,10 +343,10 @@ export class Tasks {
                                 .filter(({ solutionCount }: any) => solutionCount >= winningNumberOfSolutions)
                                 .map(({ solutionCount, ...otherAttributes }: any) => otherAttributes))
                     }
-                    if (solutionsToUpdate.length > 0 && i === unsolvedCaptchas.length - 1) {
-                        this.updateCaptchasJSON(captchaFilePath, solutionsToUpdate)
-                        await this.providerAddDataset(captchaFilePath)
-                    }
+                }
+                if (solutionsToUpdate.length > 0) {
+                    this.updateCaptchasJSON(captchaFilePath, solutionsToUpdate)
+                    await this.providerAddDataset(captchaFilePath)
                 }
             }
         } catch (error) {

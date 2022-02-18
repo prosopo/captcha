@@ -197,7 +197,7 @@ export function processArgs (args, env: ProsopoEnvironment) {
         )
         .command(
             'calculate_captcha_solutions',
-            'Calculate captacha solutions',
+            'Calculate captcha solutions',
             (yargs) => yargs
                 .option('schedule', { type: 'string', demand: false, desc: 'A Recurring schedule expression' }),
             async (argv) => {
