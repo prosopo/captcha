@@ -31,8 +31,9 @@ export type CaptchaWithoutId = {
     solution?: any
 }
 
-export type UpdateCaptchaSolution = {
+export type CaptchaSolutionToUpdate = {
     captchaId: string,
+    salt: string,
     solution: any
 }
 
@@ -86,7 +87,7 @@ export type CaptchaConfig = {
 export type CaptchaSolutionConfig = {
     requiredNumberOfSolutions: number,
     solutionWinningPercentage: number,
-    captchaStoragePath: string
+    captchaFilePath: string
 }
 
 export const CaptchaSchema = z.object({
