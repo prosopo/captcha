@@ -36,7 +36,7 @@ async function main () {
         app.listen(port, () => {
             console.log(`Prosopo app listening at http://localhost:${port}`)
         })
-    } else {
+    } else if (!args.schedule) {
         process.exit()
     }
 }

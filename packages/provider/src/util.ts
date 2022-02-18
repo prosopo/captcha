@@ -39,7 +39,7 @@ export function loadJSONFile (filePath) {
     }
 }
 
-export function createJSONFile (filePath, jsonData) {
+export function writeJSONFile (filePath, jsonData) {
     try {
         return fs.writeFileSync(filePath, JSON.stringify(jsonData), 'utf8')
     } catch (err) {

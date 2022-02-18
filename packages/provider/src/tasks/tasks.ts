@@ -17,7 +17,7 @@ import { hexToU8a } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { Hash } from '@polkadot/types/interfaces'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { createJSONFile, loadJSONFile, shuffleArray } from '../util'
+import { loadJSONFile, shuffleArray, writeJSONFile } from '../util'
 import {
     addHashesToDataset,
     compareCaptchaSolutions,
@@ -41,7 +41,7 @@ import {
     Provider,
     RandomProvider,
     ProsopoEnvironment,
-    UpdateCaptchaSolution,
+    CaptchaSolutionToUpdate,
     CaptchaStates,
     CaptchaWithoutId,
     CaptchaSolutionConfig
@@ -60,7 +60,7 @@ export class Tasks {
     db: Database
 
     captchaConfig: CaptchaConfig
-    
+
     captchaSolutionConfig: CaptchaSolutionConfig
 
     constructor (env: ProsopoEnvironment) {
@@ -90,6 +90,7 @@ export class Tasks {
 
     async providerAddDataset (file: string): Promise<AnyJson> {
         const dataset = parseCaptchaDataset(loadJSONFile(file) as JSON)
+        const datasetWithoutIds = { ...dataset }
         const tree = new CaptchaMerkleTree()
         const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash))
         tree.build(captchaHashes)
@@ -97,6 +98,7 @@ export class Tasks {
         datasetHashes.datasetId = tree.root?.hash
         datasetHashes.tree = tree.layers
         await this.db?.storeDataset(datasetHashes)
+        writeJSONFile(file, { ...datasetWithoutIds, datasetId: datasetHashes.datasetId })
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
@@ -194,18 +196,18 @@ export class Tasks {
         let response: CaptchaSolutionResponse[] = []
         const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
         const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
-        const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
+        // const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
 
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
-        if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
-            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
-            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-                await this.providerApprove(commitmentId)
-                response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
-            } else {
-                await this.providerDisapprove(commitmentId)
-            }
+        // if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
+        await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
+        if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+            await this.providerApprove(commitmentId)
+            response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
+        } else {
+            await this.providerDisapprove(commitmentId)
         }
+        // }
 
         return response
     }
@@ -252,6 +254,14 @@ export class Tasks {
         if (!commitmentId) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
         }
+
+        await this.dappUserCommit(
+            '5DPEcuBK23Hume855tKoyyKLGCHhjM9BJPHr6ebhbAQ5QE7G',
+            '0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605',
+            commitmentId,
+            '5EX3imTdVSxuBWsusTUMJYpBwNKJtnFYLZzT4FsLjmZA1wob'
+        )
+
         const commitment = await this.getCaptchaSolutionCommitment(commitmentId)
         if (!commitment) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
@@ -310,12 +320,17 @@ export class Tasks {
      */
     async calculateCaptchaSolutions () {
         try {
-            const unsolvedCaptchas = await this.db.getAllCaptchas(CaptchaStates.Unsolved)
+            const captchaFilePath = this.captchaSolutionConfig.captchaFilePath
+            const currentDataset = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
+            if (!currentDataset.datasetId) {
+                return
+            }
+            const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(currentDataset.datasetId as string, CaptchaStates.Unsolved)
 
             const totalNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
             const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
-            const captchaStoragePath = this.captchaSolutionConfig.captchaStoragePath
             const winningNumberOfSolutions = Math.round(totalNumberOfSolutions * (winningPercentage / 100))
+            let solutionsToUpdate: CaptchaSolutionToUpdate[] = []
 
             if (unsolvedCaptchas && unsolvedCaptchas.length > 0) {
                 for (let i = 0; i < unsolvedCaptchas.length; i++) {
@@ -327,24 +342,18 @@ export class Tasks {
                             solutionsWithCount[JSON.stringify(solutions[i].solution)] = {
                                 captchaId: solutions[i].captchaId,
                                 solution: solutions[i].solution,
+                                salt: solutions[i].salt,
                                 solutionCount: previousCount + 1
                             }
                         }
-
-                        const solutionsToUpdate: UpdateCaptchaSolution[] =
-                          Object.values(solutionsWithCount)
-                              .filter(({ solutionCount }: any) => solutionCount >= winningNumberOfSolutions)
-                              .map(({ solutionCount, ...otherAttributes }: any) => otherAttributes)
-
-                        if (solutionsToUpdate.length > 0) {
-                            await this.db.updateCaptchaSolution(solutionsToUpdate)
-
-                            const filePath = `${captchaStoragePath}/captchas_${Date.now()}.json`
-
-                            await this.generateCaptchasJSON(filePath)
-
-                            await this.providerAddDataset(filePath)
-                        }
+                        solutionsToUpdate = solutionsToUpdate.concat(
+                            Object.values(solutionsWithCount)
+                                .filter(({ solutionCount }: any) => solutionCount >= winningNumberOfSolutions)
+                                .map(({ solutionCount, ...otherAttributes }: any) => otherAttributes))
+                    }
+                    if (solutionsToUpdate.length > 0 && i === unsolvedCaptchas.length - 1) {
+                        this.updateCaptchasJSON(captchaFilePath, solutionsToUpdate)
+                        await this.providerAddDataset(captchaFilePath)
                     }
                 }
             }
@@ -354,28 +363,35 @@ export class Tasks {
     }
 
     /**
-     * Validate that provided `datasetId` was a result of calling `get_random_provider` method
+     * Update captchas json file with new solutions
      */
-    async generateCaptchasJSON (filePath: string) {
+    updateCaptchasJSON (filePath: string, solutionsToUpdate: CaptchaSolutionToUpdate[]) {
         try {
-            const captchas = await this.db.getAllCaptchas()
+            const solutionObj = {}
+
+            for (let i = 0; i < solutionsToUpdate.length; i++) {
+                solutionObj[solutionsToUpdate[i].salt] = solutionsToUpdate[i]
+            }
+
+            const prevDataset = parseCaptchaDataset(loadJSONFile(filePath) as JSON)
 
             const jsonData = {
-                format: 'SelectAll',
-                captchas: captchas?.map((item) => {
+                ...prevDataset,
+                captchas: prevDataset.captchas.map((item) => {
                     const captcha: CaptchaWithoutId = {
                         salt: item.salt,
                         target: item.target,
                         items: item.items
                     }
-                    if ('solution' in item) {
-                        captcha.solution = item.solution
+                    if (item.salt in solutionObj && 'solution' in solutionObj[item.salt]) {
+                        captcha.solution = solutionObj[item.salt].solution
                     }
                     return captcha
                 })
             }
 
-            createJSONFile(filePath, jsonData)
+            writeJSONFile(filePath, jsonData)
+            return true
         } catch (error) {
             throw new Error(`${ERRORS.GENERAL.GENERATE_CPATCHAS_JSON_FAILED.message}:${error}`)
         }

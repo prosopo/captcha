@@ -15,6 +15,8 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import {
     Db,
+    Filter,
+    Document,
     MongoClient
 } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
@@ -27,7 +29,6 @@ import {
     CaptchaSolution,
     DatasetWithIdsAndTreeSchema,
     DatasetWithIdsAndTree,
-    UpdateCaptchaSolution,
     CaptchaStates
 } from '../types'
 import { ERRORS } from '../errors'
@@ -248,12 +249,14 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Get all unsolved captchas
      */
-    async getAllCaptchas (state?: CaptchaStates): Promise<Captcha[] | undefined> {
-        let query = {}
+    async getAllCaptchasByDatasetId (datasetId:string, state?: CaptchaStates): Promise<Captcha[] | undefined> {
+        let query: Filter<Document> = {
+            datasetId
+        }
 
         switch (state) {
         case CaptchaStates.Solved:
-            query = { solution: { $exists: true } }
+            query.solution = { solution: { $exists: true } }
             break
         case CaptchaStates.Unsolved:
             query = { solution: { $exists: false } }
@@ -282,22 +285,5 @@ export class ProsopoDatabase implements Database {
             return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as CaptchaSolution[]
         }
         throw (ERRORS.DATABASE.SOLUTION_GET_FAILED.message)
-    }
-
-    /**
-     * @description Update a captcha solution
-     * @param {Captchas}  captchas
-     */
-    async updateCaptchaSolution (captchas: UpdateCaptchaSolution[]): Promise<void> {
-        await this.tables.captchas?.bulkWrite(captchas.map(captcha =>
-            ({
-                updateOne: {
-                    filter: { _id: captcha.captchaId },
-                    update: {
-                        $set: { solution: captcha.solution }
-                    },
-                    upsert: false
-                }
-            })))
     }
 }
