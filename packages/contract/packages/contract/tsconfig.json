@@ -1,15 +1,36 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "..",
+    "types": [
+      "node"
+    ],
+    "target": "ES2019",
+    "module": "commonjs",
+    "rootDir": "./",
     "outDir": "./build",
-    "rootDir": "./src",
-    "emitDeclarationOnly": false,
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitAny": false,
+    "declaration": true,
     "resolveJsonModule": true,
-    "noEmit": false
+    "noImplicitReturns": false,
+    "noImplicitThis": false,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "noEmitOnError": true,
+    "baseUrl": ".",
+    "composite": true
   },
   "include": [
-    "src"
+    "packages/**/*.ts"
   ],
-  "references": []
+  "exclude": [
+    "node_modules",
+    "artifacts",
+    ".cache",
+    "build/**/*",
+    "**/build/**/*"
+  ],
 }
