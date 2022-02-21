@@ -36,6 +36,7 @@ import { randomAsHex } from '@polkadot/util-crypto'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { promiseQueue } from '../../src/util'
 import { BN } from '@polkadot/util'
+import { should } from 'chai'
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -782,6 +783,16 @@ describe('CONTRACT TASKS', () => {
             expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in deregestering provider: ${error}`)
+        }
+    })
+
+    it.only('Calculate captcha solution on the basis of Dapp users provided solutions', async () => {
+        const providerTasks = new Tasks(mockEnv)
+        try {
+            const result = await providerTasks.calculateCaptchaSolutions()
+            should().equal(result, undefined)
+        } catch (error) {
+            throw new Error(`Error in calculate captcha solution: ${error}`)
         }
     })
 })
