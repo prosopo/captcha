@@ -83,8 +83,10 @@ export const ERRORS = {
         },
         BAD_REQUEST: {
             message: 'BadRequest'
+        },
+        PAYMENT_INFO_NOT_FOUND: {
+            message: 'Payment info not found for given block and transaction hashes'
         }
-
     },
     CONTRACT: {
         INVALID_METHOD: {
