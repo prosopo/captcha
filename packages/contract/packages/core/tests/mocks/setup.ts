@@ -22,21 +22,21 @@ import { Hash } from '@polkadot/types/interfaces'
 import { TestAccount, TestDapp, TestProvider } from './accounts'
 
 export async function displayBalance (env, address, who) {
-    const balance = await env.network.api.query.system.account(address)
+    const balance = await env.contractInterface.network.api.query.system.account(address)
     console.log(who, ' Balance: ', balance.data.free.toHuman())
     return balance
 }
 
 export async function sendFunds (env, address, who, amount): Promise<void> {
-    const balance = await env.network.api.query.system.account(address)
-    const signerAddresses: string[] = await env.network.getAddresses()
+    const balance = await env.contractInterface.network.api.query.system.account(address)
+    const signerAddresses: string[] = await env.contractInterface.network.getAddresses()
     const Alice = signerAddresses[0]
-    const alicePair = env.network.keyring.getPair(Alice)
-    const AliceBalance = await env.network.api.query.system.account(alicePair.address)
+    const alicePair = env.contractInterface.network.keyring.getPair(Alice)
+    const AliceBalance = await env.contractInterface.network.api.query.system.account(alicePair.address)
     if (AliceBalance < amount) {
         throw new Error(`Alice balance too low: , ${AliceBalance}`)
     }
-    const api = env.network.api
+    const api = env.contractInterface.network.api
     if (balance.data.free.isEmpty) {
         await env.patract.buildTx(
             api.registry,

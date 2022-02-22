@@ -1,22 +1,15 @@
 {
   "name": "@prosopo/provider-core",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "author": "Prosopo",
   "private": true,
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "yarn tsc -b --verbose"
+    "build": "yarn tsc -b . --verbose"
   },
   "dependencies": {
     "@prosopo/contract": "workspace:*",
-    "@redspot/chai": "file:../../../../redspot/build/redspot-chai",
-    "@redspot/decimals": "file:../../../../redspot/build/redspot-decimals",
-    "@redspot/explorer": "file:../../../../redspot/build/redspot-explorer",
-    "@redspot/gas-reporter": "file:../../../../redspot/build/redspot-gas-reporter",
-    "@redspot/known-types": "file:../../../../redspot/build/redspot-known-types",
-    "@redspot/patract": "file:../../../../redspot/build/redspot-patract",
-    "@redspot/watcher": "file:../../../../redspot/build/redspot-watcher",
     "@types/mocha": "^9.0.0",
     "c8": "^7.11.0",
     "dotenv": "^14.3.2",
@@ -35,7 +28,7 @@
     "@typescript-eslint/parser": "^5.10.0",
     "chai": "^4.3.4",
     "dotenv": "^14.3.2",
-    "eslint": "^7.32.0",
+    "eslint": "^8.9.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^16.1.0",
     "eslint-config-standard": "^16.0.3",

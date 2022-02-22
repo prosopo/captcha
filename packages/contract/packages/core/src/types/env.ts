@@ -13,14 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Network } from 'redspot/types'
 import { ProsopoConfig } from './config'
 import { Database } from './db'
+import {ContractApiInterface} from "@prosopo/contract";
 
 export interface ProsopoEnvironment {
-    network: Network
     config: ProsopoConfig,
     db: Database | undefined,
+    contractInterface: ContractApiInterface | undefined
     mnemonic: string
     deployerAddress: string
     contractAddress: string

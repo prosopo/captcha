@@ -25,22 +25,23 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "noEmitOnError": true,
-    "baseUrl": "../..",
+    "baseUrl": ".",
     "paths": {
       "@prosopo/contract": [
-        "./packages/contract/src"
+        "../contract/src"
       ],
       "@prosopo/contract/*": [
-        "./packages/contract/src/*"
+        "../contract/src/*"
       ],
       "@prosopo/provider-core": [
-        "./packages/core/src"
+        "../core/src"
       ],
       "@prosopo/provider-core/*": [
-        "./packages/core/src/*"
+        "../core/src/*"
       ]
     }
   },
+  "baseUrl": ".",
   "include": [
     "**/*.ts",
     "src/**/*.ts"
@@ -52,7 +53,8 @@
     "build/**/*",
     "**/build/**/*",
     "**/*.test.ts",
-    "**/*mock*.ts"
+    "**/*mock*.ts",
+    "tests/*"
   ],
   "references": [
     {
