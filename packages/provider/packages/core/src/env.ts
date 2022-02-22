@@ -14,20 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import findUp from 'find-up'
-// @ts-ignore
-import {network, patract} from 'redspot'
-import {Network} from 'redspot/types'
-import {Signer} from 'redspot/provider'
-import Contract from '@redspot/patract/contract'
-import {strict as assert} from 'assert'
 import {ZodError} from 'zod'
 import {ERRORS} from './errors'
 import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment} from './types'
-import {contractDefinitions, ProsopoContractApi} from '@prosopo/contract'
+import {ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 
 require('dotenv').config()
-
-const {mnemonicGenerate} = require('@polkadot/util-crypto')
 
 const TS_CONFIG_FILENAME = 'prosopo.config.ts'
 const JS_CONFIG_FILENAME = 'prosopo.config.js'
@@ -35,15 +27,11 @@ const JS_CONFIG_FILENAME = 'prosopo.config.js'
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
 
-    network: Network
-
-    contract?: Contract
-
     db: Database | undefined
 
-    mnemonic: string
+    contractInterface: ContractApiInterface | undefined
 
-    signer?: Signer
+    mnemonic: string
 
     deployerAddress: string
 
@@ -57,14 +45,13 @@ export class Environment implements ProsopoEnvironment {
 
     constructor(mnemonic) {
         this.config = Environment.getConfig()
-        this.network = network
-        this.patract = patract
         this.mnemonic = mnemonic
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
+            this.contractInterface = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName)
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`)
         }
@@ -73,9 +60,7 @@ export class Environment implements ProsopoEnvironment {
     async isReady() {
         await this.importDatabase()
         await this.db?.connect()
-        // redspot will do this if using `npx redspot` commands. do it here anyway in case using `yarn ts-node ...`
-        this.network.registry.register(contractDefinitions)
-        assert(this.contract instanceof Contract)
+        await this.contractInterface?.isReady()
     }
 
     async importDatabase(): Promise<void> {
@@ -90,29 +75,15 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
-    async changeSigner(mnemonic: string): Promise<void> {
-        await this.network.api.isReadyOrError
-        this.mnemonic = mnemonic
-        const contractApi = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName)
-        await contractApi.changeSigner(this.mnemonic)
-    }
-
-    createAccountAndAddToKeyring(): [string, string] {
-        const mnemonic: string = mnemonicGenerate()
-        const account = this.network.keyring.addFromMnemonic(mnemonic)
-        const {address} = account
-        return [mnemonic, address]
-    }
-
     private static getConfigPath(): string {
         const tsConfigPath = findUp.sync(TS_CONFIG_FILENAME)
-        if (tsConfigPath !== null) {
+        if (tsConfigPath !== null && tsConfigPath !== undefined) {
             return tsConfigPath
         }
 
         const pathToConfigFile = findUp.sync(JS_CONFIG_FILENAME)
 
-        if (pathToConfigFile === null) {
+        if (pathToConfigFile === null || pathToConfigFile === undefined) {
             throw new Error(ERRORS.GENERAL.CANNOT_FIND_CONFIG_FILE.message)
         }
 

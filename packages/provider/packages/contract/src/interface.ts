@@ -13,18 +13,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { network, patract } from 'redspot'
-import { Registry } from 'redspot/types/provider'
-import type { AbiMessage } from '@polkadot/api-contract/types'
+import {network, patract} from 'redspot'
+import {Registry} from 'redspot/types/provider'
+import type {AbiMessage} from '@polkadot/api-contract/types'
 import Contract from '@redspot/patract/contract'
-import { ContractApiInterface } from './types'
-import { Signer } from 'redspot/types'
-import { ERRORS } from './errors'
+import {ContractApiInterface} from './types'
+import {Signer} from 'redspot/types'
+import {ERRORS} from './errors'
 import {AbiMetadata, Network} from 'redspot/types'
-import { unwrap, encodeStringArgs, getEventNameFromMethodName, handleContractCallOutcomeErrors } from './helpers'
-import { AnyJson } from '@polkadot/types/types/codec'
+import {unwrap, encodeStringArgs, getEventNameFromMethodName, handleContractCallOutcomeErrors} from './helpers'
+import {AnyJson} from '@polkadot/types/types/codec'
 import {DecodedEvent} from "@redspot/patract/types";
-const { mnemonicGenerate } = require('@polkadot/util-crypto')
+import {contractDefinitions} from "./definitions";
+import {strict as assert} from "assert";
+
+const {mnemonicGenerate} = require('@polkadot/util-crypto')
 
 export class ProsopoContractApi implements ContractApiInterface {
     contract?: Contract
@@ -36,7 +39,7 @@ export class ProsopoContractApi implements ContractApiInterface {
     patract: any;
     contractName: string
 
-    constructor (deployerAddress: string, contractAddress: string, mnemonic: string | undefined, contractName:string) {
+    constructor(deployerAddress: string, contractAddress: string, mnemonic: string | undefined, contractName: string) {
         this.deployerAddress = deployerAddress
         this.contractAddress = contractAddress
         this.mnemonic = mnemonic
@@ -45,9 +48,17 @@ export class ProsopoContractApi implements ContractApiInterface {
         this.contractName = contractName
     }
 
+    async isReady(): Promise<void> {
+        // redspot will do this if using `npx redspot` commands. do it here anyway in case using `yarn ts-node ...`
+        await this.network.registry.register(contractDefinitions)
+        await this.getSigner()
+        await this.getContract()
+        assert(this.contract instanceof Contract)
+    }
+
     async getSigner(): Promise<Signer> {
         await this.network.api.isReadyOrError
-        const { mnemonic } = this
+        const {mnemonic} = this
         if (!mnemonic) {
             throw new Error(ERRORS.CONTRACT.SIGNER_UNDEFINED.message)
         }
@@ -58,14 +69,14 @@ export class ProsopoContractApi implements ContractApiInterface {
 
     }
 
-    async changeSigner (mnemonic: string): Promise<Signer> {
+    async changeSigner(mnemonic: string): Promise<Signer> {
         await this.network.api.isReadyOrError
         this.mnemonic = mnemonic
         return await this.getSigner()
     }
 
 
-    async getContract (): Promise<Contract> {
+    async getContract(): Promise<Contract> {
         await this.network.api.isReadyOrError
         const contractFactory = await patract.getContractFactory(this.contractName, this.signer)
         let contract = contractFactory.attach(this.contractAddress)
@@ -77,17 +88,17 @@ export class ProsopoContractApi implements ContractApiInterface {
         return contract
     }
 
-    createAccountAndAddToKeyring (): [string, string] {
+    createAccountAndAddToKeyring(): [string, string] {
         const mnemonic: string = mnemonicGenerate()
         const account = this.network.keyring.addFromMnemonic(mnemonic)
-        const { address } = account
+        const {address} = account
         return [mnemonic, address]
     }
 
     /**
      * Operations to carry out before calling contract
      */
-    async beforeCall<T> (contractMethodName: string, args: T[]): Promise<{ encodedArgs: T[]; signedContract: Contract }> {
+    async beforeCall<T>(contractMethodName: string, args: T[]): Promise<{ encodedArgs: T[]; signedContract: Contract }> {
         const contract = await this.getContract()
         if (!this.signer) {
             throw new Error(ERRORS.CONTRACT.SIGNER_UNDEFINED.message)
@@ -95,7 +106,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         const signedContract: Contract = contract.connect(this.signer)
         const methodObj = this.getContractMethod(contractMethodName)
         const encodedArgs: T[] = encodeStringArgs(methodObj, args)
-        return { signedContract, encodedArgs }
+        return {signedContract, encodedArgs}
     }
 
 
@@ -109,10 +120,10 @@ export class ProsopoContractApi implements ContractApiInterface {
     async contractTx<T>(contractMethodName: string, args: T[], value?: number | string): Promise<DecodedEvent[]> {
         // Always query first as errors are passed back from a dry run but not from a transaction
         await this.contractQuery(contractMethodName, args)
-        const {encodedArgs, signedContract } = await this.beforeCall(contractMethodName, args)
+        const {encodedArgs, signedContract} = await this.beforeCall(contractMethodName, args)
         let response
         if (value) {
-            response = await signedContract.tx[contractMethodName](...encodedArgs, { value })
+            response = await signedContract.tx[contractMethodName](...encodedArgs, {value})
         } else {
             response = await signedContract.tx[contractMethodName](...encodedArgs)
         }
@@ -142,8 +153,8 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param atBlock
      * @return JSON result containing the contract event
      */
-    async contractQuery <T> (contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson> {
-        const {encodedArgs, signedContract } = await this.beforeCall(contractMethodName, args)
+    async contractQuery<T>(contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson> {
+        const {encodedArgs, signedContract} = await this.beforeCall(contractMethodName, args)
         const query = !atBlock ? signedContract.query[contractMethodName] : signedContract.queryAt(atBlock, signedContract.abi.findMessage(contractMethodName))
         const response = await query(...encodedArgs)
         // @ts-ignore
@@ -161,7 +172,7 @@ export class ProsopoContractApi implements ContractApiInterface {
     /** Get the contract method from the ABI
      * @return the contract method object
      */
-    getContractMethod (contractMethodName: string): AbiMessage {
+    getContractMethod(contractMethodName: string): AbiMessage {
         const methodObj = this.contract?.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
         if (methodObj !== undefined) {
             return methodObj as unknown as AbiMessage
@@ -172,7 +183,7 @@ export class ProsopoContractApi implements ContractApiInterface {
     /** Get the storage key from the ABI given a storage name
      * @return the storage key
      */
-    getStorageKey (storageName: string): string {
+    getStorageKey(storageName: string): string {
         if (!this.contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
@@ -202,7 +213,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * Get the data at specified storage key
      * @return {any} data
      */
-    async getStorage<T> (name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
+    async getStorage<T>(name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
         await this.getContract()
         const storageKey = this.getStorageKey(name)
         if (!this.contract) {

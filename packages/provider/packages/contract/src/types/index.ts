@@ -92,6 +92,8 @@ export interface ContractApiInterface {
     contractAddress: string
     patract: any;
 
+    isReady(): Promise<void>
+
     getContract(): Promise<Contract>
 
     getSigner(): Promise<Signer>

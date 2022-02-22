@@ -2,16 +2,16 @@
   "name": "@prosopo/contract",
   "author": "Chris Taylor <chris@prosopo.io>",
   "license": "GPL-3.0",
-  "packageManager": "yarn@3.0.1",
+  "packageManager": "yarn@3.2.0",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "main": "index.js",
   "type": "module",
   "engines": {
     "node": ">=14.0.0"
   },
   "scripts": {
-    "build": "yarn tsc -b --verbose"
+    "build": "yarn tsc -b . --verbose"
   },
   "dependencies": {
     "@polkadot/api": "7.5.1",
@@ -43,7 +43,7 @@
     "@typescript-eslint/parser": "^5.10.0",
     "chai": "^4.3.4",
     "dotenv": "^14.3.2",
-    "eslint": "^7.32.0",
+    "eslint": "^8.9.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^16.1.0",
     "eslint-config-standard": "^16.0.3",
