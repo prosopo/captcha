@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import { WriteStream, createWriteStream } from 'fs'
 import { ERRORS } from './errors'
 const { decodeAddress, encodeAddress } = require('@polkadot/keyring')
 const { hexToU8a, isHex } = require('@polkadot/util')
@@ -39,12 +40,29 @@ export function loadJSONFile (filePath) {
     }
 }
 
-export function writeJSONFile (filePath, jsonData) {
-    try {
-        return fs.writeFileSync(filePath, JSON.stringify(jsonData), 'utf8')
-    } catch (err) {
-        throw new Error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
-    }
+export function writeJSONFile (filePath: string, jsonData) {
+    return new Promise((resolve, reject) => {
+        const writeStream: WriteStream = createWriteStream(filePath)
+
+        writeStream.setDefaultEncoding('utf-8')
+
+        writeStream.on('open', () => {
+            writeStream.write(JSON.stringify(jsonData), (err) => {
+                if (err) {
+                    reject(err)
+                }
+                writeStream.end()
+            })
+        })
+
+        writeStream.on('finish', () => {
+            resolve(true)
+        })
+
+        writeStream.on('error', (err) => {
+            reject(err)
+        })
+    })
 }
 
 export async function readFile (filePath): Promise<Buffer> {

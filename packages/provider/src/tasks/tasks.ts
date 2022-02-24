@@ -99,7 +99,9 @@ export class Tasks {
         datasetHashes.datasetId = tree.root?.hash
         datasetHashes.tree = tree.layers
         await this.db?.storeDataset(datasetHashes)
-        writeJSONFile(file, { ...datasetWithoutIds, datasetId: datasetHashes.datasetId })
+        writeJSONFile(file, { ...datasetWithoutIds, datasetId: datasetHashes.datasetId }).catch((err) => {
+            console.error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
+        })
         return await this.contractApi.contractCall('providerAddDataset', [hexToU8a(tree.root?.hash)])
     }
 
@@ -354,7 +356,7 @@ export class Tasks {
                     }
                 }
                 if (solutionsToUpdate.length > 0) {
-                    this.updateCaptchasJSON(captchaFilePath, solutionsToUpdate)
+                    await this.updateCaptchasJSON(captchaFilePath, solutionsToUpdate)
                     await this.providerAddDataset(captchaFilePath)
                     return solutionsToUpdate.length
                 } else {
@@ -371,7 +373,7 @@ export class Tasks {
     /**
      * Update captchas json file with new solutions
      */
-    updateCaptchasJSON (filePath: string, solutionsToUpdate: CaptchaSolutionToUpdate[]) {
+    async updateCaptchasJSON (filePath: string, solutionsToUpdate: CaptchaSolutionToUpdate[]) {
         try {
             const solutionObj = {}
 
@@ -396,7 +398,7 @@ export class Tasks {
                 })
             }
 
-            writeJSONFile(filePath, jsonData)
+            await writeJSONFile(filePath, jsonData)
             return true
         } catch (error) {
             throw new Error(`${ERRORS.GENERAL.GENERATE_CPATCHAS_JSON_FAILED.message}:${error}`)
