@@ -34,7 +34,9 @@ export const CaptchaSolutionBody = z.object({
     userAccount: z.string(),
     dappAccount: z.string(),
     captchas: CaptchaSolutionSchema,
-    requestHash: z.string()
+    requestHash: z.string(),
+    blockHash: z.string(),
+    txHash: z.string(),
 })
 
 export interface PendingCaptchaRequest {

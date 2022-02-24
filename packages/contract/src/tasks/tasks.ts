@@ -15,6 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { hexToU8a } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
+import type { RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment'
 import { Hash } from '@polkadot/types/interfaces'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { loadJSONFile, shuffleArray, writeJSONFile } from '../util'
@@ -118,8 +119,8 @@ export class Tasks {
         return await this.contractApi.contractCall('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress])
     }
 
-    async providerApprove (captchaSolutionCommitmentId): Promise<AnyJson> {
-        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId])
+    async providerApprove (captchaSolutionCommitmentId, refundFee): Promise<AnyJson> {
+        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId, refundFee])
     }
 
     async providerDisapprove (captchaSolutionCommitmentId): Promise<AnyJson> {
@@ -188,11 +189,19 @@ export class Tasks {
      * @param {JSON} captchas
      * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
      */
-    async dappUserSolution (userAccount: string, dappAccount: string, requestHash: string, captchas: JSON): Promise<CaptchaSolutionResponse[]> {
+    async dappUserSolution (userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse[]> {
         if (!await this.dappIsActive(dappAccount)) {
             throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message)
         }
+        if (blockHash === '' || txHash === '') {
+            throw new Error(ERRORS.API.BAD_REQUEST.message)
+        }
 
+        const paymentInfo = await this.getPaymentInfo(userAccount, blockHash, txHash)
+        if (!paymentInfo) {
+            throw new Error(ERRORS.API.PAYMENT_INFO_NOT_FOUND.message)
+        }
+        const partialFee = paymentInfo?.partialFee
         let response: CaptchaSolutionResponse[] = []
         const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
         const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
@@ -202,7 +211,7 @@ export class Tasks {
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-                await this.providerApprove(commitmentId)
+                await this.providerApprove(commitmentId, partialFee)
                 response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
             } else {
                 await this.providerDisapprove(commitmentId)
@@ -412,5 +421,30 @@ export class Tasks {
         if (datasetId.localeCompare(randomProviderAndBlockNo.provider.captcha_dataset_id)) {
             throw new Error(ERRORS.DATASET.INVALID_DATASET_ID.message)
         }
+    }
+
+    /**
+     * Get payment info for a transaction
+     * @param {string} userAccount
+     * @param {string} blockHash
+     * @param {string} txHash
+     * @returns {Promise<RuntimeDispatchInfo|null>}
+     */
+    private async getPaymentInfo (userAccount: string, blockHash: string, txHash: string): Promise<RuntimeDispatchInfo|null> {
+        // Validate block and transaction, checking that the signer matches the userAccount
+        const signedBlock = await this.contractApi.env.network.api.rpc.chain.getBlock(blockHash)
+        if (!signedBlock) {
+            return null
+        }
+        const extrinsic = signedBlock.block.extrinsics.find(extrinsic => extrinsic.hash.toString() === txHash)
+        if (!extrinsic || extrinsic.signer.toString() !== userAccount) {
+            return null
+        }
+        // Retrieve tx fee for extrinsic
+        const paymentInfo = await this.contractApi.env.network.api.rpc.payment.queryInfo(extrinsic.toHex(), blockHash)
+        if (!paymentInfo) {
+            return null
+        }
+        return paymentInfo
     }
 }
