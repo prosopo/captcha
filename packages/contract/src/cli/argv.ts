@@ -211,16 +211,13 @@ export function processArgs (args, env: ProsopoEnvironment) {
                         pm2.start({
                             script: `ts-node scheduler.js ${JSON.stringify(argv.schedule)}`,
                             name: 'scheduler',
-                            cwd: cwd() + '/build/src',
-                            args: argv.schedule as string
+                            cwd: cwd() + '/build/src'
                         }, (err, apps) => {
                             if (err) {
                                 console.error(err)
                                 return pm2.disconnect()
                             }
-
                             console.log(apps)
-
                             process.exit()
                         })
                     })
