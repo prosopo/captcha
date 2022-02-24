@@ -144,9 +144,9 @@ export function prosopoMiddleware (env): Router {
         } catch (err) {
             return next(new BadRequest(err))
         }
-        const { userAccount, dappAccount, captchas, requestHash } = req.body
+        const { userAccount, dappAccount, captchas, requestHash, blockHash, txHash } = req.body
         try {
-            const result = await tasks.dappUserSolution(userAccount as string, dappAccount as string, requestHash as string, captchas as JSON)
+            const result = await tasks.dappUserSolution(userAccount as string, dappAccount as string, requestHash as string, captchas as JSON, blockHash as string, txHash as string)
             return res.json({ status: ERRORS.API.CAPTCHA_PASSED.message, captchas: result })
         } catch (err: unknown) {
             const msg = `${ERRORS.API.BAD_REQUEST.message}: ${err}`
