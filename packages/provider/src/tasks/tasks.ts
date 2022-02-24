@@ -315,7 +315,7 @@ export class Tasks {
             const captchaFilePath = this.captchaSolutionConfig.captchaFilePath
             const currentDataset = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
             if (!currentDataset.datasetId) {
-                return
+                return 0
             }
             const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(currentDataset.datasetId as string, CaptchaStates.Unsolved)
 
@@ -325,16 +325,16 @@ export class Tasks {
             let solutionsToUpdate: CaptchaSolutionToUpdate[] = []
 
             if (unsolvedCaptchas && unsolvedCaptchas.length > 0) {
-                for (let i = 0; i < unsolvedCaptchas.length; i++) {
-                    const solutions = await this.db.getAllSolutions(unsolvedCaptchas[i].captchaId)
+                for (let unsolvedCaptchaCount = 0; unsolvedCaptchaCount < unsolvedCaptchas.length; unsolvedCaptchaCount++) {
+                    const solutions = await this.db.getAllSolutions(unsolvedCaptchas[unsolvedCaptchaCount].captchaId)
                     if (solutions && solutions.length >= totalNumberOfSolutions) {
                         const solutionsWithCount = {}
-                        for (let i = 0; i < solutions.length; i++) {
-                            const previousCount = solutionsWithCount[JSON.stringify(solutions[i].solution)]?.solutionCount || 0
-                            solutionsWithCount[JSON.stringify(solutions[i].solution)] = {
-                                captchaId: solutions[i].captchaId,
-                                solution: solutions[i].solution,
-                                salt: solutions[i].salt,
+                        for (let solutionsIndex = 0; solutionsIndex < solutions.length; solutionsIndex++) {
+                            const previousCount = solutionsWithCount[JSON.stringify(solutions[solutionsIndex].solution)]?.solutionCount || 0
+                            solutionsWithCount[JSON.stringify(solutions[solutionsIndex].solution)] = {
+                                captchaId: solutions[solutionsIndex].captchaId,
+                                solution: solutions[solutionsIndex].solution,
+                                salt: solutions[solutionsIndex].salt,
                                 solutionCount: previousCount + 1
                             }
                         }
@@ -347,7 +347,12 @@ export class Tasks {
                 if (solutionsToUpdate.length > 0) {
                     this.updateCaptchasJSON(captchaFilePath, solutionsToUpdate)
                     await this.providerAddDataset(captchaFilePath)
+                    return solutionsToUpdate.length
+                } else {
+                    return 0
                 }
+            } else {
+                return 0
             }
         } catch (error) {
             throw new Error(`${ERRORS.GENERAL.CALCULATE_CAPTCHA_SOLUTION.message}:${error}`)
