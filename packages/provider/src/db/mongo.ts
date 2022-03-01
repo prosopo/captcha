@@ -15,6 +15,8 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import {
     Db,
+    Filter,
+    Document,
     MongoClient
 } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
@@ -26,7 +28,8 @@ import {
     Captcha,
     CaptchaSolution,
     DatasetWithIdsAndTreeSchema,
-    DatasetWithIdsAndTree
+    DatasetWithIdsAndTree,
+    CaptchaStates
 } from '../types'
 import { ERRORS } from '../errors'
 import { isHex } from '@polkadot/util'
@@ -182,19 +185,15 @@ export class ProsopoDatabase implements Database {
         if (!isHex(treeRoot)) {
             throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: treeRoot`)
         }
-        // create a bulk upsert operation and execute
+        // create a bulk ceate operation and execute
         await this.tables.solutions?.bulkWrite(captchas.map((captchaDoc) => ({
-            updateOne: {
-                filter: { _id: captchaDoc.captchaId },
-                update: {
-                    $set:
-                        {
-                            solution: captchaDoc.solution,
-                            salt: captchaDoc.salt,
-                            treeRoot
-                        }
-                },
-                upsert: true
+            insertOne: {
+                document: {
+                    captchaId: captchaDoc.captchaId,
+                    solution: captchaDoc.solution,
+                    salt: captchaDoc.salt,
+                    treeRoot
+                }
             }
         })))
     }
@@ -245,5 +244,46 @@ export class ProsopoDatabase implements Database {
             { $set: { accountId: userAccount, pending: false, approved: approve } },
             { upsert: true }
         )
+    }
+
+    /**
+     * @description Get all unsolved captchas
+     */
+    async getAllCaptchasByDatasetId (datasetId:string, state?: CaptchaStates): Promise<Captcha[] | undefined> {
+        let query: Filter<Document> = {
+            datasetId
+        }
+
+        switch (state) {
+        case CaptchaStates.Solved:
+            query.solution = { solution: { $exists: true } }
+            break
+        case CaptchaStates.Unsolved:
+            query = { solution: { $exists: false } }
+            break
+        }
+
+        const cursor = this.tables.captchas?.find(query)
+        const docs = await cursor?.toArray()
+
+        if (docs) {
+            // drop the _id field
+            return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[]
+        }
+        throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
+    }
+
+    /**
+     * @description Get all dapp user's solutions
+     */
+    async getAllSolutions (captchaId: string): Promise<CaptchaSolution[] | undefined> {
+        const cursor = this.tables.solutions?.find({ captchaId })
+        const docs = await cursor?.toArray()
+
+        if (docs) {
+            // drop the _id field
+            return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as CaptchaSolution[]
+        }
+        throw (ERRORS.DATABASE.SOLUTION_GET_FAILED.message)
     }
 }

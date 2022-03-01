@@ -37,6 +37,11 @@ export const ProsopoConfigSchema = z.object({
             count: z.number().nonnegative()
         })
     }),
+    captchaSolutions: z.object({
+        requiredNumberOfSolutions: z.number().positive().min(2),
+        solutionWinningPercentage: z.number().positive().max(100),
+        captchaFilePath: z.string()
+    }),
     database: z.object({
         development: z.object({
             type: z.string(),

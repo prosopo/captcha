@@ -29,12 +29,13 @@ import { SOLVED_CAPTCHAS, DATASET } from '../mocks/mockdb'
 import { CaptchaSolution, Payee, Provider } from '../../src/types'
 import {
     computeCaptchaSolutionHash,
-    computePendingRequestHash
+    computePendingRequestHash,
+    parseCaptchaDataset
 } from '../../src/captcha'
 import { sendFunds, setupDapp, setupProvider } from '../mocks/setup'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { AnyJson } from '@polkadot/types/types/codec'
-import { promiseQueue } from '../../src/util'
+import { loadJSONFile, promiseQueue } from '../../src/util'
 import { getEventsFromMethodName } from '../../src/contract/helpers'
 
 const chai = require('chai')
@@ -802,6 +803,26 @@ describe('CONTRACT TASKS', () => {
             expect(events![0].args[0]).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in deregestering provider: ${error}`)
+        }
+    })
+
+    it('Calculate captcha solution on the basis of Dapp users provided solutions', async () => {
+        const providerTasks = new Tasks(mockEnv)
+        try {
+            const captchaFilePath = mockEnv.config.captchaSolutions.captchaFilePath
+            const datsetBeforeCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
+
+            const solvedCaptchasCountBeforeCalculation = datsetBeforeCalculation.captchas.filter(captcha => 'solution' in captcha).length
+
+            const result = await providerTasks.calculateCaptchaSolutions()
+
+            const datsetAfterCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
+
+            const solvedCaptchasCountAfterCalculation = datsetAfterCalculation.captchas.filter(captcha => 'solution' in captcha).length
+
+            expect(solvedCaptchasCountAfterCalculation - solvedCaptchasCountBeforeCalculation).to.equal(result)
+        } catch (error) {
+            throw new Error(`Error in calculate captcha solution: ${error}`)
         }
     })
 })

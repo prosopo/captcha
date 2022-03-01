@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Collection } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
-import { Captcha, CaptchaSolution, Dataset } from './captcha'
+import { Captcha, CaptchaSolution, CaptchaStates, Dataset } from './captcha'
 import { PendingCaptchaRequest } from './api'
 import { WithId } from 'mongodb/mongodb.ts34'
 // Other table types from other database engines go here
@@ -62,4 +62,7 @@ export interface Database {
 
     updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void>;
 
+    getAllCaptchasByDatasetId(datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined>;
+
+    getAllSolutions(captchaId: string): Promise<CaptchaSolution[] | undefined>;
 }

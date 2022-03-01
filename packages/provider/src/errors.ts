@@ -21,8 +21,17 @@ export const ERRORS = {
         JSON_LOAD_FAILED: {
             message: 'Failed to load JSON file'
         },
+        CREATE_JSON_FILE_FAILED: {
+            message: 'Failed to create JSON file'
+        },
         ASSERT_ERROR: {
             message: 'AssertionError'
+        },
+        GENERATE_CPATCHAS_JSON_FAILED: {
+            message: 'Something went wrong while creating captchas json file'
+        },
+        CALCULATE_CAPTCHA_SOLUTION: {
+            message: 'Something went wrong while calculation captcha solutions'
         }
     },
     CONFIG: {
@@ -66,6 +75,9 @@ export const ERRORS = {
         },
         INVALID_HASH: {
             message: 'Invalid hash'
+        },
+        SOLUTION_GET_FAILED: {
+            message: 'Failed to get solution'
         }
     },
     API: {
