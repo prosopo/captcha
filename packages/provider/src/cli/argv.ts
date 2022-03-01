@@ -30,9 +30,13 @@ const validateAddress = (argv) => {
 
 const validatePayee = (argv) => {
     try {
-        const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
-        const payee = PayeeSchema.parse(payeeArg)
-        return { payee }
+        if (typeof argv.payee === 'string') {
+            const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
+            const payee = PayeeSchema.parse(payeeArg)
+            return { payee }
+        } else {
+            return { payee: Payee.None }
+        }
     } catch (error) {
         throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.payee}`)
     }
@@ -81,9 +85,9 @@ export function processArgs (args, env: ProsopoEnvironment) {
             'provider_update',
             'Update a Provider',
             (yargs) => yargs
-                .option('serviceOrigin', { type: 'string', demand: true, desc: 'The provider service origin (URI)' })
-                .option('fee', { type: 'number', demand: true, desc: 'The fee to pay per solved captcha' })
-                .option('payee', { type: 'string', demand: true, desc: 'The person who receives the fee (`Provider` or `Dapp`)' })
+                .option('serviceOrigin', { type: 'string', demand: false, desc: 'The provider service origin (URI)' })
+                .option('fee', { type: 'number', demand: false, desc: 'The fee to pay per solved captcha' })
+                .option('payee', { type: 'string', demand: false, desc: 'The person who receives the fee (`Provider` or `Dapp`)' })
                 .option('address', { type: 'string', demand: true, desc: 'The AccountId of the Provider' })
                 .option('value', { type: 'number', demand: false, desc: 'The value to stake in the contract' }),
             async (argv) => {
