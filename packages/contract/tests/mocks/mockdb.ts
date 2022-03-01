@@ -20,7 +20,8 @@ import {
     Tables,
     Captcha,
     CaptchaSolution,
-    Dataset
+    Dataset,
+    CaptchaStates
 } from '../../src/types'
 import { Hash } from '@polkadot/types/interfaces'
 import { ERRORS } from '../../src/errors'
@@ -315,5 +316,14 @@ export class ProsopoDatabase implements mockDatabase {
 
     getDappUserPending (requestHash: string): Promise<any> {
         return Promise.resolve(this.tables.pending![requestHash])
+    }
+
+    getAllCaptchasByDatasetId (datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined> {
+        const collection = [...this.unsolved, ...this.solved]
+        return Promise.resolve([{ ...collection[0] }])
+    }
+
+    getAllSolutions (captchaId: string): Promise<CaptchaSolution[] | undefined> {
+        return Promise.resolve([])
     }
 }
