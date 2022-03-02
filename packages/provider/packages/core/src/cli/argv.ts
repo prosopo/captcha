@@ -19,7 +19,7 @@ import { encodeStringAddress } from '../util'
 import { ERRORS } from '../errors'
 import { Tasks } from '../tasks/tasks'
 import { Payee, PayeeSchema } from '@prosopo/contract/types'
-import {ProsopoEnvironment} from "@prosopo/provider-core/types";
+import {ProsopoEnvironment} from "../types";
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)

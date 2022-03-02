@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { MockEnvironment } from '../mocks/mockenv'
-import { ProsopoContractApi } from '@prosopo/contract/interface'
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -29,8 +28,7 @@ describe('CONTRACT WRAPPER', () => {
         // Register the dapp
         const mockEnv = new MockEnvironment()
         await mockEnv.isReady()
-        await mockEnv.changeSigner('//Alice')
-        contractApi = new ProsopoContractApi(mockEnv)
+        contractApi = mockEnv.contractInterface
     })
 
     it('Gets the contract method from the ABI when method name is valid', () => {

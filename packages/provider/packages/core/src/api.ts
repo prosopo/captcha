@@ -19,8 +19,8 @@ import { BadRequest, ERRORS } from './errors'
 import {CaptchaSolutionBody, AccountsResponse} from './types/api'
 import type { AnyJson } from '@polkadot/types/types'
 import { validateAddress } from '@polkadot/util-crypto'
-import {Environment} from "@prosopo/provider-core/env";
-import {parseBlockNumber} from "@prosopo/provider-core/util";
+import {Environment} from "../env";
+import {parseBlockNumber} from "../util";
 import {ProsopoContractApi} from "@prosopo/contract";
 
 /**
