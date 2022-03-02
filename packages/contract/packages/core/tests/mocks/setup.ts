@@ -80,8 +80,8 @@ export async function setupDappUser (env, dappUser: TestAccount, provider: TestP
     console.log('   - getCaptchaWithProof')
     const providerOnChain = await tasks.getProviderDetails(provider.address)
     if (providerOnChain) {
-        const solved = await tasks.getCaptchaWithProof(providerOnChain.captcha_dataset_id, true, 1)
-        const unsolved = await tasks.getCaptchaWithProof(providerOnChain.captcha_dataset_id, false, 1)
+        const solved = await tasks.getCaptchaWithProof(providerOnChain.captcha_dataset_id.toString(), true, 1)
+        const unsolved = await tasks.getCaptchaWithProof(providerOnChain.captcha_dataset_id.toString(), false, 1)
         solved[0].captcha.solution = [2, 3, 4]
         unsolved[0].captcha.solution = [1]
         solved[0].captcha.salt = '0xuser1'
@@ -104,7 +104,7 @@ export async function setupDappUser (env, dappUser: TestAccount, provider: TestP
             console.log('   -   Solution Root Hash: ', commitmentId)
             console.log('   -   Provider Address: ', provider.address)
             console.log('   -   Captchas: ', captchas)
-            await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id, commitmentId, provider.address)
+            await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id.toString(), commitmentId, provider.address)
             const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
         } else {
             throw new Error('commitmentId missing')

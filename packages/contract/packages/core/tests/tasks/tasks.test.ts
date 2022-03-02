@@ -26,16 +26,14 @@ import {
 } from '../mocks/accounts'
 import { ERRORS } from '../../src/errors'
 import { SOLVED_CAPTCHAS, DATASET } from '../mocks/mockdb'
-import { CaptchaSolution, Payee, Provider } from '@prosopo/contract/types'
-import {
-    computeCaptchaSolutionHash,
-    computePendingRequestHash
-} from '../../src/captcha'
+import { Payee, Provider } from '@prosopo/contract/types'
+import { computeCaptchaSolutionHash, computePendingRequestHash } from '../../src/captcha'
 import { sendFunds, setupDapp, setupProvider } from '../mocks/setup'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { AnyJson } from '@polkadot/types/types/codec'
 import {parseBlockNumber, promiseQueue} from '../../src/util'
-import { BN } from '@polkadot/util'
+import {CaptchaSolution} from "@prosopo/provider-core/types";
+import {DecodedEvent} from "@redspot/patract/types";
 
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised')
@@ -56,8 +54,8 @@ describe('CONTRACT TASKS', () => {
             await mockEnv.isReady()
 
             // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
-            const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
-            await mockEnv.changeSigner('//Alice')
+            const [providerMnemonic, providerAddress] = mockEnv.contractInterface?.createAccountAndAddToKeyring() || []
+            await mockEnv.contractInterface?.changeSigner('//Alice')
             await sendFunds(
                 mockEnv,
                 providerAddress,
@@ -70,7 +68,7 @@ describe('CONTRACT TASKS', () => {
             // Service origins cannot be duplicated
             provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8)
             datasetId = await setupProvider(mockEnv, provider as TestProvider)
-            const [dappMnemonic, dappAddress] = mockEnv.createAccountAndAddToKeyring()
+            const [dappMnemonic, dappAddress] = mockEnv.contractInterface?.createAccountAndAddToKeyring() || []
             dapp = { ...DAPP } as TestDapp
             await sendFunds(mockEnv, dappAddress, 'Dapp', '1000000000000000000')
             dapp.mnemonic = dappMnemonic
@@ -87,7 +85,7 @@ describe('CONTRACT TASKS', () => {
      */
     async function createMockCaptchaSolutionsAndRequestHash () {
         await mockEnv.isReady()
-        await mockEnv.changeSigner(dappUser.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
         const captchaSolutions: CaptchaSolution[] = SOLVED_CAPTCHAS.map(
             (captcha) => ({
                 captchaId: captcha.captchaId,
@@ -102,7 +100,7 @@ describe('CONTRACT TASKS', () => {
             salt
         )
         await mockEnv.db!.storeDappUserPending(
-            mockEnv.signer!.address,
+            mockEnv.contractInterface?.signer!.address || '',
             requestHash,
             salt
         )
@@ -110,10 +108,10 @@ describe('CONTRACT TASKS', () => {
     }
 
     it('Provider registration', async () => {
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
-            const result: AnyJson = await providerTasks.providerRegister(
+            const result: DecodedEvent[] = await providerTasks.providerRegister(
                 provider.serviceOrigin as string,
                 provider.fee as number,
                 provider.payee as Payee,
@@ -126,12 +124,12 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider update', async () => {
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const value = 1
 
         try {
-            const result: AnyJson = await providerTasks.providerUpdate(
+            const result: DecodedEvent[] = await providerTasks.providerUpdate(
                 provider.serviceOrigin as string,
                 provider.fee as number,
                 provider.payee as Payee,
@@ -145,14 +143,14 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider add dataset', async () => {
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const captchaFilePath = path.resolve(
                 __dirname,
                 '../mocks/data/captchas.json'
             )
-            const result: AnyJson = await providerTasks.providerAddDataset(
+            const result: DecodedEvent[] = await providerTasks.providerAddDataset(
                 captchaFilePath
             )
             return expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
@@ -162,8 +160,8 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Inactive Provider cannot add dataset', async () => {
-        const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
-        await mockEnv.changeSigner('//Alice')
+        const [providerMnemonic, providerAddress] = mockEnv.contractInterface?.createAccountAndAddToKeyring() || []
+        await mockEnv.contractInterface?.changeSigner('//Alice')
         await sendFunds(
             mockEnv,
             providerAddress,
@@ -171,10 +169,10 @@ describe('CONTRACT TASKS', () => {
             '10000000000000000000'
         )
         const inactiveProvider = { ...PROVIDER } as TestProvider
-        inactiveProvider.mnemonic = providerMnemonic
-        inactiveProvider.address = providerAddress
+        inactiveProvider.mnemonic = providerMnemonic || ''
+        inactiveProvider.address = providerAddress || ''
         inactiveProvider.serviceOrigin = inactiveProvider.serviceOrigin + randomAsHex().slice(0, 8)
-        await mockEnv.changeSigner(inactiveProvider.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(inactiveProvider.mnemonic)
         const providerTasks = new Tasks(mockEnv)
         await providerTasks.providerRegister(
             inactiveProvider.serviceOrigin,
@@ -191,7 +189,7 @@ describe('CONTRACT TASKS', () => {
 
     it('Provider approve', async () => {
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash()
-        await mockEnv.changeSigner(dappUser.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
         const dappUserTasks = new Tasks(mockEnv)
         const salt = randomAsHex()
 
@@ -214,7 +212,7 @@ describe('CONTRACT TASKS', () => {
             provider.address as string
         )
 
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: any = await providerTasks.providerApprove(commitmentId)
@@ -226,7 +224,7 @@ describe('CONTRACT TASKS', () => {
 
     it('Provider disapprove', async () => {
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash()
-        await mockEnv.changeSigner(dappUser.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
         const dappUserTasks = new Tasks(mockEnv)
         const salt = randomAsHex()
 
@@ -249,10 +247,10 @@ describe('CONTRACT TASKS', () => {
             provider.address as string
         )
 
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
-            const result: AnyJson = await providerTasks.providerDisapprove(commitmentId)
+            const result: DecodedEvent[] = await providerTasks.providerDisapprove(commitmentId)
             expect(result ? result[0].args[0] : undefined).to.equal(commitmentId)
         } catch (error) {
             throw new Error(`Error in provider disapprove: ${error}`)
@@ -260,7 +258,7 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider details', async () => {
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: Provider = await providerTasks.getProviderDetails(
@@ -273,7 +271,7 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider accounts', async () => {
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: AnyJson = await providerTasks.getProviderAccounts()
@@ -284,10 +282,10 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp registration', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(dapp.mnemonic as string)
         const dappTasks = new Tasks(mockEnv)
         try {
-            const result: AnyJson = await dappTasks.dappRegister(
+            const result: DecodedEvent[] = await dappTasks.dappRegister(
                 dapp.serviceOrigin as string,
                 dapp.contractAccount as string,
                 dapp.optionalOwner as string
@@ -299,7 +297,7 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp is active', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(dapp.mnemonic as string)
         const dappTasks = new Tasks(mockEnv)
         try {
             const result: any = await dappTasks.dappIsActive(
@@ -312,7 +310,7 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp details', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(dapp.mnemonic as string)
         const dappTasks = new Tasks(mockEnv)
         try {
             const result: any = await dappTasks.getDappDetails(
@@ -325,12 +323,12 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp fund', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(dapp.mnemonic as string)
         const dappTasks = new Tasks(mockEnv)
 
         const value = 10
         try {
-            const result: AnyJson = await dappTasks.dappFund(
+            const result: DecodedEvent[] = await dappTasks.dappFund(
                 dapp.contractAccount as string,
                 value
             )
@@ -346,7 +344,7 @@ describe('CONTRACT TASKS', () => {
     it('Dapp user commit', async () => {
         try {
             const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash()
-            await mockEnv.changeSigner(dappUser.mnemonic)
+            await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
             const dappUserTasks = new Tasks(mockEnv)
             const salt = randomAsHex()
 
@@ -365,7 +363,7 @@ describe('CONTRACT TASKS', () => {
 
             const commitmentId = tree.root!.hash
 
-            const result: AnyJson = await dappUserTasks.dappUserCommit(
+            const result: DecodedEvent[] = await dappUserTasks.dappUserCommit(
                 dapp.contractAccount as string,
                 datasetId as string,
                 commitmentId,
@@ -381,7 +379,7 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp accounts', async () => {
-        await mockEnv.changeSigner(dapp.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(dapp.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
             const result: AnyJson = await providerTasks.getDappAccounts()
@@ -392,7 +390,7 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Captchas are correctly formatted before being passed to the API layer', async () => {
-        await mockEnv.changeSigner(dappUser.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
         const dappUserTasks = new Tasks(mockEnv)
         const datasetId = DATASET.datasetId
         const captchas = await dappUserTasks.getCaptchaWithProof(datasetId, true, 1)
@@ -464,7 +462,7 @@ describe('CONTRACT TASKS', () => {
 
     it('Captcha proofs are returned if commitment found and solution is correct', async () => {
         const { captchaSolutions, requestHash } = await createMockCaptchaSolutionsAndRequestHash()
-        await mockEnv.changeSigner(dappUser.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
         const dappUserTasks = new Tasks(mockEnv)
         // salt ensures captcha commitment is different each time
         const salt = randomAsHex()
@@ -481,7 +479,7 @@ describe('CONTRACT TASKS', () => {
         )
 
         // next part contains internal contract calls that must be run by provider
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const result = await providerTasks.dappUserSolution(
             dappUser.address,
@@ -497,7 +495,7 @@ describe('CONTRACT TASKS', () => {
 
     it('Dapp User sending an invalid captchas causes error', async () => {
         const { requestHash } = await createMockCaptchaSolutionsAndRequestHash()
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const captchaSolutions = [
             { captchaId: 'blah', solution: [21], salt: 'blah' }
@@ -520,7 +518,7 @@ describe('CONTRACT TASKS', () => {
 
     it('Dapp User sending solutions without committing to blockchain causes error', async () => {
         const { captchaSolutions, requestHash } = await createMockCaptchaSolutionsAndRequestHash()
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const tree = new CaptchaMerkleTree()
         const captchasHashed = captchaSolutions.map((captcha) =>
@@ -559,7 +557,7 @@ describe('CONTRACT TASKS', () => {
         )
         tree.build(solutionsHashed)
         const commitmentId = tree.root!.hash
-        await mockEnv.changeSigner(dappUser.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
         const dappUserTasks = new Tasks(mockEnv)
         await dappUserTasks.dappUserCommit(
             dapp.contractAccount as string,
@@ -568,7 +566,7 @@ describe('CONTRACT TASKS', () => {
             provider.address as string
         )
         // next part contains internal contract calls that must be run by provider
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const result = await providerTasks.dappUserSolution(
             dappUser.address,
@@ -581,7 +579,7 @@ describe('CONTRACT TASKS', () => {
 
     it('Validates the received captchas length', async () => {
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash()
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         // All of the captchaIds present in the solutions should be in the database
         expect(async function () {
@@ -593,7 +591,7 @@ describe('CONTRACT TASKS', () => {
 
     it('Builds the tree and gets the commitment', async () => {
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash()
-        await mockEnv.changeSigner(dappUser.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
         const dappUserTasks = new Tasks(mockEnv)
         const initialTree = new CaptchaMerkleTree()
         const captchasHashed = captchaSolutions.map((captcha) =>
@@ -615,7 +613,7 @@ describe('CONTRACT TASKS', () => {
 
     it('BuildTreeAndGetCommitment throws if commitment does not exist', async () => {
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash()
-        await mockEnv.changeSigner(dappUser.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
         const dappUserTasks = new Tasks(mockEnv)
         const salt = randomAsHex()
         const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
@@ -632,35 +630,35 @@ describe('CONTRACT TASKS', () => {
 
     it('Validates the Dapp User Solution Request is Pending', async () => {
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash()
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const pendingRequestSalt = randomAsHex()
         const captchaIds = captchaSolutions.map((c) => c.captchaId)
         const requestHash = computePendingRequestHash(
             captchaIds,
-            mockEnv.signer!.address,
+            mockEnv.contractInterface?.signer!.address || '',
             pendingRequestSalt
         )
         await mockEnv.db!.storeDappUserPending(
-            mockEnv.signer!.address,
+            mockEnv.contractInterface?.signer!.address || '',
             requestHash,
             pendingRequestSalt
         )
         const valid = await providerTasks.validateDappUserSolutionRequestIsPending(
             requestHash,
-            mockEnv.signer!.address,
+            mockEnv.contractInterface?.signer!.address || '',
             captchaIds
         )
         return expect(valid).to.be.true
     })
 
     it('Get random captchas and request hash', async () => {
-        await mockEnv.changeSigner(dappUser.mnemonic)
+        await mockEnv.contractInterface?.changeSigner(dappUser.mnemonic)
         const dappTasks = new Tasks(mockEnv)
         const solvedCaptchaCount = mockEnv.config.captchas.solved.count
         const unsolvedCaptchaCount = mockEnv.config.captchas.unsolved.count
         const { captchas, requestHash } =
-            await dappTasks.getRandomCaptchasAndRequestHash(datasetId as string, mockEnv.signer!.address)
+            await dappTasks.getRandomCaptchasAndRequestHash(datasetId as string, mockEnv.contractInterface?.signer!.address || '')
         expect(captchas.length).to.equal(solvedCaptchaCount + unsolvedCaptchaCount)
         const pendingRequest = mockEnv.db?.getDappUserPending(requestHash)
         return expect(pendingRequest).to.not.be.null
@@ -671,8 +669,8 @@ describe('CONTRACT TASKS', () => {
         const queueRes = await promiseQueue(
             new Array(4).fill(0).map(
                 (_, datasetIndex) => async () => {
-                    const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring()
-                    await mockEnv.changeSigner('//Alice')
+                    const [providerMnemonic, providerAddress] = mockEnv.contractInterface?.createAccountAndAddToKeyring() || ['', '']
+                    await mockEnv.contractInterface?.changeSigner('//Alice')
                     await sendFunds(
                         mockEnv,
                         providerAddress,
@@ -684,7 +682,7 @@ describe('CONTRACT TASKS', () => {
                     provider.address = providerAddress
                     provider.serviceOrigin =
                         provider.serviceOrigin + randomAsHex().slice(0, 8)
-                    await mockEnv.changeSigner(providerMnemonic)
+                    await mockEnv.contractInterface?.changeSigner(providerMnemonic)
                     await tasks.providerRegister(
                         provider.serviceOrigin,
                         provider.fee,
@@ -713,7 +711,7 @@ describe('CONTRACT TASKS', () => {
 
         const res = await tasks.getRandomProvider(dappUser.address)
         const blockNumberParsed = parseBlockNumber(res.block_number)
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id, blockNumberParsed)
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id as string, blockNumberParsed)
             .then(() => true).catch(() => false)
         return expect(valid).to.be.true
     })
@@ -721,8 +719,8 @@ describe('CONTRACT TASKS', () => {
     it('Validate provided captcha dataset - fail', async () => {
         const tasks = new Tasks(mockEnv)
         const [providerMnemonic, providerAddress] =
-            mockEnv.createAccountAndAddToKeyring()
-        await mockEnv.changeSigner('//Alice')
+            mockEnv.contractInterface?.createAccountAndAddToKeyring() || ['', '']
+        await mockEnv.contractInterface?.changeSigner('//Alice')
         await sendFunds(
             mockEnv,
             providerAddress,
@@ -734,7 +732,7 @@ describe('CONTRACT TASKS', () => {
         provider.address = providerAddress
         provider.serviceOrigin =
             provider.serviceOrigin + randomAsHex().slice(0, 8)
-        await mockEnv.changeSigner(providerMnemonic)
+        await mockEnv.contractInterface?.changeSigner(providerMnemonic)
         await tasks.providerRegister(
             provider.serviceOrigin,
             provider.fee,
@@ -756,16 +754,16 @@ describe('CONTRACT TASKS', () => {
 
         const res = await tasks.getRandomProvider(dappUser.address)
         const blockNumberParsed = parseBlockNumber(res.block_number)
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', blockNumber).then(() => true).catch(() => false)
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', blockNumberParsed).then(() => true).catch(() => false)
         return expect(valid).to.be.false
     })
 
     it('Provider unstake', async () => {
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         const value = 1
         try {
-            const result: AnyJson = await providerTasks.providerUnstake(value)
+            const result: DecodedEvent[] = await providerTasks.providerUnstake(value)
             expect(result ? result[0].args[0] : undefined).to.equal(provider.address)
         } catch (error) {
             throw new Error(`Error in unstake provider: ${error}`)
@@ -773,10 +771,10 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Provider deregister', async () => {
-        await mockEnv.changeSigner(provider.mnemonic as string)
+        await mockEnv.contractInterface?.changeSigner(provider.mnemonic as string)
         const providerTasks = new Tasks(mockEnv)
         try {
-            const result: AnyJson = await providerTasks.providerDeregister(
+            const result: DecodedEvent[] = await providerTasks.providerDeregister(
                 provider.address as string
             )
             expect(result ? result[0].args[0] : undefined).to.equal(provider.address)

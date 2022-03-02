@@ -14,16 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
-import { Network, Signer } from 'redspot/types'
-import Contract from '@redspot/patract/contract'
+import { Network } from 'redspot/types'
 import { ERRORS } from '../../src/errors'
 import { network, patract } from 'redspot'
-import { contractDefinitions, ContractApiInterface } from '@prosopo/contract'
-import { strict as assert } from 'assert'
-
-const { mnemonicGenerate } = require('@polkadot/util-crypto')
-
-const CONTRACT_NAME = 'prosopo'
+import {ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -35,6 +29,7 @@ export class MockEnvironment implements ProsopoEnvironment {
     contractAddress: string
     defaultEnvironment: string
     contractName: string
+    contractInterface: ContractApiInterface | undefined
 
     constructor () {
         this.config = {
@@ -46,7 +41,8 @@ export class MockEnvironment implements ProsopoEnvironment {
                         address: process.env.CONTRACT_ADDRESS!,
                         deployer: {
                             address: '//Alice'
-                        }
+                        },
+                        name: 'prosopo'
                     }
                 }
             },
@@ -69,6 +65,9 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
+            this.contractName = this.config.networks[this.defaultEnvironment].contract.name
+            this.contractInterface = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName)
+
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT.message}:${this.config.defaultEnvironment}`)
         }
@@ -77,18 +76,13 @@ export class MockEnvironment implements ProsopoEnvironment {
 
 
     async isReady (): Promise<void> {
-        const contractApi = new ContractApiInterface
-        await this.getSigner()
-        await this.getContract()
         // Persist database state for tests
         if (!this.db) {
             await this.importDatabase()
             // @ts-ignore
             await this.db?.connect()
         }
-
-        this.network.registry.register(contractDefinitions)
-        assert(this.contract instanceof Contract)
+        await this.contractInterface?.isReady()
     }
 
     async importDatabase (): Promise<void> {

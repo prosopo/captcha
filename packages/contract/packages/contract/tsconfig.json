@@ -17,7 +17,6 @@
     "resolveJsonModule": true,
     "noImplicitReturns": false,
     "noImplicitThis": false,
-    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "noEmitOnError": true,
     "baseUrl": ".",
@@ -34,4 +33,5 @@
     "build/**/*",
     "**/build/**/*"
   ],
+  "references": []
 }

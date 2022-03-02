@@ -22,9 +22,9 @@
     "resolveJsonModule": true,
     "noImplicitReturns": false,
     "noImplicitThis": false,
-    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "noEmitOnError": true,
+    "composite": true,
     "baseUrl": ".",
     "paths": {
       "@prosopo/contract": [
@@ -44,7 +44,7 @@
   "baseUrl": ".",
   "include": [
     "**/*.ts",
-    "src/**/*.ts"
+    "src/**/*.ts",
   ],
   "exclude": [
     "node_modules",
@@ -52,9 +52,11 @@
     ".cache",
     "build/**/*",
     "**/build/**/*",
-    "**/*.test.ts",
-    "**/*mock*.ts",
-    "tests/*"
+
+  ],
+  "files": [
+    "./redspot.config.ts",
+    "./prosopo.config.ts"
   ],
   "references": [
     {
