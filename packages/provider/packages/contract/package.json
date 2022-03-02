@@ -3,10 +3,8 @@
   "author": "Chris Taylor <chris@prosopo.io>",
   "license": "GPL-3.0",
   "packageManager": "yarn@3.2.0",
-  "private": true,
   "version": "0.0.0",
-  "main": "index.js",
-  "type": "module",
+  "main": "build/index.js",
   "engines": {
     "node": ">=14.0.0"
   },
