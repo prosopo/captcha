@@ -209,7 +209,6 @@ describe('CONTRACT TASKS', () => {
         )
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
-
         await dappUserTasks.dappUserCommit(
             DAPP.contractAccount,
             datasetId as string,

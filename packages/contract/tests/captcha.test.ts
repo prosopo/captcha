@@ -118,7 +118,7 @@ describe('CAPTCHA FUNCTIONS', () => {
             items: [
                 {
                     // This test is expected to run in the integration Provider container
-                    path: '/usr/src/app/tests/mocks/data/img/01.01.jpeg',
+                    path: '/usr/src/provider/tests/mocks/data/img/01.01.jpeg',
                     type: 'image'
                 }]
         } as CaptchaWithoutId

@@ -113,7 +113,7 @@ export function compareCaptcha (received: CaptchaSolution, stored: Captcha): boo
  * @param  {Captcha} captcha
  * @return {string} the hex string hash
  */
-export async function computeCaptchaHash (captcha: CaptchaWithoutId) {
+export async function computeCaptchaHash (captcha: CaptchaWithoutId): Promise<string> {
     const itemHashes: string[] = []
     for (const item of captcha.items) {
         if (item.type === 'image') {
