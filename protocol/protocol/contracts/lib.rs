@@ -32,6 +32,7 @@ pub mod prosopo {
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaChaRng;
 
+    /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
         Default,
         PartialEq,
@@ -53,6 +54,7 @@ pub mod prosopo {
         Deactivated,
     }
 
+    /// CaptchaStatus is the status of a CaptchaSolutionCommitment, submitted by a DappUser
     #[derive(
         Default,
         PartialEq,
@@ -74,6 +76,7 @@ pub mod prosopo {
         Disapproved,
     }
 
+    /// Payee is the recipient of any fees that are paid when a CaptchaSolutionCommitment is approved
     #[derive(
         Default,
         PartialEq,
@@ -91,11 +94,12 @@ pub mod prosopo {
     pub enum Payee {
         Provider,
         Dapp,
-        // TODO how does this work if not specified as Provider or Dapp
         #[default]
         None,
     }
 
+    /// Providers are suppliers of human verification methods (captchas, etc.) to DappUsers, either
+    /// paying or receiving a fee for this service.
     #[derive(
         PartialEq,
         Debug,
@@ -110,11 +114,7 @@ pub mod prosopo {
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Provider {
-        // TODO how is the Status updated if the staked amount drops below the allowed minimum?
-        //    Should Status instead be a function that returns Active if staked > provider_stake_default
         status: GovernanceStatus,
-        // TODO should Providers have separate balances for paying/receiving fees?
-        // TODO should balances be stored in self.balances under an owner, as per ERC20?
         balance: Balance,
         // an amount in the base unit of the default parachain token (e.g. Planck on chains using DOT)
         fee: u32,
@@ -123,6 +123,7 @@ pub mod prosopo {
         captcha_dataset_id: Hash,
     }
 
+    /// RandomProvider is selected randomly by the contract for the client side application
     #[derive(scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct RandomProvider {
@@ -130,6 +131,7 @@ pub mod prosopo {
         block_number: u32,
     }
 
+    /// Operators are controllers of this contract with admin rights
     #[derive(
         PartialEq,
         Debug,
@@ -147,6 +149,8 @@ pub mod prosopo {
         status: GovernanceStatus,
     }
 
+    /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
+    /// the captchas received by a DappUser did belong to the Provider's original dataset
     #[derive(
         PartialEq,
         Debug,
@@ -166,6 +170,9 @@ pub mod prosopo {
         captcha_type: u16,
     }
 
+    /// CaptchaSolutionCommitments are submitted by DAppUsers upon completion of one or more
+    /// Captchas. They serve as proof of captcha completion to the outside world and can be used
+    /// in dispute resolution.
     #[derive(
         PartialEq,
         Debug,
@@ -192,6 +199,8 @@ pub mod prosopo {
         provider: AccountId,
     }
 
+    /// DApps are distributed apps who want their users to be verified by Providers, either paying
+    /// or receiving a fee for this service.
     #[derive(
         PartialEq,
         Debug,
@@ -207,7 +216,6 @@ pub mod prosopo {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Dapp {
         status: GovernanceStatus,
-        // TODO should balances be stored in self.balances under an owner, as per ERC20?
         balance: Balance,
         owner: AccountId,
         min_difficulty: u16,
@@ -215,6 +223,8 @@ pub mod prosopo {
         client_origin: Hash,
     }
 
+    /// Users are the users of DApps that are required to be verified as human before they are
+    /// allowed to interact with the DApps' contracts.
     #[derive(
         PartialEq,
         Debug,
@@ -447,11 +457,6 @@ pub mod prosopo {
             payee: Payee,
             provider_account: AccountId,
         ) -> Result<(), Error> {
-            // let caller = self.env().caller();
-            // TODO eventually remove operator checks to allow anyone to signup
-            // if !self.operators.get(&caller) {
-            //     return Err(ProsopoError::NotAuthorised);
-            // }
             let balance: u128 = 0;
             // this function is for registration only
             if self.providers.get(&provider_account).is_some() {
@@ -497,7 +502,6 @@ pub mod prosopo {
         ) -> Result<(), Error> {
             let caller = self.env().caller();
 
-            //TODO add operator check
             if caller != provider_account {
                 return Err(Error::NotAuthorised);
             }
@@ -533,7 +537,7 @@ pub mod prosopo {
                 balance,
                 fee,
                 service_origin,
-                captcha_dataset_id: existing.captcha_dataset_id, //TODO should this be update-able here?? No, because inactive providers cannot add datasets
+                captcha_dataset_id: existing.captcha_dataset_id,
                 payee,
             };
 
@@ -577,7 +581,6 @@ pub mod prosopo {
         /// De-Register a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deregister(&mut self, provider_account: AccountId) -> Result<(), Error> {
-            //TODO could get rid of provider_account parameter
             let caller = self.env().caller();
             if caller == provider_account {
                 // if self.operators.get(&caller) {
@@ -604,13 +607,11 @@ pub mod prosopo {
             Ok(())
         }
 
-        // TODO allow Provider to unstake(withdraw) less than they have staked
         /// Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_unstake(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
-            // TODO should the operators be able to do this ?
             if self.providers.get(&caller).is_some() {
                 let provider = self.get_provider_details(caller)?;
                 let balance = provider.balance;
@@ -633,7 +634,6 @@ pub mod prosopo {
         pub fn provider_add_dataset(&mut self, merkle_tree_root: Hash) -> Result<(), Error> {
             let provider_id = self.env().caller();
             // the calling account must belong to the provider
-            // TODO add Prosopo operators? Currently, only a provider can add a data set for themselves.
             self.validate_provider(provider_id)?;
 
             let dataset = CaptchaData {
@@ -681,7 +681,6 @@ pub mod prosopo {
                 } else {
                     GovernanceStatus::Suspended
                 };
-                // TODO this means that any caller can register any contract.. is this an issue?
                 let dapp = Dapp {
                     status,
                     balance: transferred,
@@ -779,14 +778,11 @@ pub mod prosopo {
             }
             let dapp = self.get_dapp_details(contract)?;
 
-            // TODO should the operators be authorised to do this ?
-            // TODO If an owner is not specified then the Dapp contract can never be cancelled
             if dapp.owner != caller {
                 return Err(Error::NotAuthorised);
             }
 
             let balance = dapp.balance;
-            // TODO ensure that the dapp has no outstanding payments due
             if dapp.balance > 0 {
                 self.env().transfer(caller, dapp.balance).ok();
             }
@@ -805,8 +801,6 @@ pub mod prosopo {
             dapp.status = GovernanceStatus::Deactivated;
             dapp.balance = 0;
             self.dapps.insert(dapp_account, &dapp);
-            // TODO should these be retained or not?
-            //self.dapp_accounts.retain(|account: &AccountId| account != &dapp_account);
         }
 
         /// Submit a captcha solution commit
@@ -874,7 +868,6 @@ pub mod prosopo {
 
         /// Approve a solution commitment, increment correct captchas, and refund the users tx fee
         #[ink(message)]
-        // TODO - should providers be prevented from later changing the status?
         pub fn provider_approve(
             &mut self,
             captcha_solution_commitment_id: Hash,
@@ -1571,7 +1564,6 @@ pub mod prosopo {
 
         /// Test provider add data set
         #[ink::test]
-        //TODO off-chain environment does not yet support `block_timestamp`
         fn test_provider_add_dataset() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
@@ -1699,10 +1691,7 @@ pub mod prosopo {
 
         /// Test dapp register and then update
         #[ink::test]
-        //TODO fix tests so that register and update are separate
         fn test_dapp_register_and_update() {
-            // TODO fix this test so that contract is actually updated, currently a new one is being
-            //   created
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account);
             let caller = AccountId::from([0x2; 32]);
@@ -1841,7 +1830,6 @@ pub mod prosopo {
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
-            // TODO test scenario where dataset is added before staking
             contract.provider_add_dataset(root).ok();
 
             // Register the dapp
@@ -1871,7 +1859,6 @@ pub mod prosopo {
 
         /// Test provider approve
         #[ink::test]
-        // TODO move the common stuff to a setup function
         fn test_provider_approve() {
             let operator_account = AccountId::from([0x1; 32]);
 
@@ -1967,7 +1954,6 @@ pub mod prosopo {
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
-            // TODO test scenario where dataset is added before staking
             contract.provider_add_dataset(root).ok();
 
             // Register the dapp
@@ -2001,7 +1987,6 @@ pub mod prosopo {
 
         /// Test provider disapprove
         #[ink::test]
-        // TODO move the common stuff to a setup function
         fn test_provider_disapprove() {
             let operator_account = AccountId::from([0x1; 32]);
 
@@ -2075,7 +2060,6 @@ pub mod prosopo {
 
         /// Test dapp user is human
         #[ink::test]
-        // TODO probably should change the name of this function in the main contract
         fn test_dapp_operator_is_human_user() {
             let operator_account = AccountId::from([0x1; 32]);
 
@@ -2173,8 +2157,6 @@ pub mod prosopo {
         //     let selected_provider = contract.get_random_active_provider();
         //     assert!(selected_provider.unwrap() == registered_provider_account.unwrap());
         // }
-
-        //TODO test provider_change_status
 
         /// Helper function for converting string to Hash
         fn str_to_hash(str: String) -> Hash {

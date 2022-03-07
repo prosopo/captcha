@@ -48,7 +48,6 @@ async function run() {
 
     console.log("");
     console.log(
-        "Deploy successfully. The contract address: ",
         contract.address.toString()
     );
 
