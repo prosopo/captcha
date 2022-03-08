@@ -28,6 +28,7 @@ pub mod prosopo {
         traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout, traits::StorageLayout,
         Mapping,
     };
+    use prosopo_storage_derive::EnumSpreadAllocate;
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaChaRng;
@@ -44,7 +45,7 @@ pub mod prosopo {
         scale::Decode,
         SpreadLayout,
         PackedLayout,
-        SpreadAllocate,
+        EnumSpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
@@ -66,7 +67,7 @@ pub mod prosopo {
         scale::Decode,
         SpreadLayout,
         PackedLayout,
-        SpreadAllocate,
+        EnumSpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum CaptchaStatus {
@@ -88,7 +89,7 @@ pub mod prosopo {
         scale::Decode,
         SpreadLayout,
         PackedLayout,
-        SpreadAllocate,
+        EnumSpreadAllocate,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Payee {

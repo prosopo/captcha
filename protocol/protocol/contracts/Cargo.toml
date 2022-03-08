@@ -1,19 +1,22 @@
 [package]
 name = "prosopo"
-version = "3.0.0-rc8"
+version = "3.0.0-rc9"
 authors = ["Chris Taylor chris@prosopo.io"]
 edition = "2021"
 
 [dependencies]
-ink_primitives = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
-ink_metadata = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false, features = ["derive"], optional = true }
-ink_env = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
-ink_storage = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
-ink_lang = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
-ink_prelude = { git = "https://github.com/prosopo-io/ink", branch = "enum_spread_allocate", default-features = false }
-scale = { package = "parity-scale-codec", version = "2.1", default-features = false, features = ["derive"] }
-scale-info = { version = "1.0.0", default-features = false, features = ["derive"], optional = true }
+ink_primitives = { version = "3.0.0-rc9", default-features = false }
+ink_metadata = { version = "3.0.0-rc9", default-features = false, features = ["derive"], optional = true }
+ink_env = { version = "3.0.0-rc9", default-features = false }
+ink_storage = { version = "3.0.0-rc9", default-features = false }
+ink_lang = { version = "3.0.0-rc9", default-features = false }
+ink_prelude = { version = "3.0.0-rc9", default-features = false }
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 rand_chacha = { version = "0.3.1", default-features = false }
+
+# custom prosopo storage
+prosopo_storage_derive = { version = "3.0.0-rc9", path = "../crates/storage/derive", default-features = false }
 
 [lib]
 name = "prosopo"

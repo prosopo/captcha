@@ -5,6 +5,7 @@
 /lang/target/
 /primitives/target/
 /examples/**/target/
+/crates/**/target/
 /design/
 /artifacts
 

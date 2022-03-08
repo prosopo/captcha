@@ -1,0 +1,22 @@
+[package]
+name = "prosopo_storage_derive"
+version = "3.0.0-rc9"
+authors = ["Chris Taylor <chris@prosopo.io>", "Vincenzo Ferrara <vince@gimly.io>"]
+edition = "2021"
+
+license = "Apache-2.0"
+repository = "https://github.com/prosopo-io/protocol"
+categories = ["no-std", "embedded"]
+include = ["Cargo.toml", "src/**/*.rs", "LICENSE"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1"
+syn = { version = "1", features = ["full"] }
+proc-macro2 = "1"
+synstructure = "0.12.4"
+
+[dev-dependencies]
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive", "full"] }
