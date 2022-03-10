@@ -13,11 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { blake2AsHex } from '@polkadot/util-crypto'
+import { blake2AsHex } from '@polkadot/util-crypto';
 
 function main () {
-    console.log(process.argv.slice(2)[0])
-    console.log(blake2AsHex(process.argv.slice(2)[0]))
+  console.log(process.argv.slice(2)[0]);
+  console.log(blake2AsHex(process.argv.slice(2)[0]));
 }
 
-main()
+main();

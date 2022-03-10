@@ -6,7 +6,7 @@
   "scripts": {
     "build": "yarn tsc -b . --verbose",
     "dev": "yarn build && yarn setup && yarn start",
-    "start": "ts-node ./src/cli/cli.ts",
+    "start": "yarn ts-node ./src/cli/cli.ts",
     "setup": "yarn ts-node ./build/scripts/setupdev.js",
     "mnemonic": "yarn ts-node ./scripts/generateMnemonic.ts",
     "test": "yarn redspot test",

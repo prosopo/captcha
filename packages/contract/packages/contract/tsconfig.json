@@ -20,7 +20,8 @@
     "allowSyntheticDefaultImports": true,
     "noEmitOnError": true,
     "baseUrl": ".",
-    "composite": true
+    "composite": true,
+    "moduleResolution": "node"
   },
   "baseUrl": ".",
   "include": [
@@ -32,6 +33,5 @@
     ".cache",
     "build/**/*",
     "**/build/**/*"
-  ],
-  "references": []
+  ]
 }

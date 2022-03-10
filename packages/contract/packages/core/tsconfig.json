@@ -26,6 +26,7 @@
     "noEmitOnError": true,
     "composite": true,
     "baseUrl": ".",
+    "moduleResolution": "node",
     "paths": {
       "@prosopo/contract": [
         "../contract/src"
@@ -44,15 +45,14 @@
   "baseUrl": ".",
   "include": [
     "**/*.ts",
-    "src/**/*.ts",
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "artifacts",
     ".cache",
     "build/**/*",
-    "**/build/**/*",
-
+    "**/build/**/*"
   ],
   "files": [
     "./redspot.config.ts",

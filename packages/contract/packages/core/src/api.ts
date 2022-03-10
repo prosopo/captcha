@@ -13,15 +13,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import express, { Router } from 'express'
-import { Tasks } from './tasks/tasks'
-import { BadRequest, ERRORS } from './errors'
-import {CaptchaSolutionBody, AccountsResponse} from './types/api'
-import type { AnyJson } from '@polkadot/types/types'
-import { validateAddress } from '@polkadot/util-crypto'
-import {Environment} from "../env";
-import {parseBlockNumber} from "../util";
-import {ProsopoContractApi} from "@prosopo/contract";
+import type { AnyJson } from '@polkadot/types/types';
+
+import { ProsopoContractApi } from '@prosopo/contract';
+import express, { Router } from 'express';
+
+import { validateAddress } from '@polkadot/util-crypto';
+
+import { Environment } from '../env';
+import { parseBlockNumber } from '../util';
+import { Tasks } from './tasks/tasks';
+import { AccountsResponse, CaptchaSolutionBody } from './types/api';
+import { BadRequest, ERRORS } from './errors';
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -30,114 +33,129 @@ import {ProsopoContractApi} from "@prosopo/contract";
  * @param {Environment} env - The Prosopo environment
  */
 export function prosopoMiddleware (env: Environment): Router {
-    const router = express.Router()
-    const tasks = new Tasks(env)
-    const contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName)
+  const router = express.Router();
+  const tasks = new Tasks(env);
+  const contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName);
 
-
-    /**
+  /**
      * Returns a random provider using the account that is currently the env signer
      * @param {string} userAccount - Dapp User AccountId
      * @return {Provider} - A Provider
      */
-    router.get('/v1/prosopo/random_provider/:userAccount', async (req, res, next) => {
-        const { userAccount } = req.params
-        try {
-            const provider = await tasks.getRandomProvider(userAccount)
-            return res.json(provider)
-        } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`
-            return next(new BadRequest(msg))
-        }
-    })
+  router.get('/v1/prosopo/random_provider/:userAccount', async (req, res, next) => {
+    const { userAccount } = req.params;
 
-    /**
+    try {
+      const provider = await tasks.getRandomProvider(userAccount);
+
+      return res.json(provider);
+    } catch (err: unknown) {
+      const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
+
+      return next(new BadRequest(msg));
+    }
+  });
+
+  /**
      * Returns the list of provider accounts
      *
      * @return {Hash} - The Providers
      */
-    router.get('/v1/prosopo/providers/', async (req, res, next) => {
-        try {
-            await env.isReady()
-            const providers: AnyJson = await tasks.getProviderAccounts()
-            return res.json(
-            {
-                accounts: providers
-            } as AccountsResponse
-            )
-        } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`
-            return next(new BadRequest(msg))
-        }
-    })
+  router.get('/v1/prosopo/providers/', async (req, res, next) => {
+    try {
+      await env.isReady();
+      const providers: AnyJson = await tasks.getProviderAccounts();
 
-    /**
+      return res.json(
+        {
+          accounts: providers
+        } as AccountsResponse
+      );
+    } catch (err: unknown) {
+      const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
+
+      return next(new BadRequest(msg));
+    }
+  });
+
+  /**
      * Returns the list of dapp accounts
      *
      * @return {Hash} - The Dapps
      */
-    router.get('/v1/prosopo/dapps/', async (req, res, next) => {
-        try {
-            await env.isReady()
-            const dapps: AnyJson = await tasks.getDappAccounts()
-            return res.json(
-            {
-                accounts: dapps
-            } as AccountsResponse
-            )
-        } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`
-            return next(new BadRequest(msg))
-        }
-    })
+  router.get('/v1/prosopo/dapps/', async (req, res, next) => {
+    try {
+      await env.isReady();
+      const dapps: AnyJson = await tasks.getDappAccounts();
 
-    /**
+      return res.json(
+        {
+          accounts: dapps
+        } as AccountsResponse
+      );
+    } catch (err: unknown) {
+      const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
+
+      return next(new BadRequest(msg));
+    }
+  });
+
+  /**
      * Returns details of the provider
      *
      * @param {string} provider_account - Provider's account
      * @return {Hash} - The Captcha Provider object
      */
-    router.get('/v1/prosopo/provider/:providerAccount', async (req, res, next) => {
-        await env.isReady()
-        const { providerAccount } = req.params
-        if (!providerAccount) {
-            return next(new BadRequest(ERRORS.API.BAD_REQUEST.message))
-        }
-        try {
-            validateAddress(providerAccount as string)
-            const contract = await contractApi.getContract()
-            const result = await contract.query.getProviderDetails(providerAccount)
-            return res.json(result.output)
-        } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
-            return next(new BadRequest(msg))
-        }
-    })
+  router.get('/v1/prosopo/provider/:providerAccount', async (req, res, next) => {
+    await env.isReady();
+    const { providerAccount } = req.params;
 
-    /**
+    if (!providerAccount) {
+      return next(new BadRequest(ERRORS.API.BAD_REQUEST.message));
+    }
+
+    try {
+      validateAddress(providerAccount);
+      const contract = await contractApi.getContract();
+      const result = await contract.query.getProviderDetails(providerAccount);
+
+      return res.json(result.output);
+    } catch (err: unknown) {
+      const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`;
+
+      return next(new BadRequest(msg));
+    }
+  });
+
+  /**
      * Provides a Captcha puzzle to a Dapp User
      * @param {string} datasetId - Provider datasetId
      * @param {string} userAccount - Dapp User AccountId
      * @param {string} blockNumber - Block number
      * @return {Captcha} - The Captcha data
      */
-    router.get('/v1/prosopo/provider/captcha/:datasetId/:userAccount/:blockNumber', async (req, res, next) => {
-        const { datasetId, userAccount, blockNumber } = req.params
-        if (!datasetId || !userAccount || !blockNumber) {
-            return next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message))
-        }
-        try {
-            validateAddress(userAccount as string)
-            const blockNumberParsed = parseBlockNumber(blockNumber)
-            await tasks.validateProviderWasRandomlyChosen(userAccount, datasetId, blockNumberParsed)
-            return res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId as string, userAccount as string))
-        } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`
-            return next(new BadRequest(msg))
-        }
-    })
+  router.get('/v1/prosopo/provider/captcha/:datasetId/:userAccount/:blockNumber', async (req, res, next) => {
+    const { blockNumber, datasetId, userAccount } = req.params;
 
-    /**
+    if (!datasetId || !userAccount || !blockNumber) {
+      return next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+    }
+
+    try {
+      validateAddress(userAccount);
+      const blockNumberParsed = parseBlockNumber(blockNumber);
+
+      await tasks.validateProviderWasRandomlyChosen(userAccount, datasetId, blockNumberParsed);
+
+      return res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount));
+    } catch (err: unknown) {
+      const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`;
+
+      return next(new BadRequest(msg));
+    }
+  });
+
+  /**
      * Receives solved Captchas, store to database, and check against solution commitment
      *
      * @param {string} userAccount - Dapp User id
@@ -145,21 +163,25 @@ export function prosopoMiddleware (env: Environment): Router {
      * @param {Captcha[]} captchas - The Captcha solutions
      * @return {CaptchaSolutionResponse} - The Captcha solution result and proof
      */
-    router.post('/v1/prosopo/provider/solution', async (req, res, next) => {
-        try {
-            CaptchaSolutionBody.parse(req.body)
-        } catch (err) {
-            return next(new BadRequest(err))
-        }
-        const { userAccount, dappAccount, captchas, requestHash } = req.body
-        try {
-            const result = await tasks.dappUserSolution(userAccount as string, dappAccount as string, requestHash as string, captchas as JSON)
-            return res.json({ status: ERRORS.API.CAPTCHA_PASSED.message, captchas: result })
-        } catch (err: unknown) {
-            const msg = `${ERRORS.API.BAD_REQUEST.message}: ${err}`
-            return next(new BadRequest(msg))
-        }
-    })
+  router.post('/v1/prosopo/provider/solution', async (req, res, next) => {
+    try {
+      CaptchaSolutionBody.parse(req.body);
+    } catch (err) {
+      return next(new BadRequest(err));
+    }
 
-    return router
+    const { captchas, dappAccount, requestHash, userAccount } = req.body;
+
+    try {
+      const result = await tasks.dappUserSolution(userAccount as string, dappAccount as string, requestHash as string, captchas as JSON);
+
+      return res.json({ status: ERRORS.API.CAPTCHA_PASSED.message, captchas: result });
+    } catch (err: unknown) {
+      const msg = `${ERRORS.API.BAD_REQUEST.message}: ${err}`;
+
+      return next(new BadRequest(msg));
+    }
+  });
+
+  return router;
 }
