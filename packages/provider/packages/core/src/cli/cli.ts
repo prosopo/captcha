@@ -13,35 +13,39 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import express from 'express'
-import { Environment } from '../env'
-import { prosopoMiddleware } from '../api'
-import { handleErrors } from '../errors'
-import { processArgs } from './argv'
-import { mnemonicValidate } from '@polkadot/util-crypto'
+import express from 'express';
 
-const app = express()
-app.use(express.json())
-const port = 3000
+import { mnemonicValidate } from '@polkadot/util-crypto';
+
+import { prosopoMiddleware } from '../api';
+import { Environment } from '../env';
+import { handleErrors } from '../errors';
+import { processArgs } from './argv';
+
+const app = express();
+
+app.use(express.json());
+const port = 3000;
 
 async function main () {
-    mnemonicValidate(process.env.PROVIDER_MNEMONIC as string)
-    const env = new Environment(process.env.PROVIDER_MNEMONIC)
-    await env.isReady()
-    const args = await processArgs(process.argv.slice(2), env)
+  mnemonicValidate(process.env.PROVIDER_MNEMONIC);
+  const env = new Environment(process.env.PROVIDER_MNEMONIC);
 
-    if (args.api) {
-        app.use(prosopoMiddleware(env))
-        app.use(handleErrors)
-        app.listen(port, () => {
-            console.log(`Prosopo app listening at http://localhost:${port}`)
-        })
-    } else {
-        process.exit()
-    }
+  await env.isReady();
+  const args = await processArgs(process.argv.slice(2), env);
+
+  if (args.api) {
+    app.use(prosopoMiddleware(env));
+    app.use(handleErrors);
+    app.listen(port, () => {
+      console.log(`Prosopo app listening at http://localhost:${port}`);
+    });
+  } else {
+    process.exit();
+  }
 }
 
 main()
-    .catch((error) => {
-        console.error(error)
-    })
+  .catch((error) => {
+    console.error(error);
+  });

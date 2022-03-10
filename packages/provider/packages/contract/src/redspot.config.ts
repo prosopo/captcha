@@ -13,47 +13,49 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { RedspotUserConfig } from 'redspot/types'
-import '@redspot/patract'
-import '@redspot/chai'
-import '@redspot/gas-reporter'
-import '@redspot/watcher'
-import '@redspot/explorer'
-import '@redspot/decimals'
-import { contractDefinitions } from './definitions'
+import '@redspot/patract';
+import '@redspot/chai';
+import '@redspot/gas-reporter';
+import '@redspot/watcher';
+import '@redspot/explorer';
+import '@redspot/decimals';
+
+import { RedspotUserConfig } from 'redspot/types';
+
+import { contractDefinitions } from './definitions';
 
 export default {
-    defaultNetwork: 'development',
-    networks: {
-        development: {
-            endpoint: 'ws://substrate-node:9944',
-            // Use this to contact a localhost version of substrate
-            // endpoint: "ws://host.docker.internal:9944",
-            gasLimit: '400000000000',
-            types: contractDefinitions,
-            accounts: [
-                '//Alice',
-                '//Bob',
-                '//Charlie',
-                '//Dave',
-                '//Eve',
-                '//Ferdie',
-            ]
-        },
-        jupiter: {
-            endpoint: 'wss://jupiter-poa.elara.patract.io',
-            gasLimit: '400000000000',
-            accounts: ['//Alice'],
-            types: {}
-        }
-
+  defaultNetwork: 'development',
+  networks: {
+    development: {
+      endpoint: 'ws://substrate-node:9944',
+      // Use this to contact a localhost version of substrate
+      // endpoint: "ws://host.docker.internal:9944",
+      gasLimit: '400000000000',
+      types: contractDefinitions,
+      accounts: [
+        '//Alice',
+        '//Bob',
+        '//Charlie',
+        '//Dave',
+        '//Eve',
+        '//Ferdie'
+      ]
     },
-    mocha: {
-        timeout: 120000
-    },
-    docker: {
-        sudo: false,
-        runTestnet:
-            "docker run -p 9944:9944 --rm redspot/contract /bin/bash -c 'canvas --rpc-cors all --tmp --dev --ws-port=9944 --ws-external'"
+    jupiter: {
+      endpoint: 'wss://jupiter-poa.elara.patract.io',
+      gasLimit: '400000000000',
+      accounts: ['//Alice'],
+      types: {}
     }
-} as RedspotUserConfig
+
+  },
+  mocha: {
+    timeout: 120000
+  },
+  docker: {
+    sudo: false,
+    runTestnet:
+            "docker run -p 9944:9944 --rm redspot/contract /bin/bash -c 'canvas --rpc-cors all --tmp --dev --ws-port=9944 --ws-external'"
+  }
+} as RedspotUserConfig;

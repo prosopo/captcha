@@ -13,35 +13,35 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { ProsopoConfig } from './src/types'
+import { ProsopoConfig } from './src/types';
 
 export default {
-    defaultEnvironment: 'development',
-    networks: {
-        development: {
-            endpoint: 'ws://substrate-node:9944',
-            contract: {
-                address: process.env.CONTRACT_ADDRESS,
-                deployer: {
-                    address: '//Alice'
-                },
-                name: 'prosopo'
-            }
-        }
-    },
-    captchas: {
-        solved: {
-            count: 1
+  defaultEnvironment: 'development',
+  networks: {
+    development: {
+      endpoint: 'ws://substrate-node:9944',
+      contract: {
+        address: process.env.CONTRACT_ADDRESS,
+        deployer: {
+          address: '//Alice'
         },
-        unsolved: {
-            count: 1
-        }
-    },
-    database: {
-        development: {
-            type: 'mongo',
-            endpoint: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017`,
-            dbname: 'prosopo'
-        }
+        name: 'prosopo'
+      }
     }
-} as ProsopoConfig
+  },
+  captchas: {
+    solved: {
+      count: 1
+    },
+    unsolved: {
+      count: 1
+    }
+  },
+  database: {
+    development: {
+      type: 'mongo',
+      endpoint: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017`,
+      dbname: 'prosopo'
+    }
+  }
+} as ProsopoConfig;
