@@ -25,7 +25,7 @@ import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, set
 
 require('dotenv').config();
 
-const ENVVARS = ['PROVIDER_MNEMONIC', 'PROVIDER_ADDRESS', 'DAPP_CONTRACT_ADDRESS'];
+const ENVVARS = ['PROVIDER_MNEMONIC', 'DAPP_CONTRACT_ADDRESS'];
 
 // Some default accounts that are setup in the contract for development purposes
 
@@ -60,6 +60,7 @@ async function run () {
   const env = new Environment('//Alice');
 
   await env.isReady();
+  console.log("env ready")
   ENVVARS.map((envvar) => {
     if (!envvar) {
       throw new Error(`Environment Variable ${envvar} is not set`);
@@ -67,19 +68,23 @@ async function run () {
 
     return undefined;
   });
-  await processArgs(env);
+  processArgs(env);
   process.exit();
 }
 
 function processArgs (env) {
+  console.log("argv")
+  console.log(process.argv)
   return yargs
     .usage('Usage: $0 [global options] <command> [options]')
     .command('provider', 'Setup a Provider', (yargs) => {
       return yargs;
     }, async () => {
-      const providerKeyringPair: KeyringPair = env.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
-
+      console.log("keyring...")
+      const providerKeyringPair: KeyringPair = env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
+      console.log("sending funds...")
       await sendFunds(env, providerKeyringPair.address, 'Provider', new BN('100000000000000000'));
+      console.log("setting up provider...")
       await setupProvider(env, PROVIDER);
     }
     )
@@ -95,15 +100,23 @@ function processArgs (env) {
         .option('disapprove', { type: 'boolean', demand: false });
     }, async (argv) => {
       const solutionHash: string | undefined = await setupDappUser(env, DAPP_USER, PROVIDER, DAPP);
-
+      const approve = !!argv.approve
       if ((argv.approve || argv.disapprove) && solutionHash !== undefined) {
-        await approveOrDisapproveCommitment(env, solutionHash, argv.approve, PROVIDER);
+        await approveOrDisapproveCommitment(env, solutionHash, approve, PROVIDER);
       }
     }
     )
     .argv;
 }
 
-run().catch((err) => {
-  throw new Error(`Setup dev error: ${err}`);
-});
+run()
+
+// run().catch((err) => {
+//   throw new Error(`Setup dev error: ${err}`);
+// });
+// process.on('unhandledRejection', (reason, promise) => {
+//   console.log(reason)
+// })
+// process.on('uncaughtException', (reason) => {
+//   console.log(reason)
+// })

@@ -21,6 +21,7 @@ import { prosopoMiddleware } from '../api';
 import { Environment } from '../env';
 import { handleErrors } from '../errors';
 import { processArgs } from './argv';
+import { ERRORS } from '../errors'
 
 const app = express();
 
@@ -28,6 +29,9 @@ app.use(express.json());
 const port = 3000;
 
 async function main () {
+  if (!process.env.PROVIDER_MNEMONIC) {
+    throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message)
+  }
   mnemonicValidate(process.env.PROVIDER_MNEMONIC);
   const env = new Environment(process.env.PROVIDER_MNEMONIC);
 
