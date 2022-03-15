@@ -28,10 +28,20 @@ export async function displayBalance (env, address, who) {
 }
 
 export async function sendFunds (env, address, who, amount): Promise<void> {
+    console.log(1)
+    console.log(address);
+    console.log(env.contractInterface.network.api.query === undefined)
+    console.log(env.contractInterface.network.api.query.system === undefined)
+    console.log(env.contractInterface.network.api.query.system.account === undefined)
+    console.trace(await env.contractInterface.network.api.query.system.account(address))
     const balance = await env.contractInterface.network.api.query.system.account(address)
+    console.log(2)
     const signerAddresses: string[] = await env.contractInterface.network.getAddresses()
+    console.log(3)
     const Alice = signerAddresses[0]
+    console.log(4)
     const alicePair = env.contractInterface.network.keyring.getPair(Alice)
+    console.log(5)
     const AliceBalance = await env.contractInterface.network.api.query.system.account(alicePair.address)
     if (AliceBalance < amount) {
         throw new Error(`Alice balance too low: , ${AliceBalance}`)

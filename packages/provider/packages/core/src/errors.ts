@@ -23,6 +23,9 @@ export const ERRORS = {
         },
         ASSERT_ERROR: {
             message: 'AssertionError'
+        },
+        MNEMONIC_UNDEFINED : {
+            message: 'Provider mnemonic Undefined. Please set `PROVIDER_MNEMONIC` in environment variables'
         }
     },
     CONFIG: {

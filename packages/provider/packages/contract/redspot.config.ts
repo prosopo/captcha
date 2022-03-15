@@ -13,19 +13,24 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import { RedspotUserConfig } from 'redspot/types';
 import '@redspot/patract';
 import '@redspot/chai';
-import '@redspot/gas-reporter';
 import '@redspot/watcher';
 import '@redspot/explorer';
 import '@redspot/decimals';
 
-import { RedspotUserConfig } from 'redspot/types';
-
-import { contractDefinitions } from './definitions';
+import { contractDefinitions } from './src/definitions';
 
 export default {
   defaultNetwork: 'development',
+  contract: {
+    ink: {
+      docker: false,
+      toolchain: 'nightly',
+      sources: ['/usr/src/packages/provider/packages/contract/artifacts']
+    }
+  },
   networks: {
     development: {
       endpoint: 'ws://substrate-node:9944',

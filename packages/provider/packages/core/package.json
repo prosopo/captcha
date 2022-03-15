@@ -16,6 +16,13 @@
   },
   "dependencies": {
     "@prosopo/contract": "workspace:*",
+    "@redspot/chai": "file:../../../../redspot/build/redspot-chai",
+    "@redspot/decimals": "file:../../../../redspot/build/redspot-decimals",
+    "@redspot/explorer": "file:../../../../redspot/build/redspot-explorer",
+    "@redspot/gas-reporter": "file:../../../../redspot/build/redspot-gas-reporter",
+    "@redspot/known-types": "file:../../../../redspot/build/redspot-known-types",
+    "@redspot/patract": "file:../../../../redspot/build/redspot-patract",
+    "@redspot/watcher": "file:../../../../redspot/build/redspot-watcher",
     "@types/mocha": "^9.0.0",
     "c8": "^7.11.0",
     "dotenv": "^14.3.2",

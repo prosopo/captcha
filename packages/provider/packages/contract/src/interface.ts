@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+// @ts-ignore
 import {network, patract} from 'redspot'
 import {Registry} from 'redspot/types/provider'
 import type {AbiMessage} from '@polkadot/api-contract/types'
@@ -80,7 +81,8 @@ export class ProsopoContractApi implements ContractApiInterface {
         await this.network.api.isReadyOrError
         const contractFactory = await patract.getContractFactory(this.contractName, this.signer)
         let contract = contractFactory.attach(this.contractAddress)
-        if (!this.contract) {
+        if (!contract) {
+            console.log(contract);
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
 
@@ -90,6 +92,7 @@ export class ProsopoContractApi implements ContractApiInterface {
 
     createAccountAndAddToKeyring(): [string, string] {
         const mnemonic: string = mnemonicGenerate()
+        console.log("adding from mnemonic")
         const account = this.network.keyring.addFromMnemonic(mnemonic)
         const {address} = account
         return [mnemonic, address]

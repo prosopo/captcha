@@ -48,9 +48,9 @@ export class Environment implements ProsopoEnvironment {
         this.mnemonic = mnemonic
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
-            this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
-            this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
-            this.contractName = this.config.networks[this.defaultEnvironment].contract.name
+            this.deployerAddress = this.config.networks![this.defaultEnvironment].contract.deployer.address
+            this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address
+            this.contractName = this.config.networks![this.defaultEnvironment].contract.name
             this.contractInterface = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName)
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`)
@@ -65,11 +65,13 @@ export class Environment implements ProsopoEnvironment {
 
     async importDatabase(): Promise<void> {
         try {
-            const {ProsopoDatabase} = await import(`./db/${this.config.database[this.defaultEnvironment].type}`)
-            this.db = new ProsopoDatabase(
-                this.config.database[this.defaultEnvironment].endpoint,
-                this.config.database[this.defaultEnvironment].dbname
-            )
+            if (this.config.database) {
+                const {ProsopoDatabase} = await import(`./db/${this.config.database![this.defaultEnvironment!].type!}`)
+                this.db = new ProsopoDatabase(
+                    this.config.database![this.defaultEnvironment].endpoint,
+                    this.config.database![this.defaultEnvironment].dbname
+                )
+            }
         } catch (err) {
             throw new Error(`${ERRORS.DATABASE.DATABASE_IMPORT_FAILED.message}:${this.config.database[this.defaultEnvironment].type}:${err}`)
         }
