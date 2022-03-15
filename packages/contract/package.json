@@ -12,18 +12,19 @@
     "node": ">=8.2.0"
   },
   "resolutions": {
-    "@polkadot/api": "7.5.1",
-    "@polkadot/api-contract": "7.5.1",
-    "@polkadot/api-derive": "7.5.1",
-    "@polkadot/api-augment": "7.5.1",
-    "@polkadot/apps-config": "0.103.1",
-    "@polkadot/keyring": "8.3.3",
-    "@polkadot/types": "7.5.1",
-    "@polkadot/networks": "8.3.3",
-    "@polkadot/util": "8.3.3",
-    "@polkadot/x-fetch": "8.3.3",
-    "@polkadot/util-crypto": "8.3.3",
-    "rxjs": "7.5.2"
+    "@polkadot/api": "7.12.1",
+    "@polkadot/api-contract": "7.12.1",
+    "@polkadot/api-derive": "7.12.1",
+    "@polkadot/api-augment": "7.12.1",
+    "@polkadot/apps-config": "0.109.1",
+    "@polkadot/keyring": "8.5.1",
+    "@polkadot/types": "7.12.1",
+    "@polkadot/networks": "8.5.1",
+    "@polkadot/util": "8.5.1",
+    "@polkadot/x-fetch": "8.5.1",
+    "@polkadot/util-crypto": "8.5.1",
+    "rxjs": "7.5.5",
+    "bn.js": "4.12.0"
   },
   "workspaces": [
     "packages/contract",
