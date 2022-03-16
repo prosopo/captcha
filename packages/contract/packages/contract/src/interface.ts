@@ -14,7 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 // @ts-ignore
-import {network, patract} from 'redspot'
+
+import '@redspot/patract';
+import '@redspot/chai';
+import '@redspot/watcher';
+import '@redspot/explorer';
+import '@redspot/decimals';
 import {Registry} from 'redspot/types/provider'
 import type {AbiMessage} from '@polkadot/api-contract/types'
 import Contract from '@redspot/patract/contract'
@@ -27,8 +32,8 @@ import {AnyJson} from '@polkadot/types/types/codec'
 import {DecodedEvent} from "@redspot/patract/types";
 import {contractDefinitions} from "./definitions";
 import {strict as assert} from "assert";
-
-const {mnemonicGenerate} = require('@polkadot/util-crypto')
+import { network, patract } from "redspot"
+const { mnemonicGenerate } = require('@polkadot/util-crypto')
 
 export class ProsopoContractApi implements ContractApiInterface {
     contract?: Contract
@@ -51,10 +56,11 @@ export class ProsopoContractApi implements ContractApiInterface {
 
     async isReady(): Promise<void> {
         // redspot will do this if using `npx redspot` commands. do it here anyway in case using `yarn ts-node ...`
+        await this.network.api.isReadyOrError
         await this.network.registry.register(contractDefinitions)
         await this.getSigner()
         await this.getContract()
-        assert(this.contract instanceof Contract)
+        assert(this.contract !== undefined)
     }
 
     async getSigner(): Promise<Signer> {

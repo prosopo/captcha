@@ -171,7 +171,7 @@ export class ProsopoDatabase implements Database {
     const doc = await this.tables.dataset?.findOne({ datasetId });
 
     if (doc) {
-      return doc as DatasetRecord;
+      return doc as unknown as DatasetRecord;
     }
 
     throw (ERRORS.DATABASE.DATASET_GET_FAILED.message);
@@ -232,7 +232,7 @@ export class ProsopoDatabase implements Database {
     const doc = await this.tables.pending?.findOne({ _id: requestHash });
 
     if (doc) {
-      return doc as PendingCaptchaRequestRecord;
+      return doc as unknown as PendingCaptchaRequestRecord;
     }
 
     throw (ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message);

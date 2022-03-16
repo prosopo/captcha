@@ -64,7 +64,8 @@ export class Tasks {
     captchaConfig: CaptchaConfig
 
     constructor(env: ProsopoEnvironment) {
-        this.contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName)
+        //this.contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName)
+        this.contractApi = env.contractInterface
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
     }
