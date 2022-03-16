@@ -5,6 +5,7 @@
   "packageManager": "yarn@3.2.0",
   "version": "0.0.0",
   "main": "build/src/index.js",
+  "type": "commonjs",
   "engines": {
     "node": ">=14.0.0"
   },

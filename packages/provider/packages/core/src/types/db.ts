@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Collection } from 'mongodb'
+import { Document, Collection } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
 import { Captcha, CaptchaSolution, Dataset } from './captcha'
 import { PendingCaptchaRequest } from './api'

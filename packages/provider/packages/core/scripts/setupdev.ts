@@ -60,7 +60,7 @@ async function run () {
   const env = new Environment('//Alice');
 
   await env.isReady();
-  console.log("env ready")
+  console.log('env ready');
   ENVVARS.map((envvar) => {
     if (!envvar) {
       throw new Error(`Environment Variable ${envvar} is not set`);
@@ -68,55 +68,63 @@ async function run () {
 
     return undefined;
   });
-  processArgs(env);
+  await processArgs(env);
   process.exit();
 }
 
-function processArgs (env) {
-  console.log("argv")
-  console.log(process.argv)
-  return yargs
-    .usage('Usage: $0 [global options] <command> [options]')
-    .command('provider', 'Setup a Provider', (yargs) => {
-      return yargs;
-    }, async () => {
-      console.log("keyring...")
-      const providerKeyringPair: KeyringPair = env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
-      console.log("sending funds...")
-      await sendFunds(env, providerKeyringPair.address, 'Provider', new BN('100000000000000000'));
-      console.log("setting up provider...")
-      await setupProvider(env, PROVIDER);
+async function processArgs (env) {
+  // https://github.com/yargs/yargs/issues/1069#issuecomment-709693413
+  return new Promise((resolve, reject) => {
+    try {
+      yargs
+        .usage('Usage: $0 [global options] <command> [options]')
+        .command(
+          {
+            command: 'provider',
+            describe: 'Setup a Provider',
+            builder: (yargs) => {
+              return yargs;
+            },
+            handler: async () => {
+              const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
+
+              await env.contractInterface.network.api.isReady;
+              console.log('sending funds...');
+              await sendFunds(env, providerKeyringPair.address, 'Provider', new BN('100000000000000000'));
+              console.log('setting up provider...');
+
+              return await setupProvider(env, PROVIDER);
+            }
+          }
+        )
+        .command('dapp', 'Setup a Dapp',
+          (yargs) => {
+            return yargs;
+          }, async () => {
+            await setupDapp(env, DAPP);
+          }
+        )
+        .command('user', 'Submit and approve Dapp User solution commitments', (yargs) => {
+          return yargs
+            .option('approve', { type: 'boolean', demand: false })
+            .option('disapprove', { type: 'boolean', demand: false });
+        }, async (argv) => {
+          const solutionHash: string | undefined = await setupDappUser(env, DAPP_USER, PROVIDER, DAPP);
+          const approve = !!argv.approve;
+
+          if ((argv.approve || argv.disapprove) && solutionHash !== undefined) {
+            await approveOrDisapproveCommitment(env, solutionHash, approve, PROVIDER);
+          }
+        }
+        ).onFinishCommand(async (r) => resolve(r))
+        .exitProcess(false)
+        .argv;
+    } catch (e) {
+      reject(e);
     }
-    )
-    .command('dapp', 'Setup a Dapp', (yargs) => {
-      return yargs;
-    }, async () => {
-      await setupDapp(env, DAPP);
-    }
-    )
-    .command('user', 'Submit and approve Dapp User solution commitments', (yargs) => {
-      return yargs
-        .option('approve', { type: 'boolean', demand: false })
-        .option('disapprove', { type: 'boolean', demand: false });
-    }, async (argv) => {
-      const solutionHash: string | undefined = await setupDappUser(env, DAPP_USER, PROVIDER, DAPP);
-      const approve = !!argv.approve
-      if ((argv.approve || argv.disapprove) && solutionHash !== undefined) {
-        await approveOrDisapproveCommitment(env, solutionHash, approve, PROVIDER);
-      }
-    }
-    )
-    .argv;
+  });
 }
 
-run()
-
-// run().catch((err) => {
-//   throw new Error(`Setup dev error: ${err}`);
-// });
-// process.on('unhandledRejection', (reason, promise) => {
-//   console.log(reason)
-// })
-// process.on('uncaughtException', (reason) => {
-//   console.log(reason)
-// })
+run().catch((err) => {
+  throw new Error(`Setup dev error: ${err}`);
+});

@@ -28,27 +28,18 @@ export async function displayBalance (env, address, who) {
 }
 
 export async function sendFunds (env, address, who, amount): Promise<void> {
-    console.log(1)
-    console.log(address);
-    console.log(env.contractInterface.network.api.query === undefined)
-    console.log(env.contractInterface.network.api.query.system === undefined)
-    console.log(env.contractInterface.network.api.query.system.account === undefined)
-    console.trace(await env.contractInterface.network.api.query.system.account(address))
+    await env.contractInterface.network.api.isReady
     const balance = await env.contractInterface.network.api.query.system.account(address)
-    console.log(2)
     const signerAddresses: string[] = await env.contractInterface.network.getAddresses()
-    console.log(3)
     const Alice = signerAddresses[0]
-    console.log(4)
     const alicePair = env.contractInterface.network.keyring.getPair(Alice)
-    console.log(5)
     const AliceBalance = await env.contractInterface.network.api.query.system.account(alicePair.address)
     if (AliceBalance < amount) {
         throw new Error(`Alice balance too low: , ${AliceBalance}`)
     }
     const api = env.contractInterface.network.api
     if (balance.data.free.isEmpty) {
-        await env.patract.buildTx(
+        await env.contractInterface.patract.buildTx(
             api.registry,
             api.tx.balances.transfer(address, amount),
             alicePair.address // from
@@ -57,7 +48,7 @@ export async function sendFunds (env, address, who, amount): Promise<void> {
 }
 
 export async function setupProvider (env, provider: TestProvider): Promise<Hash> {
-    await env.changeSigner(provider.mnemonic)
+    await env.contractInterface.changeSigner(provider.mnemonic)
     const tasks = new Tasks(env)
     console.log('   - providerRegister')
     await tasks.providerRegister(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address)
@@ -71,7 +62,7 @@ export async function setupProvider (env, provider: TestProvider): Promise<Hash>
 
 export async function setupDapp (env, dapp: TestDapp): Promise<void> {
     const tasks = new Tasks(env)
-    await env.changeSigner(dapp.mnemonic)
+    await env.contractInterface.changeSigner(dapp.mnemonic)
     console.log('   - dappRegister')
     await tasks.dappRegister(hexHash(dapp.serviceOrigin), dapp.contractAccount, blake2AsHex(decodeAddress(dapp.optionalOwner)))
     console.log('   - dappFund')
@@ -79,7 +70,7 @@ export async function setupDapp (env, dapp: TestDapp): Promise<void> {
 }
 
 export async function setupDappUser (env, dappUser: TestAccount, provider: TestProvider, dapp: TestDapp): Promise<string | undefined> {
-    await env.changeSigner(dappUser.mnemonic)
+    await env.contractInterface.changeSigner(dappUser.mnemonic)
 
     // This section is doing everything that the ProCaptcha repo will eventually be doing in the client browser
     //   1. Get captcha JSON
@@ -101,7 +92,7 @@ export async function setupDappUser (env, dappUser: TestAccount, provider: TestP
         const captchaSols = captchas.map(captcha => convertCaptchaToCaptchaSolution(captcha))
         const captchaSolHashes = captchaSols.map(computeCaptchaSolutionHash)
         tree.build(captchaSolHashes)
-        await env.changeSigner(dappUser.mnemonic)
+        await env.contractInterface.changeSigner(dappUser.mnemonic)
         const captchaData = await tasks.getCaptchaData(providerOnChain.captcha_dataset_id.toString())
         if (captchaData.merkle_tree_root.toString() !== providerOnChain.captcha_dataset_id.toString()) {
             throw new Error(`Cannot find captcha data id: ${providerOnChain.captcha_dataset_id.toString()}`)
@@ -130,7 +121,7 @@ export async function approveOrDisapproveCommitment (env, solutionHash: string, 
     // This stage would take place on the Provider node after checking the solution was correct
     // We need to assume that the Provider has access to the Dapp User's merkle tree root or can construct it from the
     // raw data that was sent to them
-    await env.changeSigner(provider.mnemonic)
+    await env.contractInterface.changeSigner(provider.mnemonic)
     if (approve) {
         console.log('   -   Approving commitment')
         await tasks.providerApprove(solutionHash)
