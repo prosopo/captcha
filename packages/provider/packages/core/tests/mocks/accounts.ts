@@ -33,7 +33,7 @@ export const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: Payee.Provider,
-    stake: 10,
+    stake: 1000000000000000,
     datasetFile: '/usr/src/data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
@@ -53,7 +53,7 @@ export const DAPP: TestDapp = {
     mnemonic: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed
     optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
-    fundAmount: 100
+    fundAmount: 1000000000000000
 }
 
 export const DAPP_USER = {
