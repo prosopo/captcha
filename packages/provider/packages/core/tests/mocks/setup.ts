@@ -20,6 +20,7 @@ import { CaptchaMerkleTree } from '../../src/merkle'
 import { computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution } from '../../src/captcha'
 import { Hash } from '@polkadot/types/interfaces'
 import { TestAccount, TestDapp, TestProvider } from './accounts'
+import { getEventsFromMethodName } from '@prosopo/contract';
 
 export async function displayBalance (env, address, who) {
     const balance = await env.contractInterface.network.api.query.system.account(address)
@@ -56,8 +57,9 @@ export async function setupProvider (env, provider: TestProvider): Promise<Hash>
     await tasks.providerUpdate(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address, provider.stake)
     console.log('   - providerAddDataset')
     const datasetResult = await tasks.providerAddDataset(provider.datasetFile)
+    const events = getEventsFromMethodName(datasetResult, 'providerAddDataset')
     // @ts-ignore
-    return datasetResult[0].args[1] as Hash
+    return events[0].args[1] as Hash
 }
 
 export async function setupDapp (env, dapp: TestDapp): Promise<void> {

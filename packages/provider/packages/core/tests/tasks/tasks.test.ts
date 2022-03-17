@@ -22,11 +22,11 @@ import path from 'path';
 import { AnyJson } from '@polkadot/types/types/codec';
 import { randomAsHex } from '@polkadot/util-crypto';
 
-import {computeCaptchaSolutionHash, computePendingRequestHash, parseCaptchaDataset} from '../../src/captcha';
+import { computeCaptchaSolutionHash, computePendingRequestHash, parseCaptchaDataset } from '../../src/captcha';
 import { ERRORS } from '../../src/errors';
 import { CaptchaMerkleTree } from '../../src/merkle';
 import { Tasks } from '../../src/tasks/tasks';
-import { parseBlockNumber, promiseQueue, loadJSONFile } from '../../src/util';
+import { loadJSONFile, parseBlockNumber, promiseQueue } from '../../src/util';
 import { DAPP, DAPP_USER, PROVIDER, TestDapp, TestProvider } from '../mocks/accounts';
 import { DATASET, SOLVED_CAPTCHAS } from '../mocks/mockdb';
 import { MockEnvironment } from '../mocks/mockenv';
@@ -143,7 +143,7 @@ describe('CONTRACT TASKS', () => {
         value
       );
 
-      expect(result ? result![0].args[0] : undefined).to.equal(provider.address);
+      expect(result ? result[0].args[0] : undefined).to.equal(provider.address);
     } catch (error) {
       throw new Error(`Error in updating provider: ${error}`);
     }
@@ -201,7 +201,7 @@ describe('CONTRACT TASKS', () => {
     );
   });
 
-  it.only('Provider approve', async () => {
+  it('Provider approve', async () => {
     const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash();
 
     await mockEnv.contractInterface!.changeSigner(dappUser.mnemonic);
@@ -231,14 +231,14 @@ describe('CONTRACT TASKS', () => {
     await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
     const providerTasks = new Tasks(mockEnv);
 
-    // try {
-    const result: any = await providerTasks.providerApprove(commitmentId, 0);
-    const events = getEventsFromMethodName(result, 'providerApprove');
+    try {
+      const result: any = await providerTasks.providerApprove(commitmentId, 0);
+      const events = getEventsFromMethodName(result, 'providerApprove');
 
-    expect(events![0].args[0]).to.equal(commitmentId);
-    // } catch (error) {
-    //   throw new Error(`Error in provider approve: ${error}`);
-    // }
+      expect(events![0].args[0]).to.equal(commitmentId);
+    } catch (error) {
+      throw new Error(`Error in provider approve: ${error}`);
+    }
   });
 
   it('Provider disapprove', async () => {
@@ -320,7 +320,7 @@ describe('CONTRACT TASKS', () => {
         dapp.optionalOwner as string
       );
 
-      expect(result!['txHash']).to.not.be.empty;
+      expect(result!.txHash).to.not.be.empty;
     } catch (error) {
       throw new Error(`Error in registering dapp: ${error}`);
     }
@@ -506,38 +506,42 @@ describe('CONTRACT TASKS', () => {
   });
 
   it('Captcha proofs are returned if commitment found and solution is correct', async () => {
-    const { captchaSolutions, requestHash } = await createMockCaptchaSolutionsAndRequestHash()
-    await mockEnv.contractInterface!.changeSigner(dappUser.mnemonic)
-    const dappUserTasks = new Tasks(mockEnv)
+    const { captchaSolutions, requestHash } = await createMockCaptchaSolutionsAndRequestHash();
+
+    await mockEnv.contractInterface!.changeSigner(dappUser.mnemonic);
+    const dappUserTasks = new Tasks(mockEnv);
     // salt ensures captcha commitment is different each time
-    const salt = randomAsHex()
-    const tree = new CaptchaMerkleTree()
-    const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({ ...captcha, salt: salt }))
-    const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
-    tree.build(captchasHashed)
-    const commitmentId = tree.root!.hash
+    const salt = randomAsHex();
+    const tree = new CaptchaMerkleTree();
+    const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({ ...captcha, salt: salt }));
+    const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
+
+    tree.build(captchasHashed);
+    const commitmentId = tree.root!.hash;
     const response = await dappUserTasks.dappUserCommit(
-        dapp.contractAccount as string,
-        datasetId as string,
-        commitmentId,
-        provider.address as string
-    )
+      dapp.contractAccount as string,
+      datasetId as string,
+      commitmentId,
+      provider.address as string
+    );
 
     // next part contains internal contract calls that must be run by provider
-    await  mockEnv.contractInterface!.changeSigner(provider.mnemonic as string)
-    const providerTasks = new Tasks(mockEnv)
+    await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
+    const providerTasks = new Tasks(mockEnv);
     const result = await providerTasks.dappUserSolution(
-        dappUser.address,
-        dapp.contractAccount as string,
-        requestHash,
-        JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
-        (response!['blockHash']) as string,
-        (response!['result']['txHash'].toString()) as string
-    )
-    expect(result!.length).to.be.eq(2)
-    const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId)
-    expect(result![0].proof).to.deep.eq(expectedProof)
-    expect(result![0].captchaId).to.eq(captchaSolutionsSalted[0].captchaId)
+      dappUser.address,
+      dapp.contractAccount as string,
+      requestHash,
+      JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
+      (response!.blockHash) as string,
+      (response!.result.txHash.toString()) as string
+    );
+
+    expect(result.length).to.be.eq(2);
+    const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId);
+
+    expect(result[0].proof).to.deep.eq(expectedProof);
+    expect(result[0].captchaId).to.eq(captchaSolutionsSalted[0].captchaId);
   });
 
   // it('Dapp User sending an invalid captchas causes error', async () => {
@@ -859,7 +863,7 @@ describe('CONTRACT TASKS', () => {
         provider.address as string
       );
 
-      expect(result ? result![0].args[0] : undefined).to.equal(provider.address);
+      expect(result ? result[0].args[0] : undefined).to.equal(provider.address);
     } catch (error) {
       throw new Error(`Error in deregestering provider: ${error}`);
     }

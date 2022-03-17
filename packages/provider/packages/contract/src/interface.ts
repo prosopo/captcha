@@ -138,18 +138,14 @@ export class ProsopoContractApi implements ContractApiInterface {
         const eventsProperty = 'events'
 
         if (response.result.status.isRetracted) {
-            throw (response.result.status.asRetracted)
+            throw (response.status.asRetracted)
         }
         if (response.result.status.isInvalid) {
-            throw new Error('isInvalid')
+            throw (response.status.asInvalid)
         }
 
         if (response.result.isInBlock || response.result.isFinalized) {
-            const eventName = getEventNameFromMethodName(contractMethodName)
-            // Most contract transactions should return an event
-            if (response[eventsProperty] !== undefined) {
-                return response[eventsProperty]!.filter((x) => x.name === eventName)
-            }
+            return response
         }
         return []
     }
