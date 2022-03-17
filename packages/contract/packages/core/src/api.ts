@@ -20,11 +20,11 @@ import express, { Router } from 'express';
 
 import { validateAddress } from '@polkadot/util-crypto';
 
-import { Environment } from '../env';
-import { parseBlockNumber } from '../util';
 import { Tasks } from './tasks/tasks';
 import { AccountsResponse, CaptchaSolutionBody } from './types/api';
+import { Environment } from './env';
 import { BadRequest, ERRORS } from './errors';
+import { parseBlockNumber } from './util';
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
