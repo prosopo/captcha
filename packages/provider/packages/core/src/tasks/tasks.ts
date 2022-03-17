@@ -59,7 +59,7 @@ import {
     CaptchaWithoutId,
     CaptchaSolutionConfig
 } from '../types'
-import { loadJSONFile, shuffleArray } from '../util';
+import { loadJSONFile, shuffleArray, writeJSONFile } from '../util'
 
 /**
  * @description Tasks that are shared by the API and CLI
