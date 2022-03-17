@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Payee, PayeeSchema } from '@prosopo/contract/types';
+import { Payee, PayeeSchema } from '@prosopo/contract';
 import parser from 'cron-parser';
 import pm2 from 'pm2';
 import { cwd } from 'process';
