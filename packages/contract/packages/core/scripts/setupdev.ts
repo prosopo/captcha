@@ -18,11 +18,11 @@ import BN from 'bn.js';
 import yargs from 'yargs';
 
 import { KeyringPair } from '@polkadot/keyring/types';
+import { randomAsHex } from '@polkadot/util-crypto';
 
 import { Environment } from '../src/env';
 import { TestAccount, TestDapp, TestProvider } from '../tests/mocks/accounts';
 import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, setupProvider } from '../tests/mocks/setup';
-import {randomAsHex} from "@polkadot/util-crypto";
 
 require('dotenv').config();
 
@@ -31,102 +31,102 @@ const ENVVARS = ['PROVIDER_MNEMONIC', 'DAPP_CONTRACT_ADDRESS'];
 // Some default accounts that are setup in the contract for development purposes
 
 export const PROVIDER: TestProvider = {
-    serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8); // make it "unique"
-    fee: 10,
-    payee: Payee.Provider,
-    stake: 10,
-    datasetFile: '/usr/src/data/captchas.json',
-    mnemonic: process.env.PROVIDER_MNEMONIC || '',
-    address: process.env.PROVIDER_ADDRESS || '',
-    captchaDatasetId: ''
+  serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
+  fee: 10,
+  payee: Payee.Provider,
+  stake: 10,
+  datasetFile: '/usr/src/data/captchas.json',
+  mnemonic: process.env.PROVIDER_MNEMONIC || '',
+  address: process.env.PROVIDER_ADDRESS || '',
+  captchaDatasetId: ''
 };
 
 export const DAPP: TestDapp = {
-    serviceOrigin: 'http://localhost:9393',
-    mnemonic: '//Ferdie',
-    contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
-    optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
-    fundAmount: 100
+  serviceOrigin: 'http://localhost:9393',
+  mnemonic: '//Ferdie',
+  contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
+  optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
+  fundAmount: 100
 };
 
 export const DAPP_USER: TestAccount = {
-    mnemonic: '//Charlie',
-    address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y'
+  mnemonic: '//Charlie',
+  address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y'
 };
 
 /*
  * Seed the contract with some dummy data
  */
 async function run () {
-    const env = new Environment('//Alice');
+  const env = new Environment('//Alice');
 
-    await env.isReady();
-    console.log('env ready');
-    ENVVARS.map((envvar) => {
-        if (!envvar) {
-            throw new Error(`Environment Variable ${envvar} is not set`);
-        }
+  await env.isReady();
+  console.log('env ready');
+  ENVVARS.map((envvar) => {
+    if (!envvar) {
+      throw new Error(`Environment Variable ${envvar} is not set`);
+    }
 
-        return undefined;
-    });
-    await processArgs(env);
-    process.exit();
+    return undefined;
+  });
+  await processArgs(env);
+  process.exit();
 }
 
 async function processArgs (env) {
-    // https://github.com/yargs/yargs/issues/1069#issuecomment-709693413
-    return new Promise((resolve, reject) => {
-        try {
-            yargs
-                .usage('Usage: $0 [global options] <command> [options]')
-                .command(
-                    {
-                        command: 'provider',
-                        describe: 'Setup a Provider',
-                        builder: (yargs) => {
-                            return yargs;
-                        },
-                        handler: async () => {
-                            const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
+  // https://github.com/yargs/yargs/issues/1069#issuecomment-709693413
+  return new Promise((resolve, reject) => {
+    try {
+      yargs
+        .usage('Usage: $0 [global options] <command> [options]')
+        .command(
+          {
+            command: 'provider',
+            describe: 'Setup a Provider',
+            builder: (yargs) => {
+              return yargs;
+            },
+            handler: async () => {
+              const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
 
-                            await env.contractInterface.network.api.isReady;
-                            console.log('sending funds...');
-                            await sendFunds(env, providerKeyringPair.address, 'Provider', new BN('100000000000000000'));
-                            console.log('setting up provider...');
-                            PROVIDER.address = providerKeyringPair.address;
+              await env.contractInterface.network.api.isReady;
+              console.log('sending funds...');
+              await sendFunds(env, providerKeyringPair.address, 'Provider', new BN('100000000000000000'));
+              console.log('setting up provider...');
+              PROVIDER.address = providerKeyringPair.address;
 
-                            return await setupProvider(env, PROVIDER);
-                        }
-                    }
-                )
-                .command('dapp', 'Setup a Dapp',
-                    (yargs) => {
-                        return yargs;
-                    }, async () => {
-                        await setupDapp(env, DAPP);
-                    }
-                )
-                .command('user', 'Submit and approve Dapp User solution commitments', (yargs) => {
-                        return yargs
-                            .option('approve', { type: 'boolean', demand: false })
-                            .option('disapprove', { type: 'boolean', demand: false });
-                    }, async (argv) => {
-                        const solutionHash: string | undefined = await setupDappUser(env, DAPP_USER, PROVIDER, DAPP);
-                        const approve = !!argv.approve;
+              return await setupProvider(env, PROVIDER);
+            }
+          }
+        )
+        .command('dapp', 'Setup a Dapp',
+          (yargs) => {
+            return yargs;
+          }, async () => {
+            await setupDapp(env, DAPP);
+          }
+        )
+        .command('user', 'Submit and approve Dapp User solution commitments', (yargs) => {
+          return yargs
+            .option('approve', { type: 'boolean', demand: false })
+            .option('disapprove', { type: 'boolean', demand: false });
+        }, async (argv) => {
+          const solutionHash: string | undefined = await setupDappUser(env, DAPP_USER, PROVIDER, DAPP);
+          const approve = !!argv.approve;
 
-                        if ((argv.approve || argv.disapprove) && solutionHash !== undefined) {
-                            await approveOrDisapproveCommitment(env, solutionHash, approve, PROVIDER);
-                        }
-                    }
-                ).onFinishCommand(async (r) => resolve(r))
-                .exitProcess(false)
-                .argv;
-        } catch (e) {
-            reject(e);
+          if ((argv.approve || argv.disapprove) && solutionHash !== undefined) {
+            await approveOrDisapproveCommitment(env, solutionHash, approve, PROVIDER);
+          }
         }
-    });
+        ).onFinishCommand(async (r) => resolve(r))
+        .exitProcess(false)
+        .argv;
+    } catch (e) {
+      reject(e);
+    }
+  });
 }
 
 run().catch((err) => {
-    throw new Error(`Setup dev error: ${err}`);
+  throw new Error(`Setup dev error: ${err}`);
 });
