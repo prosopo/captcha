@@ -13,13 +13,13 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Db, MongoClient } from 'mongodb';
+import { Db, Document, Filter, MongoClient } from 'mongodb';
 
 import { Hash } from '@polkadot/types/interfaces';
 import { isHex } from '@polkadot/util';
 
 import { ERRORS } from '../errors';
-import { Captcha, CaptchaSolution, Database, DatasetRecord, DatasetWithIdsAndTree, DatasetWithIdsAndTreeSchema, PendingCaptchaRequestRecord, Tables } from '../types';
+import { Captcha, CaptchaSolution, CaptchaStates, Database, DatasetRecord, DatasetWithIdsAndTree, DatasetWithIdsAndTreeSchema, PendingCaptchaRequestRecord, Tables } from '../types';
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017';
@@ -171,7 +171,7 @@ export class ProsopoDatabase implements Database {
     const doc = await this.tables.dataset?.findOne({ datasetId });
 
     if (doc) {
-      return doc as unknown as DatasetRecord;
+      return doc as DatasetRecord;
     }
 
     throw (ERRORS.DATABASE.DATASET_GET_FAILED.message);
@@ -185,19 +185,15 @@ export class ProsopoDatabase implements Database {
       throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: treeRoot`);
     }
 
-    // create a bulk upsert operation and execute
+    // create a bulk create operation and execute
     await this.tables.solutions?.bulkWrite(captchas.map((captchaDoc) => ({
-      updateOne: {
-        filter: { _id: captchaDoc.captchaId },
-        update: {
-          $set:
-                        {
-                          solution: captchaDoc.solution,
-                          salt: captchaDoc.salt,
-                          treeRoot
-                        }
-        },
-        upsert: true
+      insertOne: {
+        document: {
+          captchaId: captchaDoc.captchaId,
+          solution: captchaDoc.solution,
+          salt: captchaDoc.salt,
+          treeRoot
+        }
       }
     })));
   }
@@ -232,7 +228,7 @@ export class ProsopoDatabase implements Database {
     const doc = await this.tables.pending?.findOne({ _id: requestHash });
 
     if (doc) {
-      return doc as unknown as PendingCaptchaRequestRecord;
+      return doc as PendingCaptchaRequestRecord;
     }
 
     throw (ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message);
@@ -255,5 +251,48 @@ export class ProsopoDatabase implements Database {
       { $set: { accountId: userAccount, pending: false, approved: approve } },
       { upsert: true }
     );
+  }
+
+  /**
+     * @description Get all unsolved captchas
+     */
+  async getAllCaptchasByDatasetId (datasetId: string, state?: CaptchaStates): Promise<Captcha[] | undefined> {
+    let query: Filter<Document> = {
+      datasetId
+    };
+
+    switch (state) {
+      case CaptchaStates.Solved:
+        query.solution = { solution: { $exists: true } };
+        break;
+      case CaptchaStates.Unsolved:
+        query = { solution: { $exists: false } };
+        break;
+    }
+
+    const cursor = this.tables.captchas?.find(query);
+    const docs = await cursor?.toArray();
+
+    if (docs) {
+      // drop the _id field
+      return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as Captcha[];
+    }
+
+    throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
+  }
+
+  /**
+     * @description Get all dapp user's solutions
+     */
+  async getAllSolutions (captchaId: string): Promise<CaptchaSolution[] | undefined> {
+    const cursor = this.tables.solutions?.find({ captchaId });
+    const docs = await cursor?.toArray();
+
+    if (docs) {
+      // drop the _id field
+      return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as CaptchaSolution[];
+    }
+
+    throw (ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
   }
 }

@@ -54,6 +54,11 @@ export class MockEnvironment implements ProsopoEnvironment {
                     count: 1
                 }
             },
+            captchaSolutions: {
+                requiredNumberOfSolutions: 3,
+                solutionWinningPercentage: 80,
+                captchaFilePath: '/usr/src/data/captchas.json'
+            },
             database: {
                 development: { type: 'mockdb', endpoint: '', dbname: '' }
             }

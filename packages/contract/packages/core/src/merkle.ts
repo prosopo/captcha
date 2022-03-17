@@ -86,7 +86,7 @@ export class CaptchaMerkleTree {
         return parent
     }
 
-    proof (leafHash: string) {
+    proof (leafHash: string): string[][] {
         const proofTree: string[][] = []
         let layerNum = 0
         while (layerNum < this.layers.length) {

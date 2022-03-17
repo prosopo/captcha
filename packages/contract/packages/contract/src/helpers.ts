@@ -27,6 +27,17 @@ export function getEventNameFromMethodName (contractMethodName: string): string 
     return contractMethodName[0].toUpperCase() + contractMethodName.substring(1)
 }
 
+/**
+ * Extract events given the contract method name
+ *
+ * @return {AnyJson} array of events filtered by calculated event name
+ */
+ export function getEventsFromMethodName (response: AnyJson, contractMethodName: string): AnyJson {
+    const eventName = getEventNameFromMethodName(contractMethodName)
+    // @ts-ignore
+    return response["events"].filter((x) => x.name === eventName)
+}
+
 /** Encodes arguments that should be hashes using blake2AsU8a
  * @return encoded arguments
  */

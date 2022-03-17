@@ -13,7 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+
 import { Payee, PayeeSchema } from '@prosopo/contract/types';
+import parser from 'cron-parser';
+import pm2 from 'pm2';
+import { cwd } from 'process';
 import yargs from 'yargs';
 
 import { Compact, u128 } from '@polkadot/types';
@@ -48,6 +52,20 @@ const validateValue = (argv) => {
   }
 
   throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`);
+};
+
+const validateScheduleExpression = (argv) => {
+  if (typeof argv.schedule === 'string') {
+    const result = parser.parseString(argv.schedule as string);
+
+    if (argv.schedule in result.errors) {
+      throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.schedule}`);
+    }
+
+    return { schedule: argv.schedule as string };
+  } else {
+    return { schedule: null };
+  }
 };
 
 export function processArgs (args, env: ProsopoEnvironment) {
@@ -196,6 +214,40 @@ export function processArgs (args, env: ProsopoEnvironment) {
         }
       },
       [validateAddress]
+    )
+    .command(
+      'calculate_captcha_solutions',
+      'Calculate captcha solutions',
+      (yargs) => yargs
+        .option('schedule', { type: 'string', demand: false, desc: 'A Recurring schedule expression' }),
+      async (argv) => {
+        if (argv.schedule) {
+          pm2.connect((err) => {
+            if (err) {
+              console.error(err);
+              process.exit(2);
+            }
+
+            pm2.start({
+              script: `ts-node scheduler.js ${JSON.stringify(argv.schedule)}`,
+              name: 'scheduler',
+              cwd: cwd() + '/build/src'
+            }, (err, apps) => {
+              if (err) {
+                console.error(err);
+
+                return pm2.disconnect();
+              }
+
+              console.log(apps);
+              process.exit();
+            });
+          });
+        } else {
+          await tasks.calculateCaptchaSolutions();
+        }
+      },
+      [validateScheduleExpression]
     )
     .argv;
 }
