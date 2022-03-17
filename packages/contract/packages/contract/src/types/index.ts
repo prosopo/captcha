@@ -104,7 +104,7 @@ export interface ContractApiInterface {
 
     beforeCall<T> (contractMethodName: string, args: T[]): Promise<{ encodedArgs: T[]; signedContract: Contract }>
 
-    contractTx <T> (contractMethodName: string, args: T[], value?: number | string): Promise<DecodedEvent[]>
+    contractTx <T> (contractMethodName: string, args: T[], value?: number | string): Promise<AnyJson>
 
     contractQuery <T> (contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson>
 

@@ -124,7 +124,7 @@ export async function approveOrDisapproveCommitment (env, solutionHash: string, 
     await env.contractInterface.changeSigner(provider.mnemonic)
     if (approve) {
         console.log('   -   Approving commitment')
-        await tasks.providerApprove(solutionHash)
+        await tasks.providerApprove(solutionHash, 100)
     } else {
         console.log('   -   Disapproving commitment')
         await tasks.providerDisapprove(solutionHash)
