@@ -24,7 +24,7 @@
       "node",
     ],
     "lib": [
-      "ES6",
+      "esnext",
     ],
     "rootDirs": [
       ".",

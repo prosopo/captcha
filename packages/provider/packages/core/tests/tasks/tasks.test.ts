@@ -537,7 +537,7 @@ describe('CONTRACT TASKS', () => {
       requestHash,
       JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
       (response.blockHash) as string,
-      (response.result.txHash.toString()) as string
+      (response.result.txHash.toString())
     );
 
     expect(result.length).to.be.eq(2);
