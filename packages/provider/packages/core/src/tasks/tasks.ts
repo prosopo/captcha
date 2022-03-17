@@ -49,8 +49,6 @@ import {
     CaptchaSolutionResponse,
     CaptchaStatus,
     CaptchaWithProof,
-    ContractApiInterface,
-    Dapp,
     Database,
     DatasetRecord,
     ProsopoEnvironment,
@@ -87,23 +85,23 @@ export class Tasks {
 
     // Contract transactions potentially involving database writes
 
-    async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<DecodedEvent[]> {
+    async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<AnyJson> {
         return await this.contractApi.contractTx('providerRegister', [serviceOrigin, fee, payee, address]);
     }
 
-    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value: number | undefined): Promise<DecodedEvent[]> {
+    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value: number | undefined): Promise<AnyJson> {
         return await this.contractApi.contractTx('providerUpdate', [serviceOrigin, fee, payee, address], value);
     }
 
-    async providerDeregister (address: string): Promise<DecodedEvent[]> {
+    async providerDeregister (address: string): Promise<AnyJson> {
         return await this.contractApi.contractTx('providerDeregister', [address]);
     }
 
-    async providerUnstake (value: number): Promise<DecodedEvent[]> {
+    async providerUnstake (value: number): Promise<AnyJson> {
         return await this.contractApi.contractTx('providerUnstake', [], value);
     }
 
-    async providerAddDataset (file: string): Promise<DecodedEvent[]> {
+    async providerAddDataset (file: string): Promise<AnyJson> {
         const dataset = parseCaptchaDataset(loadJSONFile(file) as JSON);
         const datasetWithoutIds = { ...dataset }
         const tree = new CaptchaMerkleTree();
@@ -119,27 +117,27 @@ export class Tasks {
         return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)]);
     }
 
-    async dappRegister (dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<DecodedEvent[]> {
+    async dappRegister (dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<AnyJson> {
         return await this.contractApi.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
     }
 
-    async dappFund (contractAccount: string, value: number | string): Promise<DecodedEvent[]> {
+    async dappFund (contractAccount: string, value: number | string): Promise<AnyJson> {
         return await this.contractApi.contractTx('dappFund', [contractAccount], value);
     }
 
-    async dappCancel (contractAccount: string): Promise<DecodedEvent[]> {
+    async dappCancel (contractAccount: string): Promise<AnyJson> {
         return await this.contractApi.contractTx('dappCancel', [contractAccount]);
     }
 
-    async dappUserCommit (contractAccount: string, captchaDatasetId: Hash | string, userMerkleTreeRoot: string, providerAddress: string): Promise<DecodedEvent[]> {
+    async dappUserCommit (contractAccount: string, captchaDatasetId: Hash | string, userMerkleTreeRoot: string, providerAddress: string): Promise<AnyJson> {
         return await this.contractApi.contractTx('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
     }
 
     async providerApprove (captchaSolutionCommitmentId, refundFee): Promise<AnyJson> {
-        return await this.contractApi.contractCall('providerApprove', [captchaSolutionCommitmentId, refundFee])
+        return await this.contractApi.contractTx('providerApprove', [captchaSolutionCommitmentId, refundFee])
     }
 
-    async providerDisapprove (captchaSolutionCommitmentId): Promise<DecodedEvent[]> {
+    async providerDisapprove (captchaSolutionCommitmentId): Promise<AnyJson> {
         return await this.contractApi.contractTx('providerDisapprove', [captchaSolutionCommitmentId]);
     }
 
@@ -449,7 +447,7 @@ export class Tasks {
      */
     private async getPaymentInfo (userAccount: string, blockHash: string, txHash: string): Promise<RuntimeDispatchInfo|null> {
         // Validate block and transaction, checking that the signer matches the userAccount
-        const signedBlock = await this.contractApi.env.network.api.rpc.chain.getBlock(blockHash)
+        const signedBlock = await this.contractApi.network.api.rpc.chain.getBlock(blockHash)
         if (!signedBlock) {
             return null
         }
@@ -458,7 +456,7 @@ export class Tasks {
             return null
         }
         // Retrieve tx fee for extrinsic
-        const paymentInfo = await this.contractApi.env.network.api.rpc.payment.queryInfo(extrinsic.toHex(), blockHash)
+        const paymentInfo = await this.contractApi.network.api.rpc.payment.queryInfo(extrinsic.toHex(), blockHash)
         if (!paymentInfo) {
             return null
         }

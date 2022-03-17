@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { expect } from 'chai';
+import * as path from 'path';
 
 import { addHashesToDataset, compareCaptcha, compareCaptchaSolutions, computeCaptchaHash, computeCaptchaHashes, computeCaptchaSolutionHash, computePendingRequestHash, parseCaptchaDataset, parseCaptchas, parseCaptchaSolutions } from '../src/captcha';
 import { CaptchaMerkleTree } from '../src/merkle';
@@ -114,7 +115,7 @@ describe('CAPTCHA FUNCTIONS', () => {
       items: [
         {
           // This test is expected to run in the integration Provider container
-          path: '/usr/src/app/tests/mocks/data/img/01.01.jpeg',
+          path: path.join(process.cwd(), '/tests/mocks/data/img/01.01.jpeg'),
           type: 'image'
         }]
     } as CaptchaWithoutId;

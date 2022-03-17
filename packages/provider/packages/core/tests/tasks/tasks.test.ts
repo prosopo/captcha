@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import { getEventsFromMethodName } from '@prosopo/contract';
 import { Payee, Provider } from '@prosopo/contract/types';
 import { CaptchaSolution } from '@prosopo/provider-core/types';
 import { DecodedEvent } from '@redspot/patract/types';
@@ -21,11 +22,11 @@ import path from 'path';
 import { AnyJson } from '@polkadot/types/types/codec';
 import { randomAsHex } from '@polkadot/util-crypto';
 
-import { computeCaptchaSolutionHash, computePendingRequestHash } from '../../src/captcha';
+import {computeCaptchaSolutionHash, computePendingRequestHash, parseCaptchaDataset} from '../../src/captcha';
 import { ERRORS } from '../../src/errors';
 import { CaptchaMerkleTree } from '../../src/merkle';
 import { Tasks } from '../../src/tasks/tasks';
-import { parseBlockNumber, promiseQueue } from '../../src/util';
+import { parseBlockNumber, promiseQueue, loadJSONFile } from '../../src/util';
 import { DAPP, DAPP_USER, PROVIDER, TestDapp, TestProvider } from '../mocks/accounts';
 import { DATASET, SOLVED_CAPTCHAS } from '../mocks/mockdb';
 import { MockEnvironment } from '../mocks/mockenv';
@@ -115,7 +116,7 @@ describe('CONTRACT TASKS', () => {
     const providerTasks = new Tasks(mockEnv);
 
     try {
-      const result: DecodedEvent[] = await providerTasks.providerRegister(
+      const result: AnyJson = await providerTasks.providerRegister(
         provider.serviceOrigin as string,
         provider.fee as number,
         provider.payee as Payee,
@@ -134,7 +135,7 @@ describe('CONTRACT TASKS', () => {
     const value = 1;
 
     try {
-      const result: DecodedEvent[] = await providerTasks.providerUpdate(
+      const result: AnyJson = await providerTasks.providerUpdate(
         provider.serviceOrigin as string,
         provider.fee as number,
         provider.payee as Payee,
@@ -142,7 +143,7 @@ describe('CONTRACT TASKS', () => {
         value
       );
 
-      expect(result ? result[0].args[0] : undefined).to.equal(provider.address);
+      expect(result ? result![0].args[0] : undefined).to.equal(provider.address);
     } catch (error) {
       throw new Error(`Error in updating provider: ${error}`);
     }
@@ -157,12 +158,12 @@ describe('CONTRACT TASKS', () => {
         __dirname,
         '../mocks/data/captchas.json'
       );
-      const result: DecodedEvent[] = await providerTasks.providerAddDataset(
+      const result: AnyJson = await providerTasks.providerAddDataset(
         captchaFilePath
       );
       const eventData = getEventsFromMethodName(result, 'providerAddDataset');
 
-      return expect(eventData[0].args[0]).to.equal(provider.address);
+      return expect(eventData![0].args[0]).to.equal(provider.address);
     } catch (error) {
       throw new Error(`Error in adding dataset: ${error}`);
     }
@@ -200,7 +201,7 @@ describe('CONTRACT TASKS', () => {
     );
   });
 
-  it('Provider approve', async () => {
+  it.only('Provider approve', async () => {
     const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash();
 
     await mockEnv.contractInterface!.changeSigner(dappUser.mnemonic);
@@ -230,14 +231,14 @@ describe('CONTRACT TASKS', () => {
     await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const result: any = await providerTasks.providerApprove(commitmentId);
-      const events = getEventsFromMethodName(result, 'providerApprove');
+    // try {
+    const result: any = await providerTasks.providerApprove(commitmentId, 0);
+    const events = getEventsFromMethodName(result, 'providerApprove');
 
-      expect(events[0].args[0]).to.equal(commitmentId);
-    } catch (error) {
-      throw new Error(`Error in provider approve: ${error}`);
-    }
+    expect(events![0].args[0]).to.equal(commitmentId);
+    // } catch (error) {
+    //   throw new Error(`Error in provider approve: ${error}`);
+    // }
   });
 
   it('Provider disapprove', async () => {
@@ -271,10 +272,10 @@ describe('CONTRACT TASKS', () => {
     const providerTasks = new Tasks(mockEnv);
 
     try {
-      const result: DecodedEvent[] = await providerTasks.providerDisapprove(commitmentId);
+      const result: AnyJson = await providerTasks.providerDisapprove(commitmentId);
       const events = getEventsFromMethodName(result, 'providerDisapprove');
 
-      expect(events[0].args[0]).to.equal(commitmentId);
+      expect(events![0].args[0]).to.equal(commitmentId);
     } catch (error) {
       throw new Error(`Error in provider disapprove: ${error}`);
     }
@@ -313,13 +314,13 @@ describe('CONTRACT TASKS', () => {
     const dappTasks = new Tasks(mockEnv);
 
     try {
-      const result: DecodedEvent[] = await dappTasks.dappRegister(
+      const result: AnyJson = await dappTasks.dappRegister(
         dapp.serviceOrigin as string,
         dapp.contractAccount as string,
         dapp.optionalOwner as string
       );
 
-      expect(result.txHash).to.not.be.empty;
+      expect(result!['txHash']).to.not.be.empty;
     } catch (error) {
       throw new Error(`Error in registering dapp: ${error}`);
     }
@@ -362,16 +363,16 @@ describe('CONTRACT TASKS', () => {
     const value = 10;
 
     try {
-      const result: DecodedEvent[] = await dappTasks.dappFund(
+      const result: AnyJson = await dappTasks.dappFund(
         dapp.contractAccount as string,
         value
       );
-      const decoded = result[0].args.map((arg) => arg.toHuman());
+      const decoded = result![0].args.map((arg) => arg.toHuman());
 
       expect(decoded[0]).to.equal(dapp.contractAccount);
       const dappStruct = await dappTasks.getDappDetails(dapp.contractAccount as string);
 
-      expect(result[0].args[1].toHuman()).to.equal(dappStruct.balance);
+      expect(result![0].args[1].toHuman()).to.equal(dappStruct.balance);
     } catch (error) {
       throw new Error(`Error in dapp fund: ${error}`);
     }
@@ -400,7 +401,7 @@ describe('CONTRACT TASKS', () => {
 
       const commitmentId = tree.root!.hash;
 
-      const result: DecodedEvent[] = await dappUserTasks.dappUserCommit(
+      const result: AnyJson = await dappUserTasks.dappUserCommit(
         dapp.contractAccount as string,
         datasetId as string,
         commitmentId,
@@ -413,7 +414,7 @@ describe('CONTRACT TASKS', () => {
 
       const events = getEventsFromMethodName(result, 'dappUserCommit');
 
-      expect(events[0].args[2]).to.equal(dapp.contractAccount);
+      expect(events![0].args[2]).to.equal(dapp.contractAccount);
     } catch (error) {
       throw new Error(`Error in dapp user commit: ${error}`);
     }
@@ -505,41 +506,38 @@ describe('CONTRACT TASKS', () => {
   });
 
   it('Captcha proofs are returned if commitment found and solution is correct', async () => {
-    const { captchaSolutions, requestHash } = await createMockCaptchaSolutionsAndRequestHash();
-
-    await mockEnv.contractInterface!.changeSigner(dappUser.mnemonic);
-    const dappUserTasks = new Tasks(mockEnv);
+    const { captchaSolutions, requestHash } = await createMockCaptchaSolutionsAndRequestHash()
+    await mockEnv.contractInterface!.changeSigner(dappUser.mnemonic)
+    const dappUserTasks = new Tasks(mockEnv)
     // salt ensures captcha commitment is different each time
-    const salt = randomAsHex();
-    const tree = new CaptchaMerkleTree();
-    const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({ ...captcha, salt: salt }));
-    const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
-
-    tree.build(captchasHashed);
-    const commitmentId = tree.root!.hash;
-
-    await dappUserTasks.dappUserCommit(
-      dapp.contractAccount as string,
-      datasetId as string,
-      commitmentId,
-      provider.address as string
-    );
+    const salt = randomAsHex()
+    const tree = new CaptchaMerkleTree()
+    const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({ ...captcha, salt: salt }))
+    const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
+    tree.build(captchasHashed)
+    const commitmentId = tree.root!.hash
+    const response = await dappUserTasks.dappUserCommit(
+        dapp.contractAccount as string,
+        datasetId as string,
+        commitmentId,
+        provider.address as string
+    )
 
     // next part contains internal contract calls that must be run by provider
-    await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
-    const providerTasks = new Tasks(mockEnv);
+    await  mockEnv.contractInterface!.changeSigner(provider.mnemonic as string)
+    const providerTasks = new Tasks(mockEnv)
     const result = await providerTasks.dappUserSolution(
-      dappUser.address,
-      dapp.contractAccount as string,
-      requestHash,
-      JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON
-    );
-
-    expect(result.length).to.be.eq(2);
-    const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId);
-
-    expect(result[0].proof).to.deep.eq(expectedProof);
-    expect(result[0].captchaId).to.eq(captchaSolutionsSalted[0].captchaId);
+        dappUser.address,
+        dapp.contractAccount as string,
+        requestHash,
+        JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
+        (response!['blockHash']) as string,
+        (response!['result']['txHash'].toString()) as string
+    )
+    expect(result!.length).to.be.eq(2)
+    const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId)
+    expect(result![0].proof).to.deep.eq(expectedProof)
+    expect(result![0].captchaId).to.eq(captchaSolutionsSalted[0].captchaId)
   });
 
   // it('Dapp User sending an invalid captchas causes error', async () => {
@@ -633,7 +631,7 @@ describe('CONTRACT TASKS', () => {
   //         JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON
   //     );
   //
-  //     expect(result.length).to.be.eq(0);
+  //     expect(result!.length).to.be.eq(0);
   // });
 
   it('Validates the received captchas length', async () => {
@@ -843,10 +841,10 @@ describe('CONTRACT TASKS', () => {
     const value = 1;
 
     try {
-      const result: DecodedEvent[] = await providerTasks.providerUnstake(value);
+      const result: AnyJson = await providerTasks.providerUnstake(value);
       const events = getEventsFromMethodName(result, 'providerUnstake');
 
-      expect(events[0].args[0]).to.equal(provider.address);
+      expect(events![0].args[0]).to.equal(provider.address);
     } catch (error) {
       throw new Error(`Error in unstake provider: ${error}`);
     }
@@ -857,11 +855,11 @@ describe('CONTRACT TASKS', () => {
     const providerTasks = new Tasks(mockEnv);
 
     try {
-      const result: DecodedEvent[] = await providerTasks.providerDeregister(
+      const result: AnyJson = await providerTasks.providerDeregister(
         provider.address as string
       );
 
-      expect(result ? result[0].args[0] : undefined).to.equal(provider.address);
+      expect(result ? result![0].args[0] : undefined).to.equal(provider.address);
     } catch (error) {
       throw new Error(`Error in deregestering provider: ${error}`);
     }

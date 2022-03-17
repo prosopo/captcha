@@ -98,7 +98,6 @@ export class ProsopoContractApi implements ContractApiInterface {
 
     createAccountAndAddToKeyring(): [string, string] {
         const mnemonic: string = mnemonicGenerate()
-        console.log("adding from mnemonic")
         const account = this.network.keyring.addFromMnemonic(mnemonic)
         const {address} = account
         return [mnemonic, address]
@@ -126,7 +125,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx<T>(contractMethodName: string, args: T[], value?: number | string): Promise<DecodedEvent[]> {
+    async contractTx<T>(contractMethodName: string, args: T[], value?: number | string): Promise<AnyJson> {
         // Always query first as errors are passed back from a dry run but not from a transaction
         await this.contractQuery(contractMethodName, args)
         const {encodedArgs, signedContract} = await this.beforeCall(contractMethodName, args)
