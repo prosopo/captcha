@@ -13,12 +13,13 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { RedspotUserConfig } from 'redspot/types';
 import '@redspot/patract';
 import '@redspot/chai';
 import '@redspot/watcher';
 import '@redspot/explorer';
 import '@redspot/decimals';
+
+import { RedspotUserConfig } from 'redspot/types';
 
 import { contractDefinitions } from './src/definitions';
 

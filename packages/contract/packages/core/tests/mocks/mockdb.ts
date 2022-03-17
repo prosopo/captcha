@@ -13,20 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {
-  Database,
-  DatasetRecord,
-  DatasetWithIdsAndTreeSchema,
-  Tables,
-  Captcha,
-  CaptchaSolution,
-  Dataset,
-  CaptchaStates
-} from '../../src/types'
-import { Hash } from '@polkadot/types/interfaces'
-import { ERRORS } from '../../src/errors'
+import { Hash } from '@polkadot/types/interfaces';
 
-const DEFAULT_ENDPOINT = 'test'
+import { ERRORS } from '../../src/errors';
+import { Captcha, CaptchaSolution, CaptchaStates, Database, Dataset, DatasetRecord, DatasetWithIdsAndTreeSchema, Tables } from '../../src/types';
+
+const DEFAULT_ENDPOINT = 'test';
 
 export const SOLVED_CAPTCHAS = [
   {
@@ -129,7 +121,7 @@ export const SOLVED_CAPTCHAS = [
       }
     ]
   }
-]
+];
 
 const UNSOLVED_CAPTCHAS = [
   {
@@ -178,7 +170,7 @@ const UNSOLVED_CAPTCHAS = [
     salt: '0x02',
     target: 'train'
   }
-]
+];
 
 export const DATASET = {
   _id: '0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605',
@@ -208,7 +200,7 @@ export const DATASET = {
       '0x4e5b2ae257650340b493e94b4b4a4ac0e0dded8b1ecdad8252fe92bbd5b26605'
     ]
   ]
-}
+};
 
 interface mockDatabase extends Database {
   solved: Captcha[]
@@ -217,84 +209,93 @@ interface mockDatabase extends Database {
 
 export class ProsopoDatabase implements mockDatabase {
   dbname: string;
-  tables: Tables
+  tables: Tables;
   readonly url: string;
-  solved: Captcha[]
-  unsolved: Captcha[]
+  solved: Captcha[];
+  unsolved: Captcha[];
 
   constructor (url, dbname) {
-    this.url = url || DEFAULT_ENDPOINT
-    this.tables = {}
-    this.dbname = dbname
-    this.solved = SOLVED_CAPTCHAS
-    this.unsolved = UNSOLVED_CAPTCHAS
+    this.url = url || DEFAULT_ENDPOINT;
+    this.tables = {};
+    this.dbname = dbname;
+    this.solved = SOLVED_CAPTCHAS;
+    this.unsolved = UNSOLVED_CAPTCHAS;
   }
 
   connect (): Promise<void> {
     // @ts-ignore
-    this.tables.responses = {}
+    this.tables.responses = {};
     // @ts-ignore
-    this.tables.dataset = {}
-    this.tables.dataset![DATASET.datasetId] = DATASET
+    this.tables.dataset = {};
+    this.tables.dataset![DATASET.datasetId] = DATASET;
     // @ts-ignore
-    this.tables.pending = {}
+    this.tables.pending = {};
 
-    return Promise.resolve(undefined)
+    return Promise.resolve(undefined);
   }
 
   getCaptcha (solved: boolean, datasetId: string, size?: number): Promise<Captcha[] | undefined> {
     // @ts-ignore
     if (size && size > this.solved.length) {
-      throw (new Error('NotImplemented'))
+      throw (new Error('NotImplemented'));
     }
-    let cloned
+
+    let cloned;
+
     if (solved) {
       // We clone because `solution` is deleted from the object in the code
-      cloned = { ...this.solved[0] }
+      cloned = { ...this.solved[0] };
     } else {
-      cloned = { ...this.unsolved[0] }
+      cloned = { ...this.unsolved[0] };
     }
-    return Promise.resolve([cloned])
+
+    return Promise.resolve([cloned]);
   }
 
   getDatasetDetails (datasetId: string): Promise<DatasetRecord> {
-    const matching = this.tables.dataset![datasetId] as DatasetRecord
-    return Promise.resolve(matching)
+    const matching = this.tables.dataset![datasetId] as DatasetRecord;
+
+    return Promise.resolve(matching);
   }
 
   storeDataset (dataset: Dataset): Promise<void> {
     try {
-      const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset)
+      const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset);
+
       this.tables.dataset![parsedDataset.datasetId.toString()] = {
         datasetId: parsedDataset.datasetId,
         format: parsedDataset.format,
         tree: parsedDataset.tree
-      }
-      return Promise.resolve(undefined)
+      };
+
+      return Promise.resolve(undefined);
     } catch (err) {
-      throw new Error(`${ERRORS.DATABASE.DATASET_LOAD_FAILED.message}:\n${err}`)
+      throw new Error(`${ERRORS.DATABASE.DATASET_LOAD_FAILED.message}:\n${err}`);
     }
   }
 
   updateCaptcha (captcha: Captcha, datasetId: string): Promise<void> {
-    return Promise.resolve(undefined)
+    return Promise.resolve(undefined);
   }
 
   getRandomCaptcha (solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
-    const collection = solved ? this.solved : this.unsolved
+    const collection = solved ? this.solved : this.unsolved;
+
     if (size && size > collection.length) {
-      throw (new Error('Not Implemented'))
+      throw (new Error('Not Implemented'));
     }
-    return Promise.resolve([{ ...collection[0] }])
+
+    return Promise.resolve([{ ...collection[0] }]);
   }
 
   getCaptchaById (captchaId: string[]): Promise<Captcha[] | undefined> {
-    const matching = captchaId.map(id => ({ ...(this.solved.filter(captcha => captcha.captchaId === id)[0]) }))
-    return Promise.resolve(matching)
+    const matching = captchaId.map((id) => ({ ...(this.solved.filter((captcha) => captcha.captchaId === id)[0]) }));
+
+    return Promise.resolve(matching);
   }
 
   storeDappUserSolution (captchas: CaptchaSolution[], treeRoot: string) {
-    return Promise.resolve(undefined)
+    return Promise.resolve(undefined);
   }
 
   storeDappUserPending (userAccount: string, responseHash: string, salt: string) {
@@ -302,28 +303,32 @@ export class ProsopoDatabase implements mockDatabase {
       accountId: userAccount,
       pending: true,
       salt: salt
-    }
-    return Promise.resolve(undefined)
+    };
+
+    return Promise.resolve(undefined);
   }
 
   updateDappUserPendingStatus (userAccount: string, requestHash: string, approve: boolean) {
-    const pendingRequest = this.tables.pending![requestHash]
-    pendingRequest.accountId = userAccount
-    pendingRequest.pending = false
-    pendingRequest.approved = approve
-    return Promise.resolve(undefined)
+    const pendingRequest = this.tables.pending![requestHash];
+
+    pendingRequest.accountId = userAccount;
+    pendingRequest.pending = false;
+    pendingRequest.approved = approve;
+
+    return Promise.resolve(undefined);
   }
 
   getDappUserPending (requestHash: string): Promise<any> {
-    return Promise.resolve(this.tables.pending![requestHash])
+    return Promise.resolve(this.tables.pending![requestHash]);
   }
 
   getAllCaptchasByDatasetId (datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined> {
-    const collection = [...this.unsolved, ...this.solved]
-    return Promise.resolve([{ ...collection[0] }])
+    const collection = [...this.unsolved, ...this.solved];
+
+    return Promise.resolve([{ ...collection[0] }]);
   }
 
   getAllSolutions (captchaId: string): Promise<CaptchaSolution[] | undefined> {
-    return Promise.resolve([])
+    return Promise.resolve([]);
   }
 }

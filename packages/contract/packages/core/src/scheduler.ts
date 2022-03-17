@@ -1,24 +1,30 @@
-import { CronJob } from 'cron'
-import { mnemonicValidate } from '@polkadot/util-crypto'
-import { Tasks } from './tasks/tasks'
-import { Environment } from './env'
+// [object Object]
+// SPDX-License-Identifier: Apache-2.0
+
+import { CronJob } from 'cron';
+
+import { mnemonicValidate } from '@polkadot/util-crypto';
+
+import { Tasks } from './tasks/tasks';
+import { Environment } from './env';
 
 async function main () {
-    mnemonicValidate(process.env.PROVIDER_MNEMONIC as string)
-    const env = new Environment(process.env.PROVIDER_MNEMONIC)
-    await env.isReady()
+  mnemonicValidate(process.env.PROVIDER_MNEMONIC as string);
+  const env = new Environment(process.env.PROVIDER_MNEMONIC);
 
-    const tasks = new Tasks(env)
-    const job = new CronJob(process.argv[2], () => {
-        console.log('It works....')
-        tasks.calculateCaptchaSolutions().catch(err => {
-            console.error(err)
-        })
-    })
+  await env.isReady();
 
-    job.start()
+  const tasks = new Tasks(env);
+  const job = new CronJob(process.argv[2], () => {
+    console.log('It works....');
+    tasks.calculateCaptchaSolutions().catch((err) => {
+      console.error(err);
+    });
+  });
+
+  job.start();
 }
 
 main().catch((error) => {
-    console.error(error)
-})
+  console.error(error);
+});

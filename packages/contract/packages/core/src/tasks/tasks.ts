@@ -21,11 +21,9 @@ import {
         Dapp,
         GovernanceStatus,
         Payee,
-        ProsopoContractApi,
         Provider,
         RandomProvider
 } from '@prosopo/contract';
-import { DecodedEvent } from '@redspot/patract/types';
 import type { RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment'
 import { Hash } from '@polkadot/types/interfaces';
 import { randomAsHex } from '@polkadot/util-crypto';
@@ -202,6 +200,8 @@ export class Tasks {
      * @param {string} dappAccount
      * @param {string} requestHash
      * @param {JSON} captchas
+     * @param blockHash
+     * @param txHash
      * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
      */
     async dappUserSolution (userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse[]> {

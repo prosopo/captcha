@@ -170,7 +170,7 @@ export function prosopoMiddleware (env: Environment): Router {
       return next(new BadRequest(err));
     }
 
-    const { captchas, dappAccount, requestHash, userAccount, blockHash, txHash } = req.body;
+    const { blockHash, captchas, dappAccount, requestHash, txHash, userAccount } = req.body;
 
     try {
       const result = await tasks.dappUserSolution(userAccount as string, dappAccount as string, requestHash as string, captchas as JSON, blockHash, txHash);
