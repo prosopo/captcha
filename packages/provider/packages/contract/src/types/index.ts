@@ -22,7 +22,7 @@ import {TypeDef} from '@polkadot/types-create/types'
 import {AnyJson} from '@polkadot/types/types/codec'
 import {z} from 'zod'
 import {Network , Signer} from "redspot/types";
-import {DecodedEvent} from "@redspot/patract/types";
+import {DecodedEvent, TransactionResponse} from "@redspot/patract/types";
 
 export enum GovernanceStatus {
     Active = 'Active',
@@ -104,7 +104,7 @@ export interface ContractApiInterface {
 
     beforeCall<T> (contractMethodName: string, args: T[]): Promise<{ encodedArgs: T[]; signedContract: Contract }>
 
-    contractTx <T> (contractMethodName: string, args: T[], value?: number | string): Promise<AnyJson>
+    contractTx <T> (contractMethodName: string, args: T[], value?: number | string): Promise<TransactionResponse>
 
     contractQuery <T> (contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson>
 

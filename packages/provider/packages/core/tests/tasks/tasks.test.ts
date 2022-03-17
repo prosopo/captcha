@@ -16,7 +16,7 @@
 import { getEventsFromMethodName } from '@prosopo/contract';
 import { Payee, Provider } from '@prosopo/contract/types';
 import { CaptchaSolution } from '@prosopo/provider-core/types';
-import { DecodedEvent } from '@redspot/patract/types';
+import { DecodedEvent, TransactionResponse } from '@redspot/patract/types';
 import path from 'path';
 
 import { AnyJson } from '@polkadot/types/types/codec';
@@ -116,14 +116,14 @@ describe('CONTRACT TASKS', () => {
     const providerTasks = new Tasks(mockEnv);
 
     try {
-      const result: AnyJson = await providerTasks.providerRegister(
+      const result: TransactionResponse = await providerTasks.providerRegister(
         provider.serviceOrigin as string,
         provider.fee as number,
         provider.payee as Payee,
         provider.address as string
       );
 
-      expect(result).to.be.an('array');
+      expect(result.txHash!).to.not.be.empty;
     } catch (error) {
       throw new Error(`Error in registering provider: ${error}`);
     }
@@ -135,7 +135,7 @@ describe('CONTRACT TASKS', () => {
     const value = 1;
 
     try {
-      const result: AnyJson = await providerTasks.providerUpdate(
+      const result: TransactionResponse = await providerTasks.providerUpdate(
         provider.serviceOrigin as string,
         provider.fee as number,
         provider.payee as Payee,
@@ -143,7 +143,9 @@ describe('CONTRACT TASKS', () => {
         value
       );
 
-      expect(result ? result[0].args[0] : undefined).to.equal(provider.address);
+      const eventData = getEventsFromMethodName(result, 'providerUpdate');
+
+      expect(eventData![0].args[0]).to.equal(provider.address);
     } catch (error) {
       throw new Error(`Error in updating provider: ${error}`);
     }
@@ -158,7 +160,7 @@ describe('CONTRACT TASKS', () => {
         __dirname,
         '../mocks/data/captchas.json'
       );
-      const result: AnyJson = await providerTasks.providerAddDataset(
+      const result: TransactionResponse = await providerTasks.providerAddDataset(
         captchaFilePath
       );
       const eventData = getEventsFromMethodName(result, 'providerAddDataset');
@@ -272,7 +274,7 @@ describe('CONTRACT TASKS', () => {
     const providerTasks = new Tasks(mockEnv);
 
     try {
-      const result: AnyJson = await providerTasks.providerDisapprove(commitmentId);
+      const result: TransactionResponse = await providerTasks.providerDisapprove(commitmentId);
       const events = getEventsFromMethodName(result, 'providerDisapprove');
 
       expect(events![0].args[0]).to.equal(commitmentId);
@@ -314,13 +316,13 @@ describe('CONTRACT TASKS', () => {
     const dappTasks = new Tasks(mockEnv);
 
     try {
-      const result: AnyJson = await dappTasks.dappRegister(
+      const result: TransactionResponse = await dappTasks.dappRegister(
         dapp.serviceOrigin as string,
         dapp.contractAccount as string,
         dapp.optionalOwner as string
       );
 
-      expect(result!.txHash).to.not.be.empty;
+      expect(result.txHash).to.not.be.empty;
     } catch (error) {
       throw new Error(`Error in registering dapp: ${error}`);
     }
@@ -363,16 +365,17 @@ describe('CONTRACT TASKS', () => {
     const value = 10;
 
     try {
-      const result: AnyJson = await dappTasks.dappFund(
+      const result: TransactionResponse = await dappTasks.dappFund(
         dapp.contractAccount as string,
         value
       );
-      const decoded = result![0].args.map((arg) => arg.toHuman());
+      const events = getEventsFromMethodName(result, 'dappFund');
+      const decoded = events![0].args.map((arg) => arg.toHuman());
 
       expect(decoded[0]).to.equal(dapp.contractAccount);
       const dappStruct = await dappTasks.getDappDetails(dapp.contractAccount as string);
 
-      expect(result![0].args[1].toHuman()).to.equal(dappStruct.balance);
+      expect(events![0].args[1].toHuman()).to.equal(dappStruct.balance);
     } catch (error) {
       throw new Error(`Error in dapp fund: ${error}`);
     }
@@ -401,7 +404,7 @@ describe('CONTRACT TASKS', () => {
 
       const commitmentId = tree.root!.hash;
 
-      const result: AnyJson = await dappUserTasks.dappUserCommit(
+      const result: TransactionResponse = await dappUserTasks.dappUserCommit(
         dapp.contractAccount as string,
         datasetId as string,
         commitmentId,
@@ -533,8 +536,8 @@ describe('CONTRACT TASKS', () => {
       dapp.contractAccount as string,
       requestHash,
       JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
-      (response!.blockHash) as string,
-      (response!.result.txHash.toString()) as string
+      (response.blockHash) as string,
+      (response.result.txHash.toString()) as string
     );
 
     expect(result.length).to.be.eq(2);
@@ -822,7 +825,7 @@ describe('CONTRACT TASKS', () => {
       provider.serviceOrigin,
       provider.fee,
       provider.payee,
-      provider.address,
+      providerAddress,
       1
     );
     const captchaFilePath = path.resolve(
@@ -845,7 +848,7 @@ describe('CONTRACT TASKS', () => {
     const value = 1;
 
     try {
-      const result: AnyJson = await providerTasks.providerUnstake(value);
+      const result: TransactionResponse = await providerTasks.providerUnstake(value);
       const events = getEventsFromMethodName(result, 'providerUnstake');
 
       expect(events![0].args[0]).to.equal(provider.address);
@@ -859,11 +862,12 @@ describe('CONTRACT TASKS', () => {
     const providerTasks = new Tasks(mockEnv);
 
     try {
-      const result: AnyJson = await providerTasks.providerDeregister(
+      const result: TransactionResponse = await providerTasks.providerDeregister(
         provider.address as string
       );
+      const events = getEventsFromMethodName(result, 'providerDeregister');
 
-      expect(result ? result[0].args[0] : undefined).to.equal(provider.address);
+      expect(events![0].args[0]).to.equal(provider.address);
     } catch (error) {
       throw new Error(`Error in deregestering provider: ${error}`);
     }

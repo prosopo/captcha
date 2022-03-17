@@ -29,7 +29,7 @@ import {ERRORS} from './errors'
 import {AbiMetadata, Network} from 'redspot/types'
 import {unwrap, encodeStringArgs, getEventNameFromMethodName, handleContractCallOutcomeErrors} from './helpers'
 import {AnyJson} from '@polkadot/types/types/codec'
-import {DecodedEvent} from "@redspot/patract/types";
+import {DecodedEvent, TransactionResponse} from "@redspot/patract/types";
 import {contractDefinitions} from "./definitions";
 import {strict as assert} from "assert";
 import { network, patract } from "redspot"
@@ -125,7 +125,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx<T>(contractMethodName: string, args: T[], value?: number | string): Promise<AnyJson> {
+    async contractTx<T>(contractMethodName: string, args: T[], value?: number | string): Promise<TransactionResponse> {
         // Always query first as errors are passed back from a dry run but not from a transaction
         await this.contractQuery(contractMethodName, args)
         const {encodedArgs, signedContract} = await this.beforeCall(contractMethodName, args)
@@ -144,10 +144,7 @@ export class ProsopoContractApi implements ContractApiInterface {
             throw (response.status.asInvalid)
         }
 
-        if (response.result.isInBlock || response.result.isFinalized) {
-            return response
-        }
-        return []
+        return response
     }
 
     /**
