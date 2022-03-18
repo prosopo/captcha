@@ -13,34 +13,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-const {mnemonicGenerate, cryptoWaitReady} = require('@polkadot/util-crypto');
-const {Keyring} = require('@polkadot/keyring');
-const keyring = new Keyring({type: 'sr25519'});
-const fs = require('fs');
+const { cryptoWaitReady, mnemonicGenerate } = require('@polkadot/util-crypto');
+const { Keyring } = require('@polkadot/keyring');
+const keyring = new Keyring({ type: 'sr25519' });
 
-function mnemonic(envvar) {
-    cryptoWaitReady().then(() => {
-        const mnemonic = mnemonicGenerate();
-        const account = keyring.addFromMnemonic(mnemonic);
-        console.log(`Address: ${account.address}`);
-        console.log(`Mnemonic: ${mnemonic}`);
-        const data = [`export ${envvar}_ADDRESS=${account.address};`, `export ${envvar}_MNEMONIC="${mnemonic}";`].join("\n")
-        if (envvar) {
-            fs.writeFile('envvars.sh', data, function (err) {
-                if (err) return console.log(err);
-            });
-        }
-    });
+function mnemonic () {
+  cryptoWaitReady().then(() => {
+    const mnemonic = mnemonicGenerate();
+    const account = keyring.addFromMnemonic(mnemonic);
+
+    console.log(`Address: ${account.address}`);
+    console.log(`Mnemonic: ${mnemonic}`);
+  });
 }
 
-function processArgs() {
-    const {argv} = require("yargs")
-        .scriptName("generateMnemonic")
-        .usage("Usage: $0 -envvar str")
-        .option("envvar", {demand: false, type: "string"})
-    console.log(argv.envvar)
-    mnemonic(argv.envvar)
-}
-
-
-processArgs()
+mnemonic();
