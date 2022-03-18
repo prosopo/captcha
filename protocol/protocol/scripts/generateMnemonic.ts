@@ -16,15 +16,31 @@
 const {mnemonicGenerate, cryptoWaitReady} = require('@polkadot/util-crypto');
 const {Keyring} = require('@polkadot/keyring');
 const keyring = new Keyring({type: 'sr25519'});
+const fs = require('fs');
 
-function mnemonic() {
+function mnemonic(envvar) {
     cryptoWaitReady().then(() => {
-
         const mnemonic = mnemonicGenerate();
         const account = keyring.addFromMnemonic(mnemonic);
         console.log(`Address: ${account.address}`);
         console.log(`Mnemonic: ${mnemonic}`);
+        const data = [`export ${envvar}_ADDRESS=${account.address};`, `export ${envvar}_MNEMONIC="${mnemonic}";`].join("\n")
+        if (envvar) {
+            fs.writeFile('envvars.sh', data, function (err) {
+                if (err) return console.log(err);
+            });
+        }
     });
 }
 
-mnemonic()
+function processArgs() {
+    const {argv} = require("yargs")
+        .scriptName("generateMnemonic")
+        .usage("Usage: $0 -envvar str")
+        .option("envvar", {demand: false, type: "string"})
+    console.log(argv.envvar)
+    mnemonic(argv.envvar)
+}
+
+
+processArgs()
