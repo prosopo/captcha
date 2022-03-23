@@ -53,7 +53,8 @@ import {
     CaptchaSolutionToUpdate,
     CaptchaStates,
     CaptchaWithoutId,
-    CaptchaSolutionConfig
+    CaptchaSolutionConfig,
+    LastCorrectCaptcha
 } from '../types'
 import { loadJSONFile, shuffleArray, writeJSONFile } from '../util'
 import { TransactionResponse } from '@redspot/patract/types';
@@ -166,6 +167,10 @@ export class Tasks {
 
     async getDappAccounts (): Promise<AnyJson> {
         return await this.contractApi.getStorage('dapp_accounts', buildDecodeVector('DappAccounts'));
+    }
+
+    async getDappOperatorLastCorrectCaptcha (accountId: string): Promise<LastCorrectCaptcha> {
+        return await this.contractApi.contractQuery('dappOperatorLastCorrectCaptcha', [accountId]) as unknown as LastCorrectCaptcha
     }
 
     // Other tasks
