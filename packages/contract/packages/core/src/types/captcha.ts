@@ -15,6 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { z } from 'zod'
 import { AccountId, Hash } from '@polkadot/types/interfaces'
+import { u64 } from '@polkadot/types'
 
 export enum CaptchaTypes { SelectAll = 'SelectAll'}
 
@@ -67,6 +68,7 @@ export interface CaptchaSolutionCommitment {
     status: CaptchaStatus,
     contract: AccountId,
     provider: AccountId,
+    completed_at: u64,
 }
 
 export type CaptchaSolution = {
@@ -93,7 +95,8 @@ export type CaptchaSolutionConfig = {
 export const CaptchaSchema = z.object({
     captchaId: z.union([z.string(), z.undefined()]),
     salt: z.string(),
-    solution: z.number().array().optional()
+    solution: z.number().array().optional(),
+    timeLimit: z.number().optional()
 })
 
 export const CaptchaWithIdSchema = z.object({
@@ -137,7 +140,7 @@ export const CaptchasWithIdSchema = z.array(CaptchaWithIdSchema)
 export const CaptchaSolution = z.object({
     captchaId: z.string(),
     solution: z.number().array(),
-    salt: z.string()
+    salt: z.string(),
 })
 
 export const CaptchaSolutionSchema = z.array(CaptchaSolution)
@@ -148,7 +151,8 @@ export const DatasetSchema = z.object({
     datasetId: z.string().optional(),
     captchas: CaptchasSchema,
     format: z.nativeEnum(CaptchaTypes),
-    tree: z.array(z.array(z.string())).optional()
+    tree: z.array(z.array(z.string())).optional(),
+    timeLimit: z.number().optional()
 })
 
 export const DatasetWithIdsSchema = z.object({

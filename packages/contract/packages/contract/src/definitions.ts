@@ -91,11 +91,16 @@ export const contractDefinitions = {
         captcha_dataset_id: 'Hash',
         status: 'CaptchaStatus',
         contract: 'AccountId',
-        provider: 'AccountId'
+        provider: 'AccountId',
+        completed_at: 'u64'
     },
     CaptchaData: {
         provider: 'AccountId',
         merkle_tree_root: 'Hash',
         captcha_type: 'u16'
+    },
+    ProsopoLastCorrectCaptcha: {
+        before_ms: 'u32',
+        dapp_id: 'AccountId',
     }
 }

@@ -112,15 +112,24 @@ describe('CONTRACT TASKS', () => {
   }
 
   it('Provider registration', async () => {
-    await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
+    const [providerMnemonic, providerAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || ['', ''];
+
+    await sendFunds(
+      mockEnv,
+      providerAddress,
+      'Provider',
+      '10000000000000000000'
+    );
+
+    await mockEnv.contractInterface!.changeSigner(providerMnemonic);
     const providerTasks = new Tasks(mockEnv);
 
     try {
       const result: TransactionResponse = await providerTasks.providerRegister(
-        provider.serviceOrigin as string,
+        PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
         provider.fee as number,
         provider.payee as Payee,
-        provider.address as string
+        providerAddress
       );
 
       expect(result.txHash!).to.not.be.empty;
@@ -281,6 +290,52 @@ describe('CONTRACT TASKS', () => {
     } catch (error) {
       throw new Error(`Error in provider disapprove: ${error}`);
     }
+  });
+
+  it('Timestamps check', async () => {
+    await mockEnv.contractInterface!.changeSigner(dappUser.mnemonic)
+    const dappUserTasks = new Tasks(mockEnv)
+    const salt = randomAsHex()
+
+    const tree = new CaptchaMerkleTree()
+
+    const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash();
+
+    const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
+        ...captcha,
+        salt: salt
+    }))
+    const captchasHashed = captchaSolutionsSalted.map((captcha) =>
+        computeCaptchaSolutionHash(captcha)
+    )
+    tree.build(captchasHashed)
+    const commitmentId = tree.root!.hash
+    await dappUserTasks.dappUserCommit(
+        DAPP.contractAccount,
+        datasetId as string,
+        commitmentId,
+        provider.address as string
+    )
+
+    await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string)
+    const providerTasks = new Tasks(mockEnv)
+    try {
+        const result = await providerTasks.providerApprove(commitmentId, 0)
+        const events = getEventsFromMethodName(result, 'providerApprove')
+        expect(events![0].args[0]).to.equal(commitmentId)
+    } catch (error) {
+        throw new Error(`Error in provider approve: ${error}`)
+    }
+
+    const commitment = await providerTasks.getCaptchaSolutionCommitment(commitmentId);
+
+    // check the timestamp
+    const completedAt = parseInt(commitment.completed_at.toString().replaceAll(",", ""));
+    expect(completedAt).to.be.above(0);
+
+    // check how much time passed after successful completion
+    const lastCorrectCaptcha = await providerTasks.getDappOperatorLastCorrectCaptcha(dappUser.address);
+    expect(Number.parseInt(lastCorrectCaptcha.before_ms)).to.be.above(0);
   });
 
   it('Provider details', async () => {
