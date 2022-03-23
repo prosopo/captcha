@@ -26,3 +26,8 @@ jobs:
           rustup update nightly
           rustup target add wasm32-unknown-unknown --toolchain nightly
           cargo install cargo-tarpaulin
+      - name: Run the unit tests
+        run: |
+          cd contracts
+          SUMMARY="$(cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tail -7 | head -1)"
+          if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
