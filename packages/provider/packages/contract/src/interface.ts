@@ -29,9 +29,8 @@ import {ERRORS} from './errors'
 import {AbiMetadata, Network} from 'redspot/types'
 import {unwrap, encodeStringArgs, getEventNameFromMethodName, handleContractCallOutcomeErrors} from './helpers'
 import {AnyJson} from '@polkadot/types/types/codec'
-import {DecodedEvent, TransactionResponse} from "@redspot/patract/types";
+import {TransactionResponse} from "@redspot/patract/types";
 import {contractDefinitions} from "./definitions";
-import {strict as assert} from "assert";
 import { network, patract } from "redspot"
 const { mnemonicGenerate } = require('@polkadot/util-crypto')
 
@@ -60,7 +59,9 @@ export class ProsopoContractApi implements ContractApiInterface {
         await this.network.registry.register(contractDefinitions)
         await this.getSigner()
         await this.getContract()
-        assert(this.contract !== undefined)
+        if (this.contract === undefined) {
+            throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
+        }
     }
 
     async getSigner(): Promise<Signer> {

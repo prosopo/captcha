@@ -335,7 +335,7 @@ describe('CONTRACT TASKS', () => {
 
     // check how much time passed after successful completion
     const lastCorrectCaptcha = await providerTasks.getDappOperatorLastCorrectCaptcha(dappUser.address);
-    expect(Number.parseInt(lastCorrectCaptcha.before_ms)).to.be.above(0);
+    expect(Number.parseInt(lastCorrectCaptcha.before_ms.toString())).to.be.above(0);
   });
 
   it('Provider details', async () => {
@@ -828,7 +828,7 @@ describe('CONTRACT TASKS', () => {
             provider.fee,
             provider.payee,
             provider.address,
-            1
+            2000000000000
           );
           const captchaFilePath = path.resolve(
             __dirname,
