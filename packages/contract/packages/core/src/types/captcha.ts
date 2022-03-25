@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { z } from 'zod'
 import { AccountId, Hash } from '@polkadot/types/interfaces'
-import { u64 } from '@polkadot/types'
+import { u32, u64 } from '@polkadot/types'
 
 export enum CaptchaTypes { SelectAll = 'SelectAll'}
 
@@ -90,6 +90,11 @@ export type CaptchaSolutionConfig = {
     requiredNumberOfSolutions: number,
     solutionWinningPercentage: number,
     captchaFilePath: string
+}
+
+export type LastCorrectCaptcha = {
+    before_ms: u32,
+    dapp_id: AccountId,
 }
 
 export const CaptchaSchema = z.object({
