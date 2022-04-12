@@ -45,38 +45,50 @@ describe('CONTRACT TASKS', () => {
   let dapp;
   const dappUser = DAPP_USER;
   const mockEnv = new MockEnvironment();
+  const registeredProviders: [providerMnemonic: string, providerAddress: string][] = [];
 
   before(async () => {
-    try {
-      // Register the dapp
-      await mockEnv.isReady();
+    // Register the dapp
+    await mockEnv.isReady();
 
-      // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
-      const [providerMnemonic, providerAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
+    // Register a NEW provider otherwise commitments already exist in contract when Dapp User tries to use
+    const [providerMnemonic, providerAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
 
-      await mockEnv.contractInterface!.changeSigner('//Alice');
-      await sendFunds(
-        mockEnv,
-        providerAddress,
-        'Provider',
-        '10000000000000000000'
+    await mockEnv.contractInterface!.changeSigner('//Alice');
+    await sendFunds(
+      mockEnv,
+      providerAddress,
+      'Provider',
+      '10000000000000000000'
+    );
+    provider = { ...PROVIDER } as TestProvider;
+    provider.mnemonic = providerMnemonic;
+    provider.address = providerAddress;
+    // Service origins cannot be duplicated
+    provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8);
+    datasetId = await setupProvider(mockEnv, provider as TestProvider);
+    const [dappMnemonic, dappAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
+
+    dapp = { ...DAPP } as TestDapp;
+    await sendFunds(mockEnv, dappAddress, 'Dapp', '1000000000000000000');
+    dapp.mnemonic = dappMnemonic;
+    dapp.address = dappAddress;
+    await setupDapp(mockEnv, dapp as TestDapp);
+  });
+
+  after(async () => {
+
+    for (const registeredProvider of registeredProviders) {
+      const [providerMnemonic, providerAddress] = registeredProvider;
+
+      await mockEnv.contractInterface!.changeSigner(providerMnemonic as string);
+      const providerTasks = new Tasks(mockEnv);
+      
+      await providerTasks.providerDeregister(
+        providerAddress as string
       );
-      provider = { ...PROVIDER } as TestProvider;
-      provider.mnemonic = providerMnemonic;
-      provider.address = providerAddress;
-      // Service origins cannot be duplicated
-      provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8);
-      datasetId = await setupProvider(mockEnv, provider as TestProvider);
-      const [dappMnemonic, dappAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
-
-      dapp = { ...DAPP } as TestDapp;
-      await sendFunds(mockEnv, dappAddress, 'Dapp', '1000000000000000000');
-      dapp.mnemonic = dappMnemonic;
-      dapp.address = dappAddress;
-      await setupDapp(mockEnv, dapp as TestDapp);
-    } catch (err) {
-      throw new Error(err as string);
     }
+
   });
 
   /** Gets some static solved captchas and constructions captcha solutions from them
@@ -124,18 +136,16 @@ describe('CONTRACT TASKS', () => {
     await mockEnv.contractInterface!.changeSigner(providerMnemonic);
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const result: TransactionResponse = await providerTasks.providerRegister(
-        PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
-        provider.fee as number,
-        provider.payee as Payee,
-        providerAddress
-      );
+    const result: TransactionResponse = await providerTasks.providerRegister(
+      PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
+      provider.fee as number,
+      provider.payee as Payee,
+      providerAddress
+    );
 
-      expect(result.txHash!).to.not.be.empty;
-    } catch (error) {
-      throw new Error(`Error in registering provider: ${error}`);
-    }
+    registeredProviders.push([providerMnemonic, providerAddress]);
+
+    expect(result.txHash!).to.not.be.empty;
   });
 
   it('Provider update', async () => {
@@ -143,41 +153,33 @@ describe('CONTRACT TASKS', () => {
     const providerTasks = new Tasks(mockEnv);
     const value = 1;
 
-    try {
-      const result: TransactionResponse = await providerTasks.providerUpdate(
-        provider.serviceOrigin as string,
-        provider.fee as number,
-        provider.payee as Payee,
-        provider.address as string,
-        value
-      );
+    const result: TransactionResponse = await providerTasks.providerUpdate(
+      provider.serviceOrigin as string,
+      provider.fee as number,
+      provider.payee as Payee,
+      provider.address as string,
+      value
+    );
 
-      const eventData = getEventsFromMethodName(result, 'providerUpdate');
+    const eventData = getEventsFromMethodName(result, 'providerUpdate');
 
-      expect(eventData![0].args[0]).to.equal(provider.address);
-    } catch (error) {
-      throw new Error(`Error in updating provider: ${error}`);
-    }
+    expect(eventData![0].args[0]).to.equal(provider.address);
   });
 
   it('Provider add dataset', async () => {
     await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const captchaFilePath = path.resolve(
-        __dirname,
-        '../mocks/data/captchas.json'
-      );
-      const result: TransactionResponse = await providerTasks.providerAddDataset(
-        captchaFilePath
-      );
-      const eventData = getEventsFromMethodName(result, 'providerAddDataset');
+    const captchaFilePath = path.resolve(
+      __dirname,
+      '../mocks/data/captchas.json'
+    );
+    const result: TransactionResponse = await providerTasks.providerAddDataset(
+      captchaFilePath
+    );
+    const eventData = getEventsFromMethodName(result, 'providerAddDataset');
 
-      return expect(eventData![0].args[0]).to.equal(provider.address);
-    } catch (error) {
-      throw new Error(`Error in adding dataset: ${error}`);
-    }
+    expect(eventData![0].args[0]).to.equal(provider.address);
   });
 
   it('Inactive Provider cannot add dataset', async () => {
@@ -204,6 +206,9 @@ describe('CONTRACT TASKS', () => {
       inactiveProvider.payee,
       inactiveProvider.address
     );
+
+    registeredProviders.push([providerMnemonic, providerAddress]);
+
     const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json');
     const datasetPromise = providerTasks.providerAddDataset(captchaFilePath);
 
@@ -242,14 +247,10 @@ describe('CONTRACT TASKS', () => {
     await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const result: any = await providerTasks.providerApprove(commitmentId, 0);
-      const events = getEventsFromMethodName(result, 'providerApprove');
+    const result: any = await providerTasks.providerApprove(commitmentId, 0);
+    const events = getEventsFromMethodName(result, 'providerApprove');
 
-      expect(events![0].args[0]).to.equal(commitmentId);
-    } catch (error) {
-      throw new Error(`Error in provider approve: ${error}`);
-    }
+    expect(events![0].args[0]).to.equal(commitmentId);
   });
 
   it('Provider disapprove', async () => {
@@ -282,14 +283,10 @@ describe('CONTRACT TASKS', () => {
     await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const result: TransactionResponse = await providerTasks.providerDisapprove(commitmentId);
-      const events = getEventsFromMethodName(result, 'providerDisapprove');
+    const result: TransactionResponse = await providerTasks.providerDisapprove(commitmentId);
+    const events = getEventsFromMethodName(result, 'providerDisapprove');
 
-      expect(events![0].args[0]).to.equal(commitmentId);
-    } catch (error) {
-      throw new Error(`Error in provider disapprove: ${error}`);
-    }
+    expect(events![0].args[0]).to.equal(commitmentId);
   });
 
   it('Timestamps check', async () => {
@@ -319,13 +316,10 @@ describe('CONTRACT TASKS', () => {
 
     await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string)
     const providerTasks = new Tasks(mockEnv)
-    try {
-        const result = await providerTasks.providerApprove(commitmentId, 0)
-        const events = getEventsFromMethodName(result, 'providerApprove')
-        expect(events![0].args[0]).to.equal(commitmentId)
-    } catch (error) {
-        throw new Error(`Error in provider approve: ${error}`)
-    }
+
+    const result = await providerTasks.providerApprove(commitmentId, 0)
+    const events = getEventsFromMethodName(result, 'providerApprove')
+    expect(events![0].args[0]).to.equal(commitmentId)
 
     const commitment = await providerTasks.getCaptchaSolutionCommitment(commitmentId);
 
@@ -342,75 +336,57 @@ describe('CONTRACT TASKS', () => {
     await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const result: Provider = await providerTasks.getProviderDetails(
-        provider.address as string
-      );
+    const result: Provider = await providerTasks.getProviderDetails(
+      provider.address as string
+    );
 
-      expect(result).to.have.a.property('status');
-    } catch (error) {
-      throw new Error(`Error in provider details: ${error}`);
-    }
+    expect(result).to.have.a.property('status');
   });
 
   it('Provider accounts', async () => {
     await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const result: AnyJson = await providerTasks.getProviderAccounts();
+    const result: AnyJson = await providerTasks.getProviderAccounts();
 
-      expect(result).to.be.an('array');
-    } catch (error) {
-      throw new Error(`Error in provider accounts: ${error}`);
-    }
+    expect(result).to.be.an('array');
+
   });
 
   it('Dapp registration', async () => {
     await mockEnv.contractInterface!.changeSigner(dapp.mnemonic as string);
     const dappTasks = new Tasks(mockEnv);
 
-    try {
-      const result: TransactionResponse = await dappTasks.dappRegister(
-        dapp.serviceOrigin as string,
-        dapp.contractAccount as string,
-        dapp.optionalOwner as string
-      );
+    const result: TransactionResponse = await dappTasks.dappRegister(
+      dapp.serviceOrigin as string,
+      dapp.contractAccount as string,
+      dapp.optionalOwner as string
+    );
 
-      expect(result.txHash).to.not.be.empty;
-    } catch (error) {
-      throw new Error(`Error in registering dapp: ${error}`);
-    }
+    expect(result.txHash).to.not.be.empty;
+
   });
 
   it('Dapp is active', async () => {
     await mockEnv.contractInterface!.changeSigner(dapp.mnemonic as string);
     const dappTasks = new Tasks(mockEnv);
 
-    try {
-      const result: any = await dappTasks.dappIsActive(
-        dapp.contractAccount as string
-      );
+    const result: any = await dappTasks.dappIsActive(
+      dapp.contractAccount as string
+    );
 
-      expect(result).to.equal(true);
-    } catch (error) {
-      throw new Error(`Error in is active dapp: ${error}`);
-    }
+    expect(result).to.equal(true);
   });
 
   it('Dapp details', async () => {
     await mockEnv.contractInterface!.changeSigner(dapp.mnemonic as string);
     const dappTasks = new Tasks(mockEnv);
 
-    try {
-      const result: any = await dappTasks.getDappDetails(
-        dapp.contractAccount as string
-      );
+    const result: any = await dappTasks.getDappDetails(
+      dapp.contractAccount as string
+    );
 
-      expect(result).to.have.a.property('status');
-    } catch (error) {
-      throw new Error(`Error in dapp details: ${error}`);
-    }
+    expect(result).to.have.a.property('status');
   });
 
   it('Dapp fund', async () => {
@@ -419,25 +395,21 @@ describe('CONTRACT TASKS', () => {
 
     const value = 10;
 
-    try {
-      const result: TransactionResponse = await dappTasks.dappFund(
-        dapp.contractAccount as string,
-        value
-      );
-      const events = getEventsFromMethodName(result, 'dappFund');
-      const decoded = events![0].args.map((arg) => arg.toHuman());
+    const result: TransactionResponse = await dappTasks.dappFund(
+      dapp.contractAccount as string,
+      value
+    );
+    const events = getEventsFromMethodName(result, 'dappFund');
+    const decoded = events![0].args.map((arg) => arg.toHuman());
 
-      expect(decoded[0]).to.equal(dapp.contractAccount);
-      const dappStruct = await dappTasks.getDappDetails(dapp.contractAccount as string);
+    expect(decoded[0]).to.equal(dapp.contractAccount);
+    const dappStruct = await dappTasks.getDappDetails(dapp.contractAccount as string);
 
-      expect(events![0].args[1].toHuman()).to.equal(dappStruct.balance);
-    } catch (error) {
-      throw new Error(`Error in dapp fund: ${error}`);
-    }
+    expect(events![0].args[1].toHuman()).to.equal(dappStruct.balance);
+
   });
 
   it('Dapp user commit', async () => {
-    try {
       const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash();
 
       await mockEnv.contractInterface!.changeSigner(dappUser.mnemonic);
@@ -473,22 +445,15 @@ describe('CONTRACT TASKS', () => {
       const events = getEventsFromMethodName(result, 'dappUserCommit');
 
       expect(events![0].args[2]).to.equal(dapp.contractAccount);
-    } catch (error) {
-      throw new Error(`Error in dapp user commit: ${error}`);
-    }
   });
 
   it('Dapp accounts', async () => {
     await mockEnv.contractInterface!.changeSigner(dapp.mnemonic as string);
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const result: AnyJson = await providerTasks.getDappAccounts();
+    const result: AnyJson = await providerTasks.getDappAccounts();
 
-      expect(result).to.be.an('array');
-    } catch (error) {
-      throw new Error(`Error in dapp accounts: ${error}`);
-    }
+    expect(result).to.be.an('array');
   });
 
   it('Captchas are correctly formatted before being passed to the API layer', async () => {
@@ -779,7 +744,7 @@ describe('CONTRACT TASKS', () => {
       captchaIds
     );
 
-    return expect(valid).to.be.true;
+    expect(valid).to.be.true;
   });
 
   it('Get random captchas and request hash', async () => {
@@ -793,7 +758,7 @@ describe('CONTRACT TASKS', () => {
     expect(captchas.length).to.equal(solvedCaptchaCount + unsolvedCaptchaCount);
     const pendingRequest = mockEnv.db?.getDappUserPending(requestHash);
 
-    return expect(pendingRequest).to.not.be.null;
+    expect(pendingRequest).to.not.be.null;
   });
 
   it('Validate provided captcha dataset', async () => {
@@ -814,8 +779,7 @@ describe('CONTRACT TASKS', () => {
 
           provider.mnemonic = providerMnemonic;
           provider.address = providerAddress;
-          provider.serviceOrigin =
-                        provider.serviceOrigin + randomAsHex().slice(0, 8);
+          provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8);
           await mockEnv.contractInterface!.changeSigner(providerMnemonic);
           await tasks.providerRegister(
             provider.serviceOrigin,
@@ -823,6 +787,9 @@ describe('CONTRACT TASKS', () => {
             provider.payee,
             provider.address
           );
+
+          registeredProviders.push([providerMnemonic, providerAddress]);
+
           await tasks.providerUpdate(
             provider.serviceOrigin,
             provider.fee,
@@ -849,7 +816,7 @@ describe('CONTRACT TASKS', () => {
     const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id as string, blockNumberParsed)
       .then(() => true).catch(() => false);
 
-    return expect(valid).to.be.true;
+    expect(valid).to.be.true;
   });
 
   it('Validate provided captcha dataset - fail', async () => {
@@ -867,8 +834,7 @@ describe('CONTRACT TASKS', () => {
     const provider = { ...PROVIDER } as TestProvider;
 
     provider.mnemonic = providerMnemonic;
-    provider.serviceOrigin =
-            provider.serviceOrigin + randomAsHex().slice(0, 8);
+    provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8);
     await mockEnv.contractInterface!.changeSigner(providerMnemonic);
     await tasks.providerRegister(
       provider.serviceOrigin,
@@ -876,6 +842,9 @@ describe('CONTRACT TASKS', () => {
       provider.payee,
       providerAddress
     );
+
+    registeredProviders.push([providerMnemonic, providerAddress]);
+
     await tasks.providerUpdate(
       provider.serviceOrigin,
       provider.fee,
@@ -894,7 +863,7 @@ describe('CONTRACT TASKS', () => {
     const blockNumberParsed = parseBlockNumber(res.block_number);
     const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', blockNumberParsed).then(() => true).catch(() => false);
 
-    return expect(valid).to.be.false;
+    expect(valid).to.be.false;
   });
 
   it('Provider unstake', async () => {
@@ -902,50 +871,39 @@ describe('CONTRACT TASKS', () => {
     const providerTasks = new Tasks(mockEnv);
     const value = 1;
 
-    try {
-      const result: TransactionResponse = await providerTasks.providerUnstake(value);
-      const events = getEventsFromMethodName(result, 'providerUnstake');
+    const result: TransactionResponse = await providerTasks.providerUnstake(value);
+    const events = getEventsFromMethodName(result, 'providerUnstake');
 
-      expect(events![0].args[0]).to.equal(provider.address);
-    } catch (error) {
-      throw new Error(`Error in unstake provider: ${error}`);
-    }
+    expect(events![0].args[0]).to.equal(provider.address);
   });
 
   it('Provider deregister', async () => {
     await mockEnv.contractInterface!.changeSigner(provider.mnemonic as string);
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const result: TransactionResponse = await providerTasks.providerDeregister(
-        provider.address as string
-      );
-      const events = getEventsFromMethodName(result, 'providerDeregister');
+    const result: TransactionResponse = await providerTasks.providerDeregister(
+      provider.address as string
+    );
+    const events = getEventsFromMethodName(result, 'providerDeregister');
 
-      expect(events![0].args[0]).to.equal(provider.address);
-    } catch (error) {
-      throw new Error(`Error in deregestering provider: ${error}`);
-    }
+    expect(events![0].args[0]).to.equal(provider.address);
   });
 
   it('Calculate captcha solution on the basis of Dapp users provided solutions', async () => {
     const providerTasks = new Tasks(mockEnv);
 
-    try {
-      const captchaFilePath = mockEnv.config.captchaSolutions.captchaFilePath;
-      const datsetBeforeCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON);
+    const captchaFilePath = mockEnv.config.captchaSolutions.captchaFilePath;
+    const datsetBeforeCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON);
 
-      const solvedCaptchasCountBeforeCalculation = datsetBeforeCalculation.captchas.filter((captcha) => 'solution' in captcha).length;
+    const solvedCaptchasCountBeforeCalculation = datsetBeforeCalculation.captchas.filter((captcha) => 'solution' in captcha).length;
 
-      const result = await providerTasks.calculateCaptchaSolutions();
+    const result = await providerTasks.calculateCaptchaSolutions();
 
-      const datsetAfterCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON);
+    const datsetAfterCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON);
 
-      const solvedCaptchasCountAfterCalculation = datsetAfterCalculation.captchas.filter((captcha) => 'solution' in captcha).length;
+    const solvedCaptchasCountAfterCalculation = datsetAfterCalculation.captchas.filter((captcha) => 'solution' in captcha).length;
 
-      expect(solvedCaptchasCountAfterCalculation - solvedCaptchasCountBeforeCalculation).to.equal(result);
-    } catch (error) {
-      throw new Error(`Error in calculate captcha solution: ${error}`);
-    }
+    expect(solvedCaptchasCountAfterCalculation - solvedCaptchasCountBeforeCalculation).to.equal(result);
   });
+
 });
