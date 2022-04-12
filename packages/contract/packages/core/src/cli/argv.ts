@@ -78,12 +78,12 @@ export function processArgs (args, env: ProsopoEnvironment) {
       'provider_register',
       'Register a Provider',
       (yargs) => yargs
-        .option('serviceOrigin', { type: 'string', demand: true, desc: 'The provider service origin (URI)' })
+        .option('origin', { type: 'string', demand: true, desc: 'The provider service origin (URI)' })
         .option('fee', { type: 'number', demand: true, desc: 'The fee to pay per solved captcha' })
         .option('payee', { type: 'string', demand: true, desc: 'The person who receives the fee (`Provider` or `Dapp`)' })
         .option('address', { type: 'string', demand: true, desc: 'The AccountId of the Provider' }),
       async (argv) => {
-        const result = await tasks.providerRegister(argv.serviceOrigin, argv.fee, argv.payee as Payee, argv.address);
+        const result = await tasks.providerRegister(argv.origin, argv.fee, argv.payee as Payee, argv.address);
 
         console.log(JSON.stringify(result, null, 2));
       },
@@ -93,13 +93,13 @@ export function processArgs (args, env: ProsopoEnvironment) {
       'provider_update',
       'Update a Provider',
       (yargs) => yargs
-        .option('serviceOrigin', { type: 'string', demand: true, desc: 'The provider service origin (URI)' })
+        .option('origin', { type: 'string', demand: true, desc: 'The provider service origin (URI)' })
         .option('fee', { type: 'number', demand: true, desc: 'The fee to pay per solved captcha' })
         .option('payee', { type: 'string', demand: true, desc: 'The person who receives the fee (`Provider` or `Dapp`)' })
         .option('address', { type: 'string', demand: true, desc: 'The AccountId of the Provider' })
         .option('value', { type: 'number', demand: false, desc: 'The value to stake in the contract' }),
       async (argv) => {
-        const result = await tasks.providerUpdate(argv.serviceOrigin, argv.fee, argv.payee as Payee, argv.address, argv.value);
+        const result = await tasks.providerUpdate(argv.origin, argv.fee, argv.payee as Payee, argv.address, argv.value);
 
         console.log(JSON.stringify(result, null, 2));
       },
