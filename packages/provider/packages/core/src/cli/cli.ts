@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import express from 'express';
+import cors from 'cors';
 
 import { mnemonicValidate } from '@polkadot/util-crypto';
 
@@ -22,10 +23,12 @@ import { Environment } from '../env';
 import { ERRORS, handleErrors } from '../errors';
 import { processArgs } from './argv';
 
+const port = 3000;
+
 const app = express();
 
 app.use(express.json());
-const port = 3000;
+app.use(cors());
 
 async function main () {
   if (!process.env.PROVIDER_MNEMONIC) {
