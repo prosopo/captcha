@@ -24,7 +24,7 @@ export interface TestProvider extends TestAccount {
     serviceOrigin: string,
     fee: number,
     datasetFile: string,
-    stake: number,
+    stake: number | string,
     payee: Payee
     captchaDatasetId: string,
 }
@@ -33,7 +33,7 @@ export const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: Payee.Provider,
-    stake: 1000000000000000,
+    stake: '1000000000000000',
     datasetFile: '/usr/src/data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
