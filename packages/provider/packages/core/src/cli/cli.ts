@@ -45,7 +45,7 @@ async function main () {
     app.use(prosopoMiddleware(env));
     app.use(handleErrors);
     app.listen(port, () => {
-      console.log(`Prosopo app listening at http://localhost:${port}`);
+      env.logger.info(`Prosopo app listening at http://localhost:${port}`);
     });
   } else {
     process.exit();

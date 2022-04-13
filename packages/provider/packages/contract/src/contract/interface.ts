@@ -13,48 +13,39 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-// @ts-ignore
-
-import '@redspot/patract';
-import '@redspot/chai';
-// import '@redspot/watcher';
-// import '@redspot/explorer';
-import '@redspot/decimals';
-import {Registry} from 'redspot/types/provider'
 import type {AbiMessage} from '@polkadot/api-contract/types'
-import Contract from '@redspot/patract/contract'
-import {ContractApiInterface} from './types'
-import {Signer} from 'redspot/types'
-import {ERRORS} from './errors'
-import {AbiMetadata, Network} from 'redspot/types'
-import {unwrap, encodeStringArgs, getEventNameFromMethodName, handleContractCallOutcomeErrors} from './helpers'
+import {ContractApiInterface, ContractAbi, AbiMetadata, Network} from '../types'
+import {ERRORS} from '../errors'
+import {unwrap, encodeStringArgs, handleContractCallOutcomeErrors} from './helpers'
 import {AnyJson} from '@polkadot/types/types/codec'
-import {TransactionResponse} from "@redspot/patract/types";
 import {contractDefinitions} from "./definitions";
-import { network, patract } from "redspot"
-const { mnemonicGenerate } = require('@polkadot/util-crypto')
+import {Signer} from '../signer/signer'
+import {Contract} from "./contract";
+import {Registry} from "@polkadot/types/types";
+import {TransactionResponse} from "../types";
+
+const {mnemonicGenerate} = require('@polkadot/util-crypto')
 
 export class ProsopoContractApi implements ContractApiInterface {
     contract?: Contract
-    network: Network
-    mnemonic?: string
-    signer?: Signer
+    network!: Network
+    mnemonic: string
+    signer!: Signer
     deployerAddress: string
     contractAddress: string
-    patract: any;
     contractName: string
+    abi: ContractAbi
 
-    constructor(deployerAddress: string, contractAddress: string, mnemonic: string | undefined, contractName: string) {
+    constructor(deployerAddress: string, contractAddress: string, mnemonic: string, contractName: string, abi: ContractAbi, network: Network) {
         this.deployerAddress = deployerAddress
-        this.contractAddress = contractAddress
         this.mnemonic = mnemonic
-        this.network = network
-        this.patract = patract
         this.contractName = contractName
+        this.contractAddress = contractAddress
+        this.abi = abi
+        this.network = network
     }
 
     async isReady(): Promise<void> {
-        // redspot will do this if using `npx redspot` commands. do it here anyway in case using `yarn ts-node ...`
         await this.network.api.isReadyOrError
         await this.network.registry.register(contractDefinitions)
         await this.getSigner()
@@ -71,7 +62,9 @@ export class ProsopoContractApi implements ContractApiInterface {
             throw new Error(ERRORS.CONTRACT.SIGNER_UNDEFINED.message)
         }
         const keyringPair = this.network.keyring.addFromMnemonic(mnemonic)
-        const signer = this.network.createSigner(keyringPair)
+        const accountSigner = this.network.signer
+        const signer = new Signer(keyringPair, accountSigner)
+        accountSigner.addPair(signer.pair)
         this.signer = signer
         return signer
 
@@ -83,13 +76,10 @@ export class ProsopoContractApi implements ContractApiInterface {
         return await this.getSigner()
     }
 
-
     async getContract(): Promise<Contract> {
         await this.network.api.isReadyOrError
-        const contractFactory = await patract.getContractFactory(this.contractName, this.signer)
-        let contract = contractFactory.attach(this.contractAddress)
+        let contract = new Contract(this.contractAddress, this.abi, this.network.api, this.signer)
         if (!contract) {
-            console.log(contract);
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
 
@@ -132,11 +122,10 @@ export class ProsopoContractApi implements ContractApiInterface {
         const {encodedArgs, signedContract} = await this.beforeCall(contractMethodName, args)
         let response
         if (value) {
-            response = await signedContract.tx[contractMethodName](...encodedArgs, {value})
+            response = await signedContract.tx[contractMethodName](...encodedArgs, {value, signer: this.signer})
         } else {
-            response = await signedContract.tx[contractMethodName](...encodedArgs)
+            response = await signedContract.tx[contractMethodName](...encodedArgs, {signer: this.signer})
         }
-        const eventsProperty = 'events'
 
         if (response.result.status.isRetracted) {
             throw (response.status.asRetracted)

@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { AnyJson } from '@polkadot/types/types';
-
 import { ProsopoContractApi } from '@prosopo/contract';
 import express, { Router } from 'express';
 
@@ -35,7 +34,7 @@ import { parseBlockNumber } from './util';
 export function prosopoMiddleware (env: Environment): Router {
   const router = express.Router();
   const tasks = new Tasks(env);
-  const contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName);
+  const contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName, env.abi, env.network);
 
   /**
      * Get the contract address

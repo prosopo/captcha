@@ -13,15 +13,16 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
-import { Network } from 'redspot/types'
-import { ERRORS } from '../../src/errors'
-import { network, patract } from 'redspot'
-import {ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
+import {Database, ProsopoConfig, ProsopoEnvironment} from '../../src/types'
+import {createNetwork, Network} from '@prosopo/contract'
+import {ERRORS} from '../../src/errors'
+import {network, patract} from 'redspot'
+import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
+import {loadJSONFile} from "../../src/util";
+import consola, {LogLevel} from 'consola'
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
-    network: Network
     db: Database | undefined
     mnemonic: string
     deployerAddress: string
@@ -30,9 +31,14 @@ export class MockEnvironment implements ProsopoEnvironment {
     defaultEnvironment: string
     contractName: string
     contractInterface: ContractApiInterface | undefined
+    abi: ContractAbi
+    network!: Network
+    logger: typeof consola
 
-    constructor () {
+    constructor() {
         this.config = {
+            logLevel: 'debug',
+            contract: {abi: '/usr/src/packages/provider/packages/core/artifacts/prosopo.json'},
             defaultEnvironment: 'development',
             networks: {
                 development: {
@@ -43,7 +49,15 @@ export class MockEnvironment implements ProsopoEnvironment {
                             address: '//Alice'
                         },
                         name: 'prosopo'
-                    }
+                    },
+                    accounts: [
+                        '//Alice',
+                        '//Bob',
+                        '//Charlie',
+                        '//Dave',
+                        '//Eve',
+                        '//Ferdie'
+                    ]
                 }
             },
             captchas: {
@@ -60,27 +74,28 @@ export class MockEnvironment implements ProsopoEnvironment {
                 captchaFilePath: '/usr/src/data/captchas.json'
             },
             database: {
-                development: { type: 'mockdb', endpoint: '', dbname: '' }
+                development: {type: 'mockdb', endpoint: '', dbname: ''}
             }
         }
         this.mnemonic = '//Alice'
-        this.network = network
+
         this.patract = patract
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.contractInterface = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName)
-
+            this.abi = MockEnvironment.getContractAbi(this.config.contract.abi)
+            this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT.message}:${this.config.defaultEnvironment}`)
         }
     }
 
 
-
-    async isReady (): Promise<void> {
+    async isReady(): Promise<void> {
+        this.network = await createNetwork(this.mnemonic, this.config.networks![this.defaultEnvironment])
+        this.contractInterface = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName, this.abi, this.network)
         // Persist database state for tests
         if (!this.db) {
             await this.importDatabase()
@@ -90,9 +105,9 @@ export class MockEnvironment implements ProsopoEnvironment {
         await this.contractInterface?.isReady()
     }
 
-    async importDatabase (): Promise<void> {
+    async importDatabase(): Promise<void> {
         try {
-            const { ProsopoDatabase } = await import(`./${this.config.database[this.defaultEnvironment].type}`)
+            const {ProsopoDatabase} = await import(`./${this.config.database[this.defaultEnvironment].type}`)
             this.db = new ProsopoDatabase(
                 this.config.database[this.defaultEnvironment].endpoint,
                 this.config.database[this.defaultEnvironment].dbname
@@ -100,6 +115,10 @@ export class MockEnvironment implements ProsopoEnvironment {
         } catch (err) {
             throw new Error(`${ERRORS.DATABASE.DATABASE_IMPORT_FAILED.message}:${this.config.database[this.defaultEnvironment].type}:${err}`)
         }
+    }
+
+    private static getContractAbi(path): ContractAbi {
+        return loadJSONFile(path) as ContractAbi
     }
 
 }

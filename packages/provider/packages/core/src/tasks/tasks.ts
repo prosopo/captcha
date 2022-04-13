@@ -13,23 +13,23 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { hexToU8a } from '@polkadot/util';
-import { AnyJson } from '@polkadot/types/types/codec';
+import {hexToU8a} from '@polkadot/util';
+import {AnyJson} from '@polkadot/types/types/codec';
 import {
-        CaptchaData,
-        ContractApiInterface,
-        Dapp,
-        GovernanceStatus,
-        Payee,
-        Provider,
-        RandomProvider
+    ContractApiInterface,
+    Payee,
+    Dapp,
+    Provider,
+    CaptchaData,
+    GovernanceStatus,
+    RandomProvider
 } from '@prosopo/contract';
-import type { RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment'
-import { Hash } from '@polkadot/types/interfaces';
-import { randomAsHex } from '@polkadot/util-crypto';
-import { buildDecodeVector } from '../codec/codec';
-import { ERRORS } from '../errors';
-import { CaptchaMerkleTree } from '../merkle';
+import type {RuntimeDispatchInfo} from '@polkadot/types/interfaces/payment'
+import {Hash} from '@polkadot/types/interfaces';
+import {randomAsHex} from '@polkadot/util-crypto';
+import {buildDecodeVector} from '../codec/codec';
+import {ERRORS} from '../errors';
+import {CaptchaMerkleTree} from '../merkle';
 import {
     addHashesToDataset,
     compareCaptchaSolutions,
@@ -56,8 +56,8 @@ import {
     CaptchaSolutionConfig,
     LastCorrectCaptcha
 } from '../types'
-import { loadJSONFile, shuffleArray, writeJSONFile } from '../util'
-import { TransactionResponse } from '@redspot/patract/types';
+import {loadJSONFile, shuffleArray, writeJSONFile} from '../util'
+import {TransactionResponse} from '@redspot/patract/types';
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -71,7 +71,7 @@ export class Tasks {
 
     captchaSolutionConfig: CaptchaSolutionConfig
 
-    constructor (env: ProsopoEnvironment) {
+    constructor(env: ProsopoEnvironment) {
         // this.contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName)
         if (!env.contractInterface) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message);
@@ -85,7 +85,7 @@ export class Tasks {
 
     // Contract transactions potentially involving database writes
 
-    async providerRegister (serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<TransactionResponse> {
+    async providerRegister(serviceOrigin: string, fee: number, payee: Payee, address: string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('providerRegister', [serviceOrigin, fee, payee, address]);
     }
 
@@ -93,17 +93,17 @@ export class Tasks {
         return await this.contractApi.contractTx('providerUpdate', [serviceOrigin, fee, payee, address], value);
     }
 
-    async providerDeregister (address: string): Promise<TransactionResponse> {
+    async providerDeregister(address: string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('providerDeregister', [address]);
     }
 
-    async providerUnstake (value: number): Promise<TransactionResponse> {
+    async providerUnstake(value: number): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('providerUnstake', [], value);
     }
 
-    async providerAddDataset (file: string): Promise<TransactionResponse> {
+    async providerAddDataset(file: string): Promise<TransactionResponse> {
         const dataset = parseCaptchaDataset(loadJSONFile(file) as JSON);
-        const datasetWithoutIds = { ...dataset }
+        const datasetWithoutIds = {...dataset}
         const tree = new CaptchaMerkleTree();
         const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
         tree.build(captchaHashes);
@@ -111,65 +111,65 @@ export class Tasks {
         datasetHashes.datasetId = tree.root?.hash;
         datasetHashes.tree = tree.layers;
         await this.db?.storeDataset(datasetHashes);
-        writeJSONFile(file, { ...datasetWithoutIds, datasetId: datasetHashes.datasetId }).catch((err) => {
+        writeJSONFile(file, {...datasetWithoutIds, datasetId: datasetHashes.datasetId}).catch((err) => {
             console.error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
         })
         return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)]);
     }
 
-    async dappRegister (dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<TransactionResponse> {
+    async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
     }
 
-    async dappFund (contractAccount: string, value: number | string): Promise<TransactionResponse> {
+    async dappFund(contractAccount: string, value: number | string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('dappFund', [contractAccount], value);
     }
 
-    async dappCancel (contractAccount: string): Promise<TransactionResponse> {
+    async dappCancel(contractAccount: string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('dappCancel', [contractAccount]);
     }
 
-    async dappUserCommit (contractAccount: string, captchaDatasetId: Hash | string, userMerkleTreeRoot: string, providerAddress: string): Promise<TransactionResponse> {
+    async dappUserCommit(contractAccount: string, captchaDatasetId: Hash | string, userMerkleTreeRoot: string, providerAddress: string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
     }
 
-    async providerApprove (captchaSolutionCommitmentId, refundFee): Promise<TransactionResponse> {
+    async providerApprove(captchaSolutionCommitmentId, refundFee): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('providerApprove', [captchaSolutionCommitmentId, refundFee])
     }
 
-    async providerDisapprove (captchaSolutionCommitmentId): Promise<TransactionResponse> {
+    async providerDisapprove(captchaSolutionCommitmentId): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('providerDisapprove', [captchaSolutionCommitmentId]);
     }
 
-    async getRandomProvider (userAccount: string, at?: string | Uint8Array): Promise<RandomProvider> {
+    async getRandomProvider(userAccount: string, at?: string | Uint8Array): Promise<RandomProvider> {
         return await this.contractApi.contractQuery('getRandomActiveProvider', [userAccount], at) as unknown as RandomProvider;
     }
 
-    async getProviderDetails (accountId: string): Promise<Provider> {
+    async getProviderDetails(accountId: string): Promise<Provider> {
         return await this.contractApi.contractQuery('getProviderDetails', [accountId]) as unknown as Provider;
     }
 
-    async getDappDetails (accountId: string): Promise<Dapp> {
+    async getDappDetails(accountId: string): Promise<Dapp> {
         return await this.contractApi.contractQuery('getDappDetails', [accountId]) as unknown as Dapp;
     }
 
-    async getCaptchaData (captchaDatasetId: string): Promise<CaptchaData> {
+    async getCaptchaData(captchaDatasetId: string): Promise<CaptchaData> {
         return await this.contractApi.contractQuery('getCaptchaData', [captchaDatasetId]) as unknown as CaptchaData;
     }
 
-    async getCaptchaSolutionCommitment (solutionId: string): Promise<CaptchaSolutionCommitment> {
+    async getCaptchaSolutionCommitment(solutionId: string): Promise<CaptchaSolutionCommitment> {
         return await this.contractApi.contractQuery('getCaptchaSolutionCommitment', [solutionId]) as unknown as CaptchaSolutionCommitment;
     }
 
-    async getProviderAccounts (): Promise<AnyJson> {
+    async getProviderAccounts(): Promise<AnyJson> {
         return await this.contractApi.contractQuery('getAllProviderIds', []);
     }
 
-    async getDappAccounts (): Promise<AnyJson> {
+    async getDappAccounts(): Promise<AnyJson> {
         return await this.contractApi.getStorage('dapp_accounts', buildDecodeVector('DappAccounts'));
     }
 
-    async getDappOperatorLastCorrectCaptcha (accountId: string): Promise<LastCorrectCaptcha> {
+    async getDappOperatorLastCorrectCaptcha(accountId: string): Promise<LastCorrectCaptcha> {
         return await this.contractApi.contractQuery('dappOperatorLastCorrectCaptcha', [accountId]) as unknown as LastCorrectCaptcha
     }
 
@@ -181,7 +181,7 @@ export class Tasks {
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptchaWithProof (datasetId: Hash | string, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
+    async getCaptchaWithProof(datasetId: Hash | string, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
         const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size)
         if (captchaDocs) {
             const captchas: CaptchaWithProof[] = []
@@ -192,7 +192,7 @@ export class Tasks {
                 const proof = tree.proof(captcha.captchaId)
                 // cannot pass solution to dapp user as they are required to solve the captcha!
                 delete captcha.solution
-                captchas.push({ captcha, proof })
+                captchas.push({captcha, proof})
             }
             return captchas
         }
@@ -209,7 +209,7 @@ export class Tasks {
      * @param txHash
      * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
      */
-    async dappUserSolution (userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse[]> {
+    async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse[]> {
         if (!await this.dappIsActive(dappAccount)) {
             throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message)
         }
@@ -223,8 +223,8 @@ export class Tasks {
         }
         const partialFee = paymentInfo?.partialFee
         let response: CaptchaSolutionResponse[] = []
-        const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
-        const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
+        const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas)
+        const {tree, commitment, commitmentId} = await this.buildTreeAndGetCommitment(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
 
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
@@ -232,7 +232,7 @@ export class Tasks {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
-                response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
+                response = captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)}))
             } else {
                 await this.providerDisapprove(commitmentId)
             }
@@ -244,7 +244,7 @@ export class Tasks {
     /**
      * Validate that the dapp is active in the contract
      */
-    async dappIsActive (dappAccount: string): Promise<boolean> {
+    async dappIsActive(dappAccount: string): Promise<boolean> {
         const dapp = await this.getDappDetails(dappAccount)
         return dapp.status === GovernanceStatus.Active
     }
@@ -252,7 +252,7 @@ export class Tasks {
     /**
      * Validate that the provider is active in the contract
      */
-    async providerIsActive (providerAccount: string): Promise<boolean> {
+    async providerIsActive(providerAccount: string): Promise<boolean> {
         const provider = await this.getProviderDetails(providerAccount)
         return provider.status === GovernanceStatus.Active
     }
@@ -260,14 +260,14 @@ export class Tasks {
     /**
      * Validate length of received captchas array matches length of captchas found in database
      */
-    async validateCaptchasLength (captchas: JSON): Promise<{ storedCaptchas: Captcha[], receivedCaptchas: CaptchaSolution[], captchaIds: string[] }> {
+    async validateCaptchasLength(captchas: JSON): Promise<{ storedCaptchas: Captcha[], receivedCaptchas: CaptchaSolution[], captchaIds: string[] }> {
         const receivedCaptchas = parseCaptchaSolutions(captchas)
         const captchaIds = receivedCaptchas.map((captcha) => captcha.captchaId)
         const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
             throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
         }
-        return { storedCaptchas, receivedCaptchas, captchaIds }
+        return {storedCaptchas, receivedCaptchas, captchaIds}
     }
 
     /**
@@ -275,7 +275,7 @@ export class Tasks {
      * @param {CaptchaSolution[]} captchaSolutions
      * @returns {Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }>}
      */
-    async buildTreeAndGetCommitment (captchaSolutions: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }> {
+    async buildTreeAndGetCommitment(captchaSolutions: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }> {
         const tree = new CaptchaMerkleTree()
         const solutionsHashed = captchaSolutions.map((captcha) => computeCaptchaSolutionHash(captcha))
         tree.build(solutionsHashed)
@@ -287,7 +287,7 @@ export class Tasks {
         if (!commitment) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
         }
-        return { tree, commitment, commitmentId }
+        return {tree, commitment, commitmentId}
     }
 
     /**
@@ -296,7 +296,7 @@ export class Tasks {
      * @param {string} userAccount
      * @param {string[]} captchaIds
      */
-    async validateDappUserSolutionRequestIsPending (requestHash: string, userAccount: string, captchaIds: string[]): Promise<boolean> {
+    async validateDappUserSolutionRequestIsPending(requestHash: string, userAccount: string, captchaIds: string[]): Promise<boolean> {
         const pendingRecord = await this.db.getDappUserPending(requestHash)
         if (pendingRecord) {
             const pendingHashComputed = computePendingRequestHash(captchaIds, userAccount, pendingRecord.salt)
@@ -310,7 +310,7 @@ export class Tasks {
      * @param {string} datasetId
      * @param {string} userAccount
      */
-    async getRandomCaptchasAndRequestHash (datasetId: string, userAccount: string): Promise<{ captchas: CaptchaWithProof[], requestHash: string }> {
+    async getRandomCaptchasAndRequestHash(datasetId: string, userAccount: string): Promise<{ captchas: CaptchaWithProof[], requestHash: string }> {
         const dataset = await this.db.getDatasetDetails(datasetId)
         if (!dataset) {
             throw (new Error(ERRORS.DATABASE.DATASET_GET_FAILED.message))
@@ -324,7 +324,7 @@ export class Tasks {
         }
 
         const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount)
-        let unsolved:CaptchaWithProof[] = []
+        let unsolved: CaptchaWithProof[] = []
         if (unsolvedCount) {
             unsolved = await this.getCaptchaWithProof(datasetId, false, unsolvedCount)
         }
@@ -333,14 +333,14 @@ export class Tasks {
 
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)
         await this.db.storeDappUserPending(userAccount, requestHash, salt)
-        return { captchas, requestHash }
+        return {captchas, requestHash}
     }
 
     /**
      * Apply new captcha solutions to captcha dataset and recalculate merkle tree
      * @param {string} datasetId
      */
-    async calculateCaptchaSolutions () {
+    async calculateCaptchaSolutions() {
         try {
             const captchaFilePath = this.captchaSolutionConfig.captchaFilePath
             const currentDataset = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
@@ -370,8 +370,8 @@ export class Tasks {
                         }
                         solutionsToUpdate = solutionsToUpdate.concat(
                             Object.values(solutionsWithCount)
-                                .filter(({ solutionCount }: any) => solutionCount >= winningNumberOfSolutions)
-                                .map(({ solutionCount, ...otherAttributes }: any) => otherAttributes))
+                                .filter(({solutionCount}: any) => solutionCount >= winningNumberOfSolutions)
+                                .map(({solutionCount, ...otherAttributes}: any) => otherAttributes))
                     }
                 }
                 if (solutionsToUpdate.length > 0) {
@@ -392,7 +392,7 @@ export class Tasks {
     /**
      * Update captchas json file with new solutions
      */
-    async updateCaptchasJSON (filePath: string, solutionsToUpdate: CaptchaSolutionToUpdate[]) {
+    async updateCaptchasJSON(filePath: string, solutionsToUpdate: CaptchaSolutionToUpdate[]) {
         try {
             const solutionObj = {}
 
@@ -430,7 +430,7 @@ export class Tasks {
      * @param {string} datasetId - `captcha_dataset_id` from the result of `get_random_provider`
      * @param {string} blockNo - Block on which `get_random_provider` was called
      */
-    async validateProviderWasRandomlyChosen (userAccount: string, datasetId: string | Hash, blockNo: number) {
+    async validateProviderWasRandomlyChosen(userAccount: string, datasetId: string | Hash, blockNo: number) {
         const contract = await this.contractApi.getContract();
         if (!contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
@@ -451,7 +451,7 @@ export class Tasks {
      * @param {string} txHash
      * @returns {Promise<RuntimeDispatchInfo|null>}
      */
-    private async getPaymentInfo (userAccount: string, blockHash: string, txHash: string): Promise<RuntimeDispatchInfo|null> {
+    private async getPaymentInfo(userAccount: string, blockHash: string, txHash: string): Promise<RuntimeDispatchInfo | null> {
         // Validate block and transaction, checking that the signer matches the userAccount
         const signedBlock = await this.contractApi.network.api.rpc.chain.getBlock(blockHash)
         if (!signedBlock) {

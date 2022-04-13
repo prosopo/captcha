@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 
-import { Payee, PayeeSchema } from '@prosopo/contract';
 import parser from 'cron-parser';
 import pm2 from 'pm2';
 import { cwd } from 'process';
@@ -26,6 +25,7 @@ import { ERRORS } from '../errors';
 import { Tasks } from '../tasks/tasks';
 import { ProsopoEnvironment } from '../types';
 import { encodeStringAddress } from '../util';
+import {PayeeSchema, Payee} from "@prosopo/contract";
 
 const validateAddress = (argv) => {
   const address = encodeStringAddress(argv.address as string);
@@ -70,7 +70,7 @@ const validateScheduleExpression = (argv) => {
 
 export function processArgs (args, env: ProsopoEnvironment) {
   const tasks = new Tasks(env);
-
+  const logger = env.logger;
   return yargs
     .usage('Usage: $0 [global options] <command> [options]')
     .option('api', { demand: false, default: false, type: 'boolean' })
@@ -85,7 +85,7 @@ export function processArgs (args, env: ProsopoEnvironment) {
       async (argv) => {
         const result = await tasks.providerRegister(argv.origin, argv.fee, argv.payee as Payee, argv.address);
 
-        console.log(JSON.stringify(result, null, 2));
+        logger.info(JSON.stringify(result, null, 2));
       },
       [validateAddress, validatePayee]
     )
@@ -101,7 +101,7 @@ export function processArgs (args, env: ProsopoEnvironment) {
       async (argv) => {
         const result = await tasks.providerUpdate(argv.origin, argv.fee, argv.payee as Payee, argv.address, argv.value);
 
-        console.log(JSON.stringify(result, null, 2));
+        logger.info(JSON.stringify(result, null, 2));
       },
       [validateAddress, validatePayee]
     )
@@ -114,9 +114,9 @@ export function processArgs (args, env: ProsopoEnvironment) {
         try {
           const result = await tasks.providerDeregister(argv.address);
 
-          console.log(JSON.stringify(result, null, 2));
+          logger.info(JSON.stringify(result, null, 2));
         } catch (err) {
-          console.log(err);
+          logger.error(err);
         }
       },
       [validateAddress]
@@ -130,9 +130,9 @@ export function processArgs (args, env: ProsopoEnvironment) {
         try {
           const result = await tasks.providerUnstake(argv.value);
 
-          console.log(JSON.stringify(result, null, 2));
+          logger.info(JSON.stringify(result, null, 2));
         } catch (err) {
-          console.log(err);
+          logger.error(err);
         }
       },
       [validateValue]
@@ -146,9 +146,9 @@ export function processArgs (args, env: ProsopoEnvironment) {
         try {
           const result = await tasks.providerAddDataset(argv.file);
 
-          console.log(JSON.stringify(result, null, 2));
+          logger.info(JSON.stringify(result, null, 2));
         } catch (err) {
-          console.log(err);
+          logger.error(err);
         }
       },
       []
@@ -161,9 +161,9 @@ export function processArgs (args, env: ProsopoEnvironment) {
         try {
           const result = await tasks.getProviderAccounts();
 
-          console.log(JSON.stringify(result, null, 2));
+          logger.info(JSON.stringify(result, null, 2));
         } catch (err) {
-          console.log(err);
+          logger.error(err);
         }
       },
       []
@@ -176,9 +176,9 @@ export function processArgs (args, env: ProsopoEnvironment) {
         try {
           const result = await tasks.getDappAccounts();
 
-          console.log(JSON.stringify(result, null, 2));
+          logger.info(JSON.stringify(result, null, 2));
         } catch (err) {
-          console.log(err);
+          logger.error(err);
         }
       },
       []
@@ -192,9 +192,9 @@ export function processArgs (args, env: ProsopoEnvironment) {
         try {
           const result = await tasks.getProviderDetails(argv.address);
 
-          console.log(JSON.stringify(result, null, 2));
+          logger.info(JSON.stringify(result, null, 2));
         } catch (err) {
-          console.log(err);
+          logger.error(err);
         }
       },
       [validateAddress]
@@ -208,9 +208,9 @@ export function processArgs (args, env: ProsopoEnvironment) {
         try {
           const result = await tasks.getDappDetails(argv.address);
 
-          console.log(JSON.stringify(result, null, 2));
+          logger.info(JSON.stringify(result, null, 2));
         } catch (err) {
-          console.log(err);
+          logger.error(err);
         }
       },
       [validateAddress]
@@ -239,7 +239,7 @@ export function processArgs (args, env: ProsopoEnvironment) {
                 return pm2.disconnect();
               }
 
-              console.log(apps);
+              logger.info(apps);
               process.exit();
             });
           });

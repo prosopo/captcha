@@ -15,7 +15,6 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { z } from 'zod'
 import { Captcha, CaptchaSolutionSchema } from './captcha'
-import { AccountId } from '@polkadot/types/interfaces'
 import { AnyJson } from '@polkadot/types/types/codec'
 
 export interface CaptchaWithProof {
