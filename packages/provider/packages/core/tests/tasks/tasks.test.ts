@@ -59,7 +59,7 @@ describe('CONTRACT TASKS', () => {
       mockEnv,
       providerAddress,
       'Provider',
-      '10000000000000000000'
+      '20000000000000000000'
     );
     provider = { ...PROVIDER } as TestProvider;
     provider.mnemonic = providerMnemonic;
@@ -70,7 +70,7 @@ describe('CONTRACT TASKS', () => {
     const [dappMnemonic, dappAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
 
     dapp = { ...DAPP } as TestDapp;
-    await sendFunds(mockEnv, dappAddress, 'Dapp', '1000000000000000000');
+    await sendFunds(mockEnv, dappAddress, 'Dapp', '2000000000000000000');
     dapp.mnemonic = dappMnemonic;
     dapp.address = dappAddress;
     await setupDapp(mockEnv, dapp as TestDapp);
@@ -144,7 +144,7 @@ describe('CONTRACT TASKS', () => {
     );
 
     registeredProviders.push([providerMnemonic, providerAddress]);
-
+  
     expect(result.txHash!).to.not.be.empty;
   });
 
@@ -850,7 +850,7 @@ describe('CONTRACT TASKS', () => {
       provider.fee,
       provider.payee,
       providerAddress,
-      1
+      1000000000000
     );
     const captchaFilePath = path.resolve(
       __dirname,

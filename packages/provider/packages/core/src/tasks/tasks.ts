@@ -89,7 +89,7 @@ export class Tasks {
         return await this.contractApi.contractTx('providerRegister', [serviceOrigin, fee, payee, address]);
     }
 
-    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value: number | undefined): Promise<TransactionResponse> {
+    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value?: number | string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('providerUpdate', [serviceOrigin, fee, payee, address], value);
     }
 
