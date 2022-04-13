@@ -30,7 +30,7 @@
     "cron-parser": "^4.2.1",
     "dotenv": "^14.3.2",
     "express": "^4.17.1",
-    "mongodb": "^4.1.4",
+    "mongodb": "4.1.4",
     "pm2": "^5.2.0",
     "redspot": "file:../../../../redspot/build/redspot-core",
     "zod": "^3.11.6"
