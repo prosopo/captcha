@@ -16,7 +16,8 @@
 import { ProsopoConfig } from './config'
 import { Database } from './db'
 import {ContractApiInterface} from "@prosopo/contract";
-
+import {Network} from "@prosopo/contract";
+import consola from 'consola'
 export interface ProsopoEnvironment {
     config: ProsopoConfig,
     db: Database | undefined,
@@ -26,7 +27,8 @@ export interface ProsopoEnvironment {
     contractAddress: string
     defaultEnvironment: string
     contractName: string
-
+    network: Network,
+    logger: typeof consola
     isReady (): Promise<void>
     importDatabase (): Promise<void>
 

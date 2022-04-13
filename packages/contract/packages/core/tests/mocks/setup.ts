@@ -13,22 +13,24 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Tasks } from '../../src/tasks/tasks'
-import { hexHash } from '../../src/util'
-import { blake2AsHex, decodeAddress } from '@polkadot/util-crypto'
-import { CaptchaMerkleTree } from '../../src/merkle'
-import { computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution } from '../../src/captcha'
-import { Hash } from '@polkadot/types/interfaces'
-import { TestAccount, TestDapp, TestProvider } from './accounts'
-import { getEventsFromMethodName } from '@prosopo/contract';
+import {Tasks} from '../../src/tasks/tasks'
+import {hexHash} from '../../src/util'
+import {blake2AsHex, decodeAddress} from '@polkadot/util-crypto'
+import {CaptchaMerkleTree} from '../../src/merkle'
+import {computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution} from '../../src/captcha'
+import {Hash} from '@polkadot/types/interfaces'
+import {TestAccount, TestDapp, TestProvider} from './accounts'
+import {getEventsFromMethodName} from '@prosopo/contract';
+import {buildTx} from '@prosopo/contract'
 
-export async function displayBalance (env, address, who) {
+export async function displayBalance(env, address, who) {
+    const logger = env.logger;
     const balance = await env.contractInterface.network.api.query.system.account(address)
-    console.log(who, ' Balance: ', balance.data.free.toHuman())
+    logger.info(who, ' Balance: ', balance.data.free.toHuman())
     return balance
 }
 
-export async function sendFunds (env, address, who, amount): Promise<void> {
+export async function sendFunds(env, address, who, amount): Promise<void> {
     await env.contractInterface.network.api.isReady
     const balance = await env.contractInterface.network.api.query.system.account(address)
     const signerAddresses: string[] = await env.contractInterface.network.getAddresses()
@@ -39,39 +41,40 @@ export async function sendFunds (env, address, who, amount): Promise<void> {
         throw new Error(`Alice balance too low: , ${AliceBalance}`)
     }
     const api = env.contractInterface.network.api
-    if (balance.data.free.isEmpty) {
-        await env.contractInterface.patract.buildTx(
-            api.registry,
-            api.tx.balances.transfer(address, amount),
-            alicePair.address // from
-        )
-    }
+    await buildTx(
+        api.registry,
+        api.tx.balances.transfer(address, amount),
+        alicePair.address, // from,
+        {signer: env.network.signer}
+    )
 }
 
-export async function setupProvider (env, provider: TestProvider): Promise<Hash> {
+export async function setupProvider(env, provider: TestProvider): Promise<Hash> {
     await env.contractInterface.changeSigner(provider.mnemonic)
+    const logger = env.logger;
     const tasks = new Tasks(env)
-    console.log('   - providerRegister')
+    logger.info('   - providerRegister')
     await tasks.providerRegister(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address)
-    console.log('   - providerStake')
+    logger.info('   - providerStake')
     await tasks.providerUpdate(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address, provider.stake)
-    console.log('   - providerAddDataset')
+    logger.info('   - providerAddDataset')
     const datasetResult = await tasks.providerAddDataset(provider.datasetFile)
     const events = getEventsFromMethodName(datasetResult, 'providerAddDataset')
     // @ts-ignore
     return events[0].args[1] as Hash
 }
 
-export async function setupDapp (env, dapp: TestDapp): Promise<void> {
+export async function setupDapp(env, dapp: TestDapp): Promise<void> {
     const tasks = new Tasks(env)
+    const logger = env.logger;
     await env.contractInterface.changeSigner(dapp.mnemonic)
-    console.log('   - dappRegister')
+    logger.info('   - dappRegister')
     await tasks.dappRegister(hexHash(dapp.serviceOrigin), dapp.contractAccount, blake2AsHex(decodeAddress(dapp.optionalOwner)))
-    console.log('   - dappFund')
+    logger.info('   - dappFund')
     await tasks.dappFund(dapp.contractAccount, dapp.fundAmount)
 }
 
-export async function setupDappUser (env, dappUser: TestAccount, provider: TestProvider, dapp: TestDapp): Promise<string | undefined> {
+export async function setupDappUser(env, dappUser: TestAccount, provider: TestProvider, dapp: TestDapp): Promise<string | undefined> {
     await env.contractInterface.changeSigner(dappUser.mnemonic)
 
     // This section is doing everything that the ProCaptcha repo will eventually be doing in the client browser
@@ -80,7 +83,8 @@ export async function setupDappUser (env, dappUser: TestAccount, provider: TestP
     //   3. Send merkle tree solution to Blockchain
     //   4. Send clear solution to Provider
     const tasks = new Tasks(env)
-    console.log('   - getCaptchaWithProof')
+    const logger = env.logger;
+    logger.info('   - getCaptchaWithProof')
     const providerOnChain = await tasks.getProviderDetails(provider.address)
     if (providerOnChain) {
         const solved = await tasks.getCaptchaWithProof(providerOnChain.captcha_dataset_id.toString(), true, 1)
@@ -100,13 +104,13 @@ export async function setupDappUser (env, dappUser: TestAccount, provider: TestP
             throw new Error(`Cannot find captcha data id: ${providerOnChain.captcha_dataset_id.toString()}`)
         }
         const commitmentId = tree.root?.hash
-        console.log('   - dappUserCommit')
+        logger.info('   - dappUserCommit')
         if (typeof (commitmentId) === 'string') {
-            console.log('   -   Contract Account: ', dapp.contractAccount)
-            console.log('   -   Captcha Dataset ID: ', providerOnChain.captcha_dataset_id)
-            console.log('   -   Solution Root Hash: ', commitmentId)
-            console.log('   -   Provider Address: ', provider.address)
-            console.log('   -   Captchas: ', captchas)
+            logger.info('   -   Contract Account: ', dapp.contractAccount)
+            logger.info('   -   Captcha Dataset ID: ', providerOnChain.captcha_dataset_id)
+            logger.info('   -   Solution Root Hash: ', commitmentId)
+            logger.info('   -   Provider Address: ', provider.address)
+            logger.info('   -   Captchas: ', captchas)
             await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id.toString(), commitmentId, provider.address)
             const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
         } else {
@@ -118,17 +122,18 @@ export async function setupDappUser (env, dappUser: TestAccount, provider: TestP
     }
 }
 
-export async function approveOrDisapproveCommitment (env, solutionHash: string, approve: boolean, provider: TestProvider) {
+export async function approveOrDisapproveCommitment(env, solutionHash: string, approve: boolean, provider: TestProvider) {
     const tasks = new Tasks(env)
+    const logger = env.logger;
     // This stage would take place on the Provider node after checking the solution was correct
     // We need to assume that the Provider has access to the Dapp User's merkle tree root or can construct it from the
     // raw data that was sent to them
     await env.contractInterface.changeSigner(provider.mnemonic)
     if (approve) {
-        console.log('   -   Approving commitment')
+        logger.info('   -   Approving commitment')
         await tasks.providerApprove(solutionHash, 100)
     } else {
-        console.log('   -   Disapproving commitment')
+        logger.info('   -   Disapproving commitment')
         await tasks.providerDisapprove(solutionHash)
     }
 }
