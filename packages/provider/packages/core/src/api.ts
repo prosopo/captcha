@@ -48,15 +48,6 @@ export function prosopoMiddleware (env: Environment): Router {
 
   /**
      * Returns a random provider using the account that is currently the env signer
-     * @return {Provider} - A Provider
-     */
-  router.get('/v1/prosopo/contract_address', async (req, res, next) => {
-    const { contractAddress } = env;
-    return res.json({ contractAddress });
-  });
-
-  /**
-     * Returns a random provider using the account that is currently the env signer
      * @param {string} userAccount - Dapp User AccountId
      * @return {Provider} - A Provider
      */
