@@ -18,13 +18,13 @@ import {AbiMessage} from '@polkadot/api-contract/types'
 import type {AnyJson} from '@polkadot/types/types';
 import {Registry} from "@polkadot/types/types";
 import type {Contract} from '../contract'
-import BN from 'bn.js';
+// import BN from 'bn.js';
 import {TransactionResponse} from "./contract";
 import {Signer} from './signer'
 import {ContractAbi} from './artifacts'
 import {Network} from './network'
 
-export type BigNumber = BN | number | string;
+export type BigNumber = bigint | number;
 
 export interface ContractApiInterface {
     contract?: Contract
@@ -47,7 +47,7 @@ export interface ContractApiInterface {
 
     beforeCall<T>(contractMethodName: string, args: T[]): Promise<{ encodedArgs: T[]; signedContract: Contract }>
 
-    contractTx<T>(contractMethodName: string, args: T[], value?: number | string): Promise<TransactionResponse>
+    contractTx<T>(contractMethodName: string, args: T[], value?: string | BigNumber): Promise<TransactionResponse>
 
     contractQuery<T>(contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson>
 

@@ -89,7 +89,7 @@ export class Tasks {
         return await this.contractApi.contractTx('providerRegister', [serviceOrigin, fee, payee, address]);
     }
 
-    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value?: number | string): Promise<TransactionResponse> {
+    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value?: bigint | number): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('providerUpdate', [serviceOrigin, fee, payee, address], value);
     }
 
@@ -121,7 +121,7 @@ export class Tasks {
         return await this.contractApi.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner]);
     }
 
-    async dappFund(contractAccount: string, value: number | string): Promise<TransactionResponse> {
+    async dappFund(contractAccount: string, value: number | bigint | string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('dappFund', [contractAccount], value);
     }
 
@@ -161,16 +161,21 @@ export class Tasks {
         return await this.contractApi.contractQuery('getCaptchaSolutionCommitment', [solutionId]) as unknown as CaptchaSolutionCommitment;
     }
 
+    async getDappOperatorLastCorrectCaptcha(accountId: string): Promise<LastCorrectCaptcha> {
+        return await this.contractApi.contractQuery('dappOperatorLastCorrectCaptcha', [accountId]) as unknown as LastCorrectCaptcha
+    }
+
+    async getProviderStakeDefault(): Promise<bigint> {
+        const providerStakeDefault = await this.contractApi.contractQuery('getProviderStakeDefault', []) as string;
+        return BigInt(providerStakeDefault.replace(/,/g, ''));
+    }
+
     async getProviderAccounts(): Promise<AnyJson> {
         return await this.contractApi.contractQuery('getAllProviderIds', []);
     }
 
     async getDappAccounts(): Promise<AnyJson> {
         return await this.contractApi.getStorage('dapp_accounts', buildDecodeVector('DappAccounts'));
-    }
-
-    async getDappOperatorLastCorrectCaptcha(accountId: string): Promise<LastCorrectCaptcha> {
-        return await this.contractApi.contractQuery('dappOperatorLastCorrectCaptcha', [accountId]) as unknown as LastCorrectCaptcha
     }
 
     // Other tasks
