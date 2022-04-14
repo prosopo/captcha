@@ -24,7 +24,7 @@ export interface TestProvider extends TestAccount {
     serviceOrigin: string,
     fee: number,
     datasetFile: string,
-    stake: number | string,
+    stake: bigint | number,
     payee: Payee
     captchaDatasetId: string,
 }
@@ -33,7 +33,7 @@ export const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: Payee.Provider,
-    stake: '1000000000000000',
+    stake: 1000000000000000n,
     datasetFile: '/usr/src/data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
@@ -44,8 +44,8 @@ export interface TestDapp {
     serviceOrigin: string,
     mnemonic: string,
     contractAccount: string,
-    optionalOwner: string
-    fundAmount: number
+    optionalOwner: string,
+    fundAmount: bigint | number,
 }
 
 export const DAPP: TestDapp = {
@@ -53,7 +53,7 @@ export const DAPP: TestDapp = {
     mnemonic: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed
     optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
-    fundAmount: 1000000000000000
+    fundAmount: 1000000000000000n,
 }
 
 export const DAPP_USER = {

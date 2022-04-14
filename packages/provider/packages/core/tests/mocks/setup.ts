@@ -30,7 +30,7 @@ export async function displayBalance(env, address, who) {
     return balance
 }
 
-export async function sendFunds(env, address, who, amount): Promise<void> {
+export async function sendFunds(env, address, who, amount: bigint | number): Promise<void> {
     await env.contractInterface.network.api.isReady
     const balance = await env.contractInterface.network.api.query.system.account(address)
     const signerAddresses: string[] = await env.contractInterface.network.getAddresses()
