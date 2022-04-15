@@ -5,7 +5,6 @@ import {createTypeUnsafe} from '@polkadot/types';
 import type {AccountId, EventRecord, Weight} from '@polkadot/types/interfaces';
 import {isU8a, stringCamelCase, stringUpperFirst, u8aToHex} from '@polkadot/util';
 import {addressEq} from '@polkadot/util-crypto';
-import BN from 'bn.js';
 import chalk from 'chalk';
 import {buildTx} from './buildTx';
 import {convertSignerToAddress} from './helpers';
@@ -56,11 +55,11 @@ async function populateTransaction(
 
     const callParams: CallParams = {
         dest: overrides.dest || contract.address,
-        value: overrides.value || new BN('0'),
+        value: overrides.value || 0n,
         gasLimit:
-            overrides.gasLimit ||
+            BigInt(String(overrides.gasLimit ||
             contract.gasLimit ||
-            maximumBlockWeight.muln(2).divn(10),
+            maximumBlockWeight.muln(2).divn(10))),
         inputData: data
     };
 
@@ -318,16 +317,11 @@ function buildSend(
 function buildEstimate(
     contract: Contract,
     fragment: AbiMessage
-): ContractFunction<BN> {
-    return async function (...args: TransactionParams): Promise<BN> {
+): ContractFunction<bigint> {
+    return async function (...args: TransactionParams): Promise<bigint> {
         const call = buildCall(contract, fragment, true);
-        const callResult = await call(...args);
-
-        if (callResult.result.isErr) {
-            return new BN('0');
-        } else {
-            return new BN(callResult.gasConsumed);
-        }
+        const callResult = await call(...args); // TODO (throw/catch?)
+        return (callResult.result.isErr) ? 0n : BigInt(String(callResult.gasConsumed));
     };
 }
 
@@ -346,7 +340,7 @@ export class Contract {
     /**
      * Estimated gas
      */
-    public readonly estimateGas: { [name: string]: ContractFunction<BN> };
+    public readonly estimateGas: { [name: string]: ContractFunction<bigint> };
 
     public readonly populateTransaction: {
         [name: string]: ContractFunction<PopulatedTransaction>;
