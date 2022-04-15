@@ -836,7 +836,7 @@ describe('CONTRACT TASKS', () => {
          expect(valid).to.be.true;
     });
 
-    it.only('Validate provided captcha dataset - fail', async () => {
+    it('Validate provided captcha dataset - fail', async () => {
         const tasks = new Tasks(mockEnv);
 
         const [providerMnemonic, providerAddress] =

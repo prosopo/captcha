@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import BN from 'bn.js';
 import yargs from 'yargs';
 
 import { KeyringPair } from '@polkadot/keyring/types';
@@ -34,7 +33,7 @@ export const PROVIDER: TestProvider = {
   serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
   fee: 10,
   payee: Payee.Provider,
-  stake: '1000000000 UNIT',
+  stake: Math.pow(10, 15),
   datasetFile: '/usr/src/data/captchas.json',
   mnemonic: process.env.PROVIDER_MNEMONIC || '',
   address: process.env.PROVIDER_ADDRESS || '',
@@ -90,7 +89,7 @@ async function processArgs (env) {
               logger.info("trying to add keyring pair")
               const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
               logger.info('sending funds...');
-              await sendFunds(env, providerKeyringPair.address, 'Provider', new BN('100000000000000000'));
+              await sendFunds(env, providerKeyringPair.address, 'Provider', 100000000000000000n);
               logger.info('setting up provider...');
               PROVIDER.address = providerKeyringPair.address;
 
