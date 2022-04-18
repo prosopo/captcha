@@ -20,8 +20,7 @@ import {CaptchaMerkleTree} from '../../src/merkle'
 import {computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution} from '../../src/captcha'
 import {Hash} from '@polkadot/types/interfaces'
 import {TestAccount, TestDapp, TestProvider} from './accounts'
-import {getEventsFromMethodName} from '@prosopo/contract';
-import {buildTx} from '@prosopo/contract'
+import {getEventsFromMethodName, buildTx, BigNumber} from '@prosopo/contract';
 
 export async function displayBalance(env, address, who) {
     const logger = env.logger;
@@ -30,7 +29,7 @@ export async function displayBalance(env, address, who) {
     return balance
 }
 
-export async function sendFunds(env, address, who, amount: bigint | number): Promise<void> {
+export async function sendFunds(env, address, who, amount: BigNumber): Promise<void> {
     await env.contractInterface.network.api.isReady
     const balance = await env.contractInterface.network.api.query.system.account(address)
     const signerAddresses: string[] = await env.contractInterface.network.getAddresses()

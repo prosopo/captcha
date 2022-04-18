@@ -17,14 +17,14 @@ import {AccountId} from '@polkadot/types/interfaces'
 import {AbiMessage} from '@polkadot/api-contract/types'
 import type {AnyJson} from '@polkadot/types/types';
 import {Registry} from "@polkadot/types/types";
+import BN from 'bn.js';
 import type {Contract} from '../contract'
-// import BN from 'bn.js';
 import {TransactionResponse} from "./contract";
 import {Signer} from './signer'
 import {ContractAbi} from './artifacts'
 import {Network} from './network'
 
-export type BigNumber = bigint | number;
+export type BigNumber = BN | bigint | number | string;
 
 export interface ContractApiInterface {
     contract?: Contract
