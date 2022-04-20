@@ -30,6 +30,13 @@ import {DATASET, SOLVED_CAPTCHAS} from '../mocks/mockdb';
 import {MockEnvironment} from '../mocks/mockenv';
 import {sendFunds, setupDapp, setupProvider} from '../mocks/setup';
 
+const envPath =
+  process.env.NODE_ENV === "test"
+    ? { path: '../../../../.env.test', override: true }
+    : undefined;
+
+require("dotenv").config(envPath);
+
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 
