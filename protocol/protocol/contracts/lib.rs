@@ -1044,14 +1044,14 @@ pub mod prosopo {
         /// Threshold is decided by the calling user
         #[ink(message)]
         pub fn dapp_operator_is_human_user(
-            &mut self,
+            &self,
             user: AccountId,
             threshold: u8,
         ) -> Result<bool, Error> {
             let user = self.get_dapp_user(user)?;
             // determine if correct captchas is greater than or equal to threshold
             Ok(
-                user.correct_captchas / (user.correct_captchas + user.incorrect_captchas) * 100
+                user.correct_captchas * 100 / (user.correct_captchas + user.incorrect_captchas)
                     >= threshold.into(),
             )
         }
