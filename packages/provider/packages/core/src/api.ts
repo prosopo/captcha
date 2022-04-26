@@ -172,16 +172,15 @@ export function prosopoMiddleware (env: Environment): Router {
      * @return {CaptchaSolutionResponse} - The Captcha solution result and proof
      */
   router.post('/v1/prosopo/provider/solution', async (req, res, next) => {
+    let parsed;
     try {
-      CaptchaSolutionBody.parse(req.body);
+      parsed = CaptchaSolutionBody.parse(req.body);
     } catch (err) {
       return next(new BadRequest(err));
     }
 
-    const { blockHash, captchas, dappAccount, requestHash, txHash, userAccount } = req.body;
-
     try {
-      const result = await tasks.dappUserSolution(userAccount as string, dappAccount as string, requestHash as string, captchas as JSON, blockHash, txHash);
+      const result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
 
       return res.json({ status: ERRORS.API.CAPTCHA_PASSED.message, captchas: result });
     } catch (err: unknown) {
