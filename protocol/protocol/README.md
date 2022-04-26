@@ -53,6 +53,12 @@ cargo +nightly tarpaulin --no-default-features --features std --verbose -- --noc
 cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture
 ```
 
+**Note:** if you get an error like _"error: no such subcommand: `tarpaulin`"_, [tarpaulin](https://crates.io/crates/cargo-tarpaulin) is missing and you'll have to install it before running the tests.
+
+```bash
+cargo install cargo-tarpaulin
+```
+
 ## Deploy
 
 The protocol repository is implemented as a [redspot](https://github.com/patractlabs/redspot) project. You can install dependencies and then run a script to deploy the contract.
