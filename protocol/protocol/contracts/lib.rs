@@ -128,6 +128,7 @@ pub mod prosopo {
     #[derive(PartialEq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct RandomProvider {
+        provider_id: AccountId,
         provider: Provider,
         block_number: u32,
     }
@@ -1281,6 +1282,7 @@ pub mod prosopo {
             let index = self.get_random_number(0, (max - 1) as u64, user_account);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             Ok(RandomProvider {
+                provider_id,
                 provider: self.providers.get(provider_id).unwrap(),
                 block_number: self.env().block_number(),
             })
