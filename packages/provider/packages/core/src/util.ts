@@ -15,10 +15,10 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { WriteStream, createWriteStream } from 'fs'
 import { ERRORS } from './errors'
-const { decodeAddress, encodeAddress } = require('@polkadot/keyring')
-const { hexToU8a, isHex } = require('@polkadot/util')
-const { blake2AsHex } = require('@polkadot/util-crypto')
-const fs = require('fs')
+import { decodeAddress, encodeAddress } from '@polkadot/keyring';
+import { hexToU8a, isHex } from '@polkadot/util';
+import { blake2AsHex } from '@polkadot/util-crypto';
+const fs = require('fs'); // TODO rm fs NODE dependency.
 
 export function encodeStringAddress (address: string) {
     try {
@@ -32,6 +32,7 @@ export function encodeStringAddress (address: string) {
     }
 }
 
+// TODO: move to nodeutils?
 export function loadJSONFile (filePath) {
     try {
         return JSON.parse(fs.readFileSync(filePath) as string)
