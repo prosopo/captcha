@@ -58,8 +58,8 @@ export default {
     database: {
         development: {
             type: 'mongo',
-            endpoint: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017`,
-            dbname: 'prosopo'
+            endpoint: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@provider-db:${process.env.DATABASE_PORT}`,
+            dbname: process.env.DATABASE_NAME
         }
     }
 } as ProsopoConfig;
