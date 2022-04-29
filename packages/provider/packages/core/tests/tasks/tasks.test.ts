@@ -67,7 +67,7 @@ describe('CONTRACT TASKS', () => {
     await mockEnv.contractInterface!.changeSigner('//Alice');
 
     const funds = 10000000n * providerStakeDefault;
-    
+
     await sendFunds(
       mockEnv,
       providerAddress,
@@ -835,9 +835,9 @@ describe('CONTRACT TASKS', () => {
             const _ = expect(res.error).to.not.exist;
         });
 
-        const res = await tasks.getRandomProvider(dappUser.address);
+        const res = await tasks.getRandomProvider(dappUser.address, dapp.address);
         const blockNumberParsed = parseBlockNumber(res.block_number);
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, res.provider.captcha_dataset_id as string, blockNumberParsed)
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, dapp.address, res.provider.captcha_dataset_id as string, blockNumberParsed)
             .then(() => true).catch(() => false);
 
          expect(valid).to.be.true;
@@ -899,9 +899,9 @@ describe('CONTRACT TASKS', () => {
 
         await tasks.providerAddDataset(captchaFilePath);
 
-        const res = await tasks.getRandomProvider(dappUser.address);
+        const res = await tasks.getRandomProvider(dappUser.address, dapp.address);
         const blockNumberParsed = parseBlockNumber(res.block_number);
-        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', blockNumberParsed)
+        const valid = await tasks.validateProviderWasRandomlyChosen(dappUser.address, dapp.address, '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a', blockNumberParsed)
             .then(() => true)
             .catch(() => false);
 
