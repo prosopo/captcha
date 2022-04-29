@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-#![feature(derive_default_enum)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
@@ -447,7 +446,9 @@ pub mod prosopo {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn default(operator: AccountId, provider_stake_default: u128) -> Self {
-            ink_lang::codegen::initialize_contract(|contract| Self::new_init(contract, operator, provider_stake_default))
+            ink_lang::codegen::initialize_contract(|contract| {
+                Self::new_init(contract, operator, provider_stake_default)
+            })
         }
 
         /// Default initializes the contract with the specified initial supply.
@@ -1270,7 +1271,9 @@ pub mod prosopo {
         pub fn get_random_active_provider(
             &self,
             user_account: AccountId,
+            dapp_contract_account: AccountId,
         ) -> Result<RandomProvider, Error> {
+            self.validate_dapp(dapp_contract_account)?;
             let active_providers = self
                 .provider_accounts
                 .get(GovernanceStatus::Active)
@@ -2211,7 +2214,19 @@ pub mod prosopo {
             let root = str_to_hash("merkle tree".to_string());
             contract.provider_add_dataset(root);
             let registered_provider_account = contract.providers.get(&provider_account);
-            let selected_provider = contract.get_random_active_provider(provider_account);
+            // Register the dapp
+            let dapp_caller_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+
+            // Call from the dapp account
+            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_caller_account);
+            // Give the dap a balance
+            let balance = 2000000000000;
+            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            let client_origin = service_origin.clone();
+            contract.dapp_register(client_origin, dapp_contract_account, None);
+            let selected_provider =
+                contract.get_random_active_provider(provider_account, dapp_contract_account);
             assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
         }
     }
