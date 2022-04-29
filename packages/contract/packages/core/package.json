@@ -12,6 +12,7 @@
     "mnemonic": "yarn ts-node ./scripts/generateMnemonic.ts",
     "test": "yarn redspot test",
     "test:mock": "NODE_ENV=test yarn redspot test",
+    "populate-data": "yarn redspot run ./src/dataUtils/populateDatabase.ts",
     "dev-provider-register": "yarn build && yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
     "dev-provider-stake": "yarn build && yarn start provider_stake --value 10 --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
     "dev-provider-dataset": "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
