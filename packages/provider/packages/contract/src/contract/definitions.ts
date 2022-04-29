@@ -54,7 +54,9 @@ export const contractDefinitions = {
             'DappInsufficientFunds',
             'CaptchaDataDoesNotExist',
             'CaptchaSolutionCommitmentDoesNotExist',
-            'DappUserDoesNotExist']
+            'DappUserDoesNotExist',
+            'NoActiveProviders'
+        ]
     },
     Payee: {
         _enum: [
