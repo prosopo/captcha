@@ -57,6 +57,8 @@ export class ProsopoDatabase implements Database {
       this.tables.captchas = db.collection('captchas');
       this.tables.solutions = db.collection('solutions');
       this.tables.responses = db.collection('responses');
+      this.tables.pending = db.collection('pending');
+
     } catch (err) {
       throw new Error(ERRORS.DATABASE.CONNECT_ERROR.message);
     }
