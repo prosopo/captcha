@@ -1,28 +1,67 @@
 {
-  "author": "Chris Taylor <chris@prosopo.io>",
-  "contributors": [
-    "Sinisa Canak"
-  ],
   "name": "@prosopo/procaptcha",
-  "license": "GPL-3.0",
-  "packageManager": "yarn@3.0.1",
-  "private": true,
-  "sideEffects": false,
-  "type": "commonjs",
   "version": "0.0.0",
-  "workspaces": [
-    "packages/*"
-  ],
-  "scripts": {
-    "build": "tsc -b ./ --verbose"
-  },
+  "private": true,
+  "packageManager": "yarn@3.2.0",
   "dependencies": {
-    "@prosopo/contract": "workspace:*"
-  },
-  "resolutions": {
-    "typescript": "^4.5.5"
+    "@emotion/react": "^11.8.1",
+    "@emotion/styled": "^11.8.1",
+    "@mui/material": "^5.4.4",
+    "@mui/styles": "^5.4.4",
+    "@polkadot/api": "^7.7.1",
+    "@polkadot/api-contract": "^7.7.1",
+    "@polkadot/extension-dapp": "^0.42.7",
+    "@polkadot/rpc-provider": "^7.7.1",
+    "@polkadot/ui-keyring": "^1.0.1",
+    "@polkadot/util": "^9.0.1",
+    "@polkadot/util-crypto": "^9.0.1",
+    "@prosopo/contract": "0.0.0",
+    "@prosopo/provider-core": "0.0.0",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^12.0.0",
+    "@testing-library/user-event": "^13.2.1",
+    "axios": "^0.26.1",
+    "browserify-fs": "^1.0.0",
+    "dotenv": "^16.0.0",
+    "fs": "^0.0.1-security",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "5.0.0",
+    "typescript": "^4.4.2",
+    "web-vitals": "^2.1.0"
   },
   "devDependencies": {
-    "typescript": "^4.5.5"
+    "@types/jest": "^27.0.1",
+    "@types/node": "^16.7.13",
+    "@types/react": "^17.0.20",
+    "@types/react-dom": "^17.0.9",
+    "node-polyfill-webpack-plugin": "^1.1.4",
+    "react-app-rewired": "^2.2.1",
+    "react-dev-utils": "^12.0.0",
+    "webpack": "^5.70.0"
+  },
+  "scripts": {
+    "start": "NODE_ENV=development PORT=3001 react-app-rewired start",
+    "build": "NODE_ENV=production react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
