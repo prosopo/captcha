@@ -33,7 +33,7 @@ export const PROVIDER: TestProvider = {
   serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
   fee: 10,
   payee: Payee.Provider,
-  stake: Math.pow(10, 15),
+  stake: Math.pow(10, 12),
   datasetFile: '/usr/src/data/captchas.json',
   mnemonic: process.env.PROVIDER_MNEMONIC || '',
   address: process.env.PROVIDER_ADDRESS || '',
@@ -45,7 +45,7 @@ export const DAPP: TestDapp = {
   mnemonic: '//Ferdie',
   contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
   optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
-  fundAmount: Math.pow(10, 15)
+  fundAmount: Math.pow(10, 12)
 };
 
 export const DAPP_USER: TestAccount = {
@@ -74,9 +74,6 @@ async function run () {
 async function processArgs (env) {
   // https://github.com/yargs/yargs/issues/1069#issuecomment-709693413
   const logger = env.logger;
-  logger.info("trying to add keyring pair")
-  const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
-  PROVIDER.address = providerKeyringPair.address;
   return new Promise((resolve, reject) => {
     try {
       yargs
@@ -89,10 +86,13 @@ async function processArgs (env) {
               return yargs;
             },
             handler: async () => {
-
+              logger.info("trying to add keyring pair")
+              const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
               logger.info('sending funds...');
               await sendFunds(env, providerKeyringPair.address, 'Provider', 100000000000000000n);
               logger.info('setting up provider...');
+              PROVIDER.address = providerKeyringPair.address;
+
               return await setupProvider(env, PROVIDER);
             }
           }
