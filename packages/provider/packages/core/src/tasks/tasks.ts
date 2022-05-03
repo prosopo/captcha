@@ -142,8 +142,8 @@ export class Tasks {
         return await this.contractApi.contractTx('providerDisapprove', [captchaSolutionCommitmentId]);
     }
 
-    async getRandomProvider(userAccount: string, at?: string | Uint8Array): Promise<RandomProvider> {
-        return await this.contractApi.contractQuery('getRandomActiveProvider', [userAccount], at) as unknown as RandomProvider;
+    async getRandomProvider(userAccount: string, dappContractAccount: string, at?: string | Uint8Array): Promise<RandomProvider> {
+        return await this.contractApi.contractQuery('getRandomActiveProvider', [userAccount, dappContractAccount], at) as unknown as RandomProvider;
     }
 
     async getProviderDetails(accountId: string): Promise<Provider> {
@@ -433,16 +433,17 @@ export class Tasks {
     /**
      * Validate that provided `datasetId` was a result of calling `get_random_provider` method
      * @param {string} userAccount - Same user that called `get_random_provider`
+     * @param {string} dappContractAccount - account of dapp that is requesting captcha
      * @param {string} datasetId - `captcha_dataset_id` from the result of `get_random_provider`
      * @param {string} blockNo - Block on which `get_random_provider` was called
      */
-    async validateProviderWasRandomlyChosen(userAccount: string, datasetId: string | Hash, blockNo: number) {
+    async validateProviderWasRandomlyChosen(userAccount: string, dappContractAccount: string, datasetId: string | Hash, blockNo: number) {
         const contract = await this.contractApi.getContract();
         if (!contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
         const block = await contract.api.rpc.chain.getBlockHash(blockNo)
-        const randomProviderAndBlockNo = await this.getRandomProvider(userAccount, block)
+        const randomProviderAndBlockNo = await this.getRandomProvider(userAccount, dappContractAccount, block)
         // TODO: create mappers/transformations for fields
         // @ts-ignore
         if (datasetId.localeCompare(randomProviderAndBlockNo.provider.captcha_dataset_id)) {

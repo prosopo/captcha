@@ -21,6 +21,7 @@ import { validateAddress } from '@polkadot/util-crypto';
 
 import { Tasks } from './tasks/tasks';
 import { AccountsResponse, CaptchaSolutionBody } from './types/api';
+import { CaptchaWithProof } from './types/';
 import { Environment } from './env';
 import { BadRequest, ERRORS } from './errors';
 import { parseBlockNumber } from './util';
@@ -50,11 +51,11 @@ export function prosopoMiddleware (env: Environment): Router {
      * @param {string} userAccount - Dapp User AccountId
      * @return {Provider} - A Provider
      */
-  router.get('/v1/prosopo/random_provider/:userAccount', async (req, res, next) => {
-    const { userAccount } = req.params;
+  router.get('/v1/prosopo/random_provider/:userAccount/:dappContractAccount', async (req, res, next) => {
+    const { userAccount, dappContractAccount } = req.params;
 
     try {
-      const provider = await tasks.getRandomProvider(userAccount);
+      const provider = await tasks.getRandomProvider(userAccount, dappContractAccount);
 
       return res.json(provider);
     } catch (err: unknown) {
@@ -142,10 +143,10 @@ export function prosopoMiddleware (env: Environment): Router {
      * @param {string} blockNumber - Block number
      * @return {Captcha} - The Captcha data
      */
-  router.get('/v1/prosopo/provider/captcha/:datasetId/:userAccount/:blockNumber', async (req, res, next) => {
-    const { blockNumber, datasetId, userAccount } = req.params;
+  router.get('/v1/prosopo/provider/captcha/:datasetId/:userAccount/:dappContractAccount/:blockNumber', async (req, res, next) => {
+    const { blockNumber, datasetId, userAccount, dappContractAccount } = req.params;
 
-    if (!datasetId || !userAccount || !blockNumber) {
+    if (!datasetId || !userAccount || !blockNumber || !dappContractAccount) {
       return next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
     }
 
@@ -153,9 +154,18 @@ export function prosopoMiddleware (env: Environment): Router {
       validateAddress(userAccount);
       const blockNumberParsed = parseBlockNumber(blockNumber);
 
-      await tasks.validateProviderWasRandomlyChosen(userAccount, datasetId, blockNumberParsed);
+      await tasks.validateProviderWasRandomlyChosen(userAccount, dappContractAccount, datasetId, blockNumberParsed);
 
-      return res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount));
+      let taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount);
+      taskData.captchas = taskData.captchas.map((cwp: CaptchaWithProof) => {
+        return {
+          ...cwp,
+          captcha: {
+            ...cwp.captcha,
+            assetURL: env.assetsResolver?.resolveAsset(cwp.captcha.assetURI)
+          }
+      });
+      return res.json(taskData);
     } catch (err: unknown) {
       const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`;
 
