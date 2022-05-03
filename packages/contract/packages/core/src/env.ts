@@ -16,8 +16,7 @@
 import findUp from 'find-up'
 import {ZodError} from 'zod'
 import {ERRORS} from './errors'
-import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment, AssetsResolver} from './types'
-import { LocalAssetsResolver } from './assets'
+import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment} from './types'
 import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 import {loadJSONFile} from "./util";
 import {Network, createNetwork} from "@prosopo/contract";
@@ -52,8 +51,6 @@ export class Environment implements ProsopoEnvironment {
 
     logger: typeof consola
 
-    assetsResolver: AssetsResolver | undefined
-
     constructor(mnemonic) {
         this.config = Environment.getConfig()
         this.mnemonic = mnemonic
@@ -64,12 +61,6 @@ export class Environment implements ProsopoEnvironment {
             this.contractName = this.config.networks![this.defaultEnvironment].contract.name
             this.abi = Environment.getContractAbi(this.config.contract.abi) as ContractAbi
             this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
-
-            this.assetsResolver = new LocalAssetsResolver({
-                absolutePath: this.config.assets.absolutePath,
-                basePath: this.config.assets.basePath,
-                serverBaseURL: this.config.server.baseURL,
-            });
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`)
         }
