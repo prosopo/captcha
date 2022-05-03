@@ -32,7 +32,7 @@
   ],
   "scripts": {
     "dev": "yarn build && yarn setup && yarn start",
-    "start": "yarn redspot run ./packages/core/src/cli/cli.ts",
+    "start": "yarn ts-node run ./packages/core/src/cli/cli.ts",
     "setup": "ts-node ./packages/core/scripts/setupdev.ts",
     "mnemonic": "cd build && node ./scripts/generateMnemonic.js",
     "test": "yarn redspot test",
