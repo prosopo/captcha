@@ -40,7 +40,6 @@ export type CaptchaSolutionToUpdate = {
 
 export interface Captcha extends CaptchaWithoutId {
     captchaId: string
-    assetURI: string
 }
 
 export type Dataset = {
