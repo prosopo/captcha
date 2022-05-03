@@ -58,6 +58,8 @@ pub mod dapp {
     pub enum Error {
         /// Returned if not enough balance to fulfill a request is available.
         InsufficientBalance,
+        /// Returned if the user has not completed a captcha
+        UserNotHuman
     }
 
     impl Dapp {
@@ -87,11 +89,14 @@ pub mod dapp {
 
         /// Faucet function for sending tokens to humans
         #[ink(message)]
-        pub fn faucet(&mut self, accountid: AccountId) {
+        pub fn faucet(&mut self, accountid: AccountId)-> Result<(), Error>  {
             let token_holder = self.token_holder;
             if self.is_human(accountid, self.human_threshold) {
                 self.transfer_from_to(&token_holder, &accountid, self.faucet_amount);
+            } else {
+                return Err(Error::UserNotHuman);
             }
+            Ok(())
         }
 
         /// Calls the `Prosopo` contract to check if `accountid` is human
@@ -99,6 +104,7 @@ pub mod dapp {
         pub fn is_human(&self, accountid: AccountId, threshold: u8) -> bool {
             let mut prosopo_instance: ProsopoRef = ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
             prosopo_instance.dapp_operator_is_human_user(accountid, threshold).unwrap()
+            // TODO check that the captcha was completed within the last X seconds
         }
 
         /// Transfers `value` amount of tokens from the caller's account to account `to`.
