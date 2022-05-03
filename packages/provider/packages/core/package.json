@@ -7,8 +7,8 @@
   "scripts": {
     "build": "yarn tsc -b . --verbose",
     "dev": "yarn build && yarn setup && yarn start",
-    "start": "yarn redspot run ./src/cli/cli.ts",
-    "setup": "yarn redspot run ./scripts/setupdev.ts",
+    "start": "yarn ts-node ./src/cli/cli.ts",
+    "setup": "yarn ts-node ./scripts/setupdev.ts",
     "mnemonic": "yarn ts-node ./scripts/generateMnemonic.ts",
     "test": "yarn redspot test",
     "test:mock": "NODE_ENV=test yarn redspot test",
