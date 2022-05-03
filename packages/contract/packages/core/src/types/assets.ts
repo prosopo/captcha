@@ -13,25 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Environment } from '../src/env';
-import { Tasks } from '../src/tasks/tasks';
-import {mnemonicGenerate} from "@polkadot/util-crypto";
 
-require('dotenv').config();
-
-async function main () {
-    const env = new Environment('//Alice');
-    await env.isReady();
-    const tasks = new Tasks(env);
-    const [mnemonic, address] = await env.contractInterface?.createAccountAndAddToKeyring() || ['','']
-    let dappContractAccount = process.env.DAPP_CONTRACT_ADDRESS || '';
-    const provider = await tasks.getRandomProvider(address, dappContractAccount);
-    console.log(provider)
-    process.exit();
+export interface Asset {
+    URI: string;
+    getURL(): string;
 }
 
-main()
-    .catch((error) => {
-        console.error(error);
-        process.exit();
-    });
+export interface AssetsResolver {
+    resolveAsset(assetURI: string) : Asset;
+}

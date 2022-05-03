@@ -52,6 +52,13 @@ export const ProsopoConfigSchema = z.object({
             endpoint: z.string().url(),
             dbname: z.string()
         })
+    }),
+    assetsResolver: z.object({
+        absolutePath: z.string(),
+        basePath: z.string(),
+    }),
+    server: z.object({
+        baseURL: z.string().url(),
     })
 })
 
