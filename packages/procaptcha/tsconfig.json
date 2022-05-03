@@ -1,30 +1,43 @@
 {
   "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "declaration": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "importHelpers": true,
+    "skipLibCheck": true,
+    "composite": true,
     "types": [
       "node"
     ],
-    "target": "ES2019",
-    "module": "commonjs",
+    "lib": [
+      "ES6",
+      "dom"
+    ],
     "rootDir": "./",
     "outDir": "./build",
-    "esModuleInterop": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitAny": false,
-    "declaration": true,
-    "resolveJsonModule": true,
-    "noImplicitReturns": false,
-    "noImplicitThis": false,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "noEmitOnError": true,
     "baseUrl": ".",
-    "composite": true
+    "jsx": "react-jsx"
   },
   "include": [
-    "packages/**/*.ts"
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "packages/**/*.json"
   ],
   "exclude": [
     "node_modules",
@@ -32,5 +45,5 @@
     ".cache",
     "build/**/*",
     "**/build/**/*"
-  ],
+  ]
 }
