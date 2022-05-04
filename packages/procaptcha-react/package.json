@@ -16,7 +16,7 @@
     "@polkadot/util": "^9.0.1",
     "@polkadot/util-crypto": "^9.0.1",
     "@prosopo/contract": "0.0.0",
-    "@prosopo/provider-core": "0.0.0",
+    "@prosopo/provider": "0.0.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^12.0.0",
     "@testing-library/user-event": "^13.2.1",
