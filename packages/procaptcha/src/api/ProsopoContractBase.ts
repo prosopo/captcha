@@ -123,14 +123,22 @@ export class ProsopoContractBase extends AsyncFactory {
           return;
         }
 
-        // [Ready, InBlock, Finalized...]
-        if (status?.isFinalized) {
+        if (status?.isInBlock) {
           
-          const blockHash = status.asFinalized.toHex();
+          const blockHash = status.asInBlock.toHex();
 
           resolve({ dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex, blockHash });
-          
+
         }
+
+        // [Ready, InBlock, Finalized...]
+        // if (status?.isFinalized) {
+          
+        //   const blockHash = status.asFinalized.toHex();
+
+        //   resolve({ dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex, blockHash });
+          
+        // }
 
       })
       .catch((e) => { 
