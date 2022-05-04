@@ -20,19 +20,39 @@
     "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
     "importHelpers": true,
     "skipLibCheck": true,
-    "composite": true,
     "types": [
       "node",
     ],
     "lib": [
-      "ES6",
+      "esnext",
     ],
-    "rootDir": "./",
+    "rootDirs": [
+      ".",
+      "./src",
+      "./tests",
+      "./scripts"
+    ],
     "outDir": "./build",
+
     "baseUrl": ".",
+    "paths": {
+      "@prosopo/contract": [
+        "../contract/src"
+      ],
+      "@prosopo/contract/*": [
+        "../contract/src/*"
+      ],
+      "@prosopo/provider": [
+        "./src"
+      ],
+      "@prosopo/provider/*": [
+        "./src/*"
+      ]
+    }
   },
   "baseUrl": ".",
   "include": [
+    "**/*.ts",
     "src/**/*.ts"
   ],
   "exclude": [
@@ -41,5 +61,14 @@
     ".cache",
     "build/**/*",
     "**/build/**/*"
+  ],
+  "files": [
+    "./redspot.config.ts",
+    "./prosopo.config.ts"
+  ],
+  "references": [
+    {
+      "path": "../contract"
+    }
   ]
 }
