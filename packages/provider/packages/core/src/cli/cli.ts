@@ -19,6 +19,7 @@ import cors from 'cors';
 import { mnemonicValidate } from '@polkadot/util-crypto';
 
 import { prosopoMiddleware } from '../api';
+import { LocalAssetsResolver } from '../assets';
 import { Environment } from '../env';
 import { ERRORS, handleErrors } from '../errors';
 import { processArgs } from './argv';
@@ -43,6 +44,9 @@ async function main () {
 
   if (args.api) {
     app.use(prosopoMiddleware(env));
+    if (env.assetsResolver instanceof LocalAssetsResolver) {
+      env.assetsResolver.injectMiddleware(app);
+    }
     app.use(handleErrors);
     app.listen(port, () => {
       env.logger.info(`Prosopo app listening at http://localhost:${port}`);
