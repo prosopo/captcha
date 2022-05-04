@@ -1,5 +1,6 @@
 import HttpClientBase from "./HttpClientBase";
 import Storage from "../modules/storage";
+import { ProsopoConfig, ProsopoRandomProviderResponse, ProsopoCaptchaResponse, CaptchaSolution, CaptchaSolutionResponse } from '../types';
 
 export class ProviderApi extends HttpClientBase {
 

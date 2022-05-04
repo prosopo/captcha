@@ -9,6 +9,8 @@ import {CaptchaSolution, CaptchaMerkleTree} from '@prosopo/provider';
 // import {computeCaptchaSolutionHash} from '@prosopo/provider'; // TODO
 
 import { Signer } from "@polkadot/api/types";
+
+import { ProsopoRandomProviderResponse, ProsopoCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
 
 
@@ -66,7 +68,7 @@ export class ProCaptcha {
         let result: CaptchaSolutionResponse;
 
         try {
-            result = await this.providerApi.submitCaptchaSolution(tx.blockHash, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
+            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
         } catch (e) {
             console.error("ERROR", e);
             throw new Error(e.message);

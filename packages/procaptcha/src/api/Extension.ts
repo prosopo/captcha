@@ -13,7 +13,7 @@ import AsyncFactory from "./AsyncFactory";
  */
 export type NoExtensionCallback = () => void | Promise<void>;
 
-class Extension extends AsyncFactory {
+export class Extension extends AsyncFactory {
 
     private account: InjectedAccountWithMeta;
     private injected: InjectedExtension;
