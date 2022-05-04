@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 
-class HttpClientBase {
+export class HttpClientBase {
 
   protected readonly axios: AxiosInstance;
 

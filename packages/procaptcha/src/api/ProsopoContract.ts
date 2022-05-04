@@ -2,6 +2,7 @@
 import ProsopoContractBase from "./ProsopoContractBase";
 import { Signer } from '@polkadot/api/types';
 import { TransactionResponse } from '../types/contract';
+import { ProsopoRandomProviderResponse } from "../types";
 
 // TODO: import return types from provider: separate types/common package.
 export class ProsopoContract extends ProsopoContractBase {

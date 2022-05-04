@@ -1,15 +1,16 @@
-declare module "*.json" {
-  const value: any;
-  export default value;
-}
+// declare module "*.json" {
+//   const value: any;
+//   export default value;
+// }
 
 // import { SubmittableResult } from "@polkadot/api";
-interface ProsopoRandomProviderResponse {
+export interface ProsopoRandomProviderResponse {
   providerId: string,
   blockNumber: string;
   provider: ProposoProvider;
 }
-interface ProposoProvider {
+
+export interface ProposoProvider {
   balance: string;
   captchaDatasetId: string;
   fee: string;
@@ -18,33 +19,33 @@ interface ProposoProvider {
   status: string; // TODO: enum
 }
 
-interface CaptchaSet {
+export interface CaptchaSet {
   captchaId: string;
   datasetId: string;
   // TODO items: {path, type}[];
 }
 
-interface ProsopoCaptcha {
+export interface ProsopoCaptcha {
   captcha: CaptchaSet;
   proof: string[][];
 }
 
-interface ProsopoCaptchaResponse {
+export interface ProsopoCaptchaResponse {
   captchas: ProsopoCaptcha[];
   requestHash: string;
 }
 
-interface CaptchaSolution {
+export interface CaptchaSolution {
   captchaId: string;
   solution: number[];
   salt: string;
 }
 
-interface CaptchaSolutionResponse {
+export interface CaptchaSolutionResponse {
   status: string;
 }
 
-interface ProsopoConfig {
+export interface ProsopoConfig {
   "providerApi.baseURL": string;
   "providerApi.prefix": string;
   "dappAccount": string;
