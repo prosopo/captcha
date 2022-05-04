@@ -22,12 +22,12 @@ import '@redspot/decimals';
 import { RedspotUserConfig } from 'redspot/types';
 
 // Does not work when called from different project
-// REDSPOT_CONFIG=/usr/src/packages/provider/packages/contract/redspot.config.ts yarn setup
+// REDSPOT_CONFIG=/usr/src/packages/contract/redspot.config.ts yarn setup
 // compiler version: 0.16.0
 // toolchain: nightly
 // An unexpected error occurred:
 //
-//     Error: Path /usr/src/packages/provider/packages/contract/artifacts/prosopo.contract is not in cwd /usr/src/packages/provider/packages/core
+//     Error: Path /usr/src/packages/contract/artifacts/prosopo.contract is not in cwd /usr/src/packages/provider
 // at ensureAbsolutePathForCwd (/usr/src/node_modules/globby/gitignore.js:55:9)
 
 // import { contractDefinitions } from '@prosopo/contract/definitions';
@@ -38,7 +38,7 @@ export default {
     ink: {
       docker: false,
       toolchain: 'nightly',
-      sources: ['/usr/src/packages/provider/packages/core/artifacts']
+      sources: ['/usr/src/packages/provider/artifacts']
     }
   },
   networks: {
