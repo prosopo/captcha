@@ -1,6 +1,7 @@
 import React from "react";
-import { useStyles } from "../app.styles";
+import { useStyles } from "../styles";
 import { Avatar } from "@mui/material";
+import { ProsopoCaptcha } from "@prosopo/procaptcha";
 
 export function CaptchaWidget({ challenge, solution, solutionClickEvent}: 
     {challenge: ProsopoCaptcha, solution: number[], solutionClickEvent: (index: number) => void}) {
