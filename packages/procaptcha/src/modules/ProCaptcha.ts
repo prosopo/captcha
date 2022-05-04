@@ -1,4 +1,4 @@
-import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+// import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import {randomAsHex} from '@polkadot/util-crypto';
 import { blake2AsHex } from '@polkadot/util-crypto';
 
@@ -10,7 +10,6 @@ import {CaptchaSolution, CaptchaMerkleTree} from '@prosopo/provider';
 
 import { Signer } from "@polkadot/api/types";
 import { TransactionResponse } from "../types/contract";
-import { ModuleResolutionKind } from "typescript";
 
 
 function hexHash(data: string | Uint8Array): string {
