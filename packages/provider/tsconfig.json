@@ -29,15 +29,7 @@
     "lib": [
       "esnext",
     ],
-    "rootDirs": [
-      ".",
-      "./src",
-      "./tests",
-      "./scripts"
-    ],
-    "outDir": "./build",
 
-    "baseUrl": ".",
     "paths": {
       "@prosopo/contract": [
         "../contract/src"
@@ -51,19 +43,20 @@
       "@prosopo/provider/*": [
         "./src/*"
       ]
-    }
+    },
+
+    "rootDirs": [
+      "./src",
+      "./tests",
+      "./scripts"
+    ],
+    "outDir": "./build",
+
   },
-  "baseUrl": ".",
   "include": [
-    "**/*.ts",
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "artifacts",
-    ".cache",
-    "build/**/*",
-    "**/build/**/*"
+    "src/**/*",
+    "tests/**/*",
+    "scripts/**/*"
   ],
   "files": [
     "./redspot.config.ts",
@@ -71,7 +64,8 @@
   ],
   "references": [
     {
-      "path": "../contract"
+      "path": "../contract",
+      "name": "@prosopo/contract"
     }
   ]
 }
