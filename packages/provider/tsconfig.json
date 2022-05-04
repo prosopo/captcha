@@ -20,6 +20,9 @@
     "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
     "importHelpers": true,
     "skipLibCheck": true,
+    
+    "composite": true,
+
     "types": [
       "node",
     ],
