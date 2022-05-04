@@ -1,6 +1,7 @@
 import { BigNumber, Payee } from '@prosopo/contract';
 import path from 'path';
 
+import { formatBalance } from '@polkadot/util';
 import { blake2AsHex, decodeAddress, randomAsHex } from '@polkadot/util-crypto';
 
 import { MockEnvironment } from '../../tests/mocks/mockenv';
@@ -231,7 +232,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
   private async dappFund (account: Account) {
     await this.changeSigner(account);
 
-    await this.tasks!.dappFund(accountAddress(account), this.providerStakeDefault);
+    await this.tasks!.dappFund(accountAddress(account), 1000000n * this.providerStakeDefault);
   }
 
   public async registerDappWithStake (): Promise<Account> {

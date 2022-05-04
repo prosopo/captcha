@@ -1,5 +1,5 @@
 import { promiseQueue } from '../util';
-import DatabaseAccounts, { exportDatabaseAccounts } from './DatabaseAccounts';
+import { exportDatabaseAccounts } from './DatabaseAccounts';
 import DatabasePopulator, { IDatabasePopulatorMethods } from './DatabasePopulator';
 
 const AMOUNT = 10;
@@ -33,7 +33,6 @@ async function populateDatabase () {
   await populateStep(databasePopulator, 'registerProviderWithStakeAndDataset', 'Adding providers with stake and dataset...');
   await populateStep(databasePopulator, 'registerDapp', 'Adding dapps...');
   await populateStep(databasePopulator, 'registerDappWithStake', 'Adding dapps with stake...');
-
 
   console.log('Exporting accounts...');
   await exportDatabaseAccounts(databasePopulator);

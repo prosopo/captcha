@@ -14,13 +14,12 @@
 //
 // You should have received a copy of the GNU General Public License
 
-import { getEventsFromMethodName, TransactionResponse } from '@prosopo/contract';
+import { getEventsFromMethodName, Provider, TransactionResponse } from '@prosopo/contract';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { config } from 'dotenv';
 import path from 'path';
 
-import { formatBalance } from '@polkadot/util';
 import { randomAsHex } from '@polkadot/util-crypto';
 
 import { computeCaptchaSolutionHash, computePendingRequestHash } from '../../src/captcha';
@@ -28,7 +27,7 @@ import DatabaseAccounts, { accountAddress, accountMnemonic, exportDatabaseAccoun
 import { CaptchaMerkleTree } from '../../src/merkle';
 import { Tasks } from '../../src/tasks';
 import { CaptchaSolution } from '../../src/types/captcha';
-import { PROVIDER } from '../mocks/accounts';
+import { DAPP, PROVIDER } from '../mocks/accounts';
 import { SOLVED_CAPTCHAS } from '../mocks/mockdb';
 import { MockEnvironment } from '../mocks/mockenv';
 import { sendFunds } from '../mocks/setup';
@@ -47,12 +46,11 @@ const expect = chai.expect;
 describe('CONTRACT TASKS', () => {
   let providerStakeDefault: bigint;
   const mockEnv = new MockEnvironment();
-  let tasks: Tasks;
   const databaseAccounts = new DatabaseAccounts();
 
   before(async () => {
     await mockEnv.isReady();
-    tasks = new Tasks(mockEnv);
+    const tasks = new Tasks(mockEnv);
 
     await mockEnv.contractInterface!.changeSigner('//Alice');
 
@@ -103,9 +101,6 @@ describe('CONTRACT TASKS', () => {
     const [providerMnemonic, providerAddress] =
       mockEnv.contractInterface!.createAccountAndAddToKeyring() || ['', ''];
 
-    console.log(formatBalance(1000000000000000000n));
-    console.log(providerAddress, formatBalance(providerStakeDefault));
-
     await sendFunds(
       mockEnv,
       providerAddress,
@@ -114,6 +109,7 @@ describe('CONTRACT TASKS', () => {
     );
 
     await mockEnv.contractInterface!.changeSigner(providerMnemonic);
+    const tasks = new Tasks(mockEnv);
 
     const result: TransactionResponse = await tasks.providerRegister(
       PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
@@ -124,16 +120,19 @@ describe('CONTRACT TASKS', () => {
 
     expect(result.txHash!).to.not.be.empty;
 
-    databaseAccounts.registeredProviders.push([providerMnemonic, providerAddress]);
+    databaseAccounts.registeredProviders.push([
+      providerMnemonic,
+      providerAddress
+    ]);
   });
 
   it('Provider update', async () => {
     const account = databaseAccounts.registeredProviders.pop()!;
 
     await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
-    const value = 1000000n * providerStakeDefault;
+    const tasks = new Tasks(mockEnv);
 
-    console.log(formatBalance(value), formatBalance(providerStakeDefault));
+    const value = 1000000n * providerStakeDefault;
 
     const result: TransactionResponse = await tasks.providerUpdate(
       PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
@@ -155,13 +154,13 @@ describe('CONTRACT TASKS', () => {
     const account = databaseAccounts.registeredProvidersWithStake.pop()!;
 
     await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
-    const providerTasks = new Tasks(mockEnv);
+    const tasks = new Tasks(mockEnv);
 
     const captchaFilePath = path.resolve(
       __dirname,
       '../mocks/data/captchas.json'
     );
-    const result: TransactionResponse = await providerTasks.providerAddDataset(
+    const result: TransactionResponse = await tasks.providerAddDataset(
       captchaFilePath
     );
     const eventData = getEventsFromMethodName(result, 'providerAddDataset');
@@ -176,6 +175,7 @@ describe('CONTRACT TASKS', () => {
     const account = databaseAccounts.registeredProviders.pop()!;
 
     await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
+    const tasks = new Tasks(mockEnv);
 
     const captchaFilePath = path.resolve(
       __dirname,
@@ -190,7 +190,8 @@ describe('CONTRACT TASKS', () => {
   });
 
   it('Provider approve', async () => {
-    const { account, captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash();
+    const { account, captchaSolutions } =
+      await createMockCaptchaSolutionsAndRequestHash();
 
     await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
     const salt = randomAsHex();
@@ -208,35 +209,42 @@ describe('CONTRACT TASKS', () => {
     tree.build(captchasHashed);
     const commitmentId = tree.root!.hash;
 
-    const providerAccount = databaseAccounts.registeredProvidersWithStakeAndDataset.pop()!;
+    const providerAccount =
+      databaseAccounts.registeredProvidersWithStakeAndDataset.pop()!;
+    const dappTasks = new Tasks(mockEnv);
+    const provider = await dappTasks.getProviderDetails(
+      accountAddress(providerAccount)
+    );
 
-    const provider = await tasks.getProviderDetails(accountAddress(providerAccount));
-
-    console.log([provider.balance, formatBalance(providerStakeDefault), formatBalance(10000000n)]);
-    await tasks.dappUserCommit(
+    await dappTasks.dappUserCommit(
       accountAddress(account),
       provider.captcha_dataset_id,
       commitmentId,
       accountAddress(providerAccount)
     );
 
-    await mockEnv.contractInterface!.changeSigner(accountMnemonic(providerAccount));
+    await mockEnv.contractInterface!.changeSigner(
+      accountMnemonic(providerAccount)
+    );
+    const providerTasks = new Tasks(mockEnv);
 
-    const result = await tasks.providerApprove(commitmentId, 0);
+    const result = await providerTasks.providerApprove(commitmentId, 0);
     const events = getEventsFromMethodName(result, 'providerApprove');
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(events![0].args[0]).to.equal(commitmentId);
 
     databaseAccounts.registeredDappsWithStake.push(account);
-    databaseAccounts.registeredProvidersWithStakeAndDataset.push(providerAccount);
+    databaseAccounts.registeredProvidersWithStakeAndDataset.push(
+      providerAccount
+    );
   });
 
   it('Provider disapprove', async () => {
-    const { account, captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash();
+    const { account, captchaSolutions } =
+      await createMockCaptchaSolutionsAndRequestHash();
 
     await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
-    const dappUserTasks = new Tasks(mockEnv);
     const salt = randomAsHex();
 
     const tree = new CaptchaMerkleTree();
@@ -252,27 +260,36 @@ describe('CONTRACT TASKS', () => {
     tree.build(captchasHashed);
     const commitmentId = tree.root!.hash;
 
-    const providerAccount = databaseAccounts.registeredProvidersWithStakeAndDataset.pop()!;
+    const providerAccount =
+      databaseAccounts.registeredProvidersWithStakeAndDataset.pop()!;
+    const dappTasks = new Tasks(mockEnv);
 
-    const provider = await tasks.getProviderDetails(accountAddress(providerAccount));
+    const provider = await dappTasks.getProviderDetails(
+      accountAddress(providerAccount)
+    );
 
-    await dappUserTasks.dappUserCommit(
+    await dappTasks.dappUserCommit(
       accountAddress(account),
       provider.captcha_dataset_id,
       commitmentId,
       accountAddress(providerAccount)
     );
 
-    await mockEnv.contractInterface!.changeSigner(accountMnemonic(providerAccount));
+    await mockEnv.contractInterface!.changeSigner(
+      accountMnemonic(providerAccount)
+    );
+    const providerTasks = new Tasks(mockEnv);
 
-    const result = await tasks.providerDisapprove(commitmentId);
+    const result = await providerTasks.providerDisapprove(commitmentId);
     const events = getEventsFromMethodName(result, 'providerDisapprove');
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(events![0].args[0]).to.equal(commitmentId);
 
     databaseAccounts.registeredDappsWithStake.push(account);
-    databaseAccounts.registeredProvidersWithStakeAndDataset.push(providerAccount);
+    databaseAccounts.registeredProvidersWithStakeAndDataset.push(
+      providerAccount
+    );
   });
 
   it('Timestamps check', async () => {
@@ -283,7 +300,8 @@ describe('CONTRACT TASKS', () => {
 
     const tree = new CaptchaMerkleTree();
 
-    const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash();
+    const { captchaSolutions } =
+      await createMockCaptchaSolutionsAndRequestHash();
 
     const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
       ...captcha,
@@ -296,18 +314,24 @@ describe('CONTRACT TASKS', () => {
     tree.build(captchasHashed);
     const commitmentId = tree.root!.hash;
 
-    const providerAccount = databaseAccounts.registeredProvidersWithStakeAndDataset.pop()!;
+    const providerAccount =
+      databaseAccounts.registeredProvidersWithStakeAndDataset.pop()!;
+    const dappTasks = new Tasks(mockEnv);
 
-    const provider = await tasks.getProviderDetails(accountAddress(providerAccount));
+    const provider = await dappTasks.getProviderDetails(
+      accountAddress(providerAccount)
+    );
 
-    await tasks.dappUserCommit(
+    await dappTasks.dappUserCommit(
       accountAddress(dappAccount),
       provider.captcha_dataset_id,
       commitmentId,
       accountAddress(providerAccount)
     );
 
-    await mockEnv.contractInterface!.changeSigner(accountMnemonic(providerAccount));
+    await mockEnv.contractInterface!.changeSigner(
+      accountMnemonic(providerAccount)
+    );
     const providerTasks = new Tasks(mockEnv);
 
     const result = await providerTasks.providerApprove(commitmentId, 0);
@@ -316,24 +340,66 @@ describe('CONTRACT TASKS', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(events![0].args[0]).to.equal(commitmentId);
 
-    const commitment = await providerTasks.getCaptchaSolutionCommitment(commitmentId);
+    const commitment = await providerTasks.getCaptchaSolutionCommitment(
+      commitmentId
+    );
 
     // check the timestamp
-    const completedAt = parseInt(commitment.completed_at.toString().replaceAll(',', ''));
+    const completedAt = parseInt(
+      commitment.completed_at.toString().replaceAll(',', '')
+    );
 
     expect(completedAt).to.be.above(0);
 
     // check how much time passed after successful completion
-    const lastCorrectCaptcha = await providerTasks.getDappOperatorLastCorrectCaptcha(accountAddress(dappAccount));
+    const lastCorrectCaptcha =
+      await providerTasks.getDappOperatorLastCorrectCaptcha(
+        accountAddress(dappAccount)
+      );
 
-    expect(Number.parseInt(lastCorrectCaptcha.before_ms.toString())).to.be.above(0);
+    expect(
+      Number.parseInt(lastCorrectCaptcha.before_ms.toString())
+    ).to.be.above(0);
   });
 
-  //   it('Provider details', async () => {});
+  it('Provider details', async () => {
+    const account = databaseAccounts.registeredProvidersWithStakeAndDataset.pop()!;
 
-  //   it('Provider accounts', async () => {});
+    await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
+    const providerTasks = new Tasks(mockEnv);
 
-  //   it('Dapp registration', async () => {});
+    const result = await providerTasks.getProviderDetails(
+      accountAddress(account)
+    );
+
+    expect(result).to.have.a.property('status');
+  });
+
+  it('Provider accounts', async () => {
+    const account = databaseAccounts.registeredProvidersWithStakeAndDataset.pop()!;
+
+    await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
+    const providerTasks = new Tasks(mockEnv);
+
+    const result = await providerTasks.getProviderAccounts();
+
+    expect(result).to.be.an('array');
+  });
+
+  it('Dapp registration', async () => {
+    const account = mockEnv.contractInterface!.createAccountAndAddToKeyring() || ['', ''];
+    console.log(account);
+    await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
+    const dappTasks = new Tasks(mockEnv);
+
+    const result: TransactionResponse = await dappTasks.dappRegister(
+      DAPP.serviceOrigin + randomAsHex().slice(0, 8),
+      accountAddress(account),
+      accountAddress(account)
+    );
+
+    expect(result.txHash).to.not.be.empty;
+  });
 
   //   it('Dapp is active', async () => {});
 
@@ -461,5 +527,5 @@ describe('CONTRACT TASKS', () => {
 
   //   it('Provider deregister', async () => {});
 
-//   it('Calculate captcha solution on the basis of Dapp users provided solutions', async () => {});
+  //   it('Calculate captcha solution on the basis of Dapp users provided solutions', async () => {});
 });
