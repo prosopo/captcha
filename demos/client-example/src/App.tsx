@@ -112,10 +112,10 @@ function App() {
     try {
       const solved = await proCaptcha.solveCaptchaChallenge(signer, captchaChallenge.requestHash, captchaId, datasetId, captchaSolution);
       console.log("CAPTCHA SOLVED", solved);
-      alert(solved.status);
+      // alert(solved.status); // TODO
     } catch (err) {
       console.error(err);
-      alert(err.message);
+      // alert(err.message);
     }
 
     const nextCaptchaIndex = currentCaptchaIndex + 1;

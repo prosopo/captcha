@@ -31,7 +31,11 @@
     "composite": true,
 
     "types": [
-      "node"
+      "node",
+    ],
+    "lib": [
+      "esnext",
+      "dom"
     ],
     
     "paths": {
@@ -48,7 +52,10 @@
         "../packages/procaptcha-react/src/*"
       ]
     },
-    "outDir": "./dist"
+
+    "rootDir": "./src",
+    "outDir": "./build"
+
   },
   "include": [
     "./src/**/*.ts",
