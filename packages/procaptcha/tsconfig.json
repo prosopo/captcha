@@ -47,11 +47,13 @@
       ]
     },
     
-    "outDir": "./dist"
+    "rootDirs": ["./src"],
+    "outDir": "./build"
+
   },
   "include": [
-    "./src/**/*.ts",
-    "./src/abi/*.json"
+    "src/**/*.ts",
+    "src/abi/*.json"
   ],
   "references": [
     {
