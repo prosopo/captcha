@@ -27,19 +27,10 @@
     "lib": [
       "ES6",
     ],
-    "rootDir": "./",
+    "rootDirs": ["./src"],
     "outDir": "./build",
-    "baseUrl": ".",
   },
-  "baseUrl": ".",
   "include": [
     "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "artifacts",
-    ".cache",
-    "build/**/*",
-    "**/build/**/*"
   ]
 }
