@@ -21,7 +21,16 @@ import '@redspot/decimals';
 
 import { RedspotUserConfig } from 'redspot/types';
 
-import { contractDefinitions } from './src/definitions';
+// Does not work when called from different project
+// REDSPOT_CONFIG=/usr/src/packages/contract/redspot.config.ts yarn setup
+// compiler version: 0.16.0
+// toolchain: nightly
+// An unexpected error occurred:
+//
+//     Error: Path /usr/src/packages/contract/artifacts/prosopo.contract is not in cwd /usr/src/packages/provider
+// at ensureAbsolutePathForCwd (/usr/src/node_modules/globby/gitignore.js:55:9)
+
+// import { contractDefinitions } from '@prosopo/contract/definitions';
 
 export default {
   defaultNetwork: 'development',
@@ -29,7 +38,7 @@ export default {
     ink: {
       docker: false,
       toolchain: 'nightly',
-      sources: ['/usr/src/packages/provider/packages/contract/artifacts']
+      sources: ['/usr/src/packages/provider/artifacts']
     }
   },
   networks: {
@@ -38,7 +47,7 @@ export default {
       // Use this to contact a localhost version of substrate
       // endpoint: "ws://host.docker.internal:9944",
       gasLimit: '400000000000',
-      types: contractDefinitions,
+      // types: contractDefinitions,
       accounts: [
         '//Alice',
         '//Bob',
