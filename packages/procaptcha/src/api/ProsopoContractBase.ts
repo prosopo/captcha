@@ -62,6 +62,7 @@ export class ProsopoContractBase extends AsyncFactory {
         {},
         ...encodeStringArgs(abiMessage, args)
       );
+      console.log("QUERY RESPONSE", response);
       if (response.result.isOk) {
         if (response.output) {
           return unwrap(response.output.toHuman());

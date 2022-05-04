@@ -5,8 +5,8 @@ import { blake2AsHex } from '@polkadot/util-crypto';
 import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
 
-import {CaptchaSolution, CaptchaMerkleTree} from '@prosopo/provider-core';
-// import {computeCaptchaSolutionHash} from '@prosopo/provider-core'; // TODO
+import {CaptchaSolution, CaptchaMerkleTree} from '@prosopo/provider';
+// import {computeCaptchaSolutionHash} from '@prosopo/provider'; // TODO
 
 import { Signer } from "@polkadot/api/types";
 import { TransactionResponse } from "../types/contract";
