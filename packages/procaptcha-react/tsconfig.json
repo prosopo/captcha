@@ -31,8 +31,12 @@
     "composite": true,
 
     "types": [
-      "node"
+      "node",
     ],
+    "lib": [
+      "esnext",
+    ],
+
     "paths": {
       "@prosopo/procaptcha": [
         "../procaptcha/src"
@@ -41,10 +45,14 @@
         "../procaptcha/src/*"
       ]
     },
+
+    "rootDirs": ["./src"],
+    "outDir": "./build"
+
   },
   "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ],
   "references": [
     {
