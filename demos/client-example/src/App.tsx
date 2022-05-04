@@ -9,21 +9,26 @@ import {
   TextField
 } from "@mui/material";
 
-import config from "./config";
+// import config from "./config";
 
-import ProsopoContract from "./api/ProsopoContract";
-import Extension from "./api/Extension";
-import ProviderApi from "./api/ProviderApi";
+import {
+  ProsopoRandomProviderResponse,
+  ProsopoCaptchaResponse,
+  ProsopoContract,
+  Extension,
+  ProviderApi,
+  getExtension,
+  getProsopoContract,
+  ProCaptcha,
+  getConfig
+} from "@prosopo/procaptcha";
 
-import { getExtension } from "./modules/extension";
-import { getProsopoContract } from "./modules/contract";
-import ProCaptcha from "./modules/ProCaptcha";
-import { CaptchaWidget } from "./components/CaptchaWidget";
-
-import { getConfig } from "./modules/config";
+import {
+  CaptchaWidget,
+} from "@prosopo/procaptcha-react";
 
 import "./App.css";
-import { useStyles } from "./app.styles";
+import { useStyles } from "./app.styles"; // TODO procatcha-react
 
 // const { providerApi } = config;
 

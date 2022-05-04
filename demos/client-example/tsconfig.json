@@ -1,16 +1,20 @@
 {
   "compilerOptions": {
+    "jsx": "react",
+
     "target": "esnext",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "allowJs": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "module": "esnext",
     "sourceMap": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "declaration": true,
-    "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -20,30 +24,44 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "importHelpers": true,
-    "skipLibCheck": true,
+    "resolveJsonModule": true,
+
+    "useUnknownInCatchVariables": false,
+
     "composite": true,
+
     "types": [
       "node"
     ],
-    "lib": [
-      "ES6",
-      "dom"
-    ],
-    "rootDir": "./",
-    "outDir": "./build",
-    "baseUrl": ".",
-    "jsx": "react-jsx"
+    
+    "paths": {
+      "@prosopo/procaptcha": [
+        "../packages/procaptcha/src"
+      ],
+      "@prosopo/procaptcha/*": [
+        "../packages/procaptcha/src/*"
+      ],
+      "@prosopo/procaptcha-react": [
+        "../packages/procaptcha-react/src"
+      ],
+      "@prosopo/procaptcha-react/*": [
+        "../packages/procaptcha-react/src/*"
+      ]
+    },
+    "outDir": "./dist"
   },
   "include": [
-    "packages/**/*.ts",
-    "packages/**/*.tsx",
-    "packages/**/*.json"
+    "./src/**/*.ts",
+    "./src/**/*.tsx"
   ],
-  "exclude": [
-    "node_modules",
-    "artifacts",
-    ".cache",
-    "build/**/*",
-    "**/build/**/*"
+  "references": [
+    {
+      "path": "../packages/procaptcha",
+      "name": "@prosopo/procaptcha"
+    },
+    {
+      "path": "../packages/procaptcha-react",
+      "name": "@prosopo/procaptcha-react"
+    }
   ]
 }
