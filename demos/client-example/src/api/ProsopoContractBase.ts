@@ -123,6 +123,9 @@ export class ProsopoContractBase extends AsyncFactory {
           return;
         }
 
+        // [Ready, InBlock, Finalized...]
+
+        // Instant seal ON.
         if (status?.isInBlock) {
           
           const blockHash = status.asInBlock.toHex();
@@ -131,7 +134,8 @@ export class ProsopoContractBase extends AsyncFactory {
 
         }
 
-        // [Ready, InBlock, Finalized...]
+        // TODO
+        // Instant seal OFF.
         // if (status?.isFinalized) {
           
         //   const blockHash = status.asFinalized.toHex();
