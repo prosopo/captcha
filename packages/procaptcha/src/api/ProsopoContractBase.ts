@@ -6,10 +6,10 @@ import abiJson from "../abi/prosopo.json";
 import { AnyJson } from "@polkadot/types/types/codec";
 import { ProviderInterface } from "@polkadot/rpc-provider/types";
 import { unwrap, encodeStringArgs } from "../common/helpers";
-import Extension, { NoExtensionCallback } from "./Extension";
+// import Extension, { NoExtensionCallback } from "./Extension";
 import { Signer } from "@polkadot/api/types";
-import { buildTx } from "@prosopo/contract";
-import { contractDefinitions } from "@prosopo/contract";
+// import { buildTx } from "@prosopo/contract";
+// import { contractDefinitions } from "@prosopo/contract";
 import { TransactionResponse } from '../types/contract';
 import AsyncFactory from "./AsyncFactory";
 

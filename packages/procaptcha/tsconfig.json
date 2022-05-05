@@ -31,38 +31,13 @@
     "types": [
       "node"
     ],
-
-    "paths": {
-      "@prosopo/contract": [
-        "../contract/src"
-      ],
-      "@prosopo/contract/*": [
-        "../contract/src/*"
-      ],
-      "@prosopo/provider": [
-        "../provider/src"
-      ],
-      "@prosopo/provider/*": [
-        "../provider/src/*"
-      ]
-    },
     
-    "rootDirs": ["./src"],
+    "rootDir": "./src",
     "outDir": "./build"
 
   },
   "include": [
     "src/**/*.ts",
     "src/abi/*.json"
-  ],
-  "references": [
-    {
-      "path": "../provider",
-      "name": "@prosopo/provider"
-    },
-    {
-      "path": "../contract",
-      "name": "@prosopo/contract"
-    }
   ]
 }
