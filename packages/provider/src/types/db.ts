@@ -17,7 +17,7 @@ import { Document, Collection } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
 import { Captcha, CaptchaSolution, CaptchaStates, Dataset } from './captcha'
 import { PendingCaptchaRequest } from './api'
-import { WithId } from 'mongodb/mongodb.ts'
+import { WithId } from 'mongodb'
 // Other table types from other database engines go here
 export type Table = Collection | undefined
 
