@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Payee } from '@prosopo/contract'
-import { BigNumber } from '@prosopo/contract/types';
+import { BigNumber } from '@prosopo/contract';
 
 export interface TestAccount {
     mnemonic: string

@@ -31,12 +31,6 @@
     ],
 
     "paths": {
-      "@prosopo/contract": [
-        "../contract/src"
-      ],
-      "@prosopo/contract/*": [
-        "../contract/src/*"
-      ],
       "@prosopo/provider": [
         "./src"
       ],
@@ -61,11 +55,5 @@
   "files": [
     "./redspot.config.ts",
     "./prosopo.config.ts"
-  ],
-  "references": [
-    {
-      "path": "../contract",
-      "name": "@prosopo/contract"
-    }
   ]
 }
