@@ -21,6 +21,7 @@ import { validateAddress } from '@polkadot/util-crypto';
 
 import { Tasks } from './tasks/tasks';
 import { AccountsResponse, CaptchaSolutionBody } from './types/api';
+import { CaptchaWithProof } from './types/';
 import { Environment } from './env';
 import { BadRequest, ERRORS } from './errors';
 import { parseBlockNumber } from './util';
@@ -155,7 +156,23 @@ export function prosopoMiddleware (env: Environment): Router {
 
       await tasks.validateProviderWasRandomlyChosen(userAccount, dappContractAccount, datasetId, blockNumberParsed);
 
-      return res.json(await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount));
+      // {
+      //   captcha: {salt: string, solution?: any, captchaId: string, assetURI: Asset | undefined, items: any[], target: string},
+      //   proof: string[][]
+      // }[]
+      // is not assignable to type CaptchaWithProof[]
+      let taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount);
+      taskData.captchas = taskData.captchas.map((cwp: CaptchaWithProof) => (
+          {
+            ...cwp,
+            captcha: {
+              ...cwp.captcha,
+              assetURI: env.assetsResolver?.resolveAsset(cwp.captcha.assetURI || '').URI
+            }
+          }
+        )
+      );
+      return res.json(taskData);
     } catch (err: unknown) {
       const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`;
 

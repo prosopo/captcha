@@ -13,13 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {Database, ProsopoConfig, ProsopoEnvironment} from '../../src/types'
+import {AssetsResolver, Database, ProsopoConfig, ProsopoEnvironment} from '../../src/types'
 import {createNetwork, Network} from '@prosopo/contract'
 import {ERRORS} from '../../src/errors'
 import {network, patract} from 'redspot'
 import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 import {loadJSONFile} from "../../src/util";
 import consola, {LogLevel} from 'consola'
+import {LocalAssetsResolver} from "@prosopo/provider/assets";
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -34,6 +35,7 @@ export class MockEnvironment implements ProsopoEnvironment {
     abi: ContractAbi
     network!: Network
     logger: typeof consola
+    assetsResolver: AssetsResolver | undefined
 
     constructor() {
         this.config = {
@@ -75,6 +77,13 @@ export class MockEnvironment implements ProsopoEnvironment {
             },
             database: {
                 development: {type: 'mockdb', endpoint: '', dbname: ''}
+            },
+            assets : {
+                absolutePath: '',
+                basePath: ''
+            },
+            server : {
+                baseURL: ''
             }
         }
         this.mnemonic = '//Alice'
@@ -87,6 +96,11 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
             this.abi = MockEnvironment.getContractAbi(this.config.contract.abi)
             this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
+            this.assetsResolver = new LocalAssetsResolver({
+                absolutePath: this.config.assets.absolutePath,
+                basePath: this.config.assets.basePath,
+                serverBaseURL: this.config.server.baseURL,
+            });
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT.message}:${this.config.defaultEnvironment}`)
         }
