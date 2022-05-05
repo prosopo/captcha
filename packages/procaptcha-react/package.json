@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "yarn@3.2.0",
   "description": "",
-  "main": "build/src/index.js",
+  "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "yarn tsc -b . --verbose"
@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prosopo/procaptcha": "0.0.0"
+    "@prosopo/procaptcha": "workspace:packages/procaptcha"
   },
   "devDependencies": {
     "@types/react": "^18.0.8",
