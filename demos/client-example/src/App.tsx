@@ -26,6 +26,7 @@ import {
 // import {
 //   CaptchaWidget,
 // } from "@prosopo/procaptcha-react";
+import { CaptchaWidget } from "./components/CaptchaWidget";
 
 import "./App.css";
 import { useStyles } from "./app.styles"; // TODO procatcha-react
@@ -190,7 +191,7 @@ function App() {
 
           <Box className={classes.captchasBody}>
 
-            {/* {captchaChallenge && <CaptchaWidget challenge={captchaChallenge[currentCaptchaIndex]} solution={captchaSolution} solutionClickEvent={onCaptchaSolutionClick} />} */}
+            {captchaChallenge && <CaptchaWidget challenge={captchaChallenge[currentCaptchaIndex]} solution={captchaSolution} solutionClickEvent={onCaptchaSolutionClick} />}
 
             <Box className={classes.dotsContainer}>
               {Array.from(Array(totalCaptchas).keys()).map((item, index) => {
