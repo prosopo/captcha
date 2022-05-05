@@ -37,38 +37,13 @@
       "esnext",
       "dom"
     ],
-    
-    "paths": {
-      "@prosopo/procaptcha": [
-        "../packages/procaptcha/src"
-      ],
-      "@prosopo/procaptcha/*": [
-        "../packages/procaptcha/src/*"
-      ],
-      "@prosopo/procaptcha-react": [
-        "../packages/procaptcha-react/src"
-      ],
-      "@prosopo/procaptcha-react/*": [
-        "../packages/procaptcha-react/src/*"
-      ]
-    },
 
     "rootDir": "./src",
     "outDir": "./build"
 
   },
   "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx"
-  ],
-  "references": [
-    {
-      "path": "../packages/procaptcha",
-      "name": "@prosopo/procaptcha"
-    },
-    {
-      "path": "../packages/procaptcha-react",
-      "name": "@prosopo/procaptcha-react"
-    }
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ]
 }
