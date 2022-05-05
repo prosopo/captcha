@@ -1,5 +1,5 @@
 import React from "react";
-import { useStyles } from "../styles";
+import { useStyles } from "../app.styles";
 import { Avatar } from "@mui/material";
 import { ProsopoCaptcha } from "@prosopo/procaptcha";
 
