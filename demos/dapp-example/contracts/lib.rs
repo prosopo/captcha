@@ -38,6 +38,8 @@ pub mod dapp {
         token_holder: AccountId,
         /// The percentage of correct captchas that an Account must have answered correctly
         human_threshold: u8,
+        /// The time in ms within which a user must have answered a captcha
+        recency_threshold: u32,
         /// The address of the prosopo bot protection contract
         prosopo_account: AccountId
     }
@@ -66,18 +68,19 @@ pub mod dapp {
         /// Creates a new contract with the specified initial supply and loads an instance of the
         /// `prosopo` contract
         #[ink(constructor, payable)]
-        pub fn new(initial_supply: Balance, faucet_amount: Balance, prosopo_account: AccountId, human_threshold: u8) -> Self {
-            ink_lang::codegen::initialize_contract(|contract| Self::new_init(contract, initial_supply, faucet_amount, prosopo_account, human_threshold))
+        pub fn new(initial_supply: Balance, faucet_amount: Balance, prosopo_account: AccountId, human_threshold: u8, recency_threshold: u32) -> Self {
+            ink_lang::codegen::initialize_contract(|contract| Self::new_init(contract, initial_supply, faucet_amount, prosopo_account, human_threshold, recency_threshold))
         }
 
         /// Default initializes the ERC-20 contract with the specified initial supply.
-        fn new_init(&mut self, initial_supply: Balance, faucet_amount: Balance, prosopo_account: AccountId, human_threshold: u8) {
+        fn new_init(&mut self, initial_supply: Balance, faucet_amount: Balance, prosopo_account: AccountId, human_threshold: u8, recency_threshold: u32) {
             let caller = Self::env().caller();
             self.balances.insert(&caller, &initial_supply);
             self.total_supply = initial_supply;
             self.faucet_amount = faucet_amount;
             self.token_holder = caller;
             self.human_threshold = human_threshold;
+            self.recency_threshold = recency_threshold;
             self.prosopo_account = prosopo_account;
             // Events not working due to bug https://github.com/paritytech/ink/issues/1000
             // self.env().emit_event(Transfer {
@@ -91,7 +94,7 @@ pub mod dapp {
         #[ink(message)]
         pub fn faucet(&mut self, accountid: AccountId)-> Result<(), Error>  {
             let token_holder = self.token_holder;
-            if self.is_human(accountid, self.human_threshold) {
+            if self.is_human(accountid, self.human_threshold, self.recency_threshold) {
                 self.transfer_from_to(&token_holder, &accountid, self.faucet_amount);
             } else {
                 return Err(Error::UserNotHuman);
@@ -101,10 +104,12 @@ pub mod dapp {
 
         /// Calls the `Prosopo` contract to check if `accountid` is human
         #[ink(message)]
-        pub fn is_human(&self, accountid: AccountId, threshold: u8) -> bool {
+        pub fn is_human(&self, accountid: AccountId, threshold: u8, recency: u32) -> bool {
             let mut prosopo_instance: ProsopoRef = ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
-            prosopo_instance.dapp_operator_is_human_user(accountid, threshold).unwrap()
-            // TODO check that the captcha was completed within the last X seconds
+            prosopo_instance.dapp_operator_is_human_user(accountid, threshold).unwrap();
+            // check that the captcha was completed within the last X seconds
+            let last_correct_captcha = prosopo_instance.dapp_operator_last_correct_captcha(accountid).unwrap();
+            return last_correct_captcha.before_ms <= recency && prosopo_instance.dapp_operator_is_human_user(accountid, threshold).unwrap()
         }
 
         /// Transfers `value` amount of tokens from the caller's account to account `to`.

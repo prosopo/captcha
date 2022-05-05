@@ -35,6 +35,8 @@ async function run() {
         process.env.CONTRACT_ADDRESS,
         // human_threshold
         80,
+        // recency_threshold 3 minutes
+        180000,
         {
             gasLimit: "400000000000",
             value: "20000 UNIT",
