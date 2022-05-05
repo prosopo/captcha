@@ -1,5 +1,5 @@
 {
-  "name": "@prosopo/client-example",
+  "name": "client-example",
   "version": "0.0.0",
   "private": true,
   "packageManager": "yarn@3.2.0",
@@ -15,8 +15,8 @@
     "@polkadot/ui-keyring": "^1.0.1",
     "@polkadot/util": "^9.0.1",
     "@polkadot/util-crypto": "^9.0.1",
-    "@prosopo/procaptcha": "file:../packages/procaptcha",
-    "@prosopo/procaptcha-react": "file:../packages/procaptcha-react",
+    "@prosopo/procaptcha": "workspace:packages/procaptcha",
+    "@prosopo/procaptcha-react": "workspace:packages/procaptcha-react",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^12.0.0",
     "@testing-library/user-event": "^13.2.1",
