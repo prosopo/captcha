@@ -27,8 +27,10 @@
     "lib": [
       "ES6",
     ],
-    "rootDirs": ["./src"],
+
+    "rootDir": "./src",
     "outDir": "./build",
+    
   },
   "include": [
     "src/**/*.ts"
