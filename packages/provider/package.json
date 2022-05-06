@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "author": "Prosopo",
   "main": "build/src/index.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
