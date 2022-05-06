@@ -18,7 +18,7 @@
     "dev-provider-dataset": "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
   },
   "dependencies": {
-    "@prosopo/contract": "0.0.0",
+    "@prosopo/contract": "workspace:packages/contract",
     "@redspot/chai": "0.13.6",
     "@redspot/decimals": "0.13.6",
     "@redspot/explorer": "0.13.6",
@@ -32,7 +32,7 @@
     "cron-parser": "^4.2.1",
     "dotenv": "^14.3.2",
     "express": "^4.17.1",
-    "mongodb": "4.1.4",
+    "mongodb": "^4.1.4",
     "pm2": "^5.2.0",
     "redspot": "0.13.6",
     "zod": "^3.11.6"
