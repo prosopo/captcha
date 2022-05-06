@@ -7,16 +7,16 @@
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
-    "dev": "npx build && npx setup && npx start",
-    "start": "npx ts-node ./src/cli/cli.ts",
-    "setup": "npx ts-node ./scripts/setupdev.ts",
-    "mnemonic": "npx ts-node ./scripts/generateMnemonic.ts",
-    "test": "npx redspot test",
-    "test:mock": "NODE_ENV=test npx redspot test",
-    "populate-data": "npx redspot run ./src/dataUtils/populateDatabase.ts",
-    "dev-provider-register": "npx build && npx start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
-    "dev-provider-stake": "npx build && npx start provider_stake --value 10 --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
-    "dev-provider-dataset": "npx build && npx start provider_add_data_set --file /usr/src/data/captchas.json"
+    "dev": "yarn build && yarn run setup && yarn start",
+    "start": "yarn ts-node ./src/cli/cli.ts",
+    "setup": "yarn ts-node ./scripts/setupdev.ts",
+    "mnemonic": "yarn ts-node ./scripts/generateMnemonic.ts",
+    "test": "yarn redspot test",
+    "test:mock": "NODE_ENV=test yarn test",
+    "populate-data": "yarn redspot run ./src/dataUtils/populateDatabase.ts",
+    "dev-provider-register": "yarn build && yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
+    "dev-provider-stake": "yarn build && yarn start provider_stake --value 10 --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
+    "dev-provider-dataset": "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
   },
   "dependencies": {
     "@prosopo/contract": "0.0.0",
@@ -53,8 +53,10 @@
     "dotenv": "^14.3.2",
     "mocha": "8.4.0",
     "prettier": "^2.5.1",
+    "ts-mocha": "^10.0.0",
     "ts-node": "^10.5.0",
-    "typescript": "^4.5.5"
+    "typescript": "^4.5.5",
+    "yargs-parser": "^21.0.1"
   },
   "repository": {
     "type": "git",

@@ -2,6 +2,11 @@
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
 
+    "target": "esnext",
+    "module": "commonjs",
+
+    "esModuleInterop": true,
+
     "paths": {
       "@prosopo/provider": [
         "./src"
