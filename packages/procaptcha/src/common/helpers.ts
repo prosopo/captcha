@@ -17,7 +17,6 @@ import { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types'
 import { isHex, isU8a } from '@polkadot/util'
 import { blake2AsU8a } from '@polkadot/util-crypto'
 import { AnyJson } from '@polkadot/types/types/codec'
-// import { TransactionResponse } from '@redspot/patract/types';
 
 /** Encodes arguments that should be hashes using blake2AsU8a
  * @return encoded arguments
