@@ -40,6 +40,7 @@
     "@rushstack/eslint-patch": "^1.0.6",
     "@types/chai": "^4.2.14",
     "@types/express": "^4.17.13",
+    "@types/find-up": "^4.0.0",
     "@types/node": "^17.0.8",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.0",
