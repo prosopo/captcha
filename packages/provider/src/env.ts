@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import findUp from 'find-up'
+import {findUpSync} from 'find-up'
 import {ZodError} from 'zod'
 import {ERRORS} from './errors'
 import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment} from './types'
@@ -89,12 +89,12 @@ export class Environment implements ProsopoEnvironment {
     }
 
     private static getConfigPath(): string {
-        const tsConfigPath = findUp.sync(TS_CONFIG_FILENAME)
+        const tsConfigPath = findUpSync(TS_CONFIG_FILENAME)
         if (tsConfigPath !== null && tsConfigPath !== undefined) {
             return tsConfigPath
         }
 
-        const pathToConfigFile = findUp.sync(JS_CONFIG_FILENAME)
+        const pathToConfigFile = findUpSync(JS_CONFIG_FILENAME)
 
         if (pathToConfigFile === null || pathToConfigFile === undefined) {
             throw new Error(ERRORS.GENERAL.CANNOT_FIND_CONFIG_FILE.message)
