@@ -1,49 +1,27 @@
 {
+  "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "jsx": "react",
-
-    "target": "esnext",
-    "module": "esnext",
-    "sourceMap": true,
-    "strict": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "declaration": true,
-    "noImplicitAny": false,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictPropertyInitialization": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "importHelpers": true,
-    "resolveJsonModule": true,
-
-    "useUnknownInCatchVariables": false,
-
-    "composite": true,
-
-    "types": [
-      "node",
-    ],
+    "baseUrl": ".",
+    "target": "es6",
     "lib": [
-      "esnext",
-      "dom"
+      "dom",
+      "esnext"
     ],
+
+    "jsx": "react-jsx",
 
     "rootDir": "./src",
     "outDir": "./build"
-
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
+    "src/**/*"
+  ],
+  "references": [ 
+    { 
+      "path": "../packages/procaptcha"
+    },
+    { 
+      "path": "../packages/procaptcha-react"
+    }
   ]
 }
