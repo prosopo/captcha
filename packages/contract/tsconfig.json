@@ -1,38 +1,10 @@
 {
+  "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "target": "esnext",  // DO NOT CHANGE!
-    "module": "commonjs",  // DO NOT CHANGE!
-    "moduleResolution": "node",
-    "allowJs": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "declaration": true,
-    "strict": true,
-    "noImplicitAny": false /* Raise error on expressions and declarations with an implied 'any' type. */,
-    "strictNullChecks": true /* Enable strict null checks. */,
-    "strictFunctionTypes": true /* Enable strict checking of function types. */,
-    "noUnusedLocals": false /* Report errors on unused locals. */,
-    "noUnusedParameters": false /* Report errors on unused parameters. */,
-    "noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
-    "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
-    "importHelpers": true,
-    "skipLibCheck": true,
-    "composite": true,
-    "types": [
-      "node",
-    ],
-    "lib": [
-      "ES6",
-    ],
-
     "rootDir": "./src",
     "outDir": "./build",
-    
   },
   "include": [
-    "src/**/*.ts"
+    "./src/**/*.ts"
   ]
 }

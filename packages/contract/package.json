@@ -10,7 +10,8 @@
     "node": ">=14.0.0"
   },
   "scripts": {
-    "build": "yarn tsc -b . --verbose"
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose"
   },
   "resolutions": {
     "@polkadot/api": "7.12.1",
@@ -59,21 +60,6 @@
     "@typescript-eslint/parser": "^5.10.0",
     "chai": "^4.3.4",
     "dotenv": "^14.3.2",
-    "eslint": "^8.9.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-airbnb-typescript": "^16.1.0",
-    "eslint-config-standard": "^16.0.3",
-    "eslint-import-resolver-typescript": "^2.5.0",
-    "eslint-plugin-header": "^3.1.1",
-    "eslint-plugin-import": "^2.25.4",
-    "eslint-plugin-import-newlines": "^1.2.0",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-react": "latest",
-    "eslint-plugin-react-hooks": "^4.3.0",
-    "eslint-plugin-simple-import-sort": "^7.0.0",
-    "eslint-plugin-sort-destructure-keys": "^1.4.0",
     "mocha": "8.4.0",
     "prettier": "^2.5.1",
     "ts-node": "^10.5.0",
@@ -81,5 +67,15 @@
   },
   "files": [
     "./redspot.config.ts"
-  ]
+  ],
+  "types": "./build/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prosopo-io/contract.git"
+  },
+  "bugs": {
+    "url": "https://github.com/prosopo-io/contract/issues"
+  },
+  "homepage": "https://github.com/prosopo-io/contract#readme",
+  "description": ""
 }

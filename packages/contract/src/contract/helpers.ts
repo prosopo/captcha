@@ -17,8 +17,7 @@ import {AbiMessage, ContractCallOutcome, DecodedEvent} from '@polkadot/api-contr
 import {isHex, isU8a} from '@polkadot/util'
 import {blake2AsU8a} from '@polkadot/util-crypto'
 import {AnyJson} from '@polkadot/types/types/codec'
-import {TransactionResponse} from '@redspot/patract/types';
-import {Signer} from '../types'
+import {Signer, TransactionResponse} from '../types'
 
 /**
  * Get the event name from the contract method name
@@ -34,7 +33,7 @@ export function getEventNameFromMethodName(contractMethodName: string): string {
  *
  * @return {AnyJson} array of events filtered by calculated event name
  */
-export function getEventsFromMethodName(response: TransactionResponse, contractMethodName: string): AnyJson | DecodedEvent[] {
+export function getEventsFromMethodName(response: TransactionResponse, contractMethodName: string): AnyJson | DecodedEvent[] | any { // TODO: fix any
     const eventName = getEventNameFromMethodName(contractMethodName)
     if (response && response['events'] ) {
         return response && response['events'] && response["events"].filter((x) => x.name === eventName)
