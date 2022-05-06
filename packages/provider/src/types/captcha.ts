@@ -16,6 +16,7 @@
 import { z } from 'zod'
 import { AccountId, Hash } from '@polkadot/types/interfaces'
 import { u32, u64 } from '@polkadot/types'
+import {ProsopoConfigSchema} from "@prosopo/provider/types/config";
 
 export enum CaptchaTypes { SelectAll = 'SelectAll'}
 
@@ -121,6 +122,7 @@ export const CaptchaImageSchema = z.object({
     path: z.string(),
     type: CaptchaItemTypesZod
 })
+export type CaptchaImage = z.infer<typeof CaptchaImageSchema>
 
 export const CaptchaTextSchema = z.object({
     text: z.string(),
@@ -163,7 +165,7 @@ export const DatasetSchema = z.object({
 
 export const DatasetWithIdsSchema = z.object({
     datasetId: z.string(),
-    captchas: CaptchasWithIdSchema,
+    captchas: z.array(SelectAllCaptchaSchema),
     format: z.nativeEnum(CaptchaTypes),
     tree: z.array(z.array(z.string())).optional()
 })

@@ -344,7 +344,6 @@ export class Tasks {
 
     /**
      * Apply new captcha solutions to captcha dataset and recalculate merkle tree
-     * @param {string} datasetId
      */
     async calculateCaptchaSolutions() {
         try {

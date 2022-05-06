@@ -76,6 +76,7 @@ export class ProsopoDatabase implements Database {
         format: parsedDataset.format,
         tree: parsedDataset.tree
       };
+      console.log(parsedDataset);
 
       await this.tables.dataset?.updateOne({ _id: parsedDataset.datasetId }, { $set: datasetDoc }, { upsert: true });
       // put the dataset id on each of the captcha docs
@@ -120,6 +121,7 @@ export class ProsopoDatabase implements Database {
       }
     ]);
     const docs = await cursor?.toArray();
+    console.log(docs);
 
     if (docs) {
       // drop the _id field

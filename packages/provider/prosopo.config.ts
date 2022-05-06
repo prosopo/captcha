@@ -61,5 +61,13 @@ export default {
             endpoint: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}`,
             dbname: process.env.DATABASE_NAME,
         }
+    },
+    assets : {
+        absolutePath: '/usr/src/data',
+        basePath: '/v1/assets'
+    },
+    server : {
+        baseURL: 'http://localhost:3000'
     }
+
 } as ProsopoConfig;
