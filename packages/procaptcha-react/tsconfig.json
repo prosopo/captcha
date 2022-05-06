@@ -1,17 +1,25 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./build",
+    
+    "module": "esnext",
+    "target": "es5",
     "lib": [
-      "esnext",
+      "es2020",
       "dom"
     ],
-    "jsx": "react"
+
+    "jsx": "react-jsx",
+
+    "rootDir": "./src",
+    "outDir": "./build"
   },
   "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx"
+    "src"
+  ],
+  "exclude": [
+    "node_modules", 
+    "build"
   ],
   "references": [ 
     { 
