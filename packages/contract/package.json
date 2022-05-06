@@ -2,10 +2,9 @@
   "name": "@prosopo/contract",
   "author": "Chris Taylor <chris@prosopo.io>",
   "license": "GPL-3.0",
-  "packageManager": "yarn@3.2.0",
   "version": "0.0.0",
   "main": "build/index.js",
-  "type": "module",
+  "type": "commonjs",
   "engines": {
     "node": ">=14.0.0"
   },
