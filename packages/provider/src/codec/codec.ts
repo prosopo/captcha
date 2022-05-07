@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Registry } from 'redspot/types/provider';
+import { Registry } from '@polkadot/types-codec/types/registry';
 
 import { AnyJson } from '@polkadot/types/types/codec';
 import { decodeU8aVec, typeToConstructor } from '@polkadot/types-codec/utils';

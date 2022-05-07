@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import {getEventsFromMethodName, Payee, Provider, TransactionResponse} from '@prosopo/contract';
-import {CaptchaSolution} from '@prosopo/provider/types';
+import {CaptchaSolution} from '@prosopo/provider';
 import path from 'path';
 
 import {AnyJson} from '@polkadot/types/types/codec';
