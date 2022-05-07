@@ -158,7 +158,6 @@ export function prosopoMiddleware(env: Environment): Router {
       await tasks.validateProviderWasRandomlyChosen(userAccount, dappContractAccount, datasetId, blockNumberParsed);
 
       let taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount);
-      console.log(taskData.captchas);
       taskData.captchas = taskData.captchas.map((cwp: CaptchaWithProof) => (
           {
             ...cwp,

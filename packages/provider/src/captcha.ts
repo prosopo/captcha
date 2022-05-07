@@ -189,6 +189,8 @@ export function computePendingRequestHash(captchaIds: string[], userAccount: str
  * Parse the image items in a captcha and pass back a URI if they exist
  */
 export function parseCaptchaAssets(item: CaptchaImage, assetsResolver: AssetsResolver | undefined) {
-  return {...item, path: assetsResolver?.resolveAsset(item.path).URI || item.path}
+  console.log("item path", assetsResolver?.resolveAsset(item.path))
+  console.log("item URL", assetsResolver?.resolveAsset(item.path).getURL())
+  return {...item, path: assetsResolver?.resolveAsset(item.path).getURL() || item.path}
 }
 

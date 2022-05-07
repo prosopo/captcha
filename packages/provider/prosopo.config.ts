@@ -16,7 +16,7 @@
 import {ProsopoConfig} from './types';
 
 export default {
-    logLevel: 'info',
+    logLevel: 'debug',
     defaultEnvironment: 'development',
     contract: {
         abi: '/usr/src/packages/provider/artifacts/prosopo.json'
@@ -63,7 +63,7 @@ export default {
         }
     },
     assets : {
-        absolutePath: '/usr/src/data',
+        absolutePath: '/usr/src/data/img',
         basePath: '/v1/assets'
     },
     server : {

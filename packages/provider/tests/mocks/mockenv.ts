@@ -94,8 +94,8 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.abi = MockEnvironment.getContractAbi(this.config.contract.abi)
             this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
+            this.abi = MockEnvironment.getContractAbi(this.config.contract.abi, this.logger)
             this.assetsResolver = new LocalAssetsResolver({
                 absolutePath: this.config.assets.absolutePath,
                 basePath: this.config.assets.basePath,
@@ -131,8 +131,8 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
     }
 
-    private static getContractAbi(path): ContractAbi {
-        return loadJSONFile(path) as ContractAbi
+    private static getContractAbi(path, logger): ContractAbi {
+        return loadJSONFile(path, logger) as ContractAbi
     }
 
 }

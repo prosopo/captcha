@@ -38,7 +38,10 @@ export class LocalAssetsResolver implements AssetsResolver {
             URI: assetURI,
             getURL: () => {
                 if (url.protocol === 'file:') {
-                    return this.config.serverBaseURL + url.pathname;
+                    const regex: RegExp = new RegExp(`/${this.config.absolutePath}/`, 'g');
+                    console.log(this.config.absolutePath)
+                    console.log(url.pathname?.replace( this.config.absolutePath, ''))
+                    return this.config.serverBaseURL + this.config.basePath + url.pathname?.replace( this.config.absolutePath, '');
                 }
                 return '';
             }
@@ -46,6 +49,7 @@ export class LocalAssetsResolver implements AssetsResolver {
     }
 
     injectMiddleware(app : Application) : void {
+        // app.use(virtual_path, folder_with_static_assets)
         app.use(this.config.basePath, express.static(this.config.absolutePath));
     }
 }

@@ -62,8 +62,9 @@ export class Environment implements ProsopoEnvironment {
             this.deployerAddress = this.config.networks![this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address
             this.contractName = this.config.networks![this.defaultEnvironment].contract.name
-            this.abi = Environment.getContractAbi(this.config.contract.abi) as ContractAbi
             this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
+            this.abi = Environment.getContractAbi(this.config.contract.abi, this.logger) as ContractAbi
+
 
             this.assetsResolver = new LocalAssetsResolver({
                 absolutePath: this.config.assets.absolutePath,
@@ -131,7 +132,7 @@ export class Environment implements ProsopoEnvironment {
         return imported.default !== undefined ? imported.default : imported
     }
 
-    private static getContractAbi(path): ContractAbi {
-        return loadJSONFile(path) as ContractAbi
+    private static getContractAbi(path, logger): ContractAbi {
+        return loadJSONFile(path, logger) as ContractAbi
     }
 }
