@@ -23,10 +23,10 @@ import {
   getConfig
 } from "@prosopo/procaptcha";
 
-import {
-  CaptchaWidget,
-} from "@prosopo/procaptcha-react";
-// import { CaptchaWidget } from "./components/CaptchaWidget";
+// import {
+//   CaptchaWidget,
+// } from "@prosopo/procaptcha-react";
+import { CaptchaWidget } from "./components/CaptchaWidget";
 
 import "./App.css";
 import { useStyles } from "./app.styles"; // TODO procatcha-react
