@@ -30,8 +30,6 @@ import { CaptchaWidget } from "./components/CaptchaWidget";
 import "./App.css";
 import { useStyles } from "./app.styles"; // TODO procatcha-react
 
-// const { providerApi } = config;
-
 function App() {
 
   const classes = useStyles();
