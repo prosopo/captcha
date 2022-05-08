@@ -7,12 +7,9 @@
 import { ProsopoConfig } from '@prosopo/procaptcha';
 
 const config: ProsopoConfig = {
-    // "providerApi.baseURL": process.env.REACT_APP_API_BASE_URL,
-    // "providerApi.prefix": process.env.REACT_APP_API_PATH_PREFIX,
-    // "dappAccount": process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
-    "providerApi.baseURL": "http://localhost:3000",
-    "providerApi.prefix": "/v1/prosopo",
-    "dappAccount": "5CzcDQzgdEVDTHoaf8Vw23raXaSMNwxQd3mr2ThVbwP8hXBY",
+    "providerApi.baseURL": process.env.REACT_APP_API_BASE_URL,
+    "providerApi.prefix": process.env.REACT_APP_API_PATH_PREFIX,
+    "dappAccount": process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
 }
 
 export default config;

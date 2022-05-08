@@ -9,7 +9,7 @@ import {
   TextField
 } from "@mui/material";
 
-// import config from "./config";
+import config from "./config";
 
 import {
   ProsopoRandomProviderResponse,
@@ -20,7 +20,7 @@ import {
   getExtension,
   getProsopoContract,
   ProCaptcha,
-  getConfig
+  ProCaptchaConfig,
 } from "@prosopo/procaptcha";
 
 // import {
@@ -56,7 +56,9 @@ function App() {
   const [captchaChallenge, setCaptchaChallenge] = useState<ProsopoCaptchaResponse | null>(null);
   const [captchaSolution, setCaptchaSolution] = useState<number[]>([]);
 
-  const providerApi = new ProviderApi(getConfig());
+  const proCaptchaConfig = new ProCaptchaConfig(config);
+
+  const providerApi = new ProviderApi(proCaptchaConfig.getConfig());
 
   useEffect(() => {
     Promise.all([providerApi.getContractAddress(), getExtension()])
@@ -138,7 +140,7 @@ function App() {
     extension.setAccount(account.address).then(async (account) => {
       setAccount(account);
 
-      const _contract = await getProsopoContract(contractAddress, getConfig('dappAccount') as string, account);
+      const _contract = await getProsopoContract(contractAddress, proCaptchaConfig.getConfig('dappAccount') as string, account);
       setContract(_contract);
 
       const _provider = await _contract.getRandomProvider();
