@@ -11,6 +11,7 @@
     "@mui/styles": "^5.4.4",
     "@polkadot/api": "^7.7.1",
     "@polkadot/extension-dapp": "^0.42.7",
+    "@polkadot/extension-inject": "^0.43.1",
     "@polkadot/ui-keyring": "^1.0.1",
     "@prosopo/procaptcha": "0.0.0",
     "@testing-library/jest-dom": "^5.14.1",
