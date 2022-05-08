@@ -20,6 +20,11 @@
     "dev-provider-dataset": "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
   },
   "dependencies": {
+    "@polkadot/api-contract": "7.12.1",
+    "@polkadot/keyring": "8.5.1",
+    "@polkadot/types": "7.12.1",
+    "@polkadot/util": "8.5.1",
+    "@polkadot/util-crypto": "8.5.1",
     "@prosopo/contract": "0.0.0",
     "@redspot/chai": "0.13.6",
     "@redspot/decimals": "0.13.6",
@@ -27,6 +32,8 @@
     "@redspot/patract": "0.13.6",
     "@redspot/watcher": "0.13.6",
     "@types/mocha": "^9.0.0",
+    "consola": "^2.15.0",
+    "cors": "^2.8.5",
     "cron": "^1.8.2",
     "cron-parser": "^4.2.1",
     "dotenv": "^14.3.2",
@@ -35,17 +42,8 @@
     "mongodb": "^4.1.4",
     "pm2": "^5.2.0",
     "redspot": "0.13.6",
-    "zod": "^3.11.6",
-
-    "@polkadot/types": "7.12.1",
-    "@polkadot/util": "8.5.1",
-    "@polkadot/util-crypto": "8.5.1",
-    "@polkadot/api-contract": "7.12.1",
-    "@polkadot/keyring": "8.5.1",
-
-    "consola": "^2.15.0",
     "yargs": "^15.4.1",
-    "cors": "^2.8.5"
+    "zod": "^3.11.6"
   },
   "devDependencies": {
     "@types/chai": "^4.2.14",
