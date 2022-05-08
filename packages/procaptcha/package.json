@@ -13,6 +13,7 @@
     "@polkadot/api": "^7.7.1",
     "@polkadot/api-contract": "^7.7.1",
     "@polkadot/extension-dapp": "^0.42.7",
+    "@polkadot/extension-inject": "^0.43.1",
     "@polkadot/rpc-provider": "^7.7.1",
     "@polkadot/types": "7.12.1",
     "@polkadot/util": "^9.0.1",
