@@ -1,12 +1,12 @@
 import HttpClientBase from "./HttpClientBase";
 import Storage from "../modules/storage";
-import { ProsopoConfig, ProsopoRandomProviderResponse, ProsopoCaptchaResponse, CaptchaSolution, CaptchaSolutionResponse } from '../types';
+import { IProCaptchaConfig, ProsopoRandomProviderResponse, ProsopoCaptchaResponse, CaptchaSolution, CaptchaSolutionResponse } from '../types';
 
 export class ProviderApi extends HttpClientBase {
 
-  protected config: ProsopoConfig;
+  protected config: IProCaptchaConfig;
 
-  constructor(config: ProsopoConfig) {
+  constructor(config: IProCaptchaConfig) {
     super(config['providerApi.baseURL'], config['providerApi.prefix']);
     this.config = config;
   }

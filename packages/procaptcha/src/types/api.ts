@@ -45,7 +45,7 @@ export interface CaptchaSolutionResponse {
   status: string;
 }
 
-export interface ProsopoConfig {
+export interface IProCaptchaConfig {
   "providerApi.baseURL": string;
   "providerApi.prefix": string;
   "dappAccount": string;
