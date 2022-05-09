@@ -58,7 +58,7 @@ import {
     LastCorrectCaptcha
 } from '../types'
 import {loadJSONFile, shuffleArray, writeJSONFile} from '../util'
-import {TransactionResponse} from '@redspot/patract/types';
+import {TransactionResponse} from '@prosopo/contract';
 
 /**
  * @description Tasks that are shared by the API and CLI
