@@ -12,7 +12,7 @@ const config: ProsopoConfig = {
     // "dappAccount": process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
     "providerApi.baseURL": "http://localhost:3000",
     "providerApi.prefix": "/v1/prosopo",
-    "dappAccount": "5CGUZ7DpzzRMGKVyuLyD2az9VLbngbMc6SuuKzPiGqwoDGR6",
+    "dappAccount": "5CzcDQzgdEVDTHoaf8Vw23raXaSMNwxQd3mr2ThVbwP8hXBY",
 }
 
 export default config;
