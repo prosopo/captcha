@@ -137,7 +137,6 @@ function App() {
     }
     extension.setAccount(account.address).then(async (account) => {
       setAccount(account);
-
       const _contract = await getProsopoContract(contractAddress, getConfig('dappAccount') as string, account);
       setContract(_contract);
 
@@ -180,7 +179,6 @@ function App() {
           )}
         />
       )}
-
       {showCaptchas && account && (
         <Box className={classes.captchasContainer}>
           <Box className={classes.captchasHeader}>
@@ -190,8 +188,7 @@ function App() {
           </Box>
 
           <Box className={classes.captchasBody}>
-
-            {captchaChallenge && <CaptchaWidget challenge={captchaChallenge[currentCaptchaIndex]} solution={captchaSolution} solutionClickEvent={onCaptchaSolutionClick} />}
+            {captchaChallenge && <CaptchaWidget challenge={captchaChallenge.captchas[currentCaptchaIndex]} solution={captchaSolution} solutionClickEvent={onCaptchaSolutionClick} />}
 
             <Box className={classes.dotsContainer}>
               {Array.from(Array(totalCaptchas).keys()).map((item, index) => {
