@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./build",
-
+    "target": "esnext",
+    "module": "esnext",
     "lib": [
       "esnext",
       "dom"
@@ -14,12 +15,12 @@
     "./src/**/*.ts",
     "./src/abi/*.json"
   ],
-  "references": [ 
-    { 
-      "path": "../provider" 
+  "references": [
+    {
+      "path": "../provider"
     },
-    { 
-      "path": "../contract" 
+    {
+      "path": "../contract"
     }
   ]
 }
