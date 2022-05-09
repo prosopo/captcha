@@ -9,7 +9,7 @@ import {
   TextField
 } from "@mui/material";
 
-// import config from "./config";
+import config from "./config";
 
 import {
   ProsopoRandomProviderResponse,
@@ -20,7 +20,6 @@ import {
   getExtension,
   getProsopoContract,
   ProCaptcha,
-  getConfig
 } from "@prosopo/procaptcha";
 
 // import {
@@ -30,8 +29,6 @@ import { CaptchaWidget } from "./components/CaptchaWidget";
 
 import "./App.css";
 import { useStyles } from "./app.styles"; // TODO procatcha-react
-
-// const { providerApi } = config;
 
 function App() {
 
@@ -56,7 +53,7 @@ function App() {
   const [captchaChallenge, setCaptchaChallenge] = useState<ProsopoCaptchaResponse | null>(null);
   const [captchaSolution, setCaptchaSolution] = useState<number[]>([]);
 
-  const providerApi = new ProviderApi(getConfig());
+  const providerApi = new ProviderApi(config);
 
   useEffect(() => {
     Promise.all([providerApi.getContractAddress(), getExtension()])
@@ -137,7 +134,8 @@ function App() {
     }
     extension.setAccount(account.address).then(async (account) => {
       setAccount(account);
-      const _contract = await getProsopoContract(contractAddress, getConfig('dappAccount') as string, account);
+
+      const _contract = await getProsopoContract(contractAddress, config['dappAccount'], account);
       setContract(_contract);
 
       const _provider = await _contract.getRandomProvider();
@@ -179,6 +177,7 @@ function App() {
           )}
         />
       )}
+
       {showCaptchas && account && (
         <Box className={classes.captchasContainer}>
           <Box className={classes.captchasHeader}>
