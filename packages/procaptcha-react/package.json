@@ -12,6 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@mui/material": "^5.4.4",
+    "@mui/styles": "^5.4.4",
     "@prosopo/procaptcha": "0.0.0"
   },
   "devDependencies": {
