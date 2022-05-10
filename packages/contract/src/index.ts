@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 
-export * from './errors'
-export * from './contract'
-export * from './types'
-export * from './network/network'
+export * from './errors';
+export * from './contract';
+export * from './types';
+export * from './network/network';
+export * from './abi';
