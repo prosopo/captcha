@@ -28,8 +28,8 @@ import {
 
 import CaptchaWidget from "./CaptchaWidget";
 
-export interface callBacks {
-    onSubmit?: (result: CaptchaSolutionResponse | Error, captchaIndex: number) => void;
+export interface ProCaptchaCallbacks {
+    onSubmit?: (result: CaptchaSolutionResponse | Error, captchaChallenge: ProsopoCaptchaResponse | null, captchaIndex: number) => void;
     onCancel?: () => void;
     onSolved?: () => void;
     onReady?: (contractAddress: string, extension: Extension | null) => void;
@@ -46,7 +46,7 @@ export interface callBacks {
     ) => void;
 }
 
-export function ProCaptchaComponent({ config, callBacks }: { config: ProCaptchaConfig, callBacks?: callBacks }) {
+export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaConfig, callbacks?: ProCaptchaCallbacks }) {
 
     const classes = useStyles();
 
@@ -75,8 +75,8 @@ export function ProCaptchaComponent({ config, callBacks }: { config: ProCaptchaC
                 // setAccounts(_extension.getAllAcounts());
                 console.log("CONTRACT ADDRESS", _contractAddress.contractAddress);
 
-                if (callBacks?.onReady) {
-                    callBacks.onReady(_contractAddress.contractAddress, _extension);
+                if (callbacks?.onReady) {
+                    callbacks.onReady(_contractAddress.contractAddress, _extension);
                 }
             })
             .catch(err => {
@@ -104,8 +104,8 @@ export function ProCaptchaComponent({ config, callBacks }: { config: ProCaptchaC
         setAccount(null);
         setCurrentCaptchaIndex(0);
 
-        if (callBacks?.onCancel) {
-            callBacks.onCancel();
+        if (callbacks?.onCancel) {
+            callbacks.onCancel();
         }
     };
 
@@ -140,8 +140,8 @@ export function ProCaptchaComponent({ config, callBacks }: { config: ProCaptchaC
 
         console.log("CAPTCHA SUBMIT RESULT", submitResult);
 
-        if (callBacks?.onSubmit) {
-            callBacks.onSubmit(submitResult, currentCaptchaIndex);
+        if (callbacks?.onSubmit) {
+            callbacks.onSubmit(submitResult, captchaChallenge, currentCaptchaIndex);
         }
 
         const nextCaptchaIndex = currentCaptchaIndex + 1;
@@ -151,8 +151,8 @@ export function ProCaptchaComponent({ config, callBacks }: { config: ProCaptchaC
         } else {
             // TODO after all captchas solved.
             cancelCaptcha();
-            if (callBacks?.onSolved) {
-                callBacks.onSolved();
+            if (callbacks?.onSolved) {
+                callbacks.onSolved();
             }
         }
     };
@@ -178,8 +178,8 @@ export function ProCaptchaComponent({ config, callBacks }: { config: ProCaptchaC
 
             setCaptchaChallenge(_captchaChallenge);
 
-            if (callBacks?.onAccountChange) {
-                callBacks.onAccountChange(account, _contract, _provider, _captchaChallenge);
+            if (callbacks?.onAccountChange) {
+                callbacks.onAccountChange(account, _contract, _provider, _captchaChallenge);
             }
         });
     };
