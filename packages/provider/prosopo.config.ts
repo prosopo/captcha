@@ -19,7 +19,7 @@ export default {
     logLevel: 'debug',
     defaultEnvironment: 'development',
     contract: {
-        abi: '/usr/src/packages/provider/artifacts/prosopo.json'
+        abi: '/usr/src/packages/contract/src/abi/prosopo.json'
     },
     networks: {
         development: {

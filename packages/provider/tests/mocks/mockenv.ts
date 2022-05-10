@@ -40,7 +40,7 @@ export class MockEnvironment implements ProsopoEnvironment {
     constructor() {
         this.config = {
             logLevel: 'debug',
-            contract: {abi: '/usr/src/packages/provider/artifacts/prosopo.json'},
+            contract: {abi: '/usr/src/packages/contract/src/abi/prosopo.json'},
             defaultEnvironment: 'development',
             networks: {
                 development: {
