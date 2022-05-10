@@ -2,7 +2,7 @@ import { ApiPromise, SubmittableResult } from "@polkadot/api";
 import { Abi, ContractPromise } from "@polkadot/api-contract";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
-import abiJson from "../abi/prosopo.json";
+import { abiJson } from "@prosopo/contract";
 import { AnyJson } from "@polkadot/types/types/codec";
 import { ProviderInterface } from "@polkadot/rpc-provider/types";
 import { unwrap, encodeStringArgs } from "../common/helpers";
