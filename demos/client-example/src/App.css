@@ -32,3 +32,15 @@
 .tooltip:hover .tooltiptext {
   visibility: visible;
 }
+
+.iAmHumanButton {
+  height: 76;
+  width: 300;
+  background-color: "#FAFAFA !important";
+  border: "1px solid #E0E0E0 !important";
+}
+
+.iAmHumanButtonLabel {
+  color: "#555555";
+  text-transform: "none";
+}
