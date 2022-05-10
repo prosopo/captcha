@@ -20,7 +20,7 @@ function App() {
     return { ...state, ...action };
   }
 
-  const initialState = { account: null, contract: null, provider: null } as CaptchaManagerState;
+  const initialState = { account: null, contract: null, provider: null, extension: null } as CaptchaManagerState;
   const [state, dispatch] = useReducer(reducer, initialState);
 
   const toggleShowCaptcha = () => {
