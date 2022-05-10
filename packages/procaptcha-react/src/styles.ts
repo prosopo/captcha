@@ -49,16 +49,6 @@ export const useStyles = makeStyles({
   captchasHeaderLabel: {
     color: "#ffffff"
   },
-  iAmHumanButton: {
-    height: 76,
-    width: 300,
-    backgroundColor: "#FAFAFA !important",
-    border: "1px solid #E0E0E0 !important"
-  },
-  iAmHumanButtonLabel: {
-    color: "#555555",
-    textTransform: "none"
-  },
   dotsContainer: {
     display: "flex",
     alignItems: "center",
