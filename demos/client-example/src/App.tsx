@@ -51,11 +51,9 @@ function App() {
     <Box className={"App"}>
 
       {showCaptchas && (
-        <>
         <ProCaptchaManager.Provider value={{state, dispatch}}>
           <ProCaptchaComponent config={config} callbacks={{onAccountChange, onSubmit, onCancel, onSolved}} />
         </ProCaptchaManager.Provider>
-        </>
       )}
 
       {!showCaptchas && (
