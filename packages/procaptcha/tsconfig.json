@@ -12,8 +12,7 @@
 
   },
   "include": [
-    "./src/**/*.ts",
-    "./src/abi/*.json"
+    "./src/**/*.ts"
   ],
   "references": [
     {
