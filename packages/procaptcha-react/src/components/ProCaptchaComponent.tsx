@@ -63,19 +63,27 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
 
     const providerApi = new ProviderApi(config);
 
+    let init = false;
+
     useEffect(() => {
+
+        if (init) {
+            return;
+        }
+
+        init = true;
 
         if (!extension) {
             Promise.resolve(getExtension())
-            .then(_extension => {
-                context.dispatch({extension: _extension});
-                if (callbacks?.onLoadExtension) {
-                    callbacks.onLoadExtension(_extension);
-                }
-            })
-            .catch(err => {
-                console.error("FAILED TO GET EXTENSION", err);
-            });
+                .then(_extension => {
+                    context.dispatch({extension: _extension});
+                    if (callbacks?.onLoadExtension) {
+                        callbacks.onLoadExtension(_extension);
+                    }
+                })
+                .catch(err => {
+                    console.error("FAILED TO GET EXTENSION", err);
+                });
         }
 
         if (contract) {
@@ -90,7 +98,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
                 });
         }
 
-        if (contract && provider) {
+        if (contract && provider && !captchaChallenge) {
             newCaptchaChallenge(contract, provider);
         }
 
@@ -192,7 +200,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
     const onCaptchaSolutionClick = (index: number) => {
         const _captchaSolution = captchaSolution.includes(index) ? captchaSolution.filter(item => item !== index) : [...captchaSolution, index];
         setCaptchaSolution(_captchaSolution);
-        console.log("CLICK SOLUTION", captchaSolution);
+        console.log("CLICK SOLUTION", _captchaSolution);
     };
 
     return (
