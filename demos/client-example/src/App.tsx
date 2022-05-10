@@ -41,7 +41,7 @@ function App() {
       {!showCaptchas && (
         <Button
           onClick={toggleShowCaptcha}
-          classes={"iAmHumanButton"}
+          className={"iAmHumanButton"}
         >
           <Typography className={"iAmHumanButtonLabel"}>
             I am human
