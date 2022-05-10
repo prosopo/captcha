@@ -114,6 +114,8 @@ function App() {
     } catch (err) {
       console.error(err);
       // alert(err.message);
+    } finally {
+      setCaptchaSolution([]);
     }
 
     const nextCaptchaIndex = currentCaptchaIndex + 1;
