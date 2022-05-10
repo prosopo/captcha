@@ -5,15 +5,8 @@ import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
 import {
     ProsopoRandomProviderResponse,
-    ProsopoCaptchaResponse,
     ProsopoContract,
     Extension,
-    ProviderApi,
-    getExtension,
-    getProsopoContract,
-    ProCaptcha,
-    ProCaptchaConfig,
-    CaptchaSolutionResponse
 } from "@prosopo/procaptcha";
 
 export interface IProCaptchaManager {
@@ -25,8 +18,9 @@ export interface CaptchaManagerState {
     account: InjectedAccountWithMeta | null;
     contract: ProsopoContract | null;
     provider: ProsopoRandomProviderResponse | null;
+    extension: Extension | null;
 }
 
-export const ProCaptchaManager = createContext({ state: { account: null, contract: null, provider: null }, dispatch: () => {} });
+export const ProCaptchaManager = createContext({ state: { account: null, contract: null, provider: null, extension: null }, dispatch: () => {} });
 
 export default ProCaptchaManager;

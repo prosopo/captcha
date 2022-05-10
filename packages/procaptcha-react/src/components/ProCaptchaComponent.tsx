@@ -47,27 +47,28 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
 
     const context: IProCaptchaManager = useContext(ProCaptchaManager);
 
-    const { account, contract, provider } = context.state;
+    const { account, contract, provider, extension } = context.state;
 
     const [contractAddress, setContractAddress] = useState<string>('');
-    const [extension, setExtension] = useState<Extension | null>(null);
 
+    const [captchaChallenge, setCaptchaChallenge] = useState<ProsopoCaptchaResponse | null>(null);
     const [totalCaptchas, setTotalCaptchas] = useState(0);
     const [currentCaptchaIndex, setCurrentCaptchaIndex] = useState(0);
-    const [captchaChallenge, setCaptchaChallenge] = useState<ProsopoCaptchaResponse | null>(null);
     const [captchaSolution, setCaptchaSolution] = useState<number[]>([]);
 
     // const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null);
     // const [contract, setContract] = useState<ProsopoContract | null>(null);
     // const [provider, setProvider] = useState<ProsopoRandomProviderResponse | null>(null);
+    // const [extension, setExtension] = useState<Extension | null>(null);
 
     const providerApi = new ProviderApi(config);
 
     useEffect(() => {
 
-        Promise.resolve(getExtension())
+        if (!extension) {
+            Promise.resolve(getExtension())
             .then(_extension => {
-                setExtension(_extension);
+                context.dispatch({extension: _extension});
                 if (callbacks?.onLoadExtension) {
                     callbacks.onLoadExtension(_extension);
                 }
@@ -75,6 +76,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
             .catch(err => {
                 console.error("FAILED TO GET EXTENSION", err);
             });
+        }
 
         if (contract) {
             setContractAddress(contract.address);
