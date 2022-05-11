@@ -1,7 +1,7 @@
 import { useState, useReducer, Reducer } from "react";
 import { Box, Button, Typography } from "@mui/material";
 
-import { ProCaptchaComponent, ProCaptchaManager, CaptchaManagerState, TSubmitResult, TExtensionAccount } from "@prosopo/procaptcha-react";
+import { ProCaptchaComponent, ProCaptchaManager, captchaManagerReducer, TSubmitResult, TExtensionAccount } from "@prosopo/procaptcha-react";
 
 import config from "./config";
 
@@ -9,21 +9,14 @@ import "./App.css";
 
 function App() {
 
+  const [state, dispatch] = useReducer(captchaManagerReducer, {});
+
   const [showCaptchas, setShowCaptchas] = useState(false);
 
   const [status, setStatus] = useState('');
-  const [error, setError] = useState('');
-
-  const reducer = (state: CaptchaManagerState, action: Partial<CaptchaManagerState>) => {
-    return { ...state, ...action };
-  }
-
-  const [state, dispatch] = useReducer<Reducer<CaptchaManagerState, Partial<CaptchaManagerState>>>(reducer, {});
 
   const toggleShowCaptcha = () => {
     setShowCaptchas(!showCaptchas);
-    setStatus("");
-    setError("");
   };
 
   const onAccountChange = (account: TExtensionAccount) => {
@@ -33,13 +26,11 @@ function App() {
 
   const onSubmit = (submitResult: TSubmitResult) => {
     if (submitResult instanceof Error) {
-      setError(submitResult.message);
-      setStatus("");
+      // setStatus(submitResult.message);
       return;
     }
     const [result, tx] = submitResult;
-    setStatus(result.status);
-    setError("");
+    // setStatus(result.status);
 
     console.log("onSubmit: CAPTCHA SUBMIT RESULT", result);
     console.log("onSubmit: CAPTCHA SUBMIT TX", tx);
@@ -48,7 +39,6 @@ function App() {
   const onCancel = () => {
     setShowCaptchas(false);
     setStatus("");
-    setError("");
   };
 
   const onSolved = () => {
@@ -65,7 +55,6 @@ function App() {
     <Box className={"App"}>
 
       {status && <Box className={"status"}>{status}</Box>}
-      {error && <Box className={"status error"}>{error}</Box>}
 
       {showCaptchas &&
         <ProCaptchaManager.Provider value={{state, dispatch}}>
