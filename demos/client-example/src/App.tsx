@@ -32,16 +32,17 @@ function App() {
   }
 
   const onSubmit = (submitResult: TSubmitResult) => {
+    if (submitResult instanceof Error) {
+      setError(submitResult.message);
+      setStatus("");
+      return;
+    }
     const [result, tx] = submitResult;
+    setStatus(result.status);
+    setError("");
+    
     console.log("CAPTCHA SUBMIT CALLBACK", result);
     console.log("CAPTCHA SUBMIT CALLBACK TX", tx);
-    if (submitResult instanceof Error) {
-      setError(result.message);
-      setStatus("");
-    } else {
-      setStatus(result.status);
-      setError("");
-    }
   }
 
   const onCancel = () => {
