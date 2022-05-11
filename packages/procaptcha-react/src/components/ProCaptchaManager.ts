@@ -21,6 +21,10 @@ export interface CaptchaManagerState {
     extension?: Extension;
 }
 
+export const captchaManagerReducer = (state: CaptchaManagerState, action: Partial<CaptchaManagerState>) => {
+    return { ...state, ...action };
+}
+
 export const ProCaptchaManager = createContext({ state: {}, dispatch: () => {} } as IProCaptchaManager);
 
 export default ProCaptchaManager;

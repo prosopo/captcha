@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, SyntheticEvent } from "react";
+import React, { useState, useEffect, useContext, useReducer, SyntheticEvent } from "react";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
 import {
@@ -62,8 +62,16 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
     const [currentCaptchaIndex, setCurrentCaptchaIndex] = useState(0);
     const [captchaSolution, setCaptchaSolution] = useState<number[]>([]);
 
-    const [status, setStatus] = useState<string | string[]>("");
-    const [error, setError] = useState<string | string[]>("");
+    const statusReducer = (state: {info?: string, error?: string}, action: {info?: string | [string, string], error?: string | [string, string]}) => {
+        const logger = {info: console.log, error: console.error};
+        for (const key in action) {
+            logger[key](action[key]);
+            return {[key]: Array.isArray(action[key]) ? action[key][1] : action[key]};
+        }
+        return {};
+    }
+
+    const [status, setStatus] = useReducer(statusReducer, {});
 
     const providerApi = new ProviderApi(config);
 
@@ -86,7 +94,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
                     }
                 })
                 .catch(err => {
-                    setError(["FAILED TO GET EXTENSION", err.message]);
+                    setStatus({error: ["FAILED TO GET EXTENSION", err.message]});
                 });
         }
 
@@ -98,7 +106,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
                     setContractAddress(_contractAddress.contractAddress)
                 })
                 .catch(err => {
-                    setError(["FAILED TO GET CONTRACT ADDRESS", err.message]);
+                    setStatus({error: ["FAILED TO GET CONTRACT ADDRESS", err.message]});
                 });
             return;
         }
@@ -113,20 +121,6 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
         setTotalCaptchas(captchaChallenge?.captchas.length ?? 0);
         setCurrentCaptchaIndex(0);
     }, [captchaChallenge]);
-
-    useEffect(() => {
-        if (error) {
-            console.error(error);
-        }
-        setStatus("");
-    }, [error]);
-
-    useEffect(() => {
-        if (status) {
-            console.log(status);
-        }
-        setError("");
-    }, [status]);
 
     const dismissCaptcha = () => {
         setCaptchaChallenge(undefined);
@@ -157,10 +151,10 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
 
         try {
             submitResult = await proCaptcha.solveCaptchaChallenge(signer, captchaChallenge.requestHash, captchaId, datasetId, captchaSolution);
-            setStatus(["SUBMIT CAPTCHA RESULT", submitResult[0].status]);
+            setStatus({info: ["SUBMIT CAPTCHA RESULT", submitResult[0].status]});
         } catch (err) {
             submitResult = err as Error;
-            setError(["FAILED TO SUBMIT CAPTCHA", submitResult.message]);
+            setStatus({error: ["FAILED TO SUBMIT CAPTCHA", submitResult.message]});
         } finally {
             setCaptchaSolution([]);
         }
@@ -178,7 +172,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
                 callbacks.onSolved();
             }
             // TODO after all captchas solved.
-            setStatus("All captchas answered...");
+            setStatus({info: "All captchas answered..."});
             dismissCaptcha();
         }
     };
@@ -246,8 +240,8 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
                 />
             }
             
-            {/* {status && <Box className={"status"}>{Array.isArray(status) ? status[1] : status}</Box>}
-            {error && <Box className={"status error"}>{Array.isArray(error) ? error[1] : error}</Box>} */}
+            {status.info && <Box className={"status"}>{status.info}</Box>}
+            {status.error && <Box className={"status error"}>{status.error}</Box>}
 
             {account && captchaChallenge &&
                 <Box className={classes.captchasContainer}>
