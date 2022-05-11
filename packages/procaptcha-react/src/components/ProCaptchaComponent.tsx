@@ -98,7 +98,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
                     setContractAddress(_contractAddress.contractAddress)
                 })
                 .catch(err => {
-                    setError(["FAILED TO GET CONTRACT ADDRESS", err]);
+                    setError(["FAILED TO GET CONTRACT ADDRESS", err.message]);
                 });
             return;
         }
