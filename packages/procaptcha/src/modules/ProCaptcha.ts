@@ -40,10 +40,10 @@ export class ProCaptcha {
         return captchaPuzzle;
     }
 
-    public async solveCaptchaChallenge(signer: Signer, requestHash: string, captchaId: string, datasetId: string, solution: number[]) : Promise<[CaptchaSolutionResponse, TransactionResponse]> {
+    public async solveCaptchaChallenge(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<[CaptchaSolutionResponse, TransactionResponse]> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
-        const captchaSolutionsSalted: CaptchaSolution[] = [{ captchaId, solution, salt }];
+        const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(solution => ({...solution, salt: salt}));
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
 
         tree.build(captchasHashed);

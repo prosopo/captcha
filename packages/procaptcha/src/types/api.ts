@@ -4,6 +4,8 @@
 // }
 
 // import { SubmittableResult } from "@polkadot/api";
+import {Captcha} from "@prosopo/provider";
+
 export interface ProsopoRandomProviderResponse {
   providerId: string,
   blockNumber: string;
@@ -22,11 +24,19 @@ export interface ProposoProvider {
 export interface CaptchaSet {
   captchaId: string;
   datasetId: string;
-  // TODO items: {path, type}[];
+  items: CaptchaImageSchema[];
+  target: string;
+  salt?: string;
+  solution?: number[];
+}
+
+export interface CaptchaImageSchema {
+  path: string,
+  type: string
 }
 
 export interface ProsopoCaptcha {
-  captcha: CaptchaSet;
+  captcha: Captcha;
   proof: string[][];
 }
 
