@@ -37,6 +37,7 @@ export interface CaptchaEventCallbacks {
     onSubmit?: (result: TSubmitResult, captchaChallenge: ProsopoCaptchaResponse, captchaIndex: number) => void;
     onCancel?: () => void;
     onSolved?: () => void;
+    onClick?: (captchaSolution: number[]) => void;
     onBeforeLoadCaptcha?: (contract: ProsopoContract, provider: ProsopoRandomProviderResponse) => void;
     onLoadCaptcha?: (captchaChallenge: ProsopoCaptchaResponse) => void;
     onLoadExtension?: (extension: Extension) => void;
@@ -54,12 +55,15 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
 
     const { account, contract, provider, extension } = context.state;
 
-    const [contractAddress, setContractAddress] = useState<string>('');
+    const [contractAddress, setContractAddress] = useState<string>("");
 
     const [captchaChallenge, setCaptchaChallenge] = useState<ProsopoCaptchaResponse>();
     const [totalCaptchas, setTotalCaptchas] = useState(0);
     const [currentCaptchaIndex, setCurrentCaptchaIndex] = useState(0);
     const [captchaSolution, setCaptchaSolution] = useState<number[]>([]);
+
+    const [status, setStatus] = useState<string | string[]>("");
+    const [error, setError] = useState<string | string[]>("");
 
     const providerApi = new ProviderApi(config);
 
@@ -82,7 +86,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
                     }
                 })
                 .catch(err => {
-                    console.error("FAILED TO GET EXTENSION", err);
+                    setError(["FAILED TO GET EXTENSION", err.message]);
                 });
         }
 
@@ -94,7 +98,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
                     setContractAddress(_contractAddress.contractAddress)
                 })
                 .catch(err => {
-                    console.error("FAILED TO GET CONTRACT ADDRESS", err);
+                    setError(["FAILED TO GET CONTRACT ADDRESS", err.message]);
                 });
             return;
         }
@@ -109,6 +113,20 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
         setTotalCaptchas(captchaChallenge?.captchas.length ?? 0);
         setCurrentCaptchaIndex(0);
     }, [captchaChallenge]);
+
+    useEffect(() => {
+        if (error) {
+            console.error(error);
+        }
+        setStatus("");
+    }, [error]);
+
+    useEffect(() => {
+        if (status) {
+            console.log(status);
+        }
+        setError("");
+    }, [status]);
 
     const dismissCaptcha = () => {
         setCaptchaChallenge(undefined);
@@ -128,7 +146,6 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
         }
 
         const signer = extension.getInjected().signer;
-        console.log("SIGNER", signer);
 
         const proCaptcha = new ProCaptcha(contract, provider, providerApi);
         const currentCaptcha = captchaChallenge.captchas[currentCaptchaIndex];
@@ -140,21 +157,16 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
 
         try {
             submitResult = await proCaptcha.solveCaptchaChallenge(signer, captchaChallenge.requestHash, captchaId, datasetId, captchaSolution);
-            // alert(submitResult.status); // TODO
+            setStatus(["SUBMIT CAPTCHA RESULT", submitResult[0].status]);
         } catch (err) {
-            submitResult = err;
-            console.error(err);
-            // alert(err.message);
+            submitResult = err as Error;
+            setError(["FAILED TO SUBMIT CAPTCHA", submitResult.message]);
         } finally {
             setCaptchaSolution([]);
         }
 
         if (callbacks?.onSubmit) {
             callbacks.onSubmit(submitResult, captchaChallenge, currentCaptchaIndex);
-            if (submitResult instanceof Error) {
-                // TODO after any captcha failed.
-                dismissCaptcha();
-            }
         }
 
         const nextCaptchaIndex = currentCaptchaIndex + 1;
@@ -165,7 +177,9 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
             if (callbacks?.onSolved) {
                 callbacks.onSolved();
             }
-            dismissCaptcha(); // TODO after all captchas solved.
+            // TODO after all captchas solved.
+            setStatus("All captchas answered...");
+            dismissCaptcha();
         }
     };
 
@@ -193,7 +207,9 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
     const onCaptchaSolutionClick = (index: number) => {
         const _captchaSolution = captchaSolution.includes(index) ? captchaSolution.filter(item => item !== index) : [...captchaSolution, index];
         setCaptchaSolution(_captchaSolution);
-        console.log("CLICK SOLUTION", _captchaSolution);
+        if (callbacks?.onClick) {
+            callbacks.onClick(_captchaSolution);
+        }
     };
 
     const newCaptchaChallenge = async (_contract: ProsopoContract, _provider: ProsopoRandomProviderResponse) => {
@@ -229,6 +245,9 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
                     )}
                 />
             }
+            
+            {/* {status && <Box className={"status"}>{Array.isArray(status) ? status[1] : status}</Box>}
+            {error && <Box className={"status error"}>{Array.isArray(error) ? error[1] : error}</Box>} */}
 
             {account && captchaChallenge &&
                 <Box className={classes.captchasContainer}>
