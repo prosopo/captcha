@@ -1,5 +1,14 @@
 import { makeStyles } from "@mui/styles";
 
+const dot = {
+  width: 7,
+  height: 7,
+  borderRadius: 3.5,
+  marginRight: 5,
+  border: "1px solid #CFCFCF",
+  backgroundColor: "#FFFFFF",
+}
+
 export const useStyles = makeStyles({
   root: {
     display: "flex",
@@ -49,16 +58,6 @@ export const useStyles = makeStyles({
   captchasHeaderLabel: {
     color: "#ffffff"
   },
-  iAmHumanButton: {
-    height: 76,
-    width: 300,
-    backgroundColor: "#FAFAFA !important",
-    border: "1px solid #E0E0E0 !important"
-  },
-  iAmHumanButtonLabel: {
-    color: "#555555",
-    textTransform: "none"
-  },
   dotsContainer: {
     display: "flex",
     alignItems: "center",
@@ -67,11 +66,9 @@ export const useStyles = makeStyles({
     paddingBottom: 15,
     paddingTop: 10
   },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    marginRight: 5,
-    border: "1px solid #CFCFCF"
-  }
+  dot,
+  dotActive: {
+    ...dot,
+    backgroundColor: "#CFCFCF"
+  },
 });

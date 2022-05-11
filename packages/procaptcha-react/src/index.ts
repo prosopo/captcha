@@ -1,1 +1,2 @@
-export * from './components/CaptchaWidget';
+export * from './components';
+export * from './styles';
