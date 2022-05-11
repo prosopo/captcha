@@ -178,7 +178,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
 
             const _contract = await getProsopoContract(contractAddress, config['dappAccount'], _account);
             context.dispatch({contract: _contract});
-    
+
             const _provider = await _contract.getRandomProvider();
             context.dispatch({provider: _provider});
 
@@ -241,7 +241,7 @@ export function ProCaptchaComponent({ config, callbacks }: { config: ProCaptchaC
 
                     <Box className={classes.captchasBody}>
 
-                        <CaptchaWidget challenge={captchaChallenge[currentCaptchaIndex]} solution={captchaSolution} solutionClickEvent={onCaptchaSolutionClick} />
+                        <CaptchaWidget challenge={captchaChallenge.captchas[currentCaptchaIndex]} solution={captchaSolution} solutionClickEvent={onCaptchaSolutionClick} />
 
                         <Box className={classes.dotsContainer}>
                             {Array.from(Array(totalCaptchas).keys()).map((item, index) => {
