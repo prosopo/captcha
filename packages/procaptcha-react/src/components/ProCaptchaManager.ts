@@ -15,12 +15,12 @@ export interface IProCaptchaManager {
 };
 
 export interface CaptchaManagerState {
-    account: InjectedAccountWithMeta | null;
-    contract: ProsopoContract | null;
-    provider: ProsopoRandomProviderResponse | null;
-    extension: Extension | null;
+    account?: InjectedAccountWithMeta;
+    contract?: ProsopoContract;
+    provider?: ProsopoRandomProviderResponse;
+    extension?: Extension;
 }
 
-export const ProCaptchaManager = createContext({ state: { account: null, contract: null, provider: null, extension: null }, dispatch: () => {} });
+export const ProCaptchaManager = createContext({ state: {}, dispatch: () => {} } as IProCaptchaManager);
 
 export default ProCaptchaManager;
