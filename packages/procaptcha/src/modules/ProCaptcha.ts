@@ -40,7 +40,7 @@ export class ProCaptcha {
         return captchaPuzzle;
     }
 
-    public async solveCaptchaChallenge(signer: Signer, requestHash: string, captchaId: string, datasetId: string, solution: number[]) : Promise<CaptchaSolutionResponse> {
+    public async solveCaptchaChallenge(signer: Signer, requestHash: string, captchaId: string, datasetId: string, solution: number[]) : Promise<[CaptchaSolutionResponse, TransactionResponse]> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
         const captchaSolutionsSalted: CaptchaSolution[] = [{ captchaId, solution, salt }];
@@ -74,7 +74,7 @@ export class ProCaptcha {
             throw new Error(e.message);
         }
 
-        return result;
+        return [result, tx];
     }
 
 }
