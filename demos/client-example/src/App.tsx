@@ -51,6 +51,7 @@ function App() {
   };
 
   const onSolved = () => {
+    setShowCaptchas(false);
     console.log("ALL CAPTCHAS ANSWERED");
     setStatus("All captchas answered...");
   }
