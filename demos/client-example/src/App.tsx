@@ -1,4 +1,4 @@
-import { useState, useReducer } from "react";
+import { useState, useReducer, Reducer } from "react";
 import { Box, Button, Typography } from "@mui/material";
 
 import { ProCaptchaComponent, ProCaptchaManager, CaptchaManagerState, TSubmitResult, TExtensionAccount } from "@prosopo/procaptcha-react";
@@ -18,7 +18,7 @@ function App() {
     return { ...state, ...action };
   }
 
-  const [state, dispatch] = useReducer<CaptchaManagerState>(reducer, {});
+  const [state, dispatch] = useReducer<Reducer<CaptchaManagerState, Partial<CaptchaManagerState>>>(reducer, {});
 
   const toggleShowCaptcha = () => {
     setShowCaptchas(!showCaptchas);

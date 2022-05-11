@@ -1,9 +1,12 @@
 {
-  "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    
     "module": "esnext",
     "target": "esnext",
+    "moduleResolution": "node",
+
+    "composite": true,
+    "allowSyntheticDefaultImports": true,
+
     "lib": [
       "es6",
       "dom"
