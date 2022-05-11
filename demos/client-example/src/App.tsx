@@ -27,8 +27,8 @@ function App() {
   };
 
   const onAccountChange = (account: TExtensionAccount) => {
-    console.log("ACCOUNT CHANGED CALLBACK", account.address);
-    // setAccount(account.address);
+    console.log("onAccountChange: ACCOUNT CHANGED", account.address);
+    setStatus("Selected account: " + account.meta.name);
   }
 
   const onSubmit = (submitResult: TSubmitResult) => {
@@ -40,9 +40,9 @@ function App() {
     const [result, tx] = submitResult;
     setStatus(result.status);
     setError("");
-    
-    console.log("CAPTCHA SUBMIT CALLBACK", result);
-    console.log("CAPTCHA SUBMIT CALLBACK TX", tx);
+
+    console.log("onSubmit: CAPTCHA SUBMIT RESULT", result);
+    console.log("onSubmit: CAPTCHA SUBMIT TX", tx);
   }
 
   const onCancel = () => {
@@ -53,8 +53,12 @@ function App() {
 
   const onSolved = () => {
     setShowCaptchas(false);
-    console.log("ALL CAPTCHAS ANSWERED");
+    console.log("onSolved: ALL CAPTCHAS ANSWERED");
     setStatus("All captchas answered...");
+  }
+
+  const onClick = (solution: number[]) => {
+    console.log("onClick: ", solution);
   }
 
   return (
@@ -65,7 +69,7 @@ function App() {
 
       {showCaptchas &&
         <ProCaptchaManager.Provider value={{state, dispatch}}>
-          <ProCaptchaComponent config={config} callbacks={{onAccountChange, onSubmit, onCancel, onSolved}} />
+          <ProCaptchaComponent config={config} callbacks={{onAccountChange, onSubmit, onCancel, onSolved, onClick}} />
         </ProCaptchaManager.Provider>
       }
 
