@@ -1,14 +1,9 @@
-import React, { useState, useReducer } from "react";
-// import { HttpProvider } from "@polkadot/rpc-provider";
-import {
-  Box,
-  Button,
-  Typography,
-} from "@mui/material";
+import { useState, useReducer } from "react";
+import { Box, Button, Typography } from "@mui/material";
+
+import { ProCaptchaComponent, ProCaptchaManager, CaptchaManagerState, TSubmitResult, TExtensionAccount } from "@prosopo/procaptcha-react";
 
 import config from "./config";
-
-import { ProCaptchaComponent, ProCaptchaManager, CaptchaManagerState } from "@prosopo/procaptcha-react";
 
 import "./App.css";
 
@@ -16,47 +11,63 @@ function App() {
 
   const [showCaptchas, setShowCaptchas] = useState(false);
 
-  function reducer(state, action) {
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+
+  const reducer = (state: CaptchaManagerState, action: Partial<CaptchaManagerState>) => {
     return { ...state, ...action };
   }
 
-  const initialState = { account: null, contract: null, provider: null, extension: null } as CaptchaManagerState;
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer<CaptchaManagerState>(reducer, {});
 
   const toggleShowCaptcha = () => {
     setShowCaptchas(!showCaptchas);
+    setStatus("");
+    setError("");
   };
 
-  const onAccountChange = (account) => {
+  const onAccountChange = (account: TExtensionAccount) => {
     console.log("ACCOUNT CHANGED CALLBACK", account.address);
     // setAccount(account.address);
   }
 
-  const onSubmit = (submitResult) => {
-    console.log("CAPTCHA SUBMIT CALLBACK", submitResult);
+  const onSubmit = (submitResult: TSubmitResult) => {
+    const [result, tx] = submitResult;
+    console.log("CAPTCHA SUBMIT CALLBACK", result);
+    console.log("CAPTCHA SUBMIT CALLBACK TX", tx);
     if (submitResult instanceof Error) {
-      //
+      setError(result.message);
+      setStatus("");
+    } else {
+      setStatus(result.status);
+      setError("");
     }
   }
 
   const onCancel = () => {
     setShowCaptchas(false);
+    setStatus("");
+    setError("");
   };
 
   const onSolved = () => {
     console.log("ALL CAPTCHAS ANSWERED");
+    setStatus("All captchas answered...");
   }
 
   return (
     <Box className={"App"}>
 
-      {showCaptchas && (
+      {status && <Box className={"status"}>{status}</Box>}
+      {error && <Box className={"status error"}>{error}</Box>}
+
+      {showCaptchas &&
         <ProCaptchaManager.Provider value={{state, dispatch}}>
           <ProCaptchaComponent config={config} callbacks={{onAccountChange, onSubmit, onCancel, onSolved}} />
         </ProCaptchaManager.Provider>
-      )}
+      }
 
-      {!showCaptchas && (
+      {!showCaptchas &&
         <Button
           onClick={toggleShowCaptcha}
           className={"iAmHumanButton"}
@@ -65,7 +76,7 @@ function App() {
             I am human
           </Typography>
         </Button>
-      )}
+      }
     </Box>
   );
 }
