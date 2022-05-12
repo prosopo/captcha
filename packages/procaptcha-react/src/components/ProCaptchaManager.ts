@@ -17,7 +17,7 @@ export interface IProCaptchaManager {
 };
 
 export interface CaptchaManagerState {
-    config?: ProCaptchaConfig;
+    config: ProCaptchaConfig;
     contractAddress?: string;
     account?: InjectedAccountWithMeta;
     contract?: ProsopoContract;
@@ -31,7 +31,7 @@ export const onExtensionAccountChange = (selectedAccount: InjectedAccountWithMet
     context.state.extension!.setAccount(selectedAccount.address).then(async (account) => {
         context.dispatch({account});
 
-        const contract = await getProsopoContract(context.state.contractAddress!, context.state.config!['dappAccount'], account);
+        const contract = await getProsopoContract(context.state.contractAddress!, context.state.config['dappAccount'], account);
         context.dispatch({contract});
 
         const provider = await contract.getRandomProvider();
@@ -45,6 +45,13 @@ export const captchaManagerReducer = (state: CaptchaManagerState, action: Partia
     return { ...state, ...action };
 }
 
-export const ProCaptchaManager = createContext({ state: {}, dispatch: () => {} } as IProCaptchaManager);
+export const ProCaptchaManager = createContext({
+    state: {
+        config: {
+            "providerApi.baseURL": "",
+            "providerApi.prefix": "",
+            "dappAccount": ""
+        }
+    }, dispatch: () => {} } as IProCaptchaManager);
 
 export default ProCaptchaManager;
