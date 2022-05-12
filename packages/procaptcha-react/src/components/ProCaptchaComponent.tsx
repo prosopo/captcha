@@ -1,13 +1,7 @@
-import React, { useState, useEffect, useMemo, useContext, useReducer, SyntheticEvent } from "react";
+import { useState, useEffect, useContext, useReducer } from "react";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types"; // TODO procaptcha types.
 
-import {
-    Box,
-    Button,
-    Typography,
-    Autocomplete,
-    TextField
-} from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 
 import {
     ProsopoRandomProviderResponse,
@@ -16,9 +10,7 @@ import {
     Extension,
     ProviderApi,
     getExtension,
-    getProsopoContract,
     ProCaptcha,
-    ProCaptchaConfig,
     CaptchaSolutionResponse,
     TransactionResponse
 } from "@prosopo/procaptcha";
@@ -42,7 +34,7 @@ export interface CaptchaEventCallbacks {
     onClick?: (captchaSolution: number[]) => void;
     onBeforeLoadCaptcha?: (contract: ProsopoContract, provider: ProsopoRandomProviderResponse) => void;
     onLoadCaptcha?: (captchaChallenge: ProsopoCaptchaResponse) => void;
-    onLoadExtension?: (extension: Extension) => void;
+    onLoadExtension?: (extension: Extension, contractAddress: string) => void;
     onAccountChange?: (account: TExtensionAccount,
         contract: ProsopoContract,
         provider: ProsopoRandomProviderResponse,
@@ -76,23 +68,15 @@ export function ProCaptchaComponent({ callbacks }: { callbacks?: CaptchaEventCal
 
     useEffect(() => {
 
-        if (!extension) {
-            getExtension()
-                .then(extension => {
-                    context.dispatch({extension});
-                    if (callbacks?.onLoadExtension) {
-                        callbacks.onLoadExtension(extension);
-                    }
-                })
-                .catch(err => {
-                    setStatus({error: ["FAILED TO GET EXTENSION", err.message]});
-                });
-        }
+        if (!extension || !contract) {
+            Promise.all([getExtension(), providerApi.getContractAddress()])
+                .then(([extension, { contractAddress }]) => {
+                    
+                    context.dispatch({extension, contractAddress});
 
-        if (!contract) {
-            providerApi.getContractAddress()
-                .then(({contractAddress}) => {
-                    context.dispatch({contractAddress});
+                    if (callbacks?.onLoadExtension) {
+                        callbacks.onLoadExtension(extension, contractAddress);
+                    }
                 })
                 .catch(err => {
                     setStatus({error: ["FAILED TO GET CONTRACT ADDRESS", err.message]});
