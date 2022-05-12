@@ -191,52 +191,52 @@ export function ProCaptchaComponent({ callbacks }: { callbacks?: CaptchaEventCal
                 throw Error(`Error setting solution: ${index}`)
             }
         }
-        ;
+    }
 
-        return (
-          <Box className={classes.root}>
+    return (
+      <Box className={classes.root}>
 
-              {status.info && <Box className={"status"}>{status.info}</Box>}
-              {status.error && <Box className={"status error"}>{status.error}</Box>}
+          {status.info && <Box className={"status"}>{status.info}</Box>}
+          {status.error && <Box className={"status error"}>{status.error}</Box>}
 
-              {account && captchaChallenge &&
-                <Box className={classes.captchasContainer}>
+          <>{account && captchaChallenge &&
+            <Box className={classes.captchasContainer}>
 
-                    <Box className={classes.captchasHeader}>
-                        <Typography className={classes.captchasHeaderLabel}>
-                            Select all images with a {captchaChallenge.captchas[currentCaptchaIndex].captcha.target}
-                        </Typography>
-                    </Box>
+                <Box className={classes.captchasHeader}>
+                    <Typography className={classes.captchasHeaderLabel}>
+                        Select all images with a {captchaChallenge.captchas[currentCaptchaIndex].captcha.target}
+                    </Typography>
+                </Box>
 
-                    <Box className={classes.captchasBody}>
+                <Box className={classes.captchasBody}>
 
-                        <CaptchaWidget challenge={captchaChallenge.captchas[currentCaptchaIndex]}
-                                       solution={currentCaptchaSolution} solutionClickEvent={onCaptchaSolutionClick}/>
+                    <CaptchaWidget challenge={captchaChallenge.captchas[currentCaptchaIndex]}
+                                   solution={currentCaptchaSolution} solutionClickEvent={onCaptchaSolutionClick}/>
 
-                        <Box className={classes.dotsContainer}>
-                            {Array.from(Array(totalCaptchas).keys()).map((item, index) => {
-                                return <Box key={index}
-                                            className={(currentCaptchaIndex === item) ? classes.dot : classes.dotActive}/>;
-                            })}
-                        </Box>
-
-                    </Box>
-
-                    <Box className={classes.captchasFooter}>
-                        <Button onClick={cancelCaptcha} variant="text">
-                            Cancel
-                        </Button>
-                        <Button onClick={submitCaptcha} variant="contained">
-                            {currentCaptchaIndex + 1 < totalCaptchas ? "Next" : "Submit"}
-                        </Button>
+                    <Box className={classes.dotsContainer}>
+                        {Array.from(Array(totalCaptchas).keys()).map((item, index) => {
+                            return <Box key={index}
+                                        className={(currentCaptchaIndex === item) ? classes.dot : classes.dotActive}/>;
+                        })}
                     </Box>
 
                 </Box>
-              }
 
-          </Box>
-        );
-    }
+                <Box className={classes.captchasFooter}>
+                    <Button onClick={cancelCaptcha} variant="text">
+                        Cancel
+                    </Button>
+                    <Button onClick={submitCaptcha} variant="contained">
+                        {currentCaptchaIndex + 1 < totalCaptchas ? "Next" : "Submit"}
+                    </Button>
+                </Box>
+
+            </Box>
+          }</>
+
+      </Box>
+    );
+
 }
 
 export default ProCaptchaComponent;
