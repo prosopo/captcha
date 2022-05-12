@@ -1,7 +1,16 @@
-import { useState, useReducer, Reducer } from "react";
+import { useState, useReducer, Reducer, SyntheticEvent } from "react";
 import { Box, Button, Typography } from "@mui/material";
+import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
-import { ProCaptchaComponent, ProCaptchaManager, captchaManagerReducer, TSubmitResult, TExtensionAccount } from "@prosopo/procaptcha-react";
+import { 
+  ProCaptchaComponent,
+  ProCaptchaManager,
+  captchaManagerReducer,
+  TSubmitResult,
+  TExtensionAccount,
+  ExtensionAccountSelect,
+  onExtensionAccountChange 
+} from "@prosopo/procaptcha-react";
 
 import config from "./config";
 
@@ -9,28 +18,28 @@ import "./App.css";
 
 function App() {
 
-  const [state, dispatch] = useReducer(captchaManagerReducer, {});
+  const [state, dispatch] = useReducer(captchaManagerReducer, {config});
 
   const [showCaptchas, setShowCaptchas] = useState(false);
 
   const [status, setStatus] = useState('');
 
-  const toggleShowCaptcha = () => {
-    setShowCaptchas(!showCaptchas);
+  const showCaptchaClick = () => {
+    setShowCaptchas(true);
+    setStatus("");
   };
 
   const onAccountChange = (account: TExtensionAccount) => {
     console.log("onAccountChange: ACCOUNT CHANGED", account.address);
     setStatus("Selected account: " + account.meta.name);
+    setShowCaptchas(true);
   }
 
   const onSubmit = (submitResult: TSubmitResult) => {
     if (submitResult instanceof Error) {
-      // setStatus(submitResult.message);
       return;
     }
     const [result, tx] = submitResult;
-    // setStatus(result.status);
 
     console.log("onSubmit: CAPTCHA SUBMIT RESULT", result);
     console.log("onSubmit: CAPTCHA SUBMIT TX", tx);
@@ -51,27 +60,35 @@ function App() {
     console.log("onClick: ", solution);
   }
 
+  const onAccountChangeEvent = (e: SyntheticEvent<Element, Event>, account: InjectedAccountWithMeta | null) => {
+    if (!account || !state.extension || !state.contractAddress) {
+        return;
+    }
+    onExtensionAccountChange(account, {state, dispatch}, (account, contract, provider) => {
+      onAccountChange(account);
+    });
+  };
+
   return (
     <Box className={"App"}>
 
       {status && <Box className={"status"}>{status}</Box>}
-
-      {showCaptchas &&
-        <ProCaptchaManager.Provider value={{state, dispatch}}>
-          <ProCaptchaComponent config={config} callbacks={{onAccountChange, onSubmit, onCancel, onSolved, onClick}} />
-        </ProCaptchaManager.Provider>
-      }
+      
+      <ProCaptchaManager.Provider value={{state: state, dispatch}}>
+        {state.extension && !state.account && <ExtensionAccountSelect value={state.account} options={state.extension?.getAllAcounts() || []} onChange={onAccountChangeEvent} />}
+        {showCaptchas && <ProCaptchaComponent callbacks={{onAccountChange, onSubmit, onCancel, onSolved, onClick}} />}
+      </ProCaptchaManager.Provider>
 
       {!showCaptchas &&
         <Button
-          onClick={toggleShowCaptcha}
+          onClick={showCaptchaClick}
           className={"iAmHumanButton"}
         >
           <Typography className={"iAmHumanButtonLabel"}>
             I am human
           </Typography>
-        </Button>
-      }
+        </Button>}
+
     </Box>
   );
 }
