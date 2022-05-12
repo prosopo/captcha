@@ -75,7 +75,7 @@ function App() {
       {status && <Box className={"status"}>{status}</Box>}
       
       <ProCaptchaManager.Provider value={{state: state, dispatch}}>
-        {state.extension && !state.account && <ExtensionAccountSelect value={state.account} options={state.extension?.getAllAcounts() || []} onChange={onAccountChangeEvent} />}
+        {state.extension && !state.account && <ExtensionAccountSelect value={state.account} options={state.extension.getAllAcounts()} onChange={onAccountChangeEvent} />}
         {showCaptchas && <ProCaptchaComponent callbacks={{onAccountChange, onSubmit, onCancel, onSolved, onClick}} />}
       </ProCaptchaManager.Provider>
 
