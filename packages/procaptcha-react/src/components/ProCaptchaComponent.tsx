@@ -232,7 +232,6 @@ export function ProCaptchaComponent({ callbacks }: { callbacks?: CaptchaEventCal
                     </Box>
 
                 </Box>
-              : <div>Something went wrong</div>
               }
 
           </Box>
