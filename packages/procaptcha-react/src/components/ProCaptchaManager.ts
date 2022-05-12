@@ -28,16 +28,16 @@ export interface CaptchaManagerState {
 // TODO mv manager events, types to procaptcha.
 export const onExtensionAccountChange = (account: InjectedAccountWithMeta, context: IProCaptchaManager, 
     cb: (account: InjectedAccountWithMeta, contract: ProsopoContract, provider: ProsopoRandomProviderResponse) => void) => {
-    context.state.extension!.setAccount(account.address).then(async (_account) => {
-        context.dispatch({account: _account});
+    context.state.extension!.setAccount(account.address).then(async (account) => {
+        context.dispatch({account});
 
-        const _contract = await getProsopoContract(context.state.contractAddress!, context.state.config!['dappAccount'], _account);
-        context.dispatch({contract: _contract});
+        const contract = await getProsopoContract(context.state.contractAddress!, context.state.config!['dappAccount'], account);
+        context.dispatch({contract});
 
-        const _provider = await _contract.getRandomProvider();
-        context.dispatch({provider: _provider});
+        const provider = await contract.getRandomProvider();
+        context.dispatch({provider});
 
-        cb(_account, _contract, _provider);
+        cb(account, contract, provider);
     });
 };
 
