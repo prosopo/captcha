@@ -29,15 +29,14 @@ export interface CaptchaManagerState {
 export const onExtensionAccountChange = (selectedAccount: InjectedAccountWithMeta, context: IProCaptchaManager, 
     cb: (account: InjectedAccountWithMeta, contract: ProsopoContract, provider: ProsopoRandomProviderResponse) => void) => {
     context.state.extension!.setAccount(selectedAccount.address).then(async (account) => {
-        context.dispatch({account});
-
+        
         const contract = await getProsopoContract(context.state.contractAddress!, context.state.config['dappAccount'], account);
-        context.dispatch({contract});
-
         const provider = await contract.getRandomProvider();
-        context.dispatch({provider});
+
+        context.dispatch({account, contract, provider});
 
         cb(account, contract, provider);
+        
     });
 };
 
