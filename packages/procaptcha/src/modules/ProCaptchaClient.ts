@@ -145,7 +145,7 @@ export class ProCaptchaStateClient {
 
     public context: ProCaptchaClient;
     public manager: ICaptchaStateReducer;
-    
+
     constructor(context: ProCaptchaClient, manager: ICaptchaStateReducer) {
         this.context = context;
         this.manager = manager;
@@ -223,6 +223,7 @@ export class ProCaptchaStateClient {
         const { currentCaptchaSolution } = this.manager.captchaState;
         const captchaSolution = currentCaptchaSolution.includes(index) ? currentCaptchaSolution.filter(item => item !== index) : [...currentCaptchaSolution, index];
         this.manager.updateCaptchaState({ currentCaptchaSolution: captchaSolution });
+
         if (this.context.callbacks?.onClick) {
             this.context.callbacks.onClick(captchaSolution);
         }
