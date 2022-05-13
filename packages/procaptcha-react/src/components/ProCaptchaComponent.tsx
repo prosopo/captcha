@@ -21,9 +21,7 @@ import { CaptchaWidget } from "./CaptchaWidget";
 
 import { useStyles } from "../styles";
 import {
-    CaptchaMerkleTree,
     CaptchaSolution,
-    computeCaptchaSolutionHash,
     convertCaptchaToCaptchaSolution
 } from "@prosopo/provider";
 
@@ -131,7 +129,9 @@ export function ProCaptchaComponent({ callbacks }: { callbacks?: CaptchaEventCal
             return;
         }
         const nextCaptchaIndex = currentCaptchaIndex + 1;
-        if (nextCaptchaIndex > totalCaptchas) {
+        console.log("nextCaptchaIndex", nextCaptchaIndex);
+        console.log("totalCaptchas", totalCaptchas);
+        if (nextCaptchaIndex === totalCaptchas) {
 
             const signer = extension.getInjected().signer;
             const proCaptcha = new ProCaptcha(contract, provider, providerApi);
@@ -162,36 +162,31 @@ export function ProCaptchaComponent({ callbacks }: { callbacks?: CaptchaEventCal
             dismissCaptcha();
         } else {
             setCurrentCaptchaIndex(nextCaptchaIndex);
+            setCaptchaSolution([]);
         }
 
+    };
+
+    const buildSolutions = (_captchaSolution: number[]) => {
+        if (captchaChallenge && "captchas" in captchaChallenge) {
+            const solvedCaptcha = captchaChallenge.captchas[currentCaptchaIndex];
+            solvedCaptcha.captcha.solution = _captchaSolution
+            let _captchaSolutions = [...captchaSolutions]
+            _captchaSolutions[currentCaptchaIndex] = convertCaptchaToCaptchaSolution(solvedCaptcha.captcha);
+            console.log("SOLVED CAPTCHA", solvedCaptcha.captcha);
+            console.log("CAPTCHA SOLUTIONS", _captchaSolutions);
+            setCaptchaSolutions(_captchaSolutions);
+        }
     };
 
     const onCaptchaSolutionClick = (index: number) => {
         const _captchaSolution = currentCaptchaSolution.includes(index) ? currentCaptchaSolution.filter(item => item !== index) : [...currentCaptchaSolution, index];
         setCaptchaSolution(_captchaSolution);
+        buildSolutions(_captchaSolution);
         if (callbacks?.onClick) {
             callbacks.onClick(_captchaSolution);
-
-            if (captchaChallenge && "captchas" in captchaChallenge) {
-                const solvedCaptcha = captchaChallenge.captchas[currentCaptchaIndex];
-                console.log("Solution", _captchaSolution);
-                solvedCaptcha.captcha.solution = _captchaSolution
-                let _captchaSolutions = [...captchaSolutions]
-                _captchaSolutions[currentCaptchaIndex] = convertCaptchaToCaptchaSolution(solvedCaptcha.captcha);
-                console.log("SOLVED CAPTCHA", solvedCaptcha.captcha);
-                console.log("CAPTCHA SOLUTIONS", _captchaSolutions);
-                setCaptchaSolution(_captchaSolution);
-                setCaptchaSolutions(_captchaSolutions);
-                if (callbacks?.onClick) {
-                    callbacks.onClick(_captchaSolution);
-                }
-            } else {
-                console.log("CaptchaChallenge", captchaChallenge)
-                console.log("Current captcha index", currentCaptchaIndex)
-                throw Error(`Error setting solution: ${index}`)
-            }
         }
-    }
+    };
 
     return (
       <Box className={classes.root}>
