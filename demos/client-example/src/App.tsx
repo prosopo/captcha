@@ -28,12 +28,12 @@ function App() {
 
   const showCaptchaClick = () => {
     setShowCaptchas(true);
-    updateStatus({info: ""});
+    updateStatus({ info: "" });
   };
 
   const onAccountChange = (account: TExtensionAccount) => {
     console.log("onAccountChange: ACCOUNT CHANGED", account.address);
-    updateStatus({info: "Selected account: " + account.meta.name});
+    updateStatus({ info: "Selected account: " + account.meta.name });
     setShowCaptchas(true);
   }
 
@@ -49,20 +49,20 @@ function App() {
 
   const onCancel = () => {
     setShowCaptchas(false);
-    updateStatus({info: ""});
+    updateStatus({ info: "" });
   };
 
   const onSolved = () => {
     setShowCaptchas(false);
     console.log("onSolved: ALL CAPTCHAS ANSWERED");
-    updateStatus({info: "All captchas answered..."});
+    updateStatus({ info: "All captchas answered..." });
   }
 
   const onClick = (solution: number[]) => {
     console.log("onClick: ", solution);
   }
 
-  const clientInterface = new ProCaptchaClient({state, dispatch}, {status, updateStatus}, { onAccountChange, onSubmit, onCancel, onSolved, onClick });
+  const clientInterface = new ProCaptchaClient({ state, dispatch }, { status, updateStatus }, { onAccountChange, onSubmit, onCancel, onSolved, onClick });
 
   return (
     <Box className={"App"}>
@@ -71,8 +71,17 @@ function App() {
       {status.error && <Box className={"status error"}>{status.error}</Box>}
 
       <ProCaptchaManager.Provider value={{ state, dispatch }}>
-        {state.extension && !state.account && <ExtensionAccountSelect value={state.account} options={state.extension.getAllAcounts()} onChangeEvent={clientInterface.onExtensionAccountChange.bind(clientInterface)} />}
-        {showCaptchas && <ProCaptchaComponent clientInterface={clientInterface} />}
+
+        {state.extension && !state.account &&
+          <ExtensionAccountSelect
+            value={state.account}
+            options={state.extension.getAllAcounts()}
+            onChangeEvent={clientInterface.onExtensionAccountChange.bind(clientInterface)}
+          />}
+
+        {showCaptchas &&
+          <ProCaptchaComponent clientInterface={clientInterface} />}
+
       </ProCaptchaManager.Provider>
 
       {!showCaptchas &&
