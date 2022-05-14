@@ -1,29 +1,27 @@
-import { useState, useEffect, useContext, useReducer } from "react";
+import { useEffect, useContext, useReducer } from "react";
 
 import { Box, Button, Typography } from "@mui/material";
 
-import { getExtension, IProCaptchaManager, ProCaptchaClient, ProCaptchaStateClient, captchaStateReducer, statusReducer } from "@prosopo/procaptcha";
+import { ICaptchaContextReducer, ProsopoCaptchaClient, ProsopoCaptchaStateClient, captchaStateReducer } from "@prosopo/procaptcha";
 
-import { ProCaptchaManager } from "./ProCaptchaManager";
+import { CaptchaManager } from "./CaptchaManager";
 import { CaptchaWidget } from "./CaptchaWidget";
 
 import { useStyles } from "../styles";
 
 
-export function ProCaptchaComponent({ clientInterface }: { clientInterface: ProCaptchaClient }) {
+export function CaptchaComponent({ clientInterface }: { clientInterface: ProsopoCaptchaClient }) {
 
     const classes = useStyles();
 
-    const context: IProCaptchaManager = useContext(ProCaptchaManager);
+    const context: ICaptchaContextReducer = useContext(CaptchaManager);
     const { account, contract, provider } = context.state;
 
-    const [captchaState, updateCaptchaState] = useReducer(captchaStateReducer, {currentCaptchaIndex: 0, currentCaptchaSolution: []});
-    const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = captchaState;
+    const [state, update] = useReducer(captchaStateReducer, { currentCaptchaIndex: 0, currentCaptchaSolution: [] });
+    const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = state;
     const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
 
-    const stateClientInterface = new ProCaptchaStateClient(clientInterface, { captchaState, updateCaptchaState });
-
-    const status = clientInterface.status.status;
+    const stateClientInterface = new ProsopoCaptchaStateClient(clientInterface, { state, update });
 
     useEffect(() => {
 
@@ -33,7 +31,10 @@ export function ProCaptchaComponent({ clientInterface }: { clientInterface: ProC
 
     useEffect(() => {
         if (!captchaChallenge && contract && provider) {
-            stateClientInterface.newCaptchaChallenge(contract, provider);
+            stateClientInterface.newCaptchaChallenge(contract, provider)
+                .catch(error => {
+                    clientInterface.status.update({ error });
+                });
         }
     }, [contract, provider]);
 
@@ -51,7 +52,7 @@ export function ProCaptchaComponent({ clientInterface }: { clientInterface: ProC
 
                     <Box className={classes.captchasBody}>
 
-                        <CaptchaWidget challenge={captchaChallenge[currentCaptchaIndex]} solution={currentCaptchaSolution} 
+                        <CaptchaWidget challenge={captchaChallenge[currentCaptchaIndex]} solution={currentCaptchaSolution}
                             solutionClickEvent={stateClientInterface.onCaptchaSolutionClick.bind(stateClientInterface)} />
 
                         <Box className={classes.dotsContainer}>
@@ -66,7 +67,7 @@ export function ProCaptchaComponent({ clientInterface }: { clientInterface: ProC
                         <Button onClick={() => stateClientInterface.cancelCaptcha()} variant="text">
                             Cancel
                         </Button>
-                        <Button onClick={() => stateClientInterface.submitCaptcha()} variant="contained">
+                        <Button onClick={() => stateClientInterface.onSubmitCaptcha()} variant="contained">
                             {currentCaptchaIndex + 1 < totalCaptchas ? "Next" : "Submit"}
                         </Button>
                     </Box>
@@ -77,4 +78,4 @@ export function ProCaptchaComponent({ clientInterface }: { clientInterface: ProC
     );
 }
 
-export default ProCaptchaComponent;
+export default CaptchaComponent;

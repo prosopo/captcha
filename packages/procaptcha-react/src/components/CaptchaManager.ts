@@ -1,20 +1,20 @@
 
 import { createContext } from "react";
 
-import { IProCaptchaManager, IProCaptchaManagerState } from "@prosopo/procaptcha";
+import { ICaptchaContextReducer, ICaptchaContextState } from "@prosopo/procaptcha";
 
 // export interface ProCaptchaManager extends IProCaptchaManager {
 //     state: IProCaptchaManagerState;
 //     dispatch: React.Dispatch<Partial<IProCaptchaManagerState>>;
 // };
 
-export const ProCaptchaManager = createContext({
+export const CaptchaManager = createContext({
     state: {
         config: {
             "providerApi.baseURL": "",
             "providerApi.prefix": "",
             "dappAccount": ""
         }
-    }, dispatch: () => {} } as IProCaptchaManager);
+    }, update: () => {} } as ICaptchaContextReducer);
 
-export default ProCaptchaManager;
+export default CaptchaManager;

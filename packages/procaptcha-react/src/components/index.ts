@@ -1,4 +1,4 @@
-export * from './ProCaptchaManager';
+export * from './CaptchaManager';
 export * from './CaptchaWidget';
-export * from './ProCaptchaComponent';
+export * from './CaptchaComponent';
 export * from './ExtensionAccountSelect';
