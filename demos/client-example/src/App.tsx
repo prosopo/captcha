@@ -2,16 +2,16 @@ import { useState, useReducer } from "react";
 import { Box, Button, Typography } from "@mui/material";
 
 import {
-  captchaManagerReducer,
+  captchaContextReducer,
   statusReducer,
-  TSubmitResult,
+  TCaptchaSubmitResult,
   TExtensionAccount,
-  ProCaptchaClient,
+  ProsopoCaptchaClient,
 } from "@prosopo/procaptcha";
 
 import {
-  ProCaptchaComponent,
-  ProCaptchaManager,
+  CaptchaComponent,
+  CaptchaManager,
   ExtensionAccountSelect,
 } from "@prosopo/procaptcha-react";
 
@@ -21,7 +21,7 @@ import "./App.css";
 
 function App() {
 
-  const [state, dispatch] = useReducer(captchaManagerReducer, { config });
+  const [state, update] = useReducer(captchaContextReducer, { config });
   const [status, updateStatus] = useReducer(statusReducer, {});
 
   const [showCaptchas, setShowCaptchas] = useState(false);
@@ -37,11 +37,13 @@ function App() {
     setShowCaptchas(true);
   }
 
-  const onSubmit = (submitResult: TSubmitResult) => {
+  const onSubmit = (submitResult: TCaptchaSubmitResult) => {
     if (submitResult instanceof Error) {
+      updateStatus({ error: "ERROR" + submitResult.message });
       return;
     }
     const [result, tx] = submitResult;
+    updateStatus({ info: result.status });
 
     console.log("onSubmit: CAPTCHA SUBMIT RESULT", result);
     console.log("onSubmit: CAPTCHA SUBMIT TX", tx);
@@ -55,14 +57,14 @@ function App() {
   const onSolved = () => {
     setShowCaptchas(false);
     console.log("onSolved: ALL CAPTCHAS ANSWERED");
-    updateStatus({ info: "All captchas answered..." });
+    updateStatus({ info: "All captchas answered correctly..." });
   }
 
   const onClick = (solution: number[]) => {
     console.log("onClick: ", solution);
   }
 
-  const clientInterface = new ProCaptchaClient({ state, dispatch }, { status, updateStatus }, { onAccountChange, onSubmit, onCancel, onSolved, onClick });
+  const clientInterface = new ProsopoCaptchaClient({ state, update }, { state: status, update: updateStatus }, { onAccountChange, onSubmit, onCancel, onSolved, onClick });
 
   return (
     <Box className={"App"}>
@@ -70,7 +72,7 @@ function App() {
       {status.info && <Box className={"status"}>{status.info}</Box>}
       {status.error && <Box className={"status error"}>{status.error}</Box>}
 
-      <ProCaptchaManager.Provider value={{ state, dispatch }}>
+      <CaptchaManager.Provider value={{ state, update }}>
 
         {state.extension && !state.account &&
           <ExtensionAccountSelect
@@ -80,9 +82,9 @@ function App() {
           />}
 
         {showCaptchas &&
-          <ProCaptchaComponent clientInterface={clientInterface} />}
+          <CaptchaComponent clientInterface={clientInterface} />}
 
-      </ProCaptchaManager.Provider>
+      </CaptchaManager.Provider>
 
       {!showCaptchas &&
         <Button
