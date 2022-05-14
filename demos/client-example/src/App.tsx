@@ -39,11 +39,11 @@ function App() {
 
   const onSubmit = (submitResult: TCaptchaSubmitResult) => {
     if (submitResult instanceof Error) {
-      updateStatus({ error: "ERROR" + submitResult.message });
+      updateStatus({ error: ["CAPTCHA SUBMIT ERROR", submitResult] });
       return;
     }
     const [result, tx] = submitResult;
-    updateStatus({ info: result.status });
+    updateStatus({ info: ["CAPTCHA SUBMIT STATUS", result.status] });
 
     console.log("onSubmit: CAPTCHA SUBMIT RESULT", result);
     console.log("onSubmit: CAPTCHA SUBMIT TX", tx);
