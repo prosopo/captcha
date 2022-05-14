@@ -25,7 +25,7 @@ export class Extension extends AsyncFactory {
     public async init(noExtCb?: NoExtensionCallback) {
         await this.checkExtensions(noExtCb || (() => { }));
         this.allAccounts = await web3Accounts();
-        await this._loadAccount();
+        await this.loadAccount();
         console.log(this.account)
         this.injected = await web3FromSource(this.account.meta.source);
         return this;
@@ -43,22 +43,18 @@ export class Extension extends AsyncFactory {
         }
     }
 
-    private async _loadAccount() {
+    public async loadAccount() {
         const defaultAccount = storage.getAccount();
 
-        const account = this.allAccounts.find(acc => acc.address === defaultAccount)
+        const account = this.allAccounts.find(acc => acc.address === defaultAccount);
 
         return this.account = account || this.allAccounts[0];
-    }
-
-    public async loadAccount() {
-        return this._loadAccount();
     }
 
     public async setAccount(address: string): Promise<InjectedAccountWithMeta> {
         const account = this.allAccounts.find(acc => acc.address === address);
         if (!account) {
-            throw new Error("Account doesn't exist")
+            throw new Error("Account doesn't exist");
         }
         storage.setAccount(address);
         return this.account = account;

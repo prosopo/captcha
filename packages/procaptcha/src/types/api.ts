@@ -19,19 +19,19 @@ export interface ProposoProvider {
   status: string; // TODO: enum
 }
 
-export interface CaptchaSet {
+export interface CaptchaResponseCaptchaItem {
   captchaId: string;
   datasetId: string;
   // TODO items: {path, type}[];
 }
 
-export interface ProsopoCaptcha {
-  captcha: CaptchaSet;
+export interface CaptchaResponseCaptcha {
+  captcha: CaptchaResponseCaptchaItem;
   proof: string[][];
 }
 
-export interface ProsopoCaptchaResponse {
-  captchas: ProsopoCaptcha[];
+export interface GetCaptchaResponse {
+  captchas: CaptchaResponseCaptcha[];
   requestHash: string;
 }
 
@@ -45,7 +45,7 @@ export interface CaptchaSolutionResponse {
   status: string;
 }
 
-export interface ProCaptchaConfig {
+export interface ProsopoCaptchaConfig {
   "providerApi.baseURL": string;
   "providerApi.prefix": string;
   "dappAccount": string;
