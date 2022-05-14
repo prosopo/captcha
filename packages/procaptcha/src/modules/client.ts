@@ -14,10 +14,7 @@ export const statusReducer = (state: ICaptchaStatusState, action: ICaptchaStatus
     const logger = { info: console.log, error: console.error };
     for (const key in action) {
         logger[key](action[key]);
-        if (Array.isArray(action[key])) {
-            break;
-        }
-        let status = action[key];
+        let status = Array.isArray(action[key]) ? action[key][1] : action[key];
         if (status instanceof Error) {
             status = status.message;
         }

@@ -54,7 +54,6 @@ export interface ICaptchaStatusState {
     error?: string;
 }
 
-// To log only send tupple to print send string/error.
 export interface ICaptchaStatusReducerAction {
     info?: [string, any] | string;
     error?: [string, any] | string | Error;
