@@ -17,18 +17,13 @@ export class ProsopoCaptchaStateClient {
         this.manager = manager;
     }
 
-    public dismissCaptcha() {
-        this.manager.update({ captchaChallenge: undefined });
-    }
+    public async onLoadCaptcha() {
+        const { contract, provider } = this.context.manager.state;
 
-    public cancelCaptcha() {
-        if (this.context.callbacks?.onCancel) {
-            this.context.callbacks.onCancel();
+        if (!contract || !provider) {
+            return;
         }
-        this.dismissCaptcha();
-    }
 
-    public async newCaptchaChallenge(contract: ProsopoContract, provider: ProsopoRandomProviderResponse) {
         if (this.context.callbacks?.onBeforeLoadCaptcha) {
             this.context.callbacks.onBeforeLoadCaptcha(contract, provider);
         }
@@ -49,15 +44,22 @@ export class ProsopoCaptchaStateClient {
         }
     }
 
-    public async onSubmitCaptcha() {
+    public onCancel() {
+        if (this.context.callbacks?.onCancel) {
+            this.context.callbacks.onCancel();
+        }
+        this.dismissCaptcha();
+    }
+
+    public async onSubmit() {
         const { extension, contract, provider } = this.context.manager.state;
         const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = this.manager.state;
 
-        if (!extension || !contract || !provider || !captchaChallenge) {
+        if (!captchaChallenge || !extension || !contract || !provider) {
             return;
         }
 
-        const signer = extension.getInjected().signer;
+        const signer = extension.getInjectedExtension().signer;
         const proCaptcha = new ProsopoCaptcha(contract, provider, this.context.providerApi);
         const currentCaptcha = captchaChallenge.captchas[currentCaptchaIndex];
         const { captchaId, datasetId } = currentCaptcha.captcha;
@@ -81,23 +83,31 @@ export class ProsopoCaptchaStateClient {
         if (nextCaptchaIndex < captchaChallenge.captchas.length) {
             this.manager.update({ currentCaptchaIndex: nextCaptchaIndex });
         } else {
-            if (this.context.callbacks?.onSolved) {
-                this.context.callbacks.onSolved();
-            }
-            // TODO after all captchas solved.
-            this.dismissCaptcha();
+            this.onSolved();
         }
     }
 
-    public onCaptchaSolutionClick(index: number) {
+    // TODO check for solved captchas.
+    public onSolved() {
+        if (this.context.callbacks?.onSolved) {
+            this.context.callbacks.onSolved();
+        }
+        this.dismissCaptcha();
+    }
+
+    public onChange(index: number) {
         const { currentCaptchaSolution } = this.manager.state;
         const captchaSolution = currentCaptchaSolution.includes(index) ? currentCaptchaSolution.filter(item => item !== index) : [...currentCaptchaSolution, index];
 
         this.manager.update({ currentCaptchaSolution: captchaSolution });
 
-        if (this.context.callbacks?.onClick) {
-            this.context.callbacks.onClick(captchaSolution);
+        if (this.context.callbacks?.onChange) {
+            this.context.callbacks.onChange(captchaSolution);
         }
+    }
+
+    public dismissCaptcha() {
+        this.manager.update({ captchaChallenge: undefined });
     }
 
 }
