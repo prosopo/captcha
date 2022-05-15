@@ -1,9 +1,10 @@
-import React, { SyntheticEvent } from "react";
-import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types"; // TODO procaptcha types.
+import { SyntheticEvent } from "react";
 import { Autocomplete, TextField } from "@mui/material";
+import { TExtensionAccount } from "@prosopo/procaptcha";
 
-export const ExtensionAccountSelect = ({value, options, onChangeEvent}: 
-        {value: InjectedAccountWithMeta | undefined, options: InjectedAccountWithMeta[], onChangeEvent: (value: InjectedAccountWithMeta | null) => void}) => {
+
+export const ExtensionAccountSelect = ({value, options, onChange}: 
+        {value: TExtensionAccount | undefined, options: TExtensionAccount[], onChange: (value: TExtensionAccount | null) => void}) => {
     return (
         <Autocomplete
             disablePortal
@@ -11,10 +12,10 @@ export const ExtensionAccountSelect = ({value, options, onChangeEvent}:
             options={options}
             value={value}
             isOptionEqualToValue={(option, value) => option.address === value.address}
-            onChange={(event: SyntheticEvent<Element, Event>, value: InjectedAccountWithMeta | null) => onChangeEvent(value)}
+            onChange={(event: SyntheticEvent<Element, Event>, value: TExtensionAccount | null) => onChange(value)}
             sx={{ width: 550 }} // TODO prop
             getOptionLabel={(option: any) => `${option.meta.name}\n${option.address}`}
-            renderInput={(params) => <TextField {...params} label="Select account" />} // TODO label
+            renderInput={(props) => <TextField {...props} label="Select account" />} // TODO label
         />
     );
 }

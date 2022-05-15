@@ -1,8 +1,11 @@
 import { useEffect, useContext, useReducer } from "react";
-
 import { Box, Button, Typography } from "@mui/material";
-
-import { ICaptchaContextReducer, ProsopoCaptchaClient, ProsopoCaptchaStateClient, captchaStateReducer } from "@prosopo/procaptcha";
+import { 
+    ICaptchaManagerReducer, 
+    ProsopoCaptchaClient, 
+    ProsopoCaptchaStateClient, 
+    captchaStateReducer 
+} from "@prosopo/procaptcha";
 
 import { CaptchaManager } from "./CaptchaManager";
 import { CaptchaWidget } from "./CaptchaWidget";
@@ -14,10 +17,10 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
     const classes = useStyles();
 
-    const context: ICaptchaContextReducer = useContext(CaptchaManager);
-    const { account, contract, provider } = context.state;
-
+    const manager: ICaptchaManagerReducer = useContext(CaptchaManager);
     const [state, update] = useReducer(captchaStateReducer, { currentCaptchaIndex: 0, currentCaptchaSolution: [] });
+
+    const { account, contract, provider } = manager.state;
     const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = state;
     const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
 
@@ -30,13 +33,16 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     }, []);
 
     useEffect(() => {
-        if (!captchaChallenge && contract && provider) {
-            stateClientInterface.newCaptchaChallenge(contract, provider)
+        if (!captchaChallenge) {
+            stateClientInterface.onLoadCaptcha()
                 .catch(error => {
                     clientInterface.status.update({ error });
                 });
         }
     }, [contract, provider]);
+
+    // TODO text strings
+    // https://www.npmjs.com/package/i18next
 
     return (
         <Box className={classes.root}>
@@ -53,21 +59,20 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
                     <Box className={classes.captchasBody}>
 
                         <CaptchaWidget challenge={captchaChallenge[currentCaptchaIndex]} solution={currentCaptchaSolution}
-                            solutionClickEvent={stateClientInterface.onCaptchaSolutionClick.bind(stateClientInterface)} />
+                            onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
 
                         <Box className={classes.dotsContainer}>
-                            {Array.from(Array(totalCaptchas).keys()).map((item, index) => {
-                                return <Box key={index} className={(currentCaptchaIndex === item) ? classes.dot : classes.dotActive} />;
-                            })}
+                            {captchaChallenge?.captchas.map((_, index) => 
+                                <Box key={index} className={currentCaptchaIndex === index ? classes.dot : classes.dotActive} />)}
                         </Box>
 
                     </Box>
 
                     <Box className={classes.captchasFooter}>
-                        <Button onClick={() => stateClientInterface.cancelCaptcha()} variant="text">
+                        <Button onClick={() => stateClientInterface.onCancel()} variant="text">
                             Cancel
                         </Button>
-                        <Button onClick={() => stateClientInterface.onSubmitCaptcha()} variant="contained">
+                        <Button onClick={() => stateClientInterface.onSubmit()} variant="contained">
                             {currentCaptchaIndex + 1 < totalCaptchas ? "Next" : "Submit"}
                         </Button>
                     </Box>
