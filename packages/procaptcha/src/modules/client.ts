@@ -10,7 +10,7 @@ export const captchaStateReducer = (state: ICaptchaState, action: Partial<ICaptc
     return { ...state, ...action };
 }
 
-export const statusReducer = (state: ICaptchaStatusState, action: ICaptchaStatusReducerAction): ICaptchaStatusState => {
+export const captchaStatusReducer = (state: ICaptchaStatusState, action: ICaptchaStatusReducerAction): ICaptchaStatusState => {
     const logger = { info: console.log, error: console.error };
     for (const key in action) {
         logger[key](action[key]);
