@@ -73,7 +73,7 @@ export class ProsopoCaptchaStateClient {
         }
 
         if (this.context.callbacks?.onSubmit) {
-            this.context.callbacks.onSubmit(submitResult, currentCaptchaSolution, captchaChallenge, currentCaptchaIndex);
+            this.context.callbacks.onSubmit(submitResult, this.manager.state);
         }
 
         this.manager.update({ currentCaptchaSolution: [] });

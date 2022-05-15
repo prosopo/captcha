@@ -12,7 +12,7 @@ export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse
 
 export interface CaptchaEventCallbacks {
     onLoad?: (extension: Extension, contractAddress: string) => void;
-    onSubmit?: (result: TCaptchaSubmitResult, captchaSolution: number[], captchaChallenge: GetCaptchaResponse, captchaIndex: number) => void;
+    onSubmit?: (result: TCaptchaSubmitResult, captchaState: ICaptchaState) => void;
     onChange?: (captchaSolution: number[]) => void;
     onCancel?: () => void;
     onSolved?: () => void;
