@@ -29,11 +29,11 @@ export class ProsopoCaptchaClient {
             Promise.all([getExtension(), this.providerApi.getContractAddress()])
                 .then(([extension, { contractAddress }]) => {
 
-                    this.manager.update({ extension, contractAddress });
-
                     if (this.callbacks?.onLoad) {
                         this.callbacks.onLoad(extension, contractAddress);
                     }
+
+                    this.manager.update({ extension, contractAddress });
                 })
                 .catch(err => {
                     throw new Error(err);
@@ -46,7 +46,6 @@ export class ProsopoCaptchaClient {
     }
 
     public async onAccountChange(account: TExtensionAccount) {
-
         try {
             this.manager.state.extension!.setAccount(account.address);
         } catch (err) {
@@ -54,7 +53,6 @@ export class ProsopoCaptchaClient {
         }
 
         let contract: ProsopoContract;
-        let provider: ProsopoRandomProviderResponse;
 
         try {
             contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account);
@@ -62,18 +60,19 @@ export class ProsopoCaptchaClient {
             throw new Error(err);
         }
 
+        let provider: ProsopoRandomProviderResponse;
+
         try {
             provider = await contract.getRandomProvider(); // TODO how often should provider change?
         } catch (err) {
             throw new Error(err);
         }
 
-        this.manager.update({ account, contract, provider });
-
         if (this.callbacks?.onAccountChange) {
             this.callbacks.onAccountChange(account, contract, provider);
         }
 
+        this.manager.update({ account, contract, provider });
     }
 
 }

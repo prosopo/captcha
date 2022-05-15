@@ -18,7 +18,7 @@ function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
     return hexHash([captcha.captchaId, captcha.solution, captcha.salt].join());
 }
 
-export class ProsopoCaptcha {
+export class ProsopoCaptchaApi {
 
     protected contract: ProsopoContract;
     protected provider: ProsopoRandomProviderResponse;
@@ -31,14 +31,14 @@ export class ProsopoCaptcha {
     }
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
-        let captchaPuzzle: GetCaptchaResponse;
+        let captchaChallenge: GetCaptchaResponse;
         try {
-            captchaPuzzle = await this.providerApi.getCaptchaChallenge(this.provider);
+            captchaChallenge = await this.providerApi.getCaptchaChallenge(this.provider);
         } catch (err) {
             throw new Error(err);
         }
-        console.log("getCaptchaChallenge RECEIVED CAPTCHA", captchaPuzzle);
-        return captchaPuzzle;
+        console.log("getCaptchaChallenge RECEIVED CAPTCHA", captchaChallenge);
+        return captchaChallenge;
     }
 
     public async solveCaptchaChallenge(signer: Signer, requestHash: string, captchaId: string, datasetId: string, solution: number[]): Promise<[CaptchaSolutionResponse, TransactionResponse]> {
@@ -78,5 +78,5 @@ export class ProsopoCaptcha {
 
 }
 
-export default ProsopoCaptcha;
+export default ProsopoCaptchaApi;
 

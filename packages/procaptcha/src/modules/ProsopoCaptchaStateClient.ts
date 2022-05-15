@@ -1,9 +1,8 @@
 import { ICaptchaStateReducer } from "../types/client";
-import { ProsopoRandomProviderResponse, CaptchaSolutionResponse, GetCaptchaResponse } from "../types/api";
+import { CaptchaSolutionResponse, GetCaptchaResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
 
-import { ProsopoContract } from "../api/ProsopoContract";
-import { ProsopoCaptcha } from "./ProsopoCaptcha";
+import { ProsopoCaptchaApi } from "./ProsopoCaptchaApi";
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
 
 
@@ -24,24 +23,24 @@ export class ProsopoCaptchaStateClient {
             return;
         }
 
-        if (this.context.callbacks?.onBeforeLoadCaptcha) {
-            this.context.callbacks.onBeforeLoadCaptcha(contract, provider);
-        }
-
-        let captchaChallenge: GetCaptchaResponse;
-        const proCaptcha = new ProsopoCaptcha(contract, provider, this.context.providerApi);
+        let captchaChallenge: GetCaptchaResponse | Error | undefined;
+        const proCaptcha = new ProsopoCaptchaApi(contract, provider, this.context.providerApi);
 
         try {
             captchaChallenge = await proCaptcha.getCaptchaChallenge();
         } catch (err) {
-            throw new Error(err);
+            captchaChallenge = err as Error;
         }
-
-        this.manager.update({ captchaChallenge, currentCaptchaIndex: 0 });
 
         if (this.context.callbacks?.onLoadCaptcha) {
             this.context.callbacks.onLoadCaptcha(captchaChallenge);
         }
+
+        if (captchaChallenge instanceof Error) {
+            captchaChallenge = undefined;
+        }
+
+        this.manager.update({ captchaChallenge, currentCaptchaIndex: 0 });
     }
 
     public onCancel() {
@@ -53,14 +52,20 @@ export class ProsopoCaptchaStateClient {
 
     public async onSubmit() {
         const { extension, contract, provider } = this.context.manager.state;
+
+        if (!extension || !contract || !provider) {
+            return;
+        }
+
         const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = this.manager.state;
 
-        if (!captchaChallenge || !extension || !contract || !provider) {
+        if (!captchaChallenge) {
             return;
         }
 
         const signer = extension.getInjectedExtension().signer;
-        const proCaptcha = new ProsopoCaptcha(contract, provider, this.context.providerApi);
+        const proCaptcha = new ProsopoCaptchaApi(contract, provider, this.context.providerApi);
+
         const currentCaptcha = captchaChallenge.captchas[currentCaptchaIndex];
         const { captchaId, datasetId } = currentCaptcha.captcha;
 
@@ -77,6 +82,10 @@ export class ProsopoCaptchaStateClient {
         }
 
         this.manager.update({ currentCaptchaSolution: [] });
+
+        if (submitResult instanceof Error) {
+            return;
+        }
 
         const nextCaptchaIndex = currentCaptchaIndex + 1;
 
@@ -99,11 +108,11 @@ export class ProsopoCaptchaStateClient {
         const { currentCaptchaSolution } = this.manager.state;
         const captchaSolution = currentCaptchaSolution.includes(index) ? currentCaptchaSolution.filter(item => item !== index) : [...currentCaptchaSolution, index];
 
-        this.manager.update({ currentCaptchaSolution: captchaSolution });
-
         if (this.context.callbacks?.onChange) {
             this.context.callbacks.onChange(captchaSolution);
         }
+
+        this.manager.update({ currentCaptchaSolution: captchaSolution });
     }
 
     public dismissCaptcha() {

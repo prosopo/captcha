@@ -10,19 +10,21 @@ export type TExtensionAccount = InjectedAccountWithMeta;
 
 export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse] | Error;
 
-export interface CaptchaEventCallbacks {
+
+export interface ICaptchaClientEvents {
     onLoad?: (extension: Extension, contractAddress: string) => void;
+    onAccountChange?: (account: TExtensionAccount, contract: ProsopoContract, provider: ProsopoRandomProviderResponse) => void;
+}
+
+export interface ICaptchaStateClientEvents {
+    onLoadCaptcha?: (captchaChallenge: GetCaptchaResponse | Error) => void;
     onSubmit?: (result: TCaptchaSubmitResult, captchaState: ICaptchaState) => void;
     onChange?: (captchaSolution: number[]) => void;
     onCancel?: () => void;
     onSolved?: () => void;
-    onLoadCaptcha?: (captchaChallenge: GetCaptchaResponse) => void;
-    onBeforeLoadCaptcha?: (contract: ProsopoContract, provider: ProsopoRandomProviderResponse) => void;
-    onAccountChange?: (account: TExtensionAccount,
-        contract: ProsopoContract,
-        provider: ProsopoRandomProviderResponse,
-    ) => void;
 }
+
+export interface CaptchaEventCallbacks extends ICaptchaClientEvents, ICaptchaStateClientEvents { }
 
 export interface ICaptchaManagerState {
     config: ProsopoCaptchaConfig;
@@ -41,7 +43,7 @@ export interface ICaptchaManagerReducer {
 export interface ICaptchaState {
     captchaChallenge?: GetCaptchaResponse;
     currentCaptchaIndex: number;
-    currentCaptchaSolution: number[]
+    currentCaptchaSolution: number[];
 }
 
 export interface ICaptchaStateReducer {
