@@ -3,16 +3,16 @@ import { createContext, useReducer } from "react";
 import {
     ICaptchaManagerState,
     captchaManagerReducer,
-    statusReducer,
+    captchaStatusReducer,
     ICaptchaStatusState,
     ICaptchaManagerReducer,
     ICaptchaStatusReducer,
 } from "@prosopo/procaptcha";
 
 
-export function useCaptcha(defaultContext: ICaptchaManagerState, defaultStatus?: ICaptchaStatusState): [ICaptchaManagerReducer, ICaptchaStatusReducer] {
-    const [state, update] = useReducer(captchaManagerReducer, defaultContext);
-    const [status, updateStatus] = useReducer(statusReducer, defaultStatus || {});
+export function useCaptcha(defaultManager: ICaptchaManagerState, defaultStatus?: ICaptchaStatusState): [ICaptchaManagerReducer, ICaptchaStatusReducer] {
+    const [state, update] = useReducer(captchaManagerReducer, defaultManager);
+    const [status, updateStatus] = useReducer(captchaStatusReducer, defaultStatus || {});
 
     return [{ state, update }, { state: status, update: updateStatus }];
 }
