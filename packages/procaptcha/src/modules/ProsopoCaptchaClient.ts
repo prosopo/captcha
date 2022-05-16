@@ -14,7 +14,7 @@ export class ProsopoCaptchaClient {
     public manager: ICaptchaManagerReducer;
     public status: ICaptchaStatusReducer;
     public callbacks: CaptchaEventCallbacks | undefined;
-    private providerApi: ProviderApi;
+    public providerApi: ProviderApi;
 
     private static extension: Extension;
     private static contract: ProsopoContract;
@@ -26,10 +26,6 @@ export class ProsopoCaptchaClient {
         this.status = status;
         this.callbacks = callbacks;
         this.providerApi = new ProviderApi(manager.state.config);
-    }
-
-    public getProviderApi() {
-        return this.providerApi;
     }
 
     public getExtension() {
