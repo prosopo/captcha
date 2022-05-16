@@ -44,28 +44,25 @@ export class ProsopoCaptchaClient {
         return ProsopoCaptchaClient.captchaApi;
     }
 
-    public onLoad() {
-        if (!this.getExtension() || !this.getContract()) {
+    public async onLoad() {
+        let extension = this.getExtension();
+        let contractAddress = this.getContract()?.address;
 
-            Promise.all([getExtension(), this.providerApi.getContractAddress()])
-                .then(([extension, { contractAddress }]) => {
-
-                    ProsopoCaptchaClient.extension = extension;
-
-                    if (this.callbacks?.onLoad) {
-                        this.callbacks.onLoad(extension, contractAddress);
-                    }
-
-                    this.manager.update({ contractAddress });
-                })
-                .catch(err => {
-                    throw new Error(err);
-                });
-
-            return;
+        if (!extension || !contractAddress) {
+            try {
+                [extension, { contractAddress }] = await Promise.all([getExtension(), this.providerApi.getContractAddress()]);
+            } catch (err) {
+                throw new Error(err);
+            }
         }
 
-        this.manager.update({ contractAddress: this.getContract()!.address });
+        ProsopoCaptchaClient.extension = extension;
+
+        if (this.callbacks?.onLoad) {
+            this.callbacks.onLoad(extension, contractAddress);
+        }
+
+        this.manager.update({ contractAddress });
     }
 
     public async onAccountChange(account?: TExtensionAccount) {
