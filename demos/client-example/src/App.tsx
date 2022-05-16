@@ -28,9 +28,9 @@ function App() {
   };
 
   const onAccountChange = (account: TExtensionAccount) => {
-    status.update({ info: "Selected account: " + account.meta.name });
-    console.log("CAPTCHA API", clientInterface.getCaptchaApi());
     setShowCaptchas(true);
+    status.update({ info: "Selected account: " + account?.meta.name });
+    console.log("CAPTCHA API", clientInterface.getCaptchaApi());
   };
 
   const onSubmit = (submitResult: TCaptchaSubmitResult) => {
