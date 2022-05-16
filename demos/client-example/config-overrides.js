@@ -14,6 +14,8 @@ module.exports = function override(config, env) {
   ];
   config.resolve = {
     ...config.resolve,
+    alias: {'react/jsx-runtime': require.resolve('react/jsx-runtime')},
+    extensions: ['.js', '.jsx', '.mjs', '.ts', '.tsx'],
     fallback: {
       fs: require.resolve("browserify-fs"),
       repl: false,

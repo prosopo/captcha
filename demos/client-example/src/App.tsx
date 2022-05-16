@@ -87,8 +87,8 @@ function App() {
           <Typography className={"iAmHumanButtonLabel"}>
             I am human
           </Typography>
-        </Button>
-      }
+        </Button>}
+
     </Box>
   );
 }
