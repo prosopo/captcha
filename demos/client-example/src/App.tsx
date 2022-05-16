@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 
 import {
@@ -17,6 +17,7 @@ import {
 import config from "./config";
 
 import "./App.css";
+import {CaptchaSolutionCommitment} from "@prosopo/provider";
 
 function App() {
 
@@ -42,9 +43,10 @@ function App() {
     status.update({ info: ["onSubmit: CAPTCHA SUBMIT STATUS", result.status] });
   };
 
-  const onSolved = () => {
+  const onSolved = (commitment: CaptchaSolutionCommitment) => {
     setShowCaptchas(false);
-    status.update({ info: ["onSolved:", "All captchas answered correctly..."] });
+
+    status.update({ info: ["onSolved:", `Captcha solution status: ${commitment.status}`] });
   }
 
   const onChange = (solution: number[]) => {
