@@ -17,9 +17,9 @@ export class ProsopoCaptchaClient {
     public providerApi: ProviderApi;
 
     private static extension: Extension;
-    private static contract: ProsopoContract;
-    private static provider: ProsopoRandomProviderResponse;
-    private static captchaApi: ProsopoCaptchaApi;
+    private static contract: ProsopoContract | undefined;
+    private static provider: ProsopoRandomProviderResponse | undefined;
+    private static captchaApi: ProsopoCaptchaApi | undefined;
 
     constructor(manager: ICaptchaManagerReducer, status: ICaptchaStatusReducer, callbacks?: CaptchaEventCallbacks) {
         this.manager = manager;
@@ -65,10 +65,15 @@ export class ProsopoCaptchaClient {
             return;
         }
 
-        this.manager.update({ contractAddress: this.getContract().address });
+        this.manager.update({ contractAddress: this.getContract()!.address });
     }
 
-    public async onAccountChange(account: TExtensionAccount) {
+    public async onAccountChange(account?: TExtensionAccount) {
+        if (!account) {
+            this.onAccountUnset();
+            return;
+        }
+
         try {
             this.getExtension().setAccount(account.address);
         } catch (err) {
@@ -90,10 +95,22 @@ export class ProsopoCaptchaClient {
         ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract, ProsopoCaptchaClient.provider, this.providerApi);
 
         if (this.callbacks?.onAccountChange) {
-            this.callbacks.onAccountChange(account, ProsopoCaptchaClient.contract, ProsopoCaptchaClient.provider);
+            this.callbacks.onAccountChange(account);
         }
 
         this.manager.update({ account });
+    }
+
+    public onAccountUnset() {
+        ProsopoCaptchaClient.contract = undefined;
+        ProsopoCaptchaClient.provider = undefined;
+        ProsopoCaptchaClient.captchaApi = undefined;
+
+        if (this.callbacks?.onAccountChange) {
+            this.callbacks.onAccountChange(undefined);
+        }
+
+        this.manager.update({ account: undefined });
     }
 
 }

@@ -19,7 +19,7 @@ export class ProsopoCaptchaStateClient {
         let captchaChallenge: GetCaptchaResponse | Error | undefined;
 
         try {
-            captchaChallenge = await this.context.getCaptchaApi().getCaptchaChallenge();
+            captchaChallenge = await this.context.getCaptchaApi()!.getCaptchaChallenge();
         } catch (err) {
             captchaChallenge = err as Error;
         }
@@ -45,7 +45,7 @@ export class ProsopoCaptchaStateClient {
     public async onSubmit() {
         const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = this.manager.state;
 
-        const signer = this.context.getExtension().getInjectedExtension().signer;
+        const signer = this.context.getExtension().getExtension().signer;
 
         const currentCaptcha = captchaChallenge!.captchas[currentCaptchaIndex];
         const { captchaId, datasetId } = currentCaptcha.captcha;
@@ -53,7 +53,7 @@ export class ProsopoCaptchaStateClient {
         let submitResult: [CaptchaSolutionResponse, TransactionResponse] | Error;
 
         try {
-            submitResult = await this.context.getCaptchaApi().solveCaptchaChallenge(signer, captchaChallenge!.requestHash, captchaId, datasetId, currentCaptchaSolution);
+            submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, captchaId, datasetId, currentCaptchaSolution);
         } catch (err) {
             submitResult = err as Error;
         }

@@ -37,38 +37,29 @@ export class ProsopoCaptchaApi {
         } catch (err) {
             throw new Error(err);
         }
-        console.log("getCaptchaChallenge RECEIVED CAPTCHA", captchaChallenge);
         return captchaChallenge;
     }
 
-    public async solveCaptchaChallenge(signer: Signer, requestHash: string, captchaId: string, datasetId: string, solution: number[]): Promise<[CaptchaSolutionResponse, TransactionResponse]> {
+    public async submitCaptchaSolution(signer: Signer, requestHash: string, captchaId: string, datasetId: string, solution: number[]): Promise<[CaptchaSolutionResponse, TransactionResponse]> {
         const salt = randomAsHex();
-        const tree = new CaptchaMerkleTree();
-        const captchaSolutionsSalted: CaptchaSolution[] = [{ captchaId, solution, salt }];
-        const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
-
-        tree.build(captchasHashed);
-        const commitmentId = tree.root!.hash;
-
-        console.log("solveCaptchaChallenge commitmentId", commitmentId);
-        // console.log("solveCaptchaChallenge USER ACCOUNT", this.contract.getAccount().address);
-        // console.log("solveCaptchaChallenge DAPP ACCOUNT", this.contract.getDappAddress());
-        // console.log("solveCaptchaChallenge CONTRACT ADDRESS", this.contract.getContract().address.toString());
+        const merkleTree = new CaptchaMerkleTree(); // TODO move to contract?
+        const saltedCaptchas: CaptchaSolution[] = [{ captchaId, solution, salt }];
+        const hashedCaptchas = saltedCaptchas.map(captcha => computeCaptchaSolutionHash(captcha));
+        merkleTree.build(hashedCaptchas);
+        const merkleTreeRoot = merkleTree.root!.hash;
 
         let tx: TransactionResponse;
 
         try {
-            tx = await this.contract.dappUserCommit(signer, datasetId as string, commitmentId, this.provider.providerId);
+            tx = await this.contract.dappUserCommit(signer, datasetId as string, merkleTreeRoot, this.provider.providerId);
         } catch (err) {
             throw new Error(err);
         }
 
-        console.log("solveCaptchaChallenge dappUserCommit TX", tx);
-
         let result: CaptchaSolutionResponse;
 
         try {
-            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
+            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, saltedCaptchas, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
         } catch (err) {
             throw new Error(err);
         }
