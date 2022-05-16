@@ -11,15 +11,6 @@ export class ProviderApi extends HttpClientBase {
     this.config = config;
   }
 
-  /**
-   * 
-   * @deprecated use ProsopoContract$getRandomProvider instead.
-   */
-  public getRandomProvider() {
-    const userAccount = Storage.getAccount();
-    return this.axios.get(`/random_provider/${userAccount}`);
-  }
-
   public getProviders(): Promise<{accounts: string[]}> {
     return this.axios.get(`/providers`);
   }

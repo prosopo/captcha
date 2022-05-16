@@ -9,9 +9,10 @@ export type NoExtensionCallback = () => void | Promise<void>;
 
 export class Extension extends AsyncFactory {
 
-    private account: InjectedAccountWithMeta;
+    private account: InjectedAccountWithMeta | undefined;
+    private extension: InjectedExtension;
     private injectedAccounts: InjectedAccountWithMeta[];
-    private injectedExtension: InjectedExtension;
+    private injectedExtensions: InjectedExtension[];
 
     public async init() {
         await this.checkExtension();
@@ -21,28 +22,28 @@ export class Extension extends AsyncFactory {
     }
 
     public async checkExtension() {
-        let injectedExtensions: InjectedExtension[];
         try {
-            injectedExtensions = await web3Enable('Prosopo');
+            this.injectedExtensions = await web3Enable('Prosopo');
         } catch (err) {
             throw new Error(err);
         }
-        if (!injectedExtensions.length) {
+        if (!this.injectedExtensions.length) {
             throw new Error("No extension found");
         }
     }
 
-    public getInjectedExtension() {
-        return this.injectedExtension;
+    public getExtension() {
+        return this.extension;
     }
 
     private async setInjectedExtension() {
         try {
-            this.injectedExtension = await web3FromSource(this.account.meta.source);
+            // https://polkadot.js.org/docs/extension/cookbook/
+            this.extension = await web3FromSource(this.injectedAccounts[0].meta.source);
         } catch (err) {
             throw new Error(err);
         }
-        if (!this.injectedExtension) {
+        if (!this.extension) {
             throw new Error("Extension not found");
         }
     }
@@ -76,15 +77,28 @@ export class Extension extends AsyncFactory {
         storage.setAccount(account.address);
     }
 
-    private setDefaultAccount() {
-        this.setAccount(storage.getAccount() || this.injectedAccounts[0]?.address);
+    public unsetAccount() {
+        this.account = undefined;
+        storage.setAccount("");
+    }
+
+    public getDefaultAccount() {
+        const defaultAccount = storage.getAccount();
+        return this.injectedAccounts.find(acc => acc.address === defaultAccount);
+    }
+
+    public setDefaultAccount() {
+        const defaultAccount = storage.getAccount();
+        if (defaultAccount) {
+            this.setAccount(defaultAccount);
+        }
     }
 
     public async signRaw(raw: SignerPayloadRaw) {
-        if (!this.injectedExtension.signer) {
+        if (!this.extension.signer) {
             throw new Error("No signer found");
         }
-        return this.injectedExtension.signer.signRaw!({ ...raw, address: this.account.address });
+        return this.extension.signer?.signRaw!({ ...raw, address: this.account!.address });
     }
 
 }
