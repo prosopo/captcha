@@ -20,8 +20,6 @@ import "./App.css";
 
 function App() {
 
-  const [manager, status] = useCaptcha({ config });
-
   const [showCaptchas, setShowCaptchas] = useState(false);
 
   const showCaptchaClick = () => {
@@ -58,7 +56,10 @@ function App() {
     status.update({ info: "" });
   };
 
-  const clientInterface = new ProsopoCaptchaClient(manager, status, { onAccountChange, onChange, onSubmit, onSolved, onCancel });
+  const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onSolved, onCancel });
+
+  const manager = clientInterface.manager;
+  const status = clientInterface.status;
 
   return (
     <Box className={"App"}>
