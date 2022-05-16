@@ -57,7 +57,7 @@ export class ProsopoCaptchaClient {
                     ProsopoCaptchaClient.extension = extension;
 
                     if (this.callbacks?.onLoad) {
-                        this.callbacks.onLoad(contractAddress);
+                        this.callbacks.onLoad(extension, contractAddress);
                     }
 
                     this.manager.update({ contractAddress });

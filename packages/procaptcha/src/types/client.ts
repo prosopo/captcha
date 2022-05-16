@@ -12,7 +12,7 @@ export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse
 
 
 export interface ICaptchaClientEvents {
-    onLoad?: (contractAddress: string) => void;
+    onLoad?: (extension: Extension, contractAddress: string) => void;
     onAccountChange?: (account: TExtensionAccount, contract: ProsopoContract, provider: ProsopoRandomProviderResponse) => void;
 }
 
