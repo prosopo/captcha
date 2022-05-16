@@ -1,87 +1,92 @@
-import {
-    web3Enable,
-    web3FromSource,
-    web3Accounts,
-} from "@polkadot/extension-dapp";
+import { web3Enable, web3FromSource, web3Accounts } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types"
 import { SignerPayloadRaw } from "@polkadot/types/types";
 import storage from "../modules/storage";
 import AsyncFactory from "./AsyncFactory";
 
-/**
- * type for callback when no extension was found
- */
+
 export type NoExtensionCallback = () => void | Promise<void>;
 
 export class Extension extends AsyncFactory {
 
     private account: InjectedAccountWithMeta;
-    private injected: InjectedExtension;
-    private allAccounts: InjectedAccountWithMeta[];
+    private injectedAccounts: InjectedAccountWithMeta[];
+    private injectedExtension: InjectedExtension;
 
-    /**
-     * @param noExtCb - callback when no extension was found
-     */
-    public async init(noExtCb?: NoExtensionCallback) {
-        await this.checkExtensions(noExtCb || (() => { }));
-        this.allAccounts = await web3Accounts();
-        await this._loadAccount();
-        console.log(this.account)
-        this.injected = await web3FromSource(this.account.meta.source);
+    public async init() {
+        await this.checkExtension();
+        await this.setInjectedAccounts();
+        await this.setInjectedExtension();
         return this;
     }
 
-    public async checkExtensions(cb: NoExtensionCallback, compatInits?: (() => Promise<boolean>)[]) {
-        // this call fires up the authorization popup
-        const extensions = await web3Enable('Prosopo', compatInits);
-
-        if (extensions.length === 0) {
-            // no extension installed, or the user did not accept the authorization
-            // in this case we should inform the use and give a link to the extension
-            await cb();
-            return;
+    public async checkExtension() {
+        let injectedExtensions: InjectedExtension[];
+        try {
+            injectedExtensions = await web3Enable('Prosopo');
+        } catch (err) {
+            throw new Error(err);
+        }
+        if (!injectedExtensions.length) {
+            throw new Error("No extension found");
         }
     }
 
-    private async _loadAccount() {
-        const defaultAccount = storage.getAccount();
-
-        const account = this.allAccounts.find(acc => acc.address === defaultAccount)
-
-        return this.account = account || this.allAccounts[0];
+    public getInjectedExtension() {
+        return this.injectedExtension;
     }
 
-    public async loadAccount() {
-        return this._loadAccount();
-    }
-
-    public async setAccount(address: string): Promise<InjectedAccountWithMeta> {
-        const account = this.allAccounts.find(acc => acc.address === address);
-        if (!account) {
-            throw new Error("Account doesn't exist")
+    private async setInjectedExtension() {
+        try {
+            this.injectedExtension = await web3FromSource(this.account.meta.source);
+        } catch (err) {
+            throw new Error(err);
         }
-        storage.setAccount(address);
-        return this.account = account;
+        if (!this.injectedExtension) {
+            throw new Error("Extension not found");
+        }
+    }
+
+    public getInjectedAcounts() {
+        return this.injectedAccounts;
+    }
+
+    private async setInjectedAccounts() {
+        try {
+            this.injectedAccounts = await web3Accounts();
+        } catch (err) {
+            throw new Error(err);
+        }
+        this.setDefaultAccount();
     }
 
     public getAccount() {
         return this.account;
     }
 
-    public getAllAcounts() {
-        return this.allAccounts;
+    public setAccount(address: string) {
+        if (!this.injectedAccounts.length) {
+            throw new Error("No accounts found");
+        }
+        const account = this.injectedAccounts.find(acc => acc.address === address);
+        if (!account) {
+            throw new Error("Account not found");
+        }
+        this.account = account;
+        storage.setAccount(account.address);
     }
 
-    public getInjected() {
-        return this.injected;
+    private setDefaultAccount() {
+        this.setAccount(storage.getAccount() || this.injectedAccounts[0]?.address);
     }
 
-    public async signRaw(raw: Omit<SignerPayloadRaw, "address">) {
-        return (this.injected.signer && this.injected.signer.signRaw && this.injected.signer.signRaw({
-            address: this.account.address,
-            ...raw
-        }))
+    public async signRaw(raw: SignerPayloadRaw) {
+        if (!this.injectedExtension.signer) {
+            throw new Error("No signer found");
+        }
+        return this.injectedExtension.signer.signRaw!({ ...raw, address: this.account.address });
     }
+
 }
 
 export default Extension;

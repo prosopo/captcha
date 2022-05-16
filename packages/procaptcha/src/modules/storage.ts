@@ -10,7 +10,7 @@ function setAccount(account: string) {
 /**
  * Gets default `account`
  */
-function getAccount() {
+function getAccount(): string | null {
     return localStorage.getItem(CURRENT_ACCOUNT_KEY);
 }
 
