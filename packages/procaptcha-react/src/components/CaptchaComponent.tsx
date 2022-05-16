@@ -20,7 +20,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     const manager: ICaptchaManagerReducer = useContext(CaptchaManager);
     const [state, update] = useReducer(captchaStateReducer, { currentCaptchaIndex: 0, currentCaptchaSolution: [] });
 
-    const { account, contract, provider } = manager.state;
+    const { account } = manager.state;
     const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = state;
     const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
 
@@ -39,7 +39,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
                     clientInterface.status.update({ error });
                 });
         }
-    }, [contract, provider]);
+    }, [account]);
 
     // TODO text strings
     // https://www.npmjs.com/package/i18next
