@@ -6,15 +6,16 @@ import {
     captchaStatusReducer,
     ICaptchaStatusState,
     ICaptchaManagerReducer,
-    ICaptchaStatusReducer,
+    ProsopoCaptchaClient,
+    CaptchaEventCallbacks,
 } from "@prosopo/procaptcha";
 
 
-export function useCaptcha(defaultManager: ICaptchaManagerState, defaultStatus?: ICaptchaStatusState): [ICaptchaManagerReducer, ICaptchaStatusReducer] {
+export function useCaptcha(defaultManager: ICaptchaManagerState, callbacks?: CaptchaEventCallbacks): ProsopoCaptchaClient {
     const [state, update] = useReducer(captchaManagerReducer, defaultManager);
-    const [status, updateStatus] = useReducer(captchaStatusReducer, defaultStatus || {});
+    const [status, updateStatus] = useReducer(captchaStatusReducer, {});
 
-    return [{ state, update }, { state: status, update: updateStatus }];
+    return new ProsopoCaptchaClient({ state, update }, { state: status, update: updateStatus }, callbacks);
 }
 
 export const CaptchaManager = createContext({
