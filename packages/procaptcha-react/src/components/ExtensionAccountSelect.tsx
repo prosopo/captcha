@@ -4,7 +4,7 @@ import { TExtensionAccount } from "@prosopo/procaptcha";
 
 
 export const ExtensionAccountSelect = ({value, options, onChange}: 
-        {value: TExtensionAccount | undefined, options: TExtensionAccount[], onChange: (value: TExtensionAccount | null) => void}) => {
+        {value?: TExtensionAccount, options: TExtensionAccount[], onChange: (value: TExtensionAccount | null) => void}) => {
     return (
         <Autocomplete
             disablePortal

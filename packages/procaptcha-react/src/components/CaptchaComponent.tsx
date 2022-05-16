@@ -20,7 +20,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     const manager: ICaptchaManagerReducer = useContext(CaptchaManager);
     const [state, update] = useReducer(captchaStateReducer, { currentCaptchaIndex: 0, currentCaptchaSolution: [] });
 
-    const { account } = manager.state;
+    const { account, contractAddress } = manager.state;
     const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = state;
     const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
 
@@ -33,7 +33,18 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     }, []);
 
     useEffect(() => {
-        if (!captchaChallenge) {
+        const extension = clientInterface.getExtension();
+        if (contractAddress && extension) {
+            extension.setDefaultAccount();
+            const defaultAccount = extension.getAccount();
+            if (defaultAccount) {
+                clientInterface.onAccountChange(defaultAccount);
+            }
+        }
+    }, [contractAddress]);
+
+    useEffect(() => {
+        if (account && !captchaChallenge) {
             stateClientInterface.onLoadCaptcha()
                 .catch(error => {
                     clientInterface.status.update({ error });
