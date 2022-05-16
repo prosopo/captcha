@@ -1,7 +1,16 @@
-import { useState, useReducer } from "react";
+import { useState, useReducer, Reducer, SyntheticEvent } from "react";
 import { Box, Button, Typography } from "@mui/material";
+import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
-import { ProCaptchaComponent, ProCaptchaManager, CaptchaManagerState, TSubmitResult, TExtensionAccount } from "@prosopo/procaptcha-react";
+import {
+  ProCaptchaComponent,
+  ProCaptchaManager,
+  captchaManagerReducer,
+  TSubmitResult,
+  TExtensionAccount,
+  ExtensionAccountSelect,
+  onExtensionAccountChange
+} from "@prosopo/procaptcha-react";
 
 import config from "./config";
 
@@ -9,69 +18,70 @@ import "./App.css";
 
 function App() {
 
+  const [state, dispatch] = useReducer(captchaManagerReducer, {config});
+
   const [showCaptchas, setShowCaptchas] = useState(false);
 
   const [status, setStatus] = useState('');
-  const [error, setError] = useState('');
 
-  const reducer = (state: CaptchaManagerState, action: Partial<CaptchaManagerState>) => {
-    return { ...state, ...action };
-  }
-
-  const [state, dispatch] = useReducer<CaptchaManagerState>(reducer, {});
-
-  const toggleShowCaptcha = () => {
-    setShowCaptchas(!showCaptchas);
+  const showCaptchaClick = () => {
+    setShowCaptchas(true);
     setStatus("");
-    setError("");
   };
 
   const onAccountChange = (account: TExtensionAccount) => {
-    console.log("ACCOUNT CHANGED CALLBACK", account.address);
-    // setAccount(account.address);
+    console.log("onAccountChange: ACCOUNT CHANGED", account.address);
+    setStatus("Selected account: " + account.meta.name);
+    setShowCaptchas(true);
   }
 
   const onSubmit = (submitResult: TSubmitResult) => {
     if (submitResult instanceof Error) {
-      setError(submitResult.message);
-      setStatus("");
       return;
     }
     const [result, tx] = submitResult;
-    setStatus(result.status);
-    setError("");
 
-    console.log("CAPTCHA SUBMIT CALLBACK", result);
-    console.log("CAPTCHA SUBMIT CALLBACK TX", tx);
+    console.log("onSubmit: CAPTCHA SUBMIT RESULT", result);
+    console.log("onSubmit: CAPTCHA SUBMIT TX", tx);
   }
 
   const onCancel = () => {
     setShowCaptchas(false);
     setStatus("");
-    setError("");
   };
 
   const onSolved = () => {
     setShowCaptchas(false);
-    console.log("ALL CAPTCHAS ANSWERED");
+    console.log("onSolved: ALL CAPTCHAS ANSWERED");
     setStatus("All captchas answered...");
   }
+
+  const onClick = (solution: number[]) => {
+    console.log("onClick: ", solution);
+  }
+
+  const onAccountChangeEvent = (e: SyntheticEvent<Element, Event>, account: InjectedAccountWithMeta | null) => {
+    if (!account || !state.extension || !state.contractAddress) {
+        return;
+    }
+    onExtensionAccountChange(account, {state, dispatch}, (account, contract, provider) => {
+      onAccountChange(account);
+    });
+  };
 
   return (
     <Box className={"App"}>
 
       {status && <Box className={"status"}>{status}</Box>}
-      {error && <Box className={"status error"}>{error}</Box>}
 
-      {showCaptchas &&
-        <ProCaptchaManager.Provider value={{state, dispatch}}>
-          <ProCaptchaComponent config={config} callbacks={{onAccountChange, onSubmit, onCancel, onSolved}} />
-        </ProCaptchaManager.Provider>
-      }
+      <ProCaptchaManager.Provider value={{state: state, dispatch}}>
+        {state.extension && !state.account && <ExtensionAccountSelect value={state.account} options={state.extension?.getAllAcounts() || []} onChange={onAccountChangeEvent} />}
+        {showCaptchas && <ProCaptchaComponent callbacks={{onAccountChange, onSubmit, onCancel, onSolved, onClick}} />}
+      </ProCaptchaManager.Provider>
 
       {!showCaptchas &&
         <Button
-          onClick={toggleShowCaptcha}
+          onClick={showCaptchaClick}
           className={"iAmHumanButton"}
         >
           <Typography className={"iAmHumanButtonLabel"}>
