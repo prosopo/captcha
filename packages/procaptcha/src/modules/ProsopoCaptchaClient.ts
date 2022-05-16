@@ -45,21 +45,18 @@ export class ProsopoCaptchaClient {
     }
 
     public async onLoad() {
-        let extension = this.getExtension();
-        let contractAddress = this.getContract()?.address;
-
-        if (!extension || !contractAddress) {
+        let contractAddress = ProsopoCaptchaClient.contract?.address;
+    
+        if (!ProsopoCaptchaClient.extension || !contractAddress) {
             try {
-                [extension, { contractAddress }] = await Promise.all([getExtension(), this.providerApi.getContractAddress()]);
+                [ProsopoCaptchaClient.extension, { contractAddress }] = await Promise.all([getExtension(), this.providerApi.getContractAddress()]);
             } catch (err) {
                 throw new Error(err);
             }
         }
 
-        ProsopoCaptchaClient.extension = extension;
-
         if (this.callbacks?.onLoad) {
-            this.callbacks.onLoad(extension, contractAddress);
+            this.callbacks.onLoad(ProsopoCaptchaClient.extension, contractAddress);
         }
 
         this.manager.update({ contractAddress });
@@ -72,7 +69,7 @@ export class ProsopoCaptchaClient {
         }
 
         try {
-            this.getExtension().setAccount(account.address);
+            ProsopoCaptchaClient.extension.setAccount(account.address);
         } catch (err) {
             throw new Error(err);
         }
