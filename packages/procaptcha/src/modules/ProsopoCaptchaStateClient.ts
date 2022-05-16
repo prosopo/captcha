@@ -2,7 +2,6 @@ import { ICaptchaStateReducer } from "../types/client";
 import { CaptchaSolutionResponse, GetCaptchaResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
 
-import { ProsopoCaptchaApi } from "./ProsopoCaptchaApi";
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
 
 
@@ -17,17 +16,10 @@ export class ProsopoCaptchaStateClient {
     }
 
     public async onLoadCaptcha() {
-        const { contract, provider } = this.context.manager.state;
-
-        if (!contract || !provider) {
-            return;
-        }
-
         let captchaChallenge: GetCaptchaResponse | Error | undefined;
-        const proCaptcha = new ProsopoCaptchaApi(contract, provider, this.context.providerApi);
 
         try {
-            captchaChallenge = await proCaptcha.getCaptchaChallenge();
+            captchaChallenge = await this.context.getCaptchaApi().getCaptchaChallenge();
         } catch (err) {
             captchaChallenge = err as Error;
         }
@@ -51,28 +43,17 @@ export class ProsopoCaptchaStateClient {
     }
 
     public async onSubmit() {
-        const { extension, contract, provider } = this.context.manager.state;
-
-        if (!extension || !contract || !provider) {
-            return;
-        }
-
         const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = this.manager.state;
 
-        if (!captchaChallenge) {
-            return;
-        }
+        const signer = this.context.getExtension().getInjectedExtension().signer;
 
-        const signer = extension.getInjectedExtension().signer;
-        const proCaptcha = new ProsopoCaptchaApi(contract, provider, this.context.providerApi);
-
-        const currentCaptcha = captchaChallenge.captchas[currentCaptchaIndex];
+        const currentCaptcha = captchaChallenge!.captchas[currentCaptchaIndex];
         const { captchaId, datasetId } = currentCaptcha.captcha;
 
         let submitResult: [CaptchaSolutionResponse, TransactionResponse] | Error;
 
         try {
-            submitResult = await proCaptcha.solveCaptchaChallenge(signer, captchaChallenge.requestHash, captchaId, datasetId, currentCaptchaSolution);
+            submitResult = await this.context.getCaptchaApi().solveCaptchaChallenge(signer, captchaChallenge!.requestHash, captchaId, datasetId, currentCaptchaSolution);
         } catch (err) {
             submitResult = err as Error;
         }
@@ -89,7 +70,7 @@ export class ProsopoCaptchaStateClient {
 
         const nextCaptchaIndex = currentCaptchaIndex + 1;
 
-        if (nextCaptchaIndex < captchaChallenge.captchas.length) {
+        if (nextCaptchaIndex < captchaChallenge!.captchas.length) {
             this.manager.update({ currentCaptchaIndex: nextCaptchaIndex });
         } else {
             this.onSolved();
