@@ -1,15 +1,17 @@
-import { useState, useReducer, Reducer, SyntheticEvent } from "react";
+import { useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
-import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
 import {
-  ProCaptchaComponent,
-  ProCaptchaManager,
-  captchaManagerReducer,
-  TSubmitResult,
+  TCaptchaSubmitResult,
   TExtensionAccount,
+  ProsopoCaptchaClient,
+} from "@prosopo/procaptcha";
+
+import {
+  CaptchaComponent,
+  CaptchaManager,
   ExtensionAccountSelect,
-  onExtensionAccountChange
+  useCaptcha,
 } from "@prosopo/procaptcha-react";
 
 import config from "./config";
@@ -18,72 +20,69 @@ import "./App.css";
 
 function App() {
 
-  const [state, dispatch] = useReducer(captchaManagerReducer, {config});
-
   const [showCaptchas, setShowCaptchas] = useState(false);
-
-  const [status, setStatus] = useState('');
 
   const showCaptchaClick = () => {
     setShowCaptchas(true);
-    setStatus("");
+    status.update({ info: "" });
   };
 
   const onAccountChange = (account: TExtensionAccount) => {
-    console.log("onAccountChange: ACCOUNT CHANGED", account.address);
-    setStatus("Selected account: " + account.meta.name);
+    status.update({ info: "Selected account: " + account.meta.name });
+    console.log("CAPTCHA API", clientInterface.getCaptchaApi());
     setShowCaptchas(true);
-  }
+  };
 
-  const onSubmit = (submitResult: TSubmitResult) => {
+  const onSubmit = (submitResult: TCaptchaSubmitResult) => {
     if (submitResult instanceof Error) {
+      status.update({ error: ["onSubmit: CAPTCHA SUBMIT ERROR", submitResult] });
       return;
     }
     const [result, tx] = submitResult;
-
-    console.log("onSubmit: CAPTCHA SUBMIT RESULT", result);
-    console.log("onSubmit: CAPTCHA SUBMIT TX", tx);
-  }
-
-  const onCancel = () => {
-    setShowCaptchas(false);
-    setStatus("");
+    status.update({ info: ["onSubmit: CAPTCHA SUBMIT STATUS", result.status] });
   };
 
   const onSolved = () => {
     setShowCaptchas(false);
-    console.log("onSolved: ALL CAPTCHAS ANSWERED");
-    setStatus("All captchas answered...");
+    status.update({ info: ["onSolved:", "All captchas answered correctly..."] });
   }
 
-  const onClick = (solution: number[]) => {
-    console.log("onClick: ", solution);
-  }
-
-  const onAccountChangeEvent = (e: SyntheticEvent<Element, Event>, account: InjectedAccountWithMeta | null) => {
-    if (!account || !state.extension || !state.contractAddress) {
-        return;
-    }
-    onExtensionAccountChange(account, {state, dispatch}, (account, contract, provider) => {
-      onAccountChange(account);
-    });
+  const onChange = (solution: number[]) => {
+    console.log("onChange:", solution);
   };
+
+  const onCancel = () => {
+    setShowCaptchas(false);
+    status.update({ info: "" });
+  };
+
+  const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onSolved, onCancel });
+
+  const manager = clientInterface.manager;
+  const status = clientInterface.status;
 
   return (
     <Box className={"App"}>
 
-      {status && <Box className={"status"}>{status}</Box>}
+      {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
+      {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
 
-      <ProCaptchaManager.Provider value={{state: state, dispatch}}>
-        {state.extension && !state.account && <ExtensionAccountSelect value={state.account} options={state.extension?.getAllAcounts() || []} onChange={onAccountChangeEvent} />}
-        {showCaptchas && <ProCaptchaComponent callbacks={{onAccountChange, onSubmit, onCancel, onSolved, onClick}} />}
-      </ProCaptchaManager.Provider>
+      <CaptchaManager.Provider value={manager}>
+
+        {clientInterface.getExtension() && !manager.state.account &&
+          <ExtensionAccountSelect
+            value={manager.state.account}
+            options={clientInterface.getExtension().getInjectedAcounts()}
+            onChange={clientInterface.onAccountChange.bind(clientInterface)}
+          />}
+
+        {showCaptchas &&
+          <CaptchaComponent {...{ clientInterface }} />}
+
+      </CaptchaManager.Provider>
 
       {!showCaptchas &&
-        <Button
-          onClick={showCaptchaClick}
-          className={"iAmHumanButton"}
-        >
+        <Button onClick={showCaptchaClick} className={"iAmHumanButton"}>
           <Typography className={"iAmHumanButtonLabel"}>
             I am human
           </Typography>

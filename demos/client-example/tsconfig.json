@@ -26,6 +26,9 @@
     },
     {
       "path": "../packages/procaptcha-react"
+    },
+    {
+      "path": "../packages/provider"
     }
   ]
 }
