@@ -5,11 +5,11 @@ import { TransactionResponse } from "../types/contract";
 
 import { Extension } from "../api/Extension";
 import { ProsopoContract } from "../api/ProsopoContract";
-import {CaptchaSolution} from "@prosopo/provider";
+import {CaptchaSolution, CaptchaSolutionCommitment} from "@prosopo/provider";
 
 export type TExtensionAccount = InjectedAccountWithMeta;
 
-export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse] | Error;
+export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse, string] | Error;
 
 
 export interface ICaptchaClientEvents {
@@ -22,7 +22,7 @@ export interface ICaptchaStateClientEvents {
     onSubmit?: (result: TCaptchaSubmitResult, captchaState: ICaptchaState) => void;
     onChange?: (captchaSolution: number[]) => void;
     onCancel?: () => void;
-    onSolved?: () => void;
+    onSolved?: (commitment: CaptchaSolutionCommitment) => void;
 }
 
 export interface CaptchaEventCallbacks extends ICaptchaClientEvents, ICaptchaStateClientEvents { }

@@ -1,4 +1,4 @@
-import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
+import {randomAsHex, blake2AsHex, encodeAddress} from '@polkadot/util-crypto';
 // import {computeCaptchaSolutionHash} from '@prosopo/provider'; // TODO
 import { CaptchaSolution, CaptchaMerkleTree } from '@prosopo/provider';
 import { Signer } from "@polkadot/api/types";
@@ -41,7 +41,7 @@ export class ProsopoCaptchaApi {
         return captchaChallenge;
     }
 
-    public async solveCaptchaChallenge(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<[CaptchaSolutionResponse, TransactionResponse]> {
+    public async solveCaptchaChallenge(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<[CaptchaSolutionResponse, TransactionResponse, string]> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
         const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(solution => ({...solution, salt: salt}));
@@ -68,12 +68,13 @@ export class ProsopoCaptchaApi {
         let result: CaptchaSolutionResponse;
 
         try {
-            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
+            const encodedAccount = encodeAddress(this.contract.getAccount().address)
+            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), encodedAccount);
         } catch (err) {
             throw new Error(err);
         }
 
-        return [result, tx];
+        return [result, tx, commitmentId];
     }
 
 }

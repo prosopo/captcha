@@ -4,7 +4,7 @@
 // }
 
 // import { SubmittableResult } from "@polkadot/api";
-import {Captcha} from "@prosopo/provider";
+import {Captcha, CaptchaStatus} from "@prosopo/provider";
 
 export interface ProsopoRandomProviderResponse {
   providerId: string,
