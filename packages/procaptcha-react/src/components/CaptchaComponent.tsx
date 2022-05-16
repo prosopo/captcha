@@ -52,7 +52,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
                     <Box className={classes.captchasHeader}>
                         <Typography className={classes.captchasHeaderLabel}>
-                            Select all images with [TODO]
+                            Select all images with {captchaChallenge.captchas[currentCaptchaIndex].captcha.target}
                         </Typography>
                     </Box>
 
