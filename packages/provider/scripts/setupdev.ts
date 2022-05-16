@@ -71,11 +71,9 @@ async function run () {
   process.exit();
 }
 
-async function processArgs (env): Promise<unknown> {
+async function processArgs (env) {
   // https://github.com/yargs/yargs/issues/1069#issuecomment-709693413
   const logger = env.logger;
-  const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
-  PROVIDER.address = providerKeyringPair.address;
   return new Promise((resolve, reject) => {
     try {
       yargs
@@ -93,7 +91,9 @@ async function processArgs (env): Promise<unknown> {
               logger.info('sending funds...');
               await sendFunds(env, providerKeyringPair.address, 'Provider', 100000000000000000n);
               logger.info('setting up provider...');
-              await setupProvider(env, PROVIDER);
+              PROVIDER.address = providerKeyringPair.address;
+
+              return await setupProvider(env, PROVIDER);
             }
           }
         )
