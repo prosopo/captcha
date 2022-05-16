@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 
 import {
@@ -31,6 +31,7 @@ function App() {
 
   const onAccountChange = (account: TExtensionAccount) => {
     status.update({ info: "Selected account: " + account.meta.name });
+    console.log("CAPTCHA API", clientInterface.getCaptchaApi());
     setShowCaptchas(true);
   };
 
@@ -67,10 +68,10 @@ function App() {
 
       <CaptchaManager.Provider value={manager}>
 
-        {manager.state.extension && !manager.state.account &&
+        {clientInterface.getExtension() && !manager.state.account &&
           <ExtensionAccountSelect
             value={manager.state.account}
-            options={manager.state.extension.getInjectedAcounts()}
+            options={clientInterface.getExtension().getInjectedAcounts()}
             onChange={clientInterface.onAccountChange.bind(clientInterface)}
           />}
 
