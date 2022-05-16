@@ -1,12 +1,12 @@
 import HttpClientBase from "./HttpClientBase";
 import Storage from "../modules/storage";
-import { ProCaptchaConfig, ProsopoRandomProviderResponse, ProsopoCaptchaResponse, CaptchaSolution, CaptchaSolutionResponse } from '../types';
+import { ProsopoCaptchaConfig, ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolution, CaptchaSolutionResponse } from '../types';
 
 export class ProviderApi extends HttpClientBase {
 
-  protected config: ProCaptchaConfig;
+  protected config: ProsopoCaptchaConfig;
 
-  constructor(config: ProCaptchaConfig) {
+  constructor(config: ProsopoCaptchaConfig) {
     super(config['providerApi.baseURL'], config['providerApi.prefix']);
     this.config = config;
   }
@@ -28,7 +28,7 @@ export class ProviderApi extends HttpClientBase {
     return this.axios.get(`/contract_address`);
   }
 
-  public getCaptchaChallenge(randomProvider: ProsopoRandomProviderResponse) : Promise<ProsopoCaptchaResponse> {
+  public getCaptchaChallenge(randomProvider: ProsopoRandomProviderResponse) : Promise<GetCaptchaResponse> {
     let { provider, blockNumber } = randomProvider;
     blockNumber = blockNumber.replace(/,/g, ''); // TODO: middleware schema parser/validator.
     return this.axios.get(`/provider/captcha/${provider.captchaDatasetId}/${provider.serviceOrigin}/${this.config['dappAccount']}/${blockNumber}`);
