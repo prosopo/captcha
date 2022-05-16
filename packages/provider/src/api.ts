@@ -152,7 +152,7 @@ export function prosopoMiddleware(env: Environment): Router {
     }
 
     try {
-      validateAddress(userAccount);
+      validateAddress(userAccount, false, env.network.registry.chainSS58);
       const blockNumberParsed = parseBlockNumber(blockNumber);
 
       await tasks.validateProviderWasRandomlyChosen(userAccount, dappContractAccount, datasetId, blockNumberParsed);
@@ -195,7 +195,7 @@ export function prosopoMiddleware(env: Environment): Router {
     try {
       const result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
 
-      return res.json({status: ERRORS.API.CAPTCHA_PASSED.message, captchas: result});
+      return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, captchas: result});
     } catch (err: unknown) {
       const msg = `${ERRORS.API.BAD_REQUEST.message}: ${err}`;
 

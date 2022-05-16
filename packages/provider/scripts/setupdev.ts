@@ -114,7 +114,7 @@ async function processArgs (env): Promise<unknown> {
             await approveOrDisapproveCommitment(env, solutionHash, approve, PROVIDER);
           }
         }
-        ).onFinishCommand(async (r) => resolve(r))
+        )//.onFinishCommand(async (r) => resolve(r))
         .exitProcess(false)
         .argv;
     } catch (e) {

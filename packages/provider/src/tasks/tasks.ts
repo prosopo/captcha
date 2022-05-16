@@ -342,6 +342,7 @@ export class Tasks {
         const salt = randomAsHex()
 
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)
+
         await this.db.storeDappUserPending(userAccount, requestHash, salt)
         return {captchas, requestHash}
     }

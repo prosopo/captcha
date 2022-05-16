@@ -210,10 +210,6 @@ export class ProsopoDatabase implements Database {
       throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`);
     }
 
-    if (!isHex(userAccount)) {
-      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: userAccount`);
-    }
-
     await this.tables.pending?.updateOne(
       { _id: requestHash },
       { $set: { accountId: userAccount, pending: true, salt } },
@@ -244,10 +240,6 @@ export class ProsopoDatabase implements Database {
   async updateDappUserPendingStatus (userAccount: string, requestHash: string, approve: boolean): Promise<void> {
     if (!isHex(requestHash)) {
       throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`);
-    }
-
-    if (!isHex(userAccount)) {
-      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: userAccount`);
     }
 
     await this.tables.pending?.updateOne(
