@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 
 import {
   TCaptchaSubmitResult,
   TExtensionAccount,
-  ProsopoCaptchaClient,
 } from "@prosopo/procaptcha";
 
 import {
   CaptchaComponent,
-  CaptchaManager,
+  CaptchaContextManager,
   ExtensionAccountSelect,
   useCaptcha,
 } from "@prosopo/procaptcha-react";
@@ -67,19 +66,19 @@ function App() {
       {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
       {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
 
-      <CaptchaManager.Provider value={manager}>
+      <CaptchaContextManager.Provider value={manager}>
 
         {clientInterface.getExtension() && !manager.state.account &&
           <ExtensionAccountSelect
             value={manager.state.account}
-            options={clientInterface.getExtension().getInjectedAcounts()}
+            options={clientInterface.getExtension().getAccounts()}
             onChange={clientInterface.onAccountChange.bind(clientInterface)}
           />}
 
         {showCaptchas &&
           <CaptchaComponent {...{ clientInterface }} />}
 
-      </CaptchaManager.Provider>
+      </CaptchaContextManager.Provider>
 
       {!showCaptchas &&
         <Button onClick={showCaptchaClick} className={"iAmHumanButton"}>
