@@ -1,4 +1,4 @@
-import {randomAsHex, blake2AsHex, encodeAddress} from '@polkadot/util-crypto';
+import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
 // import {computeCaptchaSolutionHash} from '@prosopo/provider'; // TODO
 import { CaptchaSolution, CaptchaMerkleTree } from '@prosopo/provider';
 import { Signer } from "@polkadot/api/types";
@@ -37,7 +37,6 @@ export class ProsopoCaptchaApi {
         } catch (err) {
             throw new Error(err);
         }
-        console.log("getCaptchaChallenge RECEIVED CAPTCHA", captchaChallenge);
         return captchaChallenge;
     }
 
@@ -63,13 +62,10 @@ export class ProsopoCaptchaApi {
             throw new Error(err);
         }
 
-        console.log("solveCaptchaChallenge dappUserCommit TX", tx);
-
         let result: CaptchaSolutionResponse;
 
         try {
-            const encodedAccount = encodeAddress(this.contract.getAccount().address)
-            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), encodedAccount);
+            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
         } catch (err) {
             throw new Error(err);
         }

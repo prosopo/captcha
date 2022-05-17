@@ -1,8 +1,8 @@
 
-import { ICaptchaManagerState, ICaptchaState, ICaptchaStatusState, ICaptchaStatusReducerAction } from '../types';
+import { ICaptchaContextState, ICaptchaState, ICaptchaStatusState, ICaptchaStatusReducerAction } from '../types';
 
 
-export const captchaManagerReducer = (state: ICaptchaManagerState, action: Partial<ICaptchaManagerState>) => {
+export const captchaContextReducer = (state: ICaptchaContextState, action: Partial<ICaptchaContextState>) => {
     return { ...state, ...action };
 }
 

@@ -3,6 +3,8 @@
 //   export default value;
 // }
 
+import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
+
 // import { SubmittableResult } from "@polkadot/api";
 import {Captcha, CaptchaStatus} from "@prosopo/provider";
 

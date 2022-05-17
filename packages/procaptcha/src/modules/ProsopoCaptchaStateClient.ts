@@ -20,7 +20,7 @@ export class ProsopoCaptchaStateClient {
         let captchaChallenge: GetCaptchaResponse | Error | undefined;
 
         try {
-            captchaChallenge = await this.context.getCaptchaApi().getCaptchaChallenge();
+            captchaChallenge = await this.context.getCaptchaApi()!.getCaptchaChallenge();
         } catch (err) {
             captchaChallenge = err as Error;
         }

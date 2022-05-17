@@ -1,4 +1,4 @@
-import { ICaptchaManagerReducer, CaptchaEventCallbacks, TExtensionAccount, ICaptchaStatusReducer } from "../types/client";
+import { ICaptchaContextReducer, CaptchaEventCallbacks, TExtensionAccount, ICaptchaStatusReducer, IExtensionInterface } from "../types/client";
 import { ProsopoRandomProviderResponse } from "../types/api";
 
 import { ProsopoContract } from "../api/ProsopoContract";
@@ -11,17 +11,17 @@ import { Extension } from "../api";
 
 export class ProsopoCaptchaClient {
 
-    public manager: ICaptchaManagerReducer;
+    public manager: ICaptchaContextReducer;
     public status: ICaptchaStatusReducer;
     public callbacks: CaptchaEventCallbacks | undefined;
     public providerApi: ProviderApi;
 
-    private static extension: Extension;
-    private static contract: ProsopoContract;
-    private static provider: ProsopoRandomProviderResponse;
-    private static captchaApi: ProsopoCaptchaApi;
+    private static extension: IExtensionInterface;
+    private static contract: ProsopoContract | undefined;
+    private static provider: ProsopoRandomProviderResponse | undefined;
+    private static captchaApi: ProsopoCaptchaApi | undefined;
 
-    constructor(manager: ICaptchaManagerReducer, status: ICaptchaStatusReducer, callbacks?: CaptchaEventCallbacks) {
+    constructor(manager: ICaptchaContextReducer, status: ICaptchaStatusReducer, callbacks?: CaptchaEventCallbacks) {
         this.manager = manager;
         this.status = status;
         this.callbacks = callbacks;
@@ -30,6 +30,10 @@ export class ProsopoCaptchaClient {
 
     public getExtension() {
         return ProsopoCaptchaClient.extension;
+    }
+
+    public setExtension(extension: IExtensionInterface) {
+        return ProsopoCaptchaClient.extension = extension;
     }
 
     public getContract() {
@@ -44,33 +48,32 @@ export class ProsopoCaptchaClient {
         return ProsopoCaptchaClient.captchaApi;
     }
 
-    public onLoad() {
-        if (!this.getExtension() || !this.getContract()) {
+    public async onLoad() {
+        let contractAddress = ProsopoCaptchaClient.contract?.address;
+    
+        if (!ProsopoCaptchaClient.extension || !contractAddress) {
+            try {
+                [ProsopoCaptchaClient.extension, { contractAddress }] = await Promise.all([getExtension(), this.providerApi.getContractAddress()]);
+            } catch (err) {
+                throw new Error(err);
+            }
+        }
 
-            Promise.all([getExtension(), this.providerApi.getContractAddress()])
-                .then(([extension, { contractAddress }]) => {
+        if (this.callbacks?.onLoad) {
+            this.callbacks.onLoad(ProsopoCaptchaClient.extension, contractAddress);
+        }
 
-                    ProsopoCaptchaClient.extension = extension;
+        this.manager.update({ contractAddress });
+    }
 
-                    if (this.callbacks?.onLoad) {
-                        this.callbacks.onLoad(extension, contractAddress);
-                    }
-
-                    this.manager.update({ contractAddress });
-                })
-                .catch(err => {
-                    throw new Error(err);
-                });
-
+    public async onAccountChange(account?: TExtensionAccount) {
+        if (!account) {
+            this.onAccountUnset();
             return;
         }
 
-        this.manager.update({ contractAddress: this.getContract().address });
-    }
-
-    public async onAccountChange(account: TExtensionAccount) {
         try {
-            this.getExtension().setAccount(account.address);
+            ProsopoCaptchaClient.extension.setAccount(account.address);
         } catch (err) {
             throw new Error(err);
         }
@@ -90,10 +93,22 @@ export class ProsopoCaptchaClient {
         ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract, ProsopoCaptchaClient.provider, this.providerApi);
 
         if (this.callbacks?.onAccountChange) {
-            this.callbacks.onAccountChange(account, ProsopoCaptchaClient.contract, ProsopoCaptchaClient.provider);
+            this.callbacks.onAccountChange(account);
         }
 
         this.manager.update({ account });
+    }
+
+    public onAccountUnset() {
+        ProsopoCaptchaClient.contract = undefined;
+        ProsopoCaptchaClient.provider = undefined;
+        ProsopoCaptchaClient.captchaApi = undefined;
+
+        if (this.callbacks?.onAccountChange) {
+            this.callbacks.onAccountChange(undefined);
+        }
+
+        this.manager.update({ account: undefined });
     }
 
 }
