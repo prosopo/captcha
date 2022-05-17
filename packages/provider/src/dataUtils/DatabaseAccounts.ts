@@ -7,28 +7,36 @@ export const accountMnemonic = (account: Account) => account[0];
 export const accountAddress = (account: Account) => account[1];
 
 export interface IDatabaseAccounts {
-  registeredProviders: Account[];
+  providers: Account[];
 
-  registeredProvidersWithStake: Account[];
+  providersWithStake: Account[];
 
-  registeredProvidersWithStakeAndDataset: Account[];
+  providersWithStakeAndDataset: Account[];
 
-  registeredDapps: Account[];
+  dapps: Account[];
 
-  registeredDappsWithStake: Account[];
+  dappsWithStake: Account[];
+
+  dappUsers: Account[];
 }
 
 const keys = [
-  "registeredProviders",
-  "registeredProvidersWithStake",
-  "registeredProvidersWithStakeAndDataset",
-  "registeredDapps",
-  "registeredDappsWithStake",
+  "providers",
+  "providersWithStake",
+  "providersWithStakeAndDataset",
+  "dapps",
+  "dappsWithStake",
+  "dappUsers",
 ];
 
-const FILE_PATH = "../../../../database_accounts.json";
+function getPath(type: "import" | "export") {
+  return path.resolve(
+    __dirname,
+    `../../../../${type === "import" ? "" : "."}database_accounts.json`
+  );
+}
 
-export async function exportDatabaseAccounts (database: IDatabaseAccounts) {
+export async function exportDatabaseAccounts(database: IDatabaseAccounts) {
   return new Promise((resolve) => {
     const jsonData = keys.reduce((prev, curr) => {
       return {
@@ -37,11 +45,11 @@ export async function exportDatabaseAccounts (database: IDatabaseAccounts) {
       };
     }, {});
 
-    writeFile(FILE_PATH, JSON.stringify(jsonData), function (err) {
+    writeFile(getPath("export"), JSON.stringify(jsonData), function (err) {
       if (err) {
         console.log(err);
       } else {
-        console.log(`Exported accounts to ${path.resolve(FILE_PATH)}`);
+        console.log(`Exported accounts to ${getPath("export")}`);
       }
 
       resolve(null);
@@ -55,39 +63,44 @@ class DatabaseAccounts implements IDatabaseAccounts {
   private _registeredProvidersWithStakeAndDataset: Account[] = [];
   private _registeredDapps: Account[] = [];
   private _registeredDappsWithStake: Account[] = [];
+  private _registeredDappUsers: Account[] = [];
 
-  get registeredProviders(): Account[] {
+  get providers(): Account[] {
     return this._registeredProviders;
   }
-  get registeredProvidersWithStake(): Account[] {
+  get providersWithStake(): Account[] {
     return this._registeredProvidersWithStake;
   }
-  get registeredProvidersWithStakeAndDataset(): Account[] {
+  get providersWithStakeAndDataset(): Account[] {
     return this._registeredProvidersWithStakeAndDataset;
   }
-  get registeredDapps(): Account[] {
+  get dapps(): Account[] {
     return this._registeredDapps;
   }
-  get registeredDappsWithStake(): Account[] {
+  get dappsWithStake(): Account[] {
     return this._registeredDappsWithStake;
   }
 
-  public importDatabaseAccounts () {
+  get dappUsers(): Account[] {
+    return this._registeredDappUsers;
+  }
+
+  public importDatabaseAccounts() {
     const self = this;
     return new Promise((resolve) => {
-      readFile(FILE_PATH, {encoding: "utf-8"}, function(err, stringData) {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log(`Imported accounts from ${path.resolve(FILE_PATH)}`);
-            const data = JSON.parse(stringData);
-            keys.forEach(key => {
-                self[`_${key}`] = data[key];
-            })
-          }
+      readFile(getPath("import"), { encoding: "utf-8" }, function (err, stringData) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(`Imported accounts from ${getPath("import")}`);
+          const data = JSON.parse(stringData);
+          keys.forEach((key) => {
+            self[`_registered${key.replace(/^./, key[0].toUpperCase())}`] = data[key];
+          });
+        }
 
-          resolve(null)
-      })
+        resolve(null);
+      });
     });
   }
 }
