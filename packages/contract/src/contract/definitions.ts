@@ -54,6 +54,7 @@ export const contractDefinitions = {
             'DappInsufficientFunds',
             'CaptchaDataDoesNotExist',
             'CaptchaSolutionCommitmentDoesNotExist',
+            'CaptchaSolutionCommitmentExists',
             'DappUserDoesNotExist',
             'NoActiveProviders'
         ]
