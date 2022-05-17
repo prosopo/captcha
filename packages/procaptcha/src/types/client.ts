@@ -6,7 +6,7 @@ import { Extension } from "../api/Extension";
 
 export type TExtensionAccount = InjectedAccountWithMeta;
 
-export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse, string] | Error;
+export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse, CaptchaSolutionCommitment];
 
 export interface IExtensionInterface {
     checkExtension(): void;
@@ -26,10 +26,10 @@ export interface ICaptchaClientEvents {
 
 export interface ICaptchaStateClientEvents {
     onLoadCaptcha?: (captchaChallenge: GetCaptchaResponse | Error) => void;
-    onSubmit?: (result: TCaptchaSubmitResult, captchaState: ICaptchaState) => void;
-    onChange?: (captchaSolution: number[]) => void;
+    onSubmit?: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => void;
+    onChange?: (captchaSolution: number[][], index: number) => void;
     onCancel?: () => void;
-    onSolved?: (commitment: CaptchaSolutionCommitment) => void;
+    onSolved?: (result: TCaptchaSubmitResult) => void;
 }
 
 export interface CaptchaEventCallbacks extends ICaptchaClientEvents, ICaptchaStateClientEvents { }
@@ -48,8 +48,8 @@ export interface ICaptchaContextReducer {
 export interface ICaptchaState {
     captchaChallenge?: GetCaptchaResponse;
     currentCaptchaIndex: number;
-    currentCaptchaSolution: number[];
-    captchaSolutions: CaptchaSolution[]
+    currentCaptchaSolution: number[][];
+    // captchaSolutions: CaptchaSolution[];
 }
 
 export interface ICaptchaStateReducer {

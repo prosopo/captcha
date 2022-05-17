@@ -1,6 +1,6 @@
 import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
 // import {computeCaptchaSolutionHash} from '@prosopo/provider'; // TODO
-import { CaptchaSolution, CaptchaMerkleTree } from '@prosopo/provider';
+import { CaptchaSolution, CaptchaMerkleTree, CaptchaSolutionCommitment } from '@prosopo/provider';
 import { Signer } from "@polkadot/api/types";
 
 import { ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
@@ -8,6 +8,7 @@ import { TransactionResponse } from "../types/contract";
 
 import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
+import { TCaptchaSubmitResult } from '../types/client';
 
 
 function hexHash(data: string | Uint8Array): string {
@@ -40,7 +41,7 @@ export class ProsopoCaptchaApi {
         return captchaChallenge;
     }
 
-    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<[CaptchaSolutionResponse, TransactionResponse, string]> {
+    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<TCaptchaSubmitResult> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
         const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(solution => ({...solution, salt: salt}));
@@ -70,7 +71,16 @@ export class ProsopoCaptchaApi {
             throw new Error(err);
         }
 
-        return [result, tx, commitmentId];
+        let commitment: CaptchaSolutionCommitment;
+
+        // TODO concurrency?
+        try {
+            commitment = await this.contract.getCaptchaSolutionCommitment(commitmentId);
+        } catch (err) {
+            throw new Error(err);
+        }
+
+        return [result, tx, commitment];
     }
 
 }
