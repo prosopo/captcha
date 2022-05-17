@@ -17,7 +17,7 @@
 import parser from 'cron-parser';
 import pm2 from 'pm2';
 import { cwd } from 'process';
-import yargs from 'yargs';
+const yargs = require('yargs')
 
 import { Compact, u128 } from '@polkadot/types';
 
@@ -45,13 +45,11 @@ const validatePayee = (argv) => {
 };
 
 const validateValue = (argv) => {
-  if (typeof argv.value === 'number') {
-    const value: Compact<u128> = argv.value as Compact<u128>;
-
-    return { value };
+  if (typeof argv.value !== 'number') {
+    throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`);
   }
-
-  throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`);
+  const value: Compact<u128> = argv.value as Compact<u128>;
+  return { value };
 };
 
 const validateScheduleExpression = (argv) => {
