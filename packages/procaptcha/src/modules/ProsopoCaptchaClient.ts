@@ -1,4 +1,4 @@
-import { ICaptchaManagerReducer, CaptchaEventCallbacks, TExtensionAccount, ICaptchaStatusReducer } from "../types/client";
+import { ICaptchaContextReducer, CaptchaEventCallbacks, TExtensionAccount, ICaptchaStatusReducer, IExtensionInterface } from "../types/client";
 import { ProsopoRandomProviderResponse } from "../types/api";
 
 import { ProsopoContract } from "../api/ProsopoContract";
@@ -11,17 +11,17 @@ import { Extension } from "../api";
 
 export class ProsopoCaptchaClient {
 
-    public manager: ICaptchaManagerReducer;
+    public manager: ICaptchaContextReducer;
     public status: ICaptchaStatusReducer;
     public callbacks: CaptchaEventCallbacks | undefined;
     public providerApi: ProviderApi;
 
-    private static extension: Extension;
+    private static extension: IExtensionInterface;
     private static contract: ProsopoContract | undefined;
     private static provider: ProsopoRandomProviderResponse | undefined;
     private static captchaApi: ProsopoCaptchaApi | undefined;
 
-    constructor(manager: ICaptchaManagerReducer, status: ICaptchaStatusReducer, callbacks?: CaptchaEventCallbacks) {
+    constructor(manager: ICaptchaContextReducer, status: ICaptchaStatusReducer, callbacks?: CaptchaEventCallbacks) {
         this.manager = manager;
         this.status = status;
         this.callbacks = callbacks;
@@ -30,6 +30,10 @@ export class ProsopoCaptchaClient {
 
     public getExtension() {
         return ProsopoCaptchaClient.extension;
+    }
+
+    public setExtension(extension: IExtensionInterface) {
+        return ProsopoCaptchaClient.extension = extension;
     }
 
     public getContract() {

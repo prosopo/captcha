@@ -2,22 +2,21 @@ import { web3Enable, web3FromSource, web3Accounts } from "@polkadot/extension-da
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types"
 import { SignerPayloadRaw } from "@polkadot/types/types";
 import storage from "../modules/storage";
+import { IExtensionInterface } from "../types/client";
 import AsyncFactory from "./AsyncFactory";
 
 
-export type NoExtensionCallback = () => void | Promise<void>;
+export class Extension extends AsyncFactory implements IExtensionInterface {
 
-export class Extension extends AsyncFactory {
-
-    private account: InjectedAccountWithMeta | undefined;
     private extension: InjectedExtension;
-    private injectedAccounts: InjectedAccountWithMeta[];
+    private account: InjectedAccountWithMeta | undefined;
+    private accounts: InjectedAccountWithMeta[];
     private injectedExtensions: InjectedExtension[];
 
     public async init() {
         await this.checkExtension();
-        await this.setInjectedAccounts();
-        await this.setInjectedExtension();
+        await this.setAccounts();
+        await this.setExtension();
         return this;
     }
 
@@ -36,10 +35,10 @@ export class Extension extends AsyncFactory {
         return this.extension;
     }
 
-    private async setInjectedExtension() {
+    private async setExtension() {
         try {
             // https://polkadot.js.org/docs/extension/cookbook/
-            this.extension = await web3FromSource(this.injectedAccounts[0].meta.source);
+            this.extension = await web3FromSource(this.accounts[0].meta.source);
         } catch (err) {
             throw new Error(err);
         }
@@ -48,13 +47,13 @@ export class Extension extends AsyncFactory {
         }
     }
 
-    public getInjectedAcounts() {
-        return this.injectedAccounts;
+    public getAccounts() {
+        return this.accounts;
     }
 
-    private async setInjectedAccounts() {
+    private async setAccounts() {
         try {
-            this.injectedAccounts = await web3Accounts();
+            this.accounts = await web3Accounts();
         } catch (err) {
             throw new Error(err);
         }
@@ -66,10 +65,10 @@ export class Extension extends AsyncFactory {
     }
 
     public setAccount(address: string) {
-        if (!this.injectedAccounts.length) {
+        if (!this.accounts.length) {
             throw new Error("No accounts found");
         }
-        const account = this.injectedAccounts.find(acc => acc.address === address);
+        const account = this.accounts.find(acc => acc.address === address);
         if (!account) {
             throw new Error("Account not found");
         }
@@ -84,7 +83,7 @@ export class Extension extends AsyncFactory {
 
     public getDefaultAccount() {
         const defaultAccount = storage.getAccount();
-        return this.injectedAccounts.find(acc => acc.address === defaultAccount);
+        return this.accounts.find(acc => acc.address === defaultAccount);
     }
 
     public setDefaultAccount() {
@@ -94,12 +93,12 @@ export class Extension extends AsyncFactory {
         }
     }
 
-    public async signRaw(raw: SignerPayloadRaw) {
-        if (!this.extension.signer) {
-            throw new Error("No signer found");
-        }
-        return this.extension.signer?.signRaw!({ ...raw, address: this.account!.address });
-    }
+    // public async signRaw(raw: SignerPayloadRaw) {
+    //     if (!this.extension.signer) {
+    //         throw new Error("No signer found");
+    //     }
+    //     return this.extension.signer?.signRaw!({ ...raw, address: this.account!.address });
+    // }
 
 }
 
