@@ -1,24 +1,22 @@
 
 import { createContext, useReducer } from "react";
 import {
-    ICaptchaManagerState,
-    captchaManagerReducer,
+    ICaptchaContextState,
+    captchaContextReducer,
     captchaStatusReducer,
-    ICaptchaStatusState,
-    ICaptchaManagerReducer,
+    ICaptchaContextReducer,
     ProsopoCaptchaClient,
     CaptchaEventCallbacks,
 } from "@prosopo/procaptcha";
 
 
-export function useCaptcha(defaultManager: ICaptchaManagerState, callbacks?: CaptchaEventCallbacks): ProsopoCaptchaClient {
-    const [state, update] = useReducer(captchaManagerReducer, defaultManager);
+export function useCaptcha(defaultContext: ICaptchaContextState, callbacks?: CaptchaEventCallbacks): ProsopoCaptchaClient {
+    const [context, updateContext] = useReducer(captchaContextReducer, defaultContext);
     const [status, updateStatus] = useReducer(captchaStatusReducer, {});
-
-    return new ProsopoCaptchaClient({ state, update }, { state: status, update: updateStatus }, callbacks);
+    return new ProsopoCaptchaClient({ state: context, update: updateContext }, { state: status, update: updateStatus }, callbacks);
 }
 
-export const CaptchaManager = createContext({
+export const CaptchaContextManager = createContext({
     state: {
         config: {
             "providerApi.baseURL": "",
@@ -27,4 +25,4 @@ export const CaptchaManager = createContext({
         }
     }, 
     update: () => {},
-} as ICaptchaManagerReducer);
+} as ICaptchaContextReducer);

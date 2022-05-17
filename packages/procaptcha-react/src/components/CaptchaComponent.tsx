@@ -1,13 +1,13 @@
 import { useEffect, useContext, useReducer } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import { 
-    ICaptchaManagerReducer, 
+    ICaptchaContextReducer, 
     ProsopoCaptchaClient, 
     ProsopoCaptchaStateClient, 
     captchaStateReducer 
 } from "@prosopo/procaptcha";
 
-import { CaptchaManager } from "./CaptchaManager";
+import { CaptchaContextManager } from "./CaptchaManager";
 import { CaptchaWidget } from "./CaptchaWidget";
 
 import { useStyles } from "../styles";
@@ -17,7 +17,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
     const classes = useStyles();
 
-    const manager: ICaptchaManagerReducer = useContext(CaptchaManager);
+    const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
     const [state, update] = useReducer(captchaStateReducer, { currentCaptchaIndex: 0, currentCaptchaSolution: [] });
 
     const { account, contractAddress } = manager.state;
