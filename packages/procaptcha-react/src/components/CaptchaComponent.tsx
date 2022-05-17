@@ -1,13 +1,13 @@
 import { useEffect, useContext, useReducer } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import {
-    ICaptchaManagerReducer,
+    ICaptchaContextReducer,
     ProsopoCaptchaClient,
     ProsopoCaptchaStateClient,
     captchaStateReducer
 } from "@prosopo/procaptcha";
 
-import { CaptchaManager } from "./CaptchaManager";
+import { CaptchaContextManager } from "./CaptchaManager";
 import { CaptchaWidget } from "./CaptchaWidget";
 
 import { useStyles } from "../styles";
@@ -17,10 +17,10 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
     const classes = useStyles();
 
-    const manager: ICaptchaManagerReducer = useContext(CaptchaManager);
+    const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
     const [state, update] = useReducer(captchaStateReducer, { currentCaptchaIndex: 0, currentCaptchaSolution: [], captchaSolutions: [] });
 
-    const { account } = manager.state;
+    const { account, contractAddress } = manager.state;
     const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = state;
     const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
 
@@ -33,7 +33,18 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     }, []);
 
     useEffect(() => {
-        if (!captchaChallenge) {
+        const extension = clientInterface.getExtension();
+        if (contractAddress && extension) {
+            extension.setDefaultAccount();
+            const defaultAccount = extension.getAccount();
+            if (defaultAccount) {
+                clientInterface.onAccountChange(defaultAccount);
+            }
+        }
+    }, [contractAddress]);
+
+    useEffect(() => {
+        if (account && !captchaChallenge) {
             stateClientInterface.onLoadCaptcha()
                 .catch(error => {
                     clientInterface.status.update({ error });
