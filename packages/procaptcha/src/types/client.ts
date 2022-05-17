@@ -1,18 +1,28 @@
-import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
 
-import { ProsopoRandomProviderResponse, ProsopoCaptchaConfig, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
+import { ProsopoCaptchaConfig, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
 
-import { Extension } from "../api/Extension";
-import { ProsopoContract } from "../api/ProsopoContract";
+import { Extension } from "../api/Extension";;
+
 
 export type TExtensionAccount = InjectedAccountWithMeta;
 
 export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse] | Error;
 
+export interface IExtensionInterface {
+    checkExtension(): void;
+    getExtension(): InjectedExtension;
+    getAccounts(): InjectedAccountWithMeta[];
+    getAccount(): InjectedAccountWithMeta | undefined;
+    setAccount(account: string): void;
+    unsetAccount(): void;
+    getDefaultAccount(): InjectedAccountWithMeta | undefined;
+    setDefaultAccount(): void;
+  }
 
 export interface ICaptchaClientEvents {
-    onLoad?: (extension: Extension, contractAddress: string) => void;
+    onLoad?: (extension: IExtensionInterface, contractAddress: string) => void;
     onAccountChange?: (account?: TExtensionAccount) => void;
 }
 
@@ -26,15 +36,15 @@ export interface ICaptchaStateClientEvents {
 
 export interface CaptchaEventCallbacks extends ICaptchaClientEvents, ICaptchaStateClientEvents { }
 
-export interface ICaptchaManagerState {
+export interface ICaptchaContextState {
     config: ProsopoCaptchaConfig;
     contractAddress?: string;
     account?: InjectedAccountWithMeta;
 }
 
-export interface ICaptchaManagerReducer {
-    state: ICaptchaManagerState;
-    update: (value: Partial<ICaptchaManagerState>) => void;
+export interface ICaptchaContextReducer {
+    state: ICaptchaContextState;
+    update: (value: Partial<ICaptchaContextState>) => void;
 }
 
 export interface ICaptchaState {
