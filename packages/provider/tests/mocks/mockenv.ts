@@ -20,7 +20,7 @@ import {network, patract} from 'redspot'
 import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 import {loadJSONFile} from "../../src/util";
 import consola, {LogLevel} from 'consola'
-import {LocalAssetsResolver} from "@prosopo/provider/assets";
+import {LocalAssetsResolver} from "../../src/assets";
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig

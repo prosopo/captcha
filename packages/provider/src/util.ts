@@ -38,7 +38,6 @@ export function handleFileProtocol(filePath: string, logger?): string {
     let parsedFilePath = filePath;
     try {
         parsedFilePath = node_url.fileURLToPath(filePath);
-        console.log("parsedFilePath", parsedFilePath)
     } catch (err) {
         if (logger) {
             logger.debug(err, filePath);
@@ -83,9 +82,7 @@ export function writeJSONFile (filePath: string, jsonData) {
 }
 
 export async function readFile (filePath): Promise<Buffer> {
-    console.log(`readFile: ${filePath}`)
     const parsedFilePath = handleFileProtocol(filePath, undefined)
-    console.log(`parsedFilePath: ${parsedFilePath}`)
     return new Promise((resolve, reject) => {
         fs.readFile(parsedFilePath, (err, data) => {
             if (err) reject(err)

@@ -90,8 +90,6 @@ export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Cap
   if (received.length && stored.length && received.length === stored.length) {
     const arr1Sorted = received.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1));
     const arr2Sorted = stored.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1));
-    console.log("arr1Sorted", arr1Sorted);
-    console.log("arr2Sorted", arr2Sorted);
     const successArr = arr1Sorted.map((captcha, idx) => compareCaptcha(captcha, arr2Sorted[idx]));
 
     return successArr.every((val) => val);
@@ -185,9 +183,6 @@ export function convertCaptchaToCaptchaSolution(captcha: Captcha): CaptchaSoluti
  * @return {string}
  */
 export function computePendingRequestHash(captchaIds: string[], userAccount: string, salt: string): string {
-  console.log("sorted captchaIds", captchaIds.sort())
-  console.log("userAccount", userAccount)
-  console.log("salt", salt);
   return hexHash([...captchaIds.sort(), userAccount, salt].join());
 }
 
@@ -195,8 +190,6 @@ export function computePendingRequestHash(captchaIds: string[], userAccount: str
  * Parse the image items in a captcha and pass back a URI if they exist
  */
 export function parseCaptchaAssets(item: CaptchaImage, assetsResolver: AssetsResolver | undefined) {
-  console.log("item path", assetsResolver?.resolveAsset(item.path))
-  console.log("item URL", assetsResolver?.resolveAsset(item.path).getURL())
   return {...item, path: assetsResolver?.resolveAsset(item.path).getURL() || item.path}
 }
 

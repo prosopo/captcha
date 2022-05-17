@@ -38,9 +38,6 @@ export class LocalAssetsResolver implements AssetsResolver {
             URI: assetURI,
             getURL: () => {
                 if (url.protocol === 'file:') {
-                    const regex: RegExp = new RegExp(`/${this.config.absolutePath}/`, 'g');
-                    console.log(this.config.absolutePath)
-                    console.log(url.pathname?.replace( this.config.absolutePath, ''))
                     return this.config.serverBaseURL + this.config.basePath + url.pathname?.replace( this.config.absolutePath, '');
                 }
                 return '';
