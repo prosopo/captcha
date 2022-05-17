@@ -6,6 +6,8 @@
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
 
 // import { SubmittableResult } from "@polkadot/api";
+import {Captcha, CaptchaStatus} from "@prosopo/provider";
+
 export interface ProsopoRandomProviderResponse {
   providerId: string,
   blockNumber: string;
@@ -21,14 +23,22 @@ export interface ProposoProvider {
   status: string; // TODO: enum
 }
 
-export interface CaptchaResponseCaptchaItem {
-  captchaId: string;
-  datasetId: string;
-  // TODO items: {path, type}[];
+// export interface CaptchaResponseCaptchaItem {
+//   captchaId: string;
+//   datasetId: string;
+//   items: CaptchaImageSchema[];
+//   target: string;
+//   salt?: string;
+//   solution?: number[];
+// }
+
+export interface CaptchaImageSchema {
+  path: string,
+  type: string
 }
 
 export interface CaptchaResponseCaptcha {
-  captcha: CaptchaResponseCaptchaItem;
+  captcha: Captcha;
   proof: string[][];
 }
 

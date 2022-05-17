@@ -40,18 +40,24 @@ export class ProsopoCaptchaApi {
         return captchaChallenge;
     }
 
-    public async submitCaptchaSolution(signer: Signer, requestHash: string, captchaId: string, datasetId: string, solution: number[]): Promise<[CaptchaSolutionResponse, TransactionResponse]> {
+    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<[CaptchaSolutionResponse, TransactionResponse, string]> {
         const salt = randomAsHex();
-        const merkleTree = new CaptchaMerkleTree(); // TODO move to contract?
-        const saltedCaptchas: CaptchaSolution[] = [{ captchaId, solution, salt }];
-        const hashedCaptchas = saltedCaptchas.map(captcha => computeCaptchaSolutionHash(captcha));
-        merkleTree.build(hashedCaptchas);
-        const merkleTreeRoot = merkleTree.root!.hash;
+        const tree = new CaptchaMerkleTree();
+        const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(solution => ({...solution, salt: salt}));
+        const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
+
+        tree.build(captchasHashed);
+        const commitmentId = tree.root!.hash;
+
+        console.log("solveCaptchaChallenge commitmentId", commitmentId);
+        // console.log("solveCaptchaChallenge USER ACCOUNT", this.contract.getAccount().address);
+        // console.log("solveCaptchaChallenge DAPP ACCOUNT", this.contract.getDappAddress());
+        // console.log("solveCaptchaChallenge CONTRACT ADDRESS", this.contract.getContract().address.toString());
 
         let tx: TransactionResponse;
 
         try {
-            tx = await this.contract.dappUserCommit(signer, datasetId as string, merkleTreeRoot, this.provider.providerId);
+            tx = await this.contract.dappUserCommit(signer, datasetId as string, commitmentId, this.provider.providerId);
         } catch (err) {
             throw new Error(err);
         }
@@ -59,12 +65,12 @@ export class ProsopoCaptchaApi {
         let result: CaptchaSolutionResponse;
 
         try {
-            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, saltedCaptchas, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
+            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
         } catch (err) {
             throw new Error(err);
         }
 
-        return [result, tx];
+        return [result, tx, commitmentId];
     }
 
 }

@@ -5,12 +5,9 @@ import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { abiJson } from "@prosopo/contract";
 import { AnyJson } from "@polkadot/types/types/codec";
 import { ProviderInterface } from "@polkadot/rpc-provider/types";
-import { unwrap, encodeStringArgs } from "../common/helpers";
-// import Extension, { NoExtensionCallback } from "./Extension";
+import { unwrap, encodeStringArgs } from "../common";
 import { Signer } from "@polkadot/api/types";
-// import { buildTx } from "@prosopo/contract";
-// import { contractDefinitions } from "@prosopo/contract";
-import { TransactionResponse } from '../types/contract';
+import { TransactionResponse } from '../types';
 import AsyncFactory from "./AsyncFactory";
 
 export class ProsopoContractBase extends AsyncFactory {
@@ -25,6 +22,7 @@ export class ProsopoContractBase extends AsyncFactory {
 
   /**
    * @param address
+   * @param dappAddress
    * @param account
    * @param providerInterface
    */
@@ -86,7 +84,7 @@ export class ProsopoContractBase extends AsyncFactory {
 
     // TODO if DEBUG==true || env.development
     const queryBeforeTx = await this.query(method, args);
-  
+
     console.log("QUERY BEFORE TX....................", queryBeforeTx);
 
     const abiMessage = this.abi.findMessage(method);
@@ -127,7 +125,7 @@ export class ProsopoContractBase extends AsyncFactory {
 
         // Instant seal ON.
         if (status?.isInBlock) {
-          
+
           const blockHash = status.asInBlock.toHex();
 
           resolve({ dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex, blockHash });
@@ -137,15 +135,15 @@ export class ProsopoContractBase extends AsyncFactory {
         // TODO
         // Instant seal OFF.
         // if (status?.isFinalized) {
-          
+
         //   const blockHash = status.asFinalized.toHex();
 
         //   resolve({ dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex, blockHash });
-          
+
         // }
 
       })
-      .catch((e) => { 
+      .catch((e) => {
         console.error("signAndSend ERROR", e);
         reject(e);
       });

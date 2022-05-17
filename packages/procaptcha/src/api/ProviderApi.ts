@@ -11,6 +11,15 @@ export class ProviderApi extends HttpClientBase {
     this.config = config;
   }
 
+  /**
+   *
+   * @deprecated use ProsopoContract$getRandomProvider instead.
+   */
+  public getRandomProvider() {
+    const userAccount = Storage.getAccount();
+    return this.axios.get(`/random_provider/${userAccount}/${this.config['dappAccount']}`);
+  }
+
   public getProviders(): Promise<{accounts: string[]}> {
     return this.axios.get(`/providers`);
   }
@@ -22,7 +31,8 @@ export class ProviderApi extends HttpClientBase {
   public getCaptchaChallenge(randomProvider: ProsopoRandomProviderResponse) : Promise<GetCaptchaResponse> {
     let { provider, blockNumber } = randomProvider;
     blockNumber = blockNumber.replace(/,/g, ''); // TODO: middleware schema parser/validator.
-    return this.axios.get(`/provider/captcha/${provider.captchaDatasetId}/${provider.serviceOrigin}/${this.config['dappAccount']}/${blockNumber}`);
+    const userAccount = Storage.getAccount();
+    return this.axios.get(`/provider/captcha/${provider.captchaDatasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
   }
 
   public submitCaptchaSolution(blockHash: string, captchas: CaptchaSolution[], requestHash: string, txHash: string, userAccount: string) : Promise<CaptchaSolutionResponse> {
