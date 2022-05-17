@@ -50,7 +50,7 @@ export class ProsopoCaptchaStateClient {
         console.log("nextCaptchaIndex", nextCaptchaIndex);
         if (nextCaptchaIndex === captchaChallenge!.captchas.length) {
 
-            const signer = this.context.getExtension().getInjectedExtension().signer;
+            const signer = this.context.getExtension().getExtension().signer;
 
             const currentCaptcha = captchaChallenge!.captchas[currentCaptchaIndex];
             const datasetId = currentCaptcha.captcha.datasetId || '';
@@ -58,7 +58,7 @@ export class ProsopoCaptchaStateClient {
             let submitResult: [CaptchaSolutionResponse, TransactionResponse, string] | Error;
 
             try {
-                submitResult = await this.context.getCaptchaApi().solveCaptchaChallenge(signer, captchaChallenge!.requestHash, datasetId, captchaSolutions);
+                submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, datasetId, captchaSolutions);
             } catch (err) {
                 submitResult = err as Error;
             }
@@ -85,7 +85,7 @@ export class ProsopoCaptchaStateClient {
 
     // TODO check for solved captchas.
     public async onSolved(commitmentId) {
-        const commitment = await this.context.getContract().getCaptchaSolutionCommitment(commitmentId)
+        const commitment = await this.context.getContract()!.getCaptchaSolutionCommitment(commitmentId)
         if (this.context.callbacks?.onSolved) {
             this.context.callbacks.onSolved(commitment);
         }

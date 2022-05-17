@@ -40,7 +40,7 @@ export class ProsopoCaptchaApi {
         return captchaChallenge;
     }
 
-    public async solveCaptchaChallenge(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<[CaptchaSolutionResponse, TransactionResponse, string]> {
+    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<[CaptchaSolutionResponse, TransactionResponse, string]> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
         const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(solution => ({...solution, salt: salt}));
