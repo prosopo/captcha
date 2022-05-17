@@ -1,10 +1,10 @@
 import { useEffect, useContext, useReducer } from "react";
 import { Box, Button, Typography } from "@mui/material";
-import { 
-    ICaptchaContextReducer, 
-    ProsopoCaptchaClient, 
-    ProsopoCaptchaStateClient, 
-    captchaStateReducer 
+import {
+    ICaptchaContextReducer,
+    ProsopoCaptchaClient,
+    ProsopoCaptchaStateClient,
+    captchaStateReducer
 } from "@prosopo/procaptcha";
 
 import { CaptchaContextManager } from "./CaptchaManager";
@@ -18,7 +18,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     const classes = useStyles();
 
     const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
-    const [state, update] = useReducer(captchaStateReducer, { currentCaptchaIndex: 0, currentCaptchaSolution: [] });
+    const [state, update] = useReducer(captchaStateReducer, { currentCaptchaIndex: 0, currentCaptchaSolution: [], captchaSolutions: [] });
 
     const { account, contractAddress } = manager.state;
     const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = state;
@@ -63,17 +63,17 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
                     <Box className={classes.captchasHeader}>
                         <Typography className={classes.captchasHeaderLabel}>
-                            Select all images with [TODO]
+                            Select all images with {captchaChallenge.captchas[currentCaptchaIndex].captcha.target}
                         </Typography>
                     </Box>
 
                     <Box className={classes.captchasBody}>
 
-                        <CaptchaWidget challenge={captchaChallenge[currentCaptchaIndex]} solution={currentCaptchaSolution}
+                        <CaptchaWidget challenge={captchaChallenge.captchas[currentCaptchaIndex]} solution={currentCaptchaSolution}
                             onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
 
                         <Box className={classes.dotsContainer}>
-                            {captchaChallenge?.captchas.map((_, index) => 
+                            {captchaChallenge?.captchas.map((_, index) =>
                                 <Box key={index} className={currentCaptchaIndex === index ? classes.dot : classes.dotActive} />)}
                         </Box>
 
