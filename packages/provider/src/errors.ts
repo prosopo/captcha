@@ -93,6 +93,9 @@ export const ERRORS = {
         CAPTCHA_FAILED: {
             message: 'You answered one or more captchas incorrectly. Please try again'
         },
+        CAPTCHA_PENDING: {
+            message: 'Captcha solutions submitted and awaiting approval'
+        },
         CAPTCHA_PASSED: {
             message: 'You correctly answered the captchas'
         },

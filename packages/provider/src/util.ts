@@ -19,6 +19,8 @@ import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
 import { blake2AsHex } from '@polkadot/util-crypto';
 const fs = require('fs'); // TODO rm fs NODE dependency.
+const node_url = require("url");
+
 
 export function encodeStringAddress (address: string) {
     try {
@@ -32,10 +34,23 @@ export function encodeStringAddress (address: string) {
     }
 }
 
-// TODO: move to nodeutils?
-export function loadJSONFile (filePath) {
+export function handleFileProtocol(filePath: string, logger?): string {
+    let parsedFilePath = filePath;
     try {
-        return JSON.parse(fs.readFileSync(filePath) as string)
+        parsedFilePath = node_url.fileURLToPath(filePath);
+    } catch (err) {
+        if (logger) {
+            logger.debug(err, filePath);
+        }
+    }
+    return parsedFilePath
+}
+
+// TODO: move to nodeutils?
+export function loadJSONFile (filePath: string, logger) {
+    const parsedFilePath = handleFileProtocol(filePath, logger)
+    try {
+        return JSON.parse(fs.readFileSync(parsedFilePath) as string)
     } catch (err) {
         throw new Error(`${ERRORS.GENERAL.JSON_LOAD_FAILED.message}:${err}`)
     }
@@ -67,8 +82,9 @@ export function writeJSONFile (filePath: string, jsonData) {
 }
 
 export async function readFile (filePath): Promise<Buffer> {
+    const parsedFilePath = handleFileProtocol(filePath, undefined)
     return new Promise((resolve, reject) => {
-        fs.readFile(filePath, (err, data) => {
+        fs.readFile(parsedFilePath, (err, data) => {
             if (err) reject(err)
             resolve(data as Buffer)
         })

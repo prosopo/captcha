@@ -938,13 +938,13 @@ describe('CONTRACT TASKS', () => {
 
 
             const captchaFilePath = mockEnv.config.captchaSolutions.captchaFilePath;
-            const datsetBeforeCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON);
+            const datsetBeforeCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath, providerTasks.logger) as JSON);
 
             const solvedCaptchasCountBeforeCalculation = datsetBeforeCalculation.captchas.filter((captcha) => 'solution' in captcha).length;
 
             const result = await providerTasks.calculateCaptchaSolutions();
 
-            const datsetAfterCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON);
+            const datsetAfterCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath, providerTasks.logger) as JSON);
 
             const solvedCaptchasCountAfterCalculation = datsetAfterCalculation.captchas.filter((captcha) => 'solution' in captcha).length;
 
