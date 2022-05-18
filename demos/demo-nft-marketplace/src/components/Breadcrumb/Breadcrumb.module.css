@@ -1,0 +1,10 @@
+.breadcrumb::after {
+  content: "";
+  position: absolute;
+  height: 0;
+  width: 0;
+  top: 0;
+  right: -36px;
+  border: 18px solid transparent;
+  border-left: 18px solid #242424;
+}
