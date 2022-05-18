@@ -1,9 +1,9 @@
-import { ICaptchaStateReducer } from "../types/client";
-import { CaptchaSolutionResponse, GetCaptchaResponse } from "../types/api";
+import { ICaptchaStateReducer, TCaptchaSubmitResult } from "../types/client";
+import { CaptchaSolution, CaptchaSolutionResponse, GetCaptchaResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
-import {convertCaptchaToCaptchaSolution} from "@prosopo/provider";
+import { convertCaptchaToCaptchaSolution } from "@prosopo/provider";
 
 
 export class ProsopoCaptchaStateClient {
@@ -33,7 +33,7 @@ export class ProsopoCaptchaStateClient {
             captchaChallenge = undefined;
         }
 
-        this.manager.update({ captchaChallenge, currentCaptchaIndex: 0 });
+        this.manager.update({ captchaChallenge, captchaIndex: 0 });
     }
 
     public onCancel() {
@@ -44,80 +44,86 @@ export class ProsopoCaptchaStateClient {
     }
 
     public async onSubmit() {
-        const { captchaChallenge, currentCaptchaIndex, captchaSolutions } = this.manager.state;
+        const { captchaChallenge, captchaIndex, captchaSolution } = this.manager.state;
 
-        const nextCaptchaIndex = currentCaptchaIndex + 1;
-        console.log("nextCaptchaIndex", nextCaptchaIndex);
-        if (nextCaptchaIndex === captchaChallenge!.captchas.length) {
+        const nextCaptchaIndex = captchaIndex + 1;
 
-            const signer = this.context.getExtension().getExtension().signer;
+        if (nextCaptchaIndex < captchaChallenge!.captchas.length) {
+            captchaSolution[nextCaptchaIndex] = [];
+            this.manager.update({ captchaIndex: nextCaptchaIndex, captchaSolution });
 
-            const currentCaptcha = captchaChallenge!.captchas[currentCaptchaIndex];
-            const datasetId = currentCaptcha.captcha.datasetId || '';
-
-            let submitResult: [CaptchaSolutionResponse, TransactionResponse, string] | Error;
-
-            try {
-                submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, datasetId, captchaSolutions);
-            } catch (err) {
-                submitResult = err as Error;
-            }
-
-            if (this.context.callbacks?.onSubmit) {
-                this.context.callbacks.onSubmit(submitResult, this.manager.state);
-            }
-
-            this.manager.update({currentCaptchaSolution: []});
-
-            if (submitResult instanceof Error) {
-                return;
-            }
-            console.log("submitResult", submitResult[0]);
-
-            const [_solutionResponse, _txResponse, commitmentId] = submitResult;
-
-            await this.onSolved(commitmentId);
-        } else {
-            this.manager.update({currentCaptchaIndex: nextCaptchaIndex});
-            this.manager.update({currentCaptchaSolution: []});
+            return;
         }
+
+        const signer = this.context.getExtension().getExtension().signer;
+
+        const currentCaptcha = captchaChallenge!.captchas[captchaIndex];
+        const { datasetId } = currentCaptcha.captcha; // TODO arbitrary datasetId? Could datasetId be moved up next to requestHash?
+
+        const solutions = this.parseSolution(captchaChallenge!, captchaSolution);
+
+        let submitResult: TCaptchaSubmitResult | Error;
+
+        try {
+            submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, datasetId!, solutions);
+        } catch (err) {
+            submitResult = err as Error;
+        }
+
+        if (this.context.callbacks?.onSubmit) {
+            this.context.callbacks.onSubmit(submitResult, this.manager.state);
+        }
+
+        this.manager.update({ captchaSolution: [] });
+
+        if (submitResult instanceof Error) {
+            // TODO onFail?
+            return;
+        }
+
+        await this.onSolved(submitResult);
     }
 
     // TODO check for solved captchas.
-    public async onSolved(commitmentId) {
-        const commitment = await this.context.getContract()!.getCaptchaSolutionCommitment(commitmentId)
+    public async onSolved(submitResult: TCaptchaSubmitResult) {
         if (this.context.callbacks?.onSolved) {
-            this.context.callbacks.onSolved(commitment);
+            this.context.callbacks.onSolved(submitResult);
         }
         this.dismissCaptcha();
     }
 
     public onChange(index: number) {
-        const { currentCaptchaSolution } = this.manager.state;
-        const captchaSolution = currentCaptchaSolution.includes(index) ? currentCaptchaSolution.filter(item => item !== index) : [...currentCaptchaSolution, index];
-        this.buildSolutions(captchaSolution);
+        const { captchaIndex, captchaSolution } = this.manager.state;
+
+        let currentSolution: number[] = captchaSolution[captchaIndex] || [];
+        currentSolution = currentSolution.includes(index) ? currentSolution.filter(item => item !== index) : [...currentSolution, index];
+
+        captchaSolution[captchaIndex] = currentSolution;
+
         if (this.context.callbacks?.onChange) {
-            this.context.callbacks.onChange(captchaSolution);
+            this.context.callbacks.onChange(captchaSolution, captchaIndex);
         }
 
-        this.manager.update({ currentCaptchaSolution: captchaSolution });
-    }
-
-    public buildSolutions(_captchaSolution: number[]) {
-        const { captchaChallenge, currentCaptchaIndex, captchaSolutions } = this.manager.state;
-        if (captchaChallenge && "captchas" in captchaChallenge) {
-            const solvedCaptcha = captchaChallenge.captchas[currentCaptchaIndex];
-            solvedCaptcha.captcha.solution = _captchaSolution
-            let _captchaSolutions = [...captchaSolutions]
-            _captchaSolutions[currentCaptchaIndex] = convertCaptchaToCaptchaSolution(solvedCaptcha.captcha);
-            console.log("SOLVED CAPTCHA", solvedCaptcha.captcha);
-            console.log("CAPTCHA SOLUTIONS", _captchaSolutions);
-            this.manager.update({ captchaSolutions: _captchaSolutions });
-        }
+        this.manager.update({ captchaSolution });
     }
 
     public dismissCaptcha() {
         this.manager.update({ captchaChallenge: undefined });
+    }
+
+    // TODO move to ProsopoContract/ProviderApi/Model?
+    public parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: number[][]): CaptchaSolution[] {
+        const parsedSolution: CaptchaSolution[] = [];
+
+        for (const [index, challenge] of captchaChallenge!.captchas.entries()) {
+            const solution = captchaSolution[index] || [];
+            challenge.captcha.solution = solution;
+            parsedSolution[index] = convertCaptchaToCaptchaSolution(challenge.captcha);
+        }
+
+        console.log("CAPTCHA SOLUTIONS", parsedSolution);
+
+        return parsedSolution;
     }
 
 }

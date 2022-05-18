@@ -12,7 +12,7 @@ export class ProsopoContract extends ProsopoContractBase {
         return await this.query('getRandomActiveProvider', [this.account.address, this.dappAddress]) as ProsopoRandomProviderResponse;
     }
 
-    public async getCaptchaSolutionCommitment(commitmentId:string) {
+    public async getCaptchaSolutionCommitment(commitmentId: string) {
         return await this.query('getCaptchaSolutionCommitment', [commitmentId]) as CaptchaSolutionCommitment;
     }
 

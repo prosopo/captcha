@@ -6,7 +6,7 @@ import { getProsopoContract } from "./contract";
 import { getExtension } from "./extension";
 import { ProviderApi } from "../api/ProviderApi";
 import { ProsopoCaptchaApi } from "./ProsopoCaptchaApi";
-import { Extension } from "../api";
+// import { Extension } from "../api";
 
 
 export class ProsopoCaptchaClient {
