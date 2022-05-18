@@ -18,10 +18,10 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     const classes = useStyles();
 
     const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
-    const [state, update] = useReducer(captchaStateReducer, { currentCaptchaIndex: 0, currentCaptchaSolution: [], captchaSolutions: [] });
+    const [state, update] = useReducer(captchaStateReducer, { captchaIndex: 0, captchaSolution: [] });
 
     const { account, contractAddress } = manager.state;
-    const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = state;
+    const { captchaChallenge, captchaIndex, captchaSolution } = state;
     const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
 
     const stateClientInterface = new ProsopoCaptchaStateClient(clientInterface, { state, update });
@@ -63,18 +63,18 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
                     <Box className={classes.captchasHeader}>
                         <Typography className={classes.captchasHeaderLabel}>
-                            Select all images with {captchaChallenge.captchas[currentCaptchaIndex].captcha.target}
+                            Select all images with {captchaChallenge.captchas[captchaIndex].captcha.target}
                         </Typography>
                     </Box>
 
                     <Box className={classes.captchasBody}>
 
-                        <CaptchaWidget challenge={captchaChallenge.captchas[currentCaptchaIndex]} solution={currentCaptchaSolution}
+                        <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex]}
                             onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
 
                         <Box className={classes.dotsContainer}>
                             {captchaChallenge?.captchas.map((_, index) =>
-                                <Box key={index} className={currentCaptchaIndex === index ? classes.dot : classes.dotActive} />)}
+                                <Box key={index} className={captchaIndex === index ? classes.dot : classes.dotActive} />)}
                         </Box>
 
                     </Box>
@@ -84,7 +84,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
                             Cancel
                         </Button>
                         <Button onClick={() => stateClientInterface.onSubmit()} variant="contained">
-                            {currentCaptchaIndex + 1 < totalCaptchas ? "Next" : "Submit"}
+                            {captchaIndex + 1 < totalCaptchas ? "Next" : "Submit"}
                         </Button>
                     </Box>
 
