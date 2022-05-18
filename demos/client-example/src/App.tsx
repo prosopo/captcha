@@ -16,7 +16,7 @@ import {
 import config from "./config";
 
 import "./App.css";
-import {CaptchaSolutionCommitment} from "@prosopo/provider";
+
 
 function App() {
 
@@ -33,7 +33,7 @@ function App() {
     console.log("CAPTCHA API", clientInterface.getCaptchaApi());
   };
 
-  const onSubmit = (submitResult: TCaptchaSubmitResult) => {
+  const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
     if (submitResult instanceof Error) {
       status.update({ error: ["onSubmit: CAPTCHA SUBMIT ERROR", submitResult] });
       return;
@@ -42,13 +42,13 @@ function App() {
     status.update({ info: ["onSubmit: CAPTCHA SUBMIT STATUS", result.status] });
   };
 
-  const onSolved = (commitment: CaptchaSolutionCommitment) => {
+  const onSolved = ([result, tx,  commitment]: TCaptchaSubmitResult) => {
     setShowCaptchas(false);
 
     status.update({ info: ["onSolved:", `Captcha solution status: ${commitment.status}`] });
   }
 
-  const onChange = (solution: number[]) => {
+  const onChange = (solution: number[][]) => {
     console.log("onChange:", solution);
   };
 
