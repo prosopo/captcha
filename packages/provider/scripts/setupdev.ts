@@ -76,53 +76,52 @@ async function processArgs (env): Promise<unknown> {
   const logger = env.logger;
   const providerKeyringPair: KeyringPair = await env.contractInterface.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
   PROVIDER.address = providerKeyringPair.address;
-  return new Promise((resolve, reject) => {
-    try {
-      yargs
-        .usage('Usage: $0 [global options] <command> [options]')
-        .command(
-          {
-            command: 'provider',
-            describe: 'Setup a Provider',
-            builder: (yargs) => {
-              return yargs;
-            },
-            handler: async () => {
-              logger.info('sending funds...');
-              await sendFunds(env, providerKeyringPair.address, 'Provider', 100000000000000000n);
-              logger.info('setting up provider...');
-              await setupProvider(env, PROVIDER);
-            }
-          }
-        )
-        .command('dapp', 'Setup a Dapp',
-          (yargs) => {
-            return yargs;
-          }, async () => {
-            await setupDapp(env, DAPP);
-          }
-        )
-        .command('user', 'Submit and approve Dapp User solution commitments', (yargs) => {
-          return yargs
-            .option('approve', { type: 'boolean', demand: false })
-            .option('disapprove', { type: 'boolean', demand: false });
-        }, async (argv) => {
-          const solutionHash: string | undefined = await setupDappUser(env, DAPP_USER, PROVIDER, DAPP);
-          const approve = !!argv.approve;
 
-          if ((argv.approve || argv.disapprove) && solutionHash !== undefined) {
-            await approveOrDisapproveCommitment(env, solutionHash, approve, PROVIDER);
-          }
+  return yargs
+    .usage('Usage: $0 [global options] <command> [options]')
+    .command(
+      {
+        command: 'provider',
+        describe: 'Setup a Provider',
+        builder: (yargs) => {
+          return yargs;
+        },
+        handler: async () => {
+          logger.info('sending funds...');
+          await sendFunds(env, providerKeyringPair.address, 'Provider', 100000000000000000n);
+          logger.info('setting up provider...');
+          await setupProvider(env, PROVIDER);
         }
-        )//.onFinishCommand(async (r) => resolve(r))
-        .exitProcess(false)
-        .argv;
-    } catch (e) {
-      reject(e);
-    }
-  });
+      }
+    )
+    .command('dapp', 'Setup a Dapp',
+      (yargs) => {
+        return yargs;
+      }, async () => {
+        await setupDapp(env, DAPP);
+      }
+    )
+    .command('user', 'Submit and approve Dapp User solution commitments', (yargs) => {
+        return yargs
+          .option('approve', {type: 'boolean', demand: false})
+          .option('disapprove', {type: 'boolean', demand: false});
+      }, async (argv) => {
+        const solutionHash: string | undefined = await setupDappUser(env, DAPP_USER, PROVIDER, DAPP);
+        const approve = !!argv.approve;
+
+        if ((argv.approve || argv.disapprove) && solutionHash !== undefined) {
+          await approveOrDisapproveCommitment(env, solutionHash, approve, PROVIDER);
+        }
+      }
+    )
+    .exitProcess(false)
+    .argv
+
 }
 
-run().catch((err) => {
+run().then(async function (response) {
+  await response;
+  process.exit()
+}).catch((err) => {
   throw new Error(`Setup dev error: ${err}`);
 });
