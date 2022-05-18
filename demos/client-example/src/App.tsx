@@ -33,7 +33,7 @@ function App() {
     console.log("CAPTCHA API", clientInterface.getCaptchaApi());
   };
 
-  const onSubmit = (submitResult: TCaptchaSubmitResult) => {
+  const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
     if (submitResult instanceof Error) {
       status.update({ error: ["onSubmit: CAPTCHA SUBMIT ERROR", submitResult] });
       return;
