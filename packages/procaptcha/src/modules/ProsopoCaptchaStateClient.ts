@@ -60,7 +60,7 @@ export class ProsopoCaptchaStateClient {
         const currentCaptcha = captchaChallenge!.captchas[captchaIndex];
         const { datasetId } = currentCaptcha.captcha; // TODO arbitrary datasetId? Could datasetId be moved up next to requestHash?
 
-        const solutions = this.parseSolutions(captchaChallenge!, captchaSolution);
+        const solutions = this.parseSolution(captchaChallenge!, captchaSolution);
 
         let submitResult: TCaptchaSubmitResult | Error;
 
@@ -80,8 +80,6 @@ export class ProsopoCaptchaStateClient {
             // TODO onFail?
             return;
         }
-
-        // const [result, tx, commitment] = submitResult;
 
         await this.onSolved(submitResult);
     }
@@ -114,18 +112,18 @@ export class ProsopoCaptchaStateClient {
     }
 
     // TODO move to ProsopoContract/ProviderApi/Model?
-    public parseSolutions(captchaChallenge: GetCaptchaResponse, captchaSolutions: number[][]): CaptchaSolution[] {
-        const parsedSolutions: CaptchaSolution[] = [];
+    public parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: number[][]): CaptchaSolution[] {
+        const parsedSolution: CaptchaSolution[] = [];
 
         for (const [index, challenge] of captchaChallenge!.captchas.entries()) {
-            const solution = captchaSolutions[index] || [];
+            const solution = captchaSolution[index] || [];
             challenge.captcha.solution = solution;
-            parsedSolutions[index] = convertCaptchaToCaptchaSolution(challenge.captcha);
+            parsedSolution[index] = convertCaptchaToCaptchaSolution(challenge.captcha);
         }
 
-        console.log("CAPTCHA SOLUTIONS", parsedSolutions);
+        console.log("CAPTCHA SOLUTIONS", parsedSolution);
 
-        return parsedSolutions;
+        return parsedSolution;
     }
 
 }
