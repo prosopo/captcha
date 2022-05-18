@@ -69,7 +69,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
                     <Box className={classes.captchasBody}>
 
-                        <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex]}
+                        <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex] || []}
                             onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
 
                         <Box className={classes.dotsContainer}>
