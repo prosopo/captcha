@@ -47,8 +47,8 @@ export interface ICaptchaContextReducer {
 
 export interface ICaptchaState {
     captchaChallenge?: GetCaptchaResponse;
-    currentCaptchaIndex: number;
-    currentCaptchaSolution: number[][];
+    captchaIndex: number;
+    captchaSolution: number[][];
     // captchaSolutions: CaptchaSolution[];
 }
 

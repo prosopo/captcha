@@ -3,7 +3,7 @@ import { CaptchaSolution, CaptchaSolutionResponse, GetCaptchaResponse } from "..
 import { TransactionResponse } from "../types/contract";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
-import {convertCaptchaToCaptchaSolution} from "@prosopo/provider";
+import { convertCaptchaToCaptchaSolution } from "@prosopo/provider";
 
 
 export class ProsopoCaptchaStateClient {
@@ -33,7 +33,7 @@ export class ProsopoCaptchaStateClient {
             captchaChallenge = undefined;
         }
 
-        this.manager.update({ captchaChallenge, currentCaptchaIndex: 0 });
+        this.manager.update({ captchaChallenge, captchaIndex: 0 });
     }
 
     public onCancel() {
@@ -44,23 +44,23 @@ export class ProsopoCaptchaStateClient {
     }
 
     public async onSubmit() {
-        const { captchaChallenge, currentCaptchaIndex, currentCaptchaSolution } = this.manager.state;
+        const { captchaChallenge, captchaIndex, captchaSolution } = this.manager.state;
 
-        const nextCaptchaIndex = currentCaptchaIndex + 1;
+        const nextCaptchaIndex = captchaIndex + 1;
 
-        if (nextCaptchaIndex < captchaChallenge!.captchas.length) { 
-            currentCaptchaSolution[nextCaptchaIndex] = [];
-            this.manager.update({ currentCaptchaIndex: nextCaptchaIndex, currentCaptchaSolution });
-            
+        if (nextCaptchaIndex < captchaChallenge!.captchas.length) {
+            captchaSolution[nextCaptchaIndex] = [];
+            this.manager.update({ captchaIndex: nextCaptchaIndex, captchaSolution });
+
             return;
         }
 
         const signer = this.context.getExtension().getExtension().signer;
 
-        const currentCaptcha = captchaChallenge!.captchas[currentCaptchaIndex];
+        const currentCaptcha = captchaChallenge!.captchas[captchaIndex];
         const { datasetId } = currentCaptcha.captcha; // TODO arbitrary datasetId? Could datasetId be moved up next to requestHash?
 
-        const solutions = this.parseSolutions(captchaChallenge!, currentCaptchaSolution);
+        const solutions = this.parseSolutions(captchaChallenge!, captchaSolution);
 
         let submitResult: TCaptchaSubmitResult | Error;
 
@@ -74,7 +74,7 @@ export class ProsopoCaptchaStateClient {
             this.context.callbacks.onSubmit(submitResult, this.manager.state);
         }
 
-        this.manager.update({currentCaptchaSolution: []});
+        this.manager.update({ captchaSolution: [] });
 
         if (submitResult instanceof Error) {
             // TODO onFail?
@@ -95,18 +95,18 @@ export class ProsopoCaptchaStateClient {
     }
 
     public onChange(index: number) {
-        const { currentCaptchaIndex, currentCaptchaSolution } = this.manager.state;
+        const { captchaIndex, captchaSolution } = this.manager.state;
 
-        let currentSolution: number[] = currentCaptchaSolution[currentCaptchaIndex] || [];
-        currentSolution = currentSolution.includes(index) ? currentSolution.filter(item => item !== index) as number[] : [...currentSolution, index];
-        
-        currentCaptchaSolution[currentCaptchaIndex] = currentSolution;
+        let currentSolution: number[] = captchaSolution[captchaIndex] || [];
+        currentSolution = currentSolution.includes(index) ? currentSolution.filter(item => item !== index) : [...currentSolution, index];
+
+        captchaSolution[captchaIndex] = currentSolution;
 
         if (this.context.callbacks?.onChange) {
-            this.context.callbacks.onChange(currentCaptchaSolution, currentCaptchaIndex);
+            this.context.callbacks.onChange(captchaSolution, captchaIndex);
         }
 
-        this.manager.update({ currentCaptchaSolution });
+        this.manager.update({ captchaSolution });
     }
 
     public dismissCaptcha() {
@@ -114,11 +114,11 @@ export class ProsopoCaptchaStateClient {
     }
 
     // TODO move to ProsopoContract/ProviderApi/Model?
-    public parseSolutions(captchaChallenge: GetCaptchaResponse, currentCaptchaSolution: number[][] ): CaptchaSolution[] {
+    public parseSolutions(captchaChallenge: GetCaptchaResponse, captchaSolutions: number[][]): CaptchaSolution[] {
         const parsedSolutions: CaptchaSolution[] = [];
 
         for (const [index, challenge] of captchaChallenge!.captchas.entries()) {
-            const solution = currentCaptchaSolution[index] || [];
+            const solution = captchaSolutions[index] || [];
             challenge.captcha.solution = solution;
             parsedSolutions[index] = convertCaptchaToCaptchaSolution(challenge.captcha);
         }
