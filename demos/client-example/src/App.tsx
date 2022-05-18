@@ -42,13 +42,13 @@ function App() {
     status.update({ info: ["onSubmit: CAPTCHA SUBMIT STATUS", result.status] });
   };
 
-  const onSolved = (commitment: CaptchaSolutionCommitment) => {
+  const onSolved = ([result, tx,  commitment]: TCaptchaSubmitResult) => {
     setShowCaptchas(false);
 
     status.update({ info: ["onSolved:", `Captcha solution status: ${commitment.status}`] });
   }
 
-  const onChange = (solution: number[]) => {
+  const onChange = (solution: number[][]) => {
     console.log("onChange:", solution);
   };
 
