@@ -16,7 +16,7 @@ import {
 import config from "./config";
 
 import "./App.css";
-import {CaptchaSolutionCommitment} from "@prosopo/provider";
+
 
 function App() {
 
