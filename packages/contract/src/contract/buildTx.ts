@@ -2,7 +2,7 @@ import { SubmittableResult } from '@polkadot/api';
 import type { SignerOptions } from '@polkadot/api/types';
 import { SubmittableExtrinsic } from '@polkadot/api/types';
 import type { Registry } from '@polkadot/types/types';
-import {TransactionResponse} from "../types";
+import {TransactionResponse} from '../types/contract';
 
 export async function buildTx(
   registry: Registry,
