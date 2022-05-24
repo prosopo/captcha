@@ -16,7 +16,7 @@
 import { z } from 'zod'
 import { AccountId, Hash } from '@polkadot/types/interfaces'
 import { u32, u64 } from '@polkadot/types'
-import {ProsopoConfigSchema} from "@prosopo/provider/types/config";
+// import {ProsopoConfigSchema} from "./config";
 
 export enum CaptchaTypes { SelectAll = 'SelectAll'}
 
