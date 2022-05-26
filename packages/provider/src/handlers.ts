@@ -1,8 +1,8 @@
 
-export class EnvError extends Error {
-    constructor(error: Error) {
+export class ProsopoEnvError extends Error {
+    constructor(error: Error, context?: string) {
         super(error.message);
-        this.name = EnvError.name;
+        this.name = context && `${ProsopoEnvError.name}@${context}` || ProsopoEnvError.name;
         this.cause = error;
         // TODO: if env.debug
         console.error('\n********************* ERROR *********************\n');

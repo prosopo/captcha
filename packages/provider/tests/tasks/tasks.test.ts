@@ -30,7 +30,7 @@ import {DATASET, SOLVED_CAPTCHAS} from '../mocks/mockdb';
 import {MockEnvironment} from '../mocks/mockenv';
 import {sendFunds, setupDapp, setupProvider} from '../mocks/setup';
 
-import { EnvError as Error } from '../../src/handlers';
+import { ProsopoEnvError as Error } from '../../src/handlers';
 
 const envPath =
   process.env.NODE_ENV === "test"
@@ -73,8 +73,8 @@ describe('CONTRACT TASKS', () => {
     try {
         await sendFunds(mockEnv, providerAddress, 'Provider', funds);
     } catch (e) {
-        // throw new Error(e);
-        new Error(e);
+        // Not throwing errors, to catch as many errors as possible. (Tx rejection errors can have ambiguous signatures.)
+        new Error(e, 'sendFunds');
     }
 
     provider = { ...PROVIDER } as TestProvider;
@@ -86,7 +86,7 @@ describe('CONTRACT TASKS', () => {
     try {
         datasetId = await setupProvider(mockEnv, provider as TestProvider);
     } catch (e) {
-        new Error(e);
+        new Error(e, 'setupProvider');
     }
     
     const [dappMnemonic, dappAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
@@ -96,7 +96,7 @@ describe('CONTRACT TASKS', () => {
     try {
         await sendFunds(mockEnv, dappAddress, 'Dapp', funds);
     } catch (e) {
-        new Error(e);
+        new Error(e, 'sendFunds');
     }
 
     dapp.mnemonic = dappMnemonic;
@@ -105,7 +105,7 @@ describe('CONTRACT TASKS', () => {
     try {
         await setupDapp(mockEnv, dapp as TestDapp);
     } catch (e) {
-        new Error(e);
+        throw new Error(e, 'setupDapp');
     }
 
   });
