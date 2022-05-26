@@ -34,7 +34,7 @@ export const PROVIDER: TestProvider = {
     fee: 10,
     payee: Payee.Provider,
     stake: 1000000000000000n,
-    datasetFile: '/usr/src/data/captchas.json',
+    datasetFile: '../../data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
     address: '',

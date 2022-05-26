@@ -19,11 +19,11 @@ export default {
     logLevel: 'debug',
     defaultEnvironment: 'development',
     contract: {
-        abi: '/usr/src/packages/contract/src/abi/prosopo.json'
+        abi: '../contract/src/abi/prosopo.json'
     },
     networks: {
         development: {
-            endpoint: 'ws://substrate-node:9944',
+            endpoint: process.env.SUBSTRATE_NODE_URL,
             contract: {
                 address: process.env.CONTRACT_ADDRESS,
                 deployer: {
@@ -53,7 +53,7 @@ export default {
     captchaSolutions: {
         requiredNumberOfSolutions: 3,
         solutionWinningPercentage: 80,
-        captchaFilePath: '/usr/src/data/captchas.json'
+        captchaFilePath: '../data/captchas.json'
     },
     database: {
         development: {
@@ -63,11 +63,11 @@ export default {
         }
     },
     assets : {
-        absolutePath: '/usr/src/data/img',
+        absolutePath: '../data/img',
         basePath: '/v1/assets'
     },
     server : {
-        baseURL: 'http://localhost:3000'
+        baseURL: process.env.API_BASE_URL,
     }
 
 } as ProsopoConfig;

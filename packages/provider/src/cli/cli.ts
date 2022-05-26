@@ -15,6 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import express from 'express';
 import cors from 'cors';
+import { URL } from 'url';
 
 import { mnemonicValidate } from '@polkadot/util-crypto';
 
@@ -24,7 +25,7 @@ import { Environment } from '../env';
 import { ERRORS, handleErrors } from '../errors';
 import { processArgs } from './argv';
 
-const port = 3000;
+const port = new URL(process.env.API_BASE_URL as string).port || 3000;
 
 const app = express();
 

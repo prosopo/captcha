@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Asset, AssetsResolver } from "./types/assets";
-import URL from 'url';
+import { URL } from 'url';
 import express, { Application } from 'express';
 
 export type LocalAssetsResolverConfig = {
@@ -33,7 +33,7 @@ export class LocalAssetsResolver implements AssetsResolver {
     }
 
     resolveAsset(assetURI: string) : Asset {
-        const url = URL.parse(assetURI);
+        const url = new URL(assetURI);
         return {
             URI: assetURI,
             getURL: () => {
@@ -47,6 +47,6 @@ export class LocalAssetsResolver implements AssetsResolver {
 
     injectMiddleware(app : Application) : void {
         // app.use(virtual_path, folder_with_static_assets)
-        app.use(this.config.basePath, express.static(this.config.absolutePath));
+        // app.use(this.config.basePath, express.static(this.config.absolutePath));
     }
 }
