@@ -30,6 +30,8 @@ import {DATASET, SOLVED_CAPTCHAS} from '../mocks/mockdb';
 import {MockEnvironment} from '../mocks/mockenv';
 import {sendFunds, setupDapp, setupProvider} from '../mocks/setup';
 
+import { EnvError as Error } from '../../src/handlers';
+
 const envPath =
   process.env.NODE_ENV === "test"
     ? { path: '../../../../.env.test', override: true }
@@ -68,26 +70,44 @@ describe('CONTRACT TASKS', () => {
 
     const funds = 10000000n * providerStakeDefault;
 
-    await sendFunds(
-      mockEnv,
-      providerAddress,
-      'Provider',
-      funds
-    );
+    try {
+        await sendFunds(mockEnv, providerAddress, 'Provider', funds);
+    } catch (e) {
+        // throw new Error(e);
+        new Error(e);
+    }
 
     provider = { ...PROVIDER } as TestProvider;
     provider.mnemonic = providerMnemonic;
     provider.address = providerAddress;
     // Service origins cannot be duplicated
     provider.serviceOrigin = provider.serviceOrigin + randomAsHex().slice(0, 8);
-    datasetId = await setupProvider(mockEnv, provider as TestProvider);
+
+    try {
+        datasetId = await setupProvider(mockEnv, provider as TestProvider);
+    } catch (e) {
+        new Error(e);
+    }
+    
     const [dappMnemonic, dappAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [];
 
     dapp = { ...DAPP } as TestDapp;
-    await sendFunds(mockEnv, dappAddress, 'Dapp', funds);
+
+    try {
+        await sendFunds(mockEnv, dappAddress, 'Dapp', funds);
+    } catch (e) {
+        new Error(e);
+    }
+
     dapp.mnemonic = dappMnemonic;
     dapp.address = dappAddress;
-    await setupDapp(mockEnv, dapp as TestDapp);
+
+    try {
+        await setupDapp(mockEnv, dapp as TestDapp);
+    } catch (e) {
+        new Error(e);
+    }
+
   });
 
   after(async () => {
