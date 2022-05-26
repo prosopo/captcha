@@ -21,6 +21,8 @@ import {loadJSONFile} from "../../src/util";
 import consola, {LogLevel} from 'consola'
 import {LocalAssetsResolver} from "../../src/assets";
 
+// TODO mock imageserver.
+
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
