@@ -33,7 +33,7 @@ export const PROVIDER: TestProvider = {
   serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
   fee: 10,
   payee: Payee.Provider,
-  stake: Math.pow(10, 12),
+  stake: Math.pow(10, 13),
   datasetFile: '../data/captchas.json',
   mnemonic: process.env.PROVIDER_MNEMONIC || '',
   address: process.env.PROVIDER_ADDRESS || '',
