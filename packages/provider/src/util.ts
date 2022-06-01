@@ -13,13 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { WriteStream, createWriteStream } from 'fs'
-import { ERRORS } from './errors'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
 import { blake2AsHex } from '@polkadot/util-crypto';
-const fs = require('fs'); // TODO rm fs NODE dependency.
-const node_url = require("url");
+import fs, { createWriteStream, WriteStream } from 'fs';
+import node_url from "url";
+import { ERRORS } from './errors';
 
 
 export function encodeStringAddress (address: string) {
@@ -48,9 +47,10 @@ export function handleFileProtocol(filePath: string, logger?): string {
 
 // TODO: move to nodeutils?
 export function loadJSONFile (filePath: string, logger) {
+    console.log(".........", filePath);
     const parsedFilePath = handleFileProtocol(filePath, logger)
     try {
-        return JSON.parse(fs.readFileSync(parsedFilePath) as string)
+        return JSON.parse(fs.readFileSync(parsedFilePath, 'utf8'))
     } catch (err) {
         throw new Error(`${ERRORS.GENERAL.JSON_LOAD_FAILED.message}:${err}`)
     }
@@ -105,8 +105,9 @@ export function hexHash (data: string | Uint8Array): string {
 
 export async function imageHash (path: string) {
     // data must remain in the same order so load images synchronously
-    const fileBuffer = await readFile(path)
-    return hexHash(fileBuffer)
+    // const fileBuffer = await readFile(path)
+    // TODO
+    return hexHash(path)
 }
 
 type PromiseQueueRes<T> = {

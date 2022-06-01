@@ -13,14 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import {createNetwork, Network, abiJson, ContractAbi, ContractApiInterface, ProsopoContractApi } from '@prosopo/contract'
 import {AssetsResolver, Database, ProsopoConfig, ProsopoEnvironment} from '../../src/types'
-import {createNetwork, Network} from '@prosopo/contract'
 import {ERRORS} from '../../src/errors'
 import {network, patract} from 'redspot'
-import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 import {loadJSONFile} from "../../src/util";
 import consola, {LogLevel} from 'consola'
 import {LocalAssetsResolver} from "../../src/assets";
+
+// TODO mock imageserver.
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -40,11 +41,11 @@ export class MockEnvironment implements ProsopoEnvironment {
     constructor() {
         this.config = {
             logLevel: 'debug',
-            contract: {abi: '/usr/src/packages/contract/src/abi/prosopo.json'},
+            contract: {abi: '../contract/src/abi/prosopo.json'},
             defaultEnvironment: 'development',
             networks: {
                 development: {
-                    endpoint: 'ws://substrate-node:9944',
+                    endpoint: process.env.SUBSTRATE_NODE_URL!,
                     contract: {
                         address: process.env.CONTRACT_ADDRESS!,
                         deployer: {
@@ -73,7 +74,7 @@ export class MockEnvironment implements ProsopoEnvironment {
             captchaSolutions: {
                 requiredNumberOfSolutions: 3,
                 solutionWinningPercentage: 80,
-                captchaFilePath: '/usr/src/data/captchas.json'
+                captchaFilePath: '../../data/captchas.json'
             },
             database: {
                 development: {type: 'mockdb', endpoint: '', dbname: ''}
@@ -132,7 +133,8 @@ export class MockEnvironment implements ProsopoEnvironment {
     }
 
     private static getContractAbi(path, logger): ContractAbi {
-        return loadJSONFile(path, logger) as ContractAbi
+        return abiJson;
+        // return loadJSONFile(path, logger) as ContractAbi
     }
 
 }

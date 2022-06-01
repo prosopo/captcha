@@ -11,6 +11,7 @@
     "start": "ts-node ./src/cli/cli.ts",
     "setup": "ts-node ./scripts/setupdev.ts",
     "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
+    "imageserver:start": "ts-node ./scripts/imageserver.ts",
     "test": "redspot test",
     "test:mocha": "ts-mocha tests/**/*.test.ts",
     "test:mock": "NODE_ENV=test yarn test",

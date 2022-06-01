@@ -24,6 +24,8 @@ import {Network, createNetwork} from "@prosopo/contract";
 import consola from "consola";
 import {LogLevel} from 'consola'
 
+import { abiJson } from '@prosopo/contract';
+
 require('dotenv').config()
 
 const TS_CONFIG_FILENAME = 'prosopo.config.ts'
@@ -63,7 +65,8 @@ export class Environment implements ProsopoEnvironment {
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address
             this.contractName = this.config.networks![this.defaultEnvironment].contract.name
             this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
-            this.abi = Environment.getContractAbi(this.config.contract.abi, this.logger) as ContractAbi
+            // this.abi = Environment.getContractAbi(this.config.contract.abi, this.logger) as ContractAbi
+            this.abi = abiJson as ContractAbi;
 
 
             this.assetsResolver = new LocalAssetsResolver({

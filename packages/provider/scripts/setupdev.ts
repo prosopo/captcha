@@ -34,7 +34,7 @@ export const PROVIDER: TestProvider = {
   fee: 10,
   payee: Payee.Provider,
   stake: Math.pow(10, 13),
-  datasetFile: '/usr/src/data/captchas.json',
+  datasetFile: '../../data/captchas.json',
   mnemonic: process.env.PROVIDER_MNEMONIC || '',
   address: process.env.PROVIDER_ADDRESS || '',
   captchaDatasetId: ''
@@ -90,7 +90,12 @@ async function processArgs (env): Promise<unknown> {
           logger.info('sending funds...');
           await sendFunds(env, providerKeyringPair.address, 'Provider', 100000000000000000n);
           logger.info('setting up provider...');
-          await setupProvider(env, PROVIDER);
+          try {
+            await setupProvider(env, PROVIDER);
+          } catch (e) {
+            logger.error('Error setting up provider: ', e);
+            throw new Error(e);
+          }
         }
       }
     )
