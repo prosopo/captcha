@@ -53,7 +53,7 @@ export default {
     captchaSolutions: {
         requiredNumberOfSolutions: 3,
         solutionWinningPercentage: 80,
-        captchaFilePath: '../data/captchas.json'
+        captchaFilePath: '../../data/captchas.json'
     },
     database: {
         development: {

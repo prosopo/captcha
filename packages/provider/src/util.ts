@@ -47,6 +47,7 @@ export function handleFileProtocol(filePath: string, logger?): string {
 
 // TODO: move to nodeutils?
 export function loadJSONFile (filePath: string, logger) {
+    console.log(".........", filePath);
     const parsedFilePath = handleFileProtocol(filePath, logger)
     try {
         return JSON.parse(fs.readFileSync(parsedFilePath, 'utf8'))
