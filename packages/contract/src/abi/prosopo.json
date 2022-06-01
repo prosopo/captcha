@@ -1,8 +1,8 @@
 {
   "source": {
-    "hash": "0xca93208a321a32f0d2ba5ea9a8ea6a2c838cb6c9fb7e6d789302a9c58da5c06b",
+    "hash": "0xc942c022d932e26ee19a9966604e5ea59bdfbc7d4830457c483504f59578d50a",
     "language": "ink! 3.0.1",
-    "compiler": "rustc 1.62.0-nightly"
+    "compiler": "rustc 1.63.0-nightly"
   },
   "contract": {
     "name": "prosopo",
