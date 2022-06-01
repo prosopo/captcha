@@ -13,18 +13,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import type {AbiMessage} from '@polkadot/api-contract/types'
-import {ContractApiInterface, ContractAbi, AbiMetadata, Network} from '../types'
-import {ERRORS} from '../errors'
-import {unwrap, encodeStringArgs, handleContractCallOutcomeErrors} from './helpers'
-import {AnyJson} from '@polkadot/types/types/codec'
+import type {AbiMessage} from '@polkadot/api-contract/types';
+import {AnyJson} from '@polkadot/types/types/codec';
+import {Registry} from '@polkadot/types/types';
+import {ContractApiInterface, ContractAbi, AbiMetadata, Network, TransactionResponse} from '../types'; // TODO from each module
+import {ERRORS} from '../errors';
+import {unwrap, encodeStringArgs, handleContractCallOutcomeErrors} from './helpers';
 import {contractDefinitions} from "./definitions";
-import {Signer} from '../signer/signer'
-import {Contract} from "./contract";
-import {Registry} from "@polkadot/types/types";
-import {TransactionResponse} from "../types";
+import {Signer} from '../signer/signer';
+import {AccountSigner} from '../signer/accountsigner';
+import {Contract} from './contract';
 
-const {mnemonicGenerate} = require('@polkadot/util-crypto')
+import { mnemonicGenerate } from '@polkadot/util-crypto';
 
 export class ProsopoContractApi implements ContractApiInterface {
     contract?: Contract
@@ -62,8 +62,8 @@ export class ProsopoContractApi implements ContractApiInterface {
             throw new Error(ERRORS.CONTRACT.SIGNER_UNDEFINED.message)
         }
         const keyringPair = this.network.keyring.addFromMnemonic(mnemonic)
-        const accountSigner = this.network.signer
-        const signer = new Signer(keyringPair, accountSigner)
+        const accountSigner = this.network.signer as unknown as AccountSigner; // TODO
+        const signer = new Signer(keyringPair, accountSigner);
         accountSigner.addPair(signer.pair)
         this.signer = signer
         return signer

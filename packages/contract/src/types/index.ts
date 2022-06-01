@@ -15,7 +15,6 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 export * from './artifacts'
 export * from './contract'
-export * from './interface'
 export * from './network'
 export * from './prosopo'
 export * from './signer'

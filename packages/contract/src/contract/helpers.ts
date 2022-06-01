@@ -17,7 +17,8 @@ import {AbiMessage, ContractCallOutcome, DecodedEvent} from '@polkadot/api-contr
 import {isHex, isU8a} from '@polkadot/util'
 import {blake2AsU8a} from '@polkadot/util-crypto'
 import {AnyJson} from '@polkadot/types/types/codec'
-import {Signer, TransactionResponse} from '../types'
+import {Signer} from '../types/signer'
+import {TransactionResponse} from '../types/contract'
 
 /**
  * Get the event name from the contract method name

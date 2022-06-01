@@ -9,11 +9,6 @@ import BN from 'bn.js';
 import chalk from 'chalk';
 import {buildTx} from './buildTx';
 import {convertSignerToAddress} from './helpers';
-import {
-    BigNumber,
-    ContractAbi,
-    Signer
-} from '../types';
 import {AnyString} from "@polkadot/util/types";
 import {
     CallOverrides,
@@ -21,8 +16,14 @@ import {
     ContractFunction,
     DecodedEvent,
     PopulatedTransaction,
-    TransactionParams, TransactionResponse
-} from "../types";
+    TransactionParams,
+    TransactionResponse,
+} from '../types/contract';
+
+import { BigNumber, IContract } from '../types/contract';
+import { ContractAbi } from '../types/artifacts';
+import { Signer } from '../types/signer';
+
 import {logger} from '../logger'
 
 async function populateTransaction(
@@ -331,7 +332,7 @@ function buildEstimate(
     };
 }
 
-export class Contract {
+export class Contract implements IContract {
     public readonly address: AccountId;
     public readonly abi: Abi;
     public readonly signer: string;

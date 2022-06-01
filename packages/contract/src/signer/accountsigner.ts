@@ -5,11 +5,11 @@ import type { KeyringPair } from '@polkadot/keyring/types';
 import type { Registry } from '@polkadot/types/types';
 import { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
 import { u8aToHex } from '@polkadot/util';
-import {NetworkAccountsUserConfig, LocalKeyringPair} from "../types";
+import {NetworkAccountsUserConfig, LocalKeyringPair} from "../types/signer";
 
-let id = 0;
+let id = 0; // TODO static id?
 
-export class Signer implements PolkadotSigner {
+export class AccountSigner implements PolkadotSigner {
     readonly #keyring: Keyring;
     #config: NetworkAccountsUserConfig = [];
     #registry!: Registry;

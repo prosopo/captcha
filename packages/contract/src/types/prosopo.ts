@@ -41,7 +41,7 @@ export interface CaptchaData {
     captcha_type: u16
 }
 
-export interface LastCorrectCaptcha {
+export interface ILastCorrectCaptcha {
     before_ms: string,
     dapp_id: AccountId,
 }

@@ -1,13 +1,11 @@
 import {SignerResult} from '@polkadot/api/types';
 import type {SignOptions} from '@polkadot/keyring/types';
-import {SignerPayloadJSON} from '@polkadot/types/types';
-import {Signer as AccountSigner} from './account-signer';
-import type {KeyringPair as PolkadotKeyringPair} from '@polkadot/keyring/types';
-import {Signer as SignerInterface} from '../types'
-
-export interface LocalKeyringPair extends PolkadotKeyringPair {
-    suri?: string;
-}
+import {ISubmittableResult, SignerPayloadJSON, SignerPayloadRaw} from '@polkadot/types/types';
+import {AccountSigner} from './accountsigner';
+// import type {KeyringPair as PolkadotKeyringPair} from '@polkadot/keyring/types';
+import {LocalKeyringPair, Signer as SignerInterface} from '../types/signer';
+import { H256 } from '@polkadot/types/interfaces';
+// import type { Signer as PolkadotSigner } from '@polkadot/api/types';
 
 /**
  * A wrapper for Keyringpair
@@ -18,11 +16,11 @@ export class Signer implements SignerInterface {
      * @param pair An instantiation of keyringpair
      * @param accountSigner
      */
-    constructor(
-        public pair: LocalKeyringPair,
-        public readonly accountSigner: AccountSigner
-    ) {
-    }
+    constructor(public pair: LocalKeyringPair, public readonly accountSigner: AccountSigner) {}
+
+    addPair: (pair: LocalKeyringPair) => void;
+    signRaw?: ((raw: SignerPayloadRaw) => Promise<SignerResult>) | undefined;
+    update?: ((id: number, status: H256 | ISubmittableResult) => void) | undefined;
 
     /**
      * @description The Account address

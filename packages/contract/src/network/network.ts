@@ -1,8 +1,8 @@
 import {ApiPromise} from '@polkadot/api';
 import {WsProvider} from '@polkadot/rpc-provider/ws';
 import Keyring from "@polkadot/keyring";
-import {Network, NetworkUserConfig} from '../types'
-import {Signer as AccountSigner} from '../signer/account-signer'
+import {Network, NetworkUserConfig} from '../types/network';
+import {AccountSigner} from '../signer/accountsigner';
 import {KeyringPair} from "@polkadot/keyring/types";
 import { Signer } from '../signer/signer';
 
