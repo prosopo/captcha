@@ -29,23 +29,32 @@ export async function displayBalance(env, address, who) {
     return balance
 }
 
-export async function sendFunds(env, address, who, amount: BigNumber): Promise<void> {
-    await env.contractInterface.network.api.isReady
-    const balance = await env.contractInterface.network.api.query.system.account(address)
-    const signerAddresses: string[] = await env.contractInterface.network.getAddresses()
-    const Alice = signerAddresses[0]
-    const alicePair = env.contractInterface.network.keyring.getPair(Alice)
-    const AliceBalance = await env.contractInterface.network.api.query.system.account(alicePair.address)
-    if (AliceBalance < amount) {
-        throw new Error(`Alice balance too low: , ${AliceBalance}`)
-    }
-    const api = env.contractInterface.network.api
-    await buildTx(
-        api.registry,
-        api.tx.balances.transfer(address, amount),
-        alicePair.address, // from,
-        {signer: env.network.signer}
-    )
+const mnemonic = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'];
+let current = -1;
+
+function getNextMnemonic () {
+  current = (current + 1) % mnemonic.length;
+
+  return mnemonic[current];
+}
+
+export async function sendFunds (env, address, who, amount: BigNumber): Promise<void> {
+  await env.contractInterface.network.api.isReady;
+  const mnemonic = getNextMnemonic();
+  const pair = env.contractInterface.network.keyring.addFromMnemonic(mnemonic);
+  const balance = await env.contractInterface.network.api.query.system.account(pair.address);
+
+  if (balance < amount) {
+    throw new Error(`${mnemonic} balance too low: ${balance}`);
+  }
+
+  const api = env.contractInterface.network.api;
+  await buildTx(
+    api.registry,
+    api.tx.balances.transfer(address, amount),
+    pair.address, // from
+    {signer: env.network.signer}
+  );
 }
 
 export async function setupProvider(env, provider: TestProvider): Promise<Hash> {
