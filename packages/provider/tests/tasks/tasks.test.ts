@@ -32,12 +32,8 @@ import {sendFunds, setupDapp, setupProvider} from '../mocks/setup';
 
 import { ProsopoEnvError as Error } from '../../src/handlers';
 
-const envPath =
-  process.env.NODE_ENV === "test"
-    ? { path: '../../../../.env.test', override: true }
-    : undefined;
-
-require("dotenv").config(envPath);
+require("dotenv").config();
+require("dotenv").config({path: '../../.env'});
 
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
