@@ -13,13 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {Database, ProsopoConfig, ProsopoEnvironment} from '../../src/types'
-import {createNetwork, Network} from '@prosopo/contract'
+import {createNetwork, Network, abiJson, ContractAbi, ContractApiInterface, ProsopoContractApi } from '@prosopo/contract'
+import {AssetsResolver, Database, ProsopoConfig, ProsopoEnvironment} from '../../src/types'
 import {ERRORS} from '../../src/errors'
 import {network, patract} from 'redspot'
-import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 import {loadJSONFile} from "../../src/util";
 import consola, {LogLevel} from 'consola'
+import {LocalAssetsResolver} from "../../src/assets";
+
+// TODO mock imageserver.
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -34,15 +36,16 @@ export class MockEnvironment implements ProsopoEnvironment {
     abi: ContractAbi
     network!: Network
     logger: typeof consola
+    assetsResolver: AssetsResolver | undefined
 
     constructor() {
         this.config = {
             logLevel: 'debug',
-            contract: {abi: '/usr/src/packages/contract/src/abi/prosopo.json'},
+            contract: {abi: '../contract/src/abi/prosopo.json'},
             defaultEnvironment: 'development',
             networks: {
                 development: {
-                    endpoint: 'ws://substrate-node:9944',
+                    endpoint: process.env.SUBSTRATE_NODE_URL!,
                     contract: {
                         address: process.env.CONTRACT_ADDRESS!,
                         deployer: {
@@ -71,10 +74,17 @@ export class MockEnvironment implements ProsopoEnvironment {
             captchaSolutions: {
                 requiredNumberOfSolutions: 3,
                 solutionWinningPercentage: 80,
-                captchaFilePath: '/usr/src/data/captchas.json'
+                captchaFilePath: '../../data/captchas.json'
             },
             database: {
                 development: {type: 'mockdb', endpoint: '', dbname: ''}
+            },
+            assets : {
+                absolutePath: '',
+                basePath: ''
+            },
+            server : {
+                baseURL: ''
             }
         }
         this.mnemonic = '//Alice'
@@ -85,8 +95,13 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.abi = MockEnvironment.getContractAbi(this.config.contract.abi)
             this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
+            this.abi = MockEnvironment.getContractAbi(this.config.contract.abi, this.logger)
+            this.assetsResolver = new LocalAssetsResolver({
+                absolutePath: this.config.assets.absolutePath,
+                basePath: this.config.assets.basePath,
+                serverBaseURL: this.config.server.baseURL,
+            });
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT.message}:${this.config.defaultEnvironment}`)
         }
@@ -117,8 +132,9 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
     }
 
-    private static getContractAbi(path): ContractAbi {
-        return loadJSONFile(path) as ContractAbi
+    private static getContractAbi(path, logger): ContractAbi {
+        return abiJson;
+        // return loadJSONFile(path, logger) as ContractAbi
     }
 
 }

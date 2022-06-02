@@ -16,14 +16,14 @@
 import {ProsopoConfig} from './types';
 
 export default {
-    logLevel: 'info',
+    logLevel: 'debug',
     defaultEnvironment: 'development',
     contract: {
-        abi: '/usr/src/packages/contract/src/abi/prosopo.json'
+        abi: '../contract/src/abi/prosopo.json'
     },
     networks: {
         development: {
-            endpoint: 'ws://substrate-node:9944',
+            endpoint: process.env.SUBSTRATE_NODE_URL,
             contract: {
                 address: process.env.CONTRACT_ADDRESS,
                 deployer: {
@@ -53,7 +53,7 @@ export default {
     captchaSolutions: {
         requiredNumberOfSolutions: 3,
         solutionWinningPercentage: 80,
-        captchaFilePath: '/usr/src/data/captchas.json'
+        captchaFilePath: '../../data/captchas.json'
     },
     database: {
         development: {
@@ -61,5 +61,14 @@ export default {
             endpoint: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}`,
             dbname: process.env.DATABASE_NAME,
         }
+    },
+    // TODO deprecate local assets resolver -> tests: img server/mock.
+    assets : {
+        absolutePath: '',
+        basePath: ''
+    },
+    server : {
+        baseURL: process.env.API_BASE_URL,
     }
+
 } as ProsopoConfig;

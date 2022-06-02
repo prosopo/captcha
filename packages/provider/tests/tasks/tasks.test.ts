@@ -42,14 +42,17 @@ import { CaptchaSolution } from "../../src/types/captcha";
 import { DAPP, PROVIDER } from "../mocks/accounts";
 import { DATASET, SOLVED_CAPTCHAS } from "../mocks/mockdb";
 import { sendFunds } from "../mocks/setup";
-import { Environment } from "@prosopo/provider";
+import { Environment } from "../../src/env";
 
-const envPath =
-  process.env.NODE_ENV === "test"
-    ? { override: true, path: "../../.env.test" }
-    : undefined;
+// const envPath =
+//   process.env.NODE_ENV === "test"
+//     ? { override: true, path: "../../.env.test" }
+//     : undefined;
 
-config(envPath);
+// config(envPath);
+
+require("dotenv").config();
+require("dotenv").config({path: '../../.env'});
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -57,6 +60,7 @@ const expect = chai.expect;
 
 describe("CONTRACT TASKS", () => {
   let providerStakeDefault: bigint;
+  console.log(process.env.PROVIDER_MNEMONIC);
   const mockEnv = new Environment(process.env.PROVIDER_MNEMONIC);
   const databaseAccounts = new DatabaseAccounts();
 

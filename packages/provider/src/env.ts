@@ -16,14 +16,18 @@
 import findUp from 'find-up'
 import {ZodError} from 'zod'
 import {ERRORS} from './errors'
-import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment} from './types'
+import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment, AssetsResolver} from './types'
+import { LocalAssetsResolver } from './assets'
 import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
 import {loadJSONFile} from "./util";
 import {Network, createNetwork} from "@prosopo/contract";
 import consola from "consola";
 import {LogLevel} from 'consola'
 
-require('dotenv').config()
+import { abiJson } from '@prosopo/contract';
+
+require("dotenv").config();
+require("dotenv").config({path: '../../.env'});
 
 const TS_CONFIG_FILENAME = 'prosopo.config.ts'
 const JS_CONFIG_FILENAME = 'prosopo.config.js'
@@ -51,6 +55,8 @@ export class Environment implements ProsopoEnvironment {
 
     logger: typeof consola
 
+    assetsResolver: AssetsResolver | undefined
+
     constructor(mnemonic) {
         this.config = Environment.getConfig()
         this.mnemonic = mnemonic
@@ -59,8 +65,16 @@ export class Environment implements ProsopoEnvironment {
             this.deployerAddress = this.config.networks![this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address
             this.contractName = this.config.networks![this.defaultEnvironment].contract.name
-            this.abi = Environment.getContractAbi(this.config.contract.abi) as ContractAbi
             this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
+            // this.abi = Environment.getContractAbi(this.config.contract.abi, this.logger) as ContractAbi
+            this.abi = abiJson as ContractAbi;
+
+
+            this.assetsResolver = new LocalAssetsResolver({
+                absolutePath: this.config.assets.absolutePath,
+                basePath: this.config.assets.basePath,
+                serverBaseURL: this.config.server.baseURL,
+            });
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`)
         }
@@ -122,7 +136,7 @@ export class Environment implements ProsopoEnvironment {
         return imported.default !== undefined ? imported.default : imported
     }
 
-    private static getContractAbi(path): ContractAbi {
-        return loadJSONFile(path) as ContractAbi
+    private static getContractAbi(path, logger): ContractAbi {
+        return loadJSONFile(path, logger) as ContractAbi
     }
 }

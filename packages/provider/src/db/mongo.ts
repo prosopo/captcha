@@ -76,6 +76,7 @@ export class ProsopoDatabase implements Database {
         format: parsedDataset.format,
         tree: parsedDataset.tree
       };
+      console.log(parsedDataset);
 
       await this.tables.dataset?.updateOne({ _id: parsedDataset.datasetId }, { $set: datasetDoc }, { upsert: true });
       // put the dataset id on each of the captcha docs
@@ -120,6 +121,7 @@ export class ProsopoDatabase implements Database {
       }
     ]);
     const docs = await cursor?.toArray();
+    console.log(docs);
 
     if (docs) {
       // drop the _id field
@@ -208,10 +210,6 @@ export class ProsopoDatabase implements Database {
       throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`);
     }
 
-    if (!isHex(userAccount)) {
-      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: userAccount`);
-    }
-
     await this.tables.pending?.updateOne(
       { _id: requestHash },
       { $set: { accountId: userAccount, pending: true, salt } },
@@ -242,10 +240,6 @@ export class ProsopoDatabase implements Database {
   async updateDappUserPendingStatus (userAccount: string, requestHash: string, approve: boolean): Promise<void> {
     if (!isHex(requestHash)) {
       throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: requestHash`);
-    }
-
-    if (!isHex(userAccount)) {
-      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: userAccount`);
     }
 
     await this.tables.pending?.updateOne(

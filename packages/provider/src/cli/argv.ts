@@ -23,7 +23,7 @@ import { Compact, u128 } from '@polkadot/types';
 
 import { ERRORS } from '../errors';
 import { Tasks } from '../tasks/tasks';
-import { ProsopoEnvironment } from '../types';
+import { ProsopoEnvironment } from '../types/env';
 import { encodeStringAddress } from '../util';
 import {PayeeSchema, Payee} from "@prosopo/contract";
 

@@ -15,15 +15,20 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import express from 'express';
 import cors from 'cors';
+import { URL } from 'url';
 
 import { mnemonicValidate } from '@polkadot/util-crypto';
 
 import { prosopoMiddleware } from '../api';
+import { LocalAssetsResolver } from '../assets';
 import { Environment } from '../env';
 import { ERRORS, handleErrors } from '../errors';
 import { processArgs } from './argv';
 
-const port = 3000;
+require("dotenv").config();
+require("dotenv").config({path: '../../.env'});
+
+const port = new URL(process.env.API_BASE_URL as string).port || 3000;
 
 const app = express();
 
@@ -43,6 +48,9 @@ async function main () {
 
   if (args.api) {
     app.use(prosopoMiddleware(env));
+    if (env.assetsResolver instanceof LocalAssetsResolver) {
+      env.assetsResolver.injectMiddleware(app);
+    }
     app.use(handleErrors);
     app.listen(port, () => {
       env.logger.info(`Prosopo app listening at http://localhost:${port}`);

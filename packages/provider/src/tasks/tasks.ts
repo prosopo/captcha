@@ -58,7 +58,8 @@ import {
     LastCorrectCaptcha
 } from '../types'
 import {loadJSONFile, shuffleArray, writeJSONFile} from '../util'
-import {TransactionResponse} from '@prosopo/contract';
+import {TransactionResponse} from '@redspot/patract/types';
+import consola from "consola";
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -72,6 +73,8 @@ export class Tasks {
 
     captchaSolutionConfig: CaptchaSolutionConfig
 
+    logger: typeof consola
+
     constructor(env: ProsopoEnvironment) {
         // this.contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName)
         if (!env.contractInterface) {
@@ -82,6 +85,7 @@ export class Tasks {
         this.db = env.db as Database;
         this.captchaConfig = env.config.captchas;
         this.captchaSolutionConfig = env.config.captchaSolutions
+        this.logger = env.logger
     }
 
     // Contract transactions potentially involving database writes
@@ -103,7 +107,7 @@ export class Tasks {
     }
 
     async providerAddDataset(file: string): Promise<TransactionResponse> {
-        const dataset = parseCaptchaDataset(loadJSONFile(file) as JSON);
+        const dataset = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON);
         const datasetWithoutIds = {...dataset}
         const tree = new CaptchaMerkleTree();
         const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
@@ -338,18 +342,18 @@ export class Tasks {
         const salt = randomAsHex()
 
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)
+
         await this.db.storeDappUserPending(userAccount, requestHash, salt)
         return {captchas, requestHash}
     }
 
     /**
      * Apply new captcha solutions to captcha dataset and recalculate merkle tree
-     * @param {string} datasetId
      */
     async calculateCaptchaSolutions() {
         try {
             const captchaFilePath = this.captchaSolutionConfig.captchaFilePath
-            const currentDataset = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
+            const currentDataset = parseCaptchaDataset(loadJSONFile(captchaFilePath, this.logger) as JSON)
             if (!currentDataset.datasetId) {
                 return 0
             }
@@ -406,7 +410,7 @@ export class Tasks {
                 solutionObj[solutionsToUpdate[i].salt] = solutionsToUpdate[i]
             }
 
-            const prevDataset = parseCaptchaDataset(loadJSONFile(filePath) as JSON)
+            const prevDataset = parseCaptchaDataset(loadJSONFile(filePath, this.logger) as JSON)
 
             const jsonData = {
                 ...prevDataset,
