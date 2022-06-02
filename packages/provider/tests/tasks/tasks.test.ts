@@ -68,7 +68,7 @@ describe('CONTRACT TASKS', () => {
 
     await mockEnv.contractInterface!.changeSigner('//Alice');
 
-    const funds = 1000n * providerStakeDefault;
+    const funds = 10000n * providerStakeDefault;
 
     try {
         await sendFunds(mockEnv, providerAddress, 'Provider', funds);
@@ -160,22 +160,32 @@ describe('CONTRACT TASKS', () => {
   it('Provider registration', async () => {
     const [providerMnemonic, providerAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || ['', ''];
 
-    await sendFunds(
-      mockEnv,
-      providerAddress,
-      'Provider',
-      10000000n * providerStakeDefault,
-    );
+    try {
+        await sendFunds(
+            mockEnv,
+            providerAddress,
+            'Provider',
+            10000n * providerStakeDefault,
+        );
+    } catch (e) {
+        new Error(e, 'sendFunds');
+    }
 
     await mockEnv.contractInterface!.changeSigner(providerMnemonic);
     const providerTasks = new Tasks(mockEnv);
 
-    const result: TransactionResponse = await providerTasks.providerRegister(
-      PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
-      provider.fee as number,
-      provider.payee as Payee,
-      providerAddress
-    );
+    let result: TransactionResponse;
+
+    try {
+        result = await providerTasks.providerRegister(
+            PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
+            provider.fee as number,
+            provider.payee as Payee,
+            providerAddress
+        );
+    } catch (e) {
+        new Error(e, 'providerRegister');
+    }
 
     registeredProviders.push([providerMnemonic, providerAddress]);
 
@@ -226,7 +236,7 @@ describe('CONTRACT TASKS', () => {
             mockEnv,
             providerAddress,
             'Provider',
-            10000000n * providerStakeDefault,
+            10000n * providerStakeDefault,
         );
         const inactiveProvider = {...PROVIDER} as TestProvider;
 
