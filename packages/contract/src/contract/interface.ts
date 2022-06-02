@@ -31,13 +31,11 @@ export class ProsopoContractApi implements ContractApiInterface {
     network!: Network
     mnemonic: string
     signer!: Signer
-    deployerAddress: string
     contractAddress: string
     contractName: string
     abi: ContractAbi
 
-    constructor(deployerAddress: string, contractAddress: string, mnemonic: string, contractName: string, abi: ContractAbi, network: Network) {
-        this.deployerAddress = deployerAddress
+    constructor(contractAddress: string, mnemonic: string, contractName: string, abi: ContractAbi, network: Network) {
         this.mnemonic = mnemonic
         this.contractName = contractName
         this.contractAddress = contractAddress

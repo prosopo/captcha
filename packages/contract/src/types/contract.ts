@@ -115,7 +115,6 @@ export interface ContractApiInterface {
     contract?: IContract
     mnemonic?: string
     signer: Signer
-    deployerAddress: string
     contractAddress: AccountId | string
     abi: ContractAbi
     network: Network
