@@ -16,7 +16,7 @@
 
 // export * from './api'
 export * from './captcha'
-export * from './env'
+// export * from './env'
 // export * from './errors'
 export * from './merkle'
 // export * from './scheduler'
