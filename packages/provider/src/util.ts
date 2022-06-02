@@ -46,7 +46,7 @@ export function encodeStringAddress (address: string) {
 // }
 
 // TODO: move to nodeutils?
-export function loadJSONFile (filePath: string) {
+export function loadJSONFile (filePath: string, logger?: any) {
     // const parsedFilePath = handleFileProtocol(filePath, logger)
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'))
