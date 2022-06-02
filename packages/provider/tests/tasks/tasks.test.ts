@@ -68,7 +68,7 @@ describe('CONTRACT TASKS', () => {
 
     await mockEnv.contractInterface!.changeSigner('//Alice');
 
-    const funds = 10000000n * providerStakeDefault;
+    const funds = 1000n * providerStakeDefault;
 
     try {
         await sendFunds(mockEnv, providerAddress, 'Provider', funds);
