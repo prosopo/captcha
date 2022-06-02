@@ -26,11 +26,7 @@ export default {
             endpoint: process.env.SUBSTRATE_NODE_URL,
             contract: {
                 address: process.env.CONTRACT_ADDRESS,
-                deployer: {
-                    address: '//Alice'
-                },
                 name: 'prosopo'
-
             },
             accounts: [
                 '//Alice',

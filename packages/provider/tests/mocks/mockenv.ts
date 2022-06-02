@@ -27,7 +27,6 @@ export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
     mnemonic: string
-    deployerAddress: string
     patract: any;
     contractAddress: string
     defaultEnvironment: string
@@ -48,9 +47,6 @@ export class MockEnvironment implements ProsopoEnvironment {
                     endpoint: process.env.SUBSTRATE_NODE_URL!,
                     contract: {
                         address: process.env.CONTRACT_ADDRESS!,
-                        deployer: {
-                            address: '//Alice'
-                        },
                         name: 'prosopo'
                     },
                     accounts: [
@@ -92,7 +88,6 @@ export class MockEnvironment implements ProsopoEnvironment {
         this.patract = patract
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
-            this.deployerAddress = this.config.networks[this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
             this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
@@ -110,7 +105,7 @@ export class MockEnvironment implements ProsopoEnvironment {
 
     async isReady(): Promise<void> {
         this.network = await createNetwork(this.mnemonic, this.config.networks![this.defaultEnvironment])
-        this.contractInterface = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName, this.abi, this.network)
+        this.contractInterface = new ProsopoContractApi(this.contractAddress, this.mnemonic, this.contractName, this.abi, this.network)
         // Persist database state for tests
         if (!this.db) {
             await this.importDatabase()

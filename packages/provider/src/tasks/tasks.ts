@@ -76,7 +76,6 @@ export class Tasks {
     logger: typeof consola
 
     constructor(env: ProsopoEnvironment) {
-        // this.contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName)
         if (!env.contractInterface) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message);
         }

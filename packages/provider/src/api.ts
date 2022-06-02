@@ -36,7 +36,7 @@ import {parseCaptchaAssets} from './captcha'
 export function prosopoMiddleware(env: Environment): Router {
   const router = express.Router();
   const tasks = new Tasks(env);
-  const contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName, env.abi, env.network);
+  const contractApi = new ProsopoContractApi(env.contractAddress, env.mnemonic, env.contractName, env.abi, env.network);
 
   /**
    * Get the contract address

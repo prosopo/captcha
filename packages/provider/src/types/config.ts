@@ -25,9 +25,6 @@ export const ProsopoConfigSchema = z.object({
             endpoint: z.string().url(),
             contract: z.object({
                 address: z.string(),
-                deployer: z.object({
-                    address: z.string()
-                }),
                 name: z.string()
             }),
             accounts: z.array(z.string())

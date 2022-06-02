@@ -23,7 +23,6 @@ export interface ProsopoEnvironment {
     db: Database | undefined,
     contractInterface: ContractApiInterface | undefined
     mnemonic: string
-    deployerAddress: string
     contractAddress: string
     defaultEnvironment: string
     contractName: string
