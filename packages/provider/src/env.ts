@@ -137,6 +137,6 @@ export class Environment implements ProsopoEnvironment {
     }
 
     private static getContractAbi(path, logger): ContractAbi {
-        return loadJSONFile(path, logger) as ContractAbi
+        return loadJSONFile(path) as ContractAbi
     }
 }

@@ -44,14 +44,14 @@ import { DATASET, SOLVED_CAPTCHAS } from "../mocks/mockdb";
 import { sendFunds } from "../mocks/setup";
 import { Environment } from "../../src/env";
 
-// const envPath =
-//   process.env.NODE_ENV === "test"
-//     ? { override: true, path: "../../.env.test" }
-//     : undefined;
+const envPath =
+  process.env.NODE_ENV === "test"
+    ? { override: true, path: "../../.env.test" }
+    : undefined;
 
-// config(envPath);
+config(envPath);
 
-require("dotenv").config();
+// require("dotenv").config();
 require("dotenv").config({path: '../../.env'});
 
 chai.should();

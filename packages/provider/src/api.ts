@@ -189,6 +189,8 @@ export function prosopoMiddleware(env: Environment): Router {
     try {
       parsed = CaptchaSolutionBody.parse(req.body);
     } catch (err) {
+      console.log('1.......................', err);
+
       return next(new BadRequest(err));
     }
 
@@ -198,6 +200,8 @@ export function prosopoMiddleware(env: Environment): Router {
       return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, captchas: result});
     } catch (err: unknown) {
       const msg = `${ERRORS.API.BAD_REQUEST.message}: ${err}`;
+
+      console.log('2.......................', err);
 
       return next(new BadRequest(msg));
     }
