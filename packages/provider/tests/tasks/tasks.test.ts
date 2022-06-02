@@ -122,7 +122,7 @@ describe("CONTRACT TASKS", () => {
       mockEnv,
       providerAddress,
       "Provider",
-      10000000n * providerStakeDefault
+      10000n * providerStakeDefault
     );
 
     const tasks = await changeSigner([providerMnemonic, providerAddress]);
@@ -142,7 +142,7 @@ describe("CONTRACT TASKS", () => {
 
     const tasks = await changeSigner(account);
 
-    const value = 1000000n * providerStakeDefault;
+    const value = 1000n * providerStakeDefault;
 
     const result: TransactionResponse = await tasks.providerUpdate(
       PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
