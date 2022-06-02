@@ -180,7 +180,7 @@ describe('CONTRACT TASKS', () => {
             providerAddress
         );
     } catch (e) {
-        new Error(e, 'providerRegister');
+        throw new Error(e, 'providerRegister');
     }
 
     registeredProviders.push([providerMnemonic, providerAddress]);

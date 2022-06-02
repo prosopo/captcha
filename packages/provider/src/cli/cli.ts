@@ -25,6 +25,9 @@ import { Environment } from '../env';
 import { ERRORS, handleErrors } from '../errors';
 import { processArgs } from './argv';
 
+require("dotenv").config();
+require("dotenv").config({path: '../../.env'});
+
 const port = new URL(process.env.API_BASE_URL as string).port || 3000;
 
 const app = express();

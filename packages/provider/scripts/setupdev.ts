@@ -23,7 +23,8 @@ import { TestAccount, TestDapp, TestProvider } from '../tests/mocks/accounts';
 import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, setupProvider } from '../tests/mocks/setup';
 import {Payee} from "@prosopo/contract";
 
-require('dotenv').config();
+require("dotenv").config();
+require("dotenv").config({path: '../../.env'});
 
 const ENVVARS = ['PROVIDER_MNEMONIC', 'DAPP_CONTRACT_ADDRESS'];
 
