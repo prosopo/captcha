@@ -27,7 +27,6 @@ import {LogLevel} from 'consola'
 import { abiJson } from '@prosopo/contract';
 
 require("dotenv").config();
-require("dotenv").config({path: '../../.env'});
 
 const TS_CONFIG_FILENAME = 'prosopo.config.ts'
 const JS_CONFIG_FILENAME = 'prosopo.config.js'
