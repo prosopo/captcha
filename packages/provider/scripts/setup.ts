@@ -25,6 +25,8 @@ let provider: [mnemonic: string, address: string];
 
 dotenv.config();
 
+let setupNewProvider = false;
+
 const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
     fee: 10,
@@ -74,6 +76,7 @@ async function setupEnvFile() {
     contractEnvFile = contractEnvFile.replace('DATABASE_HOST=provider-db', 'DATABASE_HOST=localhost');
 
     if (!process.env.PROVIDER_MNEMONIC || !process.env.PROVIDER_ADDRESS) {
+        setupNewProvider = true;
         provider = await generateMnemonic();
     } else {
         provider = [process.env.PROVIDER_MNEMONIC, process.env.PROVIDER_ADDRESS];
@@ -90,13 +93,13 @@ async function setup() {
     await copyArtifacts();
     await setupEnvFile();
 
+    dotenv.config();
+
     if (!process.env.DAPP_CONTRACT_ADDRESS) {
         throw new Error('DAPP_CONTRACT_ADDRESS');
     }
 
-    if (!process.env.PROVIDER_MNEMONIC || !process.env.PROVIDER_ADDRESS) {
-
-        dotenv.config();
+    if (setupNewProvider) {
 
         const env = new Environment('//Alice');
         await env.isReady();
