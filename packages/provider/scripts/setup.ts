@@ -17,15 +17,13 @@ import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto';
 import { Keyring } from '@polkadot/keyring';
 const keyring = new Keyring({ type: 'sr25519' });
 
+dotenv.config();
+
 // TODO: Add path to protocol contract as argument. (after rm npm-ws from integration)
 // const argv = yargs(hideBin(process.argv)).argv;
 const integrationPath = '../../';
 
-let provider: [mnemonic: string, address: string];
-
-dotenv.config();
-
-let setupNewProvider = false;
+const setupNewProvider = !process.env.PROVIDER_MNEMONIC || !process.env.PROVIDER_ADDRESS;
 
 const PROVIDER: TestProvider = {
     serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
@@ -69,29 +67,24 @@ async function copyArtifacts() {
     await fse.copy(path.join(artifactsPath, 'prosopo.json'), '../contract/src/abi/prosopo.json', { overwrite: true });
 }
 
-async function setupEnvFile() {
+async function setupEnvFile(mnemonic: string, address: string) {
     let contractEnvFile = await fse.readFile(path.join(integrationPath, '.env'), 'utf8');
     let defaultEnvFile = await fse.readFile('./env.txt', 'utf8');
 
     contractEnvFile = contractEnvFile.replace('DATABASE_HOST=provider-db', 'DATABASE_HOST=localhost');
 
-    if (!process.env.PROVIDER_MNEMONIC || !process.env.PROVIDER_ADDRESS) {
-        setupNewProvider = true;
-        provider = await generateMnemonic();
-    } else {
-        provider = [process.env.PROVIDER_MNEMONIC, process.env.PROVIDER_ADDRESS];
-    }
-
-    defaultEnvFile = defaultEnvFile.replace('PROVIDER_MNEMONIC=%PROVIDER_MNEMONIC%', `PROVIDER_MNEMONIC="${provider[0]}"`);
-    defaultEnvFile = defaultEnvFile.replace('PROVIDER_ADDRESS=%PROVIDER_ADDRESS%', `PROVIDER_ADDRESS=${provider[1]}`);
+    defaultEnvFile = defaultEnvFile.replace('%PROVIDER_MNEMONIC%', `"${mnemonic}"`);
+    defaultEnvFile = defaultEnvFile.replace('%PROVIDER_ADDRESS%', address);
 
     await fse.writeFile('./.env', [contractEnvFile, defaultEnvFile].join('\n'));
 }
 
 async function setup() {
 
+    const [mnemonic, address] = (setupNewProvider) ? await generateMnemonic() : [process.env.PROVIDER_MNEMONIC!, process.env.PROVIDER_ADDRESS!];
+
     await copyArtifacts();
-    await setupEnvFile();
+    await setupEnvFile(mnemonic, address);
 
     dotenv.config();
 
@@ -104,10 +97,11 @@ async function setup() {
         const env = new Environment('//Alice');
         await env.isReady();
 
-        PROVIDER.mnemonic = provider[0];
-        PROVIDER.address = provider[1];
+        PROVIDER.mnemonic = mnemonic;
+        PROVIDER.address = address;
 
         const providerKeyringPair: KeyringPair = await env.contractInterface!.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
+
         PROVIDER.address = providerKeyringPair.address;
 
         await sendFunds(env, providerKeyringPair.address, 'Provider', 100000000000000000n);
@@ -120,6 +114,7 @@ async function setup() {
 
     }
 
+    process.exit();
 }
 
 setup();
