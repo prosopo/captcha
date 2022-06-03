@@ -68,8 +68,7 @@ async function copyArtifacts() {
 }
 
 async function setupEnvFile() {
-    // TODO: Add path to protocol contract as argument.
-    let contractEnvFile = await fse.readFile('../../.env', 'utf8');
+    let contractEnvFile = await fse.readFile(path.join(integrationPath, '.env'), 'utf8');
     let defaultEnvFile = await fse.readFile('./env.txt', 'utf8');
 
     contractEnvFile = contractEnvFile.replace('DATABASE_HOST=provider-db', 'DATABASE_HOST=localhost');
