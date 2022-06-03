@@ -1,16 +1,15 @@
 import fse from 'fs-extra';
 import path from 'path';
-import { exec } from 'child_process';
 import dotenv from 'dotenv';
-import yargs from 'yargs/yargs';
-import { hideBin } from 'yargs/helpers';
+// import yargs from 'yargs/yargs';
+// import { hideBin } from 'yargs/helpers';
 
 import { KeyringPair } from '@polkadot/keyring/types';
 import { randomAsHex } from '@polkadot/util-crypto';
 
 import { Environment } from '../src/env';
-import { TestAccount, TestDapp, TestProvider } from '../tests/mocks/accounts';
-import { approveOrDisapproveCommitment, sendFunds, setupDapp, setupDappUser, setupProvider } from '../tests/mocks/setup';
+import { TestDapp, TestProvider } from '../tests/mocks/accounts';
+import { sendFunds, setupDapp, setupProvider } from '../tests/mocks/setup';
 import { Payee } from "@prosopo/contract";
 
 import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto';
@@ -42,11 +41,6 @@ const DAPP: TestDapp = {
     contractAccount: '',
     optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
     fundAmount: Math.pow(10, 12)
-};
-
-const DAPP_USER: TestAccount = {
-    mnemonic: '//Charlie',
-    address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y'
 };
 
 async function generateMnemonic(): Promise<[string, string]> {
