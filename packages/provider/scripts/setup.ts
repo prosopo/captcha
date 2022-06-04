@@ -1,20 +1,17 @@
-import fse from 'fs-extra';
-import path from 'path';
-import dotenv from 'dotenv';
+// import { Keyring } from '@polkadot/keyring';
 // import yargs from 'yargs/yargs';
 // import { hideBin } from 'yargs/helpers';
-
 import { KeyringPair } from '@polkadot/keyring/types';
 import { randomAsHex } from '@polkadot/util-crypto';
-
+import { Payee } from "@prosopo/contract";
+import dotenv from 'dotenv';
+import fse from 'fs-extra';
+import path from 'path';
 import { Environment } from '../src/env';
 import { TestDapp, TestProvider } from '../tests/mocks/accounts';
 import { sendFunds, setupDapp, setupProvider } from '../tests/mocks/setup';
-import { Payee } from "@prosopo/contract";
+import { generateMnemonic, updateEnvVar } from './utils';
 
-import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto';
-import { Keyring } from '@polkadot/keyring';
-const keyring = new Keyring({ type: 'sr25519' });
 
 dotenv.config();
 
@@ -22,90 +19,95 @@ dotenv.config();
 // const argv = yargs(hideBin(process.argv)).argv;
 const integrationPath = '../../';
 
-const setupNewProvider = !process.env.PROVIDER_MNEMONIC || !process.env.PROVIDER_ADDRESS;
-
-const PROVIDER: TestProvider = {
+const defaultProvider: TestProvider = {
     serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
     fee: 10,
     payee: Payee.Provider,
     stake: Math.pow(10, 13),
-    datasetFile: '../../data/captchas.json',
-    mnemonic: '',
-    address: '',
+    datasetFile: path.join(integrationPath, 'data/captchas.json'),
+    mnemonic: process.env.PROVIDER_MNEMONIC || '',
+    address: process.env.PROVIDER_ADDRESS || '',
     captchaDatasetId: ''
 };
 
-const DAPP: TestDapp = {
+const defaultDapp: TestDapp = {
     serviceOrigin: 'http://localhost:9393',
     mnemonic: '//Ferdie',
-    contractAccount: '',
+    contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
     optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
     fundAmount: Math.pow(10, 12)
 };
 
-async function generateMnemonic(): Promise<[string, string]> {
-    await cryptoWaitReady();
-    const mnemonic = mnemonicGenerate();
-    const account = keyring.addFromMnemonic(mnemonic);
-  
-    console.log(`Address: ${account.address}`);
-    console.log(`Mnemonic: ${mnemonic}`);
-    
-    return [mnemonic, account.address];
-}
+const hasProviderAccount = defaultProvider.mnemonic && defaultProvider.address;
 
 async function copyArtifacts() {
     const artifactsPath = path.join(integrationPath, 'protocol/artifacts');
-    await fse.copy(artifactsPath, '../contract/artifacts', { overwrite: true });
-    await fse.copy(artifactsPath, './artifacts', { overwrite: true }); // TODO: remove from artifacts provider. Included in @prosopo/contract.
-    await fse.copy(path.join(artifactsPath, 'prosopo.json'), '../contract/src/abi/prosopo.json', { overwrite: true });
+    await Promise.all([
+        fse.copy(artifactsPath, '../contract/artifacts', { overwrite: true }),
+        fse.copy(artifactsPath, './artifacts', { overwrite: true }),
+        fse.copy(path.join(artifactsPath, 'prosopo.json'), '../contract/src/abi/prosopo.json', { overwrite: true }),
+    ]);
 }
 
 async function setupEnvFile(mnemonic: string, address: string) {
-    let contractEnvFile = await fse.readFile(path.join(integrationPath, '.env'), 'utf8');
-    let defaultEnvFile = await fse.readFile('./env.txt', 'utf8');
-
-    contractEnvFile = contractEnvFile.replace('DATABASE_HOST=provider-db', 'DATABASE_HOST=localhost');
-
-    defaultEnvFile = defaultEnvFile.replace('%PROVIDER_MNEMONIC%', `"${mnemonic}"`);
-    defaultEnvFile = defaultEnvFile.replace('%PROVIDER_ADDRESS%', address);
+    let [contractEnvFile, defaultEnvFile] = await Promise.all([
+        fse.readFile(path.join(integrationPath, '.env'), 'utf8'),
+        fse.readFile('./env.txt', 'utf8'),
+    ]);
+    contractEnvFile = updateEnvVar(contractEnvFile, 'DATABASE_HOST', 'localhost');
+    defaultEnvFile = updateEnvVar(defaultEnvFile, 'PROVIDER_MNEMONIC', `"${mnemonic}"`);
+    defaultEnvFile = updateEnvVar(defaultEnvFile, 'PROVIDER_ADDRESS', address);
 
     await fse.writeFile('./.env', [contractEnvFile, defaultEnvFile].join('\n'));
 }
 
+async function registerProvider(env: Environment, account: TestProvider) {
+    const providerKeyringPair: KeyringPair = await env.contractInterface!.network.keyring.addFromMnemonic(account.mnemonic);
+
+    account.address = providerKeyringPair.address;
+
+    await sendFunds(env, account.address, 'Provider', 100000000000000000n); // TODO -> setupProvider().
+
+    await setupProvider(env, account);
+}
+
+async function registerDapp(env: Environment, dapp: TestDapp) {
+    await setupDapp(env, dapp);
+}
+
 async function setup() {
 
-    const [mnemonic, address] = (setupNewProvider) ? await generateMnemonic() : [process.env.PROVIDER_MNEMONIC!, process.env.PROVIDER_ADDRESS!];
+    const [mnemonic, address] = (!hasProviderAccount) ? await generateMnemonic() : [defaultProvider.mnemonic, defaultProvider.address];
 
+    console.log(`Address: ${address}`);
+    console.log(`Mnemonic: ${mnemonic}`);
+
+    console.log('Copying contract artifacts...');
     await copyArtifacts();
+
+    console.log('Writing .env file...');
     await setupEnvFile(mnemonic, address);
 
+    // Load new .env file.
     dotenv.config();
 
     if (!process.env.DAPP_CONTRACT_ADDRESS) {
-        throw new Error('DAPP_CONTRACT_ADDRESS');
+        throw new Error('DAPP_CONTRACT_ADDRESS is not set in .env file.');
     }
 
-    if (setupNewProvider) {
-
+    if (!hasProviderAccount) {
         const env = new Environment('//Alice');
         await env.isReady();
 
-        PROVIDER.mnemonic = mnemonic;
-        PROVIDER.address = address;
+        defaultProvider.mnemonic = mnemonic;
+       
+        console.log('Registering provider...');
+        await registerProvider(env, defaultProvider);
 
-        const providerKeyringPair: KeyringPair = await env.contractInterface!.network.keyring.addFromMnemonic(PROVIDER.mnemonic);
+        defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS;
 
-        PROVIDER.address = providerKeyringPair.address;
-
-        await sendFunds(env, providerKeyringPair.address, 'Provider', 100000000000000000n);
-
-        await setupProvider(env, PROVIDER);
-
-        DAPP.contractAccount = process.env.DAPP_CONTRACT_ADDRESS;
-
-        await setupDapp(env, DAPP);
-
+        console.log('Registering dapp...');
+        await registerDapp(env, defaultDapp);
     }
 
     process.exit();

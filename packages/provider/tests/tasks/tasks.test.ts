@@ -44,6 +44,8 @@ import { DATASET, SOLVED_CAPTCHAS } from "../mocks/mockdb";
 import { sendFunds } from "../mocks/setup";
 import { Environment } from "../../src/env";
 
+import { ProsopoEnvError } from '../../src/handlers';
+
 const envPath =
   process.env.NODE_ENV === "test"
     ? { override: true, path: "../../.env.test" }
@@ -52,7 +54,7 @@ const envPath =
 config(envPath);
 
 // require("dotenv").config();
-require("dotenv").config({path: '../../.env'});
+// require("dotenv").config({path: '../../.env'});
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -65,13 +67,33 @@ describe("CONTRACT TASKS", () => {
   const databaseAccounts = new DatabaseAccounts();
 
   before(async () => {
-    await mockEnv.isReady();
+    
+    try {
+      await mockEnv.isReady();
+    } catch (e) {
+      throw new ProsopoEnvError(e, 'isReady');
+    }
+
     const tasks = new Tasks(mockEnv);
 
-    await mockEnv.contractInterface!.changeSigner("//Alice");
+    try {
+      await mockEnv.contractInterface!.changeSigner("//Alice");
+    } catch (e) {
+      throw new ProsopoEnvError(e, 'changeSigner');
+    }
 
-    providerStakeDefault = await tasks.getProviderStakeDefault();
-    await databaseAccounts.importDatabaseAccounts();
+    try {
+      providerStakeDefault = await tasks.getProviderStakeDefault();
+    } catch (e) {
+      throw new ProsopoEnvError(e, 'getProviderStakeDefault');
+    }
+
+    try {
+      await databaseAccounts.importDatabaseAccounts();
+    } catch (e) {
+      throw new ProsopoEnvError(e, 'importDatabaseAccounts');
+    }
+    
   });
 
   /** Gets some static solved captchas and constructions captcha solutions from them

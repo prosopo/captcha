@@ -107,4 +107,4 @@ secrets.json
 # Ingnore build target
 contracts/target/
 
-artifacts
+/artifacts/
