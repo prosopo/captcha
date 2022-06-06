@@ -9,7 +9,7 @@
     "build": "tsc --build --verbose",
     "dev": "yarn build && yarn run setup && yarn start",
     "start": "ts-node ./src/cli/cli.ts",
-    "setup": "ts-node ./scripts/setupdev.ts",
+    "setup": "ts-node ./scripts/setup.ts",
     "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
     "imageserver:start": "ts-node ./scripts/imageserver.ts",
     "test": "redspot test",
