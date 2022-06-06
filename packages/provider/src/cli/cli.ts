@@ -26,7 +26,7 @@ import { ERRORS, handleErrors } from '../errors';
 import { processArgs } from './argv';
 
 require("dotenv").config();
-require("dotenv").config({path: '../../.env'});
+// require("dotenv").config({path: '../../.env'});
 
 const port = new URL(process.env.API_BASE_URL as string).port || 3000;
 
@@ -46,7 +46,7 @@ async function main () {
   await env.isReady();
   const args = await processArgs(process.argv.slice(2), env);
 
-  if (args.api) {
+  // if (args.api) {
     app.use(prosopoMiddleware(env));
     if (env.assetsResolver instanceof LocalAssetsResolver) {
       env.assetsResolver.injectMiddleware(app);
@@ -55,9 +55,9 @@ async function main () {
     app.listen(port, () => {
       env.logger.info(`Prosopo app listening at http://localhost:${port}`);
     });
-  } else {
-    process.exit();
-  }
+  // } else {
+  //   process.exit();
+  // }
 }
 
 main()
