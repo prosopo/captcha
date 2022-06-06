@@ -13,29 +13,19 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import express from 'express';
-import cors from 'cors';
-import { URL } from 'url';
-
 import { mnemonicValidate } from '@polkadot/util-crypto';
-
-import { prosopoMiddleware } from '../api';
-import { LocalAssetsResolver } from '../assets';
+// import { prosopoMiddleware } from '../api';
+// import { LocalAssetsResolver } from '../assets';
 import { Environment } from '../env';
-import { ERRORS, handleErrors } from '../errors';
+import { ERRORS } from '../errors';
 import { processArgs } from './argv';
 
-require("dotenv").config();
-// require("dotenv").config({path: '../../.env'});
+import dotenv from 'dotenv';
 
-const port = new URL(process.env.API_BASE_URL as string).port || 3000;
-
-const app = express();
-
-app.use(express.json());
-app.use(cors());
+dotenv.config();
 
 async function main () {
+
   if (!process.env.PROVIDER_MNEMONIC) {
     throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
   }
@@ -44,20 +34,10 @@ async function main () {
   const env = new Environment(process.env.PROVIDER_MNEMONIC);
 
   await env.isReady();
-  const args = await processArgs(process.argv.slice(2), env);
+  await processArgs(process.argv.slice(2), env);
 
-  // if (args.api) {
-    app.use(prosopoMiddleware(env));
-    if (env.assetsResolver instanceof LocalAssetsResolver) {
-      env.assetsResolver.injectMiddleware(app);
-    }
-    app.use(handleErrors);
-    app.listen(port, () => {
-      env.logger.info(`Prosopo app listening at http://localhost:${port}`);
-    });
-  // } else {
-  //   process.exit();
-  // }
+  process.exit();
+
 }
 
 main()

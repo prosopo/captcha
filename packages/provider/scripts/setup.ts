@@ -10,7 +10,7 @@ import path from 'path';
 import { Environment } from '../src/env';
 import { TestDapp, TestProvider } from '../tests/mocks/accounts';
 import { sendFunds, setupDapp, setupProvider } from '../tests/mocks/setup';
-import { generateMnemonic, updateEnvVar } from './utils';
+import { generateMnemonic, updateEnvFileVar } from './utils';
 
 
 dotenv.config();
@@ -54,9 +54,9 @@ async function setupEnvFile(mnemonic: string, address: string) {
         fse.readFile(path.join(integrationPath, '.env'), 'utf8'),
         fse.readFile('./env.txt', 'utf8'),
     ]);
-    contractEnvFile = updateEnvVar(contractEnvFile, 'DATABASE_HOST', 'localhost');
-    defaultEnvFile = updateEnvVar(defaultEnvFile, 'PROVIDER_MNEMONIC', `"${mnemonic}"`);
-    defaultEnvFile = updateEnvVar(defaultEnvFile, 'PROVIDER_ADDRESS', address);
+    contractEnvFile = updateEnvFileVar(contractEnvFile, 'DATABASE_HOST', 'localhost');
+    defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_MNEMONIC', `"${mnemonic}"`);
+    defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_ADDRESS', address);
 
     await fse.writeFile('./.env', [contractEnvFile, defaultEnvFile].join('\n'));
 }

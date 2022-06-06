@@ -33,7 +33,7 @@ import {parseCaptchaAssets} from './captcha'
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
  * @param {Environment} env - The Prosopo environment
  */
-export function prosopoMiddleware(env: Environment): Router {
+export function prosopoRouter(env: Environment): Router {
   const router = express.Router();
   const tasks = new Tasks(env);
   const contractApi = new ProsopoContractApi(env.contractAddress, env.mnemonic, env.contractName, env.abi, env.network);
