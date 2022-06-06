@@ -13,18 +13,13 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-const { cryptoWaitReady, mnemonicGenerate } = require('@polkadot/util-crypto');
-const { Keyring } = require('@polkadot/keyring');
-const keyring = new Keyring({ type: 'sr25519' });
 
-function mnemonic () {
-  cryptoWaitReady().then(() => {
-    const mnemonic = mnemonicGenerate();
-    const account = keyring.addFromMnemonic(mnemonic);
+import { generateMnemonic } from './utils';
 
-    console.log(`Address: ${account.address}`);
-    console.log(`Mnemonic: ${mnemonic}`);
-  });
+async function mnemonic () {
+  const [mnemonic, address] = await generateMnemonic();
+  console.log(`Address: ${address}`);
+  console.log(`Mnemonic: ${mnemonic}`);
 }
 
 mnemonic();
