@@ -20,9 +20,12 @@ import { decodeU8aVec, typeToConstructor } from '@polkadot/types-codec/utils';
 
 export type DecodeFunction = (registry: Registry, data: Uint8Array) => AnyJson;
 
-export const buildDecodeVector = (typeName: string): DecodeFunction => (registry: Registry, data: Uint8Array): AnyJson => {
-  const vecType = typeToConstructor(registry, typeName);
-  const decoded = decodeU8aVec(registry, data, 0, vecType, 1);
+// import { decodeU8aVec } from '@polkadot/types-codec/utils'; // TODO
+// import { decodeVec } from '@polkadot/types-codec/base/Vec';
 
-  return decoded[0].flatMap((value) => value.toHuman());
-};
+// export const buildDecodeVector = (typeName: string): DecodeFunction => (registry: Registry, data: Uint8Array): AnyJson => {
+//   const vecType = typeToConstructor(registry, typeName);
+//   const decoded = decodeU8aVec(registry, data, 0, vecType, 1);
+
+//   return decoded[0].flatMap((value) => value.toHuman());
+// };

@@ -15,6 +15,9 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import {hexToU8a} from '@polkadot/util';
 import {AnyJson} from '@polkadot/types/types/codec';
+// import { decodeU8aVec } from '@polkadot/types-codec/utils';
+// import { decodeVec } from '@polkadot/types-codec/base/Vec';
+
 import {
     ContractApiInterface,
     Payee,
@@ -28,7 +31,7 @@ import {
 import type {RuntimeDispatchInfo} from '@polkadot/types/interfaces/payment'
 import {Hash} from '@polkadot/types/interfaces';
 import {randomAsHex} from '@polkadot/util-crypto';
-import {buildDecodeVector} from '../codec/codec';
+// import {buildDecodeVector} from '../codec/codec';
 import {ERRORS} from '../errors';
 import {CaptchaMerkleTree} from '../merkle';
 import {
@@ -179,7 +182,7 @@ export class Tasks {
     }
 
     async getDappAccounts(): Promise<AnyJson> {
-        return await this.contractApi.getStorage('dapp_accounts', buildDecodeVector('DappAccounts'));
+        return await this.contractApi.getStorage('dapp_accounts');
     }
 
     // Other tasks
