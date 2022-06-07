@@ -4,14 +4,14 @@
 import { KeyringPair } from '@polkadot/keyring/types';
 import { randomAsHex } from '@polkadot/util-crypto';
 import { Payee } from "@prosopo/contract";
-import dotenv from 'dotenv';
-import fse from 'fs-extra';
-import path from 'path';
 import { Environment } from '../src/env';
 import { TestDapp, TestProvider } from '../tests/mocks/accounts';
 import { sendFunds, setupDapp, setupProvider } from '../tests/mocks/setup';
 import { generateMnemonic, updateEnvFileVar } from './utils';
 
+const dotenv = require('dotenv');
+const fse = require('fs-extra');
+const path = require('path');
 
 dotenv.config();
 
