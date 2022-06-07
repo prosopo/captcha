@@ -1,7 +1,7 @@
 import { VerifiedIcon } from 'assets';
 import Link from 'components/Link';
 import makeBlockie from 'ethereum-blockies-base64';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC } from 'react';
 
 type Props = {
   verified?: boolean;
@@ -9,7 +9,6 @@ type Props = {
   sizeClasses?: string;
   verificationSymbolSizes?: string;
   username: string;
-  imgSrc: string | null;
 };
 
 const Avatar: FC<Props> = ({
@@ -18,18 +17,7 @@ const Avatar: FC<Props> = ({
   sizeClasses,
   username,
   verificationSymbolSizes,
-  imgSrc: origImgSrc,
 }) => {
-  const [imgSrc, setImgSrc] = useState(origImgSrc);
-  useEffect(() => {
-    if (username && !origImgSrc) {
-      setImgSrc(makeBlockie(username));
-    }
-    if (origImgSrc) {
-      setImgSrc(origImgSrc);
-    }
-  }, [username, origImgSrc]);
-
   return (
     <Link to={`/profile/${username}`}>
       <div className="relative flex cursor-pointer">
@@ -37,7 +25,7 @@ const Avatar: FC<Props> = ({
           className={`${additionalClasses} ${
             sizeClasses ?? 'w-10 h-10'
           } flex-shrink-0 border-2 border-gray-700 rounded-full`}
-          src={imgSrc}
+          src={makeBlockie(username || '0x000')}
           alt="avatar"
         />
         {verified && (

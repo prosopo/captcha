@@ -1,5 +1,6 @@
 import { getNftItems, useGetNftItems } from 'api/raribleApi';
 import { GetNftItemsResponse, NftItemsRequestType, NtfItem } from 'api/raribleRequestTypes';
+// import uniqueNetworkApi from 'api/uniqueNetworkApi';
 import { ProductList } from 'components/ProductCard';
 import React, { useCallback, useEffect, useState } from 'react';
 import { CONTRACT_ID } from 'utils/constants';
@@ -54,24 +55,23 @@ const Home: React.FunctionComponent<HomeProps> = ({ itemsData, ordersData }) => 
 
   return (
     <div className="py-8">
-      {/* <div className="flex items-center justify-between px-6 py-2 mx-auto max-w-screen-2xl">
-        <h1 className="py-0.5 text-2xl font-bold text-white">Explore</h1>
-        <Dropdown
-          displayText="Recently added"
-          dropDownContent={<div className="divide-y divide-gray-600">{renderDropDownContent()}</div>}
-        />
-      </div> */}
       <ProductList itemsData={items || []} onLoadMore={continuation ? loadMore : null} ordersData={ordersData} />
     </div>
   );
 };
 export async function getServerSideProps(context) {
+  // uniqueNetworkApi.getCollection().then(console.log);
+
   const itemsData = await getNftItems({
     ...searchParams,
   });
+
   const ordersData = await getSellOrdersForItems(itemsData.items);
   return {
     props: { itemsData, ordersData }, // will be passed to the page component as props
+  };
+  return {
+    props: { itemsData: [], ordersData: [] }, // will be passed to the page component as props
   };
 }
 

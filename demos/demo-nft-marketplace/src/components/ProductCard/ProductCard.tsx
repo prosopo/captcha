@@ -1,15 +1,13 @@
 import { useProfile } from 'api/ceramic';
 import { NtfItem, SellOrderTake } from 'api/raribleRequestTypes';
-import { FavouriteIcon } from 'assets';
 import Avatar from 'components/Avatar/Avatar';
 import Link from 'components/Link';
 import CheckoutModal from 'features/home/details/components/CheckoutModal';
 import { useToggle } from 'hooks/useToggle';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback } from 'react';
 import { getImageOrAnimation, shortAddress } from 'utils/itemUtils';
 import { getOnboard } from 'utils/walletUtils';
 import { useWallet } from 'wallet/state';
-import Button, { ButtonType } from '../Button';
 
 type Props = {
   item: NtfItem;
@@ -20,12 +18,8 @@ const ProductCard: FC<Props> = ({ item, sellOrder }) => {
   const address = shortAddress(item?.creators?.[0]?.account ?? '0x000', 5, 4);
 
   const image = getImageOrAnimation(item.meta);
-  const [renderFavButton, setRenderFavButton] = useState(false);
   const [isCheckoutVisible, setCheckoutVisible] = useToggle(false);
   const [state, dispatch] = useWallet();
-  useEffect(() => {
-    setRenderFavButton(true);
-  }, []);
 
   const onBuyNow = useCallback(
     async (e) => {
@@ -43,37 +37,25 @@ const ProductCard: FC<Props> = ({ item, sellOrder }) => {
   return (
     <Link to={`/item/${item.id}`}>
       <li className="text-white bold h-96 hover:bg-gray-900">
-        <div className="flex flex-col justify-between h-full px-4 py-3 border border-gray-600 space-y-4 rounded-md">
-          <div className="flex items-center space-x-4">
-            <Link to={`/profile/${item?.creators?.[0].account}`}>
-              <Avatar
-                username={item?.creators?.[0].account}
-                imgSrc={
-                  creatorProfile?.basicProfileInfo?.image?.original?.src
-                    ? `https://dweb.link/ipfs/${creatorProfile?.basicProfileInfo?.image?.original?.src
-                        ?.split('/')
-                        ?.pop()}`
-                    : null
-                }
-                // verified={item.userVerified}
-              />
-            </Link>
-            <div className="font-medium space-y-1 leading-6 text-small">
-              <Link to={`/profile/${item?.creators?.[0].account}`}>
+        <div className="flex flex-col justify-between h-full px-4 py-3 space-y-4 border border-gray-600 rounded-md">
+          <Link to={`/profile/${item?.creators?.[0].account}`}>
+            <div className="flex items-center space-x-4">
+              <Avatar username={item?.creators?.[0].account} />
+              <div className="space-y-1 font-medium leading-6 text-small">
                 <h3 className="text-gray-700 cursor-pointer hover:text-white">{`${
                   creatorProfile?.basicProfileInfo?.name || address
                 }`}</h3>
-              </Link>
+              </div>
             </div>
-          </div>
+          </Link>
 
           <div className="flex justify-center overflow-auto aspect-w-3 aspect-h-2">
             <img className="object-cover rounded-lg shadow-lg" src={image} alt="" />
           </div>
 
           <div>
-            <div className="font-bold leading-6">
-              <h3 className={'text-lg'}>{item?.meta?.name}</h3>
+            <div className="overflow-hidden font-bold leading-6">
+              <div className="text-lg truncate">{item?.meta?.name}</div>
               {sellOrder?.hash && (
                 <span className={'text-sm'}>
                   {sellOrder?.take?.valueDecimal} {sellOrder?.take?.assetType?.assetClass}
@@ -95,23 +77,8 @@ const ProductCard: FC<Props> = ({ item, sellOrder }) => {
                   currency={sellOrder?.take?.assetType?.assetClass}
                   orderHash={sellOrder?.hash}
                   price={sellOrder?.take.value}
-                  //TODO should we hide avail. quan. since we use erc721
-                  // availableQuantity={item.availableQuantity}
                 />
               )}
-              {/* {renderFavButton && (
-                <Button
-                  customClasses="text-gray-600 py-0"
-                  icon={FavouriteIcon}
-                  equalPadding
-                  type={ButtonType.Main}
-                  // title={item.likes.toString()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('liked');
-                  }}
-                />
-              )} */}
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": "src",
-    "target": "es5",
+    "target": "esnext",
     "lib": [
       "dom",
       "dom.iterable",
@@ -18,16 +18,31 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true
+    "incremental": true,
+
+    "composite": true,
+    "allowSyntheticDefaultImports": true,
   },
   "include": [
     "src",
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "custom.d.ts"
+    "custom.d.ts",
+    "src/api/abi.json"
   ],
   "exclude": [
     "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../packages/procaptcha"
+    },
+    {
+      "path": "../../packages/procaptcha-react"
+    },
+    {
+      "path": "../../packages/provider"
+    }
   ]
 }

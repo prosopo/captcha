@@ -2,7 +2,7 @@ const plugin = require('tailwindcss/plugin');
 const defaultTheme = require('tailwindcss/defaultTheme');
 
 module.exports = {
-  purge: ['./src/components/**/*.tsx', './src/pages/**/*.tsx', './src/features/**/*.tsx'],
+  // purge: ['./src/components/**/*.tsx', './src/pages/**/*.tsx', './src/features/**/*.tsx'],
   darkMode: false, // or 'media' or 'class'
   theme: {
     fontFamily: {

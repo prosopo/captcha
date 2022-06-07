@@ -17,7 +17,7 @@ const ProductList: FC<Props> = ({ itemsData, onLoadMore, ordersData }) => {
       <div className="px-6 mx-auto b-6 max-w-screen-2xl ">
         <ul
           role="list"
-          className="grid sm:grid-cols-2 sm:gap-x-6 gap-y-6 sm:space-y-0 lg:grid-cols-4 lg:gap-x-6 xl:grid-cols-5 "
+          className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-6 gap-y-6 sm:space-y-0 lg:grid-cols-4 lg:gap-x-6 xl:grid-cols-5"
         >
           {itemsData?.map((item, idx) => (
             <ProductCard key={item.id} item={item} sellOrder={ordersData?.[idx] ?? null} />

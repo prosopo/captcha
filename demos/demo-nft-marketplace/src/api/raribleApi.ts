@@ -1,5 +1,5 @@
 import { useQuery } from 'react-query';
-import { BidItem, Currency, NFTItemOrder, NFTOwner } from '../types';
+import { BidItem, Currency } from '../types';
 import { QueryTypes } from './queryTypes';
 import {
   ActivityHistoryFilter,

@@ -39,3 +39,6 @@ yarn-error.log*
 .idea/
 
 /.history/
+
+**/target/
+**/Cargo.lock

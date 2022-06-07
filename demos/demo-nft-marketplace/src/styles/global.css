@@ -17,3 +17,16 @@ body {
     font-family: 'Montserrat', sans-serif;
   }
 }
+
+.prosopo-extension > div > div > * {
+  background-color: white;
+}
+
+.prosopo-extension > div {
+  @apply max-w-xs md:max-w-none;
+}
+
+.prosopo-extension label.Mui-focused {
+  border-radius: 2px;
+  padding: 0 3px;
+}
