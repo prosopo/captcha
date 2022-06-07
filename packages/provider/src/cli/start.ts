@@ -25,7 +25,7 @@ import { Environment } from '../env';
 import { ERRORS, handleErrors } from '../errors';
 // import { processArgs } from './argv';
 
-import yargs from 'yargs/yargs';
+import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import dotenv from 'dotenv';

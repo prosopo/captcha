@@ -15,8 +15,6 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import '@redspot/patract';
 import '@redspot/chai';
-import '@redspot/watcher';
-import '@redspot/explorer';
 import '@redspot/decimals';
 
 import { RedspotUserConfig } from 'redspot/types';

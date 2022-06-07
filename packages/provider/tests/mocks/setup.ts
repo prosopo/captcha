@@ -120,7 +120,7 @@ export async function setupDappUser(env, dappUser: TestAccount, provider: TestPr
             logger.info('   -   Solution Root Hash: ', commitmentId)
             logger.info('   -   Provider Address: ', provider.address)
             logger.info('   -   Captchas: ', captchas)
-            await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id.toString(), commitmentId, provider.address)
+            await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id, commitmentId, provider.address)
             const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
         } else {
             throw new Error('commitmentId missing')

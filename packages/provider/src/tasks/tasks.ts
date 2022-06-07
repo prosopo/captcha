@@ -58,7 +58,7 @@ import {
     LastCorrectCaptcha
 } from '../types'
 import {loadJSONFile, shuffleArray, writeJSONFile} from '../util'
-import {TransactionResponse} from '@redspot/patract/types';
+import {TransactionResponse} from '@prosopo/contract';
 import consola from "consola";
 
 /**
@@ -133,7 +133,7 @@ export class Tasks {
         return await this.contractApi.contractTx('dappCancel', [contractAccount]);
     }
 
-    async dappUserCommit(contractAccount: string, captchaDatasetId: Hash | string, userMerkleTreeRoot: string, providerAddress: string): Promise<TransactionResponse> {
+    async dappUserCommit(contractAccount: string, captchaDatasetId: string, userMerkleTreeRoot: string, providerAddress: string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
     }
 
