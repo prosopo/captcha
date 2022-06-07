@@ -26,9 +26,6 @@ import {Contract} from './contract';
 
 import { mnemonicGenerate } from '@polkadot/util-crypto';
 
-import { decodeU8aVec } from '@polkadot/types-codec/utils'; // TODO
-import { decodeVec } from '@polkadot/types-codec/base/Vec';
-
 export class ProsopoContractApi implements ContractApiInterface {
     contract?: Contract
     network!: Network
@@ -205,7 +202,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      * Get the data at specified storage key
      * @return {any} data
      */
-    async getStorage<T>(name: string): Promise<T> {
+    async getStorage<T>(name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
         await this.getContract()
         const storageKey = this.getStorageKey(name)
         if (!this.contract) {
@@ -213,8 +210,6 @@ export class ProsopoContractApi implements ContractApiInterface {
         }
         const promiseResult = await this.network.api.rpc.contracts.getStorage(this.contract.address, storageKey)
         const data = promiseResult.unwrapOrDefault()
-
-        return data as unknown as T;
-        // return decodingFn(this.network.registry, data)
+        return decodingFn(this.network.registry, data)
     }
 }

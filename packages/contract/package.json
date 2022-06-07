@@ -4,10 +4,6 @@
   "license": "GPL-3.0",
   "version": "0.0.0",
   "main": "build/index.js",
-  "type": "commonjs",
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose"
@@ -21,7 +17,6 @@
     "@polkadot/util": "^9.4.1",
     "@polkadot/util-crypto": "^9.4.1",
     "bn.js": "^5.2.1",
-    "chalk": "^5.0.1",
     "consola": "^2.15.3",
     "zod": "^3.17.3"
   },

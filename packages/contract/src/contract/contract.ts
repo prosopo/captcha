@@ -6,7 +6,7 @@ import type {AccountId, EventRecord, Weight} from '@polkadot/types/interfaces';
 import {isU8a, stringCamelCase, stringUpperFirst, u8aToHex} from '@polkadot/util';
 import {addressEq} from '@polkadot/util-crypto';
 import BN from 'bn.js';
-import chalk from 'chalk';
+// import chalk from 'chalk';
 import {buildTx} from './buildTx';
 import {convertSignerToAddress} from './helpers';
 import {AnyString} from "@polkadot/util/types";
@@ -160,9 +160,9 @@ export function buildCall(
         logger.debug('');
 
         if (!isEstimateGas) {
-            logger.debug(chalk.magenta(`===== Read ${messageName} =====`));
+            logger.debug(`===== Read ${messageName} =====`);
         } else {
-            logger.debug(chalk.magenta(`===== Estimate gas ${messageName} =====`));
+            logger.debug(`===== Estimate gas ${messageName} =====`);
         }
 
         Object.keys(params).forEach((key) => {
@@ -268,7 +268,7 @@ function buildSend(
         const messageName = stringCamelCase(fragment.identifier);
 
         logger.debug('');
-        logger.debug(chalk.magenta(`===== Exec ${messageName} =====`));
+        logger.debug(`===== Exec ${messageName} =====`);
         Object.keys(callParams).forEach((key) => {
             try {
                 let print: string;
@@ -309,7 +309,7 @@ function buildSend(
         if (response && !response.error) {
             logger.debug(`Execute successfully`);
         } else {
-            logger.debug(`Execute failed. ${chalk.red(response.error?.message || '')}`);
+            logger.debug(`Execute failed. ${response.error?.message || ''}`);
         }
 
         return response;

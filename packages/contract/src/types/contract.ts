@@ -17,8 +17,6 @@ import { Signer } from './signer';
 import { ContractAbi } from './artifacts';
 import { Network } from './network';
 
-import { decodeVec } from '@polkadot/types-codec/base/Vec';
-
 export interface TransactionResponse {
     from: string;
     txHash?: string;
@@ -139,5 +137,5 @@ export interface ContractApiInterface {
 
     getContractMethod(contractMethodName: string): AbiMessage
 
-    getStorage<T>(key: string): Promise<T>
+    getStorage<T>(key: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T>
 }
