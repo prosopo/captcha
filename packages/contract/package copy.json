@@ -13,21 +13,23 @@
     "build": "tsc --build --verbose"
   },
   "dependencies": {
-    "@polkadot/api": "^8.7.1",
-    "@polkadot/api-contract": "^8.7.1",
-    "@polkadot/keyring": "^9.4.1",
-    "@polkadot/rpc-provider": "^8.7.1",
-    "@polkadot/types": "^8.7.1",
-    "@polkadot/util": "^9.4.1",
-    "@polkadot/util-crypto": "^9.4.1",
-    "bn.js": "^5.2.1",
-    "chalk": "^5.0.1",
-    "consola": "^2.15.3",
-    "zod": "^3.17.3"
+    "@polkadot/api": "7.12.1",
+    "@polkadot/api-contract": "7.12.1",
+    "@polkadot/keyring": "8.5.1",
+    "@polkadot/rpc-provider": "^7.7.1",
+    "@polkadot/types": "7.12.1",
+    "@polkadot/util": "8.5.1",
+    "@polkadot/util-crypto": "8.5.1",
+    "bn.js": "4.12.0",
+    "consola": "^2.15.0",
+    "zod": "^3.11.6"
   },
   "devDependencies": {
-    "typescript": "^4.7.3"
+    "typescript": "^4.5.5"
   },
+  "files": [
+    "./redspot.config.ts"
+  ],
   "types": "./build/index.d.ts",
   "repository": {
     "type": "git",

@@ -18,8 +18,8 @@ export interface Provider {
     fee: u32,
     payee: Payee,
     // rust name style, hence snake case
-    service_origin: Hash | string,
-    captcha_dataset_id: Hash | string,
+    service_origin: string,
+    captcha_dataset_id: string,
 }
 
 export interface RandomProvider {
