@@ -6,21 +6,22 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "tsc --build --clean",
-    "build": "yarn build:esm",
-    "build:esm": "tsc --build --verbose"
+    "build": "tsc --build --verbose"
+  },
+  "dependencies": {
+    "@mui/material": "^5.8.3",
+    "@mui/styles": "^5.8.3",
+    "@prosopo/procaptcha": "0.0.0",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "typescript": "^4.7.3"
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@mui/material": "^5.4.4",
-    "@mui/styles": "^5.4.4",
-    "@prosopo/procaptcha": "0.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.0.8",
-    "react": "^18.1.0",
-    "typescript": "^4.6.4"
-  },
   "types": "./build/index.d.ts",
   "repository": {
     "type": "git",
