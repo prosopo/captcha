@@ -1,21 +1,17 @@
 {
   "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./build",
     "module": "esnext",
     "target": "esnext",
-    "moduleResolution": "node",
-
-    "composite": true,
-    "allowSyntheticDefaultImports": true,
-
     "lib": [
       "es6",
       "dom"
     ],
-
-    "jsx": "react-jsx",
-
-    "rootDir": "./src",
-    "outDir": "./build"
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "composite": true,
+    "jsx": "react-jsx"
   },
   "include": [
     "src"
