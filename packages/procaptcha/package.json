@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@prosopo/contract": "0.0.0",
-    "@prosopo/provider": "0.0.0",
     "@polkadot/api": "^8.7.1",
     "@polkadot/api-contract": "^8.7.1",
     "@polkadot/extension-dapp": "^0.44.1",
