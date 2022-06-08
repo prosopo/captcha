@@ -13,11 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-export * from './artifacts'
-export * from './assets'
-export * from './captcha'
-export * from './contract'
-export * from './merkle'
-export * from './network'
-export * from './prosopo'
-export * from './signer'
+import { z } from 'zod'
+
+export interface MerkleNodeInterface {
+    hash: string
+    parent: string | null
+}
+
+export const MerkleNodeSchema = z.object({
+    hash: z.string(),
+    parent: z.union([z.string(), z.null()])
+})

@@ -13,11 +13,16 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-export * from './artifacts'
-export * from './assets'
-export * from './captcha'
-export * from './contract'
-export * from './merkle'
-export * from './network'
-export * from './prosopo'
-export * from './signer'
+import { blake2AsHex } from '@polkadot/util-crypto';
+
+export function hexHash (data: string | Uint8Array): string {
+    return blake2AsHex(data)
+}
+
+export async function imageHash (path: string) {
+    // data must remain in the same order so load images synchronously
+    // const fileBuffer = await readFile(path)
+    // TODO
+    return hexHash(path)
+}
+

@@ -30,5 +30,24 @@ export const ERRORS = {
         SIGNER_UNDEFINED: {
             message: 'Signer undefined'
         }
+    },
+    DATASET: {
+        PARSE_ERROR: {
+            message: 'error parsing dataset'
+        },
+        HASH_ERROR: {
+            message: 'error hashing dataset'
+        },
+        INVALID_DATASET_ID: {
+            message: 'invalid dataset id'
+        }
+    },
+    CAPTCHA: {
+        PARSE_ERROR: {
+            message: 'error parsing captcha'
+        },
+        INVALID_CAPTCHA_ID: {
+            message: 'invalid captcha id'
+        }
     }
 }
