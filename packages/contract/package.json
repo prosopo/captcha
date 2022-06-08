@@ -14,6 +14,7 @@
     "@polkadot/keyring": "^9.4.1",
     "@polkadot/rpc-provider": "^8.7.1",
     "@polkadot/types": "^8.7.1",
+    "@polkadot/types-create": "^8.7.1",
     "@polkadot/util": "^9.4.1",
     "@polkadot/util-crypto": "^9.4.1",
     "bn.js": "^5.2.1",
