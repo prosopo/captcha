@@ -13,38 +13,24 @@
 //
 // You should have received a copy of the GNU General Public License
 
+import { randomAsHex } from "@polkadot/util-crypto";
 import {
-  ERRORS,
-  getEventsFromMethodName,
-  TransactionResponse,
+  CaptchaMerkleTree, CaptchaSolution, computeCaptchaSolutionHash, computePendingRequestHash, ERRORS, getEventsFromMethodName, hexHash,
+  parseCaptchaDataset, TransactionResponse
 } from "@prosopo/contract";
-import { hexHash, loadJSONFile, parseBlockNumber } from "@prosopo/provider";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { config } from "dotenv";
 import path from "path";
-
-import { randomAsHex } from "@polkadot/util-crypto";
-
-import {
-  computeCaptchaSolutionHash,
-  computePendingRequestHash,
-  parseCaptchaDataset,
-} from "../../src/captcha";
-import DatabaseAccounts, {
-  Account,
-  accountAddress,
-  accountMnemonic,
-} from "../../src/dataUtils/DatabaseAccounts";
-import { CaptchaMerkleTree } from "../../src/merkle";
+import DatabaseAccounts, { Account, accountAddress, accountMnemonic } from "../../src/dataUtils/DatabaseAccounts";
+import { Environment } from "../../src/env";
+import { ProsopoEnvError } from '../../src/handlers';
 import { Tasks } from "../../src/tasks";
-import { CaptchaSolution } from "../../src/types/captcha";
+import { loadJSONFile, parseBlockNumber } from "../../src/util";
 import { DAPP, PROVIDER } from "../mocks/accounts";
 import { DATASET, SOLVED_CAPTCHAS } from "../mocks/mockdb";
 import { sendFunds } from "../mocks/setup";
-import { Environment } from "../../src/env";
 
-import { ProsopoEnvError } from '../../src/handlers';
 
 const envPath =
   process.env.NODE_ENV === "test"
@@ -67,7 +53,7 @@ describe("CONTRACT TASKS", () => {
   const databaseAccounts = new DatabaseAccounts();
 
   before(async () => {
-    
+
     try {
       await mockEnv.isReady();
     } catch (e) {
@@ -93,7 +79,7 @@ describe("CONTRACT TASKS", () => {
     } catch (e) {
       throw new ProsopoEnvError(e, 'importDatabaseAccounts');
     }
-    
+
   });
 
   /** Gets some static solved captchas and constructions captcha solutions from them
@@ -130,7 +116,7 @@ describe("CONTRACT TASKS", () => {
     return { account, captchaSolutions, requestHash };
   }
 
-  async function changeSigner (account: Account): Promise<Tasks> {
+  async function changeSigner(account: Account): Promise<Tasks> {
     await mockEnv.contractInterface!.changeSigner(accountMnemonic(account));
 
     return new Tasks(mockEnv);
@@ -518,7 +504,7 @@ describe("CONTRACT TASKS", () => {
       true,
       1
     );
-    
+
     expect(captchas[0]).to.have.nested.property('captcha.captchaId');
     expect(captchas[0]).to.have.nested.property('captcha.datasetId', datasetId);
     expect(captchas[0]).to.have.property('proof');

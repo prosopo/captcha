@@ -13,19 +13,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import type {AnyJson} from '@polkadot/types/types';
-import {ProsopoContractApi} from '@prosopo/contract';
-import express, {Router} from 'express';
+import type { AnyJson } from '@polkadot/types/types';
+import { validateAddress } from '@polkadot/util-crypto';
+import { parseCaptchaAssets, ProsopoContractApi } from '@prosopo/contract';
+import express, { Router } from 'express';
+import { Environment } from './env';
+import { BadRequest, ERRORS } from './errors';
+import { Tasks } from './tasks/tasks';
+import { CaptchaWithProof } from './types/';
+import { AccountsResponse, CaptchaSolutionBody } from './types/api';
+import { parseBlockNumber } from './util';
 
-import {validateAddress} from '@polkadot/util-crypto';
 
-import {Tasks} from './tasks/tasks';
-import {AccountsResponse, CaptchaSolutionBody} from './types/api';
-import {CaptchaWithProof} from './types/';
-import {Environment} from './env';
-import {BadRequest, ERRORS} from './errors';
-import {parseBlockNumber} from './util';
-import {parseCaptchaAssets} from './captcha'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

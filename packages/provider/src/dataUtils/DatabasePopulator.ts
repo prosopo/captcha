@@ -1,11 +1,10 @@
-import { BigNumber, Payee } from "@prosopo/contract";
+import { BigNumber, Payee, hexHash } from "@prosopo/contract";
 import path from "path";
 
 import { blake2AsHex, decodeAddress, randomAsHex } from "@polkadot/util-crypto";
 
 import { sendFunds as _sendFunds } from "../../tests/mocks/setup";
 import { Tasks } from "../tasks";
-import { hexHash } from "../util";
 import {
   Account,
   accountAddress,

@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import { hexHash } from '@prosopo/contract';
 import { expect } from 'chai';
-
-import { encodeStringAddress, hexHash, shuffleArray } from '../src/util';
+import { encodeStringAddress, shuffleArray } from '../src/util';
 
 describe('UTIL FUNCTIONS', () => {
   it('does not modify an already encoded address', () => {

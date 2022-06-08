@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 // import { findUpSync } from 'find-up'
-import { abiJson, ContractAbi, ContractApiInterface, createNetwork, Network, ProsopoContractApi } from '@prosopo/contract';
+import { abiJson, ContractAbi, ContractApiInterface, createNetwork, Network, ProsopoContractApi, AssetsResolver } from '@prosopo/contract';
 import consola, { LogLevel } from "consola";
 import dotenv from 'dotenv';
 import { sync as findUpSync } from 'find-up';
 import { ZodError } from 'zod';
 import { LocalAssetsResolver } from './assets';
 import { ERRORS } from './errors';
-import { AssetsResolver, Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment } from './types';
+import { Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment } from './types';
 import { loadJSONFile } from "./util";
 
 

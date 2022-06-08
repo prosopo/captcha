@@ -13,12 +13,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import { CaptchaMerkleTree, CaptchaTypes, Dataset, hexHash, computeCaptchaHash } from '@prosopo/contract';
 import { expect } from 'chai';
 
-import { computeCaptchaHash } from '../src/captcha';
-import { CaptchaMerkleTree } from '../src/merkle';
-import { CaptchaTypes, Dataset } from '../src/types';
-import { hexHash } from '../src/util';
 
 describe('PROVIDER MERKLE TREE', () => {
   const DATASET: Dataset = {

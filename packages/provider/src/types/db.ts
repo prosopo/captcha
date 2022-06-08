@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Document, Collection } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
-import { Captcha, CaptchaSolution, CaptchaStates, Dataset } from './captcha'
+import { Captcha, CaptchaSolution, CaptchaStates, Dataset } from '@prosopo/contract'
 import { PendingCaptchaRequest } from './api'
 import { WithId } from 'mongodb/mongodb';
 // Other table types from other database engines go here
