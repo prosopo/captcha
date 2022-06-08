@@ -68,18 +68,16 @@ function App() {
       {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
       {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
 
+      {clientInterface.getExtension() && !manager.state.account &&
+        <ExtensionAccountSelect
+          value={manager.state.account}
+          options={clientInterface.getExtension().getAccounts()}
+          onChange={clientInterface.onAccountChange.bind(clientInterface)}
+        />}
+
       <CaptchaContextManager.Provider value={manager}>
-
-        {clientInterface.getExtension() && !manager.state.account &&
-          <ExtensionAccountSelect
-            value={manager.state.account}
-            options={clientInterface.getExtension().getAccounts()}
-            onChange={clientInterface.onAccountChange.bind(clientInterface)}
-          />}
-
         {showCaptchas &&
           <CaptchaComponent {...{ clientInterface }} />}
-
       </CaptchaContextManager.Provider>
 
       {!showCaptchas &&
