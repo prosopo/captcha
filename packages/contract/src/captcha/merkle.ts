@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { hexHash } from './util'
-import { MerkleNodeInterface } from './types/merkle'
+import { MerkleNodeInterface } from '../types/merkle'
 
 class MerkleNode implements MerkleNodeInterface {
     hash: string;

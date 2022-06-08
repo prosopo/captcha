@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { ERRORS } from './errors';
+import { ERRORS } from '../errors';
 import { CaptchaMerkleTree } from './merkle';
 import {
   AssetsResolver,
@@ -24,9 +24,8 @@ import {
   Dataset,
   DatasetSchema,
   DatasetWithIds
-} from './types';
+} from '../types';
 import { hexHash, imageHash } from './util';
-
 
 
 // import {encodeAddress} from "@polkadot/util-crypto";
