@@ -19,7 +19,8 @@ import { Hash } from '@polkadot/types/interfaces';
 import { isHex } from '@polkadot/util';
 
 import { ERRORS } from '../errors';
-import { Captcha, CaptchaSolution, CaptchaStates, Database, DatasetRecord, DatasetWithIdsAndTree, DatasetWithIdsAndTreeSchema, PendingCaptchaRequestRecord, Tables } from '../types';
+import { Database, DatasetRecord, PendingCaptchaRequestRecord, Tables } from '../types';
+import { Captcha, CaptchaSolution, CaptchaStates, DatasetWithIdsAndTree, DatasetWithIdsAndTreeSchema } from '@prosopo/contract';
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017';

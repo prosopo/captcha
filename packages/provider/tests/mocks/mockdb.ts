@@ -16,7 +16,8 @@
 import { Hash } from '@polkadot/types/interfaces';
 
 import { ERRORS } from '../../src/errors';
-import { Captcha, CaptchaSolution, CaptchaStates, Database, Dataset, DatasetRecord, DatasetWithIdsAndTreeSchema, Tables } from '../../src/types';
+import { Database, DatasetRecord, Tables } from '../../src/types';
+import { Captcha, CaptchaSolution, CaptchaStates, Dataset, DatasetWithIdsAndTreeSchema } from '@prosopo/contract';
 
 const DEFAULT_ENDPOINT = 'test';
 
