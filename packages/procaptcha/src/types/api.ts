@@ -6,7 +6,7 @@
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
 
 // import { SubmittableResult } from "@polkadot/api";
-import {Captcha, CaptchaStatus} from "@prosopo/provider";
+import {Captcha, CaptchaStatus} from "@prosopo/contract";
 
 export interface ProsopoRandomProviderResponse {
   providerId: string,

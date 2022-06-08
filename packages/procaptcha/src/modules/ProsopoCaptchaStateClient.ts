@@ -3,7 +3,7 @@ import { CaptchaSolution, CaptchaSolutionResponse, GetCaptchaResponse } from "..
 import { TransactionResponse } from "../types/contract";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
-import { convertCaptchaToCaptchaSolution } from "@prosopo/provider";
+import { convertCaptchaToCaptchaSolution } from "@prosopo/contract";
 
 
 export class ProsopoCaptchaStateClient {

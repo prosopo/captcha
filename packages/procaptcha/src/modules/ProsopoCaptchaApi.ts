@@ -1,6 +1,6 @@
 import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
 // import {computeCaptchaSolutionHash} from '@prosopo/provider'; // TODO
-import { CaptchaSolution, CaptchaMerkleTree, CaptchaSolutionCommitment } from '@prosopo/provider';
+import { CaptchaSolution, CaptchaMerkleTree, CaptchaSolutionCommitment } from '@prosopo/contract';
 import { Signer } from "@polkadot/api/types";
 
 import { ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
