@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {ProsopoConfig} from './types';
+// import {ProsopoConfig} from './types';
 
 export default {
     logLevel: 'debug',
@@ -67,4 +67,4 @@ export default {
         baseURL: process.env.API_BASE_URL,
     }
 
-} as ProsopoConfig;
+};

@@ -1,4 +1,4 @@
-import { promiseQueue } from "../util";
+import { promiseQueue } from "../../src/util";
 import { exportDatabaseAccounts } from "./DatabaseAccounts";
 import DatabasePopulator, {
   IDatabasePopulatorMethods,

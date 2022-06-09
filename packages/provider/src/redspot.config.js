@@ -17,7 +17,7 @@ import '@redspot/patract';
 import '@redspot/chai';
 import '@redspot/decimals';
 
-import { RedspotUserConfig } from 'redspot/types';
+// import { RedspotUserConfig } from 'redspot/types';
 
 // Does not work when called from different project
 // REDSPOT_CONFIG=/usr/src/packages/contract/redspot.config.ts yarn setup
@@ -71,4 +71,4 @@ export default {
     runTestnet:
             "docker run -p 9944:9944 --rm redspot/contract /bin/bash -c 'canvas --rpc-cors all --tmp --dev --ws-port=9944 --ws-external'"
   }
-} as RedspotUserConfig;
+};

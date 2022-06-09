@@ -3,15 +3,15 @@ import path from "path";
 
 import { blake2AsHex, decodeAddress, randomAsHex } from "@polkadot/util-crypto";
 
-import { sendFunds as _sendFunds } from "../../tests/mocks/setup";
-import { Tasks } from "../tasks";
+import { sendFunds as _sendFunds } from "../mocks/setup";
+import { Tasks } from "../../src/tasks";
 import {
   Account,
   accountAddress,
   accountMnemonic,
   IDatabaseAccounts,
 } from "./DatabaseAccounts";
-import { Environment } from "../env";
+import { Environment } from "../../src/env";
 
 const serviceOriginBase = "http://localhost:";
 
