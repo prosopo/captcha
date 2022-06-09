@@ -43,8 +43,10 @@ const hasProviderAccount = defaultProvider.mnemonic && defaultProvider.address;
 async function copyArtifacts() {
     const artifactsPath = path.join(integrationPath, 'protocol/artifacts');
     await Promise.all([
-        fse.copy(artifactsPath, '../contract/artifacts', { overwrite: true }),
+        // TODO rm duplicate (keep in contract)?
         fse.copy(artifactsPath, './artifacts', { overwrite: true }),
+        // TODO move to contract build. Make integrationPath ENV VAR?
+        fse.copy(artifactsPath, '../contract/artifacts', { overwrite: true }),
         fse.copy(path.join(artifactsPath, 'prosopo.json'), '../contract/src/abi/prosopo.json', { overwrite: true }),
     ]);
 }
