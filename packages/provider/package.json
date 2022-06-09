@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "author": "Prosopo",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
@@ -61,7 +62,6 @@
     "url": "git+ssh://git@github.com/prosopo-io/provider.git"
   },
   "license": "GPL-3.0",
-  "types": "./build/src/index.d.ts",
   "description": "> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to set up the repositories manually.",
   "bugs": {
     "url": "https://github.com/prosopo-io/provider/issues"
