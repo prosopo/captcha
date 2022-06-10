@@ -12,7 +12,7 @@
     "setup": "ts-node ./scripts/setup.ts",
     "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
     "imageserver:start": "ts-node ./scripts/imageserver.ts",
-    "test": "yarn remove-test-container && docker compose up -d substrate-test-node && NODE_ENV=test ts-mocha tests/**/*.test.ts --timeout 120000",
+    "test": "npm run remove-test-container && docker compose up -d substrate-test-node && NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" --timeout 120000",
     "remove-test-container": "CONTAINER=$(docker ps -q -f name=substrate-test-node) && docker stop $CONTAINER || true && docker rm $CONTAINER || true",
     "populate-data": "ts-node ./src/dataUtils/populateDatabase.ts",
     "dev-provider-register": "yarn build && yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
