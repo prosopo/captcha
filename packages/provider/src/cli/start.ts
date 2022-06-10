@@ -53,13 +53,13 @@ function startApi(env: Environment) {
 function startImgSrv() {
   const imgSrv = express();
   const imgSrvPort = 4000;
-  
+
   imgSrv.use('/img', express.static('../../data/img'));
-  
+
   imgSrv.get('/', (req, res) => {
     res.send('Image server');
   });
-  
+
   imgSrv.listen(imgSrvPort, () => {
     console.log(`Image server running on port ${imgSrvPort} serving images from /data/img`);
   });
@@ -70,7 +70,6 @@ const argv = yargs(hideBin(process.argv)).argv;
 
 // TODO: Arguably ./argv.processArgs.command
 async function start () {
-
   if (!process.env.PROVIDER_MNEMONIC) {
     throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
   }

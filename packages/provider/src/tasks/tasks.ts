@@ -215,7 +215,6 @@ export class Tasks {
         const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
         const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
-
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)

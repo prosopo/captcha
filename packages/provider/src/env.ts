@@ -21,7 +21,8 @@ import { ZodError } from 'zod';
 import { LocalAssetsResolver } from './assets';
 import { ERRORS } from './errors';
 import { Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment } from './types';
-// import { loadJSONFile } from "./util";
+import {loadEnvFile} from "./util";
+
 
 dotenv.config();
 
@@ -52,8 +53,9 @@ export class Environment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
 
     constructor(mnemonic) {
+        loadEnvFile();
         this.config = Environment.getConfig()
-        this.mnemonic = mnemonic
+        this.mnemonic = mnemonic || process.env.PROVIDER_MNEMONIC
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address

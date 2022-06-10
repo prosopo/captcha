@@ -1,7 +1,17 @@
 import { writeFile, readFile } from "fs";
 import path from "path";
+import {IDatabasePopulatorMethods} from "./DatabasePopulator";
 
 export type Account = [mnemonic: string, address: string];
+
+export enum AccountKey {
+  providers = "providers",
+  providersWithStake = "providersWithStake",
+  providersWithStakeAndDataset = "providersWithStakeAndDataset",
+  dapps = "dapps",
+  dappsWithStake = "dappsWithStake",
+  dappUsers = "dappUsers",
+}
 
 export const accountMnemonic = (account: Account) => account[0];
 export const accountAddress = (account: Account) => account[1];
@@ -20,14 +30,8 @@ export interface IDatabaseAccounts {
   dappUsers: Account[];
 }
 
-const keys = [
-  "providers",
-  "providersWithStake",
-  "providersWithStakeAndDataset",
-  "dapps",
-  "dappsWithStake",
-  "dappUsers",
-];
+
+const keys  =  Object.keys(new IDatabasePopulatorMethods)
 
 function getPath(type: "import" | "export") {
   return path.resolve(

@@ -18,7 +18,16 @@ const serviceOriginBase = "http://localhost:";
 const PROVIDER_FEE = 10;
 const PROVIDER_PAYEE = Payee.Provider;
 
-export interface IDatabasePopulatorMethods {
+export enum IDatabasePopulatorMethodNames {
+  registerProvider="registerProvider",
+  registerProviderWithStake="registerProviderWithStake",
+  registerProviderWithStakeAndDataset="registerProviderWithStakeAndDataset",
+  registerDapp="registerDapp",
+  registerDappWithStake="registerDappWithStake",
+  registerDappUser="registerDappUser"
+}
+
+export class IDatabasePopulatorMethods {
   registerProvider: (
     serviceOrigin?: string,
     noPush?: boolean
@@ -33,7 +42,7 @@ export interface IDatabasePopulatorMethods {
 class DatabasePopulator
   implements IDatabaseAccounts, IDatabasePopulatorMethods
 {
-  private mockEnv = new Environment(process.env.PROVIDER_MNEMONIC);
+  private mockEnv: Environment
 
   private _registeredProviders: Account[] = [];
 
@@ -51,7 +60,8 @@ class DatabasePopulator
 
   private _isReady: Promise<void>;
 
-  constructor() {
+  constructor(env) {
+    this.mockEnv = env
     this._isReady = this.mockEnv
       .isReady()
       .then(() => {
@@ -71,24 +81,48 @@ class DatabasePopulator
     return this._registeredProviders;
   }
 
+  set providers(accounts:Account[]) {
+    this._registeredProviders = accounts;
+  }
+
   get providersWithStake(): Account[] {
     return this._registeredProvidersWithStake;
+  }
+
+  set providersWithStake(accounts:Account[]) {
+    this._registeredProvidersWithStake = accounts;
   }
 
   get providersWithStakeAndDataset(): Account[] {
     return this._registeredProvidersWithStakeAndDataset;
   }
 
+  set providersWithStakeAndDataset(accounts:Account[]) {
+    this._registeredProvidersWithStakeAndDataset = accounts;
+  }
+
   get dapps(): Account[] {
     return this._registeredDapps;
+  }
+
+  set dapps(accounts:Account[]) {
+    this._registeredDapps = accounts;
   }
 
   get dappsWithStake(): Account[] {
     return this._registeredDappsWithStake;
   }
 
+  set dappsWithStake(accounts:Account[]) {
+    this._registeredDappsWithStake = accounts;
+  }
+
   get dappUsers(): Account[] {
     return this._registeredDappUsers;
+  }
+
+  set dappUsers(accounts:Account[]) {
+    this._registeredDappUsers = accounts;
   }
 
   public isReady() {

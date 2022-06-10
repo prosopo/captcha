@@ -21,6 +21,7 @@ import { isHex } from '@polkadot/util';
 import { ERRORS } from '../errors';
 import { Database, DatasetRecord, PendingCaptchaRequestRecord, Tables } from '../types';
 import { Captcha, CaptchaSolution, CaptchaStates, DatasetWithIdsAndTree, DatasetWithIdsAndTreeSchema } from '@prosopo/contract';
+import consola from "consola";
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017';
@@ -38,10 +39,13 @@ export class ProsopoDatabase implements Database {
 
   dbname: string;
 
-  constructor (url, dbname) {
+  logger: typeof consola
+
+  constructor (url, dbname, logger) {
     this.url = url || DEFAULT_ENDPOINT;
     this.tables = {};
     this.dbname = dbname;
+    this.logger = logger;
   }
 
   /**
@@ -69,7 +73,7 @@ export class ProsopoDatabase implements Database {
      * @description Load a dataset to the database
      * @param {Dataset}  dataset
      */
-  async storeDataset (dataset: DatasetWithIdsAndTree): Promise<void> {
+  async storeDataset(dataset: DatasetWithIdsAndTree): Promise<void> {
     try {
       const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset);
       const datasetDoc = {
@@ -77,24 +81,46 @@ export class ProsopoDatabase implements Database {
         format: parsedDataset.format,
         tree: parsedDataset.tree
       };
-      console.log(parsedDataset);
 
-      await this.tables.dataset?.updateOne({ _id: parsedDataset.datasetId }, { $set: datasetDoc }, { upsert: true });
-      // put the dataset id on each of the captcha docs
-      const captchaDocs = parsedDataset.captchas.map((captcha, index) => ({
-        ...captcha,
-        datasetId: parsedDataset.datasetId,
-        index
-      }));
+      await this.tables.dataset?.updateOne({_id: parsedDataset.datasetId}, {$set: datasetDoc}, {upsert: true});
+      // put the dataset id on each of the captcha docs and remove the solution
+      const captchaDocs = parsedDataset.captchas
+        .map(({solution, ...keepAttrs}) => keepAttrs)
+        .map((captcha, index) => ({
+          ...captcha,
+          datasetId: parsedDataset.datasetId,
+          index
+        }));
+
 
       // create a bulk upsert operation and execute
       await this.tables.captchas?.bulkWrite(captchaDocs.map((captchaDoc) => ({
         updateOne: {
-          filter: { _id: captchaDoc.captchaId },
-          update: { $set: captchaDoc },
+          filter: {_id: captchaDoc.captchaId},
+          update: {$set: captchaDoc},
           upsert: true
         }
       })));
+
+      // insert any captcha solutions into the solutions collection
+      const captchaSolutionDocs = parsedDataset.captchas.filter((captcha) => "solution" in captcha)
+        .map((captcha) => ({
+          captchaId: captcha.captchaId,
+          solution: captcha.solution,
+          salt: captcha.salt,
+          datasetId: parsedDataset.datasetId,
+        }));
+
+      // create a bulk upsert operation and execute
+      await this.tables.captchas?.bulkWrite(captchaSolutionDocs.map((captchaSolutionDoc) => ({
+        updateOne: {
+          filter: {_id: captchaSolutionDoc.captchaId},
+          update: {$set: captchaSolutionDoc},
+          upsert: true
+        }
+      })));
+
+
     } catch (err) {
       throw new Error(`${ERRORS.DATABASE.DATASET_LOAD_FAILED.message}:\n${err}`);
     }
@@ -122,7 +148,6 @@ export class ProsopoDatabase implements Database {
       }
     ]);
     const docs = await cursor?.toArray();
-    console.log(docs);
 
     if (docs) {
       // drop the _id field
@@ -291,5 +316,62 @@ export class ProsopoDatabase implements Database {
     }
 
     throw (ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
+  }
+
+  async getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string> {
+    const cursor = this.tables.captchas?.aggregate([
+      {
+        $match: {}
+      },
+      {
+        $group: {
+          _id: "$datasetId",
+          count: {$sum: 1}
+        }
+      },
+      {
+        $match:
+          {
+            'count': {'$gt': solvedCaptchaCount}
+          }
+      },
+      {
+        $sample: {size: 1}
+      }
+    ])
+    const docs = await cursor?.toArray();
+    if (docs && docs.length) {
+      // return the _id field
+      return docs[0]._id
+    }
+
+    throw (ERRORS.DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED.message);
+
+  }
+
+  async getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]> {
+    //const datasetId = await this.getDatasetIdWithSolvedCaptchasOfSizeN(size);
+    if (!isHex(datasetId)) {
+      throw new Error(`${ERRORS.DATABASE.INVALID_HASH.message}: datasetId`);
+    }
+
+    const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
+    const cursor = this.tables.solutions?.aggregate([
+      {$match: {datasetId}},
+      {$sample: {size: sampleSize}},
+      {
+        $project: {
+          captchaId: 1, solution: 1,
+        }
+      }
+    ]);
+    const docs = await cursor?.toArray();
+
+    if (docs && docs.length) {
+      return docs as CaptchaSolution[]
+    }
+
+    throw (ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
+
   }
 }

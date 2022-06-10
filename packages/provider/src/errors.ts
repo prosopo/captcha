@@ -31,7 +31,7 @@ export const ERRORS = {
             message: 'Something went wrong while creating captchas json file'
         },
         CALCULATE_CAPTCHA_SOLUTION: {
-            message: 'Something went wrong while calculation captcha solutions'
+            message: 'Something went wrong while calculating captcha solutions'
         },
         MNEMONIC_UNDEFINED : {
             message: 'Provider mnemonic Undefined. Please set `PROVIDER_MNEMONIC` in environment variables'
@@ -81,6 +81,9 @@ export const ERRORS = {
         },
         SOLUTION_GET_FAILED: {
             message: 'Failed to get solution'
+        },
+        DATASET_WITH_SOLUTIONS_GET_FAILED: {
+            message: 'No datasets found with required number of solutions'
         }
     },
     API: {

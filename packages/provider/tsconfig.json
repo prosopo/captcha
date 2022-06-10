@@ -5,17 +5,17 @@
     "outDir": "./dist",
     "module": "commonjs",
     "target": "esnext",
+    "types": ["mocha"]
   },
   "include": [
     "./src/**/*.ts"
   ],
   "files": [
     "./src/prosopo.config.js",
-    "./src/redspot.config.js"
   ],
-  "references": [ 
-    { 
-      "path": "../contract" 
+  "references": [
+    {
+      "path": "../contract"
     }
   ]
 }

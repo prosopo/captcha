@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Asset, AssetsResolver } from "@prosopo/contract/types";
+import { Asset, AssetsResolver } from "@prosopo/contract";
 import { URL } from 'url';
-import express, { Application } from 'express';
+import { Application } from 'express';
 
 export type LocalAssetsResolverConfig = {
     absolutePath: string;
