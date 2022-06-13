@@ -17,7 +17,5 @@ export { default as TwitterIcon } from './icons/twitter.svg';
 export { default as VerifiedIcon } from './icons/verified.svg';
 export { default as CoverPhoto } from './images/cover.png';
 export { default as UploadIcon } from './images/upload-icon.svg';
-export { default as WalletImage } from './images/wallet-image.svg';
-export { default as WalletPageCover } from './images/wallet-page-cover.svg';
 export { default as Logo } from './logo.svg';
 export { ChevronDownIcon, CheckIcon, ExclamationCircleIcon };
