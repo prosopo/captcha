@@ -37,21 +37,21 @@ type Props = {
 };
 
 const ProfileDropdown: FC<Props> = ({ address, disconnect }) => {
-  const [displayWalletData, setDisplayWalletData] = useToggle(false);
+  const [displayFull, setDisplayFull] = useToggle(false);
 
   const router = useRouter();
   const menuItems = [
     {
       title: 'My items',
       handler: () => {
-        setDisplayWalletData(false);
+        setDisplayFull(false);
         router.push(`/profile/${address}?tab=Owned`);
       },
     },
     {
       title: 'Disconnect',
       handler: () => {
-        setDisplayWalletData(false);
+        setDisplayFull(false);
         disconnect();
       },
     },
@@ -65,15 +65,11 @@ const ProfileDropdown: FC<Props> = ({ address, disconnect }) => {
         </Popover.Button>
         <Popover.Panel className="absolute right-0 z-10 text-white top-11">{renderContent(menuItems)}</Popover.Panel>
       </Popover>
-      <img
-        className="flex h-10 text-white lg:hidden"
-        src={makeBlockie(address || '0x000')}
-        onClick={setDisplayWalletData}
-      />
-      {displayWalletData && (
+      <img className="flex h-10 text-white lg:hidden" src={makeBlockie(address || '0x000')} onClick={setDisplayFull} />
+      {displayFull && (
         <div className="fixed top-0 left-0 z-10 flex flex-col w-screen h-screen lg:hidden bg-main">
           <div className="top-0 right-0 flex justify-end px-5 py-5 ">
-            <XIcon className="block w-6 h-6 text-gray-400 " aria-hidden="true" onClick={setDisplayWalletData} />
+            <XIcon className="block w-6 h-6 text-gray-400 " aria-hidden="true" onClick={setDisplayFull} />
           </div>
 
           {renderContent(menuItems, true)}

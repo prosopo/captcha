@@ -1,5 +1,5 @@
 import NextLink from 'next/link';
-import React, { FC, useCallback } from 'react';
+import React, { FC, ReactNode, useCallback } from 'react';
 
 //TODO: add other types
 export enum LinkType {
@@ -13,6 +13,7 @@ type Props = {
   title?: string;
   type?: LinkType;
   onClick?: (e?: any) => void;
+  children?: ReactNode;
 };
 
 const Link: FC<Props> = ({ to, title = '', type = LinkType.Primary, children, onClick }) => {

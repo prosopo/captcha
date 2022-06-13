@@ -1,10 +1,9 @@
-import { useState, createContext, ReactNode, FC, useEffect } from 'react';
+import { useState, createContext, FC, useEffect } from 'react';
 import { TCaptchaSubmitResult, TExtensionAccount, Extension } from '@prosopo/procaptcha';
 import { CaptchaContextManager, useCaptcha } from '@prosopo/procaptcha-react';
 
 import config from 'config';
 import { ProviderProps, ShowCaptchasState, ConsumerProps } from './types';
-import { WsProvider } from '@polkadot/api';
 
 const CustomContext = createContext<ShowCaptchasState>({
   showCaptchas: false,
