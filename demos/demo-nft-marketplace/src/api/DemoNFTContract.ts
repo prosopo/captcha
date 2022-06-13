@@ -1,13 +1,12 @@
 import { ApiPromise, SubmittableResult, WsProvider } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
-import { Signer } from '@polkadot/api/types';
-// import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
+import { Contract } from '@polkadot/api-contract/base';
+import { Signer, SubmittableResultValue } from '@polkadot/api/types';
 import { ProviderInterface } from '@polkadot/rpc-provider/types';
-import { AsyncFactory, TransactionResponse } from '@prosopo/procaptcha';
-import { encodeStringArgs, unwrap } from '@prosopo/procaptcha/build/common';
 import { AnyJson } from '@polkadot/types/types/codec';
 
 import abiJson from './abi.json';
+import { AsyncFactory, encodeStringArgs, unwrap } from './prosopoTemp';
 
 class DemoNFTContract extends AsyncFactory {
   private api: ApiPromise;
@@ -30,6 +29,10 @@ class DemoNFTContract extends AsyncFactory {
     return this;
   }
 
+  public getContract(): ContractPromise {
+    return this.contract;
+  }
+
   public setAccount(account): void {
     this.account = account;
   }
@@ -42,7 +45,7 @@ class DemoNFTContract extends AsyncFactory {
         {},
         ...encodeStringArgs(abiMessage, args)
       );
-      console.log('QUERY RESPONSE', response);
+      // console.log('QUERY RESPONSE', response);
       if (response.result.isOk) {
         if (response.output) {
           return unwrap(response.output.toHuman());
@@ -60,11 +63,19 @@ class DemoNFTContract extends AsyncFactory {
 
   // https://polkadot.js.org/docs/api/cookbook/tx/
   // https://polkadot.js.org/docs/api/start/api.tx.subs/
-  public async transaction(signer: Signer, method: string, args: any[]): Promise<TransactionResponse> {
+  public async transaction(
+    signer: Signer,
+    method: string,
+    args: any[]
+  ): Promise<
+    SubmittableResultValue & {
+      blockHash?: string;
+    }
+  > {
     // TODO if DEBUG==true || env.development
     const queryBeforeTx = await this.query(method, args);
 
-    console.log('QUERY BEFORE TX....................', queryBeforeTx);
+    // console.log('QUERY BEFORE TX....................', queryBeforeTx);
 
     const abiMessage = this.abi.findMessage(method);
 
@@ -80,10 +91,10 @@ class DemoNFTContract extends AsyncFactory {
         .signAndSend(this.account.address, { signer }, (result: SubmittableResult) => {
           const { dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex } = result;
 
-          console.log('TX STATUS', status.type);
-          console.log('IS FINALIZED', status?.isFinalized);
-          console.log('IN BLOCK', status?.isInBlock);
-          console.log('EVENTS', events);
+          // console.log('TX STATUS', status.type);
+          // console.log('IS FINALIZED', status?.isFinalized);
+          // console.log('IN BLOCK', status?.isInBlock);
+          // console.log('EVENTS', events);
 
           if (internalError) {
             console.error('internalError', internalError);
@@ -125,10 +136,5 @@ class DemoNFTContract extends AsyncFactory {
     });
   }
 }
-
-// const contractPromise = DemoNFTContract.create(
-//   '5DMKFG4JfJQcNWjDfAkRhUmUX3pUsSx8aUdYakxsJY7e8Pf2',
-//   new WsProvider('ws://127.0.0.1:9944')
-// );
 
 export default DemoNFTContract;
