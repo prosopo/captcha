@@ -1,6 +1,5 @@
-import { ApiPromise, SubmittableResult, WsProvider } from '@polkadot/api';
+import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
-import { Contract } from '@polkadot/api-contract/base';
 import { Signer, SubmittableResultValue } from '@polkadot/api/types';
 import { ProviderInterface } from '@polkadot/rpc-provider/types';
 import { AnyJson } from '@polkadot/types/types/codec';
