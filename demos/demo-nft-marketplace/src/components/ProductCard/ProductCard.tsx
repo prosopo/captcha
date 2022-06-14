@@ -42,11 +42,11 @@ const ProductCard: FC<Props> = ({ item }) => {
           </Link>
 
           <div className="relative flex justify-center w-full h-full overflow-hidden rounded-lg aspect-w-3 aspect-h-2">
-            <img
+            {/* <img
               className="absolute self-center object-cover w-full h-full justify-self-center blur"
               src={image}
               alt=""
-            />
+            /> */}
             <img className="absolute self-center object-contain w-full h-full justify-self-center" src={image} alt="" />
           </div>
 
