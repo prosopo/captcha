@@ -1,10 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![feature(min_specialization)]
 
+mod nfts;
+
 #[brush::contract]
 pub mod demo_nft_contract {
     use base64;
-    use serde::Serialize;
+    use ink_env::debug_println;
     use serde_json_core as serde_json;
 
     use brush::{
@@ -20,6 +22,8 @@ pub mod demo_nft_contract {
     use ink_storage::traits::SpreadAllocate;
 
     use prosopo::ProsopoRef;
+
+    use crate::nfts::{self, *};
 
     #[derive(
         Default,
@@ -51,13 +55,6 @@ pub mod demo_nft_contract {
         owner: AccountId,
         token_uri: String,
         on_sale: bool,
-    }
-
-    #[derive(Serialize)]
-    pub struct Metadata {
-        name: String,
-        description: String,
-        image: String,
     }
 
     enum Attribute {
@@ -100,7 +97,17 @@ pub mod demo_nft_contract {
                 let caller = instance.env().caller();
                 instance._init_with_owner(caller);
                 instance.prosopo_account = prosopo_account;
+                instance.mint_all();
             })
+        }
+
+        #[ink(message)]
+        #[modifiers(only_owner)]
+        pub fn mint_all(&mut self) -> Result<(), PSP34Error> {
+            for ele in nfts::Nfts::get_list() {
+                self.mint(ele.name, ele.description, ele.image);
+            }
+            Ok(())
         }
 
         #[ink(message)]
