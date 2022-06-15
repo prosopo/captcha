@@ -26,7 +26,7 @@ const ProductCard: FC<Props> = ({ item }) => {
     [address]
   );
 
-  const price = 'TODO';
+  const price = item.price;
 
   return (
     <Link to={`/item/${item.id}`}>
@@ -53,15 +53,20 @@ const ProductCard: FC<Props> = ({ item }) => {
           <div>
             <div className="overflow-hidden font-bold leading-6">
               <div className="text-lg truncate">{item?.meta?.name}</div>
-              {item.onSale && <span className="text-sm">{price}</span>}
             </div>
             <div className="flex items-end justify-between font-bold leading-6">
               {item.onSale ? (
-                <div className="cursor-pointer">
-                  <Link title="Buy Now" onClick={onBuyNow} />
-                </div>
+                <>
+                  <span className="text-sm">{price}</span>
+                  <div className="cursor-pointer">
+                    <Link title="Buy Now" onClick={onBuyNow} />
+                  </div>
+                </>
               ) : (
-                <span className="text-base text-yellow-500">SOLD</span>
+                <>
+                  <span />
+                  <span className="text-base text-yellow-500">SOLD</span>
+                </>
               )}
               {isCheckoutVisible && (
                 <CheckoutModal
@@ -69,7 +74,7 @@ const ProductCard: FC<Props> = ({ item }) => {
                   title={item.meta.name}
                   isOpen={isCheckoutVisible}
                   onClose={setCheckoutVisible}
-                  price={0}
+                  price={item.price}
                 />
               )}
             </div>

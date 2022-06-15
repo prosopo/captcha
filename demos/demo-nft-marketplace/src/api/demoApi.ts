@@ -1,10 +1,11 @@
 import { WsProvider } from '@polkadot/api';
 import { Balance } from '@polkadot/types/interfaces';
 import { Signer } from '@polkadot/types/types';
+import { BN, formatBalance } from '@polkadot/util';
 import DemoNFTContract from './DemoNFTContract';
 
 const contractPromise: Promise<DemoNFTContract> = DemoNFTContract.create(
-  '5DubMGNN1JpYgsfKjhgzHaKPEHnDEMaiGKSS7bjcstcnktVd',
+  '5Cvqon9mrWN9yFpCjYjnqybDQzzAkUvJ5ABum63tkkkpXVDN',
   new WsProvider('ws://127.0.0.1:9944')
 );
 
@@ -17,6 +18,7 @@ type GetTokensContractResponse = {
   owner: string;
   tokenUri: string;
   onSale: boolean;
+  price: string;
 }[];
 
 export type TokenMetadata = {
@@ -30,12 +32,17 @@ export type Token = {
   owner: string;
   meta: TokenMetadata;
   onSale: boolean;
+  price: string;
 };
 
 function readMetadata(tokenUri: string): TokenMetadata {
   const decodedRequestBodyString = Buffer.from(tokenUri.replace('data:application/json;base64,', ''), 'base64');
   const meta = JSON.parse(decodedRequestBodyString.toString());
   return meta;
+}
+
+export function formatPrice(price: string) {
+  return formatBalance(price.replaceAll(',', ''), { decimals: 12, withSiFull: true });
 }
 
 const demoApi = {
@@ -51,45 +58,55 @@ const demoApi = {
 
     return data;
   },
-  // getTokens (pageSize: u128, pageIndex: u128, owner: Option<AccountId>):
   async getTokens(pageSize = 20, pageIndex = 0, owner = undefined as string | undefined): Promise<Token[]> {
     const contract = await contractPromise;
 
-    const tokens = (await contract.query<GetTokensContractResponse>('getTokens', [
-      pageSize,
-      pageIndex,
-      owner,
-    ])) as unknown as GetTokensContractResponse;
+    const { data: tokens } = await contract.query<GetTokensContractResponse>('getTokens', [pageSize, pageIndex, owner]);
 
-    return tokens.map(({ id, owner, tokenUri, onSale }) => ({
+    return tokens.map(({ id, owner, tokenUri, onSale, price }) => ({
       id: id[idKey],
       owner,
       meta: readMetadata(tokenUri),
       onSale,
+      price: formatPrice(price),
     }));
   },
   async getToken(id: string): Promise<Token> {
     const contract = await contractPromise;
 
-    const owner = (await contract.query<string>('psp34::ownerOf', [{ [idKey]: id }])) as unknown as string;
+    const { data: owner } = await contract.query<string>('psp34::ownerOf', [{ [idKey]: id }]);
 
-    const tokenUri = (await contract.query<string>('tokenUri', [{ [idKey]: id }])) as unknown as string;
+    const { data: tokenUri } = await contract.query<string>('tokenUri', [{ [idKey]: id }]);
 
     const meta = readMetadata(tokenUri);
 
-    const onSale = (await contract.query<boolean>('onSale', [{ [idKey]: id }])) as unknown as boolean;
+    const { data: onSale } = await contract.query<boolean>('onSale', [{ [idKey]: id }]);
+
+    const { data: price } = await contract.query<string>('price', [{ [idKey]: id }]);
 
     return {
       id,
       owner,
       meta,
       onSale,
+      price: formatPrice(price),
     };
   },
-  async buy(signer: Signer, id: string): Promise<void> {
+  async estimateBuyGasFees(id: string): Promise<string> {
     const contract = await contractPromise;
 
-    contract.transaction(signer, 'buy', [{ [idKey]: id }]) as unknown as string;
+    const { gasRequired } = await contract.query<string>('buy', [{ [idKey]: id }]);
+
+    return gasRequired.replaceAll(',', '');
+  },
+  async buy(signer: Signer, id: string, gas: string): Promise<void> {
+    const contract = await contractPromise;
+
+    const { data } = await contract.query<string>('price', [{ [idKey]: id }]);
+
+    const price = data.replaceAll(',', '');
+
+    await contract.transaction(signer, 'buy', [{ [idKey]: id }], price, gas);
 
     return;
   },

@@ -26,7 +26,7 @@ function ItemDetails({ token }: ItemDetailsProps) {
     setCreatorAvatar(makeBlockie(token.owner));
   }, []);
 
-  const price = 'TODO';
+  const price = token.price;
 
   const renderButton = () => {
     const onClick = () => {
@@ -74,7 +74,7 @@ function ItemDetails({ token }: ItemDetailsProps) {
                   title={token.meta.name}
                   isOpen={isCheckoutVisible}
                   onClose={setCheckoutVisible}
-                  price={0}
+                  price={token.price}
                 />
               </>
             )}

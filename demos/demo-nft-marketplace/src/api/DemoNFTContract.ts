@@ -36,27 +36,34 @@ class DemoNFTContract extends AsyncFactory {
     this.account = account;
   }
 
-  public async query<T>(method: string, args: any[]): Promise<T | AnyJson | null> {
+  public async query<T>(
+    method: string,
+    args: any[],
+    value?: number | string
+  ): Promise<{ data?: T | null; gasRequired?: string }> {
     try {
       const abiMessage = this.abi.findMessage(method);
       const response = await this.contract.query[method](
         this.account?.address,
-        {},
+        { value },
         ...encodeStringArgs(abiMessage, args)
       );
       // console.log('QUERY RESPONSE', response);
       if (response.result.isOk) {
         if (response.output) {
-          return unwrap(response.output.toHuman());
+          return {
+            data: unwrap(response.output.toHuman()) as undefined as T,
+            gasRequired: response.gasRequired.toString(),
+          };
         } else {
-          return null;
+          return { gasRequired: response.gasRequired.toString() };
         }
       } else {
         throw new Error(response.result.asErr.asModule.message.unwrap().toString());
       }
     } catch (e) {
       console.error('ERROR', e);
-      return null;
+      return {};
     }
   }
 
@@ -65,20 +72,22 @@ class DemoNFTContract extends AsyncFactory {
   public async transaction(
     signer: Signer,
     method: string,
-    args: any[]
+    args: any[],
+    value?: number | string,
+    gasLimit?: number | string
   ): Promise<
     SubmittableResultValue & {
       blockHash?: string;
     }
   > {
     // TODO if DEBUG==true || env.development
-    const queryBeforeTx = await this.query(method, args);
+    // const queryBeforeTx = await this.query(method, args);
 
     // console.log('QUERY BEFORE TX....................', queryBeforeTx);
 
     const abiMessage = this.abi.findMessage(method);
 
-    const extrinsic = this.contract.tx[method]({}, ...encodeStringArgs(abiMessage, args));
+    const extrinsic = this.contract.tx[method]({ value, gasLimit }, ...encodeStringArgs(abiMessage, args));
 
     // this.api.setSigner(signer);
     // const response = await buildTx(this.api.registry, extrinsic, this.account.address, { signer });
@@ -104,6 +113,8 @@ class DemoNFTContract extends AsyncFactory {
 
           if (dispatchError) {
             console.error('dispatchError', dispatchError);
+            const error = dispatchError.registry.findMetaError(dispatchError.asModule);
+            console.log(`${error.section}.${error.name}`);
             reject(dispatchError);
 
             return;

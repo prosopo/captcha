@@ -1,13 +1,14 @@
-import demoApi from 'api/demoApi';
+import demoApi, { formatPrice } from 'api/demoApi';
 import Button from 'components/Button';
 import Modal, { ModalProps } from 'components/Modal';
 import { ProsopoConsumer } from 'components/Prosopo';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ProsopoCaptchaClient } from '@prosopo/procaptcha';
+import { BN } from '@polkadot/util';
 
 type Props = Omit<ModalProps, 'title' | 'description'> & {
   id: string;
-  price: number;
+  price: string;
   title: string;
 };
 
@@ -26,28 +27,31 @@ function CheckoutModalInternal({
   clientInterface,
   ...props
 }: Props & { clientInterface: ProsopoCaptchaClient }): JSX.Element {
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState<BN>(new BN(0));
+  const [gas, setGas] = useState<string>('0');
 
   const onSubmit = useCallback(async () => {
     const signer = clientInterface.getExtension().getExtension().signer;
     await demoApi.setAccount(clientInterface.getExtension().getAccount());
-    await demoApi.buy(signer, id);
+    await demoApi.buy(signer, id, gas);
     location.reload();
-  }, [id, clientInterface]);
+  }, [id, clientInterface, gas]);
 
   const info = [
-    { key: 'Balance', value: balance },
+    { key: 'Balance', value: formatPrice(balance.toString()) },
     { key: 'Item Price', value: price },
+    { key: 'Estimated Gas', value: formatPrice(gas) },
   ];
 
   useEffect(() => {
     demoApi
       .getBalance(clientInterface.getExtension().getAccount())
-      .then((x) => setBalance(x.toHuman().free))
+      .then((x) => setBalance(new BN(x.toHuman().free.replaceAll(',', ''))))
       .catch(console.log);
+    demoApi.estimateBuyGasFees(id).then(setGas).catch(console.log);
   }, []);
 
-  const insufficient = balance < price;
+  const insufficient = new BN(price).cmp(balance) > 0;
 
   return (
     <Modal {...props} title={'Checkout'} description={`You are about to purchase [${title}]`}>
