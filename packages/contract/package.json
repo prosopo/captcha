@@ -9,7 +9,7 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { 
+  "exports": {
     ".": "./dist/index.js",
     "./types": "./dist/types/index.js",
     "./captcha": "./dist/captcha/index.js"
@@ -25,14 +25,14 @@
     }
   },
   "dependencies": {
-    "@polkadot/api": "^8.7.1",
-    "@polkadot/api-contract": "^8.7.1",
-    "@polkadot/keyring": "^9.4.1",
-    "@polkadot/rpc-provider": "^8.7.1",
-    "@polkadot/types": "^8.7.1",
-    "@polkadot/types-create": "^8.7.1",
-    "@polkadot/util": "^9.4.1",
-    "@polkadot/util-crypto": "^9.4.1",
+    "@polkadot/api": "8.7.1",
+    "@polkadot/api-contract": "8.7.1",
+    "@polkadot/keyring": "9.4.1",
+    "@polkadot/rpc-provider": "8.7.1",
+    "@polkadot/types": "8.7.1",
+    "@polkadot/types-create": "8.7.1",
+    "@polkadot/util": "9.4.1",
+    "@polkadot/util-crypto": "9.4.1",
     "bn.js": "^5.2.1",
     "consola": "^2.15.3",
     "zod": "^3.17.3"
