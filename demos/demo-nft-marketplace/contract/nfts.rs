@@ -15,6 +15,8 @@ pub mod Nfts {
 
     const DESC: &'static str = "Generated via https://bigheads.io/";
 
+    pub const PRICE: u128 = 2_000_000_000_000;
+
     pub fn get_list() -> Vec<Metadata> {
         Vec::from([
             Metadata {

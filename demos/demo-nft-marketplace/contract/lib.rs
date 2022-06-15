@@ -55,11 +55,13 @@ pub mod demo_nft_contract {
         owner: AccountId,
         token_uri: String,
         on_sale: bool,
+        price: u128,
     }
 
     enum Attribute {
         TokenUri,
         OnSale,
+        Price,
     }
 
     impl Attribute {
@@ -67,6 +69,7 @@ pub mod demo_nft_contract {
             let key = match self {
                 Attribute::TokenUri => "token_uri",
                 Attribute::OnSale => "on_sale",
+                Attribute::Price => "price",
             };
 
             String::from(key).into_bytes()
@@ -119,7 +122,7 @@ pub mod demo_nft_contract {
             image: String,
         ) -> Result<Id, PSP34Error> {
             let id = Id::U8(self.next_id);
-            self._mint_to(Self::env().caller(), id.clone())?;
+            self._mint_to(self.env().caller(), id.clone())?;
             self.next_id += 1;
             let metadata = Metadata {
                 name,
@@ -137,6 +140,11 @@ pub mod demo_nft_contract {
                 token_uri.into_bytes(),
             );
             self._set_attribute(id.clone(), Attribute::OnSale.to_key(), bool_to_bytes(true));
+            self._set_attribute(
+                id.clone(),
+                Attribute::Price.to_key(),
+                Vec::from(Nfts::PRICE.to_be_bytes()),
+            );
 
             Ok(id)
         }
@@ -167,6 +175,14 @@ pub mod demo_nft_contract {
             bytes_to_bool(on_sale_attribute)
         }
 
+        #[ink(message)]
+        pub fn price(&self, token: Id) -> u128 {
+            let price_attribute = self
+                .get_attribute(token, Attribute::Price.to_key())
+                .unwrap();
+            u128::from_be_bytes(price_attribute.try_into().unwrap())
+        }
+
         /// Calls the `Prosopo` contract to check if `user` is human
         #[ink(message)]
         pub fn is_human(&self, user: AccountId, threshold: u8, recency: u32) -> bool {
@@ -185,21 +201,31 @@ pub mod demo_nft_contract {
                     .unwrap();
         }
 
-        #[ink(message)]
+        #[ink(message, payable)]
         pub fn buy(&mut self, token: Id) -> Result<(), String> {
             let token_owner = self.owner_of(token.clone());
 
+            let amount_sent: Balance = self.env().transferred_value();
+            let caller = self.env().caller();
+
+            if amount_sent < Nfts::PRICE {
+                self.env().transfer(caller, amount_sent).ok();
+                return Err(String::from("Amount sent too low."));
+            } else if amount_sent > Nfts::PRICE {
+                self.env().transfer(caller, amount_sent - Nfts::PRICE).ok();
+            }
+
             if token_owner.is_none() {
+                self.env().transfer(caller, amount_sent).ok();
                 return Err(String::from("Token not found."));
             }
 
             let owner = token_owner.unwrap();
 
             if !self.on_sale(token.clone()) {
+                self.env().transfer(caller, amount_sent).ok();
                 return Err(String::from("Token not for sale."));
             }
-
-            let caller = Self::env().caller();
 
             self.psp34
                 .operator_approvals
@@ -208,6 +234,8 @@ pub mod demo_nft_contract {
             self.transfer(caller, token.clone(), Vec::new());
 
             self._set_attribute(token, Attribute::OnSale.to_key(), bool_to_bytes(false));
+
+            self.env().transfer(owner, amount_sent).ok();
 
             Ok(())
         }
@@ -256,12 +284,14 @@ pub mod demo_nft_contract {
 
                 let token_uri = self.token_uri(token.clone());
                 let on_sale = self.on_sale(token.clone());
+                let price = self.price(token.clone());
 
                 tokens.push(NFT {
                     id,
                     owner,
                     token_uri,
                     on_sale,
+                    price,
                 });
 
                 if i == 0 {

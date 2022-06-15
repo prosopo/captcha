@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x49a2992e373725346f877c6955dcfcb7124102a2bd2bc1a257cb34a1dcff38bd",
+    "hash": "0xd3b2d924e275c645093a43cc3887f4d3ab40b95bccbda5f88bd1f23a6d36b083",
     "language": "ink! 3.2.0",
     "compiler": "rustc 1.63.0-nightly"
   },
@@ -36,6 +36,20 @@
       "events": [],
       "messages": [
         {
+          "args": [],
+          "docs": [],
+          "label": "mint_all",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 23
+          },
+          "selector": "0xfb8ab4e9"
+        },
+        {
           "args": [
             {
               "label": "name",
@@ -43,7 +57,7 @@
                 "displayName": [
                   "String"
                 ],
-                "type": 23
+                "type": 25
               }
             },
             {
@@ -52,7 +66,7 @@
                 "displayName": [
                   "String"
                 ],
-                "type": 23
+                "type": 25
               }
             },
             {
@@ -61,7 +75,7 @@
                 "displayName": [
                   "String"
                 ],
-                "type": 23
+                "type": 25
               }
             }
           ],
@@ -73,7 +87,7 @@
             "displayName": [
               "Result"
             ],
-            "type": 24
+            "type": 26
           },
           "selector": "0xcfdd9aa2"
         },
@@ -97,7 +111,7 @@
             "displayName": [
               "String"
             ],
-            "type": 23
+            "type": 25
           },
           "selector": "0x5b64e66a"
         },
@@ -121,9 +135,33 @@
             "displayName": [
               "bool"
             ],
-            "type": 26
+            "type": 27
           },
           "selector": "0x4fc0ad74"
+        },
+        {
+          "args": [
+            {
+              "label": "token",
+              "type": {
+                "displayName": [
+                  "Id"
+                ],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [],
+          "label": "price",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "u128"
+            ],
+            "type": 6
+          },
+          "selector": "0xd4bd7bc1"
         },
         {
           "args": [
@@ -165,7 +203,7 @@
             "displayName": [
               "bool"
             ],
-            "type": 26
+            "type": 27
           },
           "selector": "0x47e27f92"
         },
@@ -184,12 +222,12 @@
           "docs": [],
           "label": "buy",
           "mutates": true,
-          "payable": false,
+          "payable": true,
           "returnType": {
             "displayName": [
               "Result"
             ],
-            "type": 27
+            "type": 28
           },
           "selector": "0x15d62801"
         },
@@ -201,7 +239,7 @@
                 "displayName": [
                   "Option"
                 ],
-                "type": 28
+                "type": 29
               }
             },
             {
@@ -210,7 +248,7 @@
                 "displayName": [
                   "Option"
                 ],
-                "type": 29
+                "type": 30
               }
             },
             {
@@ -233,28 +271,35 @@
             "displayName": [
               "Result"
             ],
-            "type": 30
+            "type": 31
           },
           "selector": "0xba045271"
         },
         {
+          "args": [],
+          "docs": [
+            " Returns current NFT total supply."
+          ],
+          "label": "PSP34::total_supply",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "psp34_external",
+              "TotalSupplyOutput"
+            ],
+            "type": 6
+          },
+          "selector": "0x628413fe"
+        },
+        {
           "args": [
-            {
-              "label": "owner",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "AllowanceInput1"
-                ],
-                "type": 8
-              }
-            },
             {
               "label": "operator",
               "type": {
                 "displayName": [
                   "psp34_external",
-                  "AllowanceInput2"
+                  "ApproveInput1"
                 ],
                 "type": 8
               }
@@ -264,27 +309,45 @@
               "type": {
                 "displayName": [
                   "psp34_external",
-                  "AllowanceInput3"
+                  "ApproveInput2"
                 ],
                 "type": 14
+              }
+            },
+            {
+              "label": "approved",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "ApproveInput3"
+                ],
+                "type": 27
               }
             }
           ],
           "docs": [
-            " Returns `true` if the operator is approved by the owner to withdraw `id` token.",
-            " If `id` is `None`, returns `true` if the operator is approved to withdraw all owner's tokens."
+            " Approves `operator` to withdraw the `id` token from the caller's account.",
+            " If `id` is `None` approves or disapproves the operator for all tokens of the caller.",
+            "",
+            " On success a `Approval` event is emitted.",
+            "",
+            " # Errors",
+            "",
+            " Returns `SelfApprove` error if it is self approve.",
+            "",
+            " Returns `NotApproved` error if caller is not owner of `id`."
           ],
-          "label": "PSP34::allowance",
-          "mutates": false,
+          "label": "PSP34::approve",
+          "mutates": true,
           "payable": false,
           "returnType": {
             "displayName": [
               "psp34_external",
-              "AllowanceOutput"
+              "ApproveOutput"
             ],
-            "type": 26
+            "type": 23
           },
-          "selector": "0x4790f55a"
+          "selector": "0x1932a8b0"
         },
         {
           "args": [],
@@ -359,26 +422,9 @@
               "psp34_external",
               "TransferOutput"
             ],
-            "type": 33
+            "type": 23
           },
           "selector": "0x3128d61b"
-        },
-        {
-          "args": [],
-          "docs": [
-            " Returns current NFT total supply."
-          ],
-          "label": "PSP34::total_supply",
-          "mutates": false,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "psp34_external",
-              "TotalSupplyOutput"
-            ],
-            "type": 6
-          },
-          "selector": "0x628413fe"
         },
         {
           "args": [
@@ -413,11 +459,21 @@
         {
           "args": [
             {
+              "label": "owner",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "AllowanceInput1"
+                ],
+                "type": 8
+              }
+            },
+            {
               "label": "operator",
               "type": {
                 "displayName": [
                   "psp34_external",
-                  "ApproveInput1"
+                  "AllowanceInput2"
                 ],
                 "type": 8
               }
@@ -427,45 +483,27 @@
               "type": {
                 "displayName": [
                   "psp34_external",
-                  "ApproveInput2"
+                  "AllowanceInput3"
                 ],
                 "type": 14
-              }
-            },
-            {
-              "label": "approved",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "ApproveInput3"
-                ],
-                "type": 26
               }
             }
           ],
           "docs": [
-            " Approves `operator` to withdraw the `id` token from the caller's account.",
-            " If `id` is `None` approves or disapproves the operator for all tokens of the caller.",
-            "",
-            " On success a `Approval` event is emitted.",
-            "",
-            " # Errors",
-            "",
-            " Returns `SelfApprove` error if it is self approve.",
-            "",
-            " Returns `NotApproved` error if caller is not owner of `id`."
+            " Returns `true` if the operator is approved by the owner to withdraw `id` token.",
+            " If `id` is `None`, returns `true` if the operator is approved to withdraw all owner's tokens."
           ],
-          "label": "PSP34::approve",
-          "mutates": true,
+          "label": "PSP34::allowance",
+          "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
               "psp34_external",
-              "ApproveOutput"
+              "AllowanceOutput"
             ],
-            "type": 33
+            "type": 27
           },
-          "selector": "0x1932a8b0"
+          "selector": "0x4790f55a"
         },
         {
           "args": [
@@ -560,7 +598,7 @@
               "psp34enumerable_external",
               "TokenByIndexOutput"
             ],
-            "type": 24
+            "type": 26
           },
           "selector": "0xcd0340d0"
         },
@@ -599,26 +637,36 @@
               "psp34enumerable_external",
               "OwnersTokenByIndexOutput"
             ],
-            "type": 24
+            "type": 26
           },
           "selector": "0x3bcfb511"
         },
         {
           "args": [],
           "docs": [
-            " Returns the address of the current owner."
+            " Leaves the contract without owner. It will not be possible to call",
+            " owner's functions anymore. Can only be called by the current owner.",
+            "",
+            " NOTE: Renouncing ownership will leave the contract without an owner,",
+            " thereby removing any functionality that is only available to the owner.",
+            "",
+            " On success a `OwnershipTransferred` event is emitted.",
+            "",
+            " # Errors",
+            "",
+            " Panics with `CallerIsNotOwner` error if caller is not owner"
           ],
-          "label": "Ownable::owner",
-          "mutates": false,
+          "label": "Ownable::renounce_ownership",
+          "mutates": true,
           "payable": false,
           "returnType": {
             "displayName": [
               "ownable_external",
-              "OwnerOutput"
+              "RenounceOwnershipOutput"
             ],
-            "type": 8
+            "type": 35
           },
-          "selector": "0x4fa43c8c"
+          "selector": "0x5e228753"
         },
         {
           "args": [
@@ -660,29 +708,19 @@
         {
           "args": [],
           "docs": [
-            " Leaves the contract without owner. It will not be possible to call",
-            " owner's functions anymore. Can only be called by the current owner.",
-            "",
-            " NOTE: Renouncing ownership will leave the contract without an owner,",
-            " thereby removing any functionality that is only available to the owner.",
-            "",
-            " On success a `OwnershipTransferred` event is emitted.",
-            "",
-            " # Errors",
-            "",
-            " Panics with `CallerIsNotOwner` error if caller is not owner"
+            " Returns the address of the current owner."
           ],
-          "label": "Ownable::renounce_ownership",
-          "mutates": true,
+          "label": "Ownable::owner",
+          "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
               "ownable_external",
-              "RenounceOwnershipOutput"
+              "OwnerOutput"
             ],
-            "type": 35
+            "type": 8
           },
-          "selector": "0x5e228753"
+          "selector": "0x4fa43c8c"
         }
       ]
     },
@@ -1425,20 +1463,12 @@
         "id": 23,
         "type": {
           "def": {
-            "primitive": "str"
-          }
-        }
-      },
-      {
-        "id": 24,
-        "type": {
-          "def": {
             "variant": {
               "variants": [
                 {
                   "fields": [
                     {
-                      "type": 1
+                      "type": 15
                     }
                   ],
                   "index": 0,
@@ -1447,7 +1477,7 @@
                 {
                   "fields": [
                     {
-                      "type": 25
+                      "type": 24
                     }
                   ],
                   "index": 1,
@@ -1459,11 +1489,11 @@
           "params": [
             {
               "name": "T",
-              "type": 1
+              "type": 15
             },
             {
               "name": "E",
-              "type": 25
+              "type": 24
             }
           ],
           "path": [
@@ -1472,7 +1502,7 @@
         }
       },
       {
-        "id": 25,
+        "id": 24,
         "type": {
           "def": {
             "variant": {
@@ -1480,7 +1510,7 @@
                 {
                   "fields": [
                     {
-                      "type": 23,
+                      "type": 25,
                       "typeName": "String"
                     }
                   ],
@@ -1506,7 +1536,7 @@
                 {
                   "fields": [
                     {
-                      "type": 23,
+                      "type": 25,
                       "typeName": "String"
                     }
                   ],
@@ -1526,7 +1556,57 @@
         }
       },
       {
+        "id": 25,
+        "type": {
+          "def": {
+            "primitive": "str"
+          }
+        }
+      },
+      {
         "id": 26,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 1
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 24
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 1
+            },
+            {
+              "name": "E",
+              "type": 24
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 27,
         "type": {
           "def": {
             "primitive": "bool"
@@ -1534,7 +1614,7 @@
         }
       },
       {
-        "id": 27,
+        "id": 28,
         "type": {
           "def": {
             "variant": {
@@ -1551,7 +1631,7 @@
                 {
                   "fields": [
                     {
-                      "type": 23
+                      "type": 25
                     }
                   ],
                   "index": 1,
@@ -1567,7 +1647,7 @@
             },
             {
               "name": "E",
-              "type": 23
+              "type": 25
             }
           ],
           "path": [
@@ -1576,7 +1656,7 @@
         }
       },
       {
-        "id": 28,
+        "id": 29,
         "type": {
           "def": {
             "variant": {
@@ -1609,7 +1689,7 @@
         }
       },
       {
-        "id": 29,
+        "id": 30,
         "type": {
           "def": {
             "variant": {
@@ -1642,103 +1722,15 @@
         }
       },
       {
-        "id": 30,
-        "type": {
-          "def": {
-            "variant": {
-              "variants": [
-                {
-                  "fields": [
-                    {
-                      "type": 31
-                    }
-                  ],
-                  "index": 0,
-                  "name": "Ok"
-                },
-                {
-                  "fields": [
-                    {
-                      "type": 23
-                    }
-                  ],
-                  "index": 1,
-                  "name": "Err"
-                }
-              ]
-            }
-          },
-          "params": [
-            {
-              "name": "T",
-              "type": 31
-            },
-            {
-              "name": "E",
-              "type": 23
-            }
-          ],
-          "path": [
-            "Result"
-          ]
-        }
-      },
-      {
         "id": 31,
         "type": {
           "def": {
-            "sequence": {
-              "type": 32
-            }
-          }
-        }
-      },
-      {
-        "id": 32,
-        "type": {
-          "def": {
-            "composite": {
-              "fields": [
-                {
-                  "name": "id",
-                  "type": 1,
-                  "typeName": "Id"
-                },
-                {
-                  "name": "owner",
-                  "type": 8,
-                  "typeName": "AccountId"
-                },
-                {
-                  "name": "token_uri",
-                  "type": 23,
-                  "typeName": "String"
-                },
-                {
-                  "name": "on_sale",
-                  "type": 26,
-                  "typeName": "bool"
-                }
-              ]
-            }
-          },
-          "path": [
-            "demo_nft_contract",
-            "demo_nft_contract",
-            "NFT"
-          ]
-        }
-      },
-      {
-        "id": 33,
-        "type": {
-          "def": {
             "variant": {
               "variants": [
                 {
                   "fields": [
                     {
-                      "type": 15
+                      "type": 32
                     }
                   ],
                   "index": 0,
@@ -1759,7 +1751,7 @@
           "params": [
             {
               "name": "T",
-              "type": 15
+              "type": 32
             },
             {
               "name": "E",
@@ -1768,6 +1760,57 @@
           ],
           "path": [
             "Result"
+          ]
+        }
+      },
+      {
+        "id": 32,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 33
+            }
+          }
+        }
+      },
+      {
+        "id": 33,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "id",
+                  "type": 1,
+                  "typeName": "Id"
+                },
+                {
+                  "name": "owner",
+                  "type": 8,
+                  "typeName": "AccountId"
+                },
+                {
+                  "name": "token_uri",
+                  "type": 25,
+                  "typeName": "String"
+                },
+                {
+                  "name": "on_sale",
+                  "type": 27,
+                  "typeName": "bool"
+                },
+                {
+                  "name": "price",
+                  "type": 6,
+                  "typeName": "u128"
+                }
+              ]
+            }
+          },
+          "path": [
+            "demo_nft_contract",
+            "demo_nft_contract",
+            "NFT"
           ]
         }
       },
