@@ -19,6 +19,7 @@ import {blake2AsU8a} from '@polkadot/util-crypto'
 import {AnyJson} from '@polkadot/types/types/codec'
 import {Signer} from '../types/signer'
 import {TransactionResponse} from '../types/contract'
+import {ProsopoContractError} from "../handlers";
 
 /**
  * Get the event name from the contract method name
@@ -79,12 +80,12 @@ export function unwrap(item: AnyJson): AnyJson {
 /** Handle errors returned from contract queries by throwing them
  * @return {ContractCallOutcome} response
  */
-export function handleContractCallOutcomeErrors(response: ContractCallOutcome): ContractCallOutcome {
+export function handleContractCallOutcomeErrors<T>(response: ContractCallOutcome, contractMethodName: string, encodedArgs: T[]): ContractCallOutcome {
     const errorKey = 'Err'
     if (response.output) {
         const humanOutput = response.output?.toHuman()
         if (humanOutput && typeof (humanOutput) === 'object' && errorKey in humanOutput) {
-            throw new Error(humanOutput[errorKey] as string)
+            throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, encodedArgs)
         }
     }
     return response
