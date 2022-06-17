@@ -23,7 +23,8 @@ import {
   CaptchaStates,
   Dataset,
   DatasetWithIdsAndTree,
-  DatasetWithIdsAndTreeSchema
+  DatasetWithIdsAndTreeSchema,
+  ProsopoEnvError
 } from '@prosopo/contract';
 import {Hash} from "@polkadot/types/interfaces";
 import {isHex} from "@polkadot/util";
@@ -146,7 +147,7 @@ export class InMemoryProsopoDatabase implements Database {
       return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
     }
 
-    throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
+    throw new ProsopoEnvError(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
   }
 
   /**
@@ -162,7 +163,7 @@ export class InMemoryProsopoDatabase implements Database {
       return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
     }
 
-    throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
+    throw new ProsopoEnvError(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
   }
 
   /**
@@ -196,7 +197,7 @@ export class InMemoryProsopoDatabase implements Database {
       return doc as DatasetRecord;
     }
 
-    throw (ERRORS.DATABASE.DATASET_GET_FAILED.message);
+    throw new ProsopoEnvError(ERRORS.DATABASE.DATASET_GET_FAILED.message);
   }
 
   /**
@@ -249,7 +250,7 @@ export class InMemoryProsopoDatabase implements Database {
       return doc as PendingCaptchaRequestRecord;
     }
 
-    throw (ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message);
+    throw new ProsopoEnvError(ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message);
   }
 
   /**
@@ -280,19 +281,19 @@ export class InMemoryProsopoDatabase implements Database {
         query.solution = {solution: {$exists: true}};
         break;
       case CaptchaStates.Unsolved:
-        query = {solution: {$exists: false}};
+        query.solution = {solution: {$exists: false}};
         break;
     }
 
     const cursor = this.tables.captchas?.find(query);
     const docs = await cursor?.toArray();
 
-    if (docs && docs.length) {
+    if (docs) {
       // drop the _id field
       return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
     }
 
-    throw (ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
+    throw new ProsopoEnvError(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
   }
 
   /**
@@ -307,7 +308,7 @@ export class InMemoryProsopoDatabase implements Database {
       return docs.map(({_id, ...keepAttrs}) => keepAttrs) as CaptchaSolution[];
     }
 
-    throw (ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
+    throw new ProsopoEnvError(ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
   }
 
   async getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string> {
@@ -339,7 +340,7 @@ export class InMemoryProsopoDatabase implements Database {
       return docs[0]._id
     }
 
-    throw (ERRORS.DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED.message);
+    throw new ProsopoEnvError(ERRORS.DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED.message);
 
   }
 
@@ -365,7 +366,7 @@ export class InMemoryProsopoDatabase implements Database {
       return docs as CaptchaSolution[]
     }
 
-    throw (ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
+    throw new ProsopoEnvError(ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
 
   }
 

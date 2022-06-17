@@ -27,7 +27,8 @@ import {
   getEventsFromMethodName,
   hexHash,
   parseCaptchaDataset,
-  TransactionResponse
+  TransactionResponse,
+  ProsopoEnvError
 } from "@prosopo/contract";
 import {
   Account,
@@ -41,7 +42,6 @@ import {DAPP, PROVIDER} from "../mocks/accounts";
 import {sendFunds} from "../mocks/setup";
 import {MockEnvironment} from "../mocks/mockenv";
 import {populateDatabase} from "../dataUtils/populateDatabase"
-import {ProsopoEnvError} from '../../src/handlers';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -581,7 +581,7 @@ describe("CONTRACT TASKS", () => {
 
       expect(result.length).to.be.eq(2);
       const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId);
-      const filteredResult = result.filter((res) => res.captchaId == captchaSolutionsSalted[0].captchaId )[0]
+      const filteredResult = result.filter((res) => res.captchaId == captchaSolutionsSalted[0].captchaId)[0]
       expect(filteredResult.proof).to.deep.eq(expectedProof);
       expect(filteredResult.captchaId).to.eq(captchaSolutionsSalted[0].captchaId);
     } catch (err) {

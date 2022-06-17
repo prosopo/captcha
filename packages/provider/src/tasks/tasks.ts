@@ -337,6 +337,11 @@ export class Tasks {
             }
             const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(currentDataset.datasetId as string, CaptchaStates.Unsolved)
 
+            if (!unsolvedCaptchas) {
+                // edge case when a captcha dataset contains no unsolved captchas
+                return 0
+            }
+
             const totalNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
             const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
             const winningNumberOfSolutions = Math.round(totalNumberOfSolutions * (winningPercentage / 100))
