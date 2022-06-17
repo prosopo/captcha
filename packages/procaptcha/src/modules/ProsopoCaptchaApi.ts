@@ -9,6 +9,7 @@ import { TransactionResponse } from "../types/contract";
 import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
 import { TCaptchaSubmitResult } from '../types/client';
+import {ProsopoApiError} from "../api/handlers";
 
 
 function hexHash(data: string | Uint8Array): string {
@@ -36,7 +37,7 @@ export class ProsopoCaptchaApi {
         try {
             captchaChallenge = await this.providerApi.getCaptchaChallenge(this.provider);
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoApiError(err)
         }
         return captchaChallenge;
     }
@@ -60,7 +61,7 @@ export class ProsopoCaptchaApi {
         try {
             tx = await this.contract.dappUserCommit(signer, datasetId as string, commitmentId, this.provider.providerId);
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoApiError(err)
         }
 
         let result: CaptchaSolutionResponse;
@@ -68,7 +69,7 @@ export class ProsopoCaptchaApi {
         try {
             result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoApiError(err)
         }
 
         let commitment: CaptchaSolutionCommitment;
@@ -77,7 +78,7 @@ export class ProsopoCaptchaApi {
         try {
             commitment = await this.contract.getCaptchaSolutionCommitment(commitmentId);
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoApiError(err)
         }
 
         return [result, tx, commitment];

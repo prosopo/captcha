@@ -2,7 +2,7 @@ import { ApiPromise, SubmittableResult } from "@polkadot/api";
 import { Abi, ContractPromise } from "@polkadot/api-contract";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
-import { abiJson } from "@prosopo/contract";
+import { abiJson, ProsopoContractError } from "@prosopo/contract";
 import { AnyJson } from "@polkadot/types/types/codec";
 import { ProviderInterface } from "@polkadot/rpc-provider/types";
 import { unwrap, encodeStringArgs } from "../common";
@@ -68,9 +68,7 @@ export class ProsopoContractBase extends AsyncFactory {
           return null;
         }
       } else {
-        throw new Error(
-          response.result.asErr.asModule.message.unwrap().toString()
-        );
+        throw new ProsopoContractError(response.result.asErr);
       }
     } catch (e) {
       console.error("ERROR", e);
