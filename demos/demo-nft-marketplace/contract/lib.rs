@@ -76,6 +76,9 @@ pub mod demo_nft_contract {
         }
     }
 
+    pub const HUMAN_THRESHOLD: u8 = 80;
+    pub const RECENCY: u32 = 5 * 60 * 1000; // 5 mins
+
     fn bool_to_bytes(value: bool) -> Vec<u8> {
         match value {
             true => Vec::from([1]),
@@ -92,6 +95,23 @@ pub mod demo_nft_contract {
     impl PSP34Metadata for DemoNFT {}
     impl PSP34Enumerable for DemoNFT {}
     impl Ownable for DemoNFT {}
+
+    impl PSP34Transfer for DemoNFT {
+        fn _before_token_transfer(
+            &mut self,
+            _from: Option<&AccountId>,
+            _to: Option<&AccountId>,
+            _id: &Id,
+        ) -> Result<(), PSP34Error> {
+            let is_human = self.is_human(*_from.unwrap());
+
+            match is_human {
+                Ok(true) => Ok(()),
+                Ok(false) => Err(PSP34Error::Custom(String::from("User not considered human"))),
+                Err(x) => Err(x),
+            }
+        }
+    }
 
     impl DemoNFT {
         #[ink(constructor)]
@@ -136,7 +156,6 @@ pub mod demo_nft_contract {
             self._set_attribute(
                 id.clone(),
                 Attribute::TokenUri.to_key(),
-                // String::from("token_uri").into_bytes(),
                 token_uri.into_bytes(),
             );
             self._set_attribute(id.clone(), Attribute::OnSale.to_key(), bool_to_bytes(true));
@@ -151,7 +170,6 @@ pub mod demo_nft_contract {
 
         #[ink(message)]
         pub fn token_uri(&self, token: Id) -> String {
-            // let token_uri_key = String::from("token_uri").into_bytes();
             let token_uri_attribute = self
                 .get_attribute(token, Attribute::TokenUri.to_key())
                 .unwrap();
@@ -185,24 +203,27 @@ pub mod demo_nft_contract {
 
         /// Calls the `Prosopo` contract to check if `user` is human
         #[ink(message)]
-        pub fn is_human(&self, user: AccountId, threshold: u8, recency: u32) -> bool {
+        pub fn is_human(
+            &self,
+            user: AccountId
+        ) -> Result<bool, PSP34Error> {
             let prosopo_instance: ProsopoRef =
                 ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
-            prosopo_instance
-                .dapp_operator_is_human_user(user, threshold)
-                .unwrap();
+            let is_human = prosopo_instance.dapp_operator_is_human_user(user, HUMAN_THRESHOLD);
             // check that the captcha was completed within the last X seconds
-            let last_correct_captcha = prosopo_instance
-                .dapp_operator_last_correct_captcha(user)
-                .unwrap();
-            return last_correct_captcha.before_ms <= recency
-                && prosopo_instance
-                    .dapp_operator_is_human_user(user, threshold)
-                    .unwrap();
+            let last_correct_captcha = prosopo_instance.dapp_operator_last_correct_captcha(user);
+
+            if is_human.is_err() {
+                return Err(PSP34Error::Custom(String::from("dapp_operator_is_human_user failed")));
+            } else if last_correct_captcha.is_err() {
+                return Err(PSP34Error::Custom(String::from("dapp_operator_last_correct_captcha failed")));
+            }
+
+            return Ok(last_correct_captcha.unwrap().before_ms <= RECENCY && is_human.unwrap());
         }
 
         #[ink(message, payable)]
-        pub fn buy(&mut self, token: Id) -> Result<(), String> {
+        pub fn buy(&mut self, token: Id) -> Result<(), PSP34Error> {
             let token_owner = self.owner_of(token.clone());
 
             let amount_sent: Balance = self.env().transferred_value();
@@ -210,21 +231,21 @@ pub mod demo_nft_contract {
 
             if amount_sent < Nfts::PRICE {
                 self.env().transfer(caller, amount_sent).ok();
-                return Err(String::from("Amount sent too low."));
+                return Err(PSP34Error::Custom(String::from("Amount sent too low.")));
             } else if amount_sent > Nfts::PRICE {
                 self.env().transfer(caller, amount_sent - Nfts::PRICE).ok();
             }
 
             if token_owner.is_none() {
                 self.env().transfer(caller, amount_sent).ok();
-                return Err(String::from("Token not found."));
+                return Err(PSP34Error::Custom(String::from("Token not found.")));
             }
 
             let owner = token_owner.unwrap();
 
             if !self.on_sale(token.clone()) {
                 self.env().transfer(caller, amount_sent).ok();
-                return Err(String::from("Token not for sale."));
+                return Err(PSP34Error::Custom(String::from("Token not for sale.")));
             }
 
             self.psp34
@@ -247,11 +268,11 @@ pub mod demo_nft_contract {
             page_size: Option<u8>,
             offset: Option<u128>,
             owner: Option<AccountId>,
-        ) -> Result<Vec<NFT>, String> {
+        ) -> Result<Vec<NFT>, PSP34Error> {
             let size: u128 = page_size.unwrap_or(20).into();
 
             if size == 0 {
-                return Err(String::from("Invalid page size! Must be 1 or greater."));
+                return Err(PSP34Error::Custom(String::from("Invalid page size! Must be 1 or greater.")));
             }
 
             let mut tokens = Vec::new();
