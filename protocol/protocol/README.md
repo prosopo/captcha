@@ -2,67 +2,78 @@
 
 Prosopo Protocol smart contract repository.
 
-Created using Ink using the official [Substrate Contracts Workshop](https://substrate.dev/substrate-contracts-workshop).
+Created with `ink!` and the official [Substrate Contracts Workshop](https://substrate.dev/substrate-contracts-workshop).
 
 ## Prerequisites
 
-Follow the [Substrate Contracts Workshop](https://substrate.dev/substrate-contracts-workshop) guide to install pre-requisits.
+Follow the [Substrate Contracts Workshop](https://substrate.dev/substrate-contracts-workshop) guide to install pre-requisites.
 
 These are the steps for Ubuntu:
-1. Install [Substrate dependancies](https://substrate.dev/docs/en/knowledgebase/getting-started)
-2. Add Rust packages and dependancies)
+1. Install [Substrate dependencies](https://substrate.dev/docs/en/knowledgebase/getting-started)
+
+2. Add Rust packages and dependencies
+
 ```bash
-rustup component add rust-src --toolchain nightly
+rustup default stable
+rustup update
+rustup update nightly
 rustup target add wasm32-unknown-unknown --toolchain nightly
 ```
-3. Setup contract node
-A specific version of the contract node is [required](https://stackoverflow.com/questions/69826769/how-can-i-query-contract-info-with-the-latest-polkadot-js-and-substrate-contract/69831057#69831057) to work with polkadotjs.
-```
-git clone https://github.com/paritytech/substrate-contracts-node &&
-cd substrate-contracts-node &&
-git checkout 8d91b8e578065a7c06433cbd41ac059bf478a0bd &&
-cargo build && 
-./target/debug/substrate-contracts-node --dev --tmp --version
-```
+3. Setup a contracts compatible node. For example, [install the Substrate Contracts Node](https://github.com/paritytech/substrate-contracts-node/#installation).
 
-4. Install Binaryen
-```bash
-wget https://github.com/WebAssembly/binaryen/releases/download/version_101/binaryen-version_101-x86_64-linux.tar.gz
-tar -xvzf binaryen-version_101-x86_64-linux.tar.gz
-sudo cp ./binaryen-version_101/bin/* /usr/bin
-```
-5. Install the Ink CLI
-```bash
-cargo install cargo-contract --vers ^0.16 --force --locked
-```
+
+4. [Install cargo-contract](https://github.com/paritytech/cargo-contract#installation)
 
 ## Build
 
 Note: Use the `--release` flag to minimise contract size if the contract is too large to put on-chain.
 
+Build the contract from within the `contracts` folder.
+
 ```bash
+
 cargo +nightly contract build
 ```
 
 ## Test
 
-There are two sets of unit tests. Some use the standard test engine but most use the experimental engine. You can run the tests using the following commmands from within the `contracts` folder.
+Run the tests using the following command from within the `contracts` folder.
 
 ```bash
-cargo +nightly tarpaulin --no-default-features --features std --verbose -- --nocapture
-cargo +nightly tarpaulin --no-default-features --features std,ink-experimental-engine --verbose -- --nocapture
+cargo +nightly test --no-default-features --features std --verbose -- --nocapture
 ```
 
-**Note:** if you get an error like _"error: no such subcommand: `tarpaulin`"_, [tarpaulin](https://crates.io/crates/cargo-tarpaulin) is missing and you'll have to install it before running the tests.
+Install [tarpaulin](https://crates.io/crates/cargo-tarpaulin) if you wish to see code coverage.
 
 ```bash
 cargo install cargo-tarpaulin
 ```
 
-## Deploy
-
-The protocol repository is implemented as a [redspot](https://github.com/patractlabs/redspot) project. You can install dependencies and then run a script to deploy the contract.
+Run with the following command to see code coverage metrics.
 
 ```bash
-yarn && yarn deploy
+cargo +nightly tarpaulin --no-default-features --features std --verbose -- --nocapture
 ```
+
+## Deploy
+
+The contract can be deployed from the command line using `cargo-contract`:
+
+```bash
+cargo contract instantiate $WASM --args "$ARGS_OWNER $ARGS_PROVIDER_STAKE_DEFAULT" --constructor $CONSTRUCTOR --suri $SURI --value $ENDOWMENT --url '$ENDPOINT:$PORT'
+```
+
+Example values for the variables are given below
+
+```bash
+ENDPOINT=ws://0.0.0.0
+PORT=9944
+SURI=//Alice
+WASM=./target/ink/prosopo.wasm
+CONSTRUCTOR=default
+ARGS_OWNER=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY # Alice's account
+ARGS_PROVIDER_STAKE_DEFAULT=2000000000000
+ENDOWMENT=1000000000000
+```
+
+
