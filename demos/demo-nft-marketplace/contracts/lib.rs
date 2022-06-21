@@ -103,13 +103,19 @@ pub mod demo_nft_contract {
             _to: Option<&AccountId>,
             _id: &Id,
         ) -> Result<(), PSP34Error> {
+            if _from.is_none() || _to.is_none() {
+                return Ok(())
+            }
+
             let is_human = self.is_human(*_from.unwrap());
 
-            match is_human {
+            let res = match is_human {
                 Ok(true) => Ok(()),
                 Ok(false) => Err(PSP34Error::Custom(String::from("User not considered human"))),
                 Err(x) => Err(x),
-            }
+            };
+
+            res
         }
     }
 
