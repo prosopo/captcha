@@ -13,10 +13,17 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-export * from './contract';
-export * from './extension';
-export * from './storage';
-export * from './client';
-export * from './ProsopoCaptchaApi';
-export * from './ProsopoCaptchaClient';
-export * from './ProsopoCaptchaStateClient';
+import {AxiosResponse} from "axios";
+
+export class ProsopoApiError extends Error {
+  constructor(error: AxiosResponse, context?: string, ...params: any[]) {
+
+    super(`${error.data.message ? error.data.message : error.statusText}`)
+
+    this.name = context && `${ProsopoApiError.name}@${context}` || ProsopoApiError.name;
+
+    // TODO: if env.debug
+    console.error('\n********************* ERROR *********************\n');
+    console.error(this.cause, this.stack, ...params);
+  }
+}
