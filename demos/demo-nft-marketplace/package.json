@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "@prosopo/demo-nft-marketplace",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,8 @@
     "build:tailwind": "postcss src/scss/base.scss -o src/scss/tailwind.scss",
     "lint": "eslint '*/**/*.{ts,tsx}' --quiet",
     "lint-fix": "yarn run lint --fix",
-    "find:unused": "next-unused"
+    "find:unused": "next-unused",
+    "setup": "node ./scripts/setup.js"
   },
   "dependencies": {
     "@emotion/react": "^11.8.1",
@@ -22,21 +23,22 @@
     "@polkadot/rpc-provider": "^8.7.1",
     "@polkadot/util": "^9.4.1",
     "@polkadot/util-crypto": "^9.4.1",
-    "@prosopo/procaptcha": "workspace:^",
-    "@prosopo/procaptcha-react": "workspace:^",
+    "@prosopo/procaptcha": "0.0.0",
+    "@prosopo/procaptcha-react": "0.0.0",
     "@tailwindcss/forms": "^0.3.3",
     "@tailwindcss/postcss7-compat": "^2.0.2",
     "autoprefixer": "^9.8.6",
     "browserify-fs": "^1.0.0",
+    "dotenv": "^16.0.1",
     "ethereum-blockies-base64": "^1.0.2",
     "next": "canary",
     "next-images": "^1.8.1",
     "node-polyfill-webpack-plugin": "^1.1.4",
-    "postcss": "^7.0.35",
+    "postcss": "^8.0.0",
     "postcss-cli": "^8.3.1",
     "postcss-loader": "^4.2.0",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
     "react-query": "^3.25.0",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.2",
     "webpack": "^5.72.1"
@@ -49,7 +51,6 @@
     "@types/react": "^18.0.9",
     "@typescript-eslint/eslint-plugin": "^4.32.0",
     "@typescript-eslint/parser": "^4.32.0",
-    "awesome-typescript-loader": "^5.2.1",
     "babel-loader": "^8.2.2",
     "babel-plugin-css-modules-transform": "^1.6.2",
     "electron": "^16.0.1",
@@ -58,13 +59,14 @@
     "eslint-plugin-import": "^2.24.2",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
+    "fs-extra": "^10.1.0",
     "husky": "^4.2.5",
     "lint-staged": "^11.2.0",
     "next-unused": "^0.0.6",
     "postcss-preset-env": "^6.7.0",
     "prettier": "^2.4.1",
     "react-docgen-typescript-loader": "^3.7.2",
-    "typescript": "^4.1.3"
+    "typescript": "^4.7.3"
   },
   "resolutions": {
     "did-jwt": "5.1.0"
