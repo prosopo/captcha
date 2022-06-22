@@ -6,7 +6,6 @@ mod nfts;
 #[brush::contract]
 pub mod demo_nft_contract {
     use base64;
-    use ink_env::debug_println;
     use serde_json_core as serde_json;
 
     use brush::{
@@ -95,29 +94,6 @@ pub mod demo_nft_contract {
     impl PSP34Metadata for DemoNFT {}
     impl PSP34Enumerable for DemoNFT {}
     impl Ownable for DemoNFT {}
-
-    impl PSP34Transfer for DemoNFT {
-        fn _before_token_transfer(
-            &mut self,
-            _from: Option<&AccountId>,
-            _to: Option<&AccountId>,
-            _id: &Id,
-        ) -> Result<(), PSP34Error> {
-            if _from.is_none() || _to.is_none() {
-                return Ok(())
-            }
-
-            let is_human = self.is_human(*_from.unwrap());
-
-            let res = match is_human {
-                Ok(true) => Ok(()),
-                Ok(false) => Err(PSP34Error::Custom(String::from("User not considered human"))),
-                Err(x) => Err(x),
-            };
-
-            res
-        }
-    }
 
     impl DemoNFT {
         #[ink(constructor)]
@@ -209,20 +185,15 @@ pub mod demo_nft_contract {
 
         /// Calls the `Prosopo` contract to check if `user` is human
         #[ink(message)]
-        pub fn is_human(
-            &self,
-            user: AccountId
-        ) -> Result<bool, PSP34Error> {
+        pub fn is_human(&self, user: AccountId) -> Result<bool, PSP34Error> {
             let prosopo_instance: ProsopoRef =
                 ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
             let is_human = prosopo_instance.dapp_operator_is_human_user(user, HUMAN_THRESHOLD);
             // check that the captcha was completed within the last X seconds
             let last_correct_captcha = prosopo_instance.dapp_operator_last_correct_captcha(user);
 
-            if is_human.is_err() {
-                return Err(PSP34Error::Custom(String::from("dapp_operator_is_human_user failed")));
-            } else if last_correct_captcha.is_err() {
-                return Err(PSP34Error::Custom(String::from("dapp_operator_last_correct_captcha failed")));
+            if is_human.is_err() || last_correct_captcha.is_err() {
+                return Ok(false);
             }
 
             return Ok(last_correct_captcha.unwrap().before_ms <= RECENCY && is_human.unwrap());
@@ -234,6 +205,20 @@ pub mod demo_nft_contract {
 
             let amount_sent: Balance = self.env().transferred_value();
             let caller = self.env().caller();
+
+            let is_human = self.is_human(caller);
+
+            let res = match is_human {
+                Ok(true) => Ok(()),
+                Ok(false) => Err(PSP34Error::Custom(String::from(
+                    "User not considered human",
+                ))),
+                Err(x) => Err(x),
+            };
+
+            if res.is_err() {
+                return res;
+            }
 
             if amount_sent < Nfts::PRICE {
                 self.env().transfer(caller, amount_sent).ok();
@@ -278,7 +263,9 @@ pub mod demo_nft_contract {
             let size: u128 = page_size.unwrap_or(20).into();
 
             if size == 0 {
-                return Err(PSP34Error::Custom(String::from("Invalid page size! Must be 1 or greater.")));
+                return Err(PSP34Error::Custom(String::from(
+                    "Invalid page size! Must be 1 or greater.",
+                )));
             }
 
             let mut tokens = Vec::new();
