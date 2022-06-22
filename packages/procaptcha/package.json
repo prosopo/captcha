@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" && exit 1",
+    "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" && exit 0",
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose"
   },
