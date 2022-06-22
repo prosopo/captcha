@@ -6,20 +6,19 @@ import config from 'config';
 import { ProviderProps, ShowCaptchasState, ConsumerProps } from './types';
 
 const CustomContext = createContext<ShowCaptchasState>({
-  showCaptchas: false,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  setShowCaptchas: (value: boolean) => {},
+  captchasVisible: false,
+  showCaptchas: () => {},
 });
 
 export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   const [showCaptchas, setShowCaptchas] = useState(false);
   const [, setLoading] = useState(true);
+  const [onSolvedCallback, setOnSolvedCallback] = useState<() => Promise<void>>(async () => {});
 
   const onAccountChange = (account: TExtensionAccount) => {
     if (!account) {
       clientInterface.getExtension()?.unsetAccount();
     }
-    setShowCaptchas(true);
     status.update({ info: 'Selected account: ' + account?.meta.name });
     console.log('CAPTCHA API', clientInterface.getCaptchaApi());
   };
@@ -37,6 +36,8 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
     setShowCaptchas(false);
 
     status.update({ info: ['onSolved:', `Captcha solution status: ${commitment.status}`] });
+
+    onSolvedCallback();
   };
 
   const onChange = (solution: number[][]) => {
@@ -68,7 +69,21 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   }, []);
 
   return (
-    <CustomContext.Provider value={{ showCaptchas, setShowCaptchas, clientInterface }}>
+    <CustomContext.Provider
+      value={{
+        captchasVisible: showCaptchas,
+        showCaptchas: (callback) => {
+          setShowCaptchas(true);
+          console.log(1);
+          if (callback) {
+            console.log(2);
+            setOnSolvedCallback(() => () => callback());
+            console.log(3);
+          }
+        },
+        clientInterface,
+      }}
+    >
       <CaptchaContextManager.Provider value={manager}>{children}</CaptchaContextManager.Provider>
     </CustomContext.Provider>
   );
@@ -76,8 +91,8 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
 
 export const ProsopoConsumer: FC<ConsumerProps> = ({ children }) => {
   return (
-    <CustomContext.Consumer>
-      {(options) => <CaptchaContextManager.Consumer>{() => children(options)}</CaptchaContextManager.Consumer>}
-    </CustomContext.Consumer>
+    <CaptchaContextManager.Consumer>
+      {() => <CustomContext.Consumer>{(options) => children(options)}</CustomContext.Consumer>}
+    </CaptchaContextManager.Consumer>
   );
 };

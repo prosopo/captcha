@@ -1,4 +1,4 @@
-import demoApi, { Token } from 'api/demoApi';
+import demoApi, { formatPrice, Token } from 'api/demoApi';
 import Button from 'components/Button';
 import HorizontalCard from 'components/HorizontalCard';
 import { ProsopoConsumer } from 'components/Prosopo';
@@ -26,7 +26,7 @@ function ItemDetails({ token }: ItemDetailsProps) {
     setCreatorAvatar(makeBlockie(token.owner));
   }, []);
 
-  const price = token.price;
+  const price = formatPrice(token.price);
 
   const renderButton = () => {
     const onClick = () => {

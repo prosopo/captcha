@@ -1,4 +1,4 @@
-import { Token } from 'api/demoApi';
+import { formatPrice, Token } from 'api/demoApi';
 import Avatar from 'components/Avatar/Avatar';
 import Link from 'components/Link';
 import { CheckoutModal } from 'components/Modal';
@@ -26,7 +26,7 @@ const ProductCard: FC<Props> = ({ item }) => {
     [address]
   );
 
-  const price = item.price;
+  const price = formatPrice(item.price);
 
   return (
     <Link to={`/item/${item.id}`}>

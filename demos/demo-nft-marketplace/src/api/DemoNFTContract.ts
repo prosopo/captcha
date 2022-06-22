@@ -32,6 +32,10 @@ class DemoNFTContract extends AsyncFactory {
     return this.contract;
   }
 
+  public getAccount() {
+    return this.account;
+  }
+
   public setAccount(account): void {
     this.account = account;
   }
@@ -59,7 +63,13 @@ class DemoNFTContract extends AsyncFactory {
           return { gasRequired: response.gasRequired.toString() };
         }
       } else {
-        throw new Error(response.result.asErr.asModule.message.unwrap().toString());
+        if (response.result.asErr.isModule) {
+          const decoded = this.api.registry.findMetaError(response.result.asErr.asModule);
+
+          throw new Error(`${decoded.section}.${decoded.name}`);
+        } else {
+          throw new Error(response.result.asErr.toString());
+        }
       }
     } catch (e) {
       console.error('ERROR', e);

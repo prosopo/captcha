@@ -1,11 +1,12 @@
 import { WsProvider } from '@polkadot/api';
 import { Balance } from '@polkadot/types/interfaces';
 import { Signer } from '@polkadot/types/types';
-import { BN, formatBalance } from '@polkadot/util';
+import { formatBalance } from '@polkadot/util';
+import config from 'config';
 import DemoNFTContract from './DemoNFTContract';
 
 const contractPromise: Promise<DemoNFTContract> = DemoNFTContract.create(
-  '5Cvqon9mrWN9yFpCjYjnqybDQzzAkUvJ5ABum63tkkkpXVDN',
+  config.dappAccount,
   new WsProvider('ws://127.0.0.1:9944')
 );
 
@@ -42,7 +43,7 @@ function readMetadata(tokenUri: string): TokenMetadata {
 }
 
 export function formatPrice(price: string) {
-  return formatBalance(price.replaceAll(',', ''), { decimals: 12, withSiFull: true });
+  return formatBalance((price || '0').replaceAll(',', ''), { decimals: 12, withSiFull: true });
 }
 
 const demoApi = {
@@ -63,12 +64,14 @@ const demoApi = {
 
     const { data: tokens } = await contract.query<GetTokensContractResponse>('getTokens', [pageSize, pageIndex, owner]);
 
+    console.log(tokens)
+
     return tokens.map(({ id, owner, tokenUri, onSale, price }) => ({
       id: id[idKey],
       owner,
       meta: readMetadata(tokenUri),
       onSale,
-      price: formatPrice(price),
+      price: price.replaceAll(',', ''),
     }));
   },
   async getToken(id: string): Promise<Token> {
@@ -89,7 +92,7 @@ const demoApi = {
       owner,
       meta,
       onSale,
-      price: formatPrice(price),
+      price: price.replaceAll(',', ''),
     };
   },
   async estimateBuyGasFees(id: string): Promise<string> {
@@ -109,6 +112,14 @@ const demoApi = {
     await contract.transaction(signer, 'buy', [{ [idKey]: id }], price, gas);
 
     return;
+  },
+  async isHuman(): Promise<boolean> {
+    const contract = await contractPromise;
+
+    console.log({ address: contract.getAccount().address });
+    const { data } = await contract.query<boolean>('isHuman', [contract.getAccount().address, 60, 20000]);
+
+    return data;
   },
 };
 

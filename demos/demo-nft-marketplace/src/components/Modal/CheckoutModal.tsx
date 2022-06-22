@@ -1,10 +1,11 @@
 import demoApi, { formatPrice } from 'api/demoApi';
 import Button from 'components/Button';
 import Modal, { ModalProps } from 'components/Modal';
-import { ProsopoConsumer } from 'components/Prosopo';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ProsopoCaptchaClient } from '@prosopo/procaptcha';
+import { CaptchaComponent, ProsopoConsumer } from 'components/Prosopo';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { BN } from '@polkadot/util';
+import { Dialog, Transition } from '@headlessui/react';
+import { ShowCaptchasState } from 'components/Prosopo/types';
 
 type Props = Omit<ModalProps, 'title' | 'description'> & {
   id: string;
@@ -15,7 +16,14 @@ type Props = Omit<ModalProps, 'title' | 'description'> & {
 function CheckoutModal(props: Props) {
   return (
     <ProsopoConsumer>
-      {({ clientInterface }) => <CheckoutModalInternal {...props} clientInterface={clientInterface} />}
+      {({ clientInterface, showCaptchas, captchasVisible }) => (
+        <CheckoutModalInternal
+          {...props}
+          clientInterface={clientInterface}
+          captchasVisible={captchasVisible}
+          showCaptchas={showCaptchas}
+        />
+      )}
     </ProsopoConsumer>
   );
 }
@@ -25,23 +33,38 @@ function CheckoutModalInternal({
   price,
   title,
   clientInterface,
+  captchasVisible,
+  showCaptchas,
   ...props
-}: Props & { clientInterface: ProsopoCaptchaClient }): JSX.Element {
+}: Props & ShowCaptchasState): JSX.Element {
   const [balance, setBalance] = useState<BN>(new BN(0));
   const [gas, setGas] = useState<string>('0');
 
   const onSubmit = useCallback(async () => {
+    console.log('onSubmit');
     const signer = clientInterface.getExtension().getExtension().signer;
-    await demoApi.setAccount(clientInterface.getExtension().getAccount());
     await demoApi.buy(signer, id, gas);
     location.reload();
   }, [id, clientInterface, gas]);
 
   const info = [
     { key: 'Balance', value: formatPrice(balance.toString()) },
-    { key: 'Item Price', value: price },
+    { key: 'Item Price', value: formatPrice(price) },
     { key: 'Estimated Gas', value: formatPrice(gas) },
   ];
+
+  const onBuy = async () => {
+    const account = clientInterface.getExtension().getAccount();
+    await demoApi.setAccount(account);
+
+    const isHuman = await demoApi.isHuman();
+
+    if (isHuman) {
+      onSubmit();
+    } else {
+      showCaptchas(onSubmit);
+    }
+  };
 
   useEffect(() => {
     demoApi
@@ -67,9 +90,17 @@ function CheckoutModalInternal({
         {insufficient ? (
           <div className="pt-2 text-lg font-bold text-center text-white">Balance too low</div>
         ) : (
-          <Button title={'Buy Now'} fullWidth onClick={onSubmit} />
+          <Button title={'Buy Now'} fullWidth onClick={onBuy} />
         )}
       </div>
+
+      <Transition appear show={captchasVisible} as={Fragment}>
+        <Dialog as="div" className="fixed inset-0 z-30 overflow-y-auto" onClose={clientInterface.callbacks.onCancel}>
+          <Dialog.Panel className="h-screen">
+            <CaptchaComponent clientInterface={clientInterface} />
+          </Dialog.Panel>
+        </Dialog>
+      </Transition>
     </Modal>
   );
 }
