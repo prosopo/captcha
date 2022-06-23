@@ -16,8 +16,8 @@
 import { mnemonicValidate } from '@polkadot/util-crypto';
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
-import { Environment } from '../env';
-import { ERRORS } from '../errors';
+import { Environment } from '../src/env';
+import { ERRORS } from '../src/errors';
 import { processArgs } from './argv';
 
 import dotenv from 'dotenv';
