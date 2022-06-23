@@ -4,8 +4,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "module": "commonjs",
-    "target": "esnext",
-    "types": ["mocha"]
+    "target": "esnext"
   },
   "include": [
     "./src/**/*.ts"
@@ -17,5 +16,10 @@
     {
       "path": "../contract"
     }
-  ]
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
 }

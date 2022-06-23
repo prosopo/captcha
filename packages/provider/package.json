@@ -7,8 +7,9 @@
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
-    "cli": "node ./dist/cli/cli.js",
-    "start": "node ./dist/cli/start.js",
+    "cli": "ts-node ./cli/cli.ts",
+    "start": "ts-node ./cli/start.ts",
+    "start:test": "NODE_ENV=test && ts-node ./cli/start.ts",
     "setup": "ts-node ./scripts/setup.ts",
     "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
     "imageserver:start": "ts-node ./scripts/imageserver.ts",

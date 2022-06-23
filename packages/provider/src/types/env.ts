@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import consola from 'consola';
-import { ContractApiInterface, Network, AssetsResolver } from "@prosopo/contract";
+import { ContractApiInterface, Network, AssetsResolver, ContractAbi } from "@prosopo/contract";
 import { Database } from './db';
 import { ProsopoConfig } from './config';
 export interface ProsopoEnvironment {
-    config: ProsopoConfig,
-    db: Database | undefined,
+    config: ProsopoConfig
+    db: Database | undefined
     contractInterface: ContractApiInterface | undefined
+    abi: ContractAbi
     mnemonic: string
     contractAddress: string
     defaultEnvironment: string

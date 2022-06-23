@@ -21,10 +21,10 @@ const yargs = require('yargs')
 
 import { Compact, u128 } from '@polkadot/types';
 
-import { ERRORS } from '../errors';
-import { Tasks } from '../tasks/tasks';
-import { ProsopoEnvironment } from '../types/env';
-import { encodeStringAddress } from '../util';
+import { ERRORS } from '../src/errors';
+import { Tasks } from '../src/tasks/tasks';
+import { ProsopoEnvironment } from '../src/types/env';
+import { encodeStringAddress } from '../src/util';
 import {PayeeSchema, Payee} from "@prosopo/contract";
 
 const validateAddress = (argv) => {
