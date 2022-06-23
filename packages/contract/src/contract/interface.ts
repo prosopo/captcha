@@ -155,7 +155,7 @@ export class ProsopoContractApi implements ContractApiInterface {
                 return []
             }
         }
-        throw new ProsopoContractError(response.result.asErr.toString(), 'contractQuery')
+        throw new ProsopoContractError(response.result.asErr, 'contractQuery')
     }
 
     /** Get the contract method from the ABI
