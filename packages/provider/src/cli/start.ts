@@ -37,8 +37,8 @@ function startApi(env: Environment) {
   const apiPort = new URL(process.env.API_BASE_URL as string).port || 3000;
 
   apiApp.use(cors());
-  apiApp.use(prosopoRouter(env));
   apiApp.use(express.json());
+  apiApp.use(prosopoRouter(env));
 
   if (env.assetsResolver instanceof LocalAssetsResolver) {
     env.assetsResolver.injectMiddleware(apiApp); //
