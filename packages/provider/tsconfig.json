@@ -16,10 +16,5 @@
     {
       "path": "../contract"
     }
-  ],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "commonjs"
-    }
-  }
+  ]
 }
