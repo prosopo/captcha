@@ -13,6 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import {ProsopoEnvError} from "@prosopo/contract";
+
 export const ERRORS = {
     GENERAL: {
         CANNOT_FIND_CONFIG_FILE: {
@@ -164,39 +166,38 @@ export const ERRORS = {
     }
 }
 
-export class GeneralError extends Error {
-    constructor (message) {
-        super()
-        this.message = message
+export class ApiError extends ProsopoEnvError {
+    constructor (err) {
+        super(err)
     }
 
     getCode () {
         if (this instanceof BadRequest) {
-            return 400
+            return 500
         }
         if (this instanceof NotFound) {
             return 404
         }
-        return 500
+        return 400
     }
 }
 
-export class BadRequest extends GeneralError {
+export class BadRequest extends ApiError {
 }
 
-export class NotFound extends GeneralError {
+export class NotFound extends ApiError {
 }
 
 export const handleErrors = (err, req, res, next) => {
-    if (err instanceof GeneralError) {
+    if (err instanceof ApiError) {
         return res.status(err.getCode()).json({
-            status: 'error',
-            message: err.message
+            message: err.message,
+            name: err.name
         })
     }
 
     return res.status(500).json({
-        status: 'error',
-        message: err.message
+        message: err.message,
+        name: err.name
     })
 }

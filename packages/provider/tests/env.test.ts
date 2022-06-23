@@ -13,3 +13,38 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+
+import {Environment} from "../src/env";
+import chai from "chai";
+import chaiAsPromised from "chai-as-promised";
+import {ProsopoContractApi} from '@prosopo/contract';
+
+chai.should();
+chai.use(chaiAsPromised);
+const expect = chai.expect;
+
+describe('ENV TESTS', () => {
+
+  it('Initiliases an environment', () => {
+      const mnemonic = "unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat"
+      const env = new Environment(mnemonic)
+      expect(env.mnemonic).to.equal(mnemonic)
+      expect(env.config).to.not.be.null
+      expect(env.defaultEnvironment).to.be.a.string
+      expect(env.contractAddress).to.be.a.string
+      expect(env.contractName).to.be.a.string
+      expect(env.db).to.be.undefined
+      expect(env.contractInterface).to.be.undefined
+      expect(env.network).to.be.undefined
+    }
+  )
+  it('Initiliases an environment and waits till it is ready', async () => {
+      const mnemonic = "unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat"
+      const env = new Environment(mnemonic)
+      await env.isReady();
+      expect(env.db).to.be.an('object')
+      expect(env.network).to.be.an('object')
+      expect(env.contractInterface).to.be.an.instanceof(ProsopoContractApi)
+    }
+  )
+})

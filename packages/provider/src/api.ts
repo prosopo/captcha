@@ -189,17 +189,14 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     try {
       parsed = CaptchaSolutionBody.parse(req.body);
     } catch (err) {
-      return next(new BadRequest(err));
+      return next(new BadRequest(JSON.stringify(err)));
     }
 
     try {
-      const result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappContractAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
-
+      const result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
       return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, captchas: result});
     } catch (err: unknown) {
-      const msg = `${ERRORS.API.BAD_REQUEST.message}: ${err}`;
-
-      return next(new BadRequest(msg));
+      return next(new BadRequest(err));
     }
   });
 

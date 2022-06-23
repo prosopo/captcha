@@ -18,6 +18,7 @@ import {ERRORS} from '../../src/errors'
 import consola, {LogLevel} from 'consola'
 import {LocalAssetsResolver} from "../../src/assets";
 import { loadEnvFile, Database, ProsopoConfig, ProsopoEnvironment } from '../../src';
+import {MongoMemoryServer} from "mongodb-memory-server";
 
 const path = require('path');
 
@@ -73,7 +74,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 captchaFilePath: path.join(process.cwd(), './tests/mocks/data/captchas.json')
             },
             database: {
-                development: {type: 'mockdb', endpoint: '', dbname: ''}
+                development: {type: 'mongo', endpoint: '', dbname: ''}
             },
             assets : {
                 absolutePath: '',
@@ -119,9 +120,12 @@ export class MockEnvironment implements ProsopoEnvironment {
 
     async importDatabase(): Promise<void> {
         try {
-            const {InMemoryProsopoDatabase} = await import(`./${this.config.database[this.defaultEnvironment].type}`)
-            this.db = new InMemoryProsopoDatabase(
-                this.config.database[this.defaultEnvironment].endpoint,
+            const dbPath = path.join(`../../src/db/${this.config.database[this.defaultEnvironment].type}`);
+            const {ProsopoDatabase} = await import(dbPath)
+            const mongod = await MongoMemoryServer.create();
+            const databaseUrl = mongod.getUri();
+            this.db = new ProsopoDatabase(
+                databaseUrl,
                 this.config.database[this.defaultEnvironment].dbname,
                 this.logger
             )

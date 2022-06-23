@@ -1,82 +1,103 @@
 # Prosopo Provider
 
-> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to set up the repositories manually.
+> NOTE: For a development environment, the easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to set up the repositories manually.
 
 ## Prerequisites
 
 - nodejs
-- yarn
-- choose a Substrate node of your choice (e.g. contracts node)
-- `git clone https://github.com/prosopo-io/protocol`
-- `git clone https://github.com/prosopo-io/redspot`
+- npm
+- A connection to a substrate node
+- A deployed Prosopo Protocol contract
 
-A reasonable folder structure would be something like the following:
-```
-- redspot
-- substrate
-- protocol
-- provider
-```
 
-### Setup contract node
+### Development Environment
+#### Setup a contract node
 
-These instructions will depend on the substrate node you choose. The following command is for https://github.com/paritytech/substrate
+If you are setting up a development environment, run a development node. For example, the [Substrate Contracts Node](https://github.com/paritytech/substrate-contracts-node/#installation)
 
-```bash
-cd substrate &&
-cargo run --release -- --dev --tmp -lerror,runtime::contracts=debug
-```
+#### Deploy the Prosopo Protocol contract
 
-### Deploy the contract
+See [protocol instructions](https://github.com/prosopo-io/protocol/#prosopo-protocol)
 
-Once your substrate node is running, go to the [protocol](https://github.com/prosopo-io/protocol) repository and run the `deploy` script. The contract will be deployed by the `Alice` test account. Make sure to note the contract address.
+#### Live environment
+If you are running in a test or live environment, use a node endpoint of your choice. Make sure you know the contract account of the Prosopo Protocol contract.
 
-```bash
-yarn deploy
-```
 
-## Running the Provider Node
+## Running a Prosopo Provider Node
 
 The following instructions apply to the `provider` repo.
 
 ### Install packages
 
 ```bash
-yarn
+npm install
 ```
 
-### Populate the contract address and the deployer address
+### Populate the Prosopo Provider Config
 
-Put the contract address, and the deployer address in the `prosopo.config.ts` file in the root of the `provider` repo, either directly or as environment variables.
+Place the required variables in the `prosopo.config.ts` file in the root of the `provider` repo.
 
-#### Env variables
-```javascript
-            contract: {
-                address: process.env.CONTRACT_ADDRESS,
-                deployer: {
-                    address: process.env.DEPLOYER_ADDRESS
-                }
-            }
+| Param                                    | Description                                                                    |
+|------------------------------------------|--------------------------------------------------------------------------------|
+| PROTOCOL_CONTRACT_JSON_ABI_PATH          | The path to the protocol JSON file                                             |
+| SUBSTATE_NODE_ENDPOINT                   | The substrate node endpoint, e.g. ws://localhost:9944                          |
+| PROTOCOL_CONTRACT_ADDRESS                | The protocol contract address                                                  |
+| CAPTCHA_SOLVED_COUNT                     | The number of solved captchas to send to the captcha frontend client           |
+| CAPTCHA_UNSOLVED_COUNT                   | The number of unsolved captchas to send to the captcha frontend client         |
+| CAPTCHA_SOLUTION_REQUIRED_SOLUTION_COUNT | The number of captchas required to calculate a solution to an unsolved captcha |
+| CAPTCHA_SOLUTION_WINNING_PERCENTAGE      | The threshold percentage that determines whether a solution is found           |
+| CAPTCHA_FILE_PATH                        | The path to the captcha dataset                                                |
+| MONGO_USERNAME                           | MongoDB username                                                               |
+| MONGO_PASSWORD                           | MongoDB password                                                               | 
+| MONGO_HOST                               | MongoDB host                                                                   |
+| MONGO_PORT                               | MongoDB port                                                                   |
+| DATABASE_NAME                            | Database name                                                                  |
+| API_BASE_URL                             | Base URL for API, e.g. http://localhost:3000                                   |
+
+#### Config
+```typescript
+const config = {
+  contract: {
+    abi: '<PROTOCOL_CONTRACT_JSON_ABI_PATH>'
+  },
+  networks: {
+    development: {
+      endpoint: '<SUBSTATE_NODE_ENDPOINT>', // e.g. ws://127.0.0.1:9944
+      contract: {
+        address: '<PROTOCOL_CONTRACT_ADDRESS>',
+        name: 'prosopo'
+      }
+    }
+  },
+  captchas: {
+    solved: {
+      count: '<CAPTCHA_SOLVED_COUNT>'
+    },
+    unsolved: {
+      count: '<CAPTCHA_UNSOLVED_COUNT>'
+    }
+  },
+  captchaSolutions: {
+    requiredNumberOfSolutions: '<CAPTCHA_SOLUTION_REQUIRED_SOLUTION_COUNT>',
+    solutionWinningPercentage: '<CAPTCHA_SOLUTION_WINNING_PERCENTAGE>',
+    captchaFilePath: '<CAPTCHA_FILE_PATH>',
+  },
+  database: {
+    development: {
+      type: 'mongo',
+      endpoint: `mongodb://<MONGO_USERNAME>:<MONGO_PASSWORD>@<MONGO_HOST>:<MONGO_PORT>`,
+      dbname: '<DATABASE_NAME>',
+    }
+  },
+  assets : {
+    absolutePath: '',
+    basePath: ''
+  },
+  server : {
+    baseURL: '<API_BASE_URL>',
+  }
+}
 ```
-
-#### Directly in the config
-```javascript
-            contract: {
-                address: 'the contract address',
-                deployer: {
-                    address: '//Alice'
-                }
-            }
-```
-
-### Symlink your Protcol artifacts
-
-Assuming the `protocol` folder is next to the `provider` folder, inside your `provider` folder run the following command. Otherwise, adjust the command as necessary.
-```bash
-ln -s ../protocol/artifacts artifacts
-```
-
-This will make your contract artefacts available to the provider project.
 
 ## Run the Provider server
 
@@ -84,36 +105,38 @@ This will make your contract artefacts available to the provider project.
 
 > Please note your `PROVIDER_MNEMONIC` environment variable must be set. You can check this with `echo $PROVIDER_MNEMONIC`
 
-It's easiest to use a development mnemonic as they already have funds. So choose one of //Alice, //Bob, //Ferdie, etc. and then set it using
+In a **development environment**, it's easiest to use a development mnemonic as they already have funds. So choose one of //Alice, //Bob, //Ferdie, etc.
 
 ```bash
     export PROVIDER_MNEMONIC=//Ferdie
 ```
 
-You can now register a provider either via the API or on the command line.
+You can now register as a Provider in the protocol contract either via the command line.
 
 ### Register using the Command Line
 
 Try registering a provider on the command line.
 
 ```bash
-yarn dev provider_register \
+npm run cli provider_register -- \
 --fee 10 \
---serviceOrigin https://localhost:8282 \
+--origin https://localhost:8282 \
 --payee Provider \
 --address YOUR_PROVIDER_ADDRESS
 ````
 
-Try staking on the command line.
+Send a stake (`value`) and/or update one of the values previously set when registering (`fee`, `origin`. `payee`).
 
 ```bash
-yarn build \ 
-&& yarn ts-node ./build/src/cli.js provider_stake \
---value 10 \
---address YOUR_PROVIDER_ADDRESS
+npm run cli provider_update -- \
+--fee 10 \
+--origin https://localhost:8282 \
+--payee Provider \
+--address YOUR_PROVIDER_ADDRESS \
+--value 10
 ```
 
-Verify that your provider was registered by calling the `providers` endpoint or by checking in Polkadot Apps local node.
+Verify that your provider was registered by calling the `/v1/prosopo/providers/` endpoint or by checking in Polkadot Apps local node.
 
 ### Curl 
 ```
@@ -136,20 +159,20 @@ Using [Polkadot apps](https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9
 ### Register a provider
 
 ```bash
-yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address ADDRESS
+npm run cli -- provider_register --fee=10 --origin=https://localhost:8282 --payee=Provider --address ADDRESS
 ```
 
-| Param | Description |
-| --------------- | --------------- |
-| fee | The amount the Provider charges or pays per captcha approval / disapproval |
-| serviceOrigin | The location of the Provider's service |
-| payee | Who is paid on successful captcha completion (`Provider` or `Dapp`) |
-| address | Address of the Provider |
+| Param   | Description                                                                |
+|---------|----------------------------------------------------------------------------|
+| fee     | The amount the Provider charges or pays per captcha approval / disapproval |
+| origin  | The location of the Provider's service                                     |
+| payee   | Who is paid on successful captcha completion (`Provider` or `Dapp`)        |
+| address | Address of the Provider                                                    |
 
 ### Update a provider and optionally stake
 
 ```bash
-yarn start provider_update --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address ADDRESS --value STAKE_VALUE
+npm run cli -- provider_update --fee=10 --origin=https://localhost:8282 --payee=Provider --address ADDRESS --value STAKE_VALUE
 ```
 
 Params are the same as `provider_register` with the addition of `value`
@@ -162,7 +185,7 @@ Params are the same as `provider_register` with the addition of `value`
 ### Add a dataset for a Provider
 
 ```bash
-yarn start provider_add_data_set --file /usr/src/data/captchas.json
+npm run cli -- provider_add_data_set --file /usr/src/data/captchas.json
 ```
 
 | Param | Description |
@@ -174,7 +197,7 @@ File format can be viewed [here](https://github.com/prosopo-io/provider/blob/mas
 ### De-register a Provider
 
 ```bash
-yarn start provider_deregister --address ADDRESS
+npm run cli -- provider_deregister --address ADDRESS
 ```
 
 | Param | Description |
@@ -184,7 +207,7 @@ yarn start provider_deregister --address ADDRESS
 ### Unstake funds
 
 ```bash
-yarn start provider_unstake --value VALUE
+npm run cli -- provider_unstake --value VALUE
 ```
 
 | Param | Description |
@@ -194,7 +217,7 @@ yarn start provider_unstake --value VALUE
 ### List Provider accounts in contract
 
 ```bash
-yarn start provider_accounts
+npm run cli -- provider_accounts
 ```
 
 ### Other commands ###
@@ -202,45 +225,34 @@ yarn start provider_accounts
 A full list of CLI commands can be viewed by running
 
 ```bash
-yarn start --help
+npm run cli -- --help
 ```
 
 ## API
 
-Run the API server
+Run the Provider API server and image server
 
 ```bash
-yarn start --api
+npm run start
 ```
 
-The API contains functions that will be required for the frontend captcha interface.
+The API contains methods required by the frontend captcha interface.
 
-| API Resource | Function |
-| --------------- | --------------- |
-| `/v1/prosopo/random_provider/`| Get a random provider based on AccountId |
-| `/v1/prosopo/providers/` | Get list of all provider IDs |
-| `/v1/prosopo/dapps/` | Get list of all dapp IDs |
-| `/v1/prosopo/provider/:providerAccount` | Get details of a specific Provider account |
-| `/v1/prosopo/provider/captcha/:datasetId/:userAccount` | Get captchas to solve |
-| `/v1/prosopo/provider/solution` | Submit captcha solutions |
+| API Resource                                                                             | Function                                   | Type | Parameters                                                         |
+|------------------------------------------------------------------------------------------|--------------------------------------------|------|--------------------------------------------------------------------|
+| `/v1/prosopo/random_provider/:userAccount/:dappContractAccount`                          | Get a random provider based on AccountId   | GET  | userAccount, dappContractAccount                                   |
+| `/v1/prosopo/providers/`                                                                 | Get list of all provider IDs               | GET  |                                                                    |
+| `/v1/prosopo/dapps/`                                                                     | Get list of all dapp IDs                   | GET  |                                                                    |
+| `/v1/prosopo/provider/:providerAccount`                                                  | Get details of a specific Provider account | GET  | providerAccount                                                    |
+| `/v1/prosopo/provider/captcha/:datasetId/:userAccount/:dappContractAccount/:blockNumber` | Get captchas to solve                      | GET  | datasetId, userAccount, dappContractAccount, blockNumber           |
+| `/v1/prosopo/provider/solution`                                                          | Submit captcha solutions                   | POST | userAccount, dappAccount, requestHash, captchas, blockHash, txHash |
 
 ## Tests
 
-> Please note your `PROVIDER_MNEMONIC` environment variable must be set for the tests to run. You can check this with `echo $PROVIDER_MNEMONIC`
-> Please note that running the tests causes many redspot warnings like  `WARN  Unable to find handler for subscription=state_storage::QaxXtKvT2LYdhf3D`. These can be ignored.
-
-The tests are located in the [tests folder](https://github.com/prosopo-io/provider/tree/master/tests) and the structure mimics that of the main `src`. You can run the tests using the following command:
-
-```bash
-yarn test
-```
+You can run the Provider integration tests using the command `npm run test`. This will start a substrate container containing a predeployed [prosopo protocol contract](https://github.com/prosopo-io/protocol/#prosopo-protocol)  and [dapp-example contract](https://github.com/prosopo-io/dapp-example#dapp-example). An in-memory mongo database will be used.
 
 To run the tests with coverage stats use:
 
 ```bash
-yarn c8 yarn test
+npx c8 npm run test
 ```
-
-The tests use a mocked database engine however they connect to the **real** contract. You will need to deploy the contract and make the address available in an env variable called `CONTRACT_ADDRESS`. The easiest way to deploy the Prosopo contract and run the tests is via the [integration repository](https://github.com/prosopo-io/integration/).
-
-Current test coverage is 90.9% of functions.

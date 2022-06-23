@@ -14,11 +14,12 @@
     "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
     "imageserver:start": "ts-node ./scripts/imageserver.ts",
     "test": "npm run remove-test-container && docker compose up -d substrate-test-node && NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" --timeout 120000",
+    "coverage": "npx c8 npm run test",
     "remove-test-container": "CONTAINER=$(docker ps -q -f name=substrate-test-node) && docker stop $CONTAINER || true && docker rm $CONTAINER || true",
     "populate-data": "ts-node ./src/dataUtils/populateDatabase.ts",
-    "dev-provider-register": "yarn build && yarn start provider_register --fee=10 --serviceOrigin=https://localhost:8282 --payee=Provider --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
-    "dev-provider-stake": "yarn build && yarn start provider_stake --value 10 --address=$(printenv | grep '^PROVIDER_ADDRESS' | cut -d '=' -f2)",
-    "dev-provider-dataset": "yarn build && yarn start provider_add_data_set --file /usr/src/data/captchas.json"
+    "dev-provider-register": "npm run cli -- provider_register --fee=10 --origin=https://localhost:8282 --payee=Provider --address=$PROVIDER_ADDRESS",
+    "dev-provider-stake": "npm run cli -- provider_update --value 2000000000000 --address=$PROVIDER_ADDRESS",
+    "dev-provider-dataset": "npm run cli -- provider_add_data_set --file ./tests/mocks/data/captchas.json"
   },
   "dependencies": {
     "@polkadot/api": "^8.7.1",
@@ -47,6 +48,7 @@
   "devDependencies": {
     "@types/mocha": "^9.1.1",
     "@types/yargs": "^17.0.10",
+    "c8": "^7.11.3",
     "fs-extra": "^10.1.0",
     "mocha": "^10.0.0",
     "mongodb-memory-server": "^8.6.0",
