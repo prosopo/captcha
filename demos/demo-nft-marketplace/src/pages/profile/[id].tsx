@@ -1,61 +1,29 @@
 import { CoverPhoto } from 'assets';
-import React, { useEffect, useCallback, useState } from 'react';
-import { useRouter } from 'next/router';
-import Tabs from 'components/Tabs/Tabs';
+import React, { useCallback, useState } from 'react';
 import Avatar from 'components/Avatar/Avatar';
-import { getNftItems } from 'api/raribleApi';
-import { GetNftItemsResponse, NftItemsRequestType, SellOrderTake } from 'api/raribleRequestTypes';
-import CreatedTab from 'features/profile/components/CreatedTab';
-import OwnedTab from 'features/profile/components/OwnedTab';
-import { getSellOrdersForItems } from 'utils/raribleApiUtils';
+import demoApi, { Token } from 'api/demoApi';
+import { ProductList } from 'components/ProductCard';
+import { NextPageContext } from 'next';
 
-const tabs = ['Owned', 'Created'];
-
-const tabItemsTypeMapping = {
-  [tabs[0]]: NftItemsRequestType.BY_OWNER,
-  [tabs[1]]: NftItemsRequestType.BY_CREATOR,
-};
+const PAGE_SIZE = 20;
 
 export interface ProfileProps {
-  createdData?: { items: GetNftItemsResponse; orders: { take: SellOrderTake }[] };
-  ownedData?: { items: GetNftItemsResponse; orders: { take: SellOrderTake }[] };
-  // activityHistory is always fetched on front
-  tab: number;
+  userId: string;
+  tokens: Token[];
 }
 
-const Profile: React.FunctionComponent<ProfileProps> = ({ ownedData, createdData, tab }) => {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState(tab);
-  const [userId, setUserId] = useState<string | null>(null);
-  useEffect(() => {
-    if (router && router.query) {
-      setActiveTab(
-        Math.max(
-          tabs.findIndex((tab) => tab === router.query.tab),
-          0
-        )
-      );
-      setUserId(router.query.id as string);
-    }
-  }, [router]);
+const Profile: React.FunctionComponent<ProfileProps> = ({ tokens: _tokens, userId }) => {
+  const [tokens, setTokens] = useState(_tokens);
+  const [canLoadMore, setCanLoadMore] = useState(_tokens.length % PAGE_SIZE == 0);
+  const loadMore = useCallback(async () => {
+    const newTokens = await demoApi.getTokens(PAGE_SIZE, tokens.length, userId);
 
-  const onTabChange = useCallback(
-    (index) => {
-      router.push(
-        {
-          pathname: window.location.pathname,
-          query: {
-            id: router.query.id,
-            tab: tabs[index],
-          },
-        },
-        `/profile/${userId}?tab=${tabs[index]}`,
-        { scroll: false, shallow: true }
-      );
-      setActiveTab(index);
-    },
-    [userId]
-  );
+    if (newTokens.length == 0 || newTokens.length % PAGE_SIZE > 0) {
+      setCanLoadMore(false);
+    }
+
+    setTokens([...tokens, ...newTokens]);
+  }, [tokens]);
 
   return (
     <>
@@ -72,42 +40,23 @@ const Profile: React.FunctionComponent<ProfileProps> = ({ ownedData, createdData
           <h1 className="relative text-sm font-bold sm:text-lg md:text-xl xl:text-2xl -top-4 ">{userId}</h1>
         </div>
       </div>
-      <Tabs titles={tabs} active={activeTab} onChange={onTabChange} />
       <div className="py-4 bg-secondary">
-        {activeTab === 0 && <OwnedTab initialData={ownedData} address={userId} />}
-        {activeTab === 1 && <CreatedTab initialData={createdData} address={userId} />}
+        <ProductList tokens={tokens} onLoadMore={canLoadMore ? loadMore : null} />
       </div>
     </>
   );
 };
 
-export async function getServerSideProps(context): Promise<{ props: ProfileProps }> {
-  const address = context.query.id;
-  const tabName = context.query.tab ?? tabs[0];
-  const props: ProfileProps = { tab: tabs.indexOf(tabName) };
-  const commonQueryData = { size: 1, showDeleted: false, includeMeta: true, address };
-  switch (tabName) {
-    case tabs[0]: {
-      const items = await getNftItems({
-        ...commonQueryData,
-        type: tabItemsTypeMapping[tabName] as NftItemsRequestType,
-      });
-      const orders = await getSellOrdersForItems(items.items);
-      props.ownedData = { orders, items };
-      break;
-    }
-    case tabs[2]: {
-      const items = await getNftItems({
-        ...commonQueryData,
-        type: tabItemsTypeMapping[tabName] as NftItemsRequestType,
-      });
-      const orders = await getSellOrdersForItems(items.items);
-      props.createdData = { orders, items };
-      break;
-    }
-  }
+export async function getServerSideProps(context: NextPageContext): Promise<{ props: ProfileProps }> {
+  const userId = context.query.id as string;
+
+  const tokens = await demoApi.getTokens(PAGE_SIZE, 0, userId);
+
   return {
-    props, // will be passed to the page component as props
+    props: {
+      tokens,
+      userId,
+    },
   };
 }
 

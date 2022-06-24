@@ -1,13 +1,11 @@
-import { ApiPromise, SubmittableResult, WsProvider } from '@polkadot/api';
+import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
-import { Signer } from '@polkadot/api/types';
-// import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
+import { Signer, SubmittableResultValue } from '@polkadot/api/types';
 import { ProviderInterface } from '@polkadot/rpc-provider/types';
-import { AsyncFactory, TransactionResponse } from '@prosopo/procaptcha';
-import { encodeStringArgs, unwrap } from '@prosopo/procaptcha/build/common';
 import { AnyJson } from '@polkadot/types/types/codec';
 
 import abiJson from './abi.json';
+import { AsyncFactory, encodeStringArgs, unwrap } from './prosopoTemp';
 
 class DemoNFTContract extends AsyncFactory {
   private api: ApiPromise;
@@ -30,45 +28,76 @@ class DemoNFTContract extends AsyncFactory {
     return this;
   }
 
+  public getContract(): ContractPromise {
+    return this.contract;
+  }
+
+  public getAccount() {
+    return this.account;
+  }
+
   public setAccount(account): void {
     this.account = account;
   }
 
-  public async query<T>(method: string, args: any[]): Promise<T | AnyJson | null> {
+  public async query<T>(
+    method: string,
+    args: any[],
+    value?: number | string
+  ): Promise<{ data?: T | null; gasRequired?: string }> {
     try {
       const abiMessage = this.abi.findMessage(method);
       const response = await this.contract.query[method](
         this.account?.address,
-        {},
+        { value },
         ...encodeStringArgs(abiMessage, args)
       );
-      console.log('QUERY RESPONSE', response);
+      // console.log('QUERY RESPONSE', response);
       if (response.result.isOk) {
         if (response.output) {
-          return unwrap(response.output.toHuman());
+          return {
+            data: unwrap(response.output.toHuman()) as undefined as T,
+            gasRequired: response.gasRequired.toString(),
+          };
         } else {
-          return null;
+          return { gasRequired: response.gasRequired.toString() };
         }
       } else {
-        throw new Error(response.result.asErr.asModule.message.unwrap().toString());
+        if (response.result.asErr.isModule) {
+          const decoded = this.api.registry.findMetaError(response.result.asErr.asModule);
+
+          throw new Error(`${decoded.section}.${decoded.name}`);
+        } else {
+          throw new Error(response.result.asErr.toString());
+        }
       }
     } catch (e) {
       console.error('ERROR', e);
-      return null;
+      return {};
     }
   }
 
   // https://polkadot.js.org/docs/api/cookbook/tx/
   // https://polkadot.js.org/docs/api/start/api.tx.subs/
-  public async transaction(signer: Signer, method: string, args: any[]): Promise<TransactionResponse> {
+  public async transaction(
+    signer: Signer,
+    method: string,
+    args: any[],
+    value?: number | string,
+    gasLimit?: number | string
+  ): Promise<
+    SubmittableResultValue & {
+      blockHash?: string;
+    }
+  > {
     // TODO if DEBUG==true || env.development
-    const queryBeforeTx = await this.query(method, args);
+    // const queryBeforeTx = await this.query(method, args);
 
-    console.log('QUERY BEFORE TX....................', queryBeforeTx);
+    // console.log('QUERY BEFORE TX....................', queryBeforeTx);
 
     const abiMessage = this.abi.findMessage(method);
 
-    const extrinsic = this.contract.tx[method]({}, ...encodeStringArgs(abiMessage, args));
+    const extrinsic = this.contract.tx[method]({ value, gasLimit }, ...encodeStringArgs(abiMessage, args));
 
     // this.api.setSigner(signer);
     // const response = await buildTx(this.api.registry, extrinsic, this.account.address, { signer });
@@ -80,10 +109,10 @@ class DemoNFTContract extends AsyncFactory {
         .signAndSend(this.account.address, { signer }, (result: SubmittableResult) => {
           const { dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex } = result;
 
-          console.log('TX STATUS', status.type);
-          console.log('IS FINALIZED', status?.isFinalized);
-          console.log('IN BLOCK', status?.isInBlock);
-          console.log('EVENTS', events);
+          // console.log('TX STATUS', status.type);
+          // console.log('IS FINALIZED', status?.isFinalized);
+          // console.log('IN BLOCK', status?.isInBlock);
+          // console.log('EVENTS', events);
 
           if (internalError) {
             console.error('internalError', internalError);
@@ -94,6 +123,8 @@ class DemoNFTContract extends AsyncFactory {
 
           if (dispatchError) {
             console.error('dispatchError', dispatchError);
+            const error = dispatchError.registry.findMetaError(dispatchError.asModule);
+            console.log(`${error.section}.${error.name}`);
             reject(dispatchError);
 
             return;
@@ -125,10 +156,5 @@ class DemoNFTContract extends AsyncFactory {
     });
   }
 }
-
-// const contractPromise = DemoNFTContract.create(
-//   '5DMKFG4JfJQcNWjDfAkRhUmUX3pUsSx8aUdYakxsJY7e8Pf2',
-//   new WsProvider('ws://127.0.0.1:9944')
-// );
 
 export default DemoNFTContract;

@@ -46,8 +46,6 @@ const Navbar: FC<unknown> = () => {
                         disconnect={() => clientInterface.onAccountUnset()}
                       />
                     ))}
-
-                  {/* {showCaptchas && <CaptchaComponent clientInterface={clientInterface} />} */}
                 </>
               )}
             </ProsopoConsumer>
