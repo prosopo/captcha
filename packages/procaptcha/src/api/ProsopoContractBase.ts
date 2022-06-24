@@ -17,10 +17,9 @@ import { ApiPromise, SubmittableResult } from "@polkadot/api";
 import { Abi, ContractPromise } from "@polkadot/api-contract";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
-import { abiJson, ProsopoContractError } from "@prosopo/contract";
+import { abiJson, unwrap, encodeStringArgs, ProsopoContractError } from "@prosopo/contract";
 import { AnyJson } from "@polkadot/types/types/codec";
 import { ProviderInterface } from "@polkadot/rpc-provider/types";
-import { unwrap, encodeStringArgs } from "../common";
 import { Signer } from "@polkadot/api/types";
 import { TransactionResponse } from '../types';
 import AsyncFactory from "./AsyncFactory";
@@ -75,7 +74,7 @@ export class ProsopoContractBase extends AsyncFactory {
         {},
         ...encodeStringArgs(abiMessage, args)
       );
-      console.log("QUERY RESPONSE", response);
+      console.log("QUERY RESPONSE", method, args, response);
       if (response.result.isOk) {
         if (response.output) {
           return unwrap(response.output.toHuman());

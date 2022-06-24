@@ -5,12 +5,11 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" && exit 0",
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose"
   },
   "dependencies": {
-    "@prosopo/contract": "0.0.0",
     "@polkadot/api": "^8.7.1",
     "@polkadot/api-contract": "^8.7.1",
     "@polkadot/extension-dapp": "^0.44.1",
@@ -19,7 +18,15 @@
     "@polkadot/types": "^8.7.1",
     "@polkadot/util": "^9.4.1",
     "@polkadot/util-crypto": "^9.4.1",
+    "@prosopo/contract": "0.0.0",
     "axios": "^0.27.2"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.1",
+    "chai": "^4.3.6",
+    "mocha": "^10.0.0",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^4.7.3"
   },
   "keywords": [],
   "author": "",
