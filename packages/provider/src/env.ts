@@ -51,10 +51,10 @@ export class Environment implements ProsopoEnvironment {
 
     assetsResolver: AssetsResolver | undefined
 
-    constructor(mnemonic) {
+    constructor(mnemonic: string) {
         loadEnvFile();
         this.config = Environment.getConfig()
-        this.mnemonic = mnemonic || process.env.PROVIDER_MNEMONIC
+        this.mnemonic = mnemonic
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address

@@ -71,7 +71,7 @@ async function setupEnvFile(mnemonic: string, address: string) {
         fse.readFile(path.join(integrationPath, '.env'), 'utf8'),
         fse.readFile('./env.txt', 'utf8'),
     ]);
-    contractEnvFile = updateEnvFileVar(contractEnvFile, 'DATABASE_HOST', 'localhost');
+    contractEnvFile = updateEnvFileVar(contractEnvFile, 'DATABASE_HOST', '127.0.0.1');
     defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_MNEMONIC', `"${mnemonic}"`);
     defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_ADDRESS', address);
 

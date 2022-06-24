@@ -25,7 +25,7 @@ import { Environment } from './env';
 
 async function main () {
   mnemonicValidate(process.env.PROVIDER_MNEMONIC as string);
-  const env = new Environment(process.env.PROVIDER_MNEMONIC);
+  const env = new Environment(process.env.PROVIDER_MNEMONIC!);
 
   await env.isReady();
 

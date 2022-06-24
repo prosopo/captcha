@@ -4,8 +4,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "module": "commonjs",
-    "target": "esnext",
-    "types": ["mocha"]
+    "target": "esnext"
   },
   "include": [
     "./src/**/*.ts"
