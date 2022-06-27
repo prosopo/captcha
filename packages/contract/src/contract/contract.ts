@@ -1,3 +1,18 @@
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of contract <https://github.com/prosopo-io/contract>.
+//
+// contract is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// contract is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with contract. If not, see <http://www.gnu.org/licenses/>.
 import {ApiPromise, SubmittableResult} from '@polkadot/api';
 import {Abi} from '@polkadot/api-contract';
 import type {AbiMessage, ContractCallOutcome} from '@polkadot/api-contract/types';
@@ -6,14 +21,9 @@ import type {AccountId, EventRecord, Weight} from '@polkadot/types/interfaces';
 import {isU8a, stringCamelCase, stringUpperFirst, u8aToHex} from '@polkadot/util';
 import {addressEq} from '@polkadot/util-crypto';
 import BN from 'bn.js';
-import chalk from 'chalk';
+// import chalk from 'chalk';
 import {buildTx} from './buildTx';
 import {convertSignerToAddress} from './helpers';
-import {
-    BigNumber,
-    ContractAbi,
-    Signer
-} from '../types';
 import {AnyString} from "@polkadot/util/types";
 import {
     CallOverrides,
@@ -21,8 +31,14 @@ import {
     ContractFunction,
     DecodedEvent,
     PopulatedTransaction,
-    TransactionParams, TransactionResponse
-} from "../types";
+    TransactionParams,
+    TransactionResponse,
+} from '../types/contract';
+
+import { BigNumber, IContract } from '../types/contract';
+import { ContractAbi } from '../types/artifacts';
+import { Signer } from '../types/signer';
+
 import {logger} from '../logger'
 
 async function populateTransaction(
@@ -159,9 +175,9 @@ export function buildCall(
         logger.debug('');
 
         if (!isEstimateGas) {
-            logger.debug(chalk.magenta(`===== Read ${messageName} =====`));
+            logger.debug(`===== Read ${messageName} =====`);
         } else {
-            logger.debug(chalk.magenta(`===== Estimate gas ${messageName} =====`));
+            logger.debug(`===== Estimate gas ${messageName} =====`);
         }
 
         Object.keys(params).forEach((key) => {
@@ -267,7 +283,7 @@ function buildSend(
         const messageName = stringCamelCase(fragment.identifier);
 
         logger.debug('');
-        logger.debug(chalk.magenta(`===== Exec ${messageName} =====`));
+        logger.debug(`===== Exec ${messageName} =====`);
         Object.keys(callParams).forEach((key) => {
             try {
                 let print: string;
@@ -308,7 +324,7 @@ function buildSend(
         if (response && !response.error) {
             logger.debug(`Execute successfully`);
         } else {
-            logger.debug(`Execute failed. ${chalk.red(response.error?.message || '')}`);
+            logger.debug(`Execute failed. ${response.error?.message || ''}`);
         }
 
         return response;
@@ -331,7 +347,7 @@ function buildEstimate(
     };
 }
 
-export class Contract {
+export class Contract implements IContract {
     public readonly address: AccountId;
     public readonly abi: Abi;
     public readonly signer: string;

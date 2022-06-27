@@ -1,3 +1,18 @@
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of contract <https://github.com/prosopo-io/contract>.
+//
+// contract is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// contract is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with contract. If not, see <http://www.gnu.org/licenses/>.
 import type { Signer as PolkadotSigner } from '@polkadot/api/types';
 import { SignerResult } from '@polkadot/api/types';
 import Keyring from '@polkadot/keyring';
@@ -5,11 +20,11 @@ import type { KeyringPair } from '@polkadot/keyring/types';
 import type { Registry } from '@polkadot/types/types';
 import { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
 import { u8aToHex } from '@polkadot/util';
-import {NetworkAccountsUserConfig, LocalKeyringPair} from "../types";
+import {NetworkAccountsUserConfig, LocalKeyringPair} from "../types/signer";
 
-let id = 0;
+let id = 0; // TODO static id?
 
-export class Signer implements PolkadotSigner {
+export class AccountSigner implements PolkadotSigner {
     readonly #keyring: Keyring;
     #config: NetworkAccountsUserConfig = [];
     #registry!: Registry;

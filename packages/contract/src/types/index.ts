@@ -14,8 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 export * from './artifacts'
+export * from './assets'
+export * from './captcha'
 export * from './contract'
-export * from './interface'
+export * from './merkle'
 export * from './network'
 export * from './prosopo'
 export * from './signer'
