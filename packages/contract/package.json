@@ -9,7 +9,7 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { 
+  "exports": {
     ".": "./dist/index.js",
     "./types": "./dist/types/index.js",
     "./captcha": "./dist/captcha/index.js"
@@ -48,8 +48,8 @@
     "url": "https://github.com/prosopo-io/contract/issues"
   },
   "homepage": "https://github.com/prosopo-io/contract#readme",
-  "description": "",
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com"
-  }
+    "registry": "https://registry.npmjs.org"
+  },
+  "description": ""
 }
