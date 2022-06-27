@@ -101,7 +101,7 @@ const config = {
 
 ## Run the Provider server
 
-### Set a provider mnemonic in redspot.config.ts
+### Set a provider mnemonic in prosopo.config.js
 
 > Please note your `PROVIDER_MNEMONIC` environment variable must be set. You can check this with `echo $PROVIDER_MNEMONIC`
 
