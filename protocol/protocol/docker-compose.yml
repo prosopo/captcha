@@ -4,23 +4,11 @@ services:
     image: prosopo/protocol-build:latest
     volumes:
       - type: bind
-        source: ./protocol
+        source: .
         target: /usr/src/protocol
     build:
       context: .
       dockerfile: ./docker/contracts.protocol.dockerfile
-    links:
-      - substrate-node
-    #command: "tail -f /dev/null"
-  dapp-build:
-    image: prosopo/dapp-build:latest
-    volumes:
-      - type: bind
-        source: ./dapp-example
-        target: /usr/src/dapp-example
-    build:
-      context: .
-      dockerfile: ./docker/contracts.dapp.dockerfile
     links:
       - substrate-node
     #command: "tail -f /dev/null"
