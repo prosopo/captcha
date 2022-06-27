@@ -1,8 +1,6 @@
 # Dapp Example
 
-This repository demonstrates how to call the Prosopo [Protocol](https://github.com/prosopo-io/protocol) contract from within a second contract.
-
-> NOTE: The easiest way to deploy the Prosopo contract and Dapp-example contract is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to deploy the dapp-example manually.
+This repository demonstrates how to call the Prosopo [Protocol](https://github.com/prosopo-io/protocol) contract from within a second contract. The easiest way to use this contract in a development environment is via the [integration repository](https://github.com/prosopo-io/integration). Manual build and deploy instructions are included below.
 
 ## Prerequisites
 
@@ -10,50 +8,36 @@ This repository demonstrates how to call the Prosopo [Protocol](https://github.c
 
 Follow instructions in Prosopo [Protocol](https://github.com/prosopo-io/protocol)
 
-### Install Prerequisites
+### Build and deploy the dapp-example contract with docker
 
-Follow the [Substrate Contracts Workshop](https://substrate.dev/substrate-contracts-workshop) guide to install pre-requisites.
+The docker file is configured to use the [substrate endpoint](https://github.com/prosopo-io/dapp-example/blob/859ed5088bd77273819023823e6a0c5fb241f0b3/docker/contracts.dapp.dockerfile#L9) from the docker compose file. Change this endpoint and the docker compose file if you wish to deploy to a different node. Specify the Prosopo Protocol account as `CONTRACT_ADDRESS`.
 
-These are the steps for Ubuntu:
-1. Install [Substrate dependancies](https://substrate.dev/docs/en/knowledgebase/getting-started)
-2. Add Rust packages and dependancies)
 ```bash
-rustup component add rust-src --toolchain nightly
-rustup target add wasm32-unknown-unknown --toolchain nightly
-```
-3. Setup contract node
-   A specific version of the contract node is [required](https://stackoverflow.com/questions/69826769/how-can-i-query-contract-info-with-the-latest-polkadot-js-and-substrate-contract/69831057#69831057) to work with polkadotjs.
-```
-git clone https://github.com/paritytech/substrate-contracts-node &&
-cd substrate-contracts-node &&
-git checkout 8d91b8e578065a7c06433cbd41ac059bf478a0bd &&
-cargo build && 
-./target/debug/substrate-contracts-node --dev --tmp --version
+CONTRACT_ADDRESS=5CCfRe5TxkUVMDMznbGs4wpxeWnUK8hC6dqQ7bZZtao6RFiH docker compose --file docker-compose.dapp.yml up dapp-build
 ```
 
-4. Install Binaryen
-```bash
-wget https://github.com/WebAssembly/binaryen/releases/download/version_101/binaryen-version_101-x86_64-linux.tar.gz
-tar -xvzf binaryen-version_101-x86_64-linux.tar.gz
-sudo cp ./binaryen-version_101/bin/* /usr/bin
-```
-5. Install the Ink CLI
-```bash
-cargo install cargo-contract --vers ^0.16 --force --locked
-```
+### Build and deploy the contract locally
 
-## Build
-
-Note: Use the `--release` flag to minimise contract size if the contract is too large to put on-chain.
+After installing all [substrate pre-requisites](https://docs.substrate.io/main-docs/install/), in the contracts folder run:
 
 ```bash
 cargo +nightly contract build
 ```
 
-## Deploy
+Then deploy the contract to a substrate node after populating the various arguments. For examples, of these arguments, please see the [docker file](https://github.com/prosopo-io/dapp-example/blob/develop/docker/contracts.dapp.dockerfile).
 
-The dapp-example repository is implemented as a [redspot](https://github.com/patractlabs/redspot) project. You can install dependencies and then run a script to deploy the contract.
+#### Deploy via the Command Line
+
+Use [cargo contract](https://github.com/paritytech/cargo-contract).
 
 ```bash
-yarn && yarn deploy
+$CONTRACT_ARGS = "$DAPP_CONTRACT_ARGS_INITIAL_SUPPLY $DAPP_CONTRACT_ARGS_FAUCET_AMOUNT $CONTRACT_ADDRESS $DAPP_CONTRACT_ARGS_HUMAN_THRESHOLD $DAPP_CONTRACT_ARGS_RECENCY_THRESHOLD"
+cargo contract instantiate $WASM --args $CONTRACT_ARGS --constructor $CONSTRUCTOR --suri $SURI --value $ENDOWMENT --url '$ENDPOINT:$PORT' --gas 500000000000
+
 ```
+
+#### Deploy via a User Interfacae
+
+Use [polkadot apps](https://polkadot.js.org/apps/) contract page.
+
+
