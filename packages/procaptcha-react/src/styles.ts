@@ -1,4 +1,28 @@
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of procaptcha-react <https://github.com/prosopo-io/procaptcha-react>.
+//
+// procaptcha-react is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// procaptcha-react is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
 import { makeStyles } from "@mui/styles";
+
+const dot = {
+  width: 7,
+  height: 7,
+  borderRadius: 3.5,
+  marginRight: 5,
+  border: "1px solid #CFCFCF",
+  backgroundColor: "#FFFFFF",
+}
 
 export const useStyles = makeStyles({
   root: {
@@ -49,16 +73,6 @@ export const useStyles = makeStyles({
   captchasHeaderLabel: {
     color: "#ffffff"
   },
-  iAmHumanButton: {
-    height: 76,
-    width: 300,
-    backgroundColor: "#FAFAFA !important",
-    border: "1px solid #E0E0E0 !important"
-  },
-  iAmHumanButtonLabel: {
-    color: "#555555",
-    textTransform: "none"
-  },
   dotsContainer: {
     display: "flex",
     alignItems: "center",
@@ -67,11 +81,9 @@ export const useStyles = makeStyles({
     paddingBottom: 15,
     paddingTop: 10
   },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    marginRight: 5,
-    border: "1px solid #CFCFCF"
-  }
+  dot,
+  dotActive: {
+    ...dot,
+    backgroundColor: "#CFCFCF"
+  },
 });

@@ -13,5 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
-export * from './components';
-export * from './styles';
+export * from './CaptchaManager';
+export * from './CaptchaWidget';
+export * from './CaptchaComponent';
+export * from './ExtensionAccountSelect';
