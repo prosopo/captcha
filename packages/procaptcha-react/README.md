@@ -1,10 +1,10 @@
-#React Prosopo Procaptcha Component Library
+# React Prosopo Procaptcha Component Library
 
 React components for integrating the Prosopo [procaptcha](https://github.com/prosopo-io/procaptcha) into a React app.
 
 Prosopo is a distributed human verification service that can be used to stop bots from interacting with smart contracts. Sign up to be a network [alpha tester](https://5b06hrhtlmh.typeform.com/to/vNpyOUfg).
 
-##Installation
+## Installation
 
 You can install this library with:
 
