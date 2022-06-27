@@ -112,20 +112,20 @@ async function setup() {
         throw new Error('DAPP_CONTRACT_ADDRESS is not set in .env file.');
     }
 
-    if (!hasProviderAccount) {
-        const env = new Environment('//Alice');
-        await env.isReady();
 
-        defaultProvider.mnemonic = mnemonic;
-       
-        console.log('Registering provider...');
-        await registerProvider(env, defaultProvider);
+    const env = new Environment('//Alice');
+    await env.isReady();
 
-        defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS;
+    defaultProvider.mnemonic = mnemonic;
 
-        console.log('Registering dapp...');
-        await registerDapp(env, defaultDapp);
-    }
+    console.log('Registering provider...');
+    await registerProvider(env, defaultProvider);
+
+    defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS;
+
+    console.log('Registering dapp...');
+    await registerDapp(env, defaultDapp);
+
 
     process.exit();
 }
