@@ -48,5 +48,8 @@
     "url": "https://github.com/prosopo-io/contract/issues"
   },
   "homepage": "https://github.com/prosopo-io/contract#readme",
-  "description": ""
+  "description": "",
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com"
+  }
 }
