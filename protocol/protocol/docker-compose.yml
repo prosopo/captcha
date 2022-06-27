@@ -1,0 +1,35 @@
+version: '3.4'
+services:
+  protocol-build:
+    image: prosopo/protocol-build:latest
+    volumes:
+      - type: bind
+        source: ./protocol
+        target: /usr/src/protocol
+    build:
+      context: .
+      dockerfile: ./docker/contracts.protocol.dockerfile
+    links:
+      - substrate-node
+    #command: "tail -f /dev/null"
+  dapp-build:
+    image: prosopo/dapp-build:latest
+    volumes:
+      - type: bind
+        source: ./dapp-example
+        target: /usr/src/dapp-example
+    build:
+      context: .
+      dockerfile: ./docker/contracts.dapp.dockerfile
+    links:
+      - substrate-node
+    #command: "tail -f /dev/null"
+  substrate-node:
+    image: prosopo/substrate:v1.0.0
+    build:
+      context: ./docker/
+      dockerfile: Substrate.dockerfile
+    ports:
+      - "9615:9615"
+      - "9944:9944"
+      - "9933:9933"
