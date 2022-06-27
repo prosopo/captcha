@@ -1,7 +1,6 @@
 {
   "name": "@prosopo/procaptcha-react",
   "version": "0.1.0",
-  "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -33,6 +32,6 @@
   "homepage": "https://github.com/prosopo-io/procaptcha-react#readme",
   "description": "",
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com"
+    "registry":"https://registry.npmjs.org"
   }
 }
