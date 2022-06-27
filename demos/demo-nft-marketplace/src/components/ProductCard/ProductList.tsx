@@ -1,4 +1,4 @@
-import { NtfItem, SellOrderTake } from 'api/raribleRequestTypes';
+import { Token } from 'api/demoApi';
 import { ReloadIcon } from 'assets';
 import Button from 'components/Button';
 import { ButtonType } from 'components/Button/Button';
@@ -6,12 +6,11 @@ import React, { FC } from 'react';
 import ProductCard from './ProductCard';
 
 type Props = {
-  itemsData: NtfItem[];
-  ordersData: { take?: SellOrderTake; hash: string }[];
   onLoadMore?: () => void;
+  tokens: Token[];
 };
 
-const ProductList: FC<Props> = ({ itemsData, onLoadMore, ordersData }) => {
+const ProductList: FC<Props> = ({ onLoadMore, tokens }) => {
   return (
     <>
       <div className="px-6 mx-auto b-6 max-w-screen-2xl ">
@@ -19,8 +18,8 @@ const ProductList: FC<Props> = ({ itemsData, onLoadMore, ordersData }) => {
           role="list"
           className="grid grid-cols-1 sm:grid-cols-2 sm:gap-x-6 gap-y-6 sm:space-y-0 lg:grid-cols-4 lg:gap-x-6 xl:grid-cols-5"
         >
-          {itemsData?.map((item, idx) => (
-            <ProductCard key={item.id} item={item} sellOrder={ordersData?.[idx] ?? null} />
+          {tokens?.map((token) => (
+            <ProductCard key={token.id} item={token} />
           ))}
         </ul>
       </div>

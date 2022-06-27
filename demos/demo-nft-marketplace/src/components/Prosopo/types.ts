@@ -2,8 +2,8 @@ import { ProsopoCaptchaClient } from '@prosopo/procaptcha';
 import { PropsWithChildren, ReactNode } from 'react';
 
 export type ShowCaptchasState = {
-  showCaptchas: boolean;
-  setShowCaptchas: (value: boolean) => void;
+  captchasVisible: boolean;
+  showCaptchas: (callback?: () => Promise<void>) => void;
   clientInterface?: ProsopoCaptchaClient;
 };
 

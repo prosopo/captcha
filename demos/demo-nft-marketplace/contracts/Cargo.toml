@@ -15,9 +15,9 @@ ink_prelude = { version = "3.2.0", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
-brush = { tag = "v1.7.1", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["psp34"] }
+brush = { tag = "v1.7.1", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["psp34", "ownable"] }
 
-prosopo = { path = "../../../protocol/contracts", default-features = false, features = ["ink-as-dependency"] }
+prosopo = { git = "https://github.com/prosopo-io/protocol", branch = "ink-3.2.0", default-features = false, features = ["ink-as-dependency"] }
 
 base64 = { version = "0.13.0", default-features = false, features = ["alloc"] }
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
