@@ -1,16 +1,27 @@
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of procaptcha <https://github.com/prosopo-io/procaptcha>.
+//
+// procaptcha is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// procaptcha is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { ApiPromise, SubmittableResult } from "@polkadot/api";
 import { Abi, ContractPromise } from "@polkadot/api-contract";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
-import abiJson from "../abi/prosopo.json";
+import { abiJson, unwrap, encodeStringArgs, ProsopoContractError } from "@prosopo/contract";
 import { AnyJson } from "@polkadot/types/types/codec";
 import { ProviderInterface } from "@polkadot/rpc-provider/types";
-import { unwrap, encodeStringArgs } from "../common/helpers";
-// import Extension, { NoExtensionCallback } from "./Extension";
 import { Signer } from "@polkadot/api/types";
-// import { buildTx } from "@prosopo/contract";
-// import { contractDefinitions } from "@prosopo/contract";
-import { TransactionResponse } from '../types/contract';
+import { TransactionResponse } from '../types';
 import AsyncFactory from "./AsyncFactory";
 
 export class ProsopoContractBase extends AsyncFactory {
@@ -25,6 +36,7 @@ export class ProsopoContractBase extends AsyncFactory {
 
   /**
    * @param address
+   * @param dappAddress
    * @param account
    * @param providerInterface
    */
@@ -62,7 +74,7 @@ export class ProsopoContractBase extends AsyncFactory {
         {},
         ...encodeStringArgs(abiMessage, args)
       );
-      console.log("QUERY RESPONSE", response);
+      console.log("QUERY RESPONSE", method, args, response);
       if (response.result.isOk) {
         if (response.output) {
           return unwrap(response.output.toHuman());
@@ -70,9 +82,7 @@ export class ProsopoContractBase extends AsyncFactory {
           return null;
         }
       } else {
-        throw new Error(
-          response.result.asErr.asModule.message.unwrap().toString()
-        );
+        throw new ProsopoContractError(response.result.asErr);
       }
     } catch (e) {
       console.error("ERROR", e);
@@ -86,7 +96,7 @@ export class ProsopoContractBase extends AsyncFactory {
 
     // TODO if DEBUG==true || env.development
     const queryBeforeTx = await this.query(method, args);
-  
+
     console.log("QUERY BEFORE TX....................", queryBeforeTx);
 
     const abiMessage = this.abi.findMessage(method);
@@ -127,7 +137,7 @@ export class ProsopoContractBase extends AsyncFactory {
 
         // Instant seal ON.
         if (status?.isInBlock) {
-          
+
           const blockHash = status.asInBlock.toHex();
 
           resolve({ dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex, blockHash });
@@ -137,15 +147,15 @@ export class ProsopoContractBase extends AsyncFactory {
         // TODO
         // Instant seal OFF.
         // if (status?.isFinalized) {
-          
+
         //   const blockHash = status.asFinalized.toHex();
 
         //   resolve({ dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex, blockHash });
-          
+
         // }
 
       })
-      .catch((e) => { 
+      .catch((e) => {
         console.error("signAndSend ERROR", e);
         reject(e);
       });

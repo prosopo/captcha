@@ -1,87 +1,120 @@
-import {
-    web3Enable,
-    web3FromSource,
-    web3Accounts,
-} from "@polkadot/extension-dapp";
+// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// This file is part of procaptcha <https://github.com/prosopo-io/procaptcha>.
+//
+// procaptcha is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// procaptcha is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
+import { web3Enable, web3FromSource, web3Accounts } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types"
 import { SignerPayloadRaw } from "@polkadot/types/types";
 import storage from "../modules/storage";
+import { IExtensionInterface } from "../types/client";
 import AsyncFactory from "./AsyncFactory";
 
-/**
- * type for callback when no extension was found
- */
-export type NoExtensionCallback = () => void | Promise<void>;
 
-export class Extension extends AsyncFactory {
+export class Extension extends AsyncFactory implements IExtensionInterface {
 
-    private account: InjectedAccountWithMeta;
-    private injected: InjectedExtension;
-    private allAccounts: InjectedAccountWithMeta[];
+    private extension: InjectedExtension;
+    private account: InjectedAccountWithMeta | undefined;
+    private accounts: InjectedAccountWithMeta[];
+    private injectedExtensions: InjectedExtension[];
 
-    /**
-     * @param noExtCb - callback when no extension was found
-     */
-    public async init(noExtCb?: NoExtensionCallback) {
-        await this.checkExtensions(noExtCb || (() => { }));
-        this.allAccounts = await web3Accounts();
-        await this._loadAccount();
-        console.log(this.account)
-        this.injected = await web3FromSource(this.account.meta.source);
+    public async init() {
+        await this.checkExtension();
+        await this.setAccounts();
+        await this.setExtension();
         return this;
     }
 
-    public async checkExtensions(cb: NoExtensionCallback, compatInits?: (() => Promise<boolean>)[]) {
-        // this call fires up the authorization popup
-        const extensions = await web3Enable('Prosopo', compatInits);
-
-        if (extensions.length === 0) {
-            // no extension installed, or the user did not accept the authorization
-            // in this case we should inform the use and give a link to the extension
-            await cb();
-            return;
+    public async checkExtension() {
+        try {
+            this.injectedExtensions = await web3Enable('Prosopo');
+        } catch (err) {
+            throw new Error(err);
+        }
+        if (!this.injectedExtensions.length) {
+            throw new Error("No extension found");
         }
     }
 
-    private async _loadAccount() {
-        const defaultAccount = storage.getAccount();
-
-        const account = this.allAccounts.find(acc => acc.address === defaultAccount)
-
-        return this.account = account || this.allAccounts[0];
+    public getExtension() {
+        return this.extension;
     }
 
-    public async loadAccount() {
-        return this._loadAccount();
-    }
-
-    public async setAccount(address: string): Promise<InjectedAccountWithMeta> {
-        const account = this.allAccounts.find(acc => acc.address === address);
-        if (!account) {
-            throw new Error("Account doesn't exist")
+    private async setExtension() {
+        try {
+            // https://polkadot.js.org/docs/extension/cookbook/
+            this.extension = await web3FromSource(this.accounts[0].meta.source);
+        } catch (err) {
+            throw new Error(err);
         }
-        storage.setAccount(address);
-        return this.account = account;
+        if (!this.extension) {
+            throw new Error("Extension not found");
+        }
+    }
+
+    public getAccounts() {
+        return this.accounts;
+    }
+
+    private async setAccounts() {
+        try {
+            this.accounts = await web3Accounts();
+        } catch (err) {
+            throw new Error(err);
+        }
+        this.setDefaultAccount();
     }
 
     public getAccount() {
         return this.account;
     }
 
-    public getAllAcounts() {
-        return this.allAccounts;
+    public setAccount(address: string) {
+        if (!this.accounts.length) {
+            throw new Error("No accounts found");
+        }
+        const account = this.accounts.find(acc => acc.address === address);
+        if (!account) {
+            throw new Error("Account not found");
+        }
+        this.account = account;
+        storage.setAccount(account.address);
     }
 
-    public getInjected() {
-        return this.injected;
+    public unsetAccount() {
+        this.account = undefined;
+        storage.setAccount("");
     }
 
-    public async signRaw(raw: Omit<SignerPayloadRaw, "address">) {
-        return (this.injected.signer && this.injected.signer.signRaw && this.injected.signer.signRaw({
-            address: this.account.address,
-            ...raw
-        }))
+    public getDefaultAccount() {
+        const defaultAccount = storage.getAccount();
+        return this.accounts.find(acc => acc.address === defaultAccount);
     }
+
+    public setDefaultAccount() {
+        const defaultAccount = storage.getAccount();
+        if (defaultAccount) {
+            this.setAccount(defaultAccount);
+        }
+    }
+
+    // public async signRaw(raw: SignerPayloadRaw) {
+    //     if (!this.extension.signer) {
+    //         throw new Error("No signer found");
+    //     }
+    //     return this.extension.signer?.signRaw!({ ...raw, address: this.account!.address });
+    // }
+
 }
 
 export default Extension;

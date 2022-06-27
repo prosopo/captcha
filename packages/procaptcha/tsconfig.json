@@ -2,24 +2,23 @@
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./build",
-
+    "outDir": "./dist",
+    "module": "commonjs",
+    "target": "esnext",
     "lib": [
       "esnext",
       "dom"
-    ],
-
+    ]
   },
   "include": [
-    "./src/**/*.ts",
-    "./src/abi/*.json"
+    "./src/**/*.ts"
   ],
-  "references": [ 
-    { 
-      "path": "../provider" 
+  "references": [
+    {
+      "path": "../provider"
     },
-    { 
-      "path": "../contract" 
+    {
+      "path": "../contract"
     }
   ]
 }
