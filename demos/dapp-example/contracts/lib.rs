@@ -105,7 +105,7 @@ pub mod dapp {
         /// Calls the `Prosopo` contract to check if `accountid` is human
         #[ink(message)]
         pub fn is_human(&self, accountid: AccountId, threshold: u8, recency: u32) -> bool {
-            let mut prosopo_instance: ProsopoRef = ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
+            let prosopo_instance: ProsopoRef = ink_env::call::FromAccountId::from_account_id(self.prosopo_account);
             prosopo_instance.dapp_operator_is_human_user(accountid, threshold).unwrap();
             // check that the captcha was completed within the last X seconds
             let last_correct_captcha = prosopo_instance.dapp_operator_last_correct_captcha(accountid).unwrap();
