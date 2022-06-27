@@ -8,6 +8,8 @@ This repository demonstrates how to call the Prosopo [Protocol](https://github.c
 
 Follow instructions in Prosopo [Protocol](https://github.com/prosopo-io/protocol)
 
+## Build and Deploy
+
 ### Build and deploy the dapp-example contract with docker
 
 The docker file is configured to use the [substrate endpoint](https://github.com/prosopo-io/dapp-example/blob/859ed5088bd77273819023823e6a0c5fb241f0b3/docker/contracts.dapp.dockerfile#L9) from the docker compose file. Change this endpoint and the docker compose file if you wish to deploy to a different node. Specify the Prosopo Protocol account as `CONTRACT_ADDRESS`.
