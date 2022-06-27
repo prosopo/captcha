@@ -13,52 +13,33 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {hexToU8a} from '@polkadot/util';
-import {AnyJson} from '@polkadot/types/types/codec';
+import { Hash } from '@polkadot/types/interfaces';
+import type { RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment';
+import { AnyJson } from '@polkadot/types/types/codec';
+import { hexToU8a } from '@polkadot/util';
+import { randomAsHex } from '@polkadot/util-crypto';
 import {
-    ContractApiInterface,
-    Payee,
-    Dapp,
-    Provider,
-    CaptchaData,
-    GovernanceStatus,
-    RandomProvider,
-    BigNumber,
-} from '@prosopo/contract';
-import type {RuntimeDispatchInfo} from '@polkadot/types/interfaces/payment'
-import {Hash} from '@polkadot/types/interfaces';
-import {randomAsHex} from '@polkadot/util-crypto';
-import {buildDecodeVector} from '../codec/codec';
-import {ERRORS} from '../errors';
-import {CaptchaMerkleTree} from '../merkle';
-import {
-    addHashesToDataset,
-    compareCaptchaSolutions,
+    addHashesToDataset, BigNumber, Captcha,
+    CaptchaConfig, CaptchaData, CaptchaMerkleTree, CaptchaSolution,
+    CaptchaSolutionCommitment, CaptchaSolutionConfig, CaptchaSolutionToUpdate,
+    CaptchaStates, CaptchaStatus, CaptchaWithoutId, compareCaptchaSolutions,
     computeCaptchaHash,
     computeCaptchaSolutionHash,
-    computePendingRequestHash,
-    parseCaptchaDataset,
-    parseCaptchaSolutions
-} from '../captcha'
+    computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, LastCorrectCaptcha, parseCaptchaDataset,
+    parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse
+} from '@prosopo/contract';
+import consola from "consola";
+import { buildDecodeVector } from '../codec/codec';
+import { ERRORS } from '../errors';
 import {
-    Captcha,
-    CaptchaConfig,
-    CaptchaSolution,
-    CaptchaSolutionCommitment,
     CaptchaSolutionResponse,
-    CaptchaStatus,
     CaptchaWithProof,
     Database,
     DatasetRecord,
-    ProsopoEnvironment,
-    CaptchaSolutionToUpdate,
-    CaptchaStates,
-    CaptchaWithoutId,
-    CaptchaSolutionConfig,
-    LastCorrectCaptcha
-} from '../types'
-import {loadJSONFile, shuffleArray, writeJSONFile} from '../util'
-import {TransactionResponse} from '@prosopo/contract';
+    ProsopoEnvironment
+} from '../types';
+import { loadJSONFile, shuffleArray, writeJSONFile } from '../util';
+
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -72,8 +53,9 @@ export class Tasks {
 
     captchaSolutionConfig: CaptchaSolutionConfig
 
+    logger: typeof consola
+
     constructor(env: ProsopoEnvironment) {
-        // this.contractApi = new ProsopoContractApi(env.deployerAddress, env.contractAddress, env.mnemonic, env.contractName)
         if (!env.contractInterface) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message);
         }
@@ -82,6 +64,7 @@ export class Tasks {
         this.db = env.db as Database;
         this.captchaConfig = env.config.captchas;
         this.captchaSolutionConfig = env.config.captchaSolutions
+        this.logger = env.logger
     }
 
     // Contract transactions potentially involving database writes
@@ -90,7 +73,7 @@ export class Tasks {
         return await this.contractApi.contractTx('providerRegister', [serviceOrigin, fee, payee, address]);
     }
 
-    async providerUpdate (serviceOrigin: string, fee: number, payee: Payee, address: string, value?: BigNumber): Promise<TransactionResponse> {
+    async providerUpdate(serviceOrigin: string, fee: number, payee: Payee, address: string, value?: BigNumber): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('providerUpdate', [serviceOrigin, fee, payee, address], value);
     }
 
@@ -103,8 +86,8 @@ export class Tasks {
     }
 
     async providerAddDataset(file: string): Promise<TransactionResponse> {
-        const dataset = parseCaptchaDataset(loadJSONFile(file) as JSON);
-        const datasetWithoutIds = {...dataset}
+        const dataset = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON);
+        const datasetWithoutIds = { ...dataset }
         const tree = new CaptchaMerkleTree();
         const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
         tree.build(captchaHashes);
@@ -112,7 +95,7 @@ export class Tasks {
         datasetHashes.datasetId = tree.root?.hash;
         datasetHashes.tree = tree.layers;
         await this.db?.storeDataset(datasetHashes);
-        writeJSONFile(file, {...datasetWithoutIds, datasetId: datasetHashes.datasetId}).catch((err) => {
+        writeJSONFile(file, { ...datasetWithoutIds, datasetId: datasetHashes.datasetId }).catch((err) => {
             console.error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
         })
         return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)]);
@@ -130,7 +113,7 @@ export class Tasks {
         return await this.contractApi.contractTx('dappCancel', [contractAccount]);
     }
 
-    async dappUserCommit(contractAccount: string, captchaDatasetId: Hash | string, userMerkleTreeRoot: string, providerAddress: string): Promise<TransactionResponse> {
+    async dappUserCommit(contractAccount: string, captchaDatasetId: string, userMerkleTreeRoot: string, providerAddress: string): Promise<TransactionResponse> {
         return await this.contractApi.contractTx('dappUserCommit', [contractAccount, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
     }
 
@@ -198,7 +181,7 @@ export class Tasks {
                 const proof = tree.proof(captcha.captchaId)
                 // cannot pass solution to dapp user as they are required to solve the captcha!
                 delete captcha.solution
-                captchas.push({captcha, proof})
+                captchas.push({ captcha, proof })
             }
             return captchas
         }
@@ -229,16 +212,15 @@ export class Tasks {
         }
         const partialFee = paymentInfo?.partialFee
         let response: CaptchaSolutionResponse[] = []
-        const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas)
-        const {tree, commitment, commitmentId} = await this.buildTreeAndGetCommitment(receivedCaptchas)
+        const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
+        const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
-
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
-                response = captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)}))
+                response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
             } else {
                 await this.providerDisapprove(commitmentId)
             }
@@ -273,7 +255,7 @@ export class Tasks {
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
             throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
         }
-        return {storedCaptchas, receivedCaptchas, captchaIds}
+        return { storedCaptchas, receivedCaptchas, captchaIds }
     }
 
     /**
@@ -293,7 +275,7 @@ export class Tasks {
         if (!commitment) {
             throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
         }
-        return {tree, commitment, commitmentId}
+        return { tree, commitment, commitmentId }
     }
 
     /**
@@ -338,22 +320,27 @@ export class Tasks {
         const salt = randomAsHex()
 
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)
+
         await this.db.storeDappUserPending(userAccount, requestHash, salt)
-        return {captchas, requestHash}
+        return { captchas, requestHash }
     }
 
     /**
      * Apply new captcha solutions to captcha dataset and recalculate merkle tree
-     * @param {string} datasetId
      */
     async calculateCaptchaSolutions() {
         try {
             const captchaFilePath = this.captchaSolutionConfig.captchaFilePath
-            const currentDataset = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
+            const currentDataset = parseCaptchaDataset(loadJSONFile(captchaFilePath, this.logger) as JSON)
             if (!currentDataset.datasetId) {
                 return 0
             }
             const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(currentDataset.datasetId as string, CaptchaStates.Unsolved)
+
+            if (!unsolvedCaptchas) {
+                // edge case when a captcha dataset contains no unsolved captchas
+                return 0
+            }
 
             const totalNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
             const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
@@ -376,8 +363,8 @@ export class Tasks {
                         }
                         solutionsToUpdate = solutionsToUpdate.concat(
                             Object.values(solutionsWithCount)
-                                .filter(({solutionCount}: any) => solutionCount >= winningNumberOfSolutions)
-                                .map(({solutionCount, ...otherAttributes}: any) => otherAttributes))
+                                .filter(({ solutionCount }: any) => solutionCount >= winningNumberOfSolutions)
+                                .map(({ solutionCount, ...otherAttributes }: any) => otherAttributes))
                     }
                 }
                 if (solutionsToUpdate.length > 0) {
@@ -406,7 +393,7 @@ export class Tasks {
                 solutionObj[solutionsToUpdate[i].salt] = solutionsToUpdate[i]
             }
 
-            const prevDataset = parseCaptchaDataset(loadJSONFile(filePath) as JSON)
+            const prevDataset = parseCaptchaDataset(loadJSONFile(filePath, this.logger) as JSON)
 
             const jsonData = {
                 ...prevDataset,

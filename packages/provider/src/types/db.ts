@@ -15,9 +15,10 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Document, Collection } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
-import { Captcha, CaptchaSolution, CaptchaStates, Dataset } from './captcha'
+import { Captcha, CaptchaSolution, CaptchaStates, Dataset } from '@prosopo/contract'
 import { PendingCaptchaRequest } from './api'
 import { WithId } from 'mongodb/mongodb';
+import consola from "consola";
 // Other table types from other database engines go here
 export type Table = Collection | undefined
 
@@ -41,6 +42,7 @@ export interface Database {
     readonly url: string;
     tables: Tables
     dbname: string;
+    logger: typeof consola
 
     connect(): Promise<void>;
 
@@ -65,4 +67,8 @@ export interface Database {
     getAllCaptchasByDatasetId(datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined>;
 
     getAllSolutions(captchaId: string): Promise<CaptchaSolution[] | undefined>;
+
+    getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string>;
+
+    getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]>;
 }

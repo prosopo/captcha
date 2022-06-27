@@ -13,20 +13,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import findUp from 'find-up'
-import {ZodError} from 'zod'
-import {ERRORS} from './errors'
-import {Database, ProsopoConfig, ProsopoConfigSchema, ProsopoEnvironment} from './types'
-import {ContractAbi, ContractApiInterface, ProsopoContractApi} from '@prosopo/contract'
-import {loadJSONFile} from "./util";
-import {Network, createNetwork} from "@prosopo/contract";
-import consola from "consola";
-import {LogLevel} from 'consola'
+// import { findUpSync } from 'find-up'
+import { abiJson, ContractAbi, ContractApiInterface, createNetwork, Network, ProsopoContractApi, AssetsResolver } from '@prosopo/contract';
+import consola, { LogLevel } from "consola";
+import dotenv from 'dotenv';
+import { LocalAssetsResolver } from './assets';
+import { ERRORS } from './errors';
+import { Database, ProsopoConfig, ProsopoEnvironment } from './types';
+import {loadEnvFile} from "./util";
 
-require('dotenv').config()
 
-const TS_CONFIG_FILENAME = 'prosopo.config.ts'
-const JS_CONFIG_FILENAME = 'prosopo.config.js'
+dotenv.config();
+
+import prosopoConfig from './prosopo.config';
+// const JS_CONFIG_FILENAME = 'prosopo.config.js'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -36,8 +36,6 @@ export class Environment implements ProsopoEnvironment {
     contractInterface: ContractApiInterface | undefined
 
     mnemonic: string
-
-    deployerAddress: string
 
     contractAddress: string
 
@@ -51,16 +49,26 @@ export class Environment implements ProsopoEnvironment {
 
     logger: typeof consola
 
-    constructor(mnemonic) {
+    assetsResolver: AssetsResolver | undefined
+
+    constructor(mnemonic: string) {
+        loadEnvFile();
         this.config = Environment.getConfig()
         this.mnemonic = mnemonic
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
             this.defaultEnvironment = this.config.defaultEnvironment
-            this.deployerAddress = this.config.networks![this.defaultEnvironment].contract.deployer.address
             this.contractAddress = this.config.networks![this.defaultEnvironment].contract.address
             this.contractName = this.config.networks![this.defaultEnvironment].contract.name
-            this.abi = Environment.getContractAbi(this.config.contract.abi) as ContractAbi
-            this.logger = consola.create({level: this.config.logLevel as unknown as LogLevel});
+            this.logger = consola.create({ level: this.config.logLevel as unknown as LogLevel });
+            // this.abi = Environment.getContractAbi(this.config.contract.abi, this.logger) as ContractAbi
+            this.abi = abiJson as ContractAbi;
+
+
+            this.assetsResolver = new LocalAssetsResolver({
+                absolutePath: this.config.assets.absolutePath,
+                basePath: this.config.assets.basePath,
+                serverBaseURL: this.config.server.baseURL,
+            });
         } else {
             throw new Error(`${ERRORS.CONFIG.UNKNOWN_ENVIRONMENT}:${this.config.defaultEnvironment}`)
         }
@@ -68,7 +76,7 @@ export class Environment implements ProsopoEnvironment {
 
     async isReady() {
         this.network = await createNetwork(this.mnemonic, this.config.networks![this.defaultEnvironment])
-        this.contractInterface = new ProsopoContractApi(this.deployerAddress, this.contractAddress, this.mnemonic, this.contractName, this.abi, this.network)
+        this.contractInterface = new ProsopoContractApi(this.contractAddress, this.mnemonic, this.contractName, this.abi, this.network)
         await this.importDatabase()
         await this.db?.connect()
         await this.contractInterface?.isReady()
@@ -77,7 +85,7 @@ export class Environment implements ProsopoEnvironment {
     async importDatabase(): Promise<void> {
         try {
             if (this.config.database) {
-                const {ProsopoDatabase} = await import(`./db/${this.config.database![this.defaultEnvironment!].type!}`)
+                const { ProsopoDatabase } = await import(`./db/${this.config.database![this.defaultEnvironment!].type!}`)
                 this.db = new ProsopoDatabase(
                     this.config.database![this.defaultEnvironment].endpoint,
                     this.config.database![this.defaultEnvironment].dbname
@@ -88,41 +96,8 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
-    private static getConfigPath(): string {
-        const tsConfigPath = findUp.sync(TS_CONFIG_FILENAME)
-        if (tsConfigPath !== null && tsConfigPath !== undefined) {
-            return tsConfigPath
-        }
-
-        const pathToConfigFile = findUp.sync(JS_CONFIG_FILENAME)
-
-        if (pathToConfigFile === null || pathToConfigFile === undefined) {
-            throw new Error(ERRORS.GENERAL.CANNOT_FIND_CONFIG_FILE.message)
-        }
-
-        return pathToConfigFile
-    }
-
     private static getConfig(): ProsopoConfig {
-        try {
-            const filePath = Environment.getConfigPath()
-            const config = Environment.importCsjOrEsModule(filePath)
-            return ProsopoConfigSchema.parse(config)
-        } catch (error) {
-            if (error instanceof ZodError) {
-                const {path, message} = error.issues[0]
-                throw new Error(`${path.join('.')} ${message}`)
-            }
-            throw new Error(ERRORS.CONFIG.CONFIGURATIONS_LOAD_FAILED.message)
-        }
+        return prosopoConfig as ProsopoConfig;
     }
 
-    private static importCsjOrEsModule(filePath: string): any {
-        const imported = require(filePath)
-        return imported.default !== undefined ? imported.default : imported
-    }
-
-    private static getContractAbi(path): ContractAbi {
-        return loadJSONFile(path) as ContractAbi
-    }
 }

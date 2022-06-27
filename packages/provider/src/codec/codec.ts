@@ -13,16 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { Registry } from '@polkadot/types-codec/types/registry';
-
-import { AnyJson } from '@polkadot/types/types/codec';
-import { decodeU8aVec, typeToConstructor } from '@polkadot/types-codec/utils';
+import {Registry} from '@polkadot/types-codec/types/registry';
+import {AnyJson} from '@polkadot/types/types/codec';
+import {Vec} from '@polkadot/types-codec';
+import type {Codec} from '@polkadot/types-codec/types';
+import {createTypeUnsafe} from '@polkadot/types';
 
 export type DecodeFunction = (registry: Registry, data: Uint8Array) => AnyJson;
 
 export const buildDecodeVector = (typeName: string): DecodeFunction => (registry: Registry, data: Uint8Array): AnyJson => {
-  const vecType = typeToConstructor(registry, typeName);
-  const decoded = decodeU8aVec(registry, data, 0, vecType, 1);
-
-  return decoded[0].flatMap((value) => value.toHuman());
+  return createTypeUnsafe<Vec<Codec>>(registry, typeName, [data]).toJSON();
 };

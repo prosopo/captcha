@@ -1,40 +1,20 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-
-    "target": "esnext",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "module": "commonjs",
-
-    "paths": {
-      "@prosopo/provider": [
-        "./src"
-      ],
-      "@prosopo/provider/*": [
-        "./src/*"
-      ]
-    },
-
-    "rootDirs": [
-      "./",
-      "./src",
-      "./tests",
-      "./scripts"
-    ],
-    "outDir": "./build",
-
-  },
-  "ts-node": {
-    "esm": true
+    "target": "esnext"
   },
   "include": [
-    "./*.ts",
-    "./src/**/*.ts",
-    "./tests/**/*.ts",
-    "./scripts/**/*.ts"
+    "./src/**/*.ts"
   ],
-  "references": [ 
-    { 
-      "path": "../contract" 
+  "files": [
+    "./src/prosopo.config.js",
+  ],
+  "references": [
+    {
+      "path": "../contract"
     }
   ]
 }

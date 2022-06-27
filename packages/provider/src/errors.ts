@@ -13,6 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import {ProsopoEnvError} from "@prosopo/contract";
+
 export const ERRORS = {
     GENERAL: {
         CANNOT_FIND_CONFIG_FILE: {
@@ -31,7 +33,7 @@ export const ERRORS = {
             message: 'Something went wrong while creating captchas json file'
         },
         CALCULATE_CAPTCHA_SOLUTION: {
-            message: 'Something went wrong while calculation captcha solutions'
+            message: 'Something went wrong while calculating captcha solutions'
         },
         MNEMONIC_UNDEFINED : {
             message: 'Provider mnemonic Undefined. Please set `PROVIDER_MNEMONIC` in environment variables'
@@ -81,6 +83,9 @@ export const ERRORS = {
         },
         SOLUTION_GET_FAILED: {
             message: 'Failed to get solution'
+        },
+        DATASET_WITH_SOLUTIONS_GET_FAILED: {
+            message: 'No datasets found with required number of solutions'
         }
     },
     API: {
@@ -92,6 +97,9 @@ export const ERRORS = {
         },
         CAPTCHA_FAILED: {
             message: 'You answered one or more captchas incorrectly. Please try again'
+        },
+        CAPTCHA_PENDING: {
+            message: 'Captcha solutions submitted and awaiting approval'
         },
         CAPTCHA_PASSED: {
             message: 'You correctly answered the captchas'
@@ -158,39 +166,38 @@ export const ERRORS = {
     }
 }
 
-export class GeneralError extends Error {
-    constructor (message) {
-        super()
-        this.message = message
+export class ApiError extends ProsopoEnvError {
+    constructor (err) {
+        super(err)
     }
 
     getCode () {
         if (this instanceof BadRequest) {
-            return 400
+            return 500
         }
         if (this instanceof NotFound) {
             return 404
         }
-        return 500
+        return 400
     }
 }
 
-export class BadRequest extends GeneralError {
+export class BadRequest extends ApiError {
 }
 
-export class NotFound extends GeneralError {
+export class NotFound extends ApiError {
 }
 
 export const handleErrors = (err, req, res, next) => {
-    if (err instanceof GeneralError) {
+    if (err instanceof ApiError) {
         return res.status(err.getCode()).json({
-            status: 'error',
-            message: err.message
+            message: err.message,
+            name: err.name
         })
     }
 
     return res.status(500).json({
-        status: 'error',
-        message: err.message
+        message: err.message,
+        name: err.name
     })
 }

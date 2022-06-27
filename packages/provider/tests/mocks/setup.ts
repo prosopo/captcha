@@ -13,14 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {Tasks} from '../../src/tasks/tasks'
-import {hexHash} from '../../src/util'
-import {blake2AsHex, decodeAddress} from '@polkadot/util-crypto'
-import {CaptchaMerkleTree} from '../../src/merkle'
-import {computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution} from '../../src/captcha'
-import {Hash} from '@polkadot/types/interfaces'
-import {TestAccount, TestDapp, TestProvider} from './accounts'
-import {getEventsFromMethodName, buildTx, BigNumber} from '@prosopo/contract';
+import { Hash } from '@polkadot/types/interfaces'
+import { blake2AsHex, decodeAddress } from '@polkadot/util-crypto'
+import { BigNumber, buildTx, CaptchaMerkleTree, computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution, getEventsFromMethodName, hexHash } from '@prosopo/contract'
+import { Tasks } from '../../src/tasks/tasks'
+import { TestAccount, TestDapp, TestProvider } from './accounts'
 
 export async function displayBalance(env, address, who) {
     const logger = env.logger;
@@ -29,25 +26,35 @@ export async function displayBalance(env, address, who) {
     return balance
 }
 
+const mnemonic = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'];
+let current = -1;
+
+function getNextMnemonic() {
+    current = (current + 1) % mnemonic.length;
+
+    return mnemonic[current];
+}
+
 export async function sendFunds(env, address, who, amount: BigNumber): Promise<void> {
-    await env.contractInterface.network.api.isReady
-    const balance = await env.contractInterface.network.api.query.system.account(address)
-    const signerAddresses: string[] = await env.contractInterface.network.getAddresses()
-    const Alice = signerAddresses[0]
-    const alicePair = env.contractInterface.network.keyring.getPair(Alice)
-    const AliceBalance = await env.contractInterface.network.api.query.system.account(alicePair.address)
-    if (AliceBalance < amount) {
-        throw new Error(`Alice balance too low: , ${AliceBalance}`)
+    await env.contractInterface.network.api.isReady;
+    const mnemonic = getNextMnemonic();
+    const pair = env.contractInterface.network.keyring.addFromMnemonic(mnemonic);
+    const balance = await env.contractInterface.network.api.query.system.account(pair.address);
+
+    if (balance < amount) {
+        throw new Error(`${mnemonic} balance too low: ${balance}`);
     }
-    const api = env.contractInterface.network.api
+
+    const api = env.contractInterface.network.api;
     await buildTx(
         api.registry,
         api.tx.balances.transfer(address, amount),
-        alicePair.address, // from,
-        {signer: env.network.signer}
-    )
+        pair.address, // from
+        { signer: env.network.signer }
+    );
 }
 
+// TODO: fund as in setupDapp? set env default value. // sendFunds
 export async function setupProvider(env, provider: TestProvider): Promise<Hash> {
     await env.contractInterface.changeSigner(provider.mnemonic)
     const logger = env.logger;
@@ -110,7 +117,7 @@ export async function setupDappUser(env, dappUser: TestAccount, provider: TestPr
             logger.info('   -   Solution Root Hash: ', commitmentId)
             logger.info('   -   Provider Address: ', provider.address)
             logger.info('   -   Captchas: ', captchas)
-            await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id.toString(), commitmentId, provider.address)
+            await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id, commitmentId, provider.address)
             const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
         } else {
             throw new Error('commitmentId missing')

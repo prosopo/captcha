@@ -13,12 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import { CaptchaMerkleTree, CaptchaSolution, CaptchaTypes, CaptchaWithoutId, Dataset } from '@prosopo/contract';
 import { expect } from 'chai';
 import * as path from 'path';
+import {
+  addHashesToDataset, compareCaptcha, compareCaptchaSolutions,
+  computeCaptchaHash, computeCaptchaHashes, computeCaptchaSolutionHash, computePendingRequestHash,
+  parseCaptchaDataset, parseCaptchas, parseCaptchaSolutions
+} from '@prosopo/contract';
 
-import { addHashesToDataset, compareCaptcha, compareCaptchaSolutions, computeCaptchaHash, computeCaptchaHashes, computeCaptchaSolutionHash, computePendingRequestHash, parseCaptchaDataset, parseCaptchas, parseCaptchaSolutions } from '../src/captcha';
-import { CaptchaMerkleTree } from '../src/merkle';
-import { CaptchaSolution, CaptchaTypes, CaptchaWithoutId, Dataset } from '../src/types';
 
 const DATASET = {
   format: 'SelectAll' as CaptchaTypes,

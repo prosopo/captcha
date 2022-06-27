@@ -13,23 +13,22 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { ProsopoConfig } from './config'
-import { Database } from './db'
-import {ContractApiInterface} from "@prosopo/contract";
-import {Network} from "@prosopo/contract";
-import consola from 'consola'
+import consola from 'consola';
+import { ContractApiInterface, Network, AssetsResolver, ContractAbi } from "@prosopo/contract";
+import { Database } from './db';
+import { ProsopoConfig } from './config';
 export interface ProsopoEnvironment {
-    config: ProsopoConfig,
-    db: Database | undefined,
+    config: ProsopoConfig
+    db: Database | undefined
     contractInterface: ContractApiInterface | undefined
+    abi: ContractAbi
     mnemonic: string
-    deployerAddress: string
     contractAddress: string
     defaultEnvironment: string
     contractName: string
-    network: Network,
+    network: Network
     logger: typeof consola
-    isReady (): Promise<void>
-    importDatabase (): Promise<void>
-
+    isReady(): Promise<void>
+    importDatabase(): Promise<void>
+    assetsResolver: AssetsResolver | undefined
 }
