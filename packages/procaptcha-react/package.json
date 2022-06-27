@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/procaptcha-react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -12,7 +12,7 @@
   "dependencies": {
     "@mui/material": "^5.8.3",
     "@mui/styles": "^5.8.3",
-    "@prosopo/procaptcha": "0.0.0",
+    "@prosopo/procaptcha": "0.1.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },
