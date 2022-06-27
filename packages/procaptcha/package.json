@@ -41,6 +41,6 @@
   "homepage": "https://github.com/prosopo-io/procaptcha#readme",
   "description": "",
   "publishConfig": {
-    "registry":"https://npm.pkg.github.com"
+    "registry":"https://registry.npmjs.org"
   }
 }
