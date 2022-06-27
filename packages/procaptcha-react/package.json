@@ -31,5 +31,8 @@
     "url": "https://github.com/prosopo-io/procaptcha-react/issues"
   },
   "homepage": "https://github.com/prosopo-io/procaptcha-react#readme",
-  "description": ""
+  "description": "",
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com"
+  }
 }
