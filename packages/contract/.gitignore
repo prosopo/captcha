@@ -107,8 +107,6 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
-dist/
-
 /.yarn/cache
 # This is the Yarn build state; it's local to each clone
 /.yarn/build-state.yml
