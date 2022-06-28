@@ -1,0 +1,1 @@
+{"version":3,"file":"handlers.d.ts","sourceRoot":"","sources":["../../src/api/handlers.ts"],"names":[],"mappings":"AAeA,OAAO,EAAC,aAAa,EAAC,MAAM,OAAO,CAAC;AAEpC,qBAAa,eAAgB,SAAQ,KAAK;gBAC5B,KAAK,EAAE,aAAa,EAAE,OAAO,CAAC,EAAE,MAAM,EAAE,GAAG,MAAM,EAAE,GAAG,EAAE;CAUrE"}
