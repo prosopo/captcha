@@ -2,7 +2,7 @@
   "name": "@prosopo/contract",
   "author": "Chris Taylor <chris@prosopo.io>",
   "license": "GPL-3.0",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose"
