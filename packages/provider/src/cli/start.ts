@@ -19,18 +19,18 @@ import { URL } from 'url';
 
 // import { mnemonicValidate } from '@polkadot/util-crypto';
 
-import { prosopoRouter } from '../src/api';
-import { LocalAssetsResolver } from '../src/assets';
-import { Environment } from '../src/env';
+import { prosopoRouter } from '../api';
+import { LocalAssetsResolver } from '../assets';
+import { Environment } from '../env';
 // import { MockEnvironment } from "../tests/mocks/mockenv";
-import { ERRORS, handleErrors } from '../src/errors';
+import { ERRORS, handleErrors } from '../errors';
 // import { processArgs } from './argv';
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import dotenv from 'dotenv';
-import { ProsopoEnvironment } from '../src/types/env';
+import { ProsopoEnvironment } from '../types/env';
 
 import { Server } from 'http';
 
