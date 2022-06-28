@@ -76,4 +76,5 @@ export interface ProsopoCaptchaConfig {
   "providerApi.baseURL": string;
   "providerApi.prefix": string;
   "dappAccount": string;
+  "dappUrl": string;
 }

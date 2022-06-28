@@ -17,7 +17,7 @@ import { ICaptchaContextReducer, CaptchaEventCallbacks, TExtensionAccount, ICapt
 import { ProsopoRandomProviderResponse } from "../types/api";
 
 import { ProsopoContract } from "../api/ProsopoContract";
-import { getProsopoContract } from "./contract";
+import { getProsopoContract, getWsProvider } from "./contract";
 import { getExtension } from "./extension";
 import { ProviderApi } from "../api/ProviderApi";
 import { ProsopoCaptchaApi } from "./ProsopoCaptchaApi";
@@ -94,7 +94,8 @@ export class ProsopoCaptchaClient {
         }
 
         try {
-            ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account);
+            ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account, 
+                getWsProvider(this.manager.state.config['dappUrl']));
         } catch (err) {
             throw new Error(err);
         }
