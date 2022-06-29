@@ -5,6 +5,7 @@ import { CheckoutModal } from 'components/Modal';
 import { useToggle } from 'hooks/useToggle';
 import React, { FC, useCallback } from 'react';
 import { shortAddress } from 'utils/itemUtils';
+import { useRouter } from 'next/router';
 
 type Props = {
   item: Token;
@@ -12,12 +13,14 @@ type Props = {
 
 const ProductCard: FC<Props> = ({ item }) => {
   const address = shortAddress(item.owner, 5, 4);
+  const router = useRouter();
 
   const image = item.meta.image;
   const [isCheckoutVisible, setCheckoutVisible] = useToggle(false);
 
   const onBuyNow = useCallback(
     async (e) => {
+      e.preventDefault();
       e.stopPropagation();
       if (address) {
         setCheckoutVisible(true);
@@ -30,8 +33,8 @@ const ProductCard: FC<Props> = ({ item }) => {
 
   return (
     <Link to={`/item/${item.id}`}>
-      <li className="text-white bold h-96 hover:bg-gray-900">
-        <div className="flex flex-col justify-between h-full px-4 py-3 space-y-4 border border-gray-600 rounded-md">
+      <li className="text-white bold hover:bg-gray-900">
+        <div className="flex flex-col justify-between h-full px-4 py-3 space-y-1 border border-gray-600 rounded-md">
           <Link to={`/profile/${item.owner}`}>
             <div className="flex items-center space-x-4">
               <Avatar username={item.owner} />
@@ -41,13 +44,17 @@ const ProductCard: FC<Props> = ({ item }) => {
             </div>
           </Link>
 
-          <div className="relative flex justify-center w-full h-full overflow-hidden rounded-lg aspect-w-3 aspect-h-2">
+          <div className="relative flex justify-center w-full overflow-hidden rounded-lg aspect-square">
             {/* <img
               className="absolute self-center object-cover w-full h-full justify-self-center blur"
               src={image}
               alt=""
             /> */}
-            <img className="absolute self-center object-contain w-full h-full justify-self-center" src={image} alt="" />
+            <img
+              className="absolute self-center object-contain w-full justify-self-center aspect-square"
+              src={image}
+              alt=""
+            />
           </div>
 
           <div>
@@ -58,25 +65,23 @@ const ProductCard: FC<Props> = ({ item }) => {
               {item.onSale ? (
                 <>
                   <span className="text-sm">{price}</span>
-                  <div className="cursor-pointer">
+                  <div className="flex-1 text-right cursor-pointer">
                     <Link title="Buy Now" onClick={onBuyNow} />
                   </div>
                 </>
               ) : (
                 <>
-                  <span />
                   <span className="text-base text-yellow-500">SOLD</span>
                 </>
               )}
-              {isCheckoutVisible && (
-                <CheckoutModal
-                  id={item.id}
-                  title={item.meta.name}
-                  isOpen={isCheckoutVisible}
-                  onClose={setCheckoutVisible}
-                  price={item.price}
-                />
-              )}
+              <CheckoutModal
+                id={item.id}
+                title={item.meta.name}
+                isOpen={isCheckoutVisible}
+                onClose={setCheckoutVisible}
+                price={item.price}
+                successCallback={() => router.push(`/item/${item.id}`)}
+              />
             </div>
           </div>
         </div>

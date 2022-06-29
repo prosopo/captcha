@@ -125,7 +125,7 @@ class DemoNFTContract extends AsyncFactory {
             console.error('dispatchError', dispatchError);
             const error = dispatchError.registry.findMetaError(dispatchError.asModule);
             console.log(`${error.section}.${error.name}`);
-            reject(dispatchError);
+            reject(error);
 
             return;
           }

@@ -1,11 +1,9 @@
 import { CoverPhoto } from 'assets';
 import React, { useCallback, useState } from 'react';
 import Avatar from 'components/Avatar/Avatar';
-import demoApi, { Token } from 'api/demoApi';
+import demoApi, { PAGE_SIZE, Token } from 'api/demoApi';
 import { ProductList } from 'components/ProductCard';
 import { NextPageContext } from 'next';
-
-const PAGE_SIZE = 20;
 
 export interface ProfileProps {
   userId: string;

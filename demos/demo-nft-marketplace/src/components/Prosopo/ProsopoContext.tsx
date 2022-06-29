@@ -1,13 +1,16 @@
 import { useState, createContext, FC, useEffect } from 'react';
 import { TCaptchaSubmitResult, TExtensionAccount, Extension } from '@prosopo/procaptcha';
 import { CaptchaContextManager, useCaptcha } from '@prosopo/procaptcha-react';
+import toast, { Toaster } from 'react-hot-toast';
 
 import config from 'config';
 import { ProviderProps, ShowCaptchasState, ConsumerProps } from './types';
 
 const CustomContext = createContext<ShowCaptchasState>({
   captchasVisible: false,
-  showCaptchas: () => {},
+  showCaptchas: () => {
+    console.log('implement showCaptchas');
+  },
 });
 
 export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
@@ -26,16 +29,26 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
     if (submitResult instanceof Error) {
       status.update({ error: ['onSubmit: CAPTCHA SUBMIT ERROR', submitResult] });
+      toast.error(`Error: ${submitResult.message}`);
       return;
     }
     const [result, tx] = submitResult;
+    const txHash = tx.txHash.toHuman();
+
     status.update({ info: ['onSubmit: CAPTCHA SUBMIT STATUS', result.status] });
+    toast.loading('Loading ...', { id: txHash });
   };
 
   const onSolved = ([result, tx, commitment]: TCaptchaSubmitResult) => {
     setShowCaptchas(false);
-
     status.update({ info: ['onSolved:', `Captcha solution status: ${commitment.status}`] });
+
+    const txHash = tx.txHash.toHuman();
+    if (commitment.status == 'Approved') {
+      toast.success("Solution Approved! You've gained reputation.", { id: txHash });
+    } else {
+      toast.error("Solution Dissaproved! You've lost some reputation.", { id: txHash });
+    }
 
     onSolvedCallback();
   };
@@ -74,17 +87,17 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
         captchasVisible: showCaptchas,
         showCaptchas: (callback) => {
           setShowCaptchas(true);
-          console.log(1);
           if (callback) {
-            console.log(2);
             setOnSolvedCallback(() => () => callback());
-            console.log(3);
           }
         },
         clientInterface,
       }}
     >
-      <CaptchaContextManager.Provider value={manager}>{children}</CaptchaContextManager.Provider>
+      <CaptchaContextManager.Provider value={manager}>
+        {children}
+        <Toaster position="top-right" toastOptions={{ duration: 6000 }} />
+      </CaptchaContextManager.Provider>
     </CustomContext.Provider>
   );
 };

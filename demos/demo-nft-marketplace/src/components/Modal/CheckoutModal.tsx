@@ -7,11 +7,13 @@ import { BN } from '@polkadot/util';
 import { Dialog, Transition } from '@headlessui/react';
 import { ShowCaptchasState } from 'components/Prosopo/types';
 import ReactCurrencyInput from 'react-currency-input-field';
+import toast from 'react-hot-toast';
 
 type Props = Omit<ModalProps, 'title' | 'description'> & {
   id: string;
   price: string;
   title: string;
+  successCallback?: () => {};
 };
 
 // 135 663 986 921
@@ -46,6 +48,7 @@ function CheckoutModalInternal({
   title,
   clientInterface,
   captchasVisible,
+  successCallback,
   showCaptchas,
   ...props
 }: Props & ShowCaptchasState): JSX.Element {
@@ -56,8 +59,21 @@ function CheckoutModalInternal({
   const onSubmit = useCallback(async () => {
     console.log('onSubmit');
     const signer = clientInterface.getExtension().getExtension().signer;
-    await demoApi.buy(signer, id, formatGas(gas));
-    location.reload();
+    await demoApi
+      .buy(signer, id, formatGas(gas))
+      .then((x) => {
+        console.log({ success: x });
+        successCallback?.();
+      })
+      .catch((error) => {
+        if (error.docs) {
+          toast.error(error.docs.join(' '));
+        } else {
+          toast.error(error.message);
+        }
+        console.log({ error });
+      });
+    props.onClose();
   }, [id, clientInterface, gas]);
 
   const info = [
@@ -66,7 +82,7 @@ function CheckoutModalInternal({
     { key: 'Estimated Gas', value: estimatedGas },
   ];
 
-  const onBuy = async () => {
+  const onBuy = async (e) => {
     const account = clientInterface.getExtension().getAccount();
     await demoApi.setAccount(account);
 
@@ -80,62 +96,70 @@ function CheckoutModalInternal({
   };
 
   useEffect(() => {
-    demoApi
-      .getBalance(clientInterface.getExtension().getAccount())
-      .then((x) => setBalance(new BN(x.toHuman().free.replaceAll(',', ''))))
-      .catch(console.log);
-    demoApi
-      .estimateBuyGasFees(id)
-      .then((gas) => {
-        const formatted = formatPrice(gas);
-        setEstimatedGas(formatted);
-        setGas(formatted.split(' ')[0]);
-      })
-      .catch(console.log);
-  }, []);
+    if (props.isOpen) {
+      demoApi
+        .getBalance(clientInterface.getExtension().getAccount())
+        .then((x) => setBalance(new BN(x.toHuman().free.replaceAll(',', ''))))
+        .catch(console.log);
+      demoApi
+        .estimateBuyGasFees(id)
+        .then((gas) => {
+          const formatted = formatPrice(gas);
+          const doubledFormatted = formatPrice(new BN(gas).muln(2).toString());
+          setEstimatedGas(formatted);
+          setGas(doubledFormatted.split(' ')[0]);
+        })
+        .catch(console.log);
+    }
+  }, [props.isOpen]);
 
   const insufficient = new BN(price).cmp(balance) > 0;
 
   return (
-    <Modal {...props} title={'Checkout'} description={`You are about to purchase [${title}]`}>
-      <div className="flex flex-col pb-2 text-gray-700 gap-y-1">
-        {insufficient && <div>Insufficiently Funds</div>}
-        {info.map(({ key, value }) => (
-          <div key={key} className="flex justify-between">
-            {key} <div>{value}</div>
+    <span
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+    >
+      <Modal {...props} title={'Checkout'} description={`You are about to purchase [${title}]`}>
+        <div className="flex flex-col pb-2 text-gray-700 gap-y-1">
+          {insufficient && <div>Insufficiently Funds</div>}
+          {info.map(({ key, value }) => (
+            <div key={key} className="flex justify-between">
+              {key} <div>{value}</div>
+            </div>
+          ))}
+          <div className="flex flex-row space-x-2">
+            <div className="flex items-center min-w-max">Gas Limit</div>
+            <ReactCurrencyInput
+              title="Gas Limit"
+              decimalsLimit={4}
+              allowDecimals={true}
+              allowNegativeValue={false}
+              className="block w-full text-right text-white border-gray-600 rounded-md shadow-sm bg-secondary focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              onValueChange={(value) => setGas(value)}
+              value={gas}
+            />
+            <div className="flex items-center min-w-max">milli Unit</div>
           </div>
-        ))}
-        <div className="flex flex-row space-x-2">
-          <div className="flex items-center min-w-max">Gas Limit</div>
-          <ReactCurrencyInput
-            title="Gas Limit"
-            decimalsLimit={4}
-            fixedDecimalLength={4}
-            allowDecimals={true}
-            allowNegativeValue={false}
-            className="block w-full text-right text-white border-gray-600 rounded-md shadow-sm bg-secondary focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            onValueChange={(value) => setGas(value)}
-            value={gas}
-          />
-          <div className="flex items-center min-w-max">milli Unit</div>
         </div>
-      </div>
-      <div className={'flex flex-col'}>
-        {insufficient ? (
-          <div className="pt-2 text-lg font-bold text-center text-white">Balance too low</div>
-        ) : (
-          <Button title={'Buy Now'} fullWidth onClick={onBuy} />
-        )}
-      </div>
-
-      <Transition appear show={captchasVisible} as={Fragment}>
-        <Dialog as="div" className="fixed inset-0 z-30 overflow-y-auto" onClose={clientInterface.callbacks.onCancel}>
-          <Dialog.Panel className="h-screen">
-            <CaptchaComponent clientInterface={clientInterface} />
-          </Dialog.Panel>
-        </Dialog>
-      </Transition>
-    </Modal>
+        <div className={'flex flex-col'}>
+          {insufficient ? (
+            <div className="pt-2 text-lg font-bold text-center text-white">Balance too low</div>
+          ) : (
+            <Button title={'Buy Now'} fullWidth onClick={onBuy} />
+          )}
+        </div>
+        <Transition appear show={captchasVisible} as={Fragment}>
+          <Dialog as="div" className="fixed inset-0 z-30 overflow-y-auto" onClose={clientInterface.callbacks.onCancel}>
+            <Dialog.Panel className="h-screen">
+              <CaptchaComponent clientInterface={clientInterface} />
+            </Dialog.Panel>
+          </Dialog>
+        </Transition>
+      </Modal>
+    </span>
   );
 }
 

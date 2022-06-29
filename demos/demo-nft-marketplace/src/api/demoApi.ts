@@ -1,4 +1,5 @@
 import { WsProvider } from '@polkadot/api';
+import { SubmittableResultValue } from '@polkadot/api/types';
 import { Balance } from '@polkadot/types/interfaces';
 import { Signer } from '@polkadot/types/types';
 import { formatBalance } from '@polkadot/util';
@@ -46,6 +47,8 @@ export function formatPrice(price: string) {
   return formatBalance((price || '0').replaceAll(',', ''), { decimals: 12, withSiFull: true });
 }
 
+export const PAGE_SIZE = 24;
+
 const demoApi = {
   async setAccount(account): Promise<void> {
     const contract = await contractPromise;
@@ -63,8 +66,6 @@ const demoApi = {
     const contract = await contractPromise;
 
     const { data: tokens } = await contract.query<GetTokensContractResponse>('getTokens', [pageSize, pageIndex, owner]);
-
-    console.log(tokens)
 
     return tokens.map(({ id, owner, tokenUri, onSale, price }) => ({
       id: id[idKey],
@@ -102,21 +103,18 @@ const demoApi = {
 
     return gasRequired.replaceAll(',', '');
   },
-  async buy(signer: Signer, id: string, gas: string): Promise<void> {
+  async buy(signer: Signer, id: string, gas: string): Promise<SubmittableResultValue & { blockHash?: string }> {
     const contract = await contractPromise;
 
     const { data } = await contract.query<string>('price', [{ [idKey]: id }]);
 
     const price = data.replaceAll(',', '');
 
-    await contract.transaction(signer, 'buy', [{ [idKey]: id }], price, gas);
-
-    return;
+    return contract.transaction(signer, 'buy', [{ [idKey]: id }], price, gas);
   },
   async isHuman(): Promise<boolean> {
     const contract = await contractPromise;
 
-    console.log({ address: contract.getAccount().address });
     const { data } = await contract.query<boolean>('isHuman', [contract.getAccount().address, 60, 20000]);
 
     return data;
