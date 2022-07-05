@@ -79,4 +79,5 @@ export interface ProsopoCaptchaConfig {
   "providerApi.prefix": string;
   "dappAccount": string;
   "dappUrl": string;
+  "solutionThreshold": number;
 }
