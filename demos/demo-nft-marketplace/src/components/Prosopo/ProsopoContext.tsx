@@ -5,6 +5,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 import config from 'config';
 import { ProviderProps, ShowCaptchasState, ConsumerProps } from './types';
+import { formatPrice } from 'api/demoApi';
 
 const CustomContext = createContext<ShowCaptchasState>({
   captchasVisible: false,
@@ -16,7 +17,9 @@ const CustomContext = createContext<ShowCaptchasState>({
 export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   const [showCaptchas, setShowCaptchas] = useState(false);
   const [, setLoading] = useState(true);
-  const [onSolvedCallback, setOnSolvedCallback] = useState<() => Promise<void>>(async () => {});
+  const [onSolvedCallback, setOnSolvedCallback] = useState<(approved: boolean) => Promise<void>>(
+    async (approved: boolean) => console.log(approved)
+  );
 
   const onAccountChange = (account: TExtensionAccount) => {
     if (!account) {
@@ -33,7 +36,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
       return;
     }
     const [result, tx] = submitResult;
-    const txHash = tx.txHash.toHuman();
+    const txHash = tx.txHash.toHuman().toString();
 
     status.update({ info: ['onSubmit: CAPTCHA SUBMIT STATUS', result.status] });
     toast.loading('Loading ...', { id: txHash });
@@ -42,15 +45,18 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   const onSolved = ([result, tx, commitment]: TCaptchaSubmitResult) => {
     setShowCaptchas(false);
     status.update({ info: ['onSolved:', `Captcha solution status: ${commitment.status}`] });
-
-    const txHash = tx.txHash.toHuman();
+    const txHash = tx.txHash.toHuman().toString();
     if (commitment.status == 'Approved') {
-      toast.success("Solution Approved! You've gained reputation.", { id: txHash });
+      toast.success(`Solution Approved! You've gained reputation. ${formatPrice(result.partialFee)} refunded.`, {
+        id: txHash,
+      });
+      onSolvedCallback(true);
     } else {
-      toast.error("Solution Dissaproved! You've lost some reputation.", { id: txHash });
+      toast.error(`Solution Disapproved! You've lost some reputation. ${formatPrice(result.partialFee)} lost.`, {
+        id: txHash,
+      });
+      onSolvedCallback(false);
     }
-
-    onSolvedCallback();
   };
 
   const onChange = (solution: number[][]) => {
@@ -68,17 +74,19 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   const status = clientInterface.status;
 
   useEffect(() => {
-    Extension.create().then((extension: Extension) => {
-      clientInterface.setExtension(extension);
-      const defaultAddress = extension.getDefaultAccount()?.address;
-      const currUser = extension.getAccounts().find(({ address }) => address == defaultAddress);
+    Extension.create()
+      .then((extension: Extension) => {
+        clientInterface.setExtension(extension);
+        const defaultAddress = extension.getDefaultAccount()?.address;
+        const currUser = extension.getAccounts().find(({ address }) => address == defaultAddress);
 
-      if (currUser) {
-        clientInterface.onAccountChange(currUser);
-      }
+        if (currUser) {
+          clientInterface.onAccountChange(currUser);
+        }
 
-      setLoading(false);
-    });
+        setLoading(false);
+      })
+      .catch((err) => console.log(err));
   }, []);
 
   return (
@@ -88,7 +96,10 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
         showCaptchas: (callback) => {
           setShowCaptchas(true);
           if (callback) {
-            setOnSolvedCallback(() => () => callback());
+            setOnSolvedCallback((approved) => () => {
+              console.log({ approved });
+              return callback(approved);
+            });
           }
         },
         clientInterface,

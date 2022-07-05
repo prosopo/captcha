@@ -1,6 +1,6 @@
 import demoApi, { PAGE_SIZE, Token } from 'api/demoApi';
 import { ProductList } from 'components/ProductCard';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 export interface HomeProps {
   tokens: Token[];

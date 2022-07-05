@@ -5,7 +5,7 @@ import { ProsopoConsumer } from 'components/Prosopo';
 import { ShowCaptchasState } from 'components/Prosopo/types';
 import makeBlockie from 'ethereum-blockies-base64';
 import { NextPageContext } from 'next';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { shortAddress } from 'utils/itemUtils';
 import { CheckoutModal } from 'components/Modal';
 import { useToggle } from 'hooks/useToggle';
@@ -45,7 +45,6 @@ function ItemDetails({ token: _token }: ItemDetailsProps) {
       });
   };
 
-  console.log(token.owner);
   const price = formatPrice(token.price);
 
   const renderButton = () => {

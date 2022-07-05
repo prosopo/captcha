@@ -55,26 +55,34 @@ function CheckoutModalInternal({
   const [balance, setBalance] = useState<BN>(new BN(0));
   const [gas, setGas] = useState<string>('');
   const [estimatedGas, setEstimatedGas] = useState<string>('0');
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = useCallback(async () => {
-    console.log('onSubmit');
-    const signer = clientInterface.getExtension().getExtension().signer;
-    await demoApi
-      .buy(signer, id, formatGas(gas))
-      .then((x) => {
-        console.log({ success: x });
-        successCallback?.();
-      })
-      .catch((error) => {
-        if (error.docs) {
-          toast.error(error.docs.join(' '));
-        } else {
-          toast.error(error.message);
-        }
-        console.log({ error });
-      });
-    props.onClose();
-  }, [id, clientInterface, gas]);
+  const onSubmit = useCallback(
+    async (approved = true) => {
+      if (!approved) {
+        setLoading(false);
+        return;
+      }
+      const signer = clientInterface.getExtension().getExtension().signer;
+      await demoApi
+        .buy(signer, id, formatGas(gas))
+        .then((x) => {
+          console.log({ success: x });
+          successCallback?.();
+        })
+        .catch((error) => {
+          if (error.docs) {
+            toast.error(error.docs.join(' '));
+          } else {
+            toast.error(error.message);
+          }
+          console.log({ error });
+        });
+      setLoading(false);
+      props.onClose();
+    },
+    [id, clientInterface, gas]
+  );
 
   const info = [
     { key: 'Balance', value: formatPrice(balance.toString()) },
@@ -82,7 +90,8 @@ function CheckoutModalInternal({
     { key: 'Estimated Gas', value: estimatedGas },
   ];
 
-  const onBuy = async (e) => {
+  const onBuy = async () => {
+    setLoading(true);
     const account = clientInterface.getExtension().getAccount();
     await demoApi.setAccount(account);
 
@@ -148,7 +157,7 @@ function CheckoutModalInternal({
           {insufficient ? (
             <div className="pt-2 text-lg font-bold text-center text-white">Balance too low</div>
           ) : (
-            <Button title={'Buy Now'} fullWidth onClick={onBuy} />
+            <Button title={'Buy Now'} fullWidth onClick={onBuy} loading={loading} />
           )}
         </div>
         <Transition appear show={captchasVisible} as={Fragment}>

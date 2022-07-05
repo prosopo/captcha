@@ -1,6 +1,6 @@
 ## What is CornerStore?
 
-CornerStore is an open source NFT marketplace build by Rarible DAO using the Rarible Protocol. You can easily plug in your NFT contract address and spin up your own marketplace in a couple minutes.
+CornerStore is an open source NFT marketplace built by Rarible DAO using the Rarible Protocol. Prosopo has forked and modified the marketplace to work with [OpenBrush's PSP34 contracts](https://github.com/Supercolony-net/openbrush-contracts/tree/main/examples/psp34). The PSP34 contracts have also been modified so that they are [protected](https://github.com/prosopo-io/demo-nft-marketplace/blob/57fe32a36d2988d3076835fc3ebe3a4dad60efa3/contracts/lib.rs#L209) by Prosopo's human verification system.
 
 ### Demo
 
@@ -28,6 +28,10 @@ Feel free to fork our design files to start redesigning the marketplace.
 
 ### How to run locally.
 
-yarn install
+```bash
+npm install
 
-yarn dev
+npm run setup
+
+npm run dev
+```

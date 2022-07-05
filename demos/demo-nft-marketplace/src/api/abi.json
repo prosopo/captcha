@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x280972d6128e1431300f43d3cb50e6f066172d4e1a93494ed779d0638019f0db",
+    "hash": "0x7ab13ef8168931d188d096da4ed7d47fb6b4cf1347b0f636a3289086ac7fcbc2",
     "language": "ink! 3.2.0",
     "compiler": "rustc 1.63.0-nightly"
   },
@@ -288,25 +288,6 @@
           "selector": "0xcde7e55f"
         },
         {
-          "args": [],
-          "docs": [
-            " Returns the collection `Id` of the NFT token.",
-            "",
-            " This can represents the relationship between tokens/contracts/pallets."
-          ],
-          "label": "PSP34::collection_id",
-          "mutates": false,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "psp34_external",
-              "CollectionIdOutput"
-            ],
-            "type": 1
-          },
-          "selector": "0xffa27a5f"
-        },
-        {
           "args": [
             {
               "label": "id",
@@ -335,53 +316,21 @@
           "selector": "0x1168624d"
         },
         {
-          "args": [
-            {
-              "label": "owner",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "AllowanceInput1"
-                ],
-                "type": 8
-              }
-            },
-            {
-              "label": "operator",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "AllowanceInput2"
-                ],
-                "type": 8
-              }
-            },
-            {
-              "label": "id",
-              "type": {
-                "displayName": [
-                  "psp34_external",
-                  "AllowanceInput3"
-                ],
-                "type": 14
-              }
-            }
-          ],
+          "args": [],
           "docs": [
-            " Returns `true` if the operator is approved by the owner to withdraw `id` token.",
-            " If `id` is `None`, returns `true` if the operator is approved to withdraw all owner's tokens."
+            " Returns current NFT total supply."
           ],
-          "label": "PSP34::allowance",
+          "label": "PSP34::total_supply",
           "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
               "psp34_external",
-              "AllowanceOutput"
+              "TotalSupplyOutput"
             ],
-            "type": 27
+            "type": 6
           },
-          "selector": "0x4790f55a"
+          "selector": "0x628413fe"
         },
         {
           "args": [
@@ -439,6 +388,55 @@
             "type": 23
           },
           "selector": "0x1932a8b0"
+        },
+        {
+          "args": [
+            {
+              "label": "owner",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "AllowanceInput1"
+                ],
+                "type": 8
+              }
+            },
+            {
+              "label": "operator",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "AllowanceInput2"
+                ],
+                "type": 8
+              }
+            },
+            {
+              "label": "id",
+              "type": {
+                "displayName": [
+                  "psp34_external",
+                  "AllowanceInput3"
+                ],
+                "type": 14
+              }
+            }
+          ],
+          "docs": [
+            " Returns `true` if the operator is approved by the owner to withdraw `id` token.",
+            " If `id` is `None`, returns `true` if the operator is approved to withdraw all owner's tokens."
+          ],
+          "label": "PSP34::allowance",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "psp34_external",
+              "AllowanceOutput"
+            ],
+            "type": 27
+          },
+          "selector": "0x4790f55a"
         },
         {
           "args": [
@@ -501,19 +499,21 @@
         {
           "args": [],
           "docs": [
-            " Returns current NFT total supply."
+            " Returns the collection `Id` of the NFT token.",
+            "",
+            " This can represents the relationship between tokens/contracts/pallets."
           ],
-          "label": "PSP34::total_supply",
+          "label": "PSP34::collection_id",
           "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
               "psp34_external",
-              "TotalSupplyOutput"
+              "CollectionIdOutput"
             ],
-            "type": 6
+            "type": 1
           },
-          "selector": "0x628413fe"
+          "selector": "0xffa27a5f"
         },
         {
           "args": [
@@ -626,6 +626,23 @@
         {
           "args": [],
           "docs": [
+            " Returns the address of the current owner."
+          ],
+          "label": "Ownable::owner",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "ownable_external",
+              "OwnerOutput"
+            ],
+            "type": 8
+          },
+          "selector": "0x4fa43c8c"
+        },
+        {
+          "args": [],
+          "docs": [
             " Leaves the contract without owner. It will not be possible to call",
             " owner's functions anymore. Can only be called by the current owner.",
             "",
@@ -649,23 +666,6 @@
             "type": 35
           },
           "selector": "0x5e228753"
-        },
-        {
-          "args": [],
-          "docs": [
-            " Returns the address of the current owner."
-          ],
-          "label": "Ownable::owner",
-          "mutates": false,
-          "payable": false,
-          "returnType": {
-            "displayName": [
-              "ownable_external",
-              "OwnerOutput"
-            ],
-            "type": 8
-          },
-          "selector": "0x4fa43c8c"
         },
         {
           "args": [
