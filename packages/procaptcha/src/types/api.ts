@@ -29,6 +29,8 @@ export interface ProsopoRandomProviderResponse {
   provider: ProposoProvider;
 }
 
+export type ProsopoDappOperatorIsHumanUserResponse = boolean
+
 export interface ProposoProvider {
   balance: string;
   captchaDatasetId: string;
