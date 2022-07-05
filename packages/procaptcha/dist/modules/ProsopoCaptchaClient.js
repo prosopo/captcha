@@ -11,6 +11,7 @@ class ProsopoCaptchaClient {
     status;
     callbacks;
     providerApi;
+    solutionThreshold;
     static extension;
     static contract;
     static provider;
@@ -20,6 +21,7 @@ class ProsopoCaptchaClient {
         this.status = status;
         this.callbacks = callbacks;
         this.providerApi = new ProviderApi_1.ProviderApi(manager.state.config);
+        this.solutionThreshold = manager.state.config.solutionThreshold;
     }
     getExtension() {
         return ProsopoCaptchaClient.extension;
