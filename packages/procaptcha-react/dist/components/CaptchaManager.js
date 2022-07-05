@@ -27,6 +27,7 @@ export const CaptchaContextManager = createContext({
             "providerApi.prefix": "",
             "dappAccount": "",
             "dappUrl": "",
+            "solutionThreshold": 0
         }
     },
     update: () => { },
