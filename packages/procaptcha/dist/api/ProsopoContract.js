@@ -30,6 +30,10 @@ class ProsopoContract extends ProsopoContractBase_1.default {
     async dappUserCommit(signer, captchaDatasetId, userMerkleTreeRoot, providerAddress) {
         return await this.transaction(signer, 'dappUserCommit', [this.dappAddress, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
     }
+    async dappOperatorIsHumanUser(threshold) {
+        // TODO get threshold from dapp contract using getStorage or allow override in UI and fallback on contract protection layer?
+        return await this.query('dappOperatorIsHumanUser', [this.account.address, threshold]);
+    }
 }
 exports.ProsopoContract = ProsopoContract;
 exports.default = ProsopoContract;

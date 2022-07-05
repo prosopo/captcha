@@ -8,6 +8,7 @@ export declare class ProsopoCaptchaClient {
     status: ICaptchaStatusReducer;
     callbacks: CaptchaEventCallbacks | undefined;
     providerApi: ProviderApi;
+    solutionThreshold: number;
     private static extension;
     private static contract;
     private static provider;

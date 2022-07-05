@@ -4,6 +4,7 @@ export interface ProsopoRandomProviderResponse {
     blockNumber: string;
     provider: ProposoProvider;
 }
+export declare type ProsopoDappOperatorIsHumanUserResponse = boolean;
 export interface ProposoProvider {
     balance: string;
     captchaDatasetId: string;
@@ -37,5 +38,6 @@ export interface ProsopoCaptchaConfig {
     "providerApi.prefix": string;
     "dappAccount": string;
     "dappUrl": string;
+    "solutionThreshold": number;
 }
 //# sourceMappingURL=api.d.ts.map
