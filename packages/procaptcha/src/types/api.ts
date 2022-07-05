@@ -29,6 +29,8 @@ export interface ProsopoRandomProviderResponse {
   provider: ProposoProvider;
 }
 
+export type ProsopoDappOperatorIsHumanUserResponse = boolean
+
 export interface ProposoProvider {
   balance: string;
   captchaDatasetId: string;
@@ -77,4 +79,5 @@ export interface ProsopoCaptchaConfig {
   "providerApi.prefix": string;
   "dappAccount": string;
   "dappUrl": string;
+  "solutionThreshold": number;
 }

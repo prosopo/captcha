@@ -101,10 +101,16 @@ export class ProsopoCaptchaStateClient {
 
     // TODO check for solved captchas.
     public async onSolved(submitResult: TCaptchaSubmitResult) {
-        if (this.context.callbacks?.onSolved) {
-            this.context.callbacks.onSolved(submitResult);
-        }
         this.dismissCaptcha();
+        const isHuman = await this.context.getContract()?.dappOperatorIsHumanUser(this.context.solutionThreshold)
+        if (isHuman) {
+            if (this.context.callbacks?.onSolved) {
+                this.context.callbacks.onSolved(submitResult);
+            }
+        } else {
+            this.context.status.update({ info: ["onSolved:", `Captcha threshold not met. Please solve more captchas.`] });
+            await this.onLoadCaptcha()
+        }
     }
 
     public onChange(index: number) {
