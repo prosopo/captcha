@@ -69,7 +69,9 @@ export interface CaptchaSolution {
 }
 
 export interface CaptchaSolutionResponse {
+  captchas: CaptchaResponseCaptcha[];
   status: string;
+  partialFee: string;
 }
 
 export interface ProsopoCaptchaConfig {
