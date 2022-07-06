@@ -33,7 +33,7 @@ export function CaptchaWidget({ challenge, solution, onChange }:
           key={index}
           src={item.path} // TODO challenge.items[].path...
           variant="square"
-          className={classes.captchaItem + " " + (solution.includes(index) ? " selected" : "")}
+          className={classes.captchaItem + " " + (solution.includes(index) ? " " + classes.captchaItemSelected : "")}
           onClick={() => onChange(index)} />
         )}
       </>
