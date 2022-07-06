@@ -20,7 +20,8 @@ import express, { Router } from 'express';
 import { Environment } from './env';
 import { BadRequest, ERRORS } from './errors';
 import { Tasks } from './tasks/tasks';
-import { CaptchaWithProof } from './types/';
+import { CaptchaWithProof } from './types/api';
+import { ProsopoEnvironment } from './types/env';
 import { AccountsResponse, CaptchaSolutionBody } from './types/api';
 import { parseBlockNumber } from './util';
 
@@ -32,7 +33,7 @@ import { parseBlockNumber } from './util';
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
  * @param {Environment} env - The Prosopo environment
  */
-export function prosopoRouter(env: Environment): Router {
+export function prosopoRouter(env: ProsopoEnvironment): Router {
   const router = express.Router();
   const tasks = new Tasks(env);
   const contractApi = new ProsopoContractApi(env.contractAddress, env.mnemonic, env.contractName, env.abi, env.network);

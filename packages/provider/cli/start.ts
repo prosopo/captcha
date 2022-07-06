@@ -19,71 +19,88 @@ import { URL } from 'url';
 
 // import { mnemonicValidate } from '@polkadot/util-crypto';
 
-import { prosopoRouter } from '../api';
-import { LocalAssetsResolver } from '../assets';
-import { Environment } from '../env';
-import { ERRORS, handleErrors } from '../errors';
+import { prosopoRouter } from '../src/api';
+import { LocalAssetsResolver } from '../src/assets';
+import { Environment } from '../src/env';
+import { MockEnvironment } from "../tests/mocks/mockenv";
+import { ERRORS, handleErrors } from '../src/errors';
 // import { processArgs } from './argv';
 
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import dotenv from 'dotenv';
+import { ProsopoEnvironment } from '../src/types/env';
+
+import { Server } from 'http';
 
 dotenv.config();
 
-function startApi(env: Environment) {
+let apiAppSrv: Server;
+let imgAppSrv: Server;
+
+function startApi(env: ProsopoEnvironment) {
   const apiApp = express();
   const apiPort = new URL(process.env.API_BASE_URL as string).port || 3000;
 
   apiApp.use(cors());
-  apiApp.use(prosopoRouter(env));
   apiApp.use(express.json());
+  apiApp.use(prosopoRouter(env));
 
   if (env.assetsResolver instanceof LocalAssetsResolver) {
     env.assetsResolver.injectMiddleware(apiApp); //
   }
 
   apiApp.use(handleErrors);
-  apiApp.listen(apiPort, () => {
+  apiAppSrv = apiApp.listen(apiPort, () => {
     env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
   });
 }
 
-function startImgSrv() {
-  const imgSrv = express();
-  const imgSrvPort = 4000;
+function startImg() {
+  const imgApp = express();
+  const imgPort = 4000;
 
-  imgSrv.use('/img', express.static('../../data/img'));
+  imgApp.use('/img', express.static('../../data/img'));
 
-  imgSrv.get('/', (req, res) => {
+  imgApp.get('/', (req, res) => {
     res.send('Image server');
   });
 
-  imgSrv.listen(imgSrvPort, () => {
-    console.log(`Image server running on port ${imgSrvPort} serving images from /data/img`);
+  imgAppSrv = imgApp.listen(imgPort, () => {
+    console.log(`Image server running on port ${imgPort} serving images from /data/img`);
   });
 }
 
-const argv = yargs(hideBin(process.argv)).argv;
-
+// const argv = yargs(hideBin(process.argv)).argv;
 
 // TODO: Arguably ./argv.processArgs.command
-async function start () {
-  if (!process.env.PROVIDER_MNEMONIC) {
-    throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+async function start (nodeEnv: string) {
+
+  let env: ProsopoEnvironment;
+
+  if (nodeEnv !== 'test') {
+    if (!process.env.PROVIDER_MNEMONIC) {
+      throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+    }
+    env = new Environment(process.env.PROVIDER_MNEMONIC);
+  } else {
+    env = new MockEnvironment();
   }
 
-  const env = new Environment(process.env.PROVIDER_MNEMONIC);
   await env.isReady();
   startApi(env);
 
   // if (argv['img'])
-  startImgSrv();
-
+  startImg();
 }
 
-start()
+function stop() {
+  apiAppSrv.close();
+  imgAppSrv.close();
+}
+
+start(process.env.NODE_ENV || 'development')
   .catch((error) => {
     console.error(error);
   });

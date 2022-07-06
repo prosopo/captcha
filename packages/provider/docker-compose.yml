@@ -1,9 +1,0 @@
-version: '3.4'
-services:
-  substrate-test-node:
-    image: prosopo/substrate:test-024becb
-    ports:
-      - "19615:9615"
-      - "19944:9944"
-      - "19933:9933"
-    command: [ "substrate-contracts-node", "--dev", "-d", "./chain-data", "--unsafe-ws-external", "--rpc-external", "-lerror,runtime::contracts=debug" ]

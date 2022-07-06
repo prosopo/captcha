@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {decodeAddress, encodeAddress, isAddress} from '@polkadot/util-crypto'
+import {blake2AsHex, decodeAddress, encodeAddress, isAddress} from '@polkadot/util-crypto'
 import {hexToString, isHex, stringToHex, u8aToHex} from '@polkadot/util'
 
 const ss58Format = 42 // TODO get this number from rpc
@@ -40,6 +40,6 @@ if (argIsAddress) {
   console.log(hexToString(arg))
 } else {
   console.log(`Encoding string ${arg} to hex`)
-  console.log(stringToHex(arg))
+  console.log(blake2AsHex(arg))
 }
 
