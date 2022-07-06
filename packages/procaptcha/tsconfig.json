@@ -3,8 +3,8 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+    "module": "commonjs",
     "target": "esnext",
-    "module": "esnext",
     "lib": [
       "esnext",
       "dom"

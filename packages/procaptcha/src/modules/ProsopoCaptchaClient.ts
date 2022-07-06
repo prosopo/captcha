@@ -17,7 +17,7 @@ import { ICaptchaContextReducer, CaptchaEventCallbacks, TExtensionAccount, ICapt
 import { ProsopoRandomProviderResponse } from "../types/api";
 
 import { ProsopoContract } from "../api/ProsopoContract";
-import { getProsopoContract } from "./contract";
+import { getProsopoContract, getWsProvider } from "./contract";
 import { getExtension } from "./extension";
 import { ProviderApi } from "../api/ProviderApi";
 import { ProsopoCaptchaApi } from "./ProsopoCaptchaApi";
@@ -30,6 +30,7 @@ export class ProsopoCaptchaClient {
     public status: ICaptchaStatusReducer;
     public callbacks: CaptchaEventCallbacks | undefined;
     public providerApi: ProviderApi;
+    public solutionThreshold: number
 
     private static extension: IExtensionInterface;
     private static contract: ProsopoContract | undefined;
@@ -41,6 +42,7 @@ export class ProsopoCaptchaClient {
         this.status = status;
         this.callbacks = callbacks;
         this.providerApi = new ProviderApi(manager.state.config);
+        this.solutionThreshold = manager.state.config.solutionThreshold
     }
 
     public getExtension() {
@@ -65,7 +67,7 @@ export class ProsopoCaptchaClient {
 
     public async onLoad() {
         let contractAddress = ProsopoCaptchaClient.contract?.address;
-    
+
         if (!ProsopoCaptchaClient.extension || !contractAddress) {
             try {
                 [ProsopoCaptchaClient.extension, { contractAddress }] = await Promise.all([getExtension(), this.providerApi.getContractAddress()]);
@@ -94,7 +96,8 @@ export class ProsopoCaptchaClient {
         }
 
         try {
-            ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account);
+            ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account,
+                getWsProvider(this.manager.state.config['dappUrl']));
         } catch (err) {
             throw new Error(err);
         }
