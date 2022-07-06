@@ -220,9 +220,10 @@ export class Tasks {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
-                response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
+                response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id), partialFee: partialFee.toString() }))
             } else {
                 await this.providerDisapprove(commitmentId)
+                response = captchaIds.map((id) => ({ captchaId: id, proof: [[]], partialFee: partialFee.toString() }))
             }
         }
 

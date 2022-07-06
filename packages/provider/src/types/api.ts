@@ -27,6 +27,7 @@ export type CaptchaResponse = CaptchaWithProof[]
 export interface CaptchaSolutionResponse {
     captchaId: string
     proof: string[][]
+    partialFee: string
 }
 
 export const CaptchaSolutionBody = z.object({
