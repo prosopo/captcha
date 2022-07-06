@@ -36,8 +36,10 @@ export const CaptchaContextManager = createContext({
         config: {
             "providerApi.baseURL": "",
             "providerApi.prefix": "",
-            "dappAccount": ""
+            "dappAccount": "",
+            "dappUrl": "",
+            "solutionThreshold": 0
         }
-    }, 
+    },
     update: () => {},
 } as ICaptchaContextReducer);
