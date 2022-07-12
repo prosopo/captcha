@@ -1,4 +1,5 @@
 import { Logo } from 'assets';
+import Button from 'components/Button';
 import Link from 'components/Link';
 import { ExtensionAccountSelect, ProsopoConsumer } from 'components/Prosopo';
 import React, { FC } from 'react';
@@ -23,10 +24,10 @@ const Navbar: FC<unknown> = () => {
           </div>
           <div className="flex lg:ml-6">
             <ProsopoConsumer>
-              {({ clientInterface }) => (
+              {({ clientInterface, showWalletModal }) => (
                 <>
-                  {clientInterface.getExtension() &&
-                    (!clientInterface.manager.state.account ? (
+                  {clientInterface.getExtension() ? (
+                    !clientInterface.manager.state.account ? (
                       <div className="prosopo-extension">
                         <ExtensionAccountSelect
                           value={clientInterface.manager.state.account}
@@ -39,7 +40,10 @@ const Navbar: FC<unknown> = () => {
                         address={clientInterface.manager.state.account.address}
                         disconnect={() => clientInterface.onAccountUnset()}
                       />
-                    ))}
+                    )
+                  ) : (
+                    <Button title="Connect Wallet" onClick={showWalletModal} />
+                  )}
                 </>
               )}
             </ProsopoConsumer>

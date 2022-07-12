@@ -16,8 +16,6 @@ type Props = Omit<ModalProps, 'title' | 'description'> & {
   successCallback?: () => {};
 };
 
-// 135 663 986 921
-
 function formatGas(value: string) {
   if (!value) {
     return '0';

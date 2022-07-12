@@ -44,7 +44,7 @@ const Button: FC<Props> = ({
   >
     {loading && <img className="inline object-contain w-5 h-5 p-px animate-spin" src={LoadingIcon} />}
     {title && <span className={`w-full ${title && icon ? (iconRight ? 'pr-2' : 'pl-2') : ''}`}>{title}</span>}
-    {icon && <img className="inline p-px" src={icon} />}
+    {icon && <img className="inline p-px w-7 h-7" src={icon} />}
   </button>
 );
 export default Button;

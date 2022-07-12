@@ -2,7 +2,6 @@ import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
 import { Signer, SubmittableResultValue } from '@polkadot/api/types';
 import { ProviderInterface } from '@polkadot/rpc-provider/types';
-import { AnyJson } from '@polkadot/types/types/codec';
 
 import abiJson from './abi.json';
 import { AsyncFactory, encodeStringArgs, unwrap } from './prosopoTemp';

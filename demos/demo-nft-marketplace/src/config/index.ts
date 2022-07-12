@@ -13,6 +13,4 @@ const config: ProsopoCaptchaConfig = {
   contractAddress: process.env.NEXT_PUBLIC_PROTOCOL_ADDRESS || '',
 };
 
-console.log(config);
-
 export default config;

@@ -6,11 +6,15 @@ import toast, { Toaster } from 'react-hot-toast';
 import config from 'config';
 import { ProviderProps, ShowCaptchasState, ConsumerProps } from './types';
 import { formatPrice } from 'api/demoApi';
+import WalletModal from 'components/Modal/WalletModal';
 
 const CustomContext = createContext<ShowCaptchasState>({
   captchasVisible: false,
   showCaptchas: () => {
     console.log('implement showCaptchas');
+  },
+  showWalletModal: () => {
+    console.log('implement showWalletModal');
   },
 });
 
@@ -20,6 +24,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   const [onSolvedCallback, setOnSolvedCallback] = useState<(approved: boolean) => Promise<void>>(
     async (approved: boolean) => console.log(approved)
   );
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   const onAccountChange = (account: TExtensionAccount) => {
     if (!account) {
@@ -86,7 +91,12 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
 
         setLoading(false);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        if (err.message != 'No extension found') {
+          console.error(err);
+        }
+        setWalletModalOpen(true);
+      });
   }, []);
 
   return (
@@ -103,11 +113,13 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
           }
         },
         clientInterface,
+        showWalletModal: () => setWalletModalOpen(true),
       }}
     >
       <CaptchaContextManager.Provider value={manager}>
         {children}
         <Toaster position="top-right" toastOptions={{ duration: 6000 }} />
+        <WalletModal isOpen={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
       </CaptchaContextManager.Provider>
     </CustomContext.Provider>
   );
