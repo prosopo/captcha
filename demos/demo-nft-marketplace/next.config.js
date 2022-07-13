@@ -32,4 +32,7 @@ module.exports = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  serverRuntimeConfig: {
+    MAIN_ACCOUNT_MNEMONIC: process.env.MAIN_ACCOUNT_MNEMONIC,
+  },
 };
