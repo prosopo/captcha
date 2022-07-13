@@ -1,12 +1,12 @@
 import { useState, createContext, FC, useEffect } from 'react';
 import { TCaptchaSubmitResult, TExtensionAccount, Extension } from '@prosopo/procaptcha';
 import { CaptchaContextManager, useCaptcha } from '@prosopo/procaptcha-react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { ToastBar, Toaster } from 'react-hot-toast';
 
 import config from 'config';
 import { ProviderProps, ShowCaptchasState, ConsumerProps } from './types';
 import { formatPrice } from 'api/demoApi';
-import WalletModal from 'components/Modal/WalletModal';
+import { FaucetModal, WalletModal } from 'components/Modal';
 
 const CustomContext = createContext<ShowCaptchasState>({
   captchasVisible: false,
@@ -15,6 +15,9 @@ const CustomContext = createContext<ShowCaptchasState>({
   },
   showWalletModal: () => {
     console.log('implement showWalletModal');
+  },
+  showFaucetModal: () => {
+    console.log('implement showFaucetModal');
   },
 });
 
@@ -25,6 +28,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
     async (approved: boolean) => console.log(approved)
   );
   const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [faucetModalOpen, setFaucetModalOpen] = useState(false);
 
   const onAccountChange = (account: TExtensionAccount) => {
     if (!account) {
@@ -107,19 +111,32 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
           setShowCaptchas(true);
           if (callback) {
             setOnSolvedCallback((approved) => () => {
-              console.log({ approved });
               return callback(approved);
             });
           }
         },
         clientInterface,
         showWalletModal: () => setWalletModalOpen(true),
+        showFaucetModal: () => setFaucetModalOpen(true),
       }}
     >
       <CaptchaContextManager.Provider value={manager}>
         {children}
-        <Toaster position="top-right" toastOptions={{ duration: 6000 }} />
+        <Toaster position="top-right" toastOptions={{ duration: 6000 }}>
+          {(t) => (
+            <ToastBar toast={t}>
+              {({ icon, message }) => (
+                <>
+                  {icon}
+                  {message}
+                  {t.type !== 'loading' && <button onClick={() => toast.dismiss(t.id)}>X</button>}
+                </>
+              )}
+            </ToastBar>
+          )}
+        </Toaster>
         <WalletModal isOpen={walletModalOpen} onClose={() => setWalletModalOpen(false)} />
+        <FaucetModal isOpen={faucetModalOpen} onClose={() => setFaucetModalOpen(false)} />
       </CaptchaContextManager.Provider>
     </CustomContext.Provider>
   );

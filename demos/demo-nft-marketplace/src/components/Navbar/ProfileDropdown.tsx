@@ -1,5 +1,7 @@
 import { Popover } from '@headlessui/react';
 import { XIcon } from '@heroicons/react/solid';
+import { ProsopoConsumer } from 'components/Prosopo';
+import { ShowCaptchasState } from 'components/Prosopo/types';
 import makeBlockie from 'ethereum-blockies-base64';
 import { useToggle } from 'hooks/useToggle';
 import { useRouter } from 'next/router';
@@ -36,7 +38,15 @@ type Props = {
   disconnect: () => void;
 };
 
-const ProfileDropdown: FC<Props> = ({ address, disconnect }) => {
+const ProfileDropdown: FC<Props> = (props: Props) => {
+  return (
+    <ProsopoConsumer>
+      {({ showFaucetModal }) => <ProfileDropdownInternal {...props} showFaucetModal={showFaucetModal} />}
+    </ProsopoConsumer>
+  );
+};
+
+const ProfileDropdownInternal: FC<Props & Partial<ShowCaptchasState>> = ({ address, disconnect, showFaucetModal }) => {
   const [displayFull, setDisplayFull] = useToggle(false);
 
   const router = useRouter();
@@ -46,6 +56,12 @@ const ProfileDropdown: FC<Props> = ({ address, disconnect }) => {
       handler: () => {
         setDisplayFull(false);
         router.push(`/profile/${address}?tab=Owned`);
+      },
+    },
+    {
+      title: 'Faucet',
+      handler: () => {
+        showFaucetModal();
       },
     },
     {

@@ -28,12 +28,13 @@ function formatGas(value: string) {
 function CheckoutModal(props: Props) {
   return (
     <ProsopoConsumer>
-      {({ clientInterface, showCaptchas, captchasVisible }) => (
+      {({ clientInterface, showCaptchas, captchasVisible, showFaucetModal }) => (
         <CheckoutModalInternal
           {...props}
           clientInterface={clientInterface}
           captchasVisible={captchasVisible}
           showCaptchas={showCaptchas}
+          showFaucetModal={showFaucetModal}
         />
       )}
     </ProsopoConsumer>
@@ -48,8 +49,9 @@ function CheckoutModalInternal({
   captchasVisible,
   successCallback,
   showCaptchas,
+  showFaucetModal,
   ...props
-}: Props & ShowCaptchasState): JSX.Element {
+}: Props & Partial<ShowCaptchasState>): JSX.Element {
   const [balance, setBalance] = useState<BN>(new BN(0));
   const [gas, setGas] = useState<string>('');
   const [estimatedGas, setEstimatedGas] = useState<string>('0');
@@ -90,9 +92,6 @@ function CheckoutModalInternal({
 
   const onBuy = async () => {
     setLoading(true);
-    const account = clientInterface.getExtension().getAccount();
-    await demoApi.setAccount(account);
-
     const isHuman = await demoApi.isHuman();
 
     if (isHuman) {
@@ -104,19 +103,22 @@ function CheckoutModalInternal({
 
   useEffect(() => {
     if (props.isOpen) {
-      demoApi
-        .getBalance(clientInterface.getExtension().getAccount())
-        .then((x) => setBalance(new BN(x.toHuman().free.replaceAll(',', ''))))
-        .catch(console.log);
-      demoApi
-        .estimateBuyGasFees(id)
-        .then((gas) => {
-          const formatted = formatPrice(gas);
-          const doubledFormatted = formatPrice(new BN(gas).muln(2).toString());
-          setEstimatedGas(formatted);
-          setGas(doubledFormatted.split(' ')[0]);
-        })
-        .catch(console.log);
+      const account = clientInterface.getExtension().getAccount();
+      demoApi.setAccount(account).then(() => {
+        demoApi
+          .getBalance()
+          .then((x) => setBalance(new BN(x.toHuman().free.replaceAll(',', ''))))
+          .catch(console.log);
+        demoApi
+          .estimateBuyGasFees(id)
+          .then((gas) => {
+            const formatted = formatPrice(gas);
+            const doubledFormatted = formatPrice(new BN(gas).muln(2).toString());
+            setEstimatedGas(formatted);
+            setGas(doubledFormatted.split(' ')[0]);
+          })
+          .catch(console.log);
+      });
     }
   }, [props.isOpen]);
 
@@ -150,10 +152,24 @@ function CheckoutModalInternal({
             />
             <div className="flex items-center min-w-max">milli Unit</div>
           </div>
+          <p className="my-2 text-sm font-semibold text-white">
+            If required to complete a captcha, you will need to pay a small fee which will be refunded upon successfully
+            completing it.
+          </p>
         </div>
         <div className={'flex flex-col'}>
           {insufficient ? (
-            <div className="pt-2 text-lg font-bold text-center text-white">Balance too low</div>
+            <>
+              <div className="py-2 text-lg font-bold text-center text-white">Balance too low</div>
+              <Button
+                title={'Use faucet'}
+                fullWidth
+                onClick={() => {
+                  props.onClose();
+                  showFaucetModal();
+                }}
+              />
+            </>
           ) : (
             <Button title={'Buy Now'} fullWidth onClick={onBuy} loading={loading} />
           )}

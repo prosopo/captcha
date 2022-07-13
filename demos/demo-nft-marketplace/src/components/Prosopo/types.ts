@@ -6,6 +6,7 @@ export type ShowCaptchasState = {
   showCaptchas: (callback?: (approved: boolean) => Promise<void>) => void;
   clientInterface?: ProsopoCaptchaClient;
   showWalletModal: () => void;
+  showFaucetModal: () => void;
 };
 
 export type ConsumerProps = {
