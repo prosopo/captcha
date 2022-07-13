@@ -8,11 +8,7 @@ type Props = {
   username: string;
 };
 
-const Avatar: FC<Props> = ({
-  additionalClasses = '',
-  sizeClasses,
-  username,
-}) => {
+const Avatar: FC<Props> = ({ additionalClasses = '', sizeClasses, username }) => {
   return (
     <Link to={`/profile/${username}`}>
       <div className="relative flex cursor-pointer">
