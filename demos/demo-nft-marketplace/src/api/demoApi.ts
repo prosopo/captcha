@@ -1,16 +1,29 @@
-import { WsProvider } from '@polkadot/api';
+import { WsProvider, Keyring } from '@polkadot/api';
+import { SubmittableResultValue } from '@polkadot/api/types';
 import { Balance } from '@polkadot/types/interfaces';
 import { Signer } from '@polkadot/types/types';
 import { formatBalance } from '@polkadot/util';
 import config from 'config';
 import DemoNFTContract from './DemoNFTContract';
+import getConfig from 'next/config';
+
+const keyring = new Keyring({ type: 'sr25519' });
 
 const contractPromise: Promise<DemoNFTContract> = DemoNFTContract.create(
   config.dappAccount,
   new WsProvider('ws://127.0.0.1:9944')
 );
 
-const idKey = 'U8'; // key = U8 | U16 | U32 | U64 | U128 | Bytes
+const ID_KEY = 'U8'; // key = U8 | U16 | U32 | U64 | U128 | Bytes
+const UNIT = 1000000000000n;
+export const MAX_BALANCE_FAUCET = 10n * UNIT;
+export const MIN_BALANCE_FAUCET = 4n * UNIT;
+
+const { serverRuntimeConfig } = getConfig();
+
+function toId(id: string) {
+  return { [ID_KEY]: id };
+}
 
 type GetTokensContractResponse = {
   id: {
@@ -46,28 +59,84 @@ export function formatPrice(price: string) {
   return formatBalance((price || '0').replaceAll(',', ''), { decimals: 12, withSiFull: true });
 }
 
+export const PAGE_SIZE = 24;
+
 const demoApi = {
   async setAccount(account): Promise<void> {
     const contract = await contractPromise;
 
     return contract.setAccount(account);
   },
-  async getBalance(account): Promise<Balance> {
+  async getAccount(): Promise<{ address: string }> {
     const contract = await contractPromise;
 
-    const { data } = await contract.getContract().api.query.system.account(account.address);
+    return contract.getAccount();
+  },
+  async getBalance(address?: string): Promise<Balance> {
+    const contract = await contractPromise;
+
+    const { data } = (await contract
+      .getContract()
+      .api.query.system.account(contract.getAccount()?.address || address)) as any;
 
     return data;
+  },
+  /**
+   * BACKEND ONLY!
+   */
+  async faucet(to: string): Promise<string> {
+    const contract = await contractPromise;
+
+    if (!serverRuntimeConfig.MAIN_ACCOUNT_MNEMONIC) {
+      throw new Error('Main account not set. Contact the developers.');
+    }
+
+    const from = keyring.addFromMnemonic(serverRuntimeConfig.MAIN_ACCOUNT_MNEMONIC);
+
+    const balance: any = await demoApi.getBalance(to);
+    const free = BigInt(balance.free.toHuman().replaceAll(',', ''));
+
+    if (free > MIN_BALANCE_FAUCET) {
+      throw new Error('Balance high enough. Transfer not allowed.');
+    }
+
+    const amount = MAX_BALANCE_FAUCET - free;
+
+    return new Promise((resolve, reject) => {
+      contract['api'].tx.balances.transfer(to, amount).signAndSend(from, async (result) => {
+        const { dispatchError, internalError, status } = result;
+        if (internalError) {
+          reject(internalError);
+
+          return;
+        }
+
+        if (dispatchError) {
+          const error = dispatchError.registry.findMetaError(dispatchError.asModule);
+          reject(error);
+
+          return;
+        }
+
+        // Instant seal ON.
+        if (status.isInBlock) {
+          resolve(amount.toString());
+        }
+
+        // Instant seal OFF.
+        // if (status.isFinalized) {
+        //   resolve();
+        // }
+      });
+    });
   },
   async getTokens(pageSize = 20, pageIndex = 0, owner = undefined as string | undefined): Promise<Token[]> {
     const contract = await contractPromise;
 
     const { data: tokens } = await contract.query<GetTokensContractResponse>('getTokens', [pageSize, pageIndex, owner]);
 
-    console.log(tokens)
-
     return tokens.map(({ id, owner, tokenUri, onSale, price }) => ({
-      id: id[idKey],
+      id: id[ID_KEY],
       owner,
       meta: readMetadata(tokenUri),
       onSale,
@@ -77,15 +146,15 @@ const demoApi = {
   async getToken(id: string): Promise<Token> {
     const contract = await contractPromise;
 
-    const { data: owner } = await contract.query<string>('psp34::ownerOf', [{ [idKey]: id }]);
+    const { data: owner } = await contract.query<string>('psp34::ownerOf', [toId(id)]);
 
-    const { data: tokenUri } = await contract.query<string>('tokenUri', [{ [idKey]: id }]);
+    const { data: tokenUri } = await contract.query<string>('tokenUri', [toId(id)]);
 
     const meta = readMetadata(tokenUri);
 
-    const { data: onSale } = await contract.query<boolean>('onSale', [{ [idKey]: id }]);
+    const { data: onSale } = await contract.query<boolean>('onSale', [toId(id)]);
 
-    const { data: price } = await contract.query<string>('price', [{ [idKey]: id }]);
+    const { data: price } = await contract.query<string>('price', [toId(id)]);
 
     return {
       id,
@@ -98,25 +167,22 @@ const demoApi = {
   async estimateBuyGasFees(id: string): Promise<string> {
     const contract = await contractPromise;
 
-    const { gasRequired } = await contract.query<string>('buy', [{ [idKey]: id }]);
+    const { gasRequired } = await contract.query<string>('buy', [toId(id)]);
 
     return gasRequired.replaceAll(',', '');
   },
-  async buy(signer: Signer, id: string, gas: string): Promise<void> {
+  async buy(signer: Signer, id: string, gas: string): Promise<SubmittableResultValue & { blockHash?: string }> {
     const contract = await contractPromise;
 
-    const { data } = await contract.query<string>('price', [{ [idKey]: id }]);
+    const { data } = await contract.query<string>('price', [toId(id)]);
 
     const price = data.replaceAll(',', '');
 
-    await contract.transaction(signer, 'buy', [{ [idKey]: id }], price, gas);
-
-    return;
+    return contract.transaction(signer, 'buy', [toId(id)], price, gas);
   },
   async isHuman(): Promise<boolean> {
     const contract = await contractPromise;
 
-    console.log({ address: contract.getAccount().address });
     const { data } = await contract.query<boolean>('isHuman', [contract.getAccount().address, 60, 20000]);
 
     return data;

@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { shortAddress } from 'utils/itemUtils';
 import { CheckoutModal } from 'components/Modal';
 import { useToggle } from 'hooks/useToggle';
+import toast from 'react-hot-toast';
 
 type Props = { token: Token };
 
@@ -18,13 +19,31 @@ function ItemDetailsPage(props: Props): JSX.Element {
 
 type ItemDetailsProps = Props & ShowCaptchasState;
 
-function ItemDetails({ token }: ItemDetailsProps) {
+function ItemDetails({ token: _token }: ItemDetailsProps) {
   const [isCheckoutVisible, setCheckoutVisible] = useToggle(false);
   const [creatorAvatar, setCreatorAvatar] = useState(null);
+  const [token, setToken] = useState(_token);
 
   useEffect(() => {
     setCreatorAvatar(makeBlockie(token.owner));
   }, []);
+
+  const getToken = () => {
+    return demoApi
+      .getToken(_token.id)
+      .then((t) => {
+        setToken(t);
+        setCreatorAvatar(makeBlockie(t.owner));
+      })
+      .catch((error) => {
+        if (error.docs) {
+          toast.error(error.docs.join(' '));
+        } else {
+          toast.error(error.message);
+        }
+        console.log({ error });
+      });
+  };
 
   const price = formatPrice(token.price);
 
@@ -67,17 +86,14 @@ function ItemDetails({ token }: ItemDetailsProps) {
               </div>
             </div>
             {renderButton()}
-            {isCheckoutVisible && (
-              <>
-                <CheckoutModal
-                  id={token.id}
-                  title={token.meta.name}
-                  isOpen={isCheckoutVisible}
-                  onClose={setCheckoutVisible}
-                  price={token.price}
-                />
-              </>
-            )}
+            <CheckoutModal
+              id={token.id}
+              title={token.meta.name}
+              isOpen={isCheckoutVisible}
+              onClose={setCheckoutVisible}
+              price={token.price}
+              successCallback={getToken}
+            />
           </div>
         </div>
       </main>

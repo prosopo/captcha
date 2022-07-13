@@ -19,7 +19,6 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-
     "composite": true,
     "allowSyntheticDefaultImports": true,
   },
@@ -40,9 +39,6 @@
     },
     {
       "path": "../../packages/procaptcha-react"
-    },
-    {
-      "path": "../../packages/provider"
     }
   ]
 }

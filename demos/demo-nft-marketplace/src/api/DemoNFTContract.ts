@@ -2,7 +2,6 @@ import { ApiPromise, SubmittableResult } from '@polkadot/api';
 import { Abi, ContractPromise } from '@polkadot/api-contract';
 import { Signer, SubmittableResultValue } from '@polkadot/api/types';
 import { ProviderInterface } from '@polkadot/rpc-provider/types';
-import { AnyJson } from '@polkadot/types/types/codec';
 
 import abiJson from './abi.json';
 import { AsyncFactory, encodeStringArgs, unwrap } from './prosopoTemp';
@@ -125,7 +124,7 @@ class DemoNFTContract extends AsyncFactory {
             console.error('dispatchError', dispatchError);
             const error = dispatchError.registry.findMetaError(dispatchError.asModule);
             console.log(`${error.section}.${error.name}`);
-            reject(dispatchError);
+            reject(error);
 
             return;
           }

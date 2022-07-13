@@ -3,8 +3,10 @@ import { PropsWithChildren, ReactNode } from 'react';
 
 export type ShowCaptchasState = {
   captchasVisible: boolean;
-  showCaptchas: (callback?: () => Promise<void>) => void;
+  showCaptchas: (callback?: (approved: boolean) => Promise<void>) => void;
   clientInterface?: ProsopoCaptchaClient;
+  showWalletModal: () => void;
+  showFaucetModal: () => void;
 };
 
 export type ConsumerProps = {
