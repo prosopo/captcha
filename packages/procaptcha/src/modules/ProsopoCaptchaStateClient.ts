@@ -102,10 +102,10 @@ export class ProsopoCaptchaStateClient {
     // TODO check for solved captchas.
     public async onSolved(submitResult: TCaptchaSubmitResult) {
         const isHuman = await this.context.getContract()?.dappOperatorIsHumanUser(this.context.solutionThreshold);
+        this.dismissCaptcha();
         if (this.context.callbacks?.onSolved) {
             this.context.callbacks.onSolved(submitResult, isHuman);
         }
-        this.dismissCaptcha();
     }
 
     public onChange(index: number) {
