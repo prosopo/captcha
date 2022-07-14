@@ -44,7 +44,7 @@ export interface ICaptchaStateClientEvents {
     onSubmit?: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => void;
     onChange?: (captchaSolution: number[][], index: number) => void;
     onCancel?: () => void;
-    onSolved?: (result: TCaptchaSubmitResult) => void;
+    onSolved?: (result: TCaptchaSubmitResult, isHuman?: boolean) => void;
 }
 
 export interface CaptchaEventCallbacks extends ICaptchaClientEvents, ICaptchaStateClientEvents { }
