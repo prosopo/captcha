@@ -93,7 +93,7 @@ async function start (nodeEnv: string) {
   startApi(env);
 
   // if (argv['img'])
-  startImg();
+  // startImg();
 }
 
 function stop() {

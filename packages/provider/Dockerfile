@@ -2,11 +2,14 @@ FROM node:16
 
 WORKDIR /usr/src/app
 
-COPY . .
+COPY . ./
+
+ENV NODE_ENV demo
 
 RUN npm i
+# RUN npm run setup
 
-EXPOSE 3000
+# EXPOSE 3000
 EXPOSE 4000
 
 CMD [ "npm", "run", "start" ]

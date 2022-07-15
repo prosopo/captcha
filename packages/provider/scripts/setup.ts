@@ -100,8 +100,10 @@ async function setup() {
     console.log(`Address: ${address}`);
     console.log(`Mnemonic: ${mnemonic}`);
 
-    console.log('Copying contract artifacts...');
-    await copyArtifacts();
+    if (process.env.NODE_ENV === 'development') {
+        console.log('Copying contract artifacts...');
+        await copyArtifacts();
+    }
 
     console.log('Writing .env file...');
     await setupEnvFile(mnemonic, address);
