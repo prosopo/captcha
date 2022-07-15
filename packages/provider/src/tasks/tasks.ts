@@ -26,7 +26,7 @@ import {
     computeCaptchaHash,
     computeCaptchaSolutionHash,
     computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, LastCorrectCaptcha, parseCaptchaDataset,
-    parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse
+    parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse,
 } from '@prosopo/contract';
 import consola from "consola";
 import { buildDecodeVector } from '../codec/codec';
@@ -39,7 +39,6 @@ import {
     ProsopoEnvironment
 } from '../types';
 import { loadJSONFile, shuffleArray, writeJSONFile } from '../util';
-
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -425,6 +424,26 @@ export class Tasks {
     }
 
     /**
+     * Block by block search for blockNo
+     */
+    async isRecentBlock(contract, header, blockNo: number, depth = this.captchaSolutionConfig.captchaBlockRecency) {
+        if (depth == 0) {
+            return false;
+        }
+
+        const _header = header.toHuman?.() || header;
+
+        const headerBlockNo: number = Number.parseInt(_header.number);
+        if (headerBlockNo == blockNo) {
+            return true;
+        }
+
+        const parent = await contract.api.rpc.chain.getBlock(_header.parentHash);
+
+        return this.isRecentBlock(contract, (parent.toHuman() as any).block.header, blockNo, depth - 1);
+    }
+
+    /**
      * Validate that provided `datasetId` was a result of calling `get_random_provider` method
      * @param {string} userAccount - Same user that called `get_random_provider`
      * @param {string} dappContractAccount - account of dapp that is requesting captcha
@@ -436,6 +455,16 @@ export class Tasks {
         if (!contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
+
+
+        const header = await contract.api.rpc.chain.getHeader()
+
+        const isBlockNoValid = await this.isRecentBlock(contract, header, blockNo)
+
+        if (!isBlockNoValid) {
+            throw new Error(ERRORS.CAPTCHA.INVALID_BLOCK_NO.message);
+        }
+
         const block = await contract.api.rpc.chain.getBlockHash(blockNo)
         const randomProviderAndBlockNo = await this.getRandomProvider(userAccount, dappContractAccount, block)
         // TODO: create mappers/transformations for fields
