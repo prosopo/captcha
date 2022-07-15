@@ -39,7 +39,7 @@ const defaultProvider: TestProvider = {
     fee: 10,
     payee: Payee.Provider,
     stake: Math.pow(10, 13),
-    datasetFile: path.join(integrationPath, 'data/captchas.json'),
+    datasetFile: './data/captchas.json',
     mnemonic: process.env.PROVIDER_MNEMONIC || '',
     address: process.env.PROVIDER_ADDRESS || '',
     captchaDatasetId: ''
@@ -67,15 +67,16 @@ async function copyArtifacts() {
 }
 
 async function setupEnvFile(mnemonic: string, address: string) {
-    let [contractEnvFile, defaultEnvFile] = await Promise.all([
-        fse.readFile(getEnvFile('.env', integrationPath), 'utf8'),
-        fse.readFile('./env.txt', 'utf8'),
-    ]);
+    // let [contractEnvFile, defaultEnvFile] = await Promise.all([
+    //     fse.readFile(getEnvFile('.env', integrationPath), 'utf8'),
+    //     fse.readFile('./env.txt', 'utf8'),
+    // ]);
+    let defaultEnvFile = await fse.readFile('./env.txt', 'utf8');
     // contractEnvFile = updateEnvFileVar(contractEnvFile, 'DATABASE_HOST', '127.0.0.1');
     defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_MNEMONIC', `"${mnemonic}"`);
     defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_ADDRESS', address);
 
-    await fse.writeFile('./env', [contractEnvFile, defaultEnvFile].join('\n'));
+    await fse.writeFile('./.env', defaultEnvFile);
 }
 
 async function registerProvider(env: Environment, account: TestProvider) {
