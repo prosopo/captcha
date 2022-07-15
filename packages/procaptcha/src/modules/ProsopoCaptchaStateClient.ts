@@ -103,7 +103,7 @@ export class ProsopoCaptchaStateClient {
     public async onSolved(submitResult: TCaptchaSubmitResult) {
         let isHuman: boolean | undefined;
         try {
-            isHuman = await this.context.getContract()?.dappOperatorIsHumanUser(this.context.solutionThreshold);
+            isHuman = await this.context.getContract()?.dappOperatorIsHumanUser(this.context.manager.state.config['solutionThreshold']);
         }   catch (err) {
             // TODO
         }

@@ -35,9 +35,9 @@ export class ProsopoContract extends ProsopoContractBase {
         return await this.transaction(signer, 'dappUserCommit', [this.dappAddress, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
     }
 
-    public async dappOperatorIsHumanUser(threshold: number): Promise<ProsopoDappOperatorIsHumanUserResponse> {
+    public async dappOperatorIsHumanUser(solutionThreshold: number): Promise<ProsopoDappOperatorIsHumanUserResponse> {
         // TODO get threshold from dapp contract using getStorage or allow override in UI and fallback on contract protection layer?
-        return await this.query('dappOperatorIsHumanUser', [this.account.address, threshold]) as ProsopoDappOperatorIsHumanUserResponse;
+        return await this.query('dappOperatorIsHumanUser', [this.account.address, solutionThreshold]) as ProsopoDappOperatorIsHumanUserResponse;
     }
 
 
