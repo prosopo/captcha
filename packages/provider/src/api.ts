@@ -194,7 +194,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
 
     try {
       const result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
-      return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, captchas: result});
+      return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, ...result });
     } catch (err: unknown) {
       return next(new BadRequest(err));
     }

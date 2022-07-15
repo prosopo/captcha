@@ -196,9 +196,9 @@ export class Tasks {
      * @param {JSON} captchas
      * @param blockHash
      * @param txHash
-     * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
+     * @return {Promise<CaptchaSolutionResponse>} result containing the contract event
      */
-    async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse[]> {
+    async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse> {
         if (!await this.dappIsActive(dappAccount)) {
             throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message)
         }
@@ -211,7 +211,7 @@ export class Tasks {
             throw new Error(ERRORS.API.PAYMENT_INFO_NOT_FOUND.message)
         }
         const partialFee = paymentInfo?.partialFee
-        let response: CaptchaSolutionResponse[] = []
+        let response: CaptchaSolutionResponse = { proofs: [], partialFee: '0' };
         const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
         const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
@@ -220,10 +220,16 @@ export class Tasks {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
-                response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id), partialFee: partialFee.toString() }))
+                response = {
+                    proofs: captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) })),
+                    partialFee: partialFee.toString(),
+                };
             } else {
                 await this.providerDisapprove(commitmentId)
-                response = captchaIds.map((id) => ({ captchaId: id, proof: [[]], partialFee: partialFee.toString() }))
+                response = {
+                    proofs: captchaIds.map((id) => ({ captchaId: id, proof: [[]] })),
+                    partialFee: partialFee.toString()
+                }
             }
         }
 
