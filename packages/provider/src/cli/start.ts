@@ -21,7 +21,7 @@ import { URL } from 'url';
 
 import { prosopoRouter } from '../api';
 import { LocalAssetsResolver } from '../assets';
-import { Environment } from '../env';
+import { Environment, loadEnv } from '../env';
 // import { MockEnvironment } from "../tests/mocks/mockenv";
 import { ERRORS, handleErrors } from '../errors';
 // import { processArgs } from './argv';
@@ -34,7 +34,7 @@ import { ProsopoEnvironment } from '../types/env';
 
 import { Server } from 'http';
 
-dotenv.config();
+loadEnv();
 
 let apiAppSrv: Server;
 let imgAppSrv: Server;

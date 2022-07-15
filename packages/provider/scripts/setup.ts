@@ -19,7 +19,7 @@
 import { KeyringPair } from '@polkadot/keyring/types';
 import { randomAsHex } from '@polkadot/util-crypto';
 import { Payee } from "@prosopo/contract";
-import { Environment } from '../src/env';
+import { Environment, getEnvFile, loadEnv } from '../src/env';
 import { TestDapp, TestProvider } from '../tests/mocks/accounts';
 import { sendFunds, setupDapp, setupProvider } from '../tests/mocks/setup';
 import { generateMnemonic, updateEnvFileVar } from './utils';
@@ -28,7 +28,7 @@ const dotenv = require('dotenv');
 const fse = require('fs-extra');
 const path = require('path');
 
-dotenv.config();
+loadEnv();
 
 // TODO: Add path to protocol contract as argument. (after rm npm-ws from integration)
 // const argv = yargs(hideBin(process.argv)).argv;
@@ -68,14 +68,14 @@ async function copyArtifacts() {
 
 async function setupEnvFile(mnemonic: string, address: string) {
     let [contractEnvFile, defaultEnvFile] = await Promise.all([
-        fse.readFile(path.join(integrationPath, '.env'), 'utf8'),
+        fse.readFile(getEnvFile('.env', integrationPath), 'utf8'),
         fse.readFile('./env.txt', 'utf8'),
     ]);
-    contractEnvFile = updateEnvFileVar(contractEnvFile, 'DATABASE_HOST', '127.0.0.1');
+    // contractEnvFile = updateEnvFileVar(contractEnvFile, 'DATABASE_HOST', '127.0.0.1');
     defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_MNEMONIC', `"${mnemonic}"`);
     defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_ADDRESS', address);
 
-    await fse.writeFile('./.env', [contractEnvFile, defaultEnvFile].join('\n'));
+    await fse.writeFile('./env', [contractEnvFile, defaultEnvFile].join('\n'));
 }
 
 async function registerProvider(env: Environment, account: TestProvider) {
@@ -106,12 +106,11 @@ async function setup() {
     await setupEnvFile(mnemonic, address);
 
     // Load new .env file.
-    dotenv.config();
+    loadEnv();
 
     if (!process.env.DAPP_CONTRACT_ADDRESS) {
         throw new Error('DAPP_CONTRACT_ADDRESS is not set in .env file.');
     }
-
 
     const env = new Environment('//Alice');
     await env.isReady();

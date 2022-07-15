@@ -16,13 +16,13 @@
 import { mnemonicValidate } from '@polkadot/util-crypto';
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
-import { Environment } from '../env';
+import { Environment, loadEnv } from '../env';
 import { ERRORS } from '../errors';
 import { processArgs } from './argv';
 
 import dotenv from 'dotenv';
 
-dotenv.config();
+loadEnv();
 
 async function main () {
 
