@@ -7,6 +7,7 @@ export type ShowCaptchasState = {
   clientInterface?: ProsopoCaptchaClient;
   showWalletModal: () => void;
   showFaucetModal: () => void;
+  captchaReloadKey: number;
 };
 
 export type ConsumerProps = {
