@@ -32,7 +32,7 @@ import consola from "consola";
 import { buildDecodeVector } from '../codec/codec';
 import { ERRORS } from '../errors';
 import {
-    CaptchaSolutionResponse,
+    DappUserSolutionResult,
     CaptchaWithProof,
     Database,
     DatasetRecord,
@@ -196,9 +196,9 @@ export class Tasks {
      * @param {JSON} captchas
      * @param blockHash
      * @param txHash
-     * @return {Promise<CaptchaSolutionResponse>} result containing the contract event
+     * @return {Promise<DappUserSolutionResult>} result containing the contract event
      */
-    async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse> {
+    async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<DappUserSolutionResult> {
         if (!await this.dappIsActive(dappAccount)) {
             throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message)
         }
@@ -211,7 +211,7 @@ export class Tasks {
             throw new Error(ERRORS.API.PAYMENT_INFO_NOT_FOUND.message)
         }
         const partialFee = paymentInfo?.partialFee
-        let response: CaptchaSolutionResponse = { proofs: [], partialFee: '0' };
+        let response: DappUserSolutionResult = { captchas: [], partialFee: '0' };
         const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
         const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
@@ -221,13 +221,13 @@ export class Tasks {
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
                 response = {
-                    proofs: captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) })),
+                    captchas: captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) })),
                     partialFee: partialFee.toString(),
                 };
             } else {
                 await this.providerDisapprove(commitmentId)
                 response = {
-                    proofs: captchaIds.map((id) => ({ captchaId: id, proof: [[]] })),
+                    captchas: captchaIds.map((id) => ({ captchaId: id, proof: [[]] })),
                     partialFee: partialFee.toString()
                 }
             }

@@ -182,7 +182,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
    * @param {string} userAccount - Dapp User id
    * @param {string} dappAccount - Dapp Contract AccountId
    * @param {Captcha[]} captchas - The Captcha solutions
-   * @return {CaptchaSolutionResponse} - The Captcha solution result and proof
+   * @return {DappUserSolutionResult} - The Captcha solution result and proof
    */
   router.post('/v1/prosopo/provider/solution', async (req, res, next) => {
     let parsed;
