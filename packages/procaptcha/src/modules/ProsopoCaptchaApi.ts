@@ -82,12 +82,7 @@ export class ProsopoCaptchaApi {
         let result: CaptchaSolutionResponse;
 
         try {
-            const res = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address) as any;
-            result = {
-                ...res,
-                captchas: res.captchas.map(({ partialFee, ...rest }) => ({ ...rest })),
-                partialFee: res.captchas[0].partialFee
-            }
+            result = await this.providerApi.submitCaptchaSolution(tx.blockHash!, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
         } catch (err) {
             throw new ProsopoApiError(err)
         }
