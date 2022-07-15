@@ -92,7 +92,8 @@ export type CaptchaConfig = {
 export type CaptchaSolutionConfig = {
     requiredNumberOfSolutions: number,
     solutionWinningPercentage: number,
-    captchaFilePath: string
+    captchaFilePath: string,
+    captchaBlockRecency: number
 }
 
 export type LastCorrectCaptcha = {
