@@ -136,7 +136,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
                 <>
                   {icon}
                   {message}
-                  {t.type !== 'loading' && <button onClick={() => toast.dismiss(t.id)}>X</button>}
+                  {t.type !== 'loading' && <button onClick={() => toast.remove(t.id)}>X</button>}
                 </>
               )}
             </ToastBar>
