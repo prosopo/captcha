@@ -47,6 +47,7 @@ export default {
         }
     },
     captchaSolutions: {
+        captchaBlockRecency: 10,
         requiredNumberOfSolutions: 3,
         solutionWinningPercentage: 80,
         captchaFilePath: '../../data/captchas.json'

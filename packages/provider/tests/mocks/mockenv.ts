@@ -71,7 +71,8 @@ export class MockEnvironment implements ProsopoEnvironment {
             captchaSolutions: {
                 requiredNumberOfSolutions: 3,
                 solutionWinningPercentage: 80,
-                captchaFilePath: path.join(process.cwd(), './tests/mocks/data/captchas.json')
+                captchaFilePath: path.join(process.cwd(), './tests/mocks/data/captchas.json'),
+                captchaBlockRecency: 10
             },
             database: {
                 development: {type: 'mongo', endpoint: '', dbname: ''}
