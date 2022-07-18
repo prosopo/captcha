@@ -162,6 +162,9 @@ export const ERRORS = {
         },
         INVALID_CAPTCHA_ID: {
             message: 'invalid captcha id'
+        },
+        INVALID_BLOCK_NO: {
+            message: 'invalid block number'
         }
     }
 }
