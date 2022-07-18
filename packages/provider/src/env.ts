@@ -14,19 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 // import { findUpSync } from 'find-up'
-import { abiJson, ContractAbi, ContractApiInterface, createNetwork, Network, ProsopoContractApi, AssetsResolver } from '@prosopo/contract';
+import { abiJson, AssetsResolver, ContractAbi, ContractApiInterface, createNetwork, Network, ProsopoContractApi } from '@prosopo/contract';
 import consola, { LogLevel } from "consola";
 import dotenv from 'dotenv';
+import path from 'path';
 import { LocalAssetsResolver } from './assets';
 import { ERRORS } from './errors';
 import { Database, ProsopoConfig, ProsopoEnvironment } from './types';
-import {loadEnvFile} from "./util";
+import { loadEnvFile } from "./util";
 
-
-dotenv.config();
+loadEnv();
 
 import prosopoConfig from './prosopo.config';
-// const JS_CONFIG_FILENAME = 'prosopo.config.js'
+
+export function loadEnv() {
+    dotenv.config();
+    dotenv.config({ path: getEnvFile() });
+}
+
+export function getEnvFile(filename = '.env', filepath = './') {
+    const env =  process.env.NODE_ENV ?? 'development';
+    return path.join(filepath, `${filename}.${env}`);
+}
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig

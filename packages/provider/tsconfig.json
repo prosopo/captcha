@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.build.json",
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
@@ -10,11 +10,6 @@
     "./src/**/*.ts"
   ],
   "files": [
-    "./src/prosopo.config.js",
-  ],
-  "references": [
-    {
-      "path": "../contract"
-    }
+    "./src/prosopo.config.js"
   ]
 }
