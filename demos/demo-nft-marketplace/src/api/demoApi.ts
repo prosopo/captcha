@@ -11,7 +11,7 @@ const keyring = new Keyring({ type: 'sr25519' });
 
 const contractPromise: Promise<DemoNFTContract> = DemoNFTContract.create(
   config.dappAccount,
-  new WsProvider('ws://127.0.0.1:9944')
+  new WsProvider(config.dappUrl)
 );
 
 const ID_KEY = 'U8'; // key = U8 | U16 | U32 | U64 | U128 | Bytes

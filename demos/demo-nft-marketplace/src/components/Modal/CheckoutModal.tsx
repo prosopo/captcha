@@ -26,19 +26,7 @@ function formatGas(value: string) {
 }
 
 function CheckoutModal(props: Props) {
-  return (
-    <ProsopoConsumer>
-      {({ clientInterface, showCaptchas, captchasVisible, showFaucetModal }) => (
-        <CheckoutModalInternal
-          {...props}
-          clientInterface={clientInterface}
-          captchasVisible={captchasVisible}
-          showCaptchas={showCaptchas}
-          showFaucetModal={showFaucetModal}
-        />
-      )}
-    </ProsopoConsumer>
-  );
+  return <ProsopoConsumer>{(contextProps) => <CheckoutModalInternal {...props} {...contextProps} />}</ProsopoConsumer>;
 }
 
 function CheckoutModalInternal({
@@ -50,6 +38,7 @@ function CheckoutModalInternal({
   successCallback,
   showCaptchas,
   showFaucetModal,
+  captchaReloadKey,
   ...props
 }: Props & Partial<ShowCaptchasState>): JSX.Element {
   const [balance, setBalance] = useState<BN>(new BN(0));
@@ -59,7 +48,13 @@ function CheckoutModalInternal({
 
   const onSubmit = useCallback(
     async (approved = true) => {
-      if (!approved) {
+      const isHuman = await demoApi.isHuman();
+
+      if (!isHuman) {
+        toast.error('Captcha threshold not met. Please solve more captchas.');
+      }
+
+      if (!isHuman || !approved) {
         setLoading(false);
         return;
       }
@@ -68,10 +63,13 @@ function CheckoutModalInternal({
         .buy(signer, id, formatGas(gas))
         .then((x) => {
           console.log({ success: x });
+          toast.success('Purchase successful!');
           successCallback?.();
         })
         .catch((error) => {
-          if (error.docs) {
+          if (error.method && error.method == 'ContractReverted') {
+            toast.error('Something went wrong! Please try again.');
+          } else if (error.docs) {
             toast.error(error.docs.join(' '));
           } else {
             toast.error(error.message);
@@ -177,7 +175,7 @@ function CheckoutModalInternal({
         <Transition appear show={captchasVisible} as={Fragment}>
           <Dialog as="div" className="fixed inset-0 z-30 overflow-y-auto" onClose={clientInterface.callbacks.onCancel}>
             <Dialog.Panel className="h-screen">
-              <CaptchaComponent clientInterface={clientInterface} />
+              <CaptchaComponent key={captchaReloadKey} clientInterface={clientInterface} />
             </Dialog.Panel>
           </Dialog>
         </Transition>

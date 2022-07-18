@@ -19,6 +19,7 @@ const CustomContext = createContext<ShowCaptchasState>({
   showFaucetModal: () => {
     console.log('implement showFaucetModal');
   },
+  captchaReloadKey: 0,
 });
 
 export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
@@ -29,6 +30,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   );
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [faucetModalOpen, setFaucetModalOpen] = useState(false);
+  const [captchaReloadKey, setCaptchaReloadKey] = useState<number>(0);
 
   const onAccountChange = (account: TExtensionAccount) => {
     if (!account) {
@@ -51,8 +53,9 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
     toast.loading('Loading ...', { id: txHash });
   };
 
-  const onSolved = ([result, tx, commitment]: TCaptchaSubmitResult) => {
-    setShowCaptchas(false);
+  const onSolved = ([result, tx, commitment]: TCaptchaSubmitResult, isHuman: boolean | undefined) => {
+    console.log({ isHuman });
+    setShowCaptchas(!isHuman);
     status.update({ info: ['onSolved:', `Captcha solution status: ${commitment.status}`] });
     const txHash = tx.txHash.toHuman().toString();
     if (commitment.status == 'Approved') {
@@ -65,6 +68,9 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
         id: txHash,
       });
       onSolvedCallback(false);
+    }
+    if (!isHuman || commitment.status != 'Approved') {
+      setCaptchaReloadKey(Date.now());
     }
   };
 
@@ -118,6 +124,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
         clientInterface,
         showWalletModal: () => setWalletModalOpen(true),
         showFaucetModal: () => setFaucetModalOpen(true),
+        captchaReloadKey,
       }}
     >
       <CaptchaContextManager.Provider value={manager}>
