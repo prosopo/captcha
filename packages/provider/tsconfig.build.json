@@ -10,7 +10,6 @@
 
     "composite": true,
 
-
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -47,6 +46,5 @@
     "lib": [
       "esnext",
     ],
-
   }
 }
