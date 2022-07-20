@@ -133,10 +133,10 @@ export function parseBlockNumber(blockNumberString: string) {
     return parseInt(blockNumberString.replace(/,/g, ''))
 }
 
-export function loadEnvFile() {
-    const envPath =
-      process.env.NODE_ENV !== undefined
-        ? { override: true, path: `.env.${process.env.NODE_ENV.toLowerCase()}` }
-        : undefined;
-    config(envPath);
-}
+// export function loadEnvFile() {
+//     const envPath =
+//       process.env.NODE_ENV !== undefined
+//         ? { override: true, path: `.env.${process.env.NODE_ENV.toLowerCase()}` }
+//         : undefined;
+//     config(envPath);
+// }

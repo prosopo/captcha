@@ -21,19 +21,18 @@ import path from 'path';
 import { LocalAssetsResolver } from './assets';
 import { ERRORS } from './errors';
 import { Database, ProsopoConfig, ProsopoEnvironment } from './types';
-import { loadEnvFile } from "./util";
+// import { loadEnvFile } from "./util";
 
 loadEnv();
 
 import prosopoConfig from './prosopo.config';
 
 export function loadEnv() {
-    dotenv.config();
     dotenv.config({ path: getEnvFile() });
 }
 
 export function getEnvFile(filename = '.env', filepath = './') {
-    const env =  process.env.NODE_ENV ?? 'development';
+    const env =  process.env.NODE_ENV || 'development';
     return path.join(filepath, `${filename}.${env}`);
 }
 
@@ -61,7 +60,7 @@ export class Environment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
 
     constructor(mnemonic: string) {
-        loadEnvFile();
+        // loadEnv();
         this.config = Environment.getConfig()
         this.mnemonic = mnemonic
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {

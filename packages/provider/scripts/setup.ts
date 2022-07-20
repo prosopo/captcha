@@ -19,20 +19,14 @@
 import { KeyringPair } from '@polkadot/keyring/types';
 import { randomAsHex } from '@polkadot/util-crypto';
 import { Payee } from "@prosopo/contract";
+import fse from 'fs-extra';
+import path from 'path';
 import { Environment, getEnvFile, loadEnv } from '../src/env';
 import { TestDapp, TestProvider } from '../tests/mocks/accounts';
 import { sendFunds, setupDapp, setupProvider } from '../tests/mocks/setup';
 import { generateMnemonic, updateEnvFileVar } from './utils';
 
-const dotenv = require('dotenv');
-const fse = require('fs-extra');
-const path = require('path');
-
 loadEnv();
-
-// TODO: Add path to protocol contract as argument. (after rm npm-ws from integration)
-// const argv = yargs(hideBin(process.argv)).argv;
-const integrationPath = '../../';
 
 const defaultProvider: TestProvider = {
     serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
@@ -56,31 +50,36 @@ const defaultDapp: TestDapp = {
 const hasProviderAccount = defaultProvider.mnemonic && defaultProvider.address;
 
 async function copyArtifacts() {
+    // TODO: Add path to protocol contract as argument. (after rm npm-ws from integration)
+    // const argv = yargs(hideBin(process.argv)).argv;
+    const integrationPath = '../../';
     const artifactsPath = path.join(integrationPath, 'protocol/artifacts');
+
     await Promise.all([
         // TODO rm duplicate (keep in contract)?
-        fse.copy(artifactsPath, './artifacts', { overwrite: true }),
+        // fse.copy(artifactsPath, './artifacts', { overwrite: true }),
         // TODO move to contract build. Make integrationPath ENV VAR?
-        fse.copy(artifactsPath, '../contract/artifacts', { overwrite: true }),
+        // fse.copy(artifactsPath, '../contract/artifacts', { overwrite: true }),
         fse.copy(path.join(artifactsPath, 'prosopo.json'), '../contract/src/abi/prosopo.json', { overwrite: true }),
     ]);
 }
 
 async function setupEnvFile(mnemonic: string, address: string) {
-    // let [contractEnvFile, defaultEnvFile] = await Promise.all([
-    //     fse.readFile(getEnvFile('.env', integrationPath), 'utf8'),
-    //     fse.readFile('./env.txt', 'utf8'),
-    // ]);
-    let defaultEnvFile = await fse.readFile('./env.txt', 'utf8');
-    // contractEnvFile = updateEnvFileVar(contractEnvFile, 'DATABASE_HOST', '127.0.0.1');
-    defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_MNEMONIC', `"${mnemonic}"`);
-    defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'PROVIDER_ADDRESS', address);
+    const tplEnvFile = getEnvFile('env');
+    const envFile = getEnvFile('.env');
 
-    await fse.writeFile('./.env', defaultEnvFile);
+    await fse.copy(tplEnvFile, envFile, { overwrite: false });
+
+    let readEnvFile = await fse.readFile(envFile, 'utf8');
+
+    readEnvFile = updateEnvFileVar(readEnvFile, 'PROVIDER_MNEMONIC', `"${mnemonic}"`);
+    readEnvFile = updateEnvFileVar(readEnvFile, 'PROVIDER_ADDRESS', address);
+
+    await fse.writeFile(envFile, readEnvFile);
 }
 
 async function registerProvider(env: Environment, account: TestProvider) {
-    const providerKeyringPair: KeyringPair = await env.contractInterface!.network.keyring.addFromMnemonic(account.mnemonic);
+    const providerKeyringPair: KeyringPair = env.contractInterface!.network.keyring.addFromMnemonic(account.mnemonic);
 
     account.address = providerKeyringPair.address;
 
@@ -120,14 +119,17 @@ async function setup() {
 
     defaultProvider.mnemonic = mnemonic;
 
-    console.log('Registering provider...');
-    await registerProvider(env, defaultProvider);
+    if (!hasProviderAccount) {
+        console.log('Registering provider...');
+        await registerProvider(env, defaultProvider);
+    } else {
+        console.log('A provider has already been registered.');
+    }
 
     defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS;
 
     console.log('Registering dapp...');
     await registerDapp(env, defaultDapp);
-
 
     process.exit();
 }
