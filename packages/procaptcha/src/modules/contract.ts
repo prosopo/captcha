@@ -25,3 +25,18 @@ export function getWsProvider(url?: string): WsProvider {
 export async function getProsopoContract(address: string, dappAddress: string, account: InjectedAccountWithMeta, providerInterface?: ProviderInterface): Promise<ProsopoContract> {
     return await ProsopoContract.create(address, dappAddress, account, providerInterface ?? getWsProvider());
 }
+
+// For circuit breaking.
+// export async function getWsProvider(url?: string): Promise<WsProvider> {
+//     const provider = new WsProvider(url, 0);
+//     try {
+//         await provider.connect();
+//     } catch (err) {
+//         throw new Error(`${err.message} ${url}`);
+//     }
+//     return provider;
+// }
+
+// export async function getProsopoContract(address: string, dappAddress: string, account: InjectedAccountWithMeta, url?: string): Promise<ProsopoContract> {
+//     return await ProsopoContract.create(address, dappAddress, account, await getWsProvider(url));
+// }

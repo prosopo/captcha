@@ -97,7 +97,7 @@ export class ProsopoCaptchaClient {
 
         try {
             ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account,
-                getWsProvider(this.manager.state.config['dappUrl']));
+                await getWsProvider(this.manager.state.config['dappUrl']));
         } catch (err) {
             throw new Error(err);
         }
