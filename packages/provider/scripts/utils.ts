@@ -25,11 +25,3 @@ export async function generateMnemonic(keyring?: Keyring): Promise<[string, stri
     const account = keyring.addFromMnemonic(mnemonic);
     return [mnemonic, account.address];
 }
-
-export function updateEnvFileVar(source: string, name: string, value: string) {
-    const envVar = new RegExp(`.*(${name}=)(.*)`, 'g');
-    if (envVar.test(source)) {
-        return source.replace(envVar, `$1${value}`);
-    }
-    return source + `\n${name}=${value}`;
-}
