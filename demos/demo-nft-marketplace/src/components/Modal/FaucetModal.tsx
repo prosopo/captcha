@@ -42,7 +42,7 @@ function FaucetModalInternal({ clientInterface, ...modalProps }: Props & Partial
       demoApi
         .getBalance()
         .then((x) => {
-          const _balance = new BN(x.toHuman().free.replaceAll(',', ''));
+          const _balance = new BN((x?.toHuman().free || '0').replaceAll(',', ''));
           setBalance(_balance);
           setAmountAllowed(new BN(0));
           if (_balance.gt(new BN(MIN_BALANCE_FAUCET.toString()))) {
