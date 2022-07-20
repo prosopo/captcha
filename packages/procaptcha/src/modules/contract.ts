@@ -26,7 +26,6 @@ export async function getProsopoContract(address: string, dappAddress: string, a
     return await ProsopoContract.create(address, dappAddress, account, providerInterface ?? getWsProvider());
 }
 
-// For circuit breaking.
 // export async function getWsProvider(url?: string): Promise<WsProvider> {
 //     const provider = new WsProvider(url, 0);
 //     try {
