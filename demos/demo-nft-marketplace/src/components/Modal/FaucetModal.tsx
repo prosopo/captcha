@@ -30,6 +30,7 @@ function FaucetModalInternal({ clientInterface, ...modalProps }: Props & Partial
   const [balance, setBalance] = useState<BN>(new BN(0));
   const [amountAllowed, setAmountAllowed] = useState<BN>(new BN(0));
   const [message, setMessage] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!modalProps.isOpen) {
@@ -67,6 +68,21 @@ function FaucetModalInternal({ clientInterface, ...modalProps }: Props & Partial
     { key: 'Allowed amount', value: formatPrice(amountAllowed.toString()) },
   ];
 
+  const onSend = async () => {
+    setLoading(true);
+    try {
+      const { address } = await demoApi.getAccount();
+      const res = await requestFunds(address);
+
+      modalProps.onClose();
+      toast.success(`${res} added.`);
+    } catch (err) {
+      toast.error('Something went wrong!');
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
   return (
     <Modal
       {...modalProps}
@@ -88,24 +104,7 @@ function FaucetModalInternal({ clientInterface, ...modalProps }: Props & Partial
       {message ? (
         <Button fullWidth title="Close" type={ButtonType.Main} onClick={() => modalProps.onClose()} />
       ) : (
-        <Button
-          fullWidth
-          title="Send"
-          type={ButtonType.Main}
-          onClick={() =>
-            demoApi.getAccount().then(({ address }) =>
-              requestFunds(address)
-                .then((res) => {
-                  modalProps.onClose();
-                  toast.success(`${res} added.`);
-                })
-                .catch((err) => {
-                  toast.error('Something went wrong!');
-                  console.error(err);
-                })
-            )
-          }
-        />
+        <Button fullWidth title="Send" type={ButtonType.Main} onClick={onSend} loading={loading} />
       )}
     </Modal>
   );

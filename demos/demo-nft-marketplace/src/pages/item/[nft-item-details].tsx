@@ -82,7 +82,11 @@ function ItemDetails({ token: _token }: ItemDetailsProps) {
             <div className={'flex flex-col xl:flex-row'}>
               <div className={'flex-1'}>
                 <div className={'pb-5'}>Owner</div>
-                <HorizontalCard title={shortAddress(token.owner, 8, 6)} imageUrl={creatorAvatar} />
+                <HorizontalCard
+                  linkTo={`/profile/${token.owner}`}
+                  title={shortAddress(token.owner, 8, 6)}
+                  imageUrl={creatorAvatar}
+                />
               </div>
             </div>
             {renderButton()}

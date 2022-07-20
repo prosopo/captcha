@@ -20,14 +20,15 @@ const CustomContext = createContext<ShowCaptchasState>({
     console.log('implement showFaucetModal');
   },
   captchaReloadKey: 0,
+  loading: true,
 });
 
 export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   const [showCaptchas, setShowCaptchas] = useState(false);
-  const [, setLoading] = useState(true);
-  const [onSolvedCallback, setOnSolvedCallback] = useState<(approved: boolean) => Promise<void>>(
-    async (approved: boolean) => console.log(approved)
-  );
+  const [loading, setLoading] = useState(true);
+  const [onSolvedCallback, setOnSolvedCallback] = useState<(approved: boolean) => Promise<void>>(async () => {
+    return;
+  });
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [faucetModalOpen, setFaucetModalOpen] = useState(false);
   const [captchaReloadKey, setCaptchaReloadKey] = useState<number>(0);
@@ -37,7 +38,11 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
       clientInterface.getExtension()?.unsetAccount();
     }
     status.update({ info: 'Selected account: ' + account?.meta.name });
-    console.log('CAPTCHA API', clientInterface.getCaptchaApi());
+    const captchaApi = clientInterface.getCaptchaApi();
+    console.log('CAPTCHA API', captchaApi);
+    if ((captchaApi['provider'] as any)?.Err) {
+      toast.error((captchaApi['provider'] as any).Err);
+    }
   };
 
   const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
@@ -125,6 +130,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
         showWalletModal: () => setWalletModalOpen(true),
         showFaucetModal: () => setFaucetModalOpen(true),
         captchaReloadKey,
+        loading,
       }}
     >
       <CaptchaContextManager.Provider value={manager}>

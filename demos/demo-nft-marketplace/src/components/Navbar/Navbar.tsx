@@ -24,28 +24,30 @@ const Navbar: FC<unknown> = () => {
           </div>
           <div className="flex lg:ml-6">
             <ProsopoConsumer>
-              {({ clientInterface, showWalletModal }) => (
-                <>
-                  {clientInterface.getExtension() ? (
-                    !clientInterface.manager.state.account ? (
-                      <div className="prosopo-extension">
-                        <ExtensionAccountSelect
-                          value={clientInterface.manager.state.account}
-                          options={clientInterface.getExtension().getAccounts()}
-                          onChange={clientInterface.onAccountChange.bind(clientInterface)}
+              {({ clientInterface, showWalletModal, loading }) =>
+                !loading && (
+                  <>
+                    {clientInterface.getExtension() ? (
+                      !clientInterface.manager.state.account ? (
+                        <div className="prosopo-extension">
+                          <ExtensionAccountSelect
+                            value={clientInterface.manager.state.account}
+                            options={clientInterface.getExtension().getAccounts()}
+                            onChange={clientInterface.onAccountChange.bind(clientInterface)}
+                          />
+                        </div>
+                      ) : (
+                        <ProfileDropdown
+                          address={clientInterface.manager.state.account.address}
+                          disconnect={() => clientInterface.onAccountUnset()}
                         />
-                      </div>
+                      )
                     ) : (
-                      <ProfileDropdown
-                        address={clientInterface.manager.state.account.address}
-                        disconnect={() => clientInterface.onAccountUnset()}
-                      />
-                    )
-                  ) : (
-                    <Button title="Connect Wallet" onClick={showWalletModal} />
-                  )}
-                </>
-              )}
+                      <Button title="Connect Wallet" onClick={showWalletModal} />
+                    )}
+                  </>
+                )
+              }
             </ProsopoConsumer>
           </div>
         </div>
