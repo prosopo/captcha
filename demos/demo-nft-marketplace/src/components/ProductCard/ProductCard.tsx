@@ -36,10 +36,10 @@ const ProductCard: FC<Props> = ({ item }) => {
       <li className="text-white bold hover:bg-gray-900">
         <div className="flex flex-col justify-between h-full px-4 py-3 space-y-1 border border-gray-600 rounded-md">
           <Link to={`/profile/${item.owner}`}>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 group">
               <Avatar username={item.owner} />
               <div className="space-y-1 font-medium leading-6 text-small">
-                <h3 className="text-gray-700 cursor-pointer hover:text-white">{`${address}`}</h3>
+                <h3 className="text-gray-700 cursor-pointer group-hover:text-white">{`${address}`}</h3>
               </div>
             </div>
           </Link>

@@ -14,7 +14,7 @@ const Profile: React.FunctionComponent<ProfileProps> = ({ tokens: _tokens, userI
   const [tokens, setTokens] = useState(_tokens);
   const [canLoadMore, setCanLoadMore] = useState(_tokens.length % PAGE_SIZE == 0);
   const loadMore = useCallback(async () => {
-    const newTokens = await demoApi.getTokens(PAGE_SIZE, tokens.length, userId);
+    const newTokens = await demoApi.getTokens(PAGE_SIZE, tokens.length, userId).catch(() => []);
 
     if (newTokens.length == 0 || newTokens.length % PAGE_SIZE > 0) {
       setCanLoadMore(false);
@@ -29,7 +29,7 @@ const Profile: React.FunctionComponent<ProfileProps> = ({ tokens: _tokens, userI
         <img className="overflow-hidden " src={CoverPhoto} />
         <div className="relative flex flex-col items-center w-11/12 bg-secondary lg:w-2/3 sm:w-10/12 md:-top-16 -top-4">
           <div className="transform -translate-y-1/2">
-            <Avatar sizeClasses="w-20 h-20 lg:w-48 lg:h-48" username={userId} />
+            <Avatar sizeClasses="w-20 h-20 lg:w-48 lg:h-48" username={userId} disableHoverEffects />
           </div>
           <h1 className="relative text-sm font-bold sm:text-lg md:text-xl xl:text-2xl -top-4 ">{userId}</h1>
         </div>
@@ -44,7 +44,7 @@ const Profile: React.FunctionComponent<ProfileProps> = ({ tokens: _tokens, userI
 export async function getServerSideProps(context: NextPageContext): Promise<{ props: ProfileProps }> {
   const userId = context.query.id as string;
 
-  const tokens = await demoApi.getTokens(PAGE_SIZE, 0, userId);
+  const tokens = await demoApi.getTokens(PAGE_SIZE, 0, userId).catch(() => []);
 
   return {
     props: {

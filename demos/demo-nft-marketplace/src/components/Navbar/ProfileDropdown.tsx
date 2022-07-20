@@ -55,12 +55,13 @@ const ProfileDropdownInternal: FC<Props & Partial<ShowCaptchasState>> = ({ addre
       title: 'My items',
       handler: () => {
         setDisplayFull(false);
-        router.push(`/profile/${address}?tab=Owned`);
+        router.push(`/profile/${address}`);
       },
     },
     {
       title: 'Faucet',
       handler: () => {
+        setDisplayFull(false);
         showFaucetModal();
       },
     },

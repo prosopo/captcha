@@ -10,7 +10,7 @@ const Home: React.FunctionComponent<HomeProps> = ({ tokens: _tokens }) => {
   const [tokens, setTokens] = useState(_tokens);
   const [canLoadMore, setCanLoadMore] = useState(_tokens.length % PAGE_SIZE == 0);
   const loadMore = useCallback(async () => {
-    const newTokens = await demoApi.getTokens(PAGE_SIZE, tokens.length);
+    const newTokens = await demoApi.getTokens(PAGE_SIZE, tokens.length).catch(() => []);
 
     if (newTokens.length == 0 || newTokens.length % PAGE_SIZE > 0) {
       setCanLoadMore(false);
@@ -26,7 +26,7 @@ const Home: React.FunctionComponent<HomeProps> = ({ tokens: _tokens }) => {
   );
 };
 export async function getServerSideProps(): Promise<{ props: HomeProps }> {
-  const tokens = await demoApi.getTokens(PAGE_SIZE);
+  const tokens = await demoApi.getTokens(PAGE_SIZE).catch(() => []);
 
   return {
     props: { tokens },

@@ -8,6 +8,7 @@ export type ShowCaptchasState = {
   showWalletModal: () => void;
   showFaucetModal: () => void;
   captchaReloadKey: number;
+  loading: boolean;
 };
 
 export type ConsumerProps = {
