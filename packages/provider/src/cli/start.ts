@@ -26,22 +26,22 @@ import { Environment, loadEnv } from '../env';
 import { ERRORS, handleErrors } from '../errors';
 // import { processArgs } from './argv';
 
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
+// import yargs from 'yargs';
+// import { hideBin } from 'yargs/helpers';
 
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import { ProsopoEnvironment } from '../types/env';
 
 import { Server } from 'http';
 
-loadEnv();
+// loadEnv();
 
 let apiAppSrv: Server;
-let imgAppSrv: Server;
+// let imgAppSrv: Server;
 
 function startApi(env: ProsopoEnvironment) {
   const apiApp = express();
-  const apiPort = process.env.API_SRV_PORT || 3000;
+  const apiPort = process.env.API_PORT || 3000;
 
   apiApp.use(cors());
   apiApp.use(express.json());
@@ -57,25 +57,27 @@ function startApi(env: ProsopoEnvironment) {
   });
 }
 
-function startImg() {
-  const imgApp = express();
-  const imgPort = process.env.IMG_SRV_PORT || 4000;
+// function startImg() {
+//   const imgApp = express();
+//   const imgPort = process.env.IMG_SRV_PORT || 4000;
 
-  imgApp.use('/img', express.static('./data/img'));
+//   imgApp.use('/img', express.static('./data/img'));
 
-  imgApp.get('/', (req, res) => {
-    res.send('Image server');
-  });
+//   imgApp.get('/', (req, res) => {
+//     res.send('Image server');
+//   });
 
-  imgAppSrv = imgApp.listen(imgPort, () => {
-    console.log(`Image server running on port ${imgPort} serving images from /data/img`);
-  });
-}
+//   imgAppSrv = imgApp.listen(imgPort, () => {
+//     console.log(`Image server running on port ${imgPort} serving images from /data/img`);
+//   });
+// }
 
 // const argv = yargs(hideBin(process.argv)).argv;
 
 // TODO: Arguably ./argv.processArgs.command
 async function start (nodeEnv: string) {
+
+  loadEnv();
 
   let env: ProsopoEnvironment;
 
@@ -98,7 +100,7 @@ async function start (nodeEnv: string) {
 
 function stop() {
   apiAppSrv.close();
-  imgAppSrv.close();
+  // imgAppSrv.close();
 }
 
 start(process.env.NODE_ENV || 'development')

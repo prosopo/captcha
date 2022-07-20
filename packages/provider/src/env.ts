@@ -23,7 +23,7 @@ import { ERRORS } from './errors';
 import { Database, ProsopoConfig, ProsopoEnvironment } from './types';
 // import { loadEnvFile } from "./util";
 
-loadEnv();
+// loadEnv();
 
 import prosopoConfig from './prosopo.config';
 
@@ -60,7 +60,7 @@ export class Environment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
 
     constructor(mnemonic: string) {
-        // loadEnv();
+        loadEnv()
         this.config = Environment.getConfig()
         this.mnemonic = mnemonic
         if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
@@ -105,7 +105,7 @@ export class Environment implements ProsopoEnvironment {
     }
 
     private static getConfig(): ProsopoConfig {
-        return prosopoConfig as ProsopoConfig;
+        return prosopoConfig() as ProsopoConfig
     }
 
 }

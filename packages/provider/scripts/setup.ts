@@ -99,6 +99,8 @@ async function registerDapp(env: Environment, dapp: TestDapp) {
 
 async function setup() {
 
+    console.log('ENVIRONMENT', process.env.NODE_ENV);
+
     const [mnemonic, address] = (!hasProviderAccount) ? await generateMnemonic() : [defaultProvider.mnemonic, defaultProvider.address];
 
     console.log(`Address: ${address}`);
@@ -114,6 +116,8 @@ async function setup() {
 
     // Load setup .env file.
     loadEnv();
+
+    console.log(process.env);
 
     if (!process.env.DAPP_CONTRACT_ADDRESS) {
         throw new Error('DAPP_CONTRACT_ADDRESS is not set in .env file.');

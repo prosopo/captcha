@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 // import {ProsopoConfig} from './types';
 
-export default {
+export default () => ({
     logLevel: 'debug',
     defaultEnvironment: 'development',
     contract: {
@@ -68,4 +68,4 @@ export default {
         baseURL: process.env.API_BASE_URL,
     }
 
-};
+});
