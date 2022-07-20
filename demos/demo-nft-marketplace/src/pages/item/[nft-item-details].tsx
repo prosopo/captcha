@@ -10,8 +10,9 @@ import { shortAddress } from 'utils/itemUtils';
 import { CheckoutModal } from 'components/Modal';
 import { useToggle } from 'hooks/useToggle';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/router';
 
-type Props = { token: Token };
+type Props = { token: Token | null };
 
 function ItemDetailsPage(props: Props): JSX.Element {
   return <ProsopoConsumer>{(options) => <ItemDetails {...props} {...options} />}</ProsopoConsumer>;
@@ -22,15 +23,20 @@ type ItemDetailsProps = Props & ShowCaptchasState;
 function ItemDetails({ token: _token }: ItemDetailsProps) {
   const [isCheckoutVisible, setCheckoutVisible] = useToggle(false);
   const [creatorAvatar, setCreatorAvatar] = useState(null);
-  const [token, setToken] = useState(_token);
+  const [token, setToken] = useState<Token | null>(_token);
+  const router = useRouter();
 
   useEffect(() => {
+    if (!token) {
+      router.push('/');
+      return;
+    }
     setCreatorAvatar(makeBlockie(token.owner));
   }, []);
 
   const getToken = () => {
     return demoApi
-      .getToken(_token.id)
+      .getToken(_token?.id)
       .then((t) => {
         setToken(t);
         setCreatorAvatar(makeBlockie(t.owner));
@@ -45,7 +51,7 @@ function ItemDetails({ token: _token }: ItemDetailsProps) {
       });
   };
 
-  const price = formatPrice(token.price);
+  const price = formatPrice(token?.price);
 
   const renderButton = () => {
     const onClick = () => {
@@ -57,6 +63,14 @@ function ItemDetails({ token: _token }: ItemDetailsProps) {
       <Button fullWidth title={`Buy for ${price}`} onClick={onClick} customClasses="sticky bottom-4 lg:static" />
     );
   };
+
+  if (!token) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center w-screen h-screen">
+        <div className="flex-1 text-6xl text-center text-white">Item not found</div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -82,7 +96,11 @@ function ItemDetails({ token: _token }: ItemDetailsProps) {
             <div className={'flex flex-col xl:flex-row'}>
               <div className={'flex-1'}>
                 <div className={'pb-5'}>Owner</div>
-                <HorizontalCard title={shortAddress(token.owner, 8, 6)} imageUrl={creatorAvatar} />
+                <HorizontalCard
+                  linkTo={`/profile/${token.owner}`}
+                  title={shortAddress(token.owner, 8, 6)}
+                  imageUrl={creatorAvatar}
+                />
               </div>
             </div>
             {renderButton()}
