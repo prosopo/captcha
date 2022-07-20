@@ -40,7 +40,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
     status.update({ info: 'Selected account: ' + account?.meta.name });
     const captchaApi = clientInterface.getCaptchaApi();
     console.log('CAPTCHA API', captchaApi);
-    if ((captchaApi['provider'] as any)?.Err) {
+    if ((captchaApi?.['provider'] as any)?.Err) {
       toast.error((captchaApi['provider'] as any).Err);
     }
   };
