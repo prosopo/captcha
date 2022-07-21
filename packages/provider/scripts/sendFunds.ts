@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Environment } from '../src/env';
-import { sendFunds } from '../tests/mocks/setup';
+import { sendFunds } from '../src/tasks/setup';
 
 require('dotenv').config();
 

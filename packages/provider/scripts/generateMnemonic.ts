@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 
-import { generateMnemonic } from './utils';
+import { generateMnemonic } from '../src/tasks/setup';
 
 async function mnemonic () {
   const [mnemonic, address] = await generateMnemonic();

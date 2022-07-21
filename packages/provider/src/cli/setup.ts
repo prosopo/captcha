@@ -21,14 +21,13 @@ import { randomAsHex } from '@polkadot/util-crypto';
 import { Payee } from "@prosopo/contract";
 import fse from 'fs-extra';
 import path from 'path';
-import { Environment, getEnvFile, loadEnv } from '../src/env';
-import { TestDapp, TestProvider } from '../tests/mocks/accounts';
-import { sendFunds, setupDapp, setupProvider } from '../tests/mocks/setup';
-import { generateMnemonic } from './utils';
+import { Environment, getEnvFile, loadEnv } from '../env';
+import { generateMnemonic, sendFunds, setupDapp, setupProvider } from '../tasks/setup';
+import { IDappAccount, IProviderAccount } from '../types/accounts';
 
 loadEnv();
 
-const defaultProvider: TestProvider = {
+const defaultProvider: IProviderAccount = {
     serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
     fee: 10,
     payee: Payee.Provider,
@@ -39,7 +38,7 @@ const defaultProvider: TestProvider = {
     captchaDatasetId: ''
 };
 
-const defaultDapp: TestDapp = {
+const defaultDapp: IDappAccount = {
     serviceOrigin: 'http://localhost:9393',
     mnemonic: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
@@ -83,7 +82,7 @@ async function updateEnvFile(vars: Record<string, string>) {
     await fse.writeFile(envFile, readEnvFile);
 }
 
-async function registerProvider(env: Environment, account: TestProvider) {
+async function registerProvider(env: Environment, account: IProviderAccount) {
     const providerKeyringPair: KeyringPair = env.contractInterface!.network.keyring.addFromMnemonic(account.mnemonic);
 
     account.address = providerKeyringPair.address;
@@ -93,7 +92,7 @@ async function registerProvider(env: Environment, account: TestProvider) {
     await setupProvider(env, account);
 }
 
-async function registerDapp(env: Environment, dapp: TestDapp) {
+async function registerDapp(env: Environment, dapp: IDappAccount) {
     await setupDapp(env, dapp);
 }
 
