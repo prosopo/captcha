@@ -18,7 +18,7 @@ import path from "path";
 
 import { blake2AsHex, decodeAddress, randomAsHex } from "@polkadot/util-crypto";
 
-import { sendFunds as _sendFunds } from "../mocks/setup";
+import { sendFunds as _sendFunds } from "../../src/tasks/setup";
 import { Tasks } from "../../src/tasks";
 import {
   Account,
