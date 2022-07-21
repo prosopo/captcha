@@ -14,41 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Payee, BigNumber } from '@prosopo/contract';
+import { IProviderAccount, IDappAccount } from '../../src/types/accounts';
 
-export interface TestAccount {
-    mnemonic: string
-    address: string
-}
-
-export interface TestProvider extends TestAccount {
-    serviceOrigin: string,
-    fee: number,
-    datasetFile: string,
-    stake: BigNumber,
-    payee: Payee,
-    captchaDatasetId: string,
-}
-
-export const PROVIDER: TestProvider = {
+export const PROVIDER: IProviderAccount = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: Payee.Provider,
     stake: 1000000000000000n,
-    datasetFile: '../../data/captchas.json',
+    datasetFile: './data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
     address: '',
 }
 
-export interface TestDapp {
-    serviceOrigin: string,
-    mnemonic: string,
-    contractAccount: string,
-    optionalOwner: string,
-    fundAmount: BigNumber,
-}
-
-export const DAPP: TestDapp = {
+export const DAPP: IDappAccount = {
     serviceOrigin: 'http://localhost:9393',
     mnemonic: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed

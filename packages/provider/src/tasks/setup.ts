@@ -13,11 +13,22 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
-import { blake2AsHex, decodeAddress } from '@polkadot/util-crypto'
+import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
 import { BigNumber, buildTx, CaptchaMerkleTree, computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution, getEventsFromMethodName, hexHash } from '@prosopo/contract'
-import { Tasks } from '../../src/tasks/tasks'
-import { TestAccount, TestDapp, TestProvider } from './accounts'
+import { IDappAccount, IProviderAccount, IUserAccount } from '../types/accounts'
+import { Tasks } from './tasks'
+
+export async function generateMnemonic(keyring?: Keyring): Promise<[string, string]> {
+    if (!keyring) {
+        keyring = new Keyring({ type: 'sr25519' });
+    }
+    await cryptoWaitReady();
+    const mnemonic = mnemonicGenerate();
+    const account = keyring.addFromMnemonic(mnemonic);
+    return [mnemonic, account.address];
+}
 
 export async function displayBalance(env, address, who) {
     const logger = env.logger;
@@ -55,7 +66,7 @@ export async function sendFunds(env, address, who, amount: BigNumber): Promise<v
 }
 
 // TODO: fund as in setupDapp? set env default value. // sendFunds
-export async function setupProvider(env, provider: TestProvider): Promise<Hash> {
+export async function setupProvider(env, provider: IProviderAccount): Promise<Hash> {
     await env.contractInterface.changeSigner(provider.mnemonic)
     const logger = env.logger;
     const tasks = new Tasks(env)
@@ -70,7 +81,7 @@ export async function setupProvider(env, provider: TestProvider): Promise<Hash> 
     return events[0].args[1] as Hash
 }
 
-export async function setupDapp(env, dapp: TestDapp): Promise<void> {
+export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
     const tasks = new Tasks(env)
     const logger = env.logger;
     await env.contractInterface.changeSigner(dapp.mnemonic)
@@ -80,7 +91,7 @@ export async function setupDapp(env, dapp: TestDapp): Promise<void> {
     await tasks.dappFund(dapp.contractAccount, dapp.fundAmount)
 }
 
-export async function setupDappUser(env, dappUser: TestAccount, provider: TestProvider, dapp: TestDapp): Promise<string | undefined> {
+export async function setupDappUser(env, dappUser: IUserAccount, provider: IProviderAccount, dapp: IDappAccount): Promise<string | undefined> {
     await env.contractInterface.changeSigner(dappUser.mnemonic)
 
     // This section is doing everything that the ProCaptcha repo will eventually be doing in the client browser
@@ -128,7 +139,7 @@ export async function setupDappUser(env, dappUser: TestAccount, provider: TestPr
     }
 }
 
-export async function approveOrDisapproveCommitment(env, solutionHash: string, approve: boolean, provider: TestProvider) {
+export async function approveOrDisapproveCommitment(env, solutionHash: string, approve: boolean, provider: IProviderAccount) {
     const tasks = new Tasks(env)
     const logger = env.logger;
     // This stage would take place on the Provider node after checking the solution was correct
