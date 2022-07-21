@@ -78,7 +78,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
                     <Box className={classes.captchasHeader}>
                         <Typography className={classes.captchasHeaderLabel}>
-                            Select all images with {captchaChallenge.captchas[captchaIndex].captcha.target}
+                            Select all images containing a {captchaChallenge.captchas[captchaIndex].captcha.target}
                         </Typography>
                     </Box>
 
