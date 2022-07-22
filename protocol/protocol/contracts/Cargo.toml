@@ -5,12 +5,12 @@ authors = ["Chris Taylor chris@prosopo.io"]
 edition = "2021"
 
 [dependencies]
-ink_primitives = { git = "https://github.com/paritytech/ink", version = "3.0.1", default-features = false }
-ink_metadata = { git = "https://github.com/paritytech/ink", version = "3.0.1", default-features = false, features = ["derive"], optional = true }
-ink_env = { git = "https://github.com/paritytech/ink", version = "3.0.1", default-features = false }
-ink_storage = { git = "https://github.com/paritytech/ink", version = "3.0.1", default-features = false }
-ink_lang = { git = "https://github.com/paritytech/ink", version = "3.0.1", default-features = false }
-ink_prelude = { git = "https://github.com/paritytech/ink", version = "3.0.1", default-features = false }
+ink_primitives = { git = "https://github.com/paritytech/ink", version = "4", default-features = false }
+ink_metadata = { git = "https://github.com/paritytech/ink", version = "4", default-features = false, features = ["derive"], optional = true }
+ink_env = { git = "https://github.com/paritytech/ink", version = "4", default-features = false }
+ink_storage = { git = "https://github.com/paritytech/ink", version = "4", default-features = false }
+ink_lang = { git = "https://github.com/paritytech/ink", version = "4", default-features = false }
+ink_prelude = { git = "https://github.com/paritytech/ink", version = "4", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 rand_chacha = { version = "0.3.1", default-features = false }
