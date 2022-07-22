@@ -30,7 +30,7 @@
     "@polkadot/types-create": "^8.13.1",
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
-    "@prosopo/contract": "0.1.4",
+    "@prosopo/contract": "^0.1.6",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "consola": "^2.15.3",
