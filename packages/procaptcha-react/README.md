@@ -35,8 +35,7 @@ See the [client example](https://github.com/prosopo-io/client-example) for a min
     </Box>
 ```
 
-### CaptchaEventCallbacks
-
+### Callbacks
 `CaptchaEventCallbacks` are passed to the captcha component at creation.
 
 ```typescript
@@ -80,7 +79,7 @@ Event fired after captcha solution has been submitted. Resets captchaSolution st
 
 #### onSolved
 
-When captcha is solved. after clearing captchaChallenge
+When captcha is solved. after clearing captchaChallenge.
 
 #### onCancel
 
