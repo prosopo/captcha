@@ -19,7 +19,7 @@ import { ProsopoCaptchaConfig, ProsopoRandomProviderResponse, GetCaptchaResponse
 
 export class ProviderApi extends HttpClientBase {
 
-  protected config: ProsopoCaptchaConfig;
+  private config: ProsopoCaptchaConfig;
 
   constructor(config: ProsopoCaptchaConfig) {
     super(config['providerApi.baseURL'], config['providerApi.prefix']);
