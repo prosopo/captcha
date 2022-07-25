@@ -34,3 +34,54 @@ See the [client example](https://github.com/prosopo-io/client-example) for a min
 
     </Box>
 ```
+
+### CaptchaEventCallbacks
+
+`CaptchaEventCallbacks` are passed to the captcha component at creation.
+
+```typescript
+const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onSolved, onCancel });
+```
+
+The captcha event callbacks are defined as follows:
+
+```typescript
+export interface CaptchaEventCallbacks extends ICaptchaClientEvents, ICaptchaStateClientEvents { }
+
+export interface ICaptchaClientEvents {
+  onLoad?: (extension: IExtensionInterface, contractAddress: string) => void;
+  onAccountChange?: (account?: TExtensionAccount) => void;
+}
+
+export interface ICaptchaStateClientEvents {
+  onLoadCaptcha?: (captchaChallenge: GetCaptchaResponse | Error) => void;
+  onSubmit?: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => void;
+  onChange?: (captchaSolution: number[][], index: number) => void;
+  onCancel?: () => void;
+  onSolved?: (result: TCaptchaSubmitResult, isHuman?: boolean) => void;
+}
+```
+
+#### onAccountChange
+
+When an account is connected or disconnected.
+
+#### onLoadCaptcha
+
+After a captcha challenge has loaded/failed to load, updates captchaChallenge state and resets captchaIndex.
+
+#### onChange
+
+When the captchaSolution is updated (after clicking an image).
+
+#### onSubmit
+
+Event fired after captcha solution has been submitted. Resets captchaSolution state.
+
+#### onSolved
+
+When captcha is solved. after clearing captchaChallenge
+
+#### onCancel
+
+When captcha is dismissed. before clearing captchaChallenge.
