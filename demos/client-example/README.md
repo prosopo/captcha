@@ -4,9 +4,7 @@ This project is a *minimal* example demonstrating how to include the Prosopo hum
 
 ## Prerequisites
 
-You will need to have access to a substrate node with the [protocol contract](https://github.com/prosopo-io/protocol) and also a [provider API instance](https://github.com/prosopo-io/provider) to run the demo.
-
-Follow the [development environment set up instructions in our integration repository](https://github.com/prosopo-io/integration#development-environment-set-up) to spin up the required containers.
+You will need to have access to a substrate node with the [protocol contract](https://github.com/prosopo-io/protocol) and also a [provider API instance](https://github.com/prosopo-io/provider) to run the demo. Follow the [development environment set up instructions in our integration repository](https://github.com/prosopo-io/integration#development-environment-set-up) to spin up the required containers.
 
 ## Config
 
@@ -26,11 +24,15 @@ REACT_APP_API_PATH_PREFIX=/v1/prosopo
 REACT_APP_DAPP_CONTRACT_ADDRESS=5Go2hCf1WHzKqt1HGCUwhKfUS85477HUHgvaKkMJRYBfyiUP
 ```
 
+## Usage
+
+The captcha component is created using the React package [procaptcha-react](https://github.com/prosopo-io/procaptcha-react).
+
 ## Available Scripts
 
 In the project directory, you can run:
 
-### `npm start`
+#### `npm start`
 
 Runs the app in the development mode.
 Open [http://localhost:3001](http://localhost:3001) to view it in the browser.
@@ -39,10 +41,3 @@ The page will reload if you make edits.
 You will also see any lint errors in the console.
 
 
-## Usage
-
-The captcha component is created by calling the React package [procaptcha-react](https://github.com/prosopo-io/procaptcha-react) along with various callback functions.
-
-```typescript
-const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onSolved, onCancel });
-```
