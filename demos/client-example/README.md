@@ -24,7 +24,7 @@ REACT_APP_API_PATH_PREFIX=/v1/prosopo
 REACT_APP_DAPP_CONTRACT_ADDRESS=5Go2hCf1WHzKqt1HGCUwhKfUS85477HUHgvaKkMJRYBfyiUP
 ```
 
-## Usage
+## Implementation
 
 The captcha component is created using the React package [procaptcha-react](https://github.com/prosopo-io/procaptcha-react).
 
