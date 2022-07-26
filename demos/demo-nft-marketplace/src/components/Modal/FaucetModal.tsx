@@ -37,7 +37,7 @@ function FaucetModalInternal({ clientInterface, ...modalProps }: Props & Partial
       return;
     }
 
-    const account = clientInterface.getExtension().getAccount();
+    const account = clientInterface.getExtension()?.getAccount?.();
     demoApi.setAccount(account).then(() => {
       demoApi
         .getBalance()

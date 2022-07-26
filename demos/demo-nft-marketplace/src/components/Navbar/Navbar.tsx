@@ -10,9 +10,9 @@ const Navbar: FC<unknown> = () => {
     <nav className="sticky top-0 z-20 bg-secondary">
       <div className="flex px-2 py-3.5 mx-auto md:py-0 md:h-24 max-w-screen-2xl sm:px-4 lg:px-8">
         <div className="flex items-center justify-between w-full px-2 lg:px-0 ">
-          <div className="flex-1">
+          <div className="flex flex-row flex-1">
             <Link to="/">
-              <div className="flex items-center">
+              <div className="flex items-center flex-none">
                 <div className="block -mt-1 text-2xl cursor-pointer w-7">
                   <img className="w-7" src={Logo} />
                 </div>
@@ -21,6 +21,7 @@ const Navbar: FC<unknown> = () => {
                 </span>
               </div>
             </Link>
+            <div className="flex-auto" />
           </div>
           <div className="flex lg:ml-6">
             <ProsopoConsumer>

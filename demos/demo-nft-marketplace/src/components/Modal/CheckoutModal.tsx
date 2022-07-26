@@ -58,7 +58,7 @@ function CheckoutModalInternal({
         setLoading(false);
         return;
       }
-      const signer = clientInterface.getExtension().getExtension().signer;
+      const signer = clientInterface.getExtension()?.getExtension?.()?.signer;
       await demoApi
         .buy(signer, id, formatGas(gas))
         .then((x) => {
@@ -105,7 +105,7 @@ function CheckoutModalInternal({
 
   useEffect(() => {
     if (props.isOpen) {
-      const account = clientInterface.getExtension().getAccount();
+      const account = clientInterface.getExtension()?.getAccount?.();
       demoApi.setAccount(account).then(() => {
         demoApi
           .getBalance()

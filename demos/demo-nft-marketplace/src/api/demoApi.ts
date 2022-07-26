@@ -114,7 +114,7 @@ const demoApi = {
     const from = keyring.addFromMnemonic(serverRuntimeConfig.MAIN_ACCOUNT_MNEMONIC);
 
     const balance: any = await demoApi.getBalance(to);
-    const free = BigInt(balance.free.toHuman().replaceAll(',', ''));
+    const free = BigInt((balance?.free?.toHuman() || '0').replaceAll(',', ''));
 
     if (free > MIN_BALANCE_FAUCET) {
       throw new Error('Balance high enough. Transfer not allowed.');
