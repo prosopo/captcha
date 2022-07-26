@@ -19,7 +19,9 @@
     "populate-data": "ts-node ./src/dataUtils/populateDatabase.ts",
     "dev-provider-register": "npm run cli -- provider_register --fee=10 --origin=https://localhost:8282 --payee=Provider --address=$PROVIDER_ADDRESS",
     "dev-provider-stake": "npm run cli -- provider_update --value 2000000000000 --address=$PROVIDER_ADDRESS",
-    "dev-provider-dataset": "npm run cli -- provider_add_data_set --file ./tests/mocks/data/captchas.json"
+    "dev-provider-dataset": "npm run cli -- provider_add_data_set --file ./tests/mocks/data/captchas.json",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix"
   },
   "dependencies": {
     "@polkadot/api": "^8.13.1",
@@ -50,7 +52,10 @@
     "@types/mocha": "^9.1.1",
     "@types/node": "^18.0.6",
     "@types/yargs": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
     "c8": "^7.11.3",
+    "eslint": "^8.20.0",
     "fs-extra": "^10.1.0",
     "mocha": "^10.0.0",
     "mongodb-memory-server": "^8.7.2",
