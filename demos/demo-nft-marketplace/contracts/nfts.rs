@@ -26,7 +26,7 @@ pub mod Nfts {
                 name: format!("bighead#{}", index),
                 description: String::from(DESC),
                 image: format!(
-                    "https://prosopo-io.github.io/demo-assets/img/bighead-{}.svg",
+                    "https://prosopo-io.github.io/demo-assets/nft-marketplace/img/bighead-{}.svg",
                     index
                 ),
             }
