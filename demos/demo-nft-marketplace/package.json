@@ -8,8 +8,8 @@
     "build-prod": "next build",
     "start": "next start -p 3001",
     "build:tailwind": "postcss src/scss/base.scss -o src/scss/tailwind.scss",
-    "lint": "eslint '*/**/*.{ts,tsx}' --quiet",
-    "lint-fix": "yarn run lint --fix",
+    "lint": "eslint '*/**/*.{ts,tsx}'",
+    "lint:fix": "npm run lint --fix",
     "find:unused": "next-unused",
     "setup": "node ./scripts/setup.js"
   },
