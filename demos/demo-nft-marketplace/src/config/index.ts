@@ -10,9 +10,8 @@ const config: ProsopoCaptchaConfig = {
   'providerApi.baseURL': process.env.NEXT_PUBLIC_API_BASE_URL || '',
   'providerApi.prefix': process.env.NEXT_PUBLIC_API_PATH_PREFIX || '',
   dappAccount: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '',
-  contractAddress: process.env.NEXT_PUBLIC_PROTOCOL_ADDRESS || '',
+  dappUrl: process.env.NEXT_PUBLIC_CONTRACT_URL || '',
+  solutionThreshold: 80,
 };
-
-console.log(config);
 
 export default config;

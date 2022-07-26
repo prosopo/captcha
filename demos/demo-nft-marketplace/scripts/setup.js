@@ -35,7 +35,6 @@ async function setupEnvFile() {
     'NEXT_PUBLIC_CONTRACT_ADDRESS',
     contractObj['DEMO_CONTRACT_ADDRESS']
   );
-  defaultEnvFile = updateEnvFileVar(defaultEnvFile, 'NEXT_PUBLIC_PROTOCOL_ADDRESS', contractObj['CONTRACT_ADDRESS']);
 
   await fse.writeFile('./.env', defaultEnvFile);
 }

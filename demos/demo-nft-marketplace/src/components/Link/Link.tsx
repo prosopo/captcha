@@ -18,17 +18,21 @@ type Props = {
 
 const Link: FC<Props> = ({ to, title = '', type = LinkType.Primary, children, onClick }) => {
   const renderComponent = useCallback(() => {
-    return (
-      children ?? (
-        <a className={`${type}`} onClick={onClick}>
-          {title}
-        </a>
-      )
-    );
+    return <a className={`${type}`}>{children ?? title}</a>;
   }, [children, type, title]);
   if (onClick) {
-    return children ?? renderComponent();
+    return (
+      (
+        <div onClick={onClick} className={`${type}`}>
+          {children ?? title}
+        </div>
+      ) ?? renderComponent()
+    );
   }
-  return <NextLink href={to}>{renderComponent()}</NextLink>;
+  return (
+    <NextLink href={to} passHref>
+      {renderComponent()}
+    </NextLink>
+  );
 };
 export default Link;
