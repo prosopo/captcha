@@ -70,6 +70,9 @@ export const useStyles = makeStyles({
     marginRight: 10,
     marginBottom: 10
   },
+  captchaItemSelected: {    
+    border: "2px solid #1976d2"
+  },
   captchasHeaderLabel: {
     color: "#ffffff"
   },
