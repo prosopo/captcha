@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { ICaptchaContextReducer, CaptchaEventCallbacks, TExtensionAccount, ICaptchaStatusReducer, IExtensionInterface } from "../types/client";
-import { ProsopoRandomProviderResponse } from "../types/api";
+import { ProsopoCaptchaConfig, ProsopoRandomProviderResponse } from "../types/api";
 
 import { ProsopoContract } from "../api/ProsopoContract";
 import { getProsopoContract, getWsProvider } from "./contract";
@@ -30,6 +30,7 @@ export class ProsopoCaptchaClient {
     public status: ICaptchaStatusReducer;
     public callbacks: CaptchaEventCallbacks | undefined;
     public providerApi: ProviderApi;
+    // public config: ProsopoCaptchaConfig;
 
     private static extension: IExtensionInterface;
     private static contract: ProsopoContract | undefined;
@@ -41,6 +42,7 @@ export class ProsopoCaptchaClient {
         this.status = status;
         this.callbacks = callbacks;
         this.providerApi = new ProviderApi(manager.state.config);
+        // this.config = manager.state.config;
     }
 
     public getExtension() {
@@ -65,7 +67,7 @@ export class ProsopoCaptchaClient {
 
     public async onLoad() {
         let contractAddress = ProsopoCaptchaClient.contract?.address;
-    
+
         if (!ProsopoCaptchaClient.extension || !contractAddress) {
             try {
                 [ProsopoCaptchaClient.extension, { contractAddress }] = await Promise.all([getExtension(), this.providerApi.getContractAddress()]);
@@ -94,8 +96,8 @@ export class ProsopoCaptchaClient {
         }
 
         try {
-            ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account, 
-                getWsProvider(this.manager.state.config['dappUrl']));
+            ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account,
+                await getWsProvider(this.manager.state.config['dappUrl']));
         } catch (err) {
             throw new Error(err);
         }

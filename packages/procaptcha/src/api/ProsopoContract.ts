@@ -16,7 +16,7 @@
 // import {Hash} from '@polkadot/types/interfaces';
 import ProsopoContractBase from "./ProsopoContractBase";
 import { Signer } from '@polkadot/api/types';
-import { TransactionResponse } from '../types';
+import {ProsopoDappOperatorIsHumanUserResponse, TransactionResponse} from '../types';
 import { ProsopoRandomProviderResponse } from "../types";
 import { CaptchaSolutionCommitment } from "@prosopo/contract";
 
@@ -33,6 +33,11 @@ export class ProsopoContract extends ProsopoContractBase {
 
     public async dappUserCommit(signer: Signer, captchaDatasetId: string, userMerkleTreeRoot: string, providerAddress: string): Promise<TransactionResponse> {
         return await this.transaction(signer, 'dappUserCommit', [this.dappAddress, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
+    }
+
+    public async dappOperatorIsHumanUser(solutionThreshold: number): Promise<ProsopoDappOperatorIsHumanUserResponse> {
+        // TODO get threshold from dapp contract using getStorage or allow override in UI and fallback on contract protection layer?
+        return await this.query('dappOperatorIsHumanUser', [this.account.address, solutionThreshold]) as ProsopoDappOperatorIsHumanUserResponse;
     }
 
 
