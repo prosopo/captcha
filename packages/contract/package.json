@@ -5,7 +5,9 @@
   "license": "Apache-2.0",
   "scripts": {
     "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose"
+    "build": "tsc --build --verbose",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -38,6 +40,9 @@
     "zod": "^3.17.9"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
+    "eslint": "^8.20.0",
     "typescript": "^4.7.4"
   },
   "repository": {
