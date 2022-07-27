@@ -89,9 +89,9 @@ export function parseCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
  */
 export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Captcha[]): boolean {
   if (received.length && stored.length && received.length === stored.length) {
-    const arr1Sorted = received.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1));
-    const arr2Sorted = stored.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1));
-    const successArr = arr1Sorted.map((captcha, idx) => compareCaptcha(captcha, arr2Sorted[idx]));
+    const receivedSorted = received.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1));
+    const storedSorted = stored.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1));
+    const successArr = receivedSorted.map((captcha, idx) => compareCaptcha(captcha, storedSorted[idx]));
 
     return successArr.every((val) => val);
   }
@@ -110,8 +110,7 @@ export function compareCaptcha(received: CaptchaSolution, stored: Captcha): bool
     // this is a captcha we know the solution for
     const arr1 = received.solution.sort();
     const arr2 = stored.solution.sort();
-
-    return arr1.every((value, index) => value === arr2[index]) && received.captchaId === stored.captchaId;
+    return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]) && received.captchaId === stored.captchaId
   }
 
   // we don't know the solution so just assume it's correct

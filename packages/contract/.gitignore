@@ -1,3 +1,6 @@
+**/node_modules/
+/dist/
+
 # Ignore build artifacts from the local tests sub-crate.
 /target/
 /core/target/
@@ -18,7 +21,6 @@ Cargo.lock
 # Ignore history files.
 **/.history/**
 
-node_modules
 /.idea
 *.tsbuildinfo
 .DS_Store
