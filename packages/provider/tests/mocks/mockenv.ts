@@ -14,15 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { abiJson, AssetsResolver, ContractAbi, ContractApiInterface, createNetwork, Network, ProsopoContractApi } from '@prosopo/contract';
-import {ERRORS} from '../../src/errors'
-import consola, {LogLevel} from 'consola'
-import {LocalAssetsResolver} from "../../src/assets";
-import { loadEnvFile, Database, ProsopoConfig, ProsopoEnvironment } from '../../src';
-import {MongoMemoryServer} from "mongodb-memory-server";
+import consola, { LogLevel } from 'consola';
+import { MongoMemoryServer } from "mongodb-memory-server";
+import path from 'path';
+import { LocalAssetsResolver } from "../../src/assets";
+import { loadEnv } from '../../src/env';
+import { ERRORS } from '../../src/errors';
+import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types';
 
-const path = require('path');
-
-// TODO mock imageserver.
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -38,10 +37,10 @@ export class MockEnvironment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
 
     constructor(mnemonic?: string) {
-        loadEnvFile();
+        loadEnv();
         this.config = {
             logLevel: 'info',
-            contract: {abi: '../contract/src/abi/prosopo.json'},
+            contract: {abi: '../contract/src/abi/prosopo.json'}, // Deprecated for abiJson.
             defaultEnvironment: 'development',
             networks: {
                 development: {
@@ -71,7 +70,8 @@ export class MockEnvironment implements ProsopoEnvironment {
             captchaSolutions: {
                 requiredNumberOfSolutions: 3,
                 solutionWinningPercentage: 80,
-                captchaFilePath: path.join(process.cwd(), './tests/mocks/data/captchas.json')
+                captchaFilePath: path.join(process.cwd(), './tests/mocks/data/captchas.json'),
+                captchaBlockRecency: 10
             },
             database: {
                 development: {type: 'mongo', endpoint: '', dbname: ''}

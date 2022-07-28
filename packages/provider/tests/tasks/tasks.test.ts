@@ -12,8 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-
-import {loadJSONFile, parseBlockNumber} from "../../src";
+import {loadJSONFile, parseBlockNumber} from "../../src/util";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import path from "path";
@@ -37,16 +36,16 @@ import {
   accountMnemonic,
   IDatabaseAccounts,
 } from "../dataUtils/DatabaseAccounts";
-import {Tasks} from "../../src/tasks";
+import {Tasks} from "../../src/tasks/tasks";
 import {DAPP, PROVIDER} from "../mocks/accounts";
-import {sendFunds} from "../mocks/setup";
+import {sendFunds} from "../../src/tasks/setup";
 import {MockEnvironment} from "../mocks/mockenv";
-import {populateDatabase} from "../dataUtils/populateDatabase"
+import {populateDatabase} from "../dataUtils/populateDatabase";
+import { DappUserSolutionResult } from "../../src/types/api";
 
 chai.should();
 chai.use(chaiAsPromised);
 const expect = chai.expect;
-
 
 describe("CONTRACT TASKS", () => {
   let providerStakeDefault: bigint;
@@ -361,7 +360,7 @@ describe("CONTRACT TASKS", () => {
 
     // check the timestamp
     const completedAt = parseInt(
-      commitment.completed_at.toString().replaceAll(",", "")
+      commitment.completed_at.toString().replace(",", "")
     );
 
     expect(completedAt).to.be.above(0);
@@ -569,7 +568,7 @@ describe("CONTRACT TASKS", () => {
 
       // next part contains internal contract calls that must be run by provider
       const providerTasks = await changeSigner(providerAccount);
-      const result = await providerTasks.dappUserSolution(
+      const result: DappUserSolutionResult = await providerTasks.dappUserSolution(
         accountAddress(dappUserAccount),
         accountAddress(dappContractAccount),
         requestHash,
@@ -579,9 +578,9 @@ describe("CONTRACT TASKS", () => {
       );
 
 
-      expect(result.length).to.be.eq(2);
+      expect(result.captchas.length).to.be.eq(2);
       const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId);
-      const filteredResult = result.filter((res) => res.captchaId == captchaSolutionsSalted[0].captchaId)[0]
+      const filteredResult = result.captchas.filter((res) => res.captchaId == captchaSolutionsSalted[0].captchaId)[0]
       expect(filteredResult.proof).to.deep.eq(expectedProof);
       expect(filteredResult.captchaId).to.eq(captchaSolutionsSalted[0].captchaId);
     } catch (err) {

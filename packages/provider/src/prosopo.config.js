@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 // import {ProsopoConfig} from './types';
 
-export default {
+export default () => ({
     logLevel: 'debug',
     defaultEnvironment: 'development',
     contract: {
@@ -47,6 +47,7 @@ export default {
         }
     },
     captchaSolutions: {
+        captchaBlockRecency: 10,
         requiredNumberOfSolutions: 3,
         solutionWinningPercentage: 80,
         captchaFilePath: '../../data/captchas.json'
@@ -54,7 +55,7 @@ export default {
     database: {
         development: {
             type: 'mongo',
-            endpoint: `mongodb://${process.env.MONGO_INITDB_ROOT_USERNAME}:${process.env.MONGO_INITDB_ROOT_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}`,
+            endpoint: `mongodb://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}`,
             dbname: process.env.DATABASE_NAME,
         }
     },
@@ -67,4 +68,4 @@ export default {
         baseURL: process.env.API_BASE_URL,
     }
 
-};
+});

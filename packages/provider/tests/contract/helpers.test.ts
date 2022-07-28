@@ -13,14 +13,13 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { encodeStringArgs, unwrap } from '@prosopo/contract';
-
 import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types';
-import { ContractSelector } from '@polkadot/types/interfaces';
 import { TypeDefInfo } from '@polkadot/types-create';
+import { ContractSelector } from '@polkadot/types/interfaces';
 import { hexToU8a } from '@polkadot/util';
+import { encodeStringArgs, unwrap } from '@prosopo/contract';
+import chai from 'chai';
 
-const chai = require('chai');
 const expect = chai.expect;
 
 describe('CONTRACT HELPERS', () => {

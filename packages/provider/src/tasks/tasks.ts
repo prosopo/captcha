@@ -26,20 +26,19 @@ import {
     computeCaptchaHash,
     computeCaptchaSolutionHash,
     computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, LastCorrectCaptcha, parseCaptchaDataset,
-    parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse
+    parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse,
 } from '@prosopo/contract';
 import consola from "consola";
 import { buildDecodeVector } from '../codec/codec';
 import { ERRORS } from '../errors';
 import {
-    CaptchaSolutionResponse,
+    DappUserSolutionResult,
     CaptchaWithProof,
     Database,
     DatasetRecord,
     ProsopoEnvironment
 } from '../types';
 import { loadJSONFile, shuffleArray, writeJSONFile } from '../util';
-
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -196,9 +195,9 @@ export class Tasks {
      * @param {JSON} captchas
      * @param blockHash
      * @param txHash
-     * @return {Promise<CaptchaSolutionResponse[]>} result containing the contract event
+     * @return {Promise<DappUserSolutionResult>} result containing the contract event
      */
-    async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<CaptchaSolutionResponse[]> {
+    async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<DappUserSolutionResult> {
         if (!await this.dappIsActive(dappAccount)) {
             throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message)
         }
@@ -211,7 +210,7 @@ export class Tasks {
             throw new Error(ERRORS.API.PAYMENT_INFO_NOT_FOUND.message)
         }
         const partialFee = paymentInfo?.partialFee
-        let response: CaptchaSolutionResponse[] = []
+        let response: DappUserSolutionResult = { captchas: [], partialFee: '0' };
         const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
         const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
@@ -220,9 +219,16 @@ export class Tasks {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
-                response = captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) }))
+                response = {
+                    captchas: captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) })),
+                    partialFee: partialFee.toString(),
+                };
             } else {
                 await this.providerDisapprove(commitmentId)
+                response = {
+                    captchas: captchaIds.map((id) => ({ captchaId: id, proof: [[]] })),
+                    partialFee: partialFee.toString()
+                }
             }
         }
 
@@ -418,6 +424,26 @@ export class Tasks {
     }
 
     /**
+     * Block by block search for blockNo
+     */
+    async isRecentBlock(contract, header, blockNo: number, depth = this.captchaSolutionConfig.captchaBlockRecency) {
+        if (depth == 0) {
+            return false;
+        }
+
+        const _header = header.toHuman?.() || header;
+
+        const headerBlockNo: number = Number.parseInt(_header.number);
+        if (headerBlockNo == blockNo) {
+            return true;
+        }
+
+        const parent = await contract.api.rpc.chain.getBlock(_header.parentHash);
+
+        return this.isRecentBlock(contract, (parent.toHuman() as any).block.header, blockNo, depth - 1);
+    }
+
+    /**
      * Validate that provided `datasetId` was a result of calling `get_random_provider` method
      * @param {string} userAccount - Same user that called `get_random_provider`
      * @param {string} dappContractAccount - account of dapp that is requesting captcha
@@ -429,6 +455,16 @@ export class Tasks {
         if (!contract) {
             throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
         }
+
+
+        const header = await contract.api.rpc.chain.getHeader()
+
+        const isBlockNoValid = await this.isRecentBlock(contract, header, blockNo)
+
+        if (!isBlockNoValid) {
+            throw new Error(ERRORS.CAPTCHA.INVALID_BLOCK_NO.message);
+        }
+
         const block = await contract.api.rpc.chain.getBlockHash(blockNo)
         const randomProviderAndBlockNo = await this.getRandomProvider(userAccount, dappContractAccount, block)
         // TODO: create mappers/transformations for fields

@@ -189,6 +189,44 @@ describe('CAPTCHA FUNCTIONS', () => {
     return expect(compareCaptchaSolutions(received, stored)).to.be.false;
   });
 
+  it('Captchas with mismatching solution lengths are marked as incorrect', () => {
+    const noSolutions = [
+      {
+        captchaId: '0x6b652a7b4ad66c1b1bd07eb7eac72b59c8c0875bbcc0cfe9b72a519353dee5e5',
+        solution: [],
+        salt: '0x43692b4b9bc7c685a8852a419965fe6f9aa894df8a0ae88a4fc9d24ae0993276'
+      },
+      {
+        captchaId: '0x84cd658a2023252b529515d4792d98e073d786037b6169ad387f43eb7bb3c190',
+        solution: [],
+        salt: '0x43692b4b9bc7c685a8852a419965fe6f9aa894df8a0ae88a4fc9d24ae0993276'
+      }
+    ]
+    const solutions =   [
+      {
+        captchaId: '0x6b652a7b4ad66c1b1bd07eb7eac72b59c8c0875bbcc0cfe9b72a519353dee5e5',
+        datasetId: '0xaa3a5a1e63a195bd2262a8e39992b6da43b40e8194a388d3f1440e3fe8744428',
+        index: 13,
+        items: [
+        ],
+        salt: '0x01',
+        solution: [ 2, 5, 7 ],
+        target: 'car'
+      },
+      {
+        captchaId: '0x84cd658a2023252b529515d4792d98e073d786037b6169ad387f43eb7bb3c190',
+        datasetId: '0xaa3a5a1e63a195bd2262a8e39992b6da43b40e8194a388d3f1440e3fe8744428',
+        index: 3,
+        items: [
+        ],
+        salt: '0x05',
+        target: 'plane',
+      }
+    ]
+    return expect(compareCaptchaSolutions(noSolutions, solutions )).to.be.false;
+
+  })
+
   it('Two captchas are correctly compared when solutions and captchaIds are identical', () => {
     const c1 = { solution: [1, 2, 3, 4], captchaId: '1', salt: '' };
     const c2 = { solution: [1, 3, 2, 4], captchaId: '1', salt: '', items: [], target: '' };

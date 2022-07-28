@@ -13,34 +13,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { mnemonicValidate } from '@polkadot/util-crypto';
-// import { prosopoMiddleware } from '../api';
-// import { LocalAssetsResolver } from '../assets';
-import { Environment, loadEnv } from '../env';
-import { ERRORS } from '../errors';
-import { processArgs } from './argv';
+import { Environment } from '../src/env';
+import { sendFunds } from '../src/tasks/setup';
 
-import dotenv from 'dotenv';
+require('dotenv').config();
 
-loadEnv();
-
-async function main () {
-
-  if (!process.env.PROVIDER_MNEMONIC) {
-    throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
-  }
-
-  mnemonicValidate(process.env.PROVIDER_MNEMONIC);
-  const env = new Environment(process.env.PROVIDER_MNEMONIC);
-
+async function main (account: string) {
+  const env = new Environment('//Alice');
   await env.isReady();
-  await processArgs(process.argv.slice(2), env);
-
+  await sendFunds(env, account, 'Provider', 100000000000000000n)
   process.exit();
-
 }
 
-main()
+main(process.argv.slice(2)[0].trim())
   .catch((error) => {
     console.error(error);
+    process.exit();
   });
