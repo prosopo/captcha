@@ -38,36 +38,36 @@ let apiAppSrv: Server;
 let imgAppSrv: Server;
 
 function startApi(env: ProsopoEnvironment) {
-  const apiApp = express();
-  const apiPort = new URL(process.env.API_BASE_URL as string).port || 3000;
+    const apiApp = express();
+    const apiPort = new URL(process.env.API_BASE_URL as string).port || 3000;
 
-  apiApp.use(cors());
-  apiApp.use(express.json());
-  apiApp.use(prosopoRouter(env));
+    apiApp.use(cors());
+    apiApp.use(express.json());
+    apiApp.use(prosopoRouter(env));
 
-  if (env.assetsResolver instanceof LocalAssetsResolver) {
-    env.assetsResolver.injectMiddleware(apiApp); //
-  }
+    if (env.assetsResolver instanceof LocalAssetsResolver) {
+        env.assetsResolver.injectMiddleware(apiApp); //
+    }
 
-  apiApp.use(handleErrors);
-  apiAppSrv = apiApp.listen(apiPort, () => {
-    env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
-  });
+    apiApp.use(handleErrors);
+    apiAppSrv = apiApp.listen(apiPort, () => {
+        env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
+    });
 }
 
 function startImg() {
-  const imgApp = express();
-  const imgPort = 4000;
+    const imgApp = express();
+    const imgPort = 4000;
 
-  imgApp.use('/img', express.static('../../data/img'));
+    imgApp.use('/img', express.static('../../data/img'));
 
-  imgApp.get('/', (req, res) => {
-    res.send('Image server');
-  });
+    imgApp.get('/', (req, res) => {
+        res.send('Image server');
+    });
 
-  imgAppSrv = imgApp.listen(imgPort, () => {
-    console.log(`Image server running on port ${imgPort} serving images from /data/img`);
-  });
+    imgAppSrv = imgApp.listen(imgPort, () => {
+        console.log(`Image server running on port ${imgPort} serving images from /data/img`);
+    });
 }
 
 // const argv = yargs(hideBin(process.argv)).argv;
@@ -75,30 +75,30 @@ function startImg() {
 // TODO: Arguably ./argv.processArgs.command
 async function start (nodeEnv: string) {
 
-  let env: ProsopoEnvironment;
+    let env: ProsopoEnvironment;
 
-  if (nodeEnv !== 'test') {
-    if (!process.env.PROVIDER_MNEMONIC) {
-      throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+    if (nodeEnv !== 'test') {
+        if (!process.env.PROVIDER_MNEMONIC) {
+            throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+        }
+        env = new Environment(process.env.PROVIDER_MNEMONIC);
+    } else {
+        env = new MockEnvironment();
     }
-    env = new Environment(process.env.PROVIDER_MNEMONIC);
-  } else {
-    env = new MockEnvironment();
-  }
 
-  await env.isReady();
-  startApi(env);
+    await env.isReady();
+    startApi(env);
 
-  // if (argv['img'])
-  startImg();
+    // if (argv['img'])
+    startImg();
 }
 
 function stop() {
-  apiAppSrv.close();
-  imgAppSrv.close();
+    apiAppSrv.close();
+    imgAppSrv.close();
 }
 
 start(process.env.NODE_ENV || 'development')
-  .catch((error) => {
-    console.error(error);
-  });
+    .catch((error) => {
+        console.error(error);
+    });

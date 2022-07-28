@@ -17,14 +17,14 @@ import { sendFunds } from '../src/tasks/setup';
 require('dotenv').config();
 
 async function main (account: string) {
-  const env = new Environment('//Alice');
-  await env.isReady();
-  await sendFunds(env, account, 'Provider', 100000000000000000n)
-  process.exit();
+    const env = new Environment('//Alice');
+    await env.isReady();
+    await sendFunds(env, account, 'Provider', 100000000000000000n)
+    process.exit();
 }
 
 main(process.argv.slice(2)[0].trim())
-  .catch((error) => {
-    console.error(error);
-    process.exit();
-  });
+    .catch((error) => {
+        console.error(error);
+        process.exit();
+    });

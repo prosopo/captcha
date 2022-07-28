@@ -22,22 +22,22 @@ import { Tasks } from './tasks/tasks';
 import { Environment } from './env';
 
 async function main () {
-  mnemonicValidate(process.env.PROVIDER_MNEMONIC as string);
-  const env = new Environment(process.env.PROVIDER_MNEMONIC!);
+    mnemonicValidate(process.env.PROVIDER_MNEMONIC as string);
+    const env = new Environment(process.env.PROVIDER_MNEMONIC!);
 
-  await env.isReady();
+    await env.isReady();
 
-  const tasks = new Tasks(env);
-  const job = new CronJob(process.argv[2], () => {
-    env.logger.debug('It works....');
-    tasks.calculateCaptchaSolutions().catch((err) => {
-      env.logger.error(err);
+    const tasks = new Tasks(env);
+    const job = new CronJob(process.argv[2], () => {
+        env.logger.debug('It works....');
+        tasks.calculateCaptchaSolutions().catch((err) => {
+            env.logger.error(err);
+        });
     });
-  });
 
-  job.start();
+    job.start();
 }
 
 main().catch((error) => {
-  console.error(error);
+    console.error(error);
 });

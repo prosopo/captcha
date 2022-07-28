@@ -24,20 +24,20 @@ const argIsAddress = isAddress(arg, false, ss58Format)
 // console.log(`argIsHex of bitLength ${bitLength}     : ${argIsHex}`)
 
 if (argIsAddress) {
-  const encodedAddress = encodeAddress(decodeAddress(arg, false, ss58Format), ss58Format);
+    const encodedAddress = encodeAddress(decodeAddress(arg, false, ss58Format), ss58Format);
 
-  if (encodedAddress === arg) {
-    const hexAddress = u8aToHex(decodeAddress(encodedAddress, false, ss58Format))
-    console.log(`Hex address ${hexAddress}`)
-  } else {
-    console.log(`Encoded address ${encodedAddress}`)
-  }
+    if (encodedAddress === arg) {
+        const hexAddress = u8aToHex(decodeAddress(encodedAddress, false, ss58Format))
+        console.log(`Hex address ${hexAddress}`)
+    } else {
+        console.log(`Encoded address ${encodedAddress}`)
+    }
 
 } else if (argIsHex) {
-  console.log(`Decoding hex ${arg} to string`)
-  console.log(hexToString(arg))
+    console.log(`Decoding hex ${arg} to string`)
+    console.log(hexToString(arg))
 } else {
-  console.log(`Encoding string ${arg} to hex`)
-  console.log(blake2AsHex(arg))
+    console.log(`Encoding string ${arg} to hex`)
+    console.log(blake2AsHex(arg))
 }
 

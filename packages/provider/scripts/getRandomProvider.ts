@@ -22,7 +22,7 @@ async function main () {
     await env.isReady();
     const tasks = new Tasks(env);
     const [mnemonic, address] = await env.contractInterface?.createAccountAndAddToKeyring() || ['','']
-    let dappContractAccount = process.env.DAPP_CONTRACT_ADDRESS || '';
+    const dappContractAccount = process.env.DAPP_CONTRACT_ADDRESS || '';
     const provider = await tasks.getRandomProvider(address, dappContractAccount);
     console.log(provider)
     process.exit();

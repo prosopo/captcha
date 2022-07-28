@@ -20,5 +20,5 @@ import {createTypeUnsafe} from '@polkadot/types';
 export type DecodeFunction = (registry: Registry, data: Uint8Array) => AnyJson;
 
 export const buildDecodeVector = (typeName: string): DecodeFunction => (registry: Registry, data: Uint8Array): AnyJson => {
-  return createTypeUnsafe<Vec<Codec>>(registry, typeName, [data]).toJSON();
+    return createTypeUnsafe<Vec<Codec>>(registry, typeName, [data]).toJSON();
 };

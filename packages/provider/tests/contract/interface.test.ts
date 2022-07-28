@@ -21,31 +21,31 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe('CONTRACT WRAPPER', () => {
-  let contractApi;
+    let contractApi;
 
-  before(async () => {
+    before(async () => {
     // Register the dapp
-    const mockEnv = new MockEnvironment();
+        const mockEnv = new MockEnvironment();
 
-    await mockEnv.isReady();
-    contractApi = mockEnv.contractInterface;
-  });
+        await mockEnv.isReady();
+        contractApi = mockEnv.contractInterface;
+    });
 
-  it('Gets the contract method from the ABI when method name is valid', () => {
-    expect(function () {
-      contractApi.getContractMethod('dappRegister');
-    }).to.not.throw();
-  });
+    it('Gets the contract method from the ABI when method name is valid', () => {
+        expect(function () {
+            contractApi.getContractMethod('dappRegister');
+        }).to.not.throw();
+    });
 
-  it('Throws an error when method name is invalid', () => {
-    expect(function () {
-      contractApi.getContractMethod('methodThatDoesntExist');
-    }).to.throw(/Invalid contract method/);
-  });
+    it('Throws an error when method name is invalid', () => {
+        expect(function () {
+            contractApi.getContractMethod('methodThatDoesntExist');
+        }).to.throw(/Invalid contract method/);
+    });
 
-  it('Gets the storage key from the ABI', async () => {
-    const accounts = await contractApi.getStorageKey('provider_accounts');
+    it('Gets the storage key from the ABI', async () => {
+        const accounts = await contractApi.getStorageKey('provider_accounts');
 
-    expect(accounts).to.equal('0x0100000000000000000000000000000000000000000000000000000000000000');
-  });
+        expect(accounts).to.equal('0x0100000000000000000000000000000000000000000000000000000000000000');
+    });
 });
