@@ -76,7 +76,7 @@ export class ProsopoContractApi implements ContractApiInterface {
 
     async getContract(): Promise<Contract> {
         await this.network.api.isReadyOrError
-        let contract = new Contract(this.contractAddress, this.abi, this.network.api, this.signer)
+        const contract = new Contract(this.contractAddress, this.abi, this.network.api, this.signer)
         if (!contract) {
             throw new ProsopoContractError(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message, 'getContract', [this.contractAddress])
         }
