@@ -1,1 +1,0 @@
-{"version":3,"file":"merkle.d.ts","sourceRoot":"","sources":["../../src/types/merkle.ts"],"names":[],"mappings":"AAeA,OAAO,EAAE,CAAC,EAAE,MAAM,KAAK,CAAA;AAEvB,MAAM,WAAW,mBAAmB;IAChC,IAAI,EAAE,MAAM,CAAA;IACZ,MAAM,EAAE,MAAM,GAAG,IAAI,CAAA;CACxB;AAED,eAAO,MAAM,gBAAgB;;;;;;;;;EAG3B,CAAA"}
