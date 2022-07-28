@@ -28,16 +28,16 @@ export function CaptchaWidget({ challenge, solution, onChange }:
     const classes = useStyles();
 
     return (
-      <>
-        {items.map((item, index) => <Avatar
-          key={index}
-          src={item.path} // TODO challenge.items[].path...
-          variant="square"
-          className={classes.captchaItem + " " + (solution.includes(index) ? " " + classes.captchaItemSelected : "")}
-          onClick={() => onChange(index)} />
-        )}
-      </>
+        <>
+            {items.map((item, index) => <Avatar
+                key={index}
+                src={item.path} // TODO challenge.items[].path...
+                variant="square"
+                className={classes.captchaItem + " " + (solution.includes(index) ? " " + classes.captchaItemSelected : "")}
+                onClick={() => onChange(index)} />
+            )}
+        </>
     );
-  }
+}
 
-  export default CaptchaWidget;
+export default CaptchaWidget;
