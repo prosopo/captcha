@@ -15,9 +15,9 @@
 import { generateMnemonic } from '../src/tasks/setup';
 
 async function mnemonic () {
-  const [mnemonic, address] = await generateMnemonic();
-  console.log(`Address: ${address}`);
-  console.log(`Mnemonic: ${mnemonic}`);
+    const [mnemonic, address] = await generateMnemonic();
+    console.log(`Address: ${address}`);
+    console.log(`Mnemonic: ${mnemonic}`);
 }
 
 mnemonic();

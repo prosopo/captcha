@@ -38,21 +38,21 @@ let apiAppSrv: Server;
 // let imgAppSrv: Server;
 
 function startApi(env: ProsopoEnvironment) {
-  const apiApp = express();
-  const apiPort = process.env.API_PORT || 3000;
+    const apiApp = express();
+    const apiPort = process.env.API_PORT || 3000;
 
-  apiApp.use(cors());
-  apiApp.use(express.json());
-  apiApp.use(prosopoRouter(env));
+    apiApp.use(cors());
+    apiApp.use(express.json());
+    apiApp.use(prosopoRouter(env));
 
-  if (env.assetsResolver instanceof LocalAssetsResolver) {
-    env.assetsResolver.injectMiddleware(apiApp); //
-  }
+    if (env.assetsResolver instanceof LocalAssetsResolver) {
+        env.assetsResolver.injectMiddleware(apiApp); //
+    }
 
-  apiApp.use(handleErrors);
-  apiAppSrv = apiApp.listen(apiPort, () => {
-    env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
-  });
+    apiApp.use(handleErrors);
+    apiAppSrv = apiApp.listen(apiPort, () => {
+        env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
+    });
 }
 
 // function startImg() {
@@ -75,33 +75,33 @@ function startApi(env: ProsopoEnvironment) {
 // TODO: Arguably ./argv.processArgs.command
 async function start (nodeEnv: string) {
 
-  loadEnv();
+    loadEnv();
 
-  let env: ProsopoEnvironment;
+    let env: ProsopoEnvironment;
 
-  if (nodeEnv !== 'test') {
-    if (!process.env.PROVIDER_MNEMONIC) {
-      throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
-    }
-    env = new Environment(process.env.PROVIDER_MNEMONIC);
-  } else {
+    if (nodeEnv !== 'test') {
+        if (!process.env.PROVIDER_MNEMONIC) {
+            throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+        }
+        env = new Environment(process.env.PROVIDER_MNEMONIC);
+    } else {
     // env = new MockEnvironment();
-    return;
-  }
+        return;
+    }
 
-  await env.isReady();
-  startApi(env);
+    await env.isReady();
+    startApi(env);
 
-  // if (argv['img'])
-  // startImg();
+    // if (argv['img'])
+    // startImg();
 }
 
 function stop() {
-  apiAppSrv.close();
-  // imgAppSrv.close();
+    apiAppSrv.close();
+    // imgAppSrv.close();
 }
 
 start(process.env.NODE_ENV || 'development')
-  .catch((error) => {
-    console.error(error);
-  });
+    .catch((error) => {
+        console.error(error);
+    });

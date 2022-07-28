@@ -19,10 +19,10 @@ import { expect } from 'chai';
 import { BadRequest } from '../src/errors';
 
 describe('ERRORS', () => {
-  it('Returns 500 for a BadRequest', () => {
-    const msg = 'This is a bad request';
-    const theError = new BadRequest(msg);
+    it('Returns 500 for a BadRequest', () => {
+        const msg = 'This is a bad request';
+        const theError = new BadRequest(msg);
 
-    expect(theError.getCode()).to.equal(500);
-  });
+        expect(theError.getCode()).to.equal(500);
+    });
 });

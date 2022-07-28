@@ -24,21 +24,21 @@ loadEnv();
 
 async function main () {
 
-  if (!process.env.PROVIDER_MNEMONIC) {
-    throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
-  }
+    if (!process.env.PROVIDER_MNEMONIC) {
+        throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+    }
 
-  mnemonicValidate(process.env.PROVIDER_MNEMONIC);
-  const env = new Environment(process.env.PROVIDER_MNEMONIC);
+    mnemonicValidate(process.env.PROVIDER_MNEMONIC);
+    const env = new Environment(process.env.PROVIDER_MNEMONIC);
 
-  await env.isReady();
-  await processArgs(process.argv.slice(2), env);
+    await env.isReady();
+    await processArgs(process.argv.slice(2), env);
 
-  process.exit();
+    process.exit();
 
 }
 
 main()
-  .catch((error) => {
-    console.error(error);
-  });
+    .catch((error) => {
+        console.error(error);
+    });

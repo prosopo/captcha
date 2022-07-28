@@ -17,18 +17,18 @@ import { Tasks } from '../src/tasks/tasks';
 require('dotenv').config();
 
 async function main () {
-  const env = new Environment('//Alice');
+    const env = new Environment('//Alice');
 
-  await env.isReady();
-  const tasks = new Tasks(env);
+    await env.isReady();
+    const tasks = new Tasks(env);
 
-  await tasks.getProviderAccounts();
-  await tasks.getDappAccounts();
-  process.exit();
+    await tasks.getProviderAccounts();
+    await tasks.getDappAccounts();
+    process.exit();
 }
 
 main()
-  .catch((error) => {
-    console.error(error);
-    process.exit();
-  });
+    .catch((error) => {
+        console.error(error);
+        process.exit();
+    });
