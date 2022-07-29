@@ -465,7 +465,7 @@ export class Tasks {
 
         const block = await contract.api.rpc.chain.getBlockHash(blockNo)
         const randomProviderAndBlockNo = await this.getRandomProvider(userAccount, dappContractAccount, block)
-        // TODO: create mappers/transformations for fields
+        
         // @ts-ignore
         if (datasetId.localeCompare(randomProviderAndBlockNo.provider.captcha_dataset_id)) {
             throw new Error(ERRORS.DATASET.INVALID_DATASET_ID.message)

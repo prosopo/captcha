@@ -28,7 +28,7 @@ const path = require('path');
 
 dotenv.config();
 
-// TODO: Add path to protocol contract as argument. (after rm npm-ws from integration)
+
 // const argv = yargs(hideBin(process.argv)).argv;
 const integrationPath = '../../';
 
@@ -56,9 +56,9 @@ const hasProviderAccount = defaultProvider.mnemonic && defaultProvider.address;
 async function copyArtifacts() {
     const artifactsPath = path.join(integrationPath, 'protocol/artifacts');
     await Promise.all([
-        // TODO rm duplicate (keep in contract)?
+        
         fse.copy(artifactsPath, './artifacts', { overwrite: true }),
-        // TODO move to contract build. Make integrationPath ENV VAR?
+        
         fse.copy(artifactsPath, '../contract/artifacts', { overwrite: true }),
         fse.copy(path.join(artifactsPath, 'prosopo.json'), '../contract/src/abi/prosopo.json', { overwrite: true }),
     ]);
@@ -81,7 +81,7 @@ async function registerProvider(env: Environment, account: TestProvider) {
 
     account.address = providerKeyringPair.address;
 
-    await sendFunds(env, account.address, 'Provider', 100000000000000000n); // TODO -> setupProvider().
+    await sendFunds(env, account.address, 'Provider', 100000000000000000n); 
 
     await setupProvider(env, account);
 }

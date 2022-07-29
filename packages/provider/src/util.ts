@@ -41,7 +41,7 @@ export function encodeStringAddress (address: string) {
 //     return parsedFilePath
 // }
 
-// TODO: move to nodeutils?
+
 export function loadJSONFile (filePath: string, logger?: any) {
     // const parsedFilePath = handleFileProtocol(filePath, logger)
     try {

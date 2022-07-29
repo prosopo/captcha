@@ -14,8 +14,8 @@
 import {blake2AsHex, decodeAddress, encodeAddress, isAddress} from '@polkadot/util-crypto'
 import {hexToString, isHex, stringToHex, u8aToHex} from '@polkadot/util'
 
-const ss58Format = 42 // TODO get this number from rpc
-const bitLength = 128 // TODO get this number from rpc
+const ss58Format = 42 
+const bitLength = 128 
 const arg = process.argv.slice(2)[0].trim()
 const argIsHex = isHex(arg, bitLength)
 const argIsAddress = isAddress(arg, false, ss58Format)
