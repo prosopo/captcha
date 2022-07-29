@@ -5,7 +5,7 @@ exports.AccountSigner = void 0;
 const tslib_1 = require("tslib");
 const keyring_1 = tslib_1.__importDefault(require("@polkadot/keyring"));
 const util_1 = require("@polkadot/util");
-let id = 0; // TODO static id?
+let id = 0;
 class AccountSigner {
     constructor() {
         _AccountSigner_keyring.set(this, void 0);

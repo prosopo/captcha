@@ -36,7 +36,7 @@ class ProsopoContractApi {
                 throw new handlers_1.ProsopoContractError(errors_1.ERRORS.CONTRACT.SIGNER_UNDEFINED.message);
             }
             const keyringPair = this.network.keyring.addFromMnemonic(mnemonic);
-            const accountSigner = this.network.signer; // TODO
+            const accountSigner = this.network.signer;
             const signer = new signer_1.Signer(keyringPair, accountSigner);
             accountSigner.addPair(signer.pair);
             this.signer = signer;
@@ -53,7 +53,7 @@ class ProsopoContractApi {
     getContract() {
         return tslib_1.__awaiter(this, void 0, void 0, function* () {
             yield this.network.api.isReadyOrError;
-            let contract = new contract_1.Contract(this.contractAddress, this.abi, this.network.api, this.signer);
+            const contract = new contract_1.Contract(this.contractAddress, this.abi, this.network.api, this.signer);
             if (!contract) {
                 throw new handlers_1.ProsopoContractError(errors_1.ERRORS.CONTRACT.CONTRACT_UNDEFINED.message, 'getContract', [this.contractAddress]);
             }

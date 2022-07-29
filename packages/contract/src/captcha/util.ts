@@ -22,7 +22,7 @@ export function hexHash (data: string | Uint8Array): string {
 export async function imageHash (path: string) {
     // data must remain in the same order so load images synchronously
     // const fileBuffer = await readFile(path)
-    // TODO
+    
     return hexHash(path)
 }
 

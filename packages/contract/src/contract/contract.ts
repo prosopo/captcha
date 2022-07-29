@@ -98,7 +98,7 @@ async function populateTransaction(
             callParams.inputData
         )
         : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore old style without storage deposit
+    // @ts-ignore old style without storage deposit
         contract.api.tx.contracts.call(
             callParams.dest,
             callParams.value,

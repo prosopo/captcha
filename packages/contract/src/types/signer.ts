@@ -22,9 +22,7 @@ export interface LocalKeyringPair extends PolkadotKeyringPair {
 }
 
 
-export interface IAccountSigner extends PolkadotSigner {
-
-}
+export type IAccountSigner = PolkadotSigner
 
 export interface Signer extends PolkadotSigner {
     addPair: (pair: LocalKeyringPair) => void;

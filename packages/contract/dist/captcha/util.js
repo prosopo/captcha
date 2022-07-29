@@ -26,7 +26,6 @@ function imageHash(path) {
     return tslib_1.__awaiter(this, void 0, void 0, function* () {
         // data must remain in the same order so load images synchronously
         // const fileBuffer = await readFile(path)
-        // TODO
         return hexHash(path);
     });
 }

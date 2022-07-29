@@ -3,8 +3,7 @@ import { Signer as PolkadotSigner } from "@polkadot/api/types";
 export interface LocalKeyringPair extends PolkadotKeyringPair {
     suri?: string;
 }
-export interface IAccountSigner extends PolkadotSigner {
-}
+export declare type IAccountSigner = PolkadotSigner;
 export interface Signer extends PolkadotSigner {
     addPair: (pair: LocalKeyringPair) => void;
     accountSigner: IAccountSigner;
