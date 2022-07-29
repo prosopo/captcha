@@ -16,11 +16,38 @@ by Prosopo's human verification system.
 
 ### How to run locally
 
+#### 1. Install packages and set up environment variables
+
 ```bash
 npm install
 
 npm run setup
+```
 
+#### 2. Fund your test account
+
+##### 2a. Wallet Setup
+
+You will need to have a test account present in a polkadot wallet. Choose either
+[talisman](https://chrome.google.com/webstore/detail/talisman-polkadot-wallet/fijngjgcjhjmmpcmkeiomlglpeiijkld)
+, [subwallet](https://chrome.google.com/webstore/detail/subwallet-polkadot-extens/onhogfjeacnfoofkfgppdlbmlmnplgbn)
+or [polkadotjs](https://polkadot.js.org/extension/). Please only install *one* wallet in your browser! Once you have
+installed a wallet, create an account.
+
+##### 2b. Send some funds to your wallet
+
+Go to [polkadot apps](https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/accounts) and select the
+development endpoint (`ws://localhost:9944`).
+
+![Select endpoint](assets/img-endpoint.png)
+
+Send some funds from one of the test accounts (Alice etc.) to your test account.
+
+![Send funds](assets/img-send-funds.png)
+
+#### 3. Start the app
+
+```bash
 npm run dev
 ```
 
