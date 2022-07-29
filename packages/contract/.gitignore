@@ -1,4 +1,5 @@
 **/node_modules/
+/dist/
 
 # Ignore build artifacts from the local tests sub-crate.
 /target/
