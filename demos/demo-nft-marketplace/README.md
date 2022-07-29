@@ -16,7 +16,17 @@ by Prosopo's human verification system.
 
 ### How to run locally
 
-#### 1. Install packages and set up environment variables
+#### 1. Build the contract
+
+The contract metadata JSON is required to interact with the contract from the frontend. You can obtain this by building
+the contract sources. Run the following command from the root of the repository to build the contract.
+
+```bash
+docker run --rm -it -v $(pwd):/sources paritytech/contracts-ci-linux:production \
+  cargo +nightly contract build --manifest-path=/sources/contracts/Cargo.toml
+```
+
+#### 2. Install packages and set up environment variables
 
 ```bash
 npm install
@@ -24,9 +34,9 @@ npm install
 npm run setup
 ```
 
-#### 2. Fund your test account
+#### 3. Fund your test account
 
-##### 2a. Wallet Setup
+##### 3a. Wallet Setup
 
 You will need to have a test account present in a polkadot wallet. Choose either
 [talisman](https://chrome.google.com/webstore/detail/talisman-polkadot-wallet/fijngjgcjhjmmpcmkeiomlglpeiijkld)
@@ -34,7 +44,7 @@ You will need to have a test account present in a polkadot wallet. Choose either
 or [polkadotjs](https://polkadot.js.org/extension/). Please only install *one* wallet in your browser! Once you have
 installed a wallet, create an account.
 
-##### 2b. Send some funds to your wallet
+##### 3b. Send some funds to your wallet
 
 Go to [polkadot apps](https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/accounts) and select the
 development endpoint (`ws://localhost:9944`).
@@ -45,7 +55,7 @@ Send some funds from one of the test accounts (Alice etc.) to your test account.
 
 ![Send funds](assets/img-send-funds.png)
 
-#### 3. Start the app
+#### 4. Start the app
 
 ```bash
 npm run dev
