@@ -73,7 +73,7 @@ export class ProsopoCaptchaStateClient {
         const signer = this.context.getExtension().getExtension().signer;
 
         const currentCaptcha = captchaChallenge!.captchas[captchaIndex];
-        const { datasetId } = currentCaptcha.captcha; // TODO arbitrary datasetId? Could datasetId be moved up next to requestHash?
+        const { datasetId } = currentCaptcha.captcha; 
 
         const solutions = this.parseSolution(captchaChallenge!, captchaSolution);
 
@@ -92,20 +92,20 @@ export class ProsopoCaptchaStateClient {
         this.manager.update({ captchaSolution: [] });
 
         if (submitResult instanceof Error) {
-            // TODO onFail?
+            
             return;
         }
 
         await this.onSolved(submitResult);
     }
 
-    // TODO check for solved captchas.
+    
     public async onSolved(submitResult: TCaptchaSubmitResult) {
         let isHuman: boolean | undefined;
         try {
             isHuman = await this.context.getContract()?.dappOperatorIsHumanUser(this.context.manager.state.config['solutionThreshold']);
         }   catch (err) {
-            // TODO
+            
         }
         this.dismissCaptcha();
         if (this.context.callbacks?.onSolved) {
@@ -132,7 +132,7 @@ export class ProsopoCaptchaStateClient {
         this.manager.update({ captchaChallenge: undefined });
     }
 
-    // TODO move to ProsopoContract/ProviderApi/Model?
+    
     public parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: number[][]): CaptchaSolution[] {
         const parsedSolution: CaptchaSolution[] = [];
 

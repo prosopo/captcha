@@ -22,7 +22,7 @@ export class ProsopoApiError extends Error {
 
         this.name = context && `${ProsopoApiError.name}@${context}` || ProsopoApiError.name;
 
-        // TODO: if env.debug
+        
         console.error('\n********************* ERROR *********************\n');
         console.error(this.cause, this.stack, ...params);
     }

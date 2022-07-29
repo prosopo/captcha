@@ -94,7 +94,7 @@ export class ProsopoContractBase extends AsyncFactory {
     // https://polkadot.js.org/docs/api/start/api.tx.subs/
     public async transaction(signer: Signer, method: string, args: any[]): Promise<TransactionResponse> {
 
-        // TODO if DEBUG==true || env.development
+        
         const queryBeforeTx = await this.query(method, args);
 
         console.log("QUERY BEFORE TX....................", queryBeforeTx);
@@ -144,7 +144,7 @@ export class ProsopoContractBase extends AsyncFactory {
 
                 }
 
-                // TODO
+                
                 // Instant seal OFF.
                 // if (status?.isFinalized) {
 

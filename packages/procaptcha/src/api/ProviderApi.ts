@@ -46,7 +46,7 @@ export class ProviderApi extends HttpClientBase {
     public getCaptchaChallenge(randomProvider: ProsopoRandomProviderResponse) : Promise<GetCaptchaResponse> {
         const{ provider } = randomProvider;
         let { blockNumber } = randomProvider;
-        blockNumber = blockNumber.replace(/,/g, ''); // TODO: middleware schema parser/validator.
+        blockNumber = blockNumber.replace(/,/g, ''); 
         const userAccount = Storage.getAccount();
         return this.axios.get(`/provider/captcha/${provider.captchaDatasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
     }
