@@ -16,7 +16,7 @@
 import type {AbiMessage} from '@polkadot/api-contract/types';
 import {AnyJson} from '@polkadot/types/types/codec';
 import {Registry} from '@polkadot/types/types';
-import {ContractApiInterface, ContractAbi, AbiMetadata, Network, TransactionResponse} from '../types'; // TODO from each module
+import {ContractApiInterface, ContractAbi, AbiMetadata, Network, TransactionResponse} from '../types'; 
 import {ERRORS} from '../errors';
 import {unwrap, encodeStringArgs, handleContractCallOutcomeErrors} from './helpers';
 import {contractDefinitions} from "./definitions";
@@ -60,7 +60,7 @@ export class ProsopoContractApi implements ContractApiInterface {
             throw new ProsopoContractError(ERRORS.CONTRACT.SIGNER_UNDEFINED.message)
         }
         const keyringPair = this.network.keyring.addFromMnemonic(mnemonic)
-        const accountSigner = this.network.signer as unknown as AccountSigner; // TODO
+        const accountSigner = this.network.signer as unknown as AccountSigner; 
         const signer = new Signer(keyringPair, accountSigner);
         accountSigner.addPair(signer.pair)
         this.signer = signer

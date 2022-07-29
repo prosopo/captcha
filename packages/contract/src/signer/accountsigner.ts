@@ -22,7 +22,7 @@ import { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
 import { u8aToHex } from '@polkadot/util';
 import {NetworkAccountsUserConfig, LocalKeyringPair} from "../types/signer";
 
-let id = 0; // TODO static id?
+let id = 0; 
 
 export class AccountSigner implements PolkadotSigner {
     readonly #keyring: Keyring;

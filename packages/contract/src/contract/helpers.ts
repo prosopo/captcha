@@ -35,7 +35,7 @@ export function getEventNameFromMethodName(contractMethodName: string): string {
  *
  * @return {AnyJson} array of events filtered by calculated event name
  */
-export function getEventsFromMethodName(response: TransactionResponse, contractMethodName: string): AnyJson | DecodedEvent[] | any { // TODO: fix any
+export function getEventsFromMethodName(response: TransactionResponse, contractMethodName: string): AnyJson | DecodedEvent[] | any { 
     const eventName = getEventNameFromMethodName(contractMethodName)
     if (response && response['events'] ) {
         return response && response['events'] && response["events"].filter((x) => x.name === eventName)

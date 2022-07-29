@@ -23,7 +23,7 @@ export class ProsopoEnvError extends Error {
         if (isError) {
             this.cause = error;
         }
-        // TODO: if env.debug
+        
         console.error('\n********************* ERROR *********************\n');
         console.error(this.cause, this.stack, ...params);
     }
