@@ -3,23 +3,23 @@ export class LocalStorageMock {
     private store: {[key: string]: string};
 
     constructor() {
-      this.store = {};
+        this.store = {};
     }
   
     clear() {
-      this.store = {};
+        this.store = {};
     }
   
     getItem(key: string) {
-      return this.store[key] || null;
+        return this.store[key] || null;
     }
   
     setItem(key: string, value: any) {
-      this.store[key] = String(value);
+        this.store[key] = String(value);
     }
   
     removeItem(key: string) {
-      delete this.store[key];
+        delete this.store[key];
     }
 
 }

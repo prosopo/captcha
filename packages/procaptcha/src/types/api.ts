@@ -35,9 +35,9 @@ export interface ProposoProvider {
   balance: string;
   captchaDatasetId: string;
   fee: string;
-  payee: string; // TODO: enum?
+  payee: string; 
   serviceOrigin: string;
-  status: string; // TODO: enum
+  status: string; 
 }
 
 // export interface CaptchaResponseCaptchaItem {

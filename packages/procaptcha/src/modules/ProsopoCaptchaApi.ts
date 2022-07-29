@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
-// import {computeCaptchaSolutionHash} from '@prosopo/provider'; // TODO
+// import {computeCaptchaSolutionHash} from '@prosopo/provider'; 
 import { CaptchaSolution, CaptchaMerkleTree, CaptchaSolutionCommitment } from '@prosopo/contract';
 import { Signer } from "@polkadot/api/types";
 
@@ -89,7 +89,7 @@ export class ProsopoCaptchaApi {
 
         let commitment: CaptchaSolutionCommitment;
 
-        // TODO concurrency?
+        
         try {
             commitment = await this.contract.getCaptchaSolutionCommitment(commitmentId);
         } catch (err) {

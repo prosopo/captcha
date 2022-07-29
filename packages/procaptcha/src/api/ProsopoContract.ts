@@ -20,7 +20,7 @@ import {ProsopoDappOperatorIsHumanUserResponse, TransactionResponse} from '../ty
 import { ProsopoRandomProviderResponse } from "../types";
 import { CaptchaSolutionCommitment } from "@prosopo/contract";
 
-// TODO: import return types from provider: separate types/common package.
+
 export class ProsopoContract extends ProsopoContractBase {
 
     public async getRandomProvider(): Promise<ProsopoRandomProviderResponse> {
@@ -36,7 +36,7 @@ export class ProsopoContract extends ProsopoContractBase {
     }
 
     public async dappOperatorIsHumanUser(solutionThreshold: number): Promise<ProsopoDappOperatorIsHumanUserResponse> {
-        // TODO get threshold from dapp contract using getStorage or allow override in UI and fallback on contract protection layer?
+        
         return await this.query('dappOperatorIsHumanUser', [this.account.address, solutionThreshold]) as ProsopoDappOperatorIsHumanUserResponse;
     }
 
