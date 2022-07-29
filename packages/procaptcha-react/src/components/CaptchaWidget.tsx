@@ -21,7 +21,7 @@ import { useStyles } from "../styles";
 
 export function CaptchaWidget({ challenge, solution, onChange }:
     {challenge: CaptchaResponseCaptcha, solution: number[], onChange: (index: number) => void}) {
-    // TODO challenge.items
+    
     //const items = Array.from(Array(9).keys());
     console.log("CHALLENGE", challenge);
     const items = challenge.captcha.items;
@@ -31,7 +31,7 @@ export function CaptchaWidget({ challenge, solution, onChange }:
         <>
             {items.map((item, index) => <Avatar
                 key={index}
-                src={item.path} // TODO challenge.items[].path...
+                src={item.path} 
                 variant="square"
                 className={classes.captchaItem + " " + (solution.includes(index) ? " " + classes.captchaItemSelected : "")}
                 onClick={() => onChange(index)} />

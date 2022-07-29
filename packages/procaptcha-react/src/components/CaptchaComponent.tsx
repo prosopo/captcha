@@ -67,7 +67,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
         }
     }, [account]);
 
-    // TODO text strings
+    
     // https://www.npmjs.com/package/i18next
 
     return (
