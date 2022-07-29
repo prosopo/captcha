@@ -85,7 +85,7 @@ async function registerProvider(env: Environment, account: IProviderAccount) {
 
     account.address = providerKeyringPair.address;
 
-    await sendFunds(env, account.address, 'Provider', 100000000000000000n); // TODO -> setupProvider().
+    await sendFunds(env, account.address, 'Provider', 100000000000000000n); 
 
     await setupProvider(env, account);
 }

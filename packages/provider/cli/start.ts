@@ -72,7 +72,7 @@ function startImg() {
 
 // const argv = yargs(hideBin(process.argv)).argv;
 
-// TODO: Arguably ./argv.processArgs.command
+
 async function start (nodeEnv: string) {
 
     let env: ProsopoEnvironment;

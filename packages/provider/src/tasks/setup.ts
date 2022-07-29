@@ -63,7 +63,7 @@ export async function sendFunds(env, address, who, amount: BigNumber): Promise<v
     );
 }
 
-// TODO: fund as in setupDapp? set env default value. // sendFunds
+
 export async function setupProvider(env, provider: IProviderAccount): Promise<Hash> {
     await env.contractInterface.changeSigner(provider.mnemonic)
     const logger = env.logger;

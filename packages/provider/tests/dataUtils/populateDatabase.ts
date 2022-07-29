@@ -41,7 +41,7 @@ const DEFAULT_USER_COUNT: UserCount = {
     [AccountKey.providersWithStakeAndDataset]: 20,
     [AccountKey.dapps]: 20,
     [AccountKey.dappsWithStake]: 20,
-    [AccountKey.dappUsers]: 0, // TODO create a method for populating these
+    [AccountKey.dappUsers]: 0, 
 }
 
 async function populateStep(

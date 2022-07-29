@@ -57,7 +57,7 @@ export default () => ({
             dbname: process.env.DATABASE_NAME,
         }
     },
-    // TODO deprecate local assets resolver -> tests: img server/mock.
+    
     assets : {
         absolutePath: '',
         basePath: ''
