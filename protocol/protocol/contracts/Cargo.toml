@@ -16,7 +16,7 @@ scale-info = { version = "2", default-features = false, features = ["derive"], o
 rand_chacha = { version = "0.3.1", default-features = false }
 
 # custom prosopo storage
-prosopo_storage_derive = { version = "3.3.0", path = "../crates/storage/derive", default-features = false }
+prosopo_storage_derive = { version = "3.3.0", path = "crates/storage/derive", default-features = false }
 
 [lib]
 name = "prosopo"
