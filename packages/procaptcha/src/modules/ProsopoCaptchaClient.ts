@@ -103,7 +103,7 @@ export class ProsopoCaptchaClient {
         }
 
         try {
-            ProsopoCaptchaClient.provider = await ProsopoCaptchaClient.contract.getRandomProvider(); // TODO how often should provider change?
+            ProsopoCaptchaClient.provider = await ProsopoCaptchaClient.contract.getRandomProvider(); 
         } catch (err) {
             throw new Error(err);
         }

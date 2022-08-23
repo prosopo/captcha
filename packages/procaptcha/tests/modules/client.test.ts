@@ -13,9 +13,9 @@ describe("CLIENT UNIT TESTS", () => {
     // var localStorage: LocalStorageMock;
 
     const testConfig: ProsopoCaptchaConfig = { 
-      "providerApi.baseURL": "http://localhost:3000",
-      "providerApi.prefix": "/v1/prosopo",
-      "dappAccount": "",
+        "providerApi.baseURL": "http://localhost:3000",
+        "providerApi.prefix": "/v1/prosopo",
+        "dappAccount": "",
     }
 
     before(async () => {

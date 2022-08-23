@@ -8,7 +8,9 @@
   "scripts": {
     "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" && exit 0",
     "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose"
+    "build": "tsc --build --verbose",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix"
   },
   "dependencies": {
     "@polkadot/api": "^8.13.1",
@@ -24,7 +26,10 @@
   },
   "devDependencies": {
     "@types/chai": "^4.3.1",
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
     "chai": "^4.3.6",
+    "eslint": "^8.20.0",
     "mocha": "^10.0.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^4.7.4"
@@ -40,6 +45,6 @@
   "homepage": "https://github.com/prosopo-io/procaptcha#readme",
   "description": "",
   "publishConfig": {
-    "registry":"https://registry.npmjs.org"
+    "registry": "https://registry.npmjs.org"
   }
 }
