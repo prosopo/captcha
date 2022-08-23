@@ -50,7 +50,7 @@ export class ProsopoCaptchaClient {
     }
 
     public setExtension(extension: IExtensionInterface) {
-        return ProsopoCaptchaClient.extension = extension;
+        ProsopoCaptchaClient.extension = extension;
     }
 
     public getContract() {
@@ -97,7 +97,7 @@ export class ProsopoCaptchaClient {
 
         try {
             ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account,
-                await getWsProvider(this.manager.state.config['dappUrl']));
+                getWsProvider(this.manager.state.config['dappUrl']));
         } catch (err) {
             throw new Error(err);
         }
