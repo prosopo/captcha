@@ -6,7 +6,7 @@ Contains interfaces for accessing the Prosopo [protocol](https://github.com/pros
 
 The Dapp smart contract account must be [registered](https://github.com/prosopo-io/protocol/blob/5cb282a911522bfbf29d34d1830badee3eecec83/contracts/lib.rs#L698-L737) in the Prosopo [protocol](https://github.com/prosopo-io/protocol/) contract in order to interact with the Prosopo protocol. You can complete Dapp registration by navigating to [polkadot-js apps](https://polkadot.js.org/apps/) and using the contracts page.
 
-![contracts-page.png](img/contracts-page.png)
+![contracts-page.png](assets/contracts-page.png)
 
 ## Usage
 
