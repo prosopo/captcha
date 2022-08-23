@@ -11,33 +11,34 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// [object Object]
-// SPDX-License-Identifier: Apache-2.0
-
-import { CronJob } from 'cron';
-
 import { mnemonicValidate } from '@polkadot/util-crypto';
+// import { prosopoMiddleware } from '../api';
+// import { LocalAssetsResolver } from '../assets';
+import { Environment, loadEnv } from '../env';
+import { ERRORS } from '../errors';
+import { processArgs } from './argv';
 
-import { Tasks } from './tasks/tasks';
-import { Environment } from './env';
+import dotenv from 'dotenv';
+
+loadEnv();
 
 async function main () {
-    mnemonicValidate(process.env.PROVIDER_MNEMONIC as string);
-    const env = new Environment(process.env.PROVIDER_MNEMONIC!);
+
+    if (!process.env.PROVIDER_MNEMONIC) {
+        throw new Error(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+    }
+
+    mnemonicValidate(process.env.PROVIDER_MNEMONIC);
+    const env = new Environment(process.env.PROVIDER_MNEMONIC);
 
     await env.isReady();
+    await processArgs(process.argv.slice(2), env);
 
-    const tasks = new Tasks(env);
-    const job = new CronJob(process.argv[2], () => {
-        env.logger.debug('It works....');
-        tasks.calculateCaptchaSolutions().catch((err) => {
-            env.logger.error(err);
-        });
-    });
+    process.exit();
 
-    job.start();
 }
 
-main().catch((error) => {
-    console.error(error);
-});
+main()
+    .catch((error) => {
+        console.error(error);
+    });

@@ -11,25 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {ApiPromise, WsProvider} from '@polkadot/api';
+import { Keyring } from '@polkadot/keyring';
+import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto';
 
-const providers = {
-    'kusama': {'endpoint': 'wss://kusama-rpc.polkadot.io/'},
-    'polkadot': {'endpoint': 'wss://rpc.polkadot.io'}
-}
-
-async function run() {
-    // Construct
-    for (const provider in providers) {
-        const wsProvider = new WsProvider(providers[provider].endpoint);
-        const api = await ApiPromise.create({provider: wsProvider});
-
-        // Do something
-        const validators = await api.query.staking.validators.keys();
-        console.log(`${validators.length} validators on ${provider}`);
+export async function generateMnemonic(keyring?: Keyring): Promise<[string, string]> {
+    if (!keyring) {
+        keyring = new Keyring({ type: 'sr25519' });
     }
-    process.exit()
-
+    await cryptoWaitReady();
+    const mnemonic = mnemonicGenerate();
+    const account = keyring.addFromMnemonic(mnemonic);
+    return [mnemonic, account.address];
 }
 
-run()
+export function updateEnvFileVar(source: string, name: string, value: string) {
+    return source.replace(new RegExp(`.*(${name}=)(.*)`, 'gi'), `$1${value}`);
+}
