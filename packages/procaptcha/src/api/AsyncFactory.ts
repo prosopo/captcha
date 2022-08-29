@@ -13,12 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
+import {ProsopoEnvError} from "@prosopo/contract";
+
 export abstract class AsyncFactory {
 
     constructor() {
-        throw new Error("Use `create` factory method");
+        throw new ProsopoEnvError("Use `create` factory method");
     }
-    
+
     public static async create(...args: any[]) {
         return await Object.create(this.prototype).init(...args);
     }
