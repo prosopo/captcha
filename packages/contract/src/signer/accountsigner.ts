@@ -21,8 +21,10 @@ import type { Registry } from '@polkadot/types/types';
 import { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
 import { u8aToHex } from '@polkadot/util';
 import {NetworkAccountsUserConfig, LocalKeyringPair} from "../types/signer";
+import {ProsopoContractError, ProsopoEnvError} from "../handlers";
+import {ERRORS} from "../errors";
 
-let id = 0; 
+let id = 0;
 
 export class AccountSigner implements PolkadotSigner {
     readonly #keyring: Keyring;
@@ -51,7 +53,7 @@ export class AccountSigner implements PolkadotSigner {
             this.#registry.createType('AccountId', pair.address).eq(address)
         );
         if (!findKeyringPair) {
-            throw new Error(`Can't find the keyringpair for ${address}`);
+            throw new ProsopoContractError(`Can't find the keyringpair for ${address}`);
         }
 
         return findKeyringPair;
@@ -93,8 +95,7 @@ export class AccountSigner implements PolkadotSigner {
                 pair.lock = (): void => {
                 };
             } catch (error: any) {
-                console.log(error.message);
-                throw new Error(`ERRORS.GENERAL.BAD_SURI.message: {uri: ${account}}`);
+                throw new ProsopoEnvError(error, ERRORS.GENERAL.BAD_SURI.message, account);
             }
         }
     };
