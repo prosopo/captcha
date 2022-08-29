@@ -291,12 +291,12 @@ export class ProsopoDatabase implements Database {
         };
 
         switch (state) {
-            case CaptchaStates.Solved:
-                query.solution = {solution: {$exists: true}};
-                break;
-            case CaptchaStates.Unsolved:
-                query.solution = {solution: {$exists: false}};
-                break;
+        case CaptchaStates.Solved:
+            query.solution = {solution: {$exists: true}};
+            break;
+        case CaptchaStates.Unsolved:
+            query.solution = {solution: {$exists: false}};
+            break;
         }
 
         const cursor = this.tables.captchas?.find(query);
