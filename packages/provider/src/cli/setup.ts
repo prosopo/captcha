@@ -1,11 +1,11 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,8 @@
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { randomAsHex } from '@polkadot/util-crypto';
-import { Payee } from "@prosopo/contract";
+import {ERRORS, Payee, ProsopoEnvError} from "@prosopo/contract";
+import {ERRORS as PROVIDER_ERRORS} from "../errors"
 import fse from 'fs-extra';
 import path from 'path';
 import { Environment, getEnvFile, loadEnv } from '../env';
@@ -85,7 +86,7 @@ async function registerProvider(env: Environment, account: IProviderAccount) {
 
     account.address = providerKeyringPair.address;
 
-    await sendFunds(env, account.address, 'Provider', 100000000000000000n); 
+    await sendFunds(env, account.address, 'Provider', 100000000000000000n);
 
     await setupProvider(env, account);
 }
@@ -115,7 +116,7 @@ async function setup() {
     loadEnv();
 
     if (!process.env.DAPP_CONTRACT_ADDRESS) {
-        throw new Error('DAPP_CONTRACT_ADDRESS is not set in .env file.');
+        throw new ProsopoEnvError(PROVIDER_ERRORS.DEVELOPER.DAPP_CONTRACT_ADDRESS_MISSING.message);
     }
 
     if (hasProviderAccount) {

@@ -1,11 +1,11 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,7 @@ import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
 import fs, { createWriteStream, WriteStream } from 'fs';
 import { ERRORS } from './errors';
-import {config} from "dotenv";
+import {ProsopoEnvError} from "@prosopo/contract";
 
 export function encodeStringAddress (address: string) {
     try {
@@ -25,7 +25,7 @@ export function encodeStringAddress (address: string) {
                 : decodeAddress(address)
         )
     } catch (error) {
-        throw new Error(`${ERRORS.CONTRACT.INVALID_ADDRESS.message}:${error}\n${address}`)
+        throw new ProsopoEnvError(error, ERRORS.CONTRACT.INVALID_ADDRESS.message, address)
     }
 }
 
@@ -47,7 +47,7 @@ export function loadJSONFile (filePath: string, logger?: any) {
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'))
     } catch (err) {
-        throw new Error(`${ERRORS.GENERAL.JSON_LOAD_FAILED.message}:${err}`)
+        throw new ProsopoEnvError(err, ERRORS.GENERAL.JSON_LOAD_FAILED.message, filePath)
     }
 }
 
