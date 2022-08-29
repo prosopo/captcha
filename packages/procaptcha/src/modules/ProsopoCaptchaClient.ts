@@ -21,6 +21,7 @@ import { getProsopoContract, getWsProvider } from "./contract";
 import { getExtension } from "./extension";
 import { ProviderApi } from "../api/ProviderApi";
 import { ProsopoCaptchaApi } from "./ProsopoCaptchaApi";
+import {ProsopoEnvError} from "@prosopo/contract";
 // import { Extension } from "../api";
 
 
@@ -72,7 +73,7 @@ export class ProsopoCaptchaClient {
             try {
                 [ProsopoCaptchaClient.extension, { contractAddress }] = await Promise.all([getExtension(), this.providerApi.getContractAddress()]);
             } catch (err) {
-                throw new Error(err);
+                throw new ProsopoEnvError(err);
             }
         }
 
@@ -92,20 +93,20 @@ export class ProsopoCaptchaClient {
         try {
             ProsopoCaptchaClient.extension.setAccount(account.address);
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoEnvError(err);
         }
 
         try {
             ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account,
                 getWsProvider(this.manager.state.config['dappUrl']));
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoEnvError(err);
         }
 
         try {
-            ProsopoCaptchaClient.provider = await ProsopoCaptchaClient.contract.getRandomProvider(); 
+            ProsopoCaptchaClient.provider = await ProsopoCaptchaClient.contract.getRandomProvider();
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoEnvError(err);
         }
 
         ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract, ProsopoCaptchaClient.provider, this.providerApi);
