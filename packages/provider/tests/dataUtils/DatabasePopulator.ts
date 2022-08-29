@@ -1,17 +1,17 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BigNumber, Payee, hexHash } from "@prosopo/contract";
+import {BigNumber, Payee, hexHash, ProsopoEnvError} from "@prosopo/contract";
 import path from "path";
 
 import { blake2AsHex, decodeAddress, randomAsHex } from "@polkadot/util-crypto";
@@ -147,7 +147,7 @@ implements IDatabaseAccounts, IDatabasePopulatorMethods
       this.mockEnv.contractInterface?.createAccountAndAddToKeyring();
 
         if (!account) {
-            throw new Error("Could not create an account!");
+            throw new ProsopoEnvError("Could not create an account!");
         }
 
         return account;
@@ -175,7 +175,7 @@ implements IDatabaseAccounts, IDatabasePopulatorMethods
       typeof account === "string" ? account : accountMnemonic(account);
 
         if (!this.mockEnv.contractInterface) {
-            throw new Error("MockEnvironment not set up");
+            throw new ProsopoEnvError("MockEnvironment not set up");
         }
 
         return this.mockEnv.contractInterface.changeSigner(mnemonic);
