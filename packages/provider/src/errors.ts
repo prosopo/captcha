@@ -1,11 +1,11 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -136,7 +136,8 @@ export const ERRORS = {
         },
         SIGNER_UNDEFINED: {
             message: 'Signer undefined'
-        }
+        },
+
     },
     CLI: {
         PARAMETER_ERROR: {
@@ -167,6 +168,9 @@ export const ERRORS = {
         DIFFERENT_DATASET_IDS: {
             message: 'dataset ids do not match'
         }
+    },
+    DEVELOPER: {
+        DAPP_CONTRACT_ADDRESS_MISSING: { message: 'DAPP_CONTRACT_ADDRESS is not set in .env file.' },
     }
 }
 

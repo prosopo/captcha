@@ -1,11 +1,11 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,16 @@
 import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
-import { BigNumber, buildTx, CaptchaMerkleTree, computeCaptchaSolutionHash, convertCaptchaToCaptchaSolution, getEventsFromMethodName, hexHash } from '@prosopo/contract'
+import {
+    BigNumber,
+    buildTx,
+    CaptchaMerkleTree,
+    computeCaptchaSolutionHash,
+    convertCaptchaToCaptchaSolution,
+    getEventsFromMethodName,
+    hexHash,
+    ProsopoEnvError
+} from '@prosopo/contract'
 import { IDappAccount, IProviderAccount, IUserAccount } from '../types/accounts'
 import { Tasks } from './tasks'
 
@@ -51,7 +60,7 @@ export async function sendFunds(env, address, who, amount: BigNumber): Promise<v
     const balance = await env.contractInterface.network.api.query.system.account(pair.address);
 
     if (balance < amount) {
-        throw new Error(`${mnemonic} balance too low: ${balance}`);
+        throw new ProsopoEnvError(`${mnemonic} balance too low: ${balance}`);
     }
 
     const api = env.contractInterface.network.api;
@@ -116,7 +125,7 @@ export async function setupDappUser(env, dappUser: IUserAccount, provider: IProv
         await env.contractInterface.changeSigner(dappUser.mnemonic)
         const captchaData = await tasks.getCaptchaData(providerOnChain.captcha_dataset_id.toString())
         if (captchaData.merkle_tree_root.toString() !== providerOnChain.captcha_dataset_id.toString()) {
-            throw new Error(`Cannot find captcha data id: ${providerOnChain.captcha_dataset_id.toString()}`)
+            throw new ProsopoEnvError(`Cannot find captcha data id`, setupDappUser.name, providerOnChain.captcha_dataset_id.toString())
         }
         const commitmentId = tree.root?.hash
         logger.info('   - dappUserCommit')
@@ -129,11 +138,11 @@ export async function setupDappUser(env, dappUser: IUserAccount, provider: IProv
             await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id, commitmentId, provider.address)
             const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
         } else {
-            throw new Error('commitmentId missing')
+            throw new ProsopoEnvError('commitmentId missing')
         }
         return commitmentId
     } else {
-        throw new Error('Provider not found')
+        throw new ProsopoEnvError('Provider not found')
     }
 }
 

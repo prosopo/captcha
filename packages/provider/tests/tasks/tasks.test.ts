@@ -499,7 +499,7 @@ describe("CONTRACT TASKS", () => {
         );
 
         if (!result) {
-            throw new Error("Result is null");
+            throw new ProsopoEnvError("Result is null");
         }
 
         const events = getEventsFromMethodName(result, "dappUserCommit");

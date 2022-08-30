@@ -1,11 +1,11 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,7 +15,7 @@
 import parser from 'cron-parser';
 import pm2 from 'pm2';
 import {cwd} from 'process';
-
+import {ProsopoEnvError} from "@prosopo/contract";
 const yargs = require('yargs')
 
 import {Compact, u128} from '@polkadot/types';
@@ -37,19 +37,17 @@ const validatePayee = (argv) => {
         if (!argv.payee)
             return
         const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || '';
-
         const payee = PayeeSchema.parse(payeeArg);
 
         return {payee};
     } catch (error) {
-        throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.payee}`);
-
+        throw new ProsopoEnvError(error, ERRORS.CLI.PARAMETER_ERROR.message, [argv.payee]);
     }
 };
 
 const validateValue = (argv) => {
     if (typeof argv.value !== 'number') {
-        throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.value}`);
+        throw new ProsopoEnvError(validateValue.name, ERRORS.CLI.PARAMETER_ERROR.message, argv.value);
     }
     const value: Compact<u128> = argv.value as Compact<u128>;
     return {value};
@@ -61,7 +59,7 @@ const validateScheduleExpression = (argv) => {
         const result = parser.parseString(argv.schedule as string);
 
         if (argv.schedule in result.errors) {
-            throw new Error(`${ERRORS.CLI.PARAMETER_ERROR.message}::value::${argv.schedule}`);
+            throw new ProsopoEnvError(validateScheduleExpression.name, ERRORS.CLI.PARAMETER_ERROR.message, [argv.schedule]);
         }
 
         return {schedule: argv.schedule as string};
