@@ -25,6 +25,7 @@ import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
 import { TCaptchaSubmitResult } from '../types/client';
 import {ProsopoApiError} from "../api/handlers";
+import { hashSolutions } from '@prosopo/contract';
 
 
 function hexHash(data: string | Uint8Array): string {
@@ -60,7 +61,7 @@ export class ProsopoCaptchaApi {
     public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<TCaptchaSubmitResult> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
-        const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(solution => ({...solution, salt: salt}));
+        const captchaSolutionsSalted: CaptchaSolution[] = hashSolutions(solutions);
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
 
         tree.build(captchasHashed);
