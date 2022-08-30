@@ -163,6 +163,9 @@ export const ERRORS = {
         },
         INVALID_BLOCK_NO: {
             message: 'invalid block number'
+        },
+        DIFFERENT_DATASET_IDS: {
+            message: 'dataset ids do not match'
         }
     }
 }

@@ -23,7 +23,7 @@ import {
     CaptchaStates, CaptchaStatus, CaptchaWithoutId, compareCaptchaSolutions,
     computeCaptchaHash,
     computeCaptchaSolutionHash,
-    computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, LastCorrectCaptcha, parseCaptchaDataset,
+    computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, hashSolutions, LastCorrectCaptcha, parseCaptchaDataset,
     parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse,
 } from '@prosopo/contract';
 import consola from "consola";
@@ -91,7 +91,7 @@ export class Tasks {
         const datasetHashes = addHashesToDataset(dataset, tree);
         datasetHashes.datasetId = tree.root?.hash;
         datasetHashes.tree = tree.layers;
-        await this.db?.storeDataset(datasetHashes);
+        await this.db?.storeDataset(hashSolutions(datasetHashes));
         writeJSONFile(file, { ...datasetWithoutIds, datasetId: datasetHashes.datasetId }).catch((err) => {
             console.error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
         })
@@ -214,8 +214,8 @@ export class Tasks {
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
-            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
-            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+            await this.db.storeDappUserSolution(hashSolutions(receivedCaptchas), commitmentId)
+            if (await compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
                 response = {
                     captchas: captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) })),
@@ -258,6 +258,9 @@ export class Tasks {
         const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
             throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
+        } 
+        if (!storedCaptchas.every((captcha) => captcha.datasetId === storedCaptchas[0].datasetId)) {
+            throw new Error(ERRORS.CAPTCHA.DIFFERENT_DATASET_IDS.message)
         }
         return { storedCaptchas, receivedCaptchas, captchaIds }
     }
