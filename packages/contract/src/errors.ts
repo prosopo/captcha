@@ -44,6 +44,12 @@ export const ERRORS = {
         },
         SIGNER_UNDEFINED: {
             message: 'Signer undefined'
+        },
+        SIGNER_NOT_SUPPORTED: {
+            message: 'Signer is not supported. Use connect instead, e.g. contract.connect(signer)'
+        },
+        CANNOT_FIND_KEYPAIR: {
+            message: 'Cannot find keypair'
         }
     },
     DATASET: {
@@ -66,6 +72,9 @@ export const ERRORS = {
         },
         SOLUTION_HASH_ERROR: {
             message: 'error hashing solution'
+        },
+        INVALID_ITEM_FORMAT : {
+            message: 'only image and text item types allowed'
         }
     }
 }

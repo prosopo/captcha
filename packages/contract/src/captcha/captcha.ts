@@ -27,7 +27,7 @@ import {
 } from '../types';
 import { hexHash, HEX_HASH_BIT_LENGTH, imageHash } from './util';
 import { isHex } from '@polkadot/util';
-
+import {ProsopoEnvError} from "../handlers";
 
 // import {encodeAddress} from "@polkadot/util-crypto";
 
@@ -39,7 +39,7 @@ export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): D
 
         return <DatasetWithIds>dataset;
     } catch (err) {
-        throw new Error(`${ERRORS.DATASET.HASH_ERROR.message}:\n${err}`);
+        throw new ProsopoEnvError(err, ERRORS.DATASET.HASH_ERROR.message);
     }
 }
 
@@ -52,7 +52,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): Dataset {
     try {
         return DatasetSchema.parse(datasetJSON);
     } catch (err) {
-        throw new Error(`${ERRORS.DATASET.PARSE_ERROR.message}:\n${err}`);
+        throw new ProsopoEnvError(err, ERRORS.DATASET.PARSE_ERROR.message);
     }
 }
 
@@ -65,7 +65,7 @@ export function parseCaptchas(captchaJSON: JSON): CaptchaWithoutId[] {
     try {
         return CaptchasSchema.parse(captchaJSON);
     } catch (err) {
-        throw new Error(`${ERRORS.CAPTCHA.PARSE_ERROR.message}:\n${err}`);
+        throw new ProsopoEnvError(err, ERRORS.CAPTCHA.PARSE_ERROR.message);
     }
 }
 
@@ -78,7 +78,7 @@ export function parseCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
     try {
         return CaptchaSolutionSchema.parse(captchaJSON);
     } catch (err) {
-        throw new Error(`${ERRORS.CAPTCHA.PARSE_ERROR.message}:\n${err}`);
+        throw new ProsopoEnvError(err, ERRORS.CAPTCHA.PARSE_ERROR.message);
     }
 }
 
@@ -127,7 +127,7 @@ export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
             itemHashes.push(hash);
             captcha.items[index].hash = hash;
         } else {
-            throw (new Error('NotImplemented: only image and text item types allowed'));
+            throw new ProsopoEnvError(ERRORS.CAPTCHA.INVALID_ITEM_FORMAT.message);
         }
     }
 
