@@ -92,7 +92,7 @@ export class Tasks {
         const datasetHashes = addHashesToDataset(dataset, tree);
         datasetHashes.datasetId = tree.root?.hash;
         datasetHashes.tree = tree.layers;
-        await this.db?.storeDataset(hashSolutions(datasetHashes));
+        await this.db?.storeDataset({...datasetHashes, captchas: hashSolutions(datasetHashes.captchas)});
         writeJSONFile(file, {...datasetWithoutIds, datasetId: datasetHashes.datasetId}).catch((err) => {
             console.error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
         })
