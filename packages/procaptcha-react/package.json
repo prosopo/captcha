@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/procaptcha-react",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "main": "./dist/index.js",
@@ -15,7 +15,7 @@
   "dependencies": {
     "@mui/material": "^5.8.3",
     "@mui/styles": "^5.8.3",
-    "@prosopo/procaptcha": "0.1.5",
+    "@prosopo/procaptcha": "0.1.6",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },
