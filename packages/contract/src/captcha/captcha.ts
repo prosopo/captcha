@@ -110,24 +110,6 @@ export async function compareCaptchaSolutions(received: CaptchaSolution[], store
 }
 
 /**
- * Check whether the `solution` arrays in a CaptchaSolution and stored Captcha are equivalent
- * @param  {CaptchaSolution} received
- * @param  {Captcha} stored
- * @return {boolean}
- */
-export function compareCaptcha(received: CaptchaSolution, stored: Captcha): boolean {
-    if (stored.solution && stored.solution.length > 0) {
-    // this is a captcha we know the solution for
-        const arr1 = received.solution.sort();
-        const arr2 = stored.solution.sort();
-        return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]) && received.captchaId === stored.captchaId
-    }
-
-    // we don't know the solution so just assume it's correct
-    return true;
-}
-
-/**
  * Compute the hash of various types of captcha, loading any images and hashing them in the process
  * @param  {Captcha} captcha
  * @return {string} the hex string hash
