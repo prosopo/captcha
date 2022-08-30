@@ -25,7 +25,8 @@ import {
     DatasetSchema,
     DatasetWithIds
 } from '../types';
-import { hexHash, imageHash } from './util';
+import { hexHash, HEX_HASH_BIT_LENGTH, imageHash } from './util';
+import { isHex } from '@polkadot/util';
 
 
 // import {encodeAddress} from "@polkadot/util-crypto";
@@ -87,13 +88,22 @@ export function parseCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
  * @param  {Captcha[]} stored
  * @return {boolean}
  */
-export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Captcha[]): boolean {
+export async function compareCaptchaSolutions(received: CaptchaSolution[], stored: Captcha[]): Promise<boolean> {
     if (received.length && stored.length && received.length === stored.length) {
-        const receivedSorted = received.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1));
-        const storedSorted = stored.sort((a, b) => (a.captchaId > b.captchaId ? 1 : -1));
-        const successArr = receivedSorted.map((captcha, idx) => compareCaptcha(captcha, storedSorted[idx]));
-
-        return successArr.every((val) => val);
+        const hashes = await Promise.all(
+            stored
+                .filter(({ solved }) => solved)
+                .map(async ({ salt, items = [], target = '', captchaId, solved }, i) => ({
+                    hash: await computeCaptchaHash({
+                        solution: solved ? received[i].solution : [],
+                        salt,
+                        items,
+                        target,
+                    }),
+                    captchaId,
+                }))
+        );
+        return hashes.every(({ hash, captchaId }) => hash === captchaId);
     }
 
     return false;
@@ -124,18 +134,78 @@ export function compareCaptcha(received: CaptchaSolution, stored: Captcha): bool
  */
 export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
     const itemHashes: string[] = [];
-
-    for (const item of captcha.items) {
+    
+    for (const [item, index] of captcha.items.map((v, i) => [v, i])) {
         if (item.type === 'image') {
-            itemHashes.push(await imageHash(item.path as string));
+            const hash = await imageHash(item.path as string);
+            itemHashes.push(hash);
+            captcha.items[index].hash = hash;
         } else if (item.type === 'text') {
-            itemHashes.push(hexHash(item.text as string));
+            const hash = hexHash(item.text as string);
+            itemHashes.push(hash);
+            captcha.items[index].hash = hash;
         } else {
             throw (new Error('NotImplemented: only image and text item types allowed'));
         }
     }
 
-    return hexHash([captcha.target, captcha.solution, captcha.salt, itemHashes].join());
+    return hexHash(
+        [
+            captcha.target,
+            hashSolutions(captcha.solution) || [],
+            captcha.salt,
+            itemHashes,
+        ].join()
+    );
+}
+
+function hashSoltutionArray(arr: (string | number)[]) {
+    return arr
+        ?.map((solution) =>
+            isHex(solution, HEX_HASH_BIT_LENGTH)
+                ? solution
+                : hexHash(solution.toString())
+        )
+        .sort();
+}
+
+export function hashSolutions(solutions: (string | number)[]): string[];
+export function hashSolutions(solutions: CaptchaSolution[]): CaptchaSolution[];
+export function hashSolutions(dataset: DatasetWithIds): DatasetWithIds;
+
+export function hashSolutions(
+    arg0: (string | number | CaptchaSolution)[] | DatasetWithIds
+): (string | CaptchaSolution)[] | DatasetWithIds {
+    try {
+        if (arg0 instanceof Array) {
+            if (!arg0.length) {
+                return [];
+            }
+
+            if (typeof arg0[0] === "string" || typeof arg0[0] === "number") {
+                return hashSoltutionArray(arg0 as (string | number)[]);
+            } else {
+                return (arg0 as CaptchaSolution[]).map(
+                    ({ solution, ...rest }) => ({
+                        ...rest,
+                        solution: hashSoltutionArray(solution),
+                    })
+                );
+            }
+        } else {
+            return {
+                ...arg0,
+                captchas: arg0.captchas.map((captcha) => ({
+                    ...captcha,
+                    solution: hashSoltutionArray(captcha.solution),
+                })),
+            };
+        }
+    } catch (err) {
+        console.error(err);
+        // @ts-ignore
+        return arg0;
+    }
 }
 
 /**
