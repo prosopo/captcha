@@ -134,14 +134,14 @@ export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
     return hexHash(
         [
             captcha.target,
-            hashSolutions(captcha.solution) || [],
+            hashSolutionArray(captcha.solution) || [],
             captcha.salt,
             itemHashes,
         ].join()
     );
 }
 
-function hashSoltutionArray(arr: (string | number)[]) {
+function hashSolutionArray(arr: (string | number)[]) {
     return arr
         ?.map((solution) =>
             isHex(solution, HEX_HASH_BIT_LENGTH)
@@ -151,38 +151,12 @@ function hashSoltutionArray(arr: (string | number)[]) {
         .sort();
 }
 
-export function hashSolutions(solutions: (string | number)[]): string[];
-export function hashSolutions(solutions: CaptchaSolution[]): CaptchaSolution[];
-export function hashSolutions(dataset: DatasetWithIds): DatasetWithIds;
-
-export function hashSolutions(
-    arg0: (string | number | CaptchaSolution)[] | DatasetWithIds
-): (string | CaptchaSolution)[] | DatasetWithIds {
+export function hashSolutions<T>(solutions: T[]): T[] {
     try {
-        if (arg0 instanceof Array) {
-            if (!arg0.length) {
-                return [];
-            }
-
-            if (typeof arg0[0] === "string" || typeof arg0[0] === "number") {
-                return hashSoltutionArray(arg0 as (string | number)[]);
-            } else {
-                return (arg0 as CaptchaSolution[]).map(
-                    ({ solution, ...rest }) => ({
-                        ...rest,
-                        solution: hashSoltutionArray(solution),
-                    })
-                );
-            }
-        } else {
-            return {
-                ...arg0,
-                captchas: arg0.captchas.map((captcha) => ({
-                    ...captcha,
-                    solution: hashSoltutionArray(captcha.solution),
-                })),
-            };
-        }
+        return solutions?.map(({ solution, ...rest }: any) => ({
+            ...rest,
+            solution: hashSolutionArray(solution),
+        }));
     } catch (err) {
         console.error(err);
         // @ts-ignore
