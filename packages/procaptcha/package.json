@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/procaptcha",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "main": "./dist/index.js",
@@ -21,7 +21,7 @@
     "@polkadot/types": "^8.13.1",
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
-    "@prosopo/contract": "0.1.5",
+    "@prosopo/contract": "0.1.7",
     "axios": "^0.27.2"
   },
   "devDependencies": {
