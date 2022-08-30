@@ -63,6 +63,9 @@ export const ERRORS = {
         },
         INVALID_CAPTCHA_ID: {
             message: 'invalid captcha id'
+        },
+        SOLUTION_HASH_ERROR: {
+            message: 'error hashing solution'
         }
     }
 }
