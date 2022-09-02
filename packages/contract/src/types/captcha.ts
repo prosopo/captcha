@@ -30,7 +30,8 @@ export type CaptchaWithoutId = {
     salt: string,
     items: any[],
     target: string,
-    solution?: any
+    solution?: any,
+    solved?: boolean
 }
 
 export type CaptchaSolutionToUpdate = {
@@ -77,7 +78,7 @@ export interface CaptchaSolutionCommitment {
 export type CaptchaSolution = {
     captchaId: string
     salt: string,
-    solution: number[]
+    solution: (string | number)[]
 }
 
 export type CaptchaConfig = {
@@ -104,41 +105,45 @@ export type LastCorrectCaptcha = {
 export const CaptchaSchema = z.object({
     captchaId: z.union([z.string(), z.undefined()]),
     salt: z.string(),
-    solution: z.number().array().optional(),
+    solution: z.string().array().optional(),
     timeLimit: z.number().optional()
 })
 
 export const CaptchaWithIdSchema = z.object({
     captchaId: z.string(),
     salt: z.string(),
-    solution: z.number().array().optional()
+    solution: z.string().array().optional()
 })
 
 export const CaptchaWithIdAndSolutionSchema = z.object({
     captchaId: z.string(),
     salt: z.string(),
-    solution: z.number().array()
+    solution: z.string().array()
 })
 
-export const CaptchaImageSchema = z.object({
+const CaptchaItemSchema = z.object({
+    hash: z.string().optional(),
+})
+
+export const CaptchaImageSchema = CaptchaItemSchema.extend({
     path: z.string(),
     type: CaptchaItemTypesZod
 })
 export type CaptchaImage = z.infer<typeof CaptchaImageSchema>
 
-export const CaptchaTextSchema = z.object({
+export const CaptchaTextSchema = CaptchaItemSchema.extend({
     text: z.string(),
     type: CaptchaItemTypesZod
 })
 
 export const SelectAllCaptchaSchema = CaptchaSchema.extend({
-    solution: z.number().array().optional(),
+    solution: z.union([z.string(), z.number()]).array().optional(),
     items: z.union([z.array(CaptchaImageSchema), z.array(CaptchaTextSchema)]),
     target: z.string()
 })
 
 export const SelectAllSolvedCaptchaSchema = CaptchaWithIdAndSolutionSchema.extend({
-    solution: z.number().array(),
+    solution: z.string().array(),
     items: z.union([z.array(CaptchaImageSchema), z.string().array()]),
     target: z.string()
 })
@@ -149,7 +154,7 @@ export const CaptchasWithIdSchema = z.array(CaptchaWithIdSchema)
 
 export const CaptchaSolution = z.object({
     captchaId: z.string(),
-    solution: z.number().array(),
+    solution: z.union([z.string(), z.number()]).array(),
     salt: z.string(),
 })
 

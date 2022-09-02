@@ -15,7 +15,10 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { blake2AsHex } from '@polkadot/util-crypto';
 
+export const HEX_HASH_BIT_LENGTH = 256;
+
 export function hexHash (data: string | Uint8Array): string {
+    // default bit length is 256
     return blake2AsHex(data)
 }
 

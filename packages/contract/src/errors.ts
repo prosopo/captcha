@@ -70,6 +70,9 @@ export const ERRORS = {
         INVALID_CAPTCHA_ID: {
             message: 'invalid captcha id'
         },
+        SOLUTION_HASH_ERROR: {
+            message: 'error hashing solution'
+        },
         INVALID_ITEM_FORMAT : {
             message: 'only image and text item types allowed'
         }
