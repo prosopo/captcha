@@ -165,7 +165,9 @@ export const ERRORS = {
         INVALID_BLOCK_NO: {
             message: 'invalid block number'
         },
-
+        DIFFERENT_DATASET_IDS: {
+            message: 'dataset ids do not match'
+        }
     },
     DEVELOPER: {
         DAPP_CONTRACT_ADDRESS_MISSING: { message: 'DAPP_CONTRACT_ADDRESS is not set in .env file.' },

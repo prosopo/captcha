@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // Copyright 2021-2022 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -90,40 +91,46 @@ export class ProsopoDatabase implements Database {
             await this.tables.dataset?.updateOne({_id: parsedDataset.datasetId}, {$set: datasetDoc}, {upsert: true});
             // put the dataset id on each of the captcha docs and remove the solution
             const captchaDocs = parsedDataset.captchas
-                .map((captcha, index) => ({
+                .map(({solution, ...captcha}, index) => ({
                     ...captcha,
                     datasetId: parsedDataset.datasetId,
-                    index
+                    index,
+                    solved: !!solution
                 }));
 
 
             // create a bulk upsert operation and execute
-            await this.tables.captchas?.bulkWrite(captchaDocs.map((captchaDoc) => ({
-                updateOne: {
-                    filter: {_id: captchaDoc.captchaId},
-                    update: {$set: captchaDoc},
-                    upsert: true
-                }
-            })));
+            if (captchaDocs.length) {
+                // @ts-ignore
+                await this.tables.captchas?.bulkWrite(captchaDocs.map((captchaDoc) => ({
+                    updateOne: {
+                        filter: {_id: captchaDoc.captchaId},
+                        update: {$set: captchaDoc},
+                        upsert: true
+                    }
+                })));
+            }
 
             // insert any captcha solutions into the solutions collection
             const captchaSolutionDocs = parsedDataset.captchas.filter((captcha) => "solution" in captcha)
                 .map((captcha) => ({
                     captchaId: captcha.captchaId,
-                    solution: captcha.solution,
+                    solution: captcha.solution || [],
                     salt: captcha.salt,
                     datasetId: parsedDataset.datasetId,
                 }));
 
             // create a bulk upsert operation and execute
-            await this.tables.solutions?.bulkWrite(captchaSolutionDocs.map((captchaSolutionDoc) => ({
-                updateOne: {
-                    filter: {_id: captchaSolutionDoc.captchaId},
-                    update: {$set: captchaSolutionDoc},
-                    upsert: true
-                }
-            })));
-
+            if (captchaSolutionDocs.length) {
+                // @ts-ignore
+                await this.tables.solutions?.bulkWrite(captchaSolutionDocs.map((captchaSolutionDoc) => ({
+                    updateOne: {
+                        filter: {_id: captchaSolutionDoc.captchaId},
+                        update: {$set: captchaSolutionDoc},
+                        upsert: true
+                    }
+                })));
+            }
 
         } catch (err) {
             throw new ProsopoEnvError(err, ERRORS.DATABASE.DATASET_LOAD_FAILED.message);
@@ -142,7 +149,7 @@ export class ProsopoDatabase implements Database {
         }
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
         const cursor = this.tables.captchas?.aggregate([
-            {$match: {datasetId, solution: {$exists: solved}}},
+            {$match: {datasetId, solved}},
             {$sample: {size: sampleSize}},
             {
                 $project: {
@@ -223,16 +230,18 @@ export class ProsopoDatabase implements Database {
         }
 
         // create a bulk create operation and execute
-        await this.tables.solutions?.bulkWrite(captchas.map((captchaDoc) => ({
-            insertOne: {
-                document: {
-                    captchaId: captchaDoc.captchaId,
-                    solution: captchaDoc.solution,
-                    salt: captchaDoc.salt,
-                    datasetId: datasetId
+        if (captchas.length) {
+            await this.tables.solutions?.bulkWrite(captchas.map((captchaDoc) => ({
+                insertOne: {
+                    document: {
+                        captchaId: captchaDoc.captchaId,
+                        solution: captchaDoc.solution,
+                        salt: captchaDoc.salt,
+                        datasetId: datasetId
+                    }
                 }
-            }
-        })));
+            })));
+        }
     }
 
     /**
