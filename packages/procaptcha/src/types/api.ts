@@ -66,7 +66,7 @@ export interface GetCaptchaResponse {
 
 export interface CaptchaSolution {
   captchaId: string;
-  solution: number[];
+  solution: (string | number)[];
   salt: string;
 }
 
