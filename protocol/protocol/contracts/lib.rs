@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-#![feature(derive_default_enum)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
@@ -121,7 +120,8 @@ pub mod prosopo {
         fee: u32,
         payee: Payee,
         service_origin: Hash,
-        captcha_dataset_id: Hash,
+        dataset_id: Hash,
+        dataset_id_solutions: Hash,
     }
 
     /// RandomProvider is selected randomly by the contract for the client side application
@@ -168,7 +168,7 @@ pub mod prosopo {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaData {
         provider: AccountId,
-        merkle_tree_root: Hash,
+        dataset_id: Hash,
         captcha_type: u16,
     }
 
@@ -191,8 +191,8 @@ pub mod prosopo {
     pub struct CaptchaSolutionCommitment {
         // the Dapp User Account
         account: AccountId,
-        // The captcha dataset id (merkle_tree_root in Provider / CaptchaData)
-        captcha_dataset_id: Hash,
+        // The captcha dataset id (dataset_id in Provider / CaptchaData)
+        dataset_id: Hash,
         // Status of this solution - correct / incorrect?
         status: CaptchaStatus,
         // The Dapp Contract AccountId that the Dapp User wants to interact with
@@ -322,7 +322,8 @@ pub mod prosopo {
     pub struct ProviderAddDataset {
         #[ink(topic)]
         account: AccountId,
-        merkle_tree_root: Hash,
+        dataset_id: Hash,
+        dataset_id_solutions: Hash
     }
 
     // Event emitted when a provider unstakes
@@ -398,7 +399,7 @@ pub mod prosopo {
         account: AccountId,
         merkle_tree_root: Hash,
         contract: AccountId,
-        captcha_dataset_id: Hash,
+        dataset_id: Hash,
     }
 
     /// The Prosopo error types
@@ -441,6 +442,8 @@ pub mod prosopo {
         DappUserDoesNotExist,
         /// Returned if there are no active providers
         NoActiveProviders,
+        /// Returned if the dataset ID and dataset ID with solutions are identical
+        DatasetIdSolutionsSame
     }
 
     impl Prosopo {
@@ -492,7 +495,8 @@ pub mod prosopo {
                 balance,
                 fee,
                 service_origin,
-                captcha_dataset_id: Hash::default(),
+                dataset_id: Hash::default(),
+                dataset_id_solutions: Hash::default(),
                 payee,
             };
             self.providers.insert(provider_account, &provider);
@@ -548,7 +552,7 @@ pub mod prosopo {
             let balance = existing.balance + self.env().transferred_value();
 
             if balance >= self.provider_stake_default
-                && existing.captcha_dataset_id != Hash::default()
+                && existing.dataset_id != Hash::default()
             {
                 new_status = GovernanceStatus::Active;
             }
@@ -559,7 +563,8 @@ pub mod prosopo {
                 balance,
                 fee,
                 service_origin,
-                captcha_dataset_id: existing.captcha_dataset_id,
+                dataset_id: existing.dataset_id,
+                dataset_id_solutions: existing.dataset_id_solutions,
                 payee,
             };
 
@@ -653,30 +658,34 @@ pub mod prosopo {
 
         /// Add a new data set
         #[ink(message)]
-        pub fn provider_add_dataset(&mut self, merkle_tree_root: Hash) -> Result<(), Error> {
+        pub fn provider_add_dataset(&mut self, dataset_id: Hash, dataset_id_solutions: Hash) -> Result<(), Error> {
+            if dataset_id == dataset_id_solutions {
+                return Err(Error::DatasetIdSolutionsSame);
+            }
             let provider_id = self.env().caller();
             // the calling account must belong to the provider
             self.validate_provider_exists_and_has_funds(provider_id)?;
             let dataset = CaptchaData {
                 provider: provider_id,
-                merkle_tree_root,
+                dataset_id,
                 captcha_type: 0,
             };
 
             // create a new id and insert details of the new captcha data set if it doesn't exist
-            if self.captcha_data.get(merkle_tree_root).is_none() {
-                self.captcha_data.insert(merkle_tree_root, &dataset);
+            if self.captcha_data.get(dataset_id).is_none() {
+                self.captcha_data.insert(dataset_id, &dataset);
             }
 
             // set the captcha data id on the provider
             let mut provider = self.providers.get(&provider_id).unwrap();
-            provider.captcha_dataset_id = merkle_tree_root;
+            provider.dataset_id = dataset_id;
+            provider.dataset_id_solutions = dataset_id_solutions;
             let old_status = provider.status;
 
             // change the provider status to active if it was not active
             if provider.status != GovernanceStatus::Active
                 && provider.balance >= self.provider_stake_default
-                && merkle_tree_root != Hash::default()
+                && dataset_id != Hash::default()
             {
                 provider.status = GovernanceStatus::Active;
                 self.provider_change_status(provider_id, old_status, provider.status);
@@ -687,7 +696,8 @@ pub mod prosopo {
             // emit event
             self.env().emit_event(ProviderAddDataset {
                 account: provider_id,
-                merkle_tree_root,
+                dataset_id,
+                dataset_id_solutions
             });
 
             Ok(())
@@ -840,13 +850,13 @@ pub mod prosopo {
         pub fn dapp_user_commit(
             &mut self,
             contract: AccountId,
-            captcha_dataset_id: Hash,
+            dataset_id: Hash,
             user_merkle_tree_root: Hash,
             provider: AccountId,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             // Guard against incorrect data being submitted
-            self.get_captcha_data(captcha_dataset_id)?;
+            self.get_captcha_data(dataset_id)?;
             // Guard against solution commitment being submitted more than once
             if self
                 .captcha_solution_commitments
@@ -863,7 +873,7 @@ pub mod prosopo {
 
             let commitment = CaptchaSolutionCommitment {
                 account: caller,
-                captcha_dataset_id,
+                dataset_id: dataset_id,
                 status: CaptchaStatus::Pending,
                 contract,
                 provider,
@@ -879,7 +889,7 @@ pub mod prosopo {
                 account: caller,
                 merkle_tree_root: user_merkle_tree_root,
                 contract,
-                captcha_dataset_id,
+                dataset_id: dataset_id,
             });
             Ok(())
         }
@@ -1140,12 +1150,12 @@ pub mod prosopo {
         ///
         /// Returns an error if the dapp does not exist
         #[ink(message)]
-        pub fn get_captcha_data(&self, captcha_dataset_id: Hash) -> Result<CaptchaData, Error> {
-            if self.captcha_data.get(&captcha_dataset_id).is_none() {
+        pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
+            if self.captcha_data.get(&dataset_id).is_none() {
                 ink_env::debug_println!("{}", "CaptchaDatasetDoesNotExist");
                 return Err(Error::CaptchaDataDoesNotExist);
             }
-            let captcha_data = self.captcha_data.get(&captcha_dataset_id);
+            let captcha_data = self.captcha_data.get(&dataset_id);
             Ok(captcha_data.unwrap())
         }
 
@@ -1639,8 +1649,9 @@ pub mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
-            let root = str_to_hash("merkle tree".to_string());
-            contract.provider_add_dataset(root).ok();
+            let root1 = str_to_hash("merkle tree".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            contract.provider_add_dataset(root1, root2).ok();
             let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
 
             // events are the register, stake, add data set
@@ -1653,7 +1664,8 @@ pub mod prosopo {
 
             if let Event::ProviderAddDataset(ProviderAddDataset {
                 account,
-                merkle_tree_root,
+                 dataset_id: dataset_id,
+                 dataset_id_solutions: dataset_id_solutions,
             }) = decoded_event_unstake
             {
                 assert_eq!(
@@ -1661,8 +1673,8 @@ pub mod prosopo {
                     "encountered invalid ProviderAddDataset.account"
                 );
                 assert_eq!(
-                    merkle_tree_root, root,
-                    "encountered invalid ProviderAddDataset.merkle_tree_root"
+                    dataset_id, root1,
+                    "encountered invalid ProviderAddDataset.dataset_id"
                 );
             } else {
                 panic!("encountered unexpected event kind: expected a ProviderAddDataset event");
@@ -1686,8 +1698,9 @@ pub mod prosopo {
             );
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
-            let root = str_to_hash("merkle tree".to_string());
-            let result = contract.provider_add_dataset(root).unwrap_err();
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            let result = contract.provider_add_dataset(root1, root2).unwrap_err();
             assert_eq!(ProviderInsufficientFunds, result)
         }
 
@@ -1885,11 +1898,12 @@ pub mod prosopo {
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            let root = str_to_hash("blah".to_string());
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
-            contract.provider_add_dataset(root).ok();
+            contract.provider_add_dataset(root1, root2).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1906,7 +1920,7 @@ pub mod prosopo {
             //Dapp User commit
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
+                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account)
                 .ok();
 
             // check that the data is in the captcha_solution_commitments hashmap
@@ -1933,13 +1947,14 @@ pub mod prosopo {
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            let root = str_to_hash("merkle tree root".to_string());
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
 
             let provider = contract.providers.get(&provider_account).unwrap();
             // can only add data set after staking
-            contract.provider_add_dataset(root).ok();
+            contract.provider_add_dataset(root1, root2).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -1957,7 +1972,7 @@ pub mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
+                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account)
                 .ok();
 
             // Call from the provider account to mark the solution as approved
@@ -2009,11 +2024,12 @@ pub mod prosopo {
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            let root = str_to_hash("merkle tree root".to_string());
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
-            contract.provider_add_dataset(root).ok();
+            contract.provider_add_dataset(root1, root2).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2031,7 +2047,7 @@ pub mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
+                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account)
                 .ok();
 
             // Call from the provider account to mark the wrong solution as approved
@@ -2061,11 +2077,12 @@ pub mod prosopo {
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            let root = str_to_hash("merkle tree root".to_string());
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
-            contract.provider_add_dataset(root).ok();
+            contract.provider_add_dataset(root1, root2).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2083,7 +2100,7 @@ pub mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
+                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account)
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
@@ -2134,11 +2151,12 @@ pub mod prosopo {
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            let root = str_to_hash("merkle tree root".to_string());
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
-            contract.provider_add_dataset(root).ok();
+            contract.provider_add_dataset(root1, root2);
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2158,7 +2176,7 @@ pub mod prosopo {
             ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_user_account);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root, user_root, provider_account)
+                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account)
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
@@ -2212,8 +2230,9 @@ pub mod prosopo {
             let balance = 20000000000000;
             ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
-            let root = str_to_hash("merkle tree".to_string());
-            contract.provider_add_dataset(root);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            contract.provider_add_dataset(root1, root2);
             let registered_provider_account = contract.providers.get(&provider_account);
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
