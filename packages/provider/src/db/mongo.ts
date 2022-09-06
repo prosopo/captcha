@@ -21,11 +21,12 @@ import {ERRORS} from '../errors';
 import {Database, DatasetRecord, PendingCaptchaRequestRecord, Tables} from '../types';
 import {
     Captcha,
+    CaptchaRaw,
     CaptchaSolution,
     CaptchaStates,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
-    ProsopoEnvError
+    ProsopoEnvError,
 } from '@prosopo/contract';
 import consola from "consola";
 
@@ -143,7 +144,7 @@ export class ProsopoDatabase implements Database {
      * @param {string}   datasetId  the id of the data set
      * @param {number}   size       the number of records to be returned
      */
-    async getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
+    async getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<CaptchaRaw[] | undefined> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.getRandomCaptcha.name, datasetId);
         }
@@ -161,7 +162,7 @@ export class ProsopoDatabase implements Database {
 
         if (docs && docs.length) {
             // drop the _id field
-            return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
+            return docs.map(({_id, ...keepAttrs}) => keepAttrs) as CaptchaRaw[];
         }
 
         throw new ProsopoEnvError(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message, this.getRandomCaptcha.name, {
