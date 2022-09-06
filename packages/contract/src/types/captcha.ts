@@ -16,7 +16,6 @@
 import { z } from 'zod'
 import { AccountId, Hash } from '@polkadot/types/interfaces'
 import { u32, u64 } from '@polkadot/types'
-import { Override } from './util';
 // import {ProsopoConfigSchema} from "./config";
 
 export enum CaptchaTypes { SelectAll = 'SelectAll'}
@@ -30,15 +29,20 @@ const CaptchaItemTypesZod = z.nativeEnum(CaptchaItemTypes)
 export type RawSolution = number;
 export type HashedSolution = string;
 
-export type CaptchaWithoutId = {
-    salt: string,
-    items: any[],
-    target: string,
-    solution?: HashedSolution[],
-    solved?: boolean
+type CaptchaWithoutIdBase = {
+    salt: string;
+    items: any[];
+    target: string;
+    solved?: boolean;
+};
+
+export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
+    solution?: HashedSolution[];
 }
 
-export type CaptchaWithoutIdRaw = Override<CaptchaWithoutId, { solution?: RawSolution[] }>
+export interface CaptchaWithoutIdRaw extends CaptchaWithoutIdBase {
+    solution?: RawSolution[];
+}
 
 export type CaptchaSolutionToUpdate = {
     captchaId: string,
@@ -46,22 +50,29 @@ export type CaptchaSolutionToUpdate = {
     solution: HashedSolution[]
 }
 
-export interface Captcha extends CaptchaWithoutId {
-    captchaId: string
-    assetURI?: string
-    datasetId?: string
+type CaptchaBase = {
+    captchaId: string;
+    assetURI?: string;
+    datasetId?: string;
+};
+
+export interface Captcha extends CaptchaWithoutId, CaptchaBase {}
+
+export interface CaptchaRaw extends CaptchaWithoutIdRaw, CaptchaBase {}
+
+type DatasetBase = {
+    datasetId?: Hash | string | Uint8Array;
+    format: CaptchaTypes;
+    tree?: string[][];
+};
+
+export interface Dataset extends DatasetBase {
+    captchas: CaptchaWithoutId[] | Captcha[];
 }
 
-export type CaptchaRaw = Override<Captcha, { solution?: RawSolution[] }>
-
-export type Dataset = {
-    datasetId?: Hash | string | Uint8Array,
-    captchas: CaptchaWithoutId[] | Captcha[],
-    format: CaptchaTypes,
-    tree?: string[][]
+export interface DatasetRaw extends DatasetBase {
+    captchas: CaptchaWithoutIdRaw[];
 }
-
-export type DatasetRaw = Override<Dataset, { captchas: CaptchaWithoutIdRaw[] }>
 
 export type DatasetWithIds = {
     datasetId?: Hash | string | Uint8Array,
@@ -85,12 +96,17 @@ export interface CaptchaSolutionCommitment {
     completed_at: u64,
 }
 
-export type CaptchaSolutionRaw = Override<CaptchaSolution, { solution: RawSolution[] }>
+type CaptchaSolutionBase = {
+    captchaId: string;
+    salt: string;
+};
 
-export type CaptchaSolution = {
-    captchaId: string
-    salt: string,
-    solution: HashedSolution[]
+export interface CaptchaSolution extends CaptchaSolutionBase {
+    solution: HashedSolution[];
+}
+
+export interface CaptchaSolutionRaw extends CaptchaSolutionBase {
+    solution: RawSolution[];
 }
 
 export type CaptchaConfig = {
