@@ -71,6 +71,45 @@ export function parseCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
     }
 }
 
+function captchaSort<T extends { captchaId: string }>(a: T, b: T) {
+    return a.captchaId.localeCompare(b.captchaId);
+}
+
+async function sortAndComputeHashes(
+    received: CaptchaSolution[],
+    stored: Captcha[]
+): Promise<{ captchaId: string; hash: string }[]> {
+    const _received = received.sort(captchaSort);
+    const _stored = stored.sort(captchaSort);
+
+    return Promise.all(
+        _stored
+            .filter(({ solved }) => solved)
+            .map(
+                async (
+                    { salt, items = [], target = "", captchaId, solved },
+                    i
+                ) => {
+                    if (captchaId != _received[i].captchaId) {
+                        throw new ProsopoEnvError(
+                            ERRORS.CAPTCHA.ID_MISSMATCH.message
+                        );
+                    }
+
+                    return {
+                        hash: await computeCaptchaHash({
+                            solution: solved ? received[i].solution : [],
+                            salt,
+                            items,
+                            target,
+                        }),
+                        captchaId,
+                    };
+                }
+            )
+    );
+}
+
 /**
  * Take an array of CaptchaSolutions and Captchas and check if the solutions are the same for each pair
  * @param  {CaptchaSolution[]} received
@@ -79,37 +118,7 @@ export function parseCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
  */
 export async function compareCaptchaSolutions(received: CaptchaSolution[], stored: Captcha[]): Promise<boolean> {
     if (received.length && stored.length && received.length === stored.length) {
-        const hashes = await Promise.all(
-            stored
-                .filter(({ solved }) => solved)
-                .map(
-                    async ({
-                        salt,
-                        items = [],
-                        target = "",
-                        captchaId,
-                        solved,
-                    }) => {
-                        const i = received.findIndex(
-                            ({ captchaId: id }) => id === captchaId
-                        );
-
-                        if (i === -1) {
-                            return { captchaId: "1", hash: "2" };
-                        }
-
-                        return {
-                            hash: await computeCaptchaHash({
-                                solution: solved ? received[i].solution : [],
-                                salt,
-                                items,
-                                target,
-                            }),
-                            captchaId,
-                        };
-                    }
-                )
-        );
+        const hashes = await sortAndComputeHashes(received, stored);
         return hashes.every(({ hash, captchaId }) => hash === captchaId);
     }
 
