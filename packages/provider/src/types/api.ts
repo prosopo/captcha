@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { z } from 'zod'
-import { Captcha, CaptchaSolutionSchema } from '@prosopo/contract'
+import { Captcha, CaptchaSolutionSchema, Override, RawSolution } from '@prosopo/contract'
 import { AnyJson } from '@polkadot/types/types/codec'
 
 export interface CaptchaWithProof {
-    captcha: Captcha
+    captcha: Override<Captcha, { solution?: RawSolution[] }>
     proof: string[][]
 }
 
