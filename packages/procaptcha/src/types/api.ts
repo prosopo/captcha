@@ -18,10 +18,7 @@
 //   export default value;
 // }
 
-import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
-
-// import { SubmittableResult } from "@polkadot/api";
-import {Captcha, CaptchaStatus} from "@prosopo/contract";
+import { Captcha } from "@prosopo/contract";
 
 export interface ProsopoRandomProviderResponse {
   providerId: string,
@@ -40,34 +37,14 @@ export interface ProposoProvider {
   status: string; 
 }
 
-// export interface CaptchaResponseCaptchaItem {
-//   captchaId: string;
-//   datasetId: string;
-//   items: CaptchaImageSchema[];
-//   target: string;
-//   salt?: string;
-//   solution?: number[];
-// }
-
-export interface CaptchaImageSchema {
-  path: string,
-  type: string
-}
-
 export interface CaptchaResponseCaptcha {
-  captcha: Captcha;
+  captcha: Omit<Captcha, 'solution'>;
   proof: string[][];
 }
 
 export interface GetCaptchaResponse {
   captchas: CaptchaResponseCaptcha[];
   requestHash: string;
-}
-
-export interface CaptchaSolution {
-  captchaId: string;
-  solution: (string | number)[];
-  salt: string;
 }
 
 export interface CaptchaSolutionResponse {
