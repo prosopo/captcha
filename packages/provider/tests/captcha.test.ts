@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaMerkleTree, CaptchaSolution, CaptchaTypes, CaptchaWithoutId, Dataset, hashSolutions } from '@prosopo/contract';
-import { expect } from 'chai';
-import * as path from 'path';
+import chai from "chai";
+import chaiAsPromised from "chai-as-promised";import * as path from 'path';
 import {
     addHashesToDataset, compareCaptchaSolutions,
     computeCaptchaHash, computeCaptchaSolutionHash, computePendingRequestHash,
     parseCaptchaDataset, parseCaptchaSolutions
 } from '@prosopo/contract';
 
+chai.should();
+chai.use(chaiAsPromised);
+const expect = chai.expect;
 
 const DATASET = {
     format: 'SelectAll' as CaptchaTypes,
@@ -203,8 +206,7 @@ describe('CAPTCHA FUNCTIONS', () => {
                 solved: true,
             },
         ];
-
-        expect(await compareCaptchaSolutions(received, stored)).to.be.false;
+        await expect(compareCaptchaSolutions(received, stored)).to.eventually.be.rejected;
     });
 
     it('Mismatched length captcha solutions returns false', async () => {
