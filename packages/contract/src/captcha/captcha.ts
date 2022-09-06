@@ -17,16 +17,18 @@ import { ERRORS } from '../errors';
 import { CaptchaMerkleTree } from './merkle';
 import {
     AssetsResolver,
-    Captcha, CaptchaImage, CaptchaSolution,
+    Captcha, CaptchaImage, CaptchaRaw, CaptchaSolution,
+    CaptchaSolutionRaw,
     CaptchaSolutionSchema,
-    CaptchasSchema,
     CaptchaWithoutId,
     Dataset,
+    DatasetRaw,
     DatasetSchema,
-    DatasetWithIds
+    DatasetWithIds,
+    HashedSolution,
+    RawSolution
 } from '../types';
-import { hexHash, HEX_HASH_BIT_LENGTH, imageHash } from './util';
-import { isHex } from '@polkadot/util';
+import { hexHash, imageHash } from './util';
 import {ProsopoEnvError} from "../handlers";
 
 // import {encodeAddress} from "@polkadot/util-crypto";
@@ -48,24 +50,11 @@ export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): D
  * @return {JSON} captcha dataset, stored in JSON
  * @param datasetJSON
  */
-export function parseCaptchaDataset(datasetJSON: JSON): Dataset {
+export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
     try {
         return DatasetSchema.parse(datasetJSON);
     } catch (err) {
         throw new ProsopoEnvError(err, ERRORS.DATASET.PARSE_ERROR.message);
-    }
-}
-
-/**
- * Make sure captchas are in the correct format
- * @param {JSON} captchaJSON captchas that have been passed in via dataset file
- * @return {CaptchaWithoutId[]} an array of parsed captchas that have not yet been hashed and have no IDs
- */
-export function parseCaptchas(captchaJSON: JSON): CaptchaWithoutId[] {
-    try {
-        return CaptchasSchema.parse(captchaJSON);
-    } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.CAPTCHA.PARSE_ERROR.message);
     }
 }
 
@@ -93,15 +82,33 @@ export async function compareCaptchaSolutions(received: CaptchaSolution[], store
         const hashes = await Promise.all(
             stored
                 .filter(({ solved }) => solved)
-                .map(async ({ salt, items = [], target = '', captchaId, solved }, i) => ({
-                    hash: await computeCaptchaHash({
-                        solution: solved ? received[i].solution : [],
+                .map(
+                    async ({
                         salt,
-                        items,
-                        target,
-                    }),
-                    captchaId,
-                }))
+                        items = [],
+                        target = "",
+                        captchaId,
+                        solved,
+                    }) => {
+                        const i = received.findIndex(
+                            ({ captchaId: id }) => id === captchaId
+                        );
+
+                        if (i === -1) {
+                            return { captchaId: "1", hash: "2" };
+                        }
+
+                        return {
+                            hash: await computeCaptchaHash({
+                                solution: solved ? received[i].solution : [],
+                                salt,
+                                items,
+                                target,
+                            }),
+                            captchaId,
+                        };
+                    }
+                )
         );
         return hashes.every(({ hash, captchaId }) => hash === captchaId);
     }
@@ -134,35 +141,29 @@ export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
     return hexHash(
         [
             captcha.target,
-            hashSolutionArray(captcha.solution) || [],
+            captcha.solution,
             captcha.salt,
             itemHashes,
         ].join()
     );
 }
 
-function hashSolutionArray(arr: (string | number)[]) {
-    return arr
-        ?.map((solution) =>
-            isHex(solution, HEX_HASH_BIT_LENGTH)
-                ? solution
-                : hexHash(solution.toString())
-        )
-        .sort();
+export function hashSolutions(arr?: RawSolution[]): HashedSolution[] {
+    return arr?.map((solution) => hexHash(solution.toString())).sort() || [];
 }
 
-export function hashSolutions<T>(solutions: T[]): T[] {
-    try {
-        return solutions?.map(({ solution, ...rest }: any) => ({
-            ...rest,
-            solution: hashSolutionArray(solution),
-        }));
-    } catch (err) {
-        console.error(err);
-        // @ts-ignore
-        return arg0;
-    }
-}
+// export function hashSolutions<T>(solutions: T[]): T[] {
+//     try {
+//         return solutions?.map(({ solution, ...rest }: any) => ({
+//             ...rest,
+//             solution: hashSolutionRaw(solution),
+//         }));
+//     } catch (err) {
+//         console.error(err);
+//         // @ts-ignore
+//         return arg0;
+//     }
+// }
 
 /**
  * Create a unique solution commitment
@@ -173,32 +174,32 @@ export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
     return hexHash([captcha.captchaId, captcha.solution, captcha.salt].join());
 }
 
-/**
- * Compute hashes for an array of captchas
- * @param  {Captcha[]} captchas
- * @return {Promise<CaptchaSolution[]>} captchasWithHashes
- */
-export async function computeCaptchaHashes(captchas: CaptchaWithoutId[]): Promise<CaptchaSolution[]> {
-    const captchasWithHashes: CaptchaSolution[] = [];
+// /**
+//  * Compute hashes for an array of captchas
+//  * @param  {Captcha[]} captchas
+//  * @return {Promise<CaptchaSolution[]>} captchasWithHashes
+//  */
+// export async function computeCaptchaHashes(captchas: CaptchaWithoutId[]): Promise<CaptchaSolution[]> {
+//     const captchasWithHashes: CaptchaSolution[] = [];
 
-    for (const captcha of captchas) {
-        const captchaId = await computeCaptchaHash(captcha);
-        const captchaWithId: Captcha = {captchaId, ...captcha};
-        const captchaSol = convertCaptchaToCaptchaSolution(captchaWithId);
+//     for (const captcha of captchas) {
+//         const captchaId = await computeCaptchaHash(captcha);
+//         const captchaWithId: Captcha = {captchaId, ...captcha};
+//         const captchaSol = convertCaptchaToCaptchaSolution(captchaWithId);
 
-        captchasWithHashes.push(captchaSol);
-    }
+//         captchasWithHashes.push(captchaSol);
+//     }
 
-    return captchasWithHashes;
-}
+//     return captchasWithHashes;
+// }
 
 /**
  * Map a Captcha to a Captcha solution (drop items, target, etc.)
  * @param  {Captcha} captcha
  * @return {CaptchaSolution}
  */
-export function convertCaptchaToCaptchaSolution(captcha: Captcha): CaptchaSolution {
-    return {captchaId: captcha.captchaId, salt: captcha.salt, solution: captcha.solution}
+export function convertCaptchaToCaptchaSolution(captcha: CaptchaRaw): CaptchaSolutionRaw {
+    return {captchaId: captcha.captchaId, salt: captcha.salt, solution: captcha.solution || []}
 }
 
 /**
