@@ -572,11 +572,10 @@ describe("CONTRACT TASKS", () => {
                 accountAddress(dappUserAccount),
                 accountAddress(dappContractAccount),
                 requestHash,
-        JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
-        dappUserCommitResponse.blockHash as string,
-        dappUserCommitResponse.result.txHash.toString()
+                JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
+                dappUserCommitResponse.blockHash as string,
+                dappUserCommitResponse.result.txHash.toString()
             );
-
 
             expect(result.captchas.length).to.be.eq(2);
             const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId);
@@ -802,7 +801,6 @@ describe("CONTRACT TASKS", () => {
                 accountAddress(dappUserAccount),
                 accountAddress(dappAccount)
             );
-
             const {captchas, requestHash} =
         await dappUserTasks.getRandomCaptchasAndRequestHash(
           provider.captcha_dataset_id as string,
