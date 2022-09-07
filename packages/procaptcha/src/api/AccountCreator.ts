@@ -13,8 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import {ApiPromise, SubmittableResult} from "@polkadot/api";
-import {Abi, ContractPromise} from "@polkadot/api-contract";
+import {ApiPromise} from "@polkadot/api";
 import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
 import {ProviderInterface} from "@polkadot/rpc-provider/types";
 import AsyncFactory from "./AsyncFactory";
@@ -47,16 +46,20 @@ export class AccountCreator extends AsyncFactory {
             keyring = new Keyring({type: 'sr25519', ss58Format: this.api.registry.chainSS58});
         }
 
-        const account = await this.generateMnemonic(keyring);
-        return address ? {address: address, meta: {source, name: account.address}} : {
-            address: account.address.length === 42
-                ? account.address
-                : encodeAddress(decodeAddress(account.address), this.api.registry.chainSS58),
-            meta: {source, name: account.address},
+
+        if (address) {
+            return {address: address, meta: {source, name: address}}
+        } else {
+            const account = await this.generateMnemonic(keyring);
+            return {
+                address: account.address.length === 42
+                    ? account.address
+                    : encodeAddress(decodeAddress(account.address), this.api.registry.chainSS58),
+                meta: {source, name: account.address},
+            }
         }
+
+
     }
 
-
 }
-
-export default AccountCreator;

@@ -13,13 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import {web3Enable, web3FromSource, web3Accounts} from "@polkadot/extension-dapp";
 import {InjectedAccountWithMeta, InjectedExtension} from "@polkadot/extension-inject/types"
 import storage from "../modules/storage";
 import {IExtensionInterface} from "../types/client";
 import AsyncFactory from "./AsyncFactory";
 import {ProsopoEnvError} from "@prosopo/contract";
-import AccountCreator from "./AccountCreator";
+import {AccountCreator} from "./AccountCreator";
 import {WsProvider} from "@polkadot/rpc-provider";
 
 
