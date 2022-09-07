@@ -21,18 +21,13 @@ import {
     IExtensionInterface
 } from "../types/client";
 import {ProsopoRandomProviderResponse} from "../types/api";
-
 import {ProsopoContract} from "../api/ProsopoContract";
 import {getProsopoContract, getWsProvider} from "./contract";
 import {getExtension} from "./extension";
 import {ProviderApi} from "../api/ProviderApi";
 import {ProsopoCaptchaApi} from "./ProsopoCaptchaApi";
 import {ProsopoEnvError} from "@prosopo/contract";
-import {AccountCreator} from "../api/AccountCreator";
 import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
-import storage from "./storage";
-// import { Extension } from "../api";
-
 
 export class ProsopoCaptchaClient {
 
@@ -40,7 +35,6 @@ export class ProsopoCaptchaClient {
     public status: ICaptchaStatusReducer;
     public callbacks: CaptchaEventCallbacks | undefined;
     public providerApi: ProviderApi;
-    // public config: ProsopoCaptchaConfig;
 
     private static extension: IExtensionInterface;
     private static contract: ProsopoContract | undefined;
@@ -52,7 +46,6 @@ export class ProsopoCaptchaClient {
         this.status = status;
         this.callbacks = callbacks;
         this.providerApi = new ProviderApi(manager.state.config);
-        // this.config = manager.state.config;
     }
 
     public getExtension() {
@@ -75,50 +68,24 @@ export class ProsopoCaptchaClient {
         return ProsopoCaptchaClient.captchaApi;
     }
 
-    public async onLoad() {
-        let contractAddress = ProsopoCaptchaClient.contract?.address;
+    public async onLoad(createAccount?: boolean) {
         let account: InjectedAccountWithMeta | undefined
-        console.log(this.manager.state)
-        console.log('web3: ', this.manager.state.config['web3']);
-
-        if (!this.manager.state.config['web3']) {
-            const accountCreator = await AccountCreator.create(getWsProvider(this.manager.state.config['dappUrl']));
-            const storedAccount = storage.getAccount();
-            account = await accountCreator.createAccount(undefined, storedAccount)
-
-        }
 
         if (!ProsopoCaptchaClient.extension) {
             try {
-                const accounts = (!this.manager.state.config['web3'] && account) ? [account] : undefined
-                ProsopoCaptchaClient.extension = await getExtension(this.manager.state.config['web3'], accounts);
+                ProsopoCaptchaClient.extension = await getExtension(this.manager.state.config['web3']);
             } catch (err) {
                 throw new ProsopoEnvError(err);
             }
         }
 
-        if (contractAddress === undefined) {
-
-            ({contractAddress} = await this.providerApi.getContractAddress());
-            console.log("onLoad contract address: ", contractAddress);
-
-        }
-        console.log("Updating contract address in manager: ", contractAddress);
-        if (contractAddress) {
-            this.manager.update({contractAddress});
-            console.log(JSON.stringify(this.manager.state))
-        }
-
         if (this.callbacks?.onLoad) {
-            this.callbacks.onLoad(ProsopoCaptchaClient.extension, contractAddress);
+            this.callbacks.onLoad(ProsopoCaptchaClient.extension, this.manager.state.config['prosopoContractAccount']);
         }
 
-
-
-        if (account && contractAddress) {
-            console.log("Update account: ", account);
-            this.manager.update({account: account});
-            console.log(JSON.stringify(this.manager.state))
+        if (createAccount) {
+            //this.manager.update({account: account});
+            const account = await this.getExtension().createAccount()
             await this.onAccountChange(account);
         }
 
@@ -126,9 +93,6 @@ export class ProsopoCaptchaClient {
 
     public async onAccountChange(account?: TExtensionAccount) {
         console.log("onAccountChange state", this.manager.state)
-        if(!this.manager.state.contractAddress){
-            throw new ProsopoEnvError(`Contract address is not set`, 'onAccountChange', this.manager.state);
-        }
 
         if (!account) {
             this.onAccountUnset();
@@ -142,8 +106,12 @@ export class ProsopoCaptchaClient {
         }
 
         try {
-            ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account,
-                getWsProvider(this.manager.state.config['dappUrl']));
+            ProsopoCaptchaClient.contract = await getProsopoContract(
+                this.manager.state.config['prosopoContractAccount'],
+                this.manager.state.config['dappAccount'],
+                account,
+                getWsProvider(this.manager.state.config['dappUrl'])
+            );
         } catch (err) {
             throw new ProsopoEnvError(err);
         }

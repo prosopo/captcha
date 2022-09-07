@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { ApiPromise, SubmittableResult } from "@polkadot/api";
-import { Abi, ContractPromise } from "@polkadot/api-contract";
-import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { ProviderInterface } from "@polkadot/rpc-provider/types";
+import {ApiPromise, SubmittableResult} from "@polkadot/api";
+import {Abi, ContractPromise} from "@polkadot/api-contract";
+import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
+import {ProviderInterface} from "@polkadot/rpc-provider/types";
 import AsyncFactory from "./AsyncFactory";
 import {decodeAddress, encodeAddress, Keyring} from "@polkadot/keyring";
 import {KeyringPair} from "@polkadot/keyring/types";
@@ -25,11 +25,12 @@ import {cryptoWaitReady, mnemonicGenerate} from "@polkadot/util-crypto";
 export class AccountCreator extends AsyncFactory {
 
     protected api: ApiPromise;
+
     /**
      * @param providerInterface
      */
     public async init(providerInterface: ProviderInterface) {
-        this.api = await ApiPromise.create({ provider: providerInterface });
+        this.api = await ApiPromise.create({provider: providerInterface});
         return this;
     }
 
@@ -39,7 +40,7 @@ export class AccountCreator extends AsyncFactory {
         return keyring.addFromMnemonic(mnemonic)
     }
 
-    public async createAccount( keyring?: Keyring, address?: string): Promise<InjectedAccountWithMeta> {
+    public async createAccount(keyring?: Keyring, address?: string): Promise<InjectedAccountWithMeta> {
         const source = 'procaptcha';
 
         if (!keyring) {
@@ -51,7 +52,7 @@ export class AccountCreator extends AsyncFactory {
             address: account.address.length === 42
                 ? account.address
                 : encodeAddress(decodeAddress(account.address), this.api.registry.chainSS58),
-            meta: {source},
+            meta: {source, name: account.address},
         }
     }
 

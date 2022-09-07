@@ -13,9 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import Extension from "../api/Extension";
-import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
+import ExtensionWeb2 from "../api/ExtensionWeb2";
+import ExtensionWeb3 from "../api/ExtensionWeb2";
+import {IExtensionInterface} from "../types/index";
 
-export async function getExtension(web3: boolean, accounts?: InjectedAccountWithMeta[]): Promise<Extension> {
-    return await Extension.create(web3, accounts);
+export async function getExtension(web3: boolean): Promise<IExtensionInterface> {
+    if (web3) {
+        return await ExtensionWeb3.create();
+    } else {
+        return await ExtensionWeb2.create()
+    }
 }
