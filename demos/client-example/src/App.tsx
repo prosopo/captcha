@@ -74,6 +74,7 @@ function App() {
           options={clientInterface.getExtension().getAccounts()}
           onChange={clientInterface.onAccountChange.bind(clientInterface)}
         />}
+      <div><span style={{width: "30%", wordBreak: "break-all"}}>{JSON.stringify(manager.state)}</span></div>
 
       <CaptchaContextManager.Provider value={manager}>
         {showCaptchas &&
