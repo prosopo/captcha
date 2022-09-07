@@ -48,7 +48,7 @@ export class AccountCreator extends AsyncFactory {
         }
 
         const account = await this.generateMnemonic(keyring);
-        return address ? {address: address, meta: {source}} : {
+        return address ? {address: address, meta: {source, name: account.address}} : {
             address: account.address.length === 42
                 ? account.address
                 : encodeAddress(decodeAddress(account.address), this.api.registry.chainSS58),
