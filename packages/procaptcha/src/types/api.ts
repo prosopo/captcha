@@ -35,9 +35,9 @@ export interface ProposoProvider {
   balance: string;
   captchaDatasetId: string;
   fee: string;
-  payee: string; 
+  payee: string;
   serviceOrigin: string;
-  status: string; 
+  status: string;
 }
 
 // export interface CaptchaResponseCaptchaItem {
@@ -82,4 +82,5 @@ export interface ProsopoCaptchaConfig {
   "dappAccount": string;
   "dappUrl": string;
   "solutionThreshold": number;
+  "web3": boolean;
 }

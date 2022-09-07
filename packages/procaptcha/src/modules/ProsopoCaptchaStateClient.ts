@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { ICaptchaStateReducer, TCaptchaSubmitResult } from "../types/client";
-import { CaptchaSolution, CaptchaSolutionResponse, GetCaptchaResponse } from "../types/api";
-import { TransactionResponse } from "../types/contract";
+import { CaptchaSolution, GetCaptchaResponse } from "../types/api";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
 import { convertCaptchaToCaptchaSolution } from "@prosopo/contract";
@@ -70,7 +69,7 @@ export class ProsopoCaptchaStateClient {
             return;
         }
 
-        const signer = this.context.getExtension().getExtension().signer;
+        const signer = this.context.getExtension().getExtension()?.signer;
 
         const currentCaptcha = captchaChallenge!.captchas[captchaIndex];
         const { datasetId } = currentCaptcha.captcha;
@@ -79,24 +78,29 @@ export class ProsopoCaptchaStateClient {
 
         let submitResult: TCaptchaSubmitResult | Error;
 
-        try {
-            submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, datasetId!, solutions);
-        } catch (err) {
-            submitResult = err as Error;
-        }
+        if(signer) {
+            try {
 
-        if (this.context.callbacks?.onSubmit) {
-            this.context.callbacks.onSubmit(submitResult, this.manager.state);
+                submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, datasetId!, solutions);
+            } catch (err) {
+                submitResult = err as Error;
+            }
+
+            if (this.context.callbacks?.onSubmit) {
+                this.context.callbacks.onSubmit(submitResult, this.manager.state);
+            }
+
+            this.manager.update({ captchaSolution: [] });
+
+            if (submitResult instanceof Error) {
+
+                return;
+            }
+            await this.onSolved(submitResult);
         }
 
         this.manager.update({ captchaSolution: [] });
 
-        if (submitResult instanceof Error) {
-
-            return;
-        }
-
-        await this.onSolved(submitResult);
     }
 
 

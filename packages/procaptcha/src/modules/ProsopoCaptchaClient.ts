@@ -13,15 +13,24 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { ICaptchaContextReducer, CaptchaEventCallbacks, TExtensionAccount, ICaptchaStatusReducer, IExtensionInterface } from "../types/client";
-import { ProsopoCaptchaConfig, ProsopoRandomProviderResponse } from "../types/api";
+import {
+    ICaptchaContextReducer,
+    CaptchaEventCallbacks,
+    TExtensionAccount,
+    ICaptchaStatusReducer,
+    IExtensionInterface
+} from "../types/client";
+import {ProsopoRandomProviderResponse} from "../types/api";
 
-import { ProsopoContract } from "../api/ProsopoContract";
-import { getProsopoContract, getWsProvider } from "./contract";
-import { getExtension } from "./extension";
-import { ProviderApi } from "../api/ProviderApi";
-import { ProsopoCaptchaApi } from "./ProsopoCaptchaApi";
+import {ProsopoContract} from "../api/ProsopoContract";
+import {getProsopoContract, getWsProvider} from "./contract";
+import {getExtension} from "./extension";
+import {ProviderApi} from "../api/ProviderApi";
+import {ProsopoCaptchaApi} from "./ProsopoCaptchaApi";
 import {ProsopoEnvError} from "@prosopo/contract";
+import {AccountCreator} from "../api/AccountCreator";
+import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
+import storage from "./storage";
 // import { Extension } from "../api";
 
 
@@ -68,23 +77,59 @@ export class ProsopoCaptchaClient {
 
     public async onLoad() {
         let contractAddress = ProsopoCaptchaClient.contract?.address;
+        let account: InjectedAccountWithMeta | undefined
+        console.log(this.manager.state)
+        console.log('web3: ', this.manager.state.config['web3']);
 
-        if (!ProsopoCaptchaClient.extension || !contractAddress) {
+        if (!this.manager.state.config['web3']) {
+            const accountCreator = await AccountCreator.create(getWsProvider(this.manager.state.config['dappUrl']));
+            const storedAccount = storage.getAccount();
+            account = await accountCreator.createAccount(undefined, storedAccount)
+
+        }
+
+        if (!ProsopoCaptchaClient.extension) {
             try {
-                [ProsopoCaptchaClient.extension, { contractAddress }] = await Promise.all([getExtension(), this.providerApi.getContractAddress()]);
+                const accounts = (!this.manager.state.config['web3'] && account) ? [account] : undefined
+                ProsopoCaptchaClient.extension = await getExtension(this.manager.state.config['web3'], accounts);
             } catch (err) {
                 throw new ProsopoEnvError(err);
             }
+        }
+
+        if (contractAddress === undefined) {
+
+            ({contractAddress} = await this.providerApi.getContractAddress());
+            console.log("onLoad contract address: ", contractAddress);
+
+        }
+        console.log("Updating contract address in manager: ", contractAddress);
+        if (contractAddress) {
+            this.manager.update({contractAddress});
+            console.log(JSON.stringify(this.manager.state))
         }
 
         if (this.callbacks?.onLoad) {
             this.callbacks.onLoad(ProsopoCaptchaClient.extension, contractAddress);
         }
 
-        this.manager.update({ contractAddress });
+
+
+        if (account && contractAddress) {
+            console.log("Update account: ", account);
+            this.manager.update({account: account});
+            console.log(JSON.stringify(this.manager.state))
+            await this.onAccountChange(account);
+        }
+
     }
 
     public async onAccountChange(account?: TExtensionAccount) {
+        console.log("onAccountChange state", this.manager.state)
+        if(!this.manager.state.contractAddress){
+            throw new ProsopoEnvError(`Contract address is not set`, 'onAccountChange', this.manager.state);
+        }
+
         if (!account) {
             this.onAccountUnset();
             return;
@@ -109,13 +154,17 @@ export class ProsopoCaptchaClient {
             throw new ProsopoEnvError(err);
         }
 
-        ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract, ProsopoCaptchaClient.provider, this.providerApi);
+        ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract,
+            ProsopoCaptchaClient.provider,
+            this.providerApi,
+            this.manager.state.config['web3']
+        );
 
         if (this.callbacks?.onAccountChange) {
             this.callbacks.onAccountChange(account);
         }
 
-        this.manager.update({ account });
+        this.manager.update({account});
     }
 
     public onAccountUnset() {
@@ -127,7 +176,7 @@ export class ProsopoCaptchaClient {
             this.callbacks.onAccountChange(undefined);
         }
 
-        this.manager.update({ account: undefined });
+        this.manager.update({account: undefined});
     }
 
 }

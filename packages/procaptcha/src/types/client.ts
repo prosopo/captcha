@@ -17,15 +17,14 @@ import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-
 import { ProsopoCaptchaConfig, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
 import {CaptchaSolution, CaptchaSolutionCommitment} from "@prosopo/contract";
-import { Extension } from "../api/Extension";
 
 export type TExtensionAccount = InjectedAccountWithMeta;
 
-export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse, CaptchaSolutionCommitment];
+export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse?, CaptchaSolutionCommitment?];
 
 export interface IExtensionInterface {
     checkExtension(): void;
-    getExtension(): InjectedExtension;
+    getExtension(): InjectedExtension | undefined;
     getAccounts(): InjectedAccountWithMeta[];
     getAccount(): InjectedAccountWithMeta | undefined;
     setAccount(account: string): void;
