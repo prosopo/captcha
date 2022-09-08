@@ -187,7 +187,7 @@ export class Tasks {
     }
 
     /**
-     * Validate and store the clear text captcha solution(s) from the Dapp User
+     * Validate and store the captcha solution(s) from the Dapp User in a web3 environment
      * @param {string} userAccount
      * @param {string} dappAccount
      * @param {string} requestHash
@@ -235,6 +235,40 @@ export class Tasks {
     }
 
     /**
+     * Validate and store the text captcha solution(s) from the Dapp User in a web2 environment
+     * @param {string} userAccount
+     * @param {string} dappAccount
+     * @param {string} requestHash
+     * @param {JSON} captchas
+     * @return {Promise<DappUserSolutionResult>} result containing the contract event
+     */
+    async dappUserSolutionWeb2(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON): Promise<DappUserSolutionResult> {
+        if (!await this.dappIsActive(dappAccount)) {
+            throw new ProsopoEnvError(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message, this.getPaymentInfo.name, {dappAccount})
+        }
+
+        let response: DappUserSolutionResult = {captchas: []};
+        const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas)
+        const {tree, commitmentId} = await this.buildTreeAndGetCommitment(receivedCaptchas)
+        const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
+        // Only do stuff if the request is in the local DB
+        if (pendingRequest) {
+            await this.db.storeDappUserSolution(hashSolutions(receivedCaptchas), commitmentId)
+            if (await compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+                response = {
+                    captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
+                };
+            } else {
+                response = {
+                    captchas: captchaIds.map((id) => ({captchaId: id, proof: [[]]})),
+                }
+            }
+        }
+
+        return response
+    }
+
+    /**
      * Validate that the dapp is active in the contract
      */
     async dappIsActive(dappAccount: string): Promise<boolean> {
@@ -259,7 +293,7 @@ export class Tasks {
         const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
             throw new ProsopoEnvError(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message, this.validateCaptchasLength.name, captchas)
-        } 
+        }
         if (!storedCaptchas.every((captcha) => captcha.datasetId === storedCaptchas[0].datasetId)) {
             throw new ProsopoEnvError(ERRORS.CAPTCHA.DIFFERENT_DATASET_IDS.message, this.validateCaptchasLength.name, captchas)
         }

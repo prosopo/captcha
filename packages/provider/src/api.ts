@@ -1,11 +1,11 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,7 @@ import express, { Router } from 'express';
 import { Environment } from './env';
 import { BadRequest, ERRORS } from './errors';
 import { Tasks } from './tasks/tasks';
-import { CaptchaWithProof } from './types/api';
+import {CaptchaWithProof, DappUserSolutionResult} from './types/api';
 import { ProsopoEnvironment } from './types/env';
 import { AccountsResponse, CaptchaSolutionBody } from './types/api';
 import { parseBlockNumber } from './util';
@@ -175,7 +175,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     });
 
     /**
-   * Receives solved Captchas, store to database, and check against solution commitment
+   * Receives solved CAPTCHA challenges, store to database, and check against solution commitment
    *
    * @param {string} userAccount - Dapp User id
    * @param {string} dappAccount - Dapp Contract AccountId
@@ -191,7 +191,12 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         }
 
         try {
-            const result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
+            let result: DappUserSolutionResult;
+            if (parsed.web2) {
+                result = await tasks.dappUserSolutionWeb2(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas);
+            } else {
+                result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
+            }
             return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, ...result });
         } catch (err: unknown) {
             return next(new BadRequest(err));
