@@ -260,7 +260,7 @@ export class Tasks {
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the request is in the local DB
         if (pendingRequest) {
-            await this.db.storeDappUserSolution(hashSolutions(receivedCaptchas), commitmentId)
+            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (await compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 response = {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
