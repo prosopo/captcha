@@ -13,7 +13,7 @@
 // limitations under the License.
 import { Document, Collection } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
-import { Captcha, CaptchaSolution, CaptchaStates, Dataset } from '@prosopo/contract'
+import { Captcha, CaptchaRaw, CaptchaSolution, CaptchaStates, Dataset } from '@prosopo/contract'
 import { PendingCaptchaRequest } from './api'
 import { WithId } from 'mongodb/mongodb';
 import consola from "consola";
@@ -46,7 +46,7 @@ export interface Database {
 
     storeDataset(dataset: Dataset): Promise<void>;
 
-    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>;
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<CaptchaRaw[] | undefined>;
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>;
 

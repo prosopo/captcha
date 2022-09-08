@@ -62,9 +62,9 @@ describe('PROVIDER MERKLE TREE', () => {
         const leafHashes = tree.leaves.map((leaf) => leaf.hash);
 
         expect(leafHashes).to.deep.equal([
-            '0x50fd1d97ab0d4e3759d3baf1a9bdd74becb464ceef55d40e2c760d0928d51b54',
+            '0x20dad7322b9b7a12f6ccaa6171cb85f2ad095e6fff2dc6050d9fb47092cb4b1a',
             '0xda4d2b3bfd078084e2a127b6f9e2b7ac8f8d434f9c20be5ac2c1e2e70046e4dd',
-            '0x08c4ebdce0742e25d366fe34f9a5a7c03f052dc46f47b83748afdb7b504fecea'
+            '0x16357d26d412fcf32335f0820691b623ab90ace94f1463ef81bc335d3a3dbe1d'
         ]
         );
     }
@@ -75,7 +75,7 @@ describe('PROVIDER MERKLE TREE', () => {
         const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
         
         tree.build(captchaHashes);
-        expect(tree.root!.hash).to.equal('0xd886603105374e6db087b9e2e8c359b18ab60479625fa76df78225b183d8c570');
+        expect(tree.root!.hash).to.equal('0x6c301d8dcc54d6836d6cf3845f09647845aeb44159853cb46ed30a5b683874e6');
     }
     );
     it('Tree proof works when computing leaf hashes', async () => {

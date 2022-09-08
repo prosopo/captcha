@@ -21,11 +21,12 @@ import {ERRORS} from '../errors';
 import {Database, DatasetRecord, PendingCaptchaRequestRecord, Tables} from '../types';
 import {
     Captcha,
+    CaptchaRaw,
     CaptchaSolution,
     CaptchaStates,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
-    ProsopoEnvError
+    ProsopoEnvError,
 } from '@prosopo/contract';
 import consola from "consola";
 
@@ -95,7 +96,7 @@ export class ProsopoDatabase implements Database {
                     ...captcha,
                     datasetId: parsedDataset.datasetId,
                     index,
-                    solved: !!solution
+                    solved: !!solution?.length
                 }));
 
 
@@ -112,10 +113,10 @@ export class ProsopoDatabase implements Database {
             }
 
             // insert any captcha solutions into the solutions collection
-            const captchaSolutionDocs = parsedDataset.captchas.filter((captcha) => "solution" in captcha)
+            const captchaSolutionDocs = parsedDataset.captchas.filter(({solution}) => solution?.length)
                 .map((captcha) => ({
                     captchaId: captcha.captchaId,
-                    solution: captcha.solution || [],
+                    solution: captcha.solution,
                     salt: captcha.salt,
                     datasetId: parsedDataset.datasetId,
                 }));
@@ -143,7 +144,7 @@ export class ProsopoDatabase implements Database {
      * @param {string}   datasetId  the id of the data set
      * @param {number}   size       the number of records to be returned
      */
-    async getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
+    async getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<CaptchaRaw[] | undefined> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.getRandomCaptcha.name, datasetId);
         }
@@ -161,7 +162,7 @@ export class ProsopoDatabase implements Database {
 
         if (docs && docs.length) {
             // drop the _id field
-            return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
+            return docs.map(({_id, ...keepAttrs}) => keepAttrs) as CaptchaRaw[];
         }
 
         throw new ProsopoEnvError(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message, this.getRandomCaptcha.name, {
