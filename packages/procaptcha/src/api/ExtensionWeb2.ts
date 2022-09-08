@@ -13,24 +13,37 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import {InjectedAccountWithMeta, InjectedExtension} from "@polkadot/extension-inject/types"
+import {
+    InjectedAccounts,
+    InjectedAccountWithMeta,
+    InjectedExtension,
+    InjectedMetadata, InjectedProvider
+} from "@polkadot/extension-inject/types"
 import storage from "../modules/storage";
 import {IExtensionInterface} from "../types/client";
 import AsyncFactory from "./AsyncFactory";
 import {ProsopoEnvError} from "@prosopo/contract";
 import {AccountCreator} from "./AccountCreator";
 import {WsProvider} from "@polkadot/rpc-provider";
-
+import Signer from "@polkadot/extension-base/page/Signer";
+import {
+    RequestTypes,
+    MessageTypesWithNullRequest,
+    TransportRequestMessage,
+    ResponseTypes
+} from "@polkadot/extension-base/background/types";
 
 export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
 
     private extension?: InjectedExtension;
     private account: InjectedAccountWithMeta | undefined;
     private accounts: InjectedAccountWithMeta[];
+
     protected web3: boolean;
     protected wsProvider: WsProvider
 
     public async init(wsProvider: WsProvider) {
+        await this.setExtension();
         this.wsProvider = wsProvider;
         return this;
     }
@@ -44,6 +57,32 @@ export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
     }
 
     private async setExtension() {
+        /*
+        InjectedAccounts
+        get: (anyType?: boolean) => Promise<InjectedAccount[]>;
+        subscribe: (cb: (accounts: InjectedAccount[]) => void | Promise<void>) => Unsubcall;
+         */
+        const injectedAccounts = {
+            get: () => Promise.resolve([]), subscribe: () => () => {
+            }
+        }
+
+        async function sendMessage<TMessageType extends MessageTypesWithNullRequest, TResponse>(message: TMessageType): Promise<void> {
+            return new Promise<void>((resolve, reject) => {
+
+                resolve();
+
+            });
+        }
+
+        await sendMessage('pub(authorize.tab)' as MessageTypesWithNullRequest);
+        const signer = new Signer(sendMessage)
+        this.extension = {
+            name: "polkadot-js-web2",
+            version: "procaptcha",
+            accounts: injectedAccounts,
+            signer: signer,
+        }
         return
     }
 

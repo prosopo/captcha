@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import {randomAsHex, blake2AsHex} from '@polkadot/util-crypto';
-import {CaptchaSolution, CaptchaMerkleTree, CaptchaSolutionCommitment} from '@prosopo/contract';
+import {CaptchaSolutionRaw, CaptchaSolution, CaptchaMerkleTree, CaptchaSolutionCommitment} from '@prosopo/contract';
 import {Signer} from "@polkadot/api/types";
 import {ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolutionResponse} from "../types/api";
 import {TransactionResponse} from "../types/contract";
@@ -22,16 +22,7 @@ import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
 import {TCaptchaSubmitResult} from '../types/client';
 import {ProsopoApiError} from "../api/handlers";
-import {hashSolutions} from '@prosopo/contract';
-
-
-function hexHash(data: string | Uint8Array): string {
-    return blake2AsHex(data);
-}
-
-function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    return hexHash([captcha.captchaId, captcha.solution, captcha.salt].join());
-}
+import { hashSolutions, computeCaptchaSolutionHash } from '@prosopo/contract';
 
 export type SubmitFunction =
     typeof ProsopoCaptchaApi.prototype.submitCaptchaSolutionWeb3
@@ -61,28 +52,40 @@ export class ProsopoCaptchaApi {
         return captchaChallenge;
     }
 
-    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]): Promise<TCaptchaSubmitResult> {
+    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolutionRaw[]): Promise<TCaptchaSubmitResult> {
         return this.submitCaptchaFn(signer, requestHash, datasetId, solutions);
     }
 
-    async submitCaptchaSolutionWeb2(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]): Promise<TCaptchaSubmitResult> {
+    async submitCaptchaSolutionWeb2(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolutionRaw[]): Promise<TCaptchaSubmitResult> {
         const salt = randomAsHex();
-        const captchaSolutionsSalted: CaptchaSolution[] = hashSolutions(solutions);
+        const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(
+            (captcha) => ({
+                ...captcha,
+                solution: hashSolutions(captcha.solution),
+                salt,
+            })
+        );
 
         let result: CaptchaSolutionResponse;
 
         try {
-            result = await this.providerApi.submitCaptchaSolution(captchaSolutionsSalted, requestHash, this.contract.getAccount().address);
+            result = await this.providerApi.submitCaptchaSolution(captchaSolutionsSalted, requestHash, this.contract.getAccount().address, salt, undefined, undefined, true);
         } catch (err) {
             throw new ProsopoApiError(err)
         }
         return [result, undefined, undefined];
     }
 
-    async submitCaptchaSolutionWeb3(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]): Promise<TCaptchaSubmitResult> {
+    public async submitCaptchaSolutionWeb3(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolutionRaw[]) : Promise<TCaptchaSubmitResult> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
-        const captchaSolutionsSalted: CaptchaSolution[] = hashSolutions(solutions);
+        const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(
+            (captcha) => ({
+                ...captcha,
+                solution: hashSolutions(captcha.solution),
+                salt,
+            })
+        );
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
 
         tree.build(captchasHashed);
@@ -104,7 +107,7 @@ export class ProsopoCaptchaApi {
         let result: CaptchaSolutionResponse;
 
         try {
-            result = await this.providerApi.submitCaptchaSolution(captchaSolutionsSalted, requestHash, this.contract.getAccount().address, tx.blockHash!, tx.txHash.toString());
+            result = await this.providerApi.submitCaptchaSolution(captchaSolutionsSalted, requestHash, this.contract.getAccount().address, salt, tx.blockHash!, tx.txHash.toString());
         } catch (err) {
             throw new ProsopoApiError(err)
         }

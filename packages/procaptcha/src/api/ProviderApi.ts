@@ -19,9 +19,9 @@ import {
     ProsopoCaptchaConfig,
     ProsopoRandomProviderResponse,
     GetCaptchaResponse,
-    CaptchaSolution,
     CaptchaSolutionResponse
 } from '../types';
+import { CaptchaSolution } from "@prosopo/contract";
 
 export class ProviderApi extends HttpClientBase {
 
@@ -48,14 +48,16 @@ export class ProviderApi extends HttpClientBase {
         return this.axios.get(`/provider/captcha/${provider.captchaDatasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
     }
 
-    public submitCaptchaSolution(captchas: CaptchaSolution[], requestHash: string, userAccount: string, blockHash?: string, txHash?: string): Promise<CaptchaSolutionResponse> {
+    public submitCaptchaSolution(captchas: CaptchaSolution[], requestHash: string, userAccount: string, salt: string, blockHash?: string, txHash?: string, web2?: boolean): Promise<CaptchaSolutionResponse> {
         return this.axios.post(`/provider/solution`, {
             blockHash,
             captchas,
             requestHash,
             txHash,
             userAccount,
-            dappAccount: this.config['dappAccount']
+            dappAccount: this.config['dappAccount'],
+            web2,
+            salt
         });
     }
 
