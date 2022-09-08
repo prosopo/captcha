@@ -218,7 +218,11 @@ export class Tasks {
         const partialFee = paymentInfo?.partialFee
         let response: DappUserSolutionResult = {captchas: [], partialFee: '0'};
         const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas)
-        const {tree, commitment, commitmentId} = await this.buildTreeAndGetCommitment(receivedCaptchas)
+        const {tree, commitmentId} = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
+        const commitment = await this.getCaptchaSolutionCommitment(commitmentId)
+        if (!commitment) {
+            throw new ProsopoEnvError(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message, this.dappUserSolution.name, {commitmentId: commitmentId})
+        }
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
@@ -256,7 +260,7 @@ export class Tasks {
 
         let response: DappUserSolutionResult = {captchas: []};
         const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas)
-        const {tree, commitmentId} = await this.buildTreeAndGetCommitment(receivedCaptchas)
+        const {tree, commitmentId} = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the request is in the local DB
         if (pendingRequest) {
@@ -312,19 +316,16 @@ export class Tasks {
      * @param {CaptchaSolution[]} captchaSolutions
      * @returns {Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }>}
      */
-    async buildTreeAndGetCommitment(captchaSolutions: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }> {
+    async buildTreeAndGetCommitmentId(captchaSolutions: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitmentId: string }> {
         const tree = new CaptchaMerkleTree()
         const solutionsHashed = captchaSolutions.map((captcha) => computeCaptchaSolutionHash(captcha))
         tree.build(solutionsHashed)
         const commitmentId = tree.root?.hash
         if (!commitmentId) {
-            throw new ProsopoEnvError(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message, this.buildTreeAndGetCommitment.name, {commitmentId: commitmentId})
+            throw new ProsopoEnvError(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message, this.buildTreeAndGetCommitmentId.name, {commitmentId: commitmentId})
         }
-        const commitment = await this.getCaptchaSolutionCommitment(commitmentId)
-        if (!commitment) {
-            throw new ProsopoEnvError(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message, this.buildTreeAndGetCommitment.name, {commitmentId: commitmentId})
-        }
-        return {tree, commitment, commitmentId}
+
+        return {tree, commitmentId}
     }
 
     /**
