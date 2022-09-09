@@ -75,7 +75,7 @@ function captchaSort<T extends { captchaId: string }>(a: T, b: T) {
     return a.captchaId.localeCompare(b.captchaId);
 }
 
-async function sortAndComputeHashes(
+export async function sortAndComputeHashes(
     received: CaptchaSolution[],
     stored: Captcha[]
 ): Promise<{ captchaId: string; hash: string }[]> {
