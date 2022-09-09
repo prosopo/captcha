@@ -25,7 +25,8 @@ import {
     computeCaptchaSolutionHash,
     computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, hashSolutions, LastCorrectCaptcha, parseCaptchaDataset,
     parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse,
-    ProsopoEnvError
+    ProsopoEnvError,
+    Dataset
 } from '@prosopo/contract';
 import consola from "consola";
 import {buildDecodeVector} from '../codec/codec';
@@ -84,16 +85,22 @@ export class Tasks {
     }
 
     async providerAddDataset(file: string): Promise<TransactionResponse> {
-        const dataset = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON);
-        const datasetWithoutIds = {...dataset}
+        const datasetRaw = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON);
         const tree = new CaptchaMerkleTree();
+        const dataset = {
+            ...datasetRaw,
+            captchas: datasetRaw.captchas.map((captcha) => ({
+                ...captcha,
+                solution: hashSolutions(captcha.solution),
+            })),
+        } as Dataset;
         const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
         tree.build(captchaHashes);
         const datasetHashes = addHashesToDataset(dataset, tree);
         datasetHashes.datasetId = tree.root?.hash;
         datasetHashes.tree = tree.layers;
-        await this.db?.storeDataset({...datasetHashes, captchas: hashSolutions(datasetHashes.captchas)});
-        writeJSONFile(file, {...datasetWithoutIds, datasetId: datasetHashes.datasetId}).catch((err) => {
+        await this.db?.storeDataset(datasetHashes);
+        await writeJSONFile(file, {...datasetRaw, datasetId: datasetHashes.datasetId}).catch((err) => {
             console.error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
         })
         return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)]);
@@ -215,7 +222,7 @@ export class Tasks {
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
-            await this.db.storeDappUserSolution(hashSolutions(receivedCaptchas), commitmentId)
+            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
             if (await compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
                 response = {
