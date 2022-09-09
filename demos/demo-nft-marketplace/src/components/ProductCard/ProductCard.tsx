@@ -6,6 +6,7 @@ import { useToggle } from 'hooks/useToggle';
 import React, { FC, useCallback } from 'react';
 import { shortAddress } from 'utils/itemUtils';
 import { useRouter } from 'next/router';
+import Image from 'components/Image/Image';
 
 type Props = {
   item: Token;
@@ -50,7 +51,7 @@ const ProductCard: FC<Props> = ({ item }) => {
               src={image}
               alt=""
             /> */}
-            <img
+            <Image
               className="absolute self-center object-contain w-full justify-self-center aspect-square"
               src={image}
               alt=""
