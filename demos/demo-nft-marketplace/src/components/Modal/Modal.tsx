@@ -11,7 +11,7 @@ export type ModalProps = {
 };
 
 function Modal({ isOpen, onClose, title, description, children, large }: ModalProps) {
-  return (
+  return isOpen ? (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-10 overflow-y-auto" onClose={onClose}>
         <div className="min-h-screen px-4 text-center">
@@ -45,7 +45,7 @@ function Modal({ isOpen, onClose, title, description, children, large }: ModalPr
                 large ? 'max-w-screen-md' : 'max-w-md'
               } px-6 py-8 my-8 overflow-hidden text-left align-middle transition-all transform border-2 border-gray-700 rounded-md shadow-2xl bg-secondary`}
             >
-              <Dialog.Title as="h3" className="text-xl font-bold text-white leading-6">
+              <Dialog.Title as="h3" className="text-xl font-bold leading-6 text-white">
                 {title}
               </Dialog.Title>
               <div className="mt-4">
@@ -57,6 +57,6 @@ function Modal({ isOpen, onClose, title, description, children, large }: ModalPr
         </div>
       </Dialog>
     </Transition>
-  );
+  ) : null;
 }
 export default Modal;
