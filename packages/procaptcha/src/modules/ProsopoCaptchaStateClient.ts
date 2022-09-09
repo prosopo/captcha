@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { ICaptchaStateReducer, TCaptchaSubmitResult } from "../types/client";
-import { CaptchaSolution, CaptchaSolutionResponse, GetCaptchaResponse } from "../types/api";
-import { TransactionResponse } from "../types/contract";
+import { GetCaptchaResponse } from "../types/api";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
-import { convertCaptchaToCaptchaSolution } from "@prosopo/contract";
+import { CaptchaSolutionRaw, convertCaptchaToCaptchaSolution } from "@prosopo/contract";
 
 
 export class ProsopoCaptchaStateClient {
@@ -133,13 +132,13 @@ export class ProsopoCaptchaStateClient {
     }
 
 
-    public parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: number[][]): CaptchaSolution[] {
-        const parsedSolution: CaptchaSolution[] = [];
+    public parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: number[][]): CaptchaSolutionRaw[] {
+        const parsedSolution: CaptchaSolutionRaw[] = [];
 
         for (const [index, challenge] of captchaChallenge!.captchas.entries()) {
             const solution = captchaSolution[index] || [];
-            challenge.captcha.solution = solution;
-            parsedSolution[index] = convertCaptchaToCaptchaSolution(challenge.captcha);
+            // challenge.captcha.solution = solution;
+            parsedSolution[index] = convertCaptchaToCaptchaSolution({...challenge.captcha, solution});
         }
 
         console.log("CAPTCHA SOLUTIONS", parsedSolution);

@@ -15,7 +15,12 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
 // import {computeCaptchaSolutionHash} from '@prosopo/provider'; 
-import { CaptchaSolution, CaptchaMerkleTree, CaptchaSolutionCommitment } from '@prosopo/contract';
+import {
+    CaptchaSolution,
+    CaptchaMerkleTree,
+    CaptchaSolutionCommitment,
+    CaptchaSolutionRaw,
+} from "@prosopo/contract";
 import { Signer } from "@polkadot/api/types";
 
 import { ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
@@ -58,10 +63,16 @@ export class ProsopoCaptchaApi {
         return captchaChallenge;
     }
 
-    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<TCaptchaSubmitResult> {
+    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolutionRaw[]) : Promise<TCaptchaSubmitResult> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
-        const captchaSolutionsSalted: CaptchaSolution[] = hashSolutions(solutions);
+        const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(
+            (captcha) => ({
+                ...captcha,
+                solution: hashSolutions(captcha.solution),
+                salt,
+            })
+        );
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
 
         tree.build(captchasHashed);
