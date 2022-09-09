@@ -4,6 +4,7 @@ import { ProsopoConsumer } from 'components/Prosopo';
 import { ShowCaptchasState } from 'components/Prosopo/types';
 import makeBlockie from 'ethereum-blockies-base64';
 import { useToggle } from 'hooks/useToggle';
+import Image from 'components/Image/Image';
 import { useRouter } from 'next/router';
 import { default as React, FC } from 'react';
 import styles from './ProfileDropdown.module.css';
@@ -78,11 +79,15 @@ const ProfileDropdownInternal: FC<Props & Partial<ShowCaptchasState>> = ({ addre
     <div className="relative flex items-center justify-center w-10">
       <Popover className="relative hidden text-white lg:flex">
         <Popover.Button>
-          <img className="w-10 h-10" src={makeBlockie(address || '0x000')} />
+          <Image className="w-10 h-10" src={makeBlockie(address || '0x000')} />
         </Popover.Button>
         <Popover.Panel className="absolute right-0 z-10 text-white top-11">{renderContent(menuItems)}</Popover.Panel>
       </Popover>
-      <img className="flex h-10 text-white lg:hidden" src={makeBlockie(address || '0x000')} onClick={setDisplayFull} />
+      <Image
+        className="flex w-10 h-10 text-white lg:hidden"
+        src={makeBlockie(address || '0x000')}
+        onClick={setDisplayFull}
+      />
       {displayFull && (
         <div className="fixed top-0 left-0 z-10 flex flex-col w-screen h-screen lg:hidden bg-main">
           <div className="top-0 right-0 flex justify-end px-5 py-5 ">

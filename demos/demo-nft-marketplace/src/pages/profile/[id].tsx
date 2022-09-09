@@ -4,6 +4,7 @@ import Avatar from 'components/Avatar/Avatar';
 import demoApi, { PAGE_SIZE, Token } from 'api/demoApi';
 import { ProductList } from 'components/ProductCard';
 import { NextPageContext } from 'next';
+import Image from 'components/Image/Image';
 
 export interface ProfileProps {
   userId: string;
@@ -26,7 +27,7 @@ const Profile: React.FunctionComponent<ProfileProps> = ({ tokens: _tokens, userI
   return (
     <>
       <div className="flex flex-col items-center m-auto text-lg text-white max-w-screen-2xl">
-        <img className="overflow-hidden " src={CoverPhoto} />
+        <Image className="w-full overflow-hidden h-96" src={CoverPhoto} />
         <div className="relative flex flex-col items-center w-11/12 bg-secondary lg:w-2/3 sm:w-10/12 md:-top-16 -top-4">
           <div className="transform -translate-y-1/2">
             <Avatar sizeClasses="w-20 h-20 lg:w-48 lg:h-48" username={userId} disableHoverEffects />

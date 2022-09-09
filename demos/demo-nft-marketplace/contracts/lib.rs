@@ -75,7 +75,7 @@ pub mod demo_nft_contract {
         }
     }
 
-    pub const HUMAN_THRESHOLD: u8 = 80;
+    pub const HUMAN_THRESHOLD: u8 = 50;
     pub const RECENCY: u32 = 5 * 60 * 1000; // 5 mins
 
     fn bool_to_bytes(value: bool) -> Vec<u8> {

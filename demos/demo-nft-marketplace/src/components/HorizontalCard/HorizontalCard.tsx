@@ -1,5 +1,6 @@
 import Link from 'components/Link';
 import React from 'react';
+import Image from 'components/Image/Image';
 
 type Props = {
   imageUrl: string;
@@ -22,7 +23,7 @@ function HorizontalCard({ imageUrl, title, subtitle, actions, mainBackground = f
           } px-2 py-4 shadow-sm flex items-center space-x-3 hover:border-gray-400 border-2`}
         >
           <div className="flex-shrink-0">
-            <img className="w-16 h-16 border-2 border-gray-700 rounded-full" src={imageUrl} alt="" />
+            <Image className="w-16 h-16 border-2 border-gray-700 rounded-full" src={imageUrl} alt="" />
           </div>
           <div className="flex flex-col flex-1 min-w-0 md:flex-row md:justify-between">
             <div>

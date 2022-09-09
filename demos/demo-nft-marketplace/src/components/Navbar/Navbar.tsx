@@ -1,7 +1,8 @@
-import { Logo } from 'assets';
+import { LoadingIcon, Logo } from 'assets';
 import Button from 'components/Button';
 import Link from 'components/Link';
 import { ExtensionAccountSelect, ProsopoConsumer } from 'components/Prosopo';
+import Image from 'components/Image/Image';
 import React, { FC } from 'react';
 import ProfileDropdown from './ProfileDropdown';
 
@@ -14,7 +15,7 @@ const Navbar: FC<unknown> = () => {
             <Link to="/">
               <div className="flex items-center flex-none">
                 <div className="block -mt-1 text-2xl cursor-pointer w-7">
-                  <img className="w-7" src={Logo} />
+                  <Image className="h-10 w-7" src={Logo} />
                 </div>
                 <span className="hidden h-auto pl-3 text-xl font-bold text-white cursor-pointer lg:block align-cente">
                   ProsopoStore
@@ -26,7 +27,9 @@ const Navbar: FC<unknown> = () => {
           <div className="flex lg:ml-6">
             <ProsopoConsumer>
               {({ clientInterface, showWalletModal, loading }) =>
-                !loading && (
+                loading ? (
+                  <Image className="inline object-contain w-10 h-10 p-px animate-spin" src={LoadingIcon} />
+                ) : (
                   <>
                     {clientInterface.getExtension() ? (
                       !clientInterface.manager.state.account ? (

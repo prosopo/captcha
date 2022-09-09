@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
 import { LoadingIcon } from 'assets';
+import Image from 'components/Image/Image';
 // TODO: add  clicked, hover effects
 
 const BASE_BUTTON =
@@ -42,9 +43,9 @@ const Button: FC<Props> = ({
       iconRight ? 'flex-row' : 'flex-row-reverse'
     } ${customClasses} ${equalPadding ? 'px-2' : 'px-4'}`}
   >
-    {loading && <img className="inline object-contain w-5 h-5 p-px animate-spin" src={LoadingIcon} />}
+    {loading && <Image className="inline object-contain w-5 h-5 p-px animate-spin" src={LoadingIcon} />}
     {title && <span className={`w-full ${title && icon ? (iconRight ? 'pr-2' : 'pl-2') : ''}`}>{title}</span>}
-    {icon && <img className="inline p-px w-7 h-7" src={icon} />}
+    {icon && <Image className="inline p-px w-7 h-7" src={icon} />}
   </button>
 );
 export default Button;

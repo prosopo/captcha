@@ -11,6 +11,7 @@ import { CheckoutModal } from 'components/Modal';
 import { useToggle } from 'hooks/useToggle';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
+import Image from 'components/Image/Image';
 
 type Props = { token: Token | null };
 
@@ -82,8 +83,8 @@ function ItemDetails({ token: _token }: ItemDetailsProps) {
 
           {/*// LEFT SIDE CONTENT*/}
           <div className="h-full mt-8 lg:mt-0 lg:col-start-1 lg:col-span-7 lg:row-start-1 lg:row-span-3">
-            <div className={'flex h-full max-h-full justify-center bg-secondary'}>
-              <img src={token.meta.image} className="object-contain w-full p-5 lg:p-16" />
+            <div className="flex justify-center min-h-full p-5 bg-secondary">
+              <Image src={token.meta.image} className="w-full aspect-square" />
             </div>
           </div>
 
