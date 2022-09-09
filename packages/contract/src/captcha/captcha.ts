@@ -84,13 +84,12 @@ async function sortAndComputeHashes(
 
     return Promise.all(
         _stored
-            .filter(({ solved }) => solved)
             .map(
                 async (
                     { salt, items = [], target = "", captchaId, solved },
-                    i
+                    index
                 ) => {
-                    if (captchaId != _received[i].captchaId) {
+                    if (captchaId != _received[index].captchaId) {
                         throw new ProsopoEnvError(
                             ERRORS.CAPTCHA.ID_MISMATCH.message
                         );
@@ -98,7 +97,7 @@ async function sortAndComputeHashes(
 
                     return {
                         hash: await computeCaptchaHash({
-                            solution: solved ? received[i].solution : [],
+                            solution: solved ? received[index].solution : [],
                             salt,
                             items,
                             target,
@@ -132,7 +131,7 @@ export async function compareCaptchaSolutions(received: CaptchaSolution[], store
  */
 export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
     const itemHashes: string[] = [];
-    
+
     for (const [item, index] of captcha.items.map((v, i) => [v, i])) {
         if (item.type === 'image') {
             const hash = await imageHash(item.path as string);
