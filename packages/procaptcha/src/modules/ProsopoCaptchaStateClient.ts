@@ -78,7 +78,6 @@ export class ProsopoCaptchaStateClient {
 
         let submitResult: TCaptchaSubmitResult | Error;
 
-        //TODO create signer in ExtensionWeb2
         if(signer) {
             try {
 
