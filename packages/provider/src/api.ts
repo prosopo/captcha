@@ -11,18 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { AnyJson } from '@polkadot/types/types';
-import { validateAddress } from '@polkadot/util-crypto';
-import { parseCaptchaAssets, ProsopoContractApi } from '@prosopo/contract';
-import express, { Router } from 'express';
-import { Environment } from './env';
-import { BadRequest, ERRORS } from './errors';
-import { Tasks } from './tasks/tasks';
+import type {AnyJson} from '@polkadot/types/types';
+import {validateAddress} from '@polkadot/util-crypto';
+import {parseCaptchaAssets, ProsopoContractApi} from '@prosopo/contract';
+import express, {Router} from 'express';
+import {Environment} from './env';
+import {BadRequest, ERRORS} from './errors';
+import {Tasks} from './tasks/tasks';
 import {CaptchaWithProof, DappUserSolutionResult} from './types/api';
-import { ProsopoEnvironment } from './types/env';
-import { AccountsResponse, CaptchaSolutionBody } from './types/api';
-import { parseBlockNumber } from './util';
-
+import {ProsopoEnvironment} from './types/env';
+import {AccountsResponse, CaptchaSolutionBody} from './types/api';
+import {parseBlockNumber} from './util';
 
 
 /**
@@ -37,19 +36,19 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     const contractApi = new ProsopoContractApi(env.contractAddress, env.mnemonic, env.contractName, env.abi, env.network);
 
     /**
-   * Get the contract address
-   * @return {contractAddress: string} - The contract address from environment
-   */
+     * Get the contract address
+     * @return {contractAddress: string} - The contract address from environment
+     */
     router.get('/v1/prosopo/contract_address', async (req, res, next) => {
         const {contractAddress} = env;
         return res.json({contractAddress});
     });
 
     /**
-   * Returns a random provider using the account that is currently the env signer
-   * @param {string} userAccount - Dapp User AccountId
-   * @return {Provider} - A Provider
-   */
+     * Returns a random provider using the account that is currently the env signer
+     * @param {string} userAccount - Dapp User AccountId
+     * @return {Provider} - A Provider
+     */
     router.get('/v1/prosopo/random_provider/:userAccount/:dappContractAccount', async (req, res, next) => {
         const {userAccount, dappContractAccount} = req.params;
 
@@ -65,19 +64,19 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     });
 
     /**
-   * Returns the list of provider accounts
-   *
-   * @return {Hash} - The Providers
-   */
+     * Returns the list of provider accounts
+     *
+     * @return {Hash} - The Providers
+     */
     router.get('/v1/prosopo/providers/', async (req, res, next) => {
         try {
             await env.isReady();
             const providers: AnyJson = await tasks.getProviderAccounts();
 
             return res.json(
-        {
-            accounts: providers
-        } as AccountsResponse
+                {
+                    accounts: providers
+                } as AccountsResponse
             );
         } catch (err: unknown) {
             const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
@@ -87,19 +86,19 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     });
 
     /**
-   * Returns the list of dapp accounts
-   *
-   * @return {Hash} - The Dapps
-   */
+     * Returns the list of dapp accounts
+     *
+     * @return {Hash} - The Dapps
+     */
     router.get('/v1/prosopo/dapps/', async (req, res, next) => {
         try {
             await env.isReady();
             const dapps: AnyJson = await tasks.getDappAccounts();
 
             return res.json(
-        {
-            accounts: dapps
-        } as AccountsResponse
+                {
+                    accounts: dapps
+                } as AccountsResponse
             );
         } catch (err: unknown) {
             const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
@@ -109,11 +108,11 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     });
 
     /**
-   * Returns details of the provider
-   *
-   * @param {string} provider_account - Provider's account
-   * @return {Hash} - The Captcha Provider object
-   */
+     * Returns details of the provider
+     *
+     * @param {string} provider_account - Provider's account
+     * @return {Hash} - The Captcha Provider object
+     */
     router.get('/v1/prosopo/provider/:providerAccount', async (req, res, next) => {
         await env.isReady();
         const {providerAccount} = req.params;
@@ -136,12 +135,12 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     });
 
     /**
-   * Provides a Captcha puzzle to a Dapp User
-   * @param {string} datasetId - Provider datasetId
-   * @param {string} userAccount - Dapp User AccountId
-   * @param {string} blockNumber - Block number
-   * @return {Captcha} - The Captcha data
-   */
+     * Provides a Captcha puzzle to a Dapp User
+     * @param {string} datasetId - Provider datasetId
+     * @param {string} userAccount - Dapp User AccountId
+     * @param {string} blockNumber - Block number
+     * @return {Captcha} - The Captcha data
+     */
     router.get('/v1/prosopo/provider/captcha/:datasetId/:userAccount/:dappContractAccount/:blockNumber', async (req, res, next) => {
         const {blockNumber, datasetId, userAccount, dappContractAccount} = req.params;
 
@@ -175,13 +174,13 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     });
 
     /**
-   * Receives solved CAPTCHA challenges, store to database, and check against solution commitment
-   *
-   * @param {string} userAccount - Dapp User id
-   * @param {string} dappAccount - Dapp Contract AccountId
-   * @param {Captcha[]} captchas - The Captcha solutions
-   * @return {DappUserSolutionResult} - The Captcha solution result and proof
-   */
+     * Receives solved CAPTCHA challenges, store to database, and check against solution commitment
+     *
+     * @param {string} userAccount - Dapp User id
+     * @param {string} dappAccount - Dapp Contract AccountId
+     * @param {Captcha[]} captchas - The Captcha solutions
+     * @return {DappUserSolutionResult} - The Captcha solution result and proof
+     */
     router.post('/v1/prosopo/provider/solution', async (req, res, next) => {
         let parsed;
         try {
@@ -193,11 +192,15 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         try {
             let result: DappUserSolutionResult;
             if (parsed.web2) {
+                // TODO does this open an attack vector when dealing with a web3 dapp user?
                 result = await tasks.dappUserSolutionWeb2(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas);
+                return res.json({
+                    status: result.solutionApproved ? ERRORS.API.CAPTCHA_PASSED.message : ERRORS.API.CAPTCHA_FAILED.message, ...result
+                });
             } else {
                 result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
+                return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, ...result});
             }
-            return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, ...result });
         } catch (err: unknown) {
             return next(new BadRequest(err));
         }

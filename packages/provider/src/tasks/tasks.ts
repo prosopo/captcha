@@ -216,7 +216,7 @@ export class Tasks {
             throw new ProsopoEnvError(ERRORS.API.PAYMENT_INFO_NOT_FOUND.message, this.getPaymentInfo.name, {userAccount, blockHash, txHash})
         }
         const partialFee = paymentInfo?.partialFee
-        let response: DappUserSolutionResult = {captchas: [], partialFee: '0'};
+        let response: DappUserSolutionResult = {captchas: [], partialFee: '0', solutionApproved: false};
         const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas)
         const {tree, commitmentId} = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
         const commitment = await this.getCaptchaSolutionCommitment(commitmentId)
@@ -232,12 +232,14 @@ export class Tasks {
                 response = {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
                     partialFee: partialFee.toString(),
+                    solutionApproved: true
                 };
             } else {
                 await this.providerDisapprove(commitmentId)
                 response = {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: [[]]})),
-                    partialFee: partialFee.toString()
+                    partialFee: partialFee.toString(),
+                    solutionApproved: false
                 }
             }
         }
@@ -258,7 +260,7 @@ export class Tasks {
             throw new ProsopoEnvError(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message, this.getPaymentInfo.name, {dappAccount})
         }
 
-        let response: DappUserSolutionResult = {captchas: []};
+        let response: DappUserSolutionResult = {captchas: [], solutionApproved: false};
         const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas)
         const {tree, commitmentId} = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
@@ -268,10 +270,12 @@ export class Tasks {
             if (await compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 response = {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
+                    solutionApproved: true
                 };
             } else {
                 response = {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: [[]]})),
+                    solutionApproved: false
                 }
             }
         }

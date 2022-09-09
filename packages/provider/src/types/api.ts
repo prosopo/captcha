@@ -24,7 +24,8 @@ export type CaptchaResponse = CaptchaWithProof[]
 
 export interface DappUserSolutionResult {
     captchas: CaptchaIdAndProof[]
-    partialFee?: string
+    partialFee?: string,
+    solutionApproved: boolean
 }
 
 export interface CaptchaIdAndProof {
