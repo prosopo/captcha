@@ -92,7 +92,7 @@ async function sortAndComputeHashes(
                 ) => {
                     if (captchaId != _received[i].captchaId) {
                         throw new ProsopoEnvError(
-                            ERRORS.CAPTCHA.ID_MISSMATCH.message
+                            ERRORS.CAPTCHA.ID_MISMATCH.message
                         );
                     }
 
