@@ -18,8 +18,7 @@ import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
 import {
     CaptchaSolution,
     CaptchaMerkleTree,
-    CaptchaSolutionCommitment,
-    CaptchaSolutionRaw,
+    CaptchaSolutionCommitment
 } from "@prosopo/contract";
 import { Signer } from "@polkadot/api/types";
 
@@ -30,7 +29,6 @@ import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
 import { TCaptchaSubmitResult } from '../types/client';
 import {ProsopoApiError} from "../api/handlers";
-import { hashSolutions } from '@prosopo/contract';
 
 
 function hexHash(data: string | Uint8Array): string {
@@ -38,7 +36,7 @@ function hexHash(data: string | Uint8Array): string {
 }
 
 function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    return hexHash([captcha.captchaId, captcha.solution, captcha.salt].join());
+    return hexHash([captcha.captchaId, [...captcha.solution].sort(), captcha.salt].join());
 }
 
 export class ProsopoCaptchaApi {
@@ -63,13 +61,12 @@ export class ProsopoCaptchaApi {
         return captchaChallenge;
     }
 
-    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolutionRaw[]) : Promise<TCaptchaSubmitResult> {
+    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<TCaptchaSubmitResult> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
         const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(
             (captcha) => ({
                 ...captcha,
-                solution: hashSolutions(captcha.solution),
                 salt,
             })
         );

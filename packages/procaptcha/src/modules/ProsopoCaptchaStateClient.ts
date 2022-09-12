@@ -17,7 +17,7 @@ import { ICaptchaStateReducer, TCaptchaSubmitResult } from "../types/client";
 import { GetCaptchaResponse } from "../types/api";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
-import { CaptchaSolutionRaw, convertCaptchaToCaptchaSolution } from "@prosopo/contract";
+import { CaptchaSolutionRaw, convertCaptchaToCaptchaSolution, matchItemsToSolutions } from "@prosopo/contract";
 
 
 export class ProsopoCaptchaStateClient {
@@ -79,7 +79,21 @@ export class ProsopoCaptchaStateClient {
         let submitResult: TCaptchaSubmitResult | Error;
 
         try {
-            submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, datasetId!, solutions);
+            submitResult = await this.context
+                .getCaptchaApi()!
+                .submitCaptchaSolution(
+                    signer,
+                    captchaChallenge!.requestHash,
+                    datasetId!,
+                    solutions.map(({ solution, ...rest }, i) => ({
+                        ...rest,
+                        solution: matchItemsToSolutions(
+                            solution,
+                            captchaChallenge?.captchas[i].captcha
+                                .items
+                        ),
+                    }))
+                );
         } catch (err) {
             submitResult = err as Error;
         }
