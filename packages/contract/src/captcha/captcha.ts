@@ -79,17 +79,17 @@ export async function sortAndComputeHashes(
     received: CaptchaSolution[],
     stored: Captcha[]
 ): Promise<{ captchaId: string; hash: string }[]> {
-    const _received = received.sort(captchaSort);
-    const _stored = stored.sort(captchaSort);
+    received.sort(captchaSort);
+    stored.sort(captchaSort);
 
     return Promise.all(
-        _stored
+        stored
             .map(
                 async (
                     { salt, items = [], target = "", captchaId, solved },
                     index
                 ) => {
-                    if (captchaId != _received[index].captchaId) {
+                    if (captchaId != received[index].captchaId) {
                         throw new ProsopoEnvError(
                             ERRORS.CAPTCHA.ID_MISMATCH.message
                         );
@@ -125,39 +125,50 @@ export async function compareCaptchaSolutions(received: CaptchaSolution[], store
 }
 
 /**
- * Compute the hash of various types of captcha, loading any images and hashing them in the process
+ * Compute the hash of various types of captcha
  * @param  {Captcha} captcha
  * @return {string} the hex string hash
  */
-export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
-    const itemHashes: string[] = [];
-
-    for (const [item, index] of captcha.items.map((v, i) => [v, i])) {
-        if (item.type === 'image') {
-            const hash = await imageHash(item.path as string);
-            itemHashes.push(hash);
-            captcha.items[index].hash = hash;
-        } else if (item.type === 'text') {
-            const hash = hexHash(item.text as string);
-            itemHashes.push(hash);
-            captcha.items[index].hash = hash;
-        } else {
-            throw new ProsopoEnvError(ERRORS.CAPTCHA.INVALID_ITEM_FORMAT.message);
-        }
-    }
+export function computeCaptchaHash(captcha: CaptchaWithoutId) {
+    const itemHashes: string[] = captcha.items.map((item) => item.hash);
 
     return hexHash(
         [
             captcha.target,
-            captcha.solution,
+            captcha.solution?.sort(),
             captcha.salt,
             itemHashes,
         ].join()
     );
 }
 
-export function hashSolutions(arr?: RawSolution[]): HashedSolution[] {
-    return arr?.map((solution) => hexHash(solution.toString())).sort() || [];
+export async function calculateItemHashes(items: any[]): Promise<any[]> {
+    return Promise.all(items.map(async (item) => {
+        if (item.type === "image") {
+            return { ...item, hash: await imageHash(item.path as string) };
+        } else if (item.type === "text") {
+            return { ...item, hash: hexHash(item.text as string) };
+        } else {
+            throw new ProsopoEnvError(
+                ERRORS.CAPTCHA.INVALID_ITEM_FORMAT.message
+            );
+        }
+    }));
+}
+
+export function matchItemsToSolutions(
+    solutions: RawSolution[] | undefined,
+    items: any[] | undefined
+): HashedSolution[] {
+    return solutions?.map((solution) => {
+        const hash = items?.[solution].hash;
+
+        if (!hash) {
+            throw new ProsopoEnvError(ERRORS.CAPTCHA.MISSING_ITEM_HASH.message);
+        }
+
+        return hash;
+    }) || [];
 }
 
 // export function hashSolutions<T>(solutions: T[]): T[] {
@@ -179,7 +190,7 @@ export function hashSolutions(arr?: RawSolution[]): HashedSolution[] {
  * @return {string} the hex string hash
  */
 export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    return hexHash([captcha.captchaId, captcha.solution, captcha.salt].join());
+    return hexHash([captcha.captchaId, captcha.solution.sort(), captcha.salt].join());
 }
 
 // /**
