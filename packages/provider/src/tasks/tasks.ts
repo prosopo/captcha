@@ -186,6 +186,7 @@ export class Tasks {
                 const proof = tree.proof(captcha.captchaId)
                 // cannot pass solution to dapp user as they are required to solve the captcha!
                 delete captcha.solution
+                captcha.items = shuffleArray(captcha.items)
                 captchas.push({captcha, proof})
             }
             return captchas
