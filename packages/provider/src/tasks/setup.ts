@@ -17,12 +17,13 @@ import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@
 import {
     BigNumber,
     buildTx,
+    calculateItemHashes,
     CaptchaMerkleTree,
     computeCaptchaSolutionHash,
     convertCaptchaToCaptchaSolution,
     getEventsFromMethodName,
-    hashSolutions,
     hexHash,
+    matchItemsToSolutions,
     ProsopoEnvError
 } from '@prosopo/contract'
 import { IDappAccount, IProviderAccount, IUserAccount } from '../types/accounts'
@@ -121,7 +122,21 @@ export async function setupDappUser(env, dappUser: IUserAccount, provider: IProv
         const tree = new CaptchaMerkleTree()
         const captchas = [solved[0].captcha, unsolved[0].captcha]
         const captchaSols = captchas.map(captcha => convertCaptchaToCaptchaSolution(captcha))
-        const captchaSolHashes = captchaSols.map(({solution, ...rest}) => computeCaptchaSolutionHash({...rest, solution: hashSolutions(solution)}))
+        const captchaSolHashes = await Promise.all(
+            captchaSols.map(async ({ solution, ...rest }, i) => {
+                captchas[i].items = await calculateItemHashes(
+                    captchas[i].items
+                );
+
+                return computeCaptchaSolutionHash({
+                    ...rest,
+                    solution: matchItemsToSolutions(
+                        solution,
+                        captchas[i].items
+                    ),
+                });
+            })
+        );
         tree.build(captchaSolHashes)
         await env.contractInterface.changeSigner(dappUser.mnemonic)
         const captchaData = await tasks.getCaptchaData(providerOnChain.captcha_dataset_id.toString())

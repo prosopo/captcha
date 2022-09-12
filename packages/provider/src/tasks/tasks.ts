@@ -23,10 +23,12 @@ import {
     CaptchaStates, CaptchaStatus, CaptchaWithoutId, compareCaptchaSolutions,
     computeCaptchaHash,
     computeCaptchaSolutionHash,
-    computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, hashSolutions, LastCorrectCaptcha, parseCaptchaDataset,
+    computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, LastCorrectCaptcha, parseCaptchaDataset,
     parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse,
     ProsopoEnvError,
-    Dataset
+    Dataset,
+    matchItemsToSolutions,
+    calculateItemHashes
 } from '@prosopo/contract';
 import consola from "consola";
 import {buildDecodeVector} from '../codec/codec';
@@ -89,10 +91,20 @@ export class Tasks {
         const tree = new CaptchaMerkleTree();
         const dataset = {
             ...datasetRaw,
-            captchas: datasetRaw.captchas.map((captcha) => ({
-                ...captcha,
-                solution: hashSolutions(captcha.solution),
-            })),
+            captchas: await Promise.all(
+                datasetRaw.captchas.map(async (captcha) => {
+                    const items = await calculateItemHashes(captcha.items);
+
+                    return {
+                        ...captcha,
+                        items,
+                        solution: matchItemsToSolutions(
+                            captcha.solution,
+                            items
+                        ),
+                    };
+                })
+            ),
         } as Dataset;
         const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
         tree.build(captchaHashes);
