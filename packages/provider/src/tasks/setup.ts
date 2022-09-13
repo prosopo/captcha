@@ -122,21 +122,14 @@ export async function setupDappUser(env, dappUser: IUserAccount, provider: IProv
         const tree = new CaptchaMerkleTree()
         const captchas = [solved[0].captcha, unsolved[0].captcha]
         const captchaSols = captchas.map(captcha => convertCaptchaToCaptchaSolution(captcha))
-        const captchaSolHashes = await Promise.all(
-            captchaSols.map(async ({ solution, ...rest }, i) => {
-                captchas[i].items = await calculateItemHashes(
-                    captchas[i].items
-                );
+        const captchaSolHashes = captchaSols.map(({ solution, ...rest }, i) => {
+            captchas[i].items = calculateItemHashes(captchas[i].items);
 
-                return computeCaptchaSolutionHash({
-                    ...rest,
-                    solution: matchItemsToSolutions(
-                        solution,
-                        captchas[i].items
-                    ),
-                });
-            })
-        );
+            return computeCaptchaSolutionHash({
+                ...rest,
+                solution: matchItemsToSolutions(solution, calculateItemHashes(captchas[i].items)),
+            });
+        });
         tree.build(captchaSolHashes)
         await env.contractInterface.changeSigner(dappUser.mnemonic)
         const captchaData = await tasks.getCaptchaData(providerOnChain.captcha_dataset_id.toString())

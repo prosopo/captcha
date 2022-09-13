@@ -12,24 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { calculateItemHashes, CaptchaMerkleTree, CaptchaSolution, CaptchaTypes, CaptchaWithoutId, Dataset, matchItemsToSolutions } from '@prosopo/contract';
-import chai from "chai";
-import chaiAsPromised from "chai-as-promised";import * as path from 'path';
+import { expect } from "chai";
 import {
     addHashesToDataset, compareCaptchaSolutions,
     computeCaptchaHash, computeCaptchaSolutionHash, computePendingRequestHash,
     parseCaptchaDataset, parseCaptchaSolutions, sortAndComputeHashes
 } from '@prosopo/contract';
+import path from 'path';
 
-chai.should();
-chai.use(chaiAsPromised);
-const expect = chai.expect;
-
-const MOCK_ITEMS = new Array(9).fill(0).map((_, i) => ({
-    path: path.join(process.cwd(), `/tests/mocks/data/img/01.0${i + 1}.jpeg`),
-    type: "image",
-}));
-
-let MOCK_ITEMS_HASHED: any[] = [];
+const MOCK_ITEMS = calculateItemHashes(
+    new Array(9).fill(0).map((_, i) => ({
+        path: path.join(
+            process.cwd(),
+            `/tests/mocks/data/img/01.0${i + 1}.jpeg`
+        ),
+        type: "image",
+    }))
+);
 
 const DATASET = {
     format: 'SelectAll' as CaptchaTypes,
@@ -72,13 +71,13 @@ const RECEIVED = [
     {
         captchaId:
             "0x29aa041cdf88e02a27ea3ef9019413112b0184d73f0f44d9b7c753ef00071c16",
-        solution: [] as string[],
+        solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
         salt: "",
     },
     {
         captchaId:
             "0xb7e53094e138f1048f4f23f08da14296d4b20e05dd13121f8bc24c94b9a605fc",
-        solution: [] as string[],
+        solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
         salt: "",
     },
 ];
@@ -88,7 +87,7 @@ const STORED = [
         captchaId:
             "0x29aa041cdf88e02a27ea3ef9019413112b0184d73f0f44d9b7c753ef00071c16",
         salt: "0x1",
-        items: [] as any[],
+        items: MOCK_ITEMS,
         target: "",
         solved: true,
     },
@@ -96,40 +95,26 @@ const STORED = [
         captchaId:
             "0xb7e53094e138f1048f4f23f08da14296d4b20e05dd13121f8bc24c94b9a605fc",
         salt: "0x2",
-        items: [] as any[],
+        items: MOCK_ITEMS,
         target: "",
         solved: true,
     },
 ];
 
 describe('CAPTCHA FUNCTIONS', () => {
-    before(async () => {
-        MOCK_ITEMS_HASHED = await calculateItemHashes(MOCK_ITEMS);
-        STORED.forEach((item) => (item.items = MOCK_ITEMS_HASHED));
-        RECEIVED.forEach(
-            (item) =>
-                (item.solution = matchItemsToSolutions(
-                    [0, 1, 2],
-                    MOCK_ITEMS_HASHED
-                ))
-        );
-    });
-
     it('Parses a captcha dataset correctly', () => {
         expect(function () { parseCaptchaDataset(JSON.parse(JSON.stringify(DATASET)) as JSON); }).to.not.throw();
     });
 
-    it('Captcha data set is hashed correctly', async () => {
+    it('Captcha data set is hashed correctly', () => {
         const dataset = {
             ...DATASET,
-            captchas: await Promise.all(
-                DATASET.captchas.map(async (captcha) => ({
-                    ...captcha,
-                    items: await calculateItemHashes(captcha.items),
-                }))
-            ),
+            captchas: DATASET.captchas.map((captcha) => ({
+                ...captcha,
+                items: calculateItemHashes(captcha.items),
+            })),
         };
-        const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
+        const captchaHashes = dataset.captchas.map(computeCaptchaHash);
 
         expect(captchaHashes[0]).to.equal('0x5ca830bbf3dcb0b080f6a03636c348a86a045a094ba58d687d347c53d2c9524a');
         expect(captchaHashes[1]).to.equal('0xf371668e49f2b9bfe48e6a1066f0a4155e6604cb721b1aedfc8f50de22fad67b');
@@ -149,15 +134,15 @@ describe('CAPTCHA FUNCTIONS', () => {
         }).to.throw();
     });
 
-    it('Captchas are hashed properly', async () => {
+    it('Captchas are hashed properly', () => {
         const captcha = {
-            solution: matchItemsToSolutions([0], MOCK_ITEMS_HASHED),
+            solution: matchItemsToSolutions([0], MOCK_ITEMS),
             salt: "0x03",
             target: "plane",
-            items: MOCK_ITEMS_HASHED,
+            items: MOCK_ITEMS,
         } as CaptchaWithoutId;
 
-        expect(await computeCaptchaHash(captcha)).to.be.a('string');
+        expect(computeCaptchaHash(captcha)).to.be.a('string');
     });
 
     it('Captcha hashes are successfully added to dataset', () => {
@@ -189,23 +174,23 @@ describe('CAPTCHA FUNCTIONS', () => {
         }).to.throw();
     });
 
-    it('Captcha solutions are correctly sorted and computed', async () => {
-        const idsAndHashes = await sortAndComputeHashes(RECEIVED, STORED);
+    it('Captcha solutions are correctly sorted and computed', () => {
+        const idsAndHashes = sortAndComputeHashes(RECEIVED, STORED);
 
         expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true;
     });
 
-    it('Captcha solutions are correctly sorted and computed - non matching order', async () => {
-        const idsAndHashes = await sortAndComputeHashes(RECEIVED, [STORED[1], STORED[0]]);
+    it('Captcha solutions are correctly sorted and computed - non matching order', () => {
+        const idsAndHashes = sortAndComputeHashes(RECEIVED, [STORED[1], STORED[0]]);
 
         expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true;
     });
 
-    it('Matching captcha solutions are correctly compared, returning true', async () => {
-        expect(await compareCaptchaSolutions(RECEIVED, STORED)).to.be.true;
+    it('Matching captcha solutions are correctly compared, returning true', () => {
+        expect(compareCaptchaSolutions(RECEIVED, STORED)).to.be.true;
     });
 
-    it('Non-matching captcha solutions are correctly compared, returning false', async () => {
+    it('Non-matching captcha solutions are correctly compared, throwing an error', () => {
         const stored = [
             {
                 ...STORED[0],
@@ -215,16 +200,15 @@ describe('CAPTCHA FUNCTIONS', () => {
             STORED[1],
         ];
 
-        await expect(compareCaptchaSolutions(RECEIVED, stored)).to.eventually.be
-            .rejected;
+        expect(() => compareCaptchaSolutions(RECEIVED, stored)).to.throw();
     });
 
-    it('Mismatched length captcha solutions returns false', async () => {
+    it('Mismatched length captcha solutions returns false', () => {
         const received = [
             {
                 captchaId:
                     "0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb",
-                solution: matchItemsToSolutions([1, 2, 3], MOCK_ITEMS_HASHED),
+                solution: matchItemsToSolutions([1, 2, 3], MOCK_ITEMS),
                 salt: "",
             },
             ...RECEIVED
@@ -241,10 +225,10 @@ describe('CAPTCHA FUNCTIONS', () => {
             STORED[0],
         ];
 
-        expect(await compareCaptchaSolutions(received, stored)).to.be.false;
+        expect(compareCaptchaSolutions(received, stored)).to.be.false;
     });
 
-    it('Captchas with mismatching solution lengths are marked as incorrect', async () => {
+    it('Captchas with mismatching solution lengths are marked as incorrect', () => {
         const noSolutions = [
             {
                 captchaId: '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
@@ -278,7 +262,7 @@ describe('CAPTCHA FUNCTIONS', () => {
                 solved: true
             }
         ]
-        expect(await compareCaptchaSolutions(noSolutions, solutions )).to.be.false;
+        expect(compareCaptchaSolutions(noSolutions, solutions )).to.be.false;
 
     })
 
@@ -289,7 +273,7 @@ describe('CAPTCHA FUNCTIONS', () => {
     });
 
     it('Computes a captcha solution hash correctly', () => {
-        const captchaSolution = { captchaId: '1', salt: '', solution: matchItemsToSolutions([1, 2], MOCK_ITEMS_HASHED) } as CaptchaSolution;
+        const captchaSolution = { captchaId: '1', salt: '', solution: matchItemsToSolutions([1, 2], MOCK_ITEMS) } as CaptchaSolution;
         const hash = computeCaptchaSolutionHash(captchaSolution);
         expect(hash).to.be.equal('0x9598cced23411f819404454b7c0e256e697d20dc3e108b8394518d5ada976648');
     });

@@ -19,30 +19,30 @@ const DATASET: Dataset = {
     captchas: [
         {
             salt: '0x01020304',
-            items: [
+            items: calculateItemHashes([
                 { type: 'text', text: '1' },
                 { type: 'text', text: 'b' },
                 { type: 'text', text: 'c' }
-            ],
+            ]),
             target: 'letters',
             solution: [] as any[]
         },
         {
             salt: '0x02020304',
-            items: [
+            items: calculateItemHashes([
                 { type: 'text', text: 'c' },
                 { type: 'text', text: 'e' },
                 { type: 'text', text: '3' }
-            ],
+            ]),
             target: 'letters'
         },
         {
             salt: '0x03020304',
-            items: [
+            items: calculateItemHashes([
                 { type: 'text', text: 'h' },
                 { type: 'text', text: 'f' },
                 { type: 'text', text: '5' }
-            ],
+            ]),
             target: 'letters',
             solution: [] as any[]
         }
@@ -52,12 +52,7 @@ const DATASET: Dataset = {
 };
 
 describe('PROVIDER MERKLE TREE', () => {
-    before(async () => {
-        await Promise.all(
-            DATASET.captchas.map(async (captcha) => {
-                captcha.items = await calculateItemHashes(captcha.items);
-            })
-        );
+    before(() => {
         DATASET.captchas[0].solution = matchItemsToSolutions(
             [1, 2],
             DATASET.captchas[0].items
@@ -68,10 +63,10 @@ describe('PROVIDER MERKLE TREE', () => {
         );
     })
 
-    it('Tree contains correct leaf hashes when computing leaf hashes', async () => {
+    it('Tree contains correct leaf hashes when computing leaf hashes', () => {
         const dataset = DATASET;
         const tree = new CaptchaMerkleTree();
-        const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
+        const captchaHashes = dataset.captchas.map(computeCaptchaHash);
 
         tree.build(captchaHashes);
         const leafHashes = tree.leaves.map((leaf) => leaf.hash);
@@ -83,19 +78,19 @@ describe('PROVIDER MERKLE TREE', () => {
         ]);
     }
     );
-    it('Tree root is correct when computing leaf hashes', async () => {
+    it('Tree root is correct when computing leaf hashes', () => {
         const dataset = DATASET;
         const tree = new CaptchaMerkleTree();
-        const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
+        const captchaHashes = dataset.captchas.map(computeCaptchaHash);
         
         tree.build(captchaHashes);
         expect(tree.root!.hash).to.equal('0x6b789beb90a4b7cda7c5e8ea863f114a122241a5278884bad94575089645d36e');
     }
     );
-    it('Tree proof works when computing leaf hashes', async () => {
+    it('Tree proof works when computing leaf hashes', () => {
         const dataset = DATASET;
         const tree = new CaptchaMerkleTree();
-        const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
+        const captchaHashes = dataset.captchas.map(computeCaptchaHash);
 
         tree.build(captchaHashes);
         const proof = tree.proof('0x0712abea4b4307c161ea64227ae1f9400f6844287ec4d574b9facfddbf5f542a');

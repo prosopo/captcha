@@ -91,22 +91,17 @@ export class Tasks {
         const tree = new CaptchaMerkleTree();
         const dataset = {
             ...datasetRaw,
-            captchas: await Promise.all(
-                datasetRaw.captchas.map(async (captcha) => {
-                    const items = await calculateItemHashes(captcha.items);
+            captchas: datasetRaw.captchas.map((captcha) => {
+                const items = calculateItemHashes(captcha.items);
 
-                    return {
-                        ...captcha,
-                        items,
-                        solution: matchItemsToSolutions(
-                            captcha.solution,
-                            items
-                        ),
-                    };
-                })
-            ),
+                return {
+                    ...captcha,
+                    items,
+                    solution: matchItemsToSolutions(captcha.solution, items),
+                };
+            }),
         } as Dataset;
-        const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
+        const captchaHashes = dataset.captchas.map(computeCaptchaHash);
         tree.build(captchaHashes);
         const datasetHashes = addHashesToDataset(dataset, tree);
         datasetHashes.datasetId = tree.root?.hash;
@@ -236,7 +231,7 @@ export class Tasks {
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
-            if (await compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
                 response = {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
