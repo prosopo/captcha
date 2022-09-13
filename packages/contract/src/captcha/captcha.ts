@@ -28,7 +28,7 @@ import {
     HashedSolution,
     RawSolution
 } from '../types';
-import { hexHash, imageHash } from './util';
+import { hexHash } from './util';
 import {ProsopoEnvError} from "../handlers";
 
 // import {encodeAddress} from "@polkadot/util-crypto";
@@ -75,37 +75,29 @@ function captchaSort<T extends { captchaId: string }>(a: T, b: T) {
     return a.captchaId.localeCompare(b.captchaId);
 }
 
-export async function sortAndComputeHashes(
+export function sortAndComputeHashes(
     received: CaptchaSolution[],
     stored: Captcha[]
-): Promise<{ captchaId: string; hash: string }[]> {
+): { captchaId: string; hash: string }[] {
     received.sort(captchaSort);
     stored.sort(captchaSort);
 
-    return Promise.all(
-        stored
-            .map(
-                async (
-                    { salt, items = [], target = "", captchaId, solved },
-                    index
-                ) => {
-                    if (captchaId != received[index].captchaId) {
-                        throw new ProsopoEnvError(
-                            ERRORS.CAPTCHA.ID_MISMATCH.message
-                        );
-                    }
+    return stored.map(
+        ({ salt, items = [], target = "", captchaId, solved }, index) => {
+            if (captchaId != received[index].captchaId) {
+                throw new ProsopoEnvError(ERRORS.CAPTCHA.ID_MISMATCH.message);
+            }
 
-                    return {
-                        hash: await computeCaptchaHash({
-                            solution: solved ? received[index].solution : [],
-                            salt,
-                            items,
-                            target,
-                        }),
-                        captchaId,
-                    };
-                }
-            )
+            return {
+                hash: computeCaptchaHash({
+                    solution: solved ? received[index].solution : [],
+                    salt,
+                    items,
+                    target,
+                }),
+                captchaId,
+            };
+        }
     );
 }
 
@@ -115,9 +107,9 @@ export async function sortAndComputeHashes(
  * @param  {Captcha[]} stored
  * @return {boolean}
  */
-export async function compareCaptchaSolutions(received: CaptchaSolution[], stored: Captcha[]): Promise<boolean> {
+export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Captcha[]): boolean {
     if (received.length && stored.length && received.length === stored.length) {
-        const hashes = await sortAndComputeHashes(received, stored);
+        const hashes = sortAndComputeHashes(received, stored);
         return hashes.every(({ hash, captchaId }) => hash === captchaId);
     }
 
@@ -142,18 +134,16 @@ export function computeCaptchaHash(captcha: CaptchaWithoutId) {
     );
 }
 
-export async function calculateItemHashes(items: any[]): Promise<any[]> {
-    return Promise.all(items.map(async (item) => {
-        if (item.type === "image") {
-            return { ...item, hash: await imageHash(item.path as string) };
-        } else if (item.type === "text") {
-            return { ...item, hash: hexHash(item.text as string) };
+export function calculateItemHashes(items: any[]): any[] {
+    return items.map((item) => {
+        if (item.type === "image" || item.type === "text") {
+            return { ...item, hash: hexHash((item.text || item.path) as string) };
         } else {
             throw new ProsopoEnvError(
                 ERRORS.CAPTCHA.INVALID_ITEM_FORMAT.message
             );
         }
-    }));
+    });
 }
 
 export function matchItemsToSolutions(
