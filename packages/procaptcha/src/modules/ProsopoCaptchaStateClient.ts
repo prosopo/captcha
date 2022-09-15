@@ -69,7 +69,7 @@ export class ProsopoCaptchaStateClient {
             return;
         }
 
-        const signer = this.context.getExtension().getExtension().signer;
+        const signer = this.context.getExtension().getExtension()?.signer;
 
         const currentCaptcha = captchaChallenge!.captchas[captchaIndex];
         const { datasetId } = currentCaptcha.captcha;
@@ -78,24 +78,29 @@ export class ProsopoCaptchaStateClient {
 
         let submitResult: TCaptchaSubmitResult | Error;
 
-        try {
-            submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, datasetId!, solutions);
-        } catch (err) {
-            submitResult = err as Error;
-        }
+        if(signer) {
+            try {
 
-        if (this.context.callbacks?.onSubmit) {
-            this.context.callbacks.onSubmit(submitResult, this.manager.state);
+                submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, datasetId!, solutions);
+            } catch (err) {
+                submitResult = err as Error;
+            }
+
+            if (this.context.callbacks?.onSubmit) {
+                this.context.callbacks.onSubmit(submitResult, this.manager.state);
+            }
+
+            this.manager.update({ captchaSolution: [] });
+
+            if (submitResult instanceof Error) {
+
+                return;
+            }
+            await this.onSolved(submitResult);
         }
 
         this.manager.update({ captchaSolution: [] });
 
-        if (submitResult instanceof Error) {
-
-            return;
-        }
-
-        await this.onSolved(submitResult);
     }
 
 

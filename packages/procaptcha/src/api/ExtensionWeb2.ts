@@ -13,38 +13,43 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { web3Enable, web3FromSource, web3Accounts } from "@polkadot/extension-dapp";
-import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types"
-import { SignerPayloadRaw } from "@polkadot/types/types";
+import {
+    InjectedAccounts,
+    InjectedAccountWithMeta,
+    InjectedExtension,
+    InjectedMetadata, InjectedProvider
+} from "@polkadot/extension-inject/types"
 import storage from "../modules/storage";
-import { IExtensionInterface } from "../types/client";
+import {IExtensionInterface} from "../types/client";
 import AsyncFactory from "./AsyncFactory";
 import {ProsopoEnvError} from "@prosopo/contract";
+import {AccountCreator} from "./AccountCreator";
+import {WsProvider} from "@polkadot/rpc-provider";
+import Signer from "@polkadot/extension-base/page/Signer";
+import {
+    RequestTypes,
+    MessageTypesWithNullRequest,
+    TransportRequestMessage,
+    ResponseTypes
+} from "@polkadot/extension-base/background/types";
 
+export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
 
-export class Extension extends AsyncFactory implements IExtensionInterface {
-
-    private extension: InjectedExtension;
+    private extension?: InjectedExtension;
     private account: InjectedAccountWithMeta | undefined;
     private accounts: InjectedAccountWithMeta[];
-    private injectedExtensions: InjectedExtension[];
 
-    public async init() {
-        await this.checkExtension();
-        await this.setAccounts();
+    protected web3: boolean;
+    protected wsProvider: WsProvider
+
+    public async init(wsProvider: WsProvider) {
         await this.setExtension();
+        this.wsProvider = wsProvider;
         return this;
     }
 
     public async checkExtension() {
-        try {
-            this.injectedExtensions = await web3Enable('Prosopo');
-        } catch (err) {
-            throw new ProsopoEnvError(err);
-        }
-        if (!this.injectedExtensions.length) {
-            throw new ProsopoEnvError("No extension found");
-        }
+        return
     }
 
     public getExtension() {
@@ -52,24 +57,42 @@ export class Extension extends AsyncFactory implements IExtensionInterface {
     }
 
     private async setExtension() {
-        try {
-            // https://polkadot.js.org/docs/extension/cookbook/
-            this.extension = await web3FromSource(this.accounts[0].meta.source);
-        } catch (err) {
-            throw new ProsopoEnvError(err);
+        /*
+        InjectedAccounts
+        get: (anyType?: boolean) => Promise<InjectedAccount[]>;
+        subscribe: (cb: (accounts: InjectedAccount[]) => void | Promise<void>) => Unsubcall;
+         */
+        const injectedAccounts = {
+            get: () => Promise.resolve([]), subscribe: () => () => {
+            }
         }
-        if (!this.extension) {
-            throw new ProsopoEnvError("Extension not found");
+
+        async function sendMessage<TMessageType extends MessageTypesWithNullRequest, TResponse>(message: TMessageType): Promise<void> {
+            return new Promise<void>((resolve, reject) => {
+
+                resolve();
+
+            });
         }
+
+        await sendMessage('pub(authorize.tab)' as MessageTypesWithNullRequest);
+        const signer = new Signer(sendMessage)
+        this.extension = {
+            name: "polkadot-js-web2",
+            version: "procaptcha",
+            accounts: injectedAccounts,
+            signer: signer,
+        }
+        return
     }
 
     public getAccounts() {
         return this.accounts;
     }
 
-    private async setAccounts() {
+    private async setAccounts(accounts: InjectedAccountWithMeta[]) {
         try {
-            this.accounts = await web3Accounts();
+            this.accounts = accounts;
         } catch (err) {
             throw new ProsopoEnvError(err);
         }
@@ -81,9 +104,11 @@ export class Extension extends AsyncFactory implements IExtensionInterface {
     }
 
     public setAccount(address: string) {
+
         if (!this.accounts.length) {
             throw new ProsopoEnvError("No accounts found");
         }
+
         const account = this.accounts.find(acc => acc.address === address);
         if (!account) {
             throw new ProsopoEnvError("Account not found");
@@ -109,13 +134,15 @@ export class Extension extends AsyncFactory implements IExtensionInterface {
         }
     }
 
-    // public async signRaw(raw: SignerPayloadRaw) {
-    //     if (!this.extension.signer) {
-    //         throw new ProsopoEnvError("No signer found");
-    //     }
-    //     return this.extension.signer?.signRaw!({ ...raw, address: this.account!.address });
-    // }
+    public async createAccount() {
+        const accountCreator = await AccountCreator.create(this.wsProvider);
+        const storedAccount = storage.getAccount();
+        const account = await accountCreator.createAccount(undefined, storedAccount)
+        await this.setAccounts([account])
+        this.setAccount(account.address)
+        return account
+    }
 
 }
 
-export default Extension;
+export default ExtensionWeb2;
