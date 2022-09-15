@@ -13,16 +13,33 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import {randomAsHex, blake2AsHex} from '@polkadot/util-crypto';
-import {CaptchaSolutionRaw, CaptchaSolution, CaptchaMerkleTree, CaptchaSolutionCommitment} from '@prosopo/contract';
-import {Signer} from "@polkadot/api/types";
-import {ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolutionResponse} from "../types/api";
-import {TransactionResponse} from "../types/contract";
+import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
+// import {computeCaptchaSolutionHash} from '@prosopo/provider';
+import {
+    CaptchaSolution,
+    CaptchaMerkleTree,
+    CaptchaSolutionCommitment,
+    CaptchaSolutionRaw,
+} from "@prosopo/contract";
+import { Signer } from "@polkadot/api/types";
+
+import { ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
+import { TransactionResponse } from "../types/contract";
+
 import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
 import {TCaptchaSubmitResult} from '../types/client';
 import {ProsopoApiError} from "../api/handlers";
-import { hashSolutions, computeCaptchaSolutionHash } from '@prosopo/contract';
+import { matchItemsToSolutions } from '@prosopo/contract';
+
+
+function hexHash(data: string | Uint8Array): string {
+    return blake2AsHex(data);
+}
+
+function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
+    return hexHash([captcha.captchaId, [...captcha.solution].sort(), captcha.salt].join());
+}
 
 export type SubmitFunction =
     typeof ProsopoCaptchaApi.prototype.submitCaptchaSolutionWeb3
@@ -52,16 +69,15 @@ export class ProsopoCaptchaApi {
         return captchaChallenge;
     }
 
-    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolutionRaw[]): Promise<TCaptchaSubmitResult> {
+    public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]): Promise<TCaptchaSubmitResult> {
         return this.submitCaptchaFn(signer, requestHash, datasetId, solutions);
     }
 
-    async submitCaptchaSolutionWeb2(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolutionRaw[]): Promise<TCaptchaSubmitResult> {
+    async submitCaptchaSolutionWeb2(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]): Promise<TCaptchaSubmitResult> {
         const salt = randomAsHex();
         const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(
             (captcha) => ({
                 ...captcha,
-                solution: hashSolutions(captcha.solution),
                 salt,
             })
         );
@@ -76,13 +92,12 @@ export class ProsopoCaptchaApi {
         return [result, undefined, undefined];
     }
 
-    public async submitCaptchaSolutionWeb3(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolutionRaw[]) : Promise<TCaptchaSubmitResult> {
+    public async submitCaptchaSolutionWeb3(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<TCaptchaSubmitResult> {
         const salt = randomAsHex();
         const tree = new CaptchaMerkleTree();
         const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(
             (captcha) => ({
                 ...captcha,
-                solution: hashSolutions(captcha.solution),
                 salt,
             })
         );
