@@ -725,12 +725,13 @@ describe("CONTRACT TASKS", () => {
             initialCommitmentId,
             accountAddress(providerAccount)
         );
-        const {commitment, commitmentId, tree} =
-      await tasks.buildTreeAndGetCommitment(captchaSolutions);
+        const {commitmentId, tree} =
+      await tasks.buildTreeAndGetCommitmentId(captchaSolutions);
 
         expect(tree).to.deep.equal(initialTree);
-        expect(commitment).to.deep.equal(commitment);
         expect(commitmentId).to.equal(initialCommitmentId);
+        const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
+        expect(commitment).to.not.be.undefined;
     });
 
     it("BuildTreeAndGetCommitment throws if commitment does not exist", async () => {
@@ -744,7 +745,7 @@ describe("CONTRACT TASKS", () => {
             ...captcha,
             salt: salt,
         }));
-        const commitmentPromise = tasks.buildTreeAndGetCommitment(
+        const commitmentPromise = tasks.buildTreeAndGetCommitmentId(
             captchaSolutionsSalted
         );
 
