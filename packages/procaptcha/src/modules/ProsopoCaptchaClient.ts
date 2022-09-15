@@ -49,6 +49,7 @@ export class ProsopoCaptchaClient {
     }
 
     public getExtension() {
+        console.log("getExtension", ProsopoCaptchaClient.extension)
         return ProsopoCaptchaClient.extension;
     }
 
