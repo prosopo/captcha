@@ -78,6 +78,9 @@ export const ERRORS = {
         },
         ID_MISMATCH: {
             message: 'captcha id mismatch'
-        }
+        },
+        MISSING_ITEM_HASH: {
+            message: 'missing item hash'
+        },
     }
 }
