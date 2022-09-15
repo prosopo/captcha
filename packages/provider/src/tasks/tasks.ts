@@ -23,10 +23,12 @@ import {
     CaptchaStates, CaptchaStatus, CaptchaWithoutId, compareCaptchaSolutions,
     computeCaptchaHash,
     computeCaptchaSolutionHash,
-    computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, hashSolutions, LastCorrectCaptcha, parseCaptchaDataset,
+    computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, LastCorrectCaptcha, parseCaptchaDataset,
     parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse,
     ProsopoEnvError,
-    Dataset
+    Dataset,
+    matchItemsToSolutions,
+    calculateItemHashes
 } from '@prosopo/contract';
 import consola from "consola";
 import {buildDecodeVector} from '../codec/codec';
@@ -89,12 +91,17 @@ export class Tasks {
         const tree = new CaptchaMerkleTree();
         const dataset = {
             ...datasetRaw,
-            captchas: datasetRaw.captchas.map((captcha) => ({
-                ...captcha,
-                solution: hashSolutions(captcha.solution),
-            })),
+            captchas: datasetRaw.captchas.map((captcha) => {
+                const items = calculateItemHashes(captcha.items);
+
+                return {
+                    ...captcha,
+                    items,
+                    solution: matchItemsToSolutions(captcha.solution, items),
+                };
+            }),
         } as Dataset;
-        const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
+        const captchaHashes = dataset.captchas.map(computeCaptchaHash);
         tree.build(captchaHashes);
         const datasetHashes = addHashesToDataset(dataset, tree);
         datasetHashes.datasetId = tree.root?.hash;
@@ -186,6 +193,7 @@ export class Tasks {
                 const proof = tree.proof(captcha.captchaId)
                 // cannot pass solution to dapp user as they are required to solve the captcha!
                 delete captcha.solution
+                captcha.items = shuffleArray(captcha.items)
                 captchas.push({captcha, proof})
             }
             return captchas
@@ -227,7 +235,7 @@ export class Tasks {
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
-            if (await compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
                 response = {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
