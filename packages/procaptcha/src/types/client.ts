@@ -16,22 +16,22 @@
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
 import { ProsopoCaptchaConfig, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
-import {CaptchaSolution, CaptchaSolutionCommitment} from "@prosopo/contract";
-import { Extension } from "../api/Extension";
+import { CaptchaSolutionCommitment} from "@prosopo/contract";
 
 export type TExtensionAccount = InjectedAccountWithMeta;
 
-export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse, CaptchaSolutionCommitment];
+export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse?, CaptchaSolutionCommitment?];
 
 export interface IExtensionInterface {
     checkExtension(): void;
-    getExtension(): InjectedExtension;
+    getExtension(): InjectedExtension | undefined;
     getAccounts(): InjectedAccountWithMeta[];
     getAccount(): InjectedAccountWithMeta | undefined;
     setAccount(account: string): void;
     unsetAccount(): void;
     getDefaultAccount(): InjectedAccountWithMeta | undefined;
     setDefaultAccount(): void;
+    createAccount(): Promise<InjectedAccountWithMeta | undefined>;
   }
 
 export interface ICaptchaClientEvents {

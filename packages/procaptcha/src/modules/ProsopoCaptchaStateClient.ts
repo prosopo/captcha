@@ -58,58 +58,63 @@ export class ProsopoCaptchaStateClient {
     }
 
     public async onSubmit() {
-        const { captchaChallenge, captchaIndex, captchaSolution } = this.manager.state;
+        const {captchaChallenge, captchaIndex, captchaSolution} = this.manager.state;
 
         const nextCaptchaIndex = captchaIndex + 1;
 
         if (nextCaptchaIndex < captchaChallenge!.captchas.length) {
             captchaSolution[nextCaptchaIndex] = [];
-            this.manager.update({ captchaIndex: nextCaptchaIndex, captchaSolution });
+            this.manager.update({captchaIndex: nextCaptchaIndex, captchaSolution});
 
             return;
         }
 
-        const signer = this.context.getExtension().getExtension().signer;
+        const signer = this.context.getExtension().getExtension()?.signer;
 
         const currentCaptcha = captchaChallenge!.captchas[captchaIndex];
-        const { datasetId } = currentCaptcha.captcha;
+        const {datasetId} = currentCaptcha.captcha;
 
         const solutions = this.parseSolution(captchaChallenge!, captchaSolution);
 
         let submitResult: TCaptchaSubmitResult | Error;
 
-        try {
-            submitResult = await this.context
-                .getCaptchaApi()!
-                .submitCaptchaSolution(
-                    signer,
-                    captchaChallenge!.requestHash,
-                    datasetId!,
-                    solutions.map(({ solution, ...rest }, i) => ({
-                        ...rest,
-                        solution: matchItemsToSolutions(
-                            solution,
-                            captchaChallenge?.captchas[i].captcha
-                                .items
-                        ),
-                    }))
-                );
-        } catch (err) {
-            submitResult = err as Error;
-        }
+        if (signer) {
+            try {
 
-        if (this.context.callbacks?.onSubmit) {
-            this.context.callbacks.onSubmit(submitResult, this.manager.state);
-        }
+                submitResult = await this.context
+                    .getCaptchaApi()!
+                    .submitCaptchaSolution(
+                        signer,
+                        captchaChallenge!.requestHash,
+                        datasetId!,
+                        solutions.map(({solution, ...rest}, index) => ({
+                            ...rest,
+                            solution: matchItemsToSolutions(
+                                solution,
+                                captchaChallenge?.captchas[index].captcha
+                                    .items
+                            ),
+                        }))
+                    );
+            } catch (err) {
+                submitResult = err as Error;
+            }
 
+            if (this.context.callbacks?.onSubmit) {
+                this.context.callbacks.onSubmit(submitResult, this.manager.state);
+            }
+
+            this.manager.update({captchaSolution: []});
+
+            if (submitResult instanceof Error) {
+
+                return;
+            }
+
+            await this.onSolved(submitResult);
+        }
         this.manager.update({ captchaSolution: [] });
 
-        if (submitResult instanceof Error) {
-
-            return;
-        }
-
-        await this.onSolved(submitResult);
     }
 
 
