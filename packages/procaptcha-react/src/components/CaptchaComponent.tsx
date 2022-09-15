@@ -34,7 +34,6 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
     const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
     const [state, update] = useReducer(captchaStateReducer, { captchaIndex: 0, captchaSolution: [] });
-
     const { account, contractAddress } = manager.state;
     const { captchaChallenge, captchaIndex, captchaSolution } = state;
     const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
@@ -42,8 +41,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     const stateClientInterface = new ProsopoCaptchaStateClient(clientInterface, { state, update });
 
     useEffect(() => {
-
-        clientInterface.onLoad();
+        clientInterface.onLoad(!manager.state.config['web3']);
 
     }, []);
 
@@ -67,7 +65,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
         }
     }, [account]);
 
-    
+
     // https://www.npmjs.com/package/i18next
 
     return (
