@@ -23,6 +23,7 @@ function App() {
     const [showCaptchas, setShowCaptchas] = useState(false);
 
     const showCaptchaClick = () => {
+        console.log("showCaptchaClick");
         setShowCaptchas(true);
         status.update({info: ""});
     };
@@ -61,7 +62,8 @@ function App() {
 
     const manager = clientInterface.manager;
     const status = clientInterface.status;
-
+    console.log("manager", manager);
+    console.log("showCaptchas", showCaptchas)
     return (
         <Box className={"App"}>
             <div className={"flex-container"}>
@@ -74,8 +76,8 @@ function App() {
                 <div style={{order: 2}}>
                     {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
                     {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
-
-                    {clientInterface.getExtension() && !manager.state.account &&
+                    {console.log(clientInterface.getExtension())}
+                    {clientInterface.getExtension() &&
                       <ExtensionAccountSelect
                         value={manager.state.account}
                         options={clientInterface.getExtension().getAccounts()}
