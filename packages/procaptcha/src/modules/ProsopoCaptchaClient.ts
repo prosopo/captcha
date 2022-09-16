@@ -82,18 +82,25 @@ export class ProsopoCaptchaClient {
 
         if (this.callbacks?.onLoad) {
             this.callbacks.onLoad(ProsopoCaptchaClient.extension, this.manager.state.config['prosopoContractAccount']);
-            this.manager.update({ contractAddress: this.manager.state.config['prosopoContractAccount'] });
+            this.manager.update({contractAddress: this.manager.state.config['prosopoContractAccount']});
         }
 
         let account: TExtensionAccount | undefined;
         if (createAccount) {
-            account = await this.getExtension().createAccount()
-
+            try {
+                account = await this.getExtension().createAccount()
+            } catch (err) {
+                throw new ProsopoEnvError(err);
+            }
         } else {
-            account = await this.getExtension().getAccount();
-
+            try {
+                account = await this.getExtension().getAccount()
+            } catch (err) {
+                throw new ProsopoEnvError(err);
+            }
         }
         await this.onAccountChange(account);
+
 
     }
 
