@@ -102,7 +102,7 @@ function App() {
                           I am human
                         </Typography>
                       </Button>}
-                    {manager.state.account &&
+                    {manager.state.account && manager.state.config.web3 &&
                       <Button onClick={disconnectAccount} className={"iAmHumanButton"}>
                         <Typography className={"iAmHumanButtonLabel"}>
                           Disconnect account
