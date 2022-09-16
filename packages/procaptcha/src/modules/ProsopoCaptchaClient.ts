@@ -70,11 +70,11 @@ export class ProsopoCaptchaClient {
     }
 
     public async onLoad(createAccount?: boolean) {
-        let account: InjectedAccountWithMeta | undefined
 
         if (!ProsopoCaptchaClient.extension) {
             try {
                 ProsopoCaptchaClient.extension = await getExtension(this.manager.state.config['web3']);
+                console.log("extension", ProsopoCaptchaClient.extension)
             } catch (err) {
                 throw new ProsopoEnvError(err);
             }
@@ -82,10 +82,10 @@ export class ProsopoCaptchaClient {
 
         if (this.callbacks?.onLoad) {
             this.callbacks.onLoad(ProsopoCaptchaClient.extension, this.manager.state.config['prosopoContractAccount']);
+            this.manager.update({ contractAddress: this.manager.state.config['prosopoContractAccount'] });
         }
 
         if (createAccount) {
-            //this.manager.update({account: account});
             const account = await this.getExtension().createAccount()
             await this.onAccountChange(account);
         }
