@@ -85,10 +85,15 @@ export class ProsopoCaptchaClient {
             this.manager.update({ contractAddress: this.manager.state.config['prosopoContractAccount'] });
         }
 
+        let account: TExtensionAccount | undefined;
         if (createAccount) {
-            const account = await this.getExtension().createAccount()
-            await this.onAccountChange(account);
+            account = await this.getExtension().createAccount()
+
+        } else {
+            account = await this.getExtension().getAccount();
+
         }
+        await this.onAccountChange(account);
 
     }
 
