@@ -12,7 +12,7 @@ const config: ProsopoCaptchaConfig = {
     "dappAccount": process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || '',
     "dappUrl": process.env.REACT_APP_DAPP_CONTRACT_URL || '',
     "solutionThreshold": 80,
-    "web3": false,
+    "web3": process.env.REACT_APP_WEB3 === "true",
     "prosopoContractAccount": process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || ''
 }
 
