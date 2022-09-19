@@ -11,6 +11,7 @@ import {
     CaptchaContextManager,
     ExtensionAccountSelect,
     useCaptcha,
+    devData
 } from "@prosopo/procaptcha-react";
 
 import config from "./config";
@@ -97,7 +98,11 @@ function App() {
                     </CaptchaContextManager.Provider>
 
                     {!showCaptchas &&
-                      <Button onClick={showCaptchaClick} className={"iAmHumanButton"}>
+                      <Button 
+                        onClick={showCaptchaClick} 
+                        className={"iAmHumanButton"} 
+                        {...devData('button-human')}
+                      >
                         <Typography className={"iAmHumanButtonLabel"}>
                           I am human
                         </Typography>
