@@ -17,6 +17,7 @@ import { Avatar } from "@mui/material";
 import { CaptchaResponseCaptcha } from "@prosopo/procaptcha";
 
 import { useStyles } from "../styles";
+import { devData } from "../util";
 
 
 export function CaptchaWidget({ challenge, solution, onChange }:
@@ -30,6 +31,7 @@ export function CaptchaWidget({ challenge, solution, onChange }:
     return (
         <>
             {items.map((item, index) => <Avatar
+                {...devData('captcha-item', {hash: item.hash})}
                 key={index}
                 src={item.path} 
                 variant="square"
