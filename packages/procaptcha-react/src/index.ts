@@ -15,3 +15,4 @@
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
 export * from './components';
 export * from './styles';
+export * from './util';

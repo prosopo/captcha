@@ -26,6 +26,7 @@ import { CaptchaContextManager } from "./CaptchaManager";
 import { CaptchaWidget } from "./CaptchaWidget";
 
 import { useStyles } from "../styles";
+import { devData } from "../util";
 
 
 export function CaptchaComponent({ clientInterface }: { clientInterface: ProsopoCaptchaClient }) {
@@ -80,12 +81,12 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
                         </Typography>
                     </Box>
 
-                    <Box className={classes.captchasBody}>
+                    <Box className={classes.captchasBody} {...devData('captcha-' + captchaIndex)}>
 
                         <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex] || []}
                             onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
 
-                        <Box className={classes.dotsContainer}>
+                        <Box className={classes.dotsContainer} {...devData('dots-captcha')}>
                             {captchaChallenge?.captchas.map((_, index) =>
                                 <Box key={index} className={captchaIndex === index ? classes.dot : classes.dotActive} />)}
                         </Box>
@@ -96,7 +97,11 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
                         <Button onClick={() => stateClientInterface.onCancel()} variant="text">
                             Cancel
                         </Button>
-                        <Button onClick={() => stateClientInterface.onSubmit()} variant="contained">
+                        <Button 
+                            onClick={() => stateClientInterface.onSubmit()} 
+                            variant="contained" 
+                            {...devData("button-next")}
+                        >
                             {captchaIndex + 1 < totalCaptchas ? "Next" : "Submit"}
                         </Button>
                     </Box>
