@@ -40,7 +40,6 @@ export class ProsopoCaptchaStateClient {
 
         try {
             captchaChallenge = await this.context.getCaptchaApi()?.getCaptchaChallenge();
-            console.log("captchaChallenge", captchaChallenge);
         } catch (err) {
             captchaChallenge = err as Error;
             throw new ProsopoEnvError(captchaChallenge)

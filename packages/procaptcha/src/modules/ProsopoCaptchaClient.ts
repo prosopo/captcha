@@ -27,7 +27,6 @@ import {getExtension} from "./extension";
 import {ProviderApi} from "../api/ProviderApi";
 import {ProsopoCaptchaApi} from "./ProsopoCaptchaApi";
 import {ProsopoEnvError} from "@prosopo/contract";
-import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
 
 export class ProsopoCaptchaClient {
 
@@ -49,7 +48,6 @@ export class ProsopoCaptchaClient {
     }
 
     public getExtension() {
-        console.log("getExtension", ProsopoCaptchaClient.extension)
         return ProsopoCaptchaClient.extension;
     }
 
@@ -74,7 +72,6 @@ export class ProsopoCaptchaClient {
         if (!ProsopoCaptchaClient.extension) {
             try {
                 ProsopoCaptchaClient.extension = await getExtension(this.manager.state.config['web3']);
-                console.log("extension", ProsopoCaptchaClient.extension)
             } catch (err) {
                 throw new ProsopoEnvError(err);
             }
@@ -105,7 +102,6 @@ export class ProsopoCaptchaClient {
     }
 
     public async onAccountChange(account?: TExtensionAccount) {
-        console.log("onAccountChange state", this.manager.state)
 
         if (!account) {
             this.onAccountUnset();

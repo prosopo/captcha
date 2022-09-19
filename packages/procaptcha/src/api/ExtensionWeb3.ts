@@ -104,7 +104,6 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
     public setDefaultAccount() {
         const defaultAccount = storage.getAccount();
         if (defaultAccount) {
-            console.log("setting default account", defaultAccount)
             this.setAccount(defaultAccount);
         }
     }
