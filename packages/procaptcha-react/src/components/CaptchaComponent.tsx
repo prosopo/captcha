@@ -42,7 +42,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     const stateClientInterface = new ProsopoCaptchaStateClient(clientInterface, { state, update });
 
     useEffect(() => {
-        clientInterface.onLoad(!manager.state.config['web3']);
+        clientInterface.onLoad(manager.state.config['web2']);
 
     }, []);
 
