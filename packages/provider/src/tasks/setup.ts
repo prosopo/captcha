@@ -115,20 +115,17 @@ export async function setupDappUser(env, dappUser: IUserAccount, provider: IProv
     if (providerOnChain) {
         const solved = await tasks.getCaptchaWithProof(providerOnChain.captcha_dataset_id.toString(), true, 1)
         const unsolved = await tasks.getCaptchaWithProof(providerOnChain.captcha_dataset_id.toString(), false, 1)
-        solved[0].captcha.solution = [2, 3, 4]
-        unsolved[0].captcha.solution = [1]
+        solved[0].captcha.solution = matchItemsToSolutions([2, 3, 4], solved[0].captcha.items)
+        unsolved[0].captcha.solution = matchItemsToSolutions([1], unsolved[0].captcha.items)
         solved[0].captcha.salt = '0xuser1'
         unsolved[0].captcha.salt = '0xuser2'
         const tree = new CaptchaMerkleTree()
         const captchas = [solved[0].captcha, unsolved[0].captcha]
         const captchaSols = captchas.map(captcha => convertCaptchaToCaptchaSolution(captcha))
-        const captchaSolHashes = captchaSols.map(({ solution, ...rest }, i) => {
+        const captchaSolHashes = captchaSols.map((captcha, i) => {
             captchas[i].items = calculateItemHashes(captchas[i].items);
 
-            return computeCaptchaSolutionHash({
-                ...rest,
-                solution: matchItemsToSolutions(solution, calculateItemHashes(captchas[i].items)),
-            });
+            return computeCaptchaSolutionHash(captcha);
         });
         tree.build(captchaSolHashes)
         await env.contractInterface.changeSigner(dappUser.mnemonic)
