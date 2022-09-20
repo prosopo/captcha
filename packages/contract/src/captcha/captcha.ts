@@ -17,8 +17,7 @@ import { ERRORS } from '../errors';
 import { CaptchaMerkleTree } from './merkle';
 import {
     AssetsResolver,
-    Captcha, CaptchaImage, CaptchaRaw, CaptchaSolution,
-    CaptchaSolutionRaw,
+    Captcha, CaptchaImage, CaptchaSolution,
     CaptchaSolutionSchema,
     CaptchaWithoutId,
     Dataset,
@@ -207,7 +206,7 @@ export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
  * @param  {Captcha} captcha
  * @return {CaptchaSolution}
  */
-export function convertCaptchaToCaptchaSolution(captcha: CaptchaRaw): CaptchaSolutionRaw {
+export function convertCaptchaToCaptchaSolution(captcha: Captcha): CaptchaSolution {
     return {captchaId: captcha.captchaId, salt: captcha.salt, solution: captcha.solution || []}
 }
 
