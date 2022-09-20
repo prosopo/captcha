@@ -15,7 +15,7 @@ describe("Captchas", () => {
   it("Number of displayed captchas equals number received in response", async () => {
     const captchas = await cy.clickIAmHuman().promisify();
 
-    cy.get("[data-cy='dots-captcha']")
+    cy.get("[data-cy='captcha-0'] > [data-cy='dots-captcha']")
       .find("div")
       .should("have.length", captchas.length);
   });
