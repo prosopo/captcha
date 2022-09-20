@@ -27,7 +27,6 @@ import {getExtension} from "./extension";
 import {ProviderApi} from "../api/ProviderApi";
 import {ProsopoCaptchaApi} from "./ProsopoCaptchaApi";
 import {ProsopoEnvError} from "@prosopo/contract";
-import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
 
 export class ProsopoCaptchaClient {
 
@@ -69,7 +68,6 @@ export class ProsopoCaptchaClient {
     }
 
     public async onLoad(createAccount?: boolean) {
-        let account: InjectedAccountWithMeta | undefined
 
         if (!ProsopoCaptchaClient.extension) {
             try {
@@ -81,18 +79,29 @@ export class ProsopoCaptchaClient {
 
         if (this.callbacks?.onLoad) {
             this.callbacks.onLoad(ProsopoCaptchaClient.extension, this.manager.state.config['prosopoContractAccount']);
+            this.manager.update({contractAddress: this.manager.state.config['prosopoContractAccount']});
         }
 
+        let account: TExtensionAccount | undefined;
         if (createAccount) {
-            //this.manager.update({account: account});
-            const account = await this.getExtension().createAccount()
-            await this.onAccountChange(account);
+            try {
+                account = await this.getExtension().createAccount()
+            } catch (err) {
+                throw new ProsopoEnvError(err);
+            }
+        } else {
+            try {
+                account = await this.getExtension().getAccount()
+            } catch (err) {
+                throw new ProsopoEnvError(err);
+            }
         }
+        await this.onAccountChange(account);
+
 
     }
 
     public async onAccountChange(account?: TExtensionAccount) {
-        console.log("onAccountChange state", this.manager.state)
 
         if (!account) {
             this.onAccountUnset();

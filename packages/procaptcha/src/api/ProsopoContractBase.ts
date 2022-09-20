@@ -69,6 +69,10 @@ export class ProsopoContractBase extends AsyncFactory {
         return this.dappAddress;
     }
 
+    public async disconnect(): Promise<void> {
+        await this.api.disconnect()
+    }
+
 
     public async query<T>(method: string, args: any[]): Promise<T | AnyJson | null> {
         try {

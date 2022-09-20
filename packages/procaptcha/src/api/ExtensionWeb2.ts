@@ -27,10 +27,7 @@ import {AccountCreator} from "./AccountCreator";
 import {WsProvider} from "@polkadot/rpc-provider";
 import Signer from "@polkadot/extension-base/page/Signer";
 import {
-    RequestTypes,
     MessageTypesWithNullRequest,
-    TransportRequestMessage,
-    ResponseTypes
 } from "@polkadot/extension-base/background/types";
 
 export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {

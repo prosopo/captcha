@@ -15,7 +15,6 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import {ApiPromise} from "@polkadot/api";
 import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
-import {ProviderInterface} from "@polkadot/rpc-provider/types";
 import AsyncFactory from "./AsyncFactory";
 import {decodeAddress, encodeAddress, Keyring} from "@polkadot/keyring";
 import {KeyringPair} from "@polkadot/keyring/types";
