@@ -59,6 +59,6 @@ export interface ProsopoCaptchaConfig {
   "dappAccount": string;
   "dappUrl": string;
   "solutionThreshold": number;
-  "web3": boolean;
+  "web2": boolean;
   "prosopoContractAccount": string;
 }

@@ -49,11 +49,11 @@ export class ProsopoCaptchaApi {
     protected providerApi: ProviderApi;
     protected submitCaptchaFn: SubmitFunction
 
-    constructor(contract: ProsopoContract, provider: ProsopoRandomProviderResponse, providerApi: ProviderApi, web3: boolean) {
+    constructor(contract: ProsopoContract, provider: ProsopoRandomProviderResponse, providerApi: ProviderApi, web2: boolean) {
         this.contract = contract;
         this.provider = provider;
         this.providerApi = providerApi;
-        this.submitCaptchaFn = web3 ? this.submitCaptchaSolutionWeb3 : this.submitCaptchaSolutionWeb2;
+        this.submitCaptchaFn = web2 ? this.submitCaptchaSolutionWeb2 : this.submitCaptchaSolutionWeb3;
     }
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {

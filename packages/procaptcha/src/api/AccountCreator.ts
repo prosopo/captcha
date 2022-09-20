@@ -19,6 +19,7 @@ import AsyncFactory from "./AsyncFactory";
 import {decodeAddress, encodeAddress, Keyring} from "@polkadot/keyring";
 import {KeyringPair} from "@polkadot/keyring/types";
 import {cryptoWaitReady, mnemonicGenerate} from "@polkadot/util-crypto";
+import { ProviderInterface } from "@polkadot/rpc-provider/types";
 
 export class AccountCreator extends AsyncFactory {
 
