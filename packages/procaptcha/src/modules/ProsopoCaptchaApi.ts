@@ -19,7 +19,6 @@ import {
     CaptchaSolution,
     CaptchaMerkleTree,
     CaptchaSolutionCommitment,
-    CaptchaSolutionRaw,
 } from "@prosopo/contract";
 import { Signer } from "@polkadot/api/types";
 
@@ -30,8 +29,6 @@ import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
 import {TCaptchaSubmitResult} from '../types/client';
 import {ProsopoApiError} from "../api/handlers";
-import { matchItemsToSolutions } from '@prosopo/contract';
-
 
 function hexHash(data: string | Uint8Array): string {
     return blake2AsHex(data);
