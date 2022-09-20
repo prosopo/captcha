@@ -79,7 +79,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
     }
   };
 
-  const onChange = (solution: number[][]) => {
+  const onChange = (solution: string[][]) => {
     console.log('onChange:', solution);
   };
 
