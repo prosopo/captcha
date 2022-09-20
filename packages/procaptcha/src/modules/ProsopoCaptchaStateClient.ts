@@ -17,7 +17,11 @@ import { ICaptchaStateReducer, TCaptchaSubmitResult } from "../types/client";
 import { GetCaptchaResponse } from "../types/api";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
-import { CaptchaSolution, convertCaptchaToCaptchaSolution, matchItemsToSolutions } from "@prosopo/contract";
+import {
+    CaptchaSolution,
+    convertCaptchaToCaptchaSolution,
+    ProsopoEnvError
+} from "@prosopo/contract";
 
 
 export class ProsopoCaptchaStateClient {
@@ -34,12 +38,13 @@ export class ProsopoCaptchaStateClient {
         let captchaChallenge: GetCaptchaResponse | Error | undefined;
 
         try {
-            captchaChallenge = await this.context.getCaptchaApi()!.getCaptchaChallenge();
+            captchaChallenge = await this.context.getCaptchaApi()?.getCaptchaChallenge();
         } catch (err) {
             captchaChallenge = err as Error;
+            throw new ProsopoEnvError(captchaChallenge)
         }
 
-        if (this.context.callbacks?.onLoadCaptcha) {
+        if (this.context.callbacks?.onLoadCaptcha && captchaChallenge) {
             this.context.callbacks.onLoadCaptcha(captchaChallenge);
         }
 
