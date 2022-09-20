@@ -29,9 +29,11 @@ function App() {
     };
 
     const onAccountChange = (account: TExtensionAccount) => {
-        setShowCaptchas(true);
-        status.update({info: "Selected account: " + account?.meta.name});
-        console.log("CAPTCHA API", clientInterface.getCaptchaApi());
+        if(account) {
+            //setShowCaptchas(true);
+            status.update({info: "Selected account: " + account?.meta.name});
+            console.log("CAPTCHA API", clientInterface.getCaptchaApi());
+        }
     };
 
     const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
@@ -60,8 +62,15 @@ function App() {
 
     const clientInterface = useCaptcha({config}, {onAccountChange, onChange, onSubmit, onSolved, onCancel});
 
+    const disconnectAccount = () => {
+        clientInterface.onAccountUnset()
+        status.update({info: ""});
+    };
+
+
     const manager = clientInterface.manager;
     const status = clientInterface.status;
+    console.log("manager", manager);
 
     return (
         <Box className={"App"}>
@@ -75,9 +84,8 @@ function App() {
                 <div style={{order: 2}}>
                     {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
                     {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
-
-                    {clientInterface.getExtension() && !manager.state.account &&
-                      <ExtensionAccountSelect
+                    {clientInterface.getExtension() && !manager.state.account && showCaptchas &&
+                        <ExtensionAccountSelect
                         value={manager.state.account}
                         options={clientInterface.getExtension().getAccounts()}
                         onChange={clientInterface.onAccountChange.bind(clientInterface)}
@@ -97,6 +105,12 @@ function App() {
                       >
                         <Typography className={"iAmHumanButtonLabel"}>
                           I am human
+                        </Typography>
+                      </Button>}
+                    {manager.state.account && manager.state.config.web3 &&
+                      <Button onClick={disconnectAccount} className={"iAmHumanButton"}>
+                        <Typography className={"iAmHumanButtonLabel"}>
+                          Disconnect account
                         </Typography>
                       </Button>}
                 </div>
