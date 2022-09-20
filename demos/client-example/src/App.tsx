@@ -49,7 +49,7 @@ function App() {
         status.update({info: ["onSolved:", `Captcha solution status: ${commitment.status}`]});
     }
 
-    const onChange = (solution: number[][]) => {
+    const onChange = (solution: string[][]) => {
         console.log("onChange:", solution);
     };
 
