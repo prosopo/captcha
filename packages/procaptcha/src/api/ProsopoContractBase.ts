@@ -23,6 +23,9 @@ import { ProviderInterface } from "@polkadot/rpc-provider/types";
 import { Signer } from "@polkadot/api/types";
 import { TransactionResponse } from '../types';
 import AsyncFactory from "./AsyncFactory";
+import {decodeAddress, encodeAddress, Keyring} from "@polkadot/keyring";
+import {KeyringPair} from "@polkadot/keyring/types";
+import {cryptoWaitReady, mnemonicGenerate} from "@polkadot/util-crypto";
 
 export class ProsopoContractBase extends AsyncFactory {
 
@@ -66,6 +69,11 @@ export class ProsopoContractBase extends AsyncFactory {
         return this.dappAddress;
     }
 
+    public async disconnect(): Promise<void> {
+        await this.api.disconnect()
+    }
+
+
     public async query<T>(method: string, args: any[]): Promise<T | AnyJson | null> {
         try {
             const abiMessage = this.abi.findMessage(method);
@@ -94,7 +102,7 @@ export class ProsopoContractBase extends AsyncFactory {
     // https://polkadot.js.org/docs/api/start/api.tx.subs/
     public async transaction(signer: Signer, method: string, args: any[]): Promise<TransactionResponse> {
 
-        
+
         const queryBeforeTx = await this.query(method, args);
 
         console.log("QUERY BEFORE TX....................", queryBeforeTx);
@@ -144,7 +152,7 @@ export class ProsopoContractBase extends AsyncFactory {
 
                 }
 
-                
+
                 // Instant seal OFF.
                 // if (status?.isFinalized) {
 

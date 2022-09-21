@@ -15,13 +15,13 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { web3Enable, web3FromSource, web3Accounts } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types"
-import { SignerPayloadRaw } from "@polkadot/types/types";
 import storage from "../modules/storage";
 import { IExtensionInterface } from "../types/client";
 import AsyncFactory from "./AsyncFactory";
+import {ProsopoEnvError} from "@prosopo/contract";
 
 
-export class Extension extends AsyncFactory implements IExtensionInterface {
+export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
 
     private extension: InjectedExtension;
     private account: InjectedAccountWithMeta | undefined;
@@ -39,10 +39,10 @@ export class Extension extends AsyncFactory implements IExtensionInterface {
         try {
             this.injectedExtensions = await web3Enable('Prosopo');
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoEnvError(err);
         }
         if (!this.injectedExtensions.length) {
-            throw new Error("No extension found");
+            throw new ProsopoEnvError("No extension found");
         }
     }
 
@@ -55,10 +55,10 @@ export class Extension extends AsyncFactory implements IExtensionInterface {
             // https://polkadot.js.org/docs/extension/cookbook/
             this.extension = await web3FromSource(this.accounts[0].meta.source);
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoEnvError(err);
         }
         if (!this.extension) {
-            throw new Error("Extension not found");
+            throw new ProsopoEnvError("Extension not found");
         }
     }
 
@@ -70,7 +70,7 @@ export class Extension extends AsyncFactory implements IExtensionInterface {
         try {
             this.accounts = await web3Accounts();
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoEnvError(err);
         }
         this.setDefaultAccount();
     }
@@ -81,11 +81,11 @@ export class Extension extends AsyncFactory implements IExtensionInterface {
 
     public setAccount(address: string) {
         if (!this.accounts.length) {
-            throw new Error("No accounts found");
+            throw new ProsopoEnvError("No accounts found");
         }
         const account = this.accounts.find(acc => acc.address === address);
         if (!account) {
-            throw new Error("Account not found");
+            throw new ProsopoEnvError("Account not found");
         }
         this.account = account;
         storage.setAccount(account.address);
@@ -108,13 +108,18 @@ export class Extension extends AsyncFactory implements IExtensionInterface {
         }
     }
 
+    public async createAccount() {
+        return undefined
+    }
+
+
     // public async signRaw(raw: SignerPayloadRaw) {
     //     if (!this.extension.signer) {
-    //         throw new Error("No signer found");
+    //         throw new ProsopoEnvError("No signer found");
     //     }
     //     return this.extension.signer?.signRaw!({ ...raw, address: this.account!.address });
     // }
 
 }
 
-export default Extension;
+export default ExtensionWeb3;

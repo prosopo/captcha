@@ -13,16 +13,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { ICaptchaContextReducer, CaptchaEventCallbacks, TExtensionAccount, ICaptchaStatusReducer, IExtensionInterface } from "../types/client";
-import { ProsopoCaptchaConfig, ProsopoRandomProviderResponse } from "../types/api";
-
-import { ProsopoContract } from "../api/ProsopoContract";
-import { getProsopoContract, getWsProvider } from "./contract";
-import { getExtension } from "./extension";
-import { ProviderApi } from "../api/ProviderApi";
-import { ProsopoCaptchaApi } from "./ProsopoCaptchaApi";
-// import { Extension } from "../api";
-
+import {
+    ICaptchaContextReducer,
+    CaptchaEventCallbacks,
+    TExtensionAccount,
+    ICaptchaStatusReducer,
+    IExtensionInterface
+} from "../types/client";
+import {ProsopoRandomProviderResponse} from "../types/api";
+import {ProsopoContract} from "../api/ProsopoContract";
+import {getProsopoContract, getWsProvider} from "./contract";
+import {getExtension} from "./extension";
+import {ProviderApi} from "../api/ProviderApi";
+import {ProsopoCaptchaApi} from "./ProsopoCaptchaApi";
+import {ProsopoEnvError} from "@prosopo/contract";
 
 export class ProsopoCaptchaClient {
 
@@ -30,7 +34,6 @@ export class ProsopoCaptchaClient {
     public status: ICaptchaStatusReducer;
     public callbacks: CaptchaEventCallbacks | undefined;
     public providerApi: ProviderApi;
-    // public config: ProsopoCaptchaConfig;
 
     private static extension: IExtensionInterface;
     private static contract: ProsopoContract | undefined;
@@ -42,7 +45,6 @@ export class ProsopoCaptchaClient {
         this.status = status;
         this.callbacks = callbacks;
         this.providerApi = new ProviderApi(manager.state.config);
-        // this.config = manager.state.config;
     }
 
     public getExtension() {
@@ -50,7 +52,7 @@ export class ProsopoCaptchaClient {
     }
 
     public setExtension(extension: IExtensionInterface) {
-        return ProsopoCaptchaClient.extension = extension;
+        ProsopoCaptchaClient.extension = extension;
     }
 
     public getContract() {
@@ -65,25 +67,42 @@ export class ProsopoCaptchaClient {
         return ProsopoCaptchaClient.captchaApi;
     }
 
-    public async onLoad() {
-        let contractAddress = ProsopoCaptchaClient.contract?.address;
+    public async onLoad(createAccount?: boolean) {
 
-        if (!ProsopoCaptchaClient.extension || !contractAddress) {
+        if (!ProsopoCaptchaClient.extension) {
             try {
-                [ProsopoCaptchaClient.extension, { contractAddress }] = await Promise.all([getExtension(), this.providerApi.getContractAddress()]);
+                ProsopoCaptchaClient.extension = await getExtension(this.manager.state.config['web2']);
             } catch (err) {
-                throw new Error(err);
+                throw new ProsopoEnvError(err);
             }
         }
 
         if (this.callbacks?.onLoad) {
-            this.callbacks.onLoad(ProsopoCaptchaClient.extension, contractAddress);
+            this.callbacks.onLoad(ProsopoCaptchaClient.extension, this.manager.state.config['prosopoContractAccount']);
+            this.manager.update({contractAddress: this.manager.state.config['prosopoContractAccount']});
         }
 
-        this.manager.update({ contractAddress });
+        let account: TExtensionAccount | undefined;
+        if (createAccount) {
+            try {
+                account = await this.getExtension().createAccount()
+            } catch (err) {
+                throw new ProsopoEnvError(err);
+            }
+        } else {
+            try {
+                account = await this.getExtension().getAccount()
+            } catch (err) {
+                throw new ProsopoEnvError(err);
+            }
+        }
+        await this.onAccountChange(account);
+
+
     }
 
     public async onAccountChange(account?: TExtensionAccount) {
+
         if (!account) {
             this.onAccountUnset();
             return;
@@ -92,29 +111,37 @@ export class ProsopoCaptchaClient {
         try {
             ProsopoCaptchaClient.extension.setAccount(account.address);
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoEnvError(err);
         }
 
         try {
-            ProsopoCaptchaClient.contract = await getProsopoContract(this.manager.state.contractAddress!, this.manager.state.config['dappAccount'], account,
-                await getWsProvider(this.manager.state.config['dappUrl']));
+            ProsopoCaptchaClient.contract = await getProsopoContract(
+                this.manager.state.config['prosopoContractAccount'],
+                this.manager.state.config['dappAccount'],
+                account,
+                getWsProvider(this.manager.state.config['dappUrl'])
+            );
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoEnvError(err);
         }
 
         try {
-            ProsopoCaptchaClient.provider = await ProsopoCaptchaClient.contract.getRandomProvider(); 
+            ProsopoCaptchaClient.provider = await ProsopoCaptchaClient.contract.getRandomProvider();
         } catch (err) {
-            throw new Error(err);
+            throw new ProsopoEnvError(err);
         }
 
-        ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract, ProsopoCaptchaClient.provider, this.providerApi);
+        ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract,
+            ProsopoCaptchaClient.provider,
+            this.providerApi,
+            this.manager.state.config['web2']
+        );
 
         if (this.callbacks?.onAccountChange) {
             this.callbacks.onAccountChange(account);
         }
 
-        this.manager.update({ account });
+        this.manager.update({account});
     }
 
     public onAccountUnset() {
@@ -126,7 +153,7 @@ export class ProsopoCaptchaClient {
             this.callbacks.onAccountChange(undefined);
         }
 
-        this.manager.update({ account: undefined });
+        this.manager.update({account: undefined});
     }
 
 }

@@ -16,22 +16,22 @@
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
 import { ProsopoCaptchaConfig, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
-import {CaptchaSolution, CaptchaSolutionCommitment} from "@prosopo/contract";
-import { Extension } from "../api/Extension";
+import { CaptchaSolutionCommitment} from "@prosopo/contract";
 
 export type TExtensionAccount = InjectedAccountWithMeta;
 
-export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse, CaptchaSolutionCommitment];
+export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse?, CaptchaSolutionCommitment?];
 
 export interface IExtensionInterface {
     checkExtension(): void;
-    getExtension(): InjectedExtension;
+    getExtension(): InjectedExtension | undefined;
     getAccounts(): InjectedAccountWithMeta[];
     getAccount(): InjectedAccountWithMeta | undefined;
     setAccount(account: string): void;
     unsetAccount(): void;
     getDefaultAccount(): InjectedAccountWithMeta | undefined;
     setDefaultAccount(): void;
+    createAccount(): Promise<InjectedAccountWithMeta | undefined>;
   }
 
 export interface ICaptchaClientEvents {
@@ -42,7 +42,7 @@ export interface ICaptchaClientEvents {
 export interface ICaptchaStateClientEvents {
     onLoadCaptcha?: (captchaChallenge: GetCaptchaResponse | Error) => void;
     onSubmit?: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => void;
-    onChange?: (captchaSolution: number[][], index: number) => void;
+    onChange?: (captchaSolution: string[][], index: number) => void;
     onCancel?: () => void;
     onSolved?: (result: TCaptchaSubmitResult, isHuman?: boolean) => void;
 }
@@ -63,7 +63,7 @@ export interface ICaptchaContextReducer {
 export interface ICaptchaState {
     captchaChallenge?: GetCaptchaResponse;
     captchaIndex: number;
-    captchaSolution: number[][];
+    captchaSolution: string[][];
     // captchaSolutions: CaptchaSolution[];
 }
 

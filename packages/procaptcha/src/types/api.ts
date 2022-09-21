@@ -18,10 +18,7 @@
 //   export default value;
 // }
 
-import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
-
-// import { SubmittableResult } from "@polkadot/api";
-import {Captcha, CaptchaStatus} from "@prosopo/contract";
+import { Captcha } from "@prosopo/contract";
 
 export interface ProsopoRandomProviderResponse {
   providerId: string,
@@ -35,39 +32,19 @@ export interface ProposoProvider {
   balance: string;
   captchaDatasetId: string;
   fee: string;
-  payee: string; 
+  payee: string;
   serviceOrigin: string;
-  status: string; 
-}
-
-// export interface CaptchaResponseCaptchaItem {
-//   captchaId: string;
-//   datasetId: string;
-//   items: CaptchaImageSchema[];
-//   target: string;
-//   salt?: string;
-//   solution?: number[];
-// }
-
-export interface CaptchaImageSchema {
-  path: string,
-  type: string
+  status: string;
 }
 
 export interface CaptchaResponseCaptcha {
-  captcha: Captcha;
+  captcha: Omit<Captcha, 'solution'>;
   proof: string[][];
 }
 
 export interface GetCaptchaResponse {
   captchas: CaptchaResponseCaptcha[];
   requestHash: string;
-}
-
-export interface CaptchaSolution {
-  captchaId: string;
-  solution: number[];
-  salt: string;
 }
 
 export interface CaptchaSolutionResponse {
@@ -82,4 +59,6 @@ export interface ProsopoCaptchaConfig {
   "dappAccount": string;
   "dappUrl": string;
   "solutionThreshold": number;
+  "web2": boolean;
+  "prosopoContractAccount": string;
 }

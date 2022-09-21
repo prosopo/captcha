@@ -14,11 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { ICaptchaStateReducer, TCaptchaSubmitResult } from "../types/client";
-import { CaptchaSolution, CaptchaSolutionResponse, GetCaptchaResponse } from "../types/api";
-import { TransactionResponse } from "../types/contract";
+import { GetCaptchaResponse } from "../types/api";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
-import { convertCaptchaToCaptchaSolution } from "@prosopo/contract";
+import {
+    CaptchaSolution,
+    convertCaptchaToCaptchaSolution,
+    ProsopoEnvError
+} from "@prosopo/contract";
 
 
 export class ProsopoCaptchaStateClient {
@@ -35,12 +38,13 @@ export class ProsopoCaptchaStateClient {
         let captchaChallenge: GetCaptchaResponse | Error | undefined;
 
         try {
-            captchaChallenge = await this.context.getCaptchaApi()!.getCaptchaChallenge();
+            captchaChallenge = await this.context.getCaptchaApi()?.getCaptchaChallenge();
         } catch (err) {
             captchaChallenge = err as Error;
+            throw new ProsopoEnvError(captchaChallenge)
         }
 
-        if (this.context.callbacks?.onLoadCaptcha) {
+        if (this.context.callbacks?.onLoadCaptcha && captchaChallenge) {
             this.context.callbacks.onLoadCaptcha(captchaChallenge);
         }
 
@@ -59,44 +63,56 @@ export class ProsopoCaptchaStateClient {
     }
 
     public async onSubmit() {
-        const { captchaChallenge, captchaIndex, captchaSolution } = this.manager.state;
+        const {captchaChallenge, captchaIndex, captchaSolution} = this.manager.state;
 
         const nextCaptchaIndex = captchaIndex + 1;
 
         if (nextCaptchaIndex < captchaChallenge!.captchas.length) {
             captchaSolution[nextCaptchaIndex] = [];
-            this.manager.update({ captchaIndex: nextCaptchaIndex, captchaSolution });
+            this.manager.update({captchaIndex: nextCaptchaIndex, captchaSolution});
 
             return;
         }
 
-        const signer = this.context.getExtension().getExtension().signer;
+        const signer = this.context.getExtension().getExtension()?.signer;
 
         const currentCaptcha = captchaChallenge!.captchas[captchaIndex];
-        const { datasetId } = currentCaptcha.captcha;
+        const {datasetId} = currentCaptcha.captcha;
 
         const solutions = this.parseSolution(captchaChallenge!, captchaSolution);
 
         let submitResult: TCaptchaSubmitResult | Error;
 
-        try {
-            submitResult = await this.context.getCaptchaApi()!.submitCaptchaSolution(signer, captchaChallenge!.requestHash, datasetId!, solutions);
-        } catch (err) {
-            submitResult = err as Error;
-        }
+        if (signer) {
+            try {
 
-        if (this.context.callbacks?.onSubmit) {
-            this.context.callbacks.onSubmit(submitResult, this.manager.state);
-        }
+                submitResult = await this.context
+                    .getCaptchaApi()!
+                    .submitCaptchaSolution(
+                        signer,
+                        captchaChallenge!.requestHash,
+                        datasetId!,
+                        solutions
+                    );
+            } catch (err) {
+                submitResult = err as Error;
+            }
 
+            if (this.context.callbacks?.onSubmit) {
+                this.context.callbacks.onSubmit(submitResult, this.manager.state);
+            }
+
+            this.manager.update({captchaSolution: []});
+
+            if (submitResult instanceof Error) {
+
+                return;
+            }
+
+            await this.onSolved(submitResult);
+        }
         this.manager.update({ captchaSolution: [] });
 
-        if (submitResult instanceof Error) {
-
-            return;
-        }
-
-        await this.onSolved(submitResult);
     }
 
 
@@ -113,11 +129,11 @@ export class ProsopoCaptchaStateClient {
         }
     }
 
-    public onChange(index: number) {
+    public onChange(hash: string) {
         const { captchaIndex, captchaSolution } = this.manager.state;
 
-        let currentSolution: number[] = captchaSolution[captchaIndex] || [];
-        currentSolution = currentSolution.includes(index) ? currentSolution.filter(item => item !== index) : [...currentSolution, index];
+        let currentSolution: string[] = captchaSolution[captchaIndex] || [];
+        currentSolution = currentSolution.includes(hash) ? currentSolution.filter(item => item !== hash) : [...currentSolution, hash];
 
         captchaSolution[captchaIndex] = currentSolution;
 
@@ -133,13 +149,13 @@ export class ProsopoCaptchaStateClient {
     }
 
 
-    public parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: number[][]): CaptchaSolution[] {
+    public parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: string[][]): CaptchaSolution[] {
         const parsedSolution: CaptchaSolution[] = [];
 
         for (const [index, challenge] of captchaChallenge!.captchas.entries()) {
             const solution = captchaSolution[index] || [];
-            challenge.captcha.solution = solution;
-            parsedSolution[index] = convertCaptchaToCaptchaSolution(challenge.captcha);
+            // challenge.captcha.solution = solution;
+            parsedSolution[index] = convertCaptchaToCaptchaSolution({...challenge.captcha, solution});
         }
 
         console.log("CAPTCHA SOLUTIONS", parsedSolution);
