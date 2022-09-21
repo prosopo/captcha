@@ -50,15 +50,11 @@ export type CaptchaSolutionToUpdate = {
     solution: HashedSolution[]
 }
 
-type CaptchaBase = {
+export interface Captcha extends CaptchaWithoutId {
     captchaId: string;
     assetURI?: string;
     datasetId?: string;
-};
-
-export interface Captcha extends CaptchaWithoutId, CaptchaBase {}
-
-export interface CaptchaRaw extends CaptchaWithoutIdRaw, CaptchaBase {}
+}
 
 type DatasetBase = {
     datasetId?: Hash | string | Uint8Array;
@@ -96,17 +92,10 @@ export interface CaptchaSolutionCommitment {
     completed_at: u64,
 }
 
-type CaptchaSolutionBase = {
+export interface CaptchaSolution {
     captchaId: string;
     salt: string;
-};
-
-export interface CaptchaSolution extends CaptchaSolutionBase {
     solution: HashedSolution[];
-}
-
-export interface CaptchaSolutionRaw extends CaptchaSolutionBase {
-    solution: RawSolution[];
 }
 
 export type CaptchaConfig = {
