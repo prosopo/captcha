@@ -17,11 +17,11 @@ import { Avatar } from "@mui/material";
 import { CaptchaResponseCaptcha } from "@prosopo/procaptcha";
 
 import { useStyles } from "../styles";
-import { devData } from "../util";
+import { addDataAttr } from "../util";
 
 
 export function CaptchaWidget({ challenge, solution, onChange }:
-    {challenge: CaptchaResponseCaptcha, solution: number[], onChange: (index: number) => void}) {
+    {challenge: CaptchaResponseCaptcha, solution: string[], onChange: (hash: string) => void}) {
     
     //const items = Array.from(Array(9).keys());
     console.log("CHALLENGE", challenge);
@@ -31,12 +31,12 @@ export function CaptchaWidget({ challenge, solution, onChange }:
     return (
         <>
             {items.map((item, index) => <Avatar
-                {...devData('captcha-item', {hash: item.hash})}
+                {...addDataAttr({dev: {cy: 'captcha-item', hash: item.hash}})}
                 key={index}
                 src={item.path} 
                 variant="square"
-                className={classes.captchaItem + " " + (solution.includes(index) ? " " + classes.captchaItemSelected : "")}
-                onClick={() => onChange(index)} />
+                className={classes.captchaItem + " " + (solution.includes(item.hash) ? " " + classes.captchaItemSelected : "")}
+                onClick={() => onChange(item.hash)} />
             )}
         </>
     );
