@@ -499,7 +499,7 @@ describe("CONTRACT TASKS", () => {
         );
 
         if (!result) {
-            throw new Error("Result is null");
+            throw new ProsopoEnvError("Result is null");
         }
 
         const events = getEventsFromMethodName(result, "dappUserCommit");
@@ -572,11 +572,10 @@ describe("CONTRACT TASKS", () => {
                 accountAddress(dappUserAccount),
                 accountAddress(dappContractAccount),
                 requestHash,
-        JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
-        dappUserCommitResponse.blockHash as string,
-        dappUserCommitResponse.result.txHash.toString()
+                JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
+                dappUserCommitResponse.blockHash as string,
+                dappUserCommitResponse.result.txHash.toString()
             );
-
 
             expect(result.captchas.length).to.be.eq(2);
             const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId);
@@ -726,12 +725,13 @@ describe("CONTRACT TASKS", () => {
             initialCommitmentId,
             accountAddress(providerAccount)
         );
-        const {commitment, commitmentId, tree} =
-      await tasks.buildTreeAndGetCommitment(captchaSolutions);
+        const {commitmentId, tree} =
+      await tasks.buildTreeAndGetCommitmentId(captchaSolutions);
 
         expect(tree).to.deep.equal(initialTree);
-        expect(commitment).to.deep.equal(commitment);
         expect(commitmentId).to.equal(initialCommitmentId);
+        const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
+        expect(commitment).to.not.be.undefined;
     });
 
     it("BuildTreeAndGetCommitment throws if commitment does not exist", async () => {
@@ -745,7 +745,7 @@ describe("CONTRACT TASKS", () => {
             ...captcha,
             salt: salt,
         }));
-        const commitmentPromise = tasks.buildTreeAndGetCommitment(
+        const commitmentPromise = tasks.buildTreeAndGetCommitmentId(
             captchaSolutionsSalted
         );
 
@@ -802,7 +802,6 @@ describe("CONTRACT TASKS", () => {
                 accountAddress(dappUserAccount),
                 accountAddress(dappAccount)
             );
-
             const {captchas, requestHash} =
         await dappUserTasks.getRandomCaptchasAndRequestHash(
           provider.captcha_dataset_id as string,

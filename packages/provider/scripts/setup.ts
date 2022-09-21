@@ -1,11 +1,11 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { randomAsHex } from '@polkadot/util-crypto';
-import { Payee } from "@prosopo/contract";
+import {Payee, ProsopoEnvError} from "@prosopo/contract";
 import { Environment } from '../src/env';
 import { TestDapp, TestProvider } from '../tests/mocks/accounts';
 import { sendFunds, setupDapp, setupProvider } from '../tests/mocks/setup';
@@ -56,9 +56,9 @@ const hasProviderAccount = defaultProvider.mnemonic && defaultProvider.address;
 async function copyArtifacts() {
     const artifactsPath = path.join(integrationPath, 'protocol/artifacts');
     await Promise.all([
-        
+
         fse.copy(artifactsPath, './artifacts', { overwrite: true }),
-        
+
         fse.copy(artifactsPath, '../contract/artifacts', { overwrite: true }),
         fse.copy(path.join(artifactsPath, 'prosopo.json'), '../contract/src/abi/prosopo.json', { overwrite: true }),
     ]);
@@ -81,7 +81,7 @@ async function registerProvider(env: Environment, account: TestProvider) {
 
     account.address = providerKeyringPair.address;
 
-    await sendFunds(env, account.address, 'Provider', 100000000000000000n); 
+    await sendFunds(env, account.address, 'Provider', 100000000000000000n);
 
     await setupProvider(env, account);
 }
@@ -107,7 +107,7 @@ async function setup() {
     dotenv.config();
 
     if (!process.env.DAPP_CONTRACT_ADDRESS) {
-        throw new Error('DAPP_CONTRACT_ADDRESS is not set in .env file.');
+        throw new ProsopoEnvError('DAPP_CONTRACT_ADDRESS is not set in .env file.');
     }
 
 

@@ -1,21 +1,21 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Hash } from '@polkadot/types/interfaces';
-import type { RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment';
-import { AnyJson } from '@polkadot/types/types/codec';
-import { hexToU8a } from '@polkadot/util';
-import { randomAsHex } from '@polkadot/util-crypto';
+import {Hash} from '@polkadot/types/interfaces';
+import type {RuntimeDispatchInfo} from '@polkadot/types/interfaces/payment';
+import {AnyJson} from '@polkadot/types/types/codec';
+import {hexToU8a} from '@polkadot/util';
+import {randomAsHex} from '@polkadot/util-crypto';
 import {
     addHashesToDataset, BigNumber, Captcha,
     CaptchaConfig, CaptchaData, CaptchaMerkleTree, CaptchaSolution,
@@ -25,10 +25,14 @@ import {
     computeCaptchaSolutionHash,
     computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, LastCorrectCaptcha, parseCaptchaDataset,
     parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse,
+    ProsopoEnvError,
+    Dataset,
+    matchItemsToSolutions,
+    calculateItemHashes
 } from '@prosopo/contract';
 import consola from "consola";
-import { buildDecodeVector } from '../codec/codec';
-import { ERRORS } from '../errors';
+import {buildDecodeVector} from '../codec/codec';
+import {ERRORS} from '../errors';
 import {
     DappUserSolutionResult,
     CaptchaWithProof,
@@ -36,7 +40,7 @@ import {
     DatasetRecord,
     ProsopoEnvironment
 } from '../types';
-import { loadJSONFile, shuffleArray, writeJSONFile } from '../util';
+import {loadJSONFile, shuffleArray, writeJSONFile} from '../util';
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -54,7 +58,7 @@ export class Tasks {
 
     constructor(env: ProsopoEnvironment) {
         if (!env.contractInterface) {
-            throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message);
+            throw new ProsopoEnvError(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message, this.constructor.name, {contractAddress:env.contractAddress});
         }
 
         this.contractApi = env.contractInterface!;
@@ -83,16 +87,27 @@ export class Tasks {
     }
 
     async providerAddDataset(file: string): Promise<TransactionResponse> {
-        const dataset = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON);
-        const datasetWithoutIds = { ...dataset }
+        const datasetRaw = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON);
         const tree = new CaptchaMerkleTree();
-        const captchaHashes = await Promise.all(dataset.captchas.map(computeCaptchaHash));
+        const dataset = {
+            ...datasetRaw,
+            captchas: datasetRaw.captchas.map((captcha) => {
+                const items = calculateItemHashes(captcha.items);
+
+                return {
+                    ...captcha,
+                    items,
+                    solution: matchItemsToSolutions(captcha.solution, items),
+                };
+            }),
+        } as Dataset;
+        const captchaHashes = dataset.captchas.map(computeCaptchaHash);
         tree.build(captchaHashes);
         const datasetHashes = addHashesToDataset(dataset, tree);
         datasetHashes.datasetId = tree.root?.hash;
         datasetHashes.tree = tree.layers;
         await this.db?.storeDataset(datasetHashes);
-        writeJSONFile(file, { ...datasetWithoutIds, datasetId: datasetHashes.datasetId }).catch((err) => {
+        await writeJSONFile(file, {...datasetRaw, datasetId: datasetHashes.datasetId}).catch((err) => {
             console.error(`${ERRORS.GENERAL.CREATE_JSON_FILE_FAILED.message}:${err}`)
         })
         return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)]);
@@ -178,15 +193,16 @@ export class Tasks {
                 const proof = tree.proof(captcha.captchaId)
                 // cannot pass solution to dapp user as they are required to solve the captcha!
                 delete captcha.solution
-                captchas.push({ captcha, proof })
+                captcha.items = shuffleArray(captcha.items)
+                captchas.push({captcha, proof})
             }
             return captchas
         }
-        throw Error(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message)
+        throw new ProsopoEnvError(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message, this.getCaptchaWithProof.name, {datasetId, solved, size})
     }
 
     /**
-     * Validate and store the clear text captcha solution(s) from the Dapp User
+     * Validate and store the captcha solution(s) from the Dapp User in a web3 environment
      * @param {string} userAccount
      * @param {string} dappAccount
      * @param {string} requestHash
@@ -197,20 +213,24 @@ export class Tasks {
      */
     async dappUserSolution(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON, blockHash: string, txHash: string): Promise<DappUserSolutionResult> {
         if (!await this.dappIsActive(dappAccount)) {
-            throw new Error(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message)
+            throw new ProsopoEnvError(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message, this.getPaymentInfo.name, {dappAccount})
         }
         if (blockHash === '' || txHash === '') {
-            throw new Error(ERRORS.API.BAD_REQUEST.message)
+            throw new ProsopoEnvError(ERRORS.API.BAD_REQUEST.message, this.getPaymentInfo.name, {userAccount, dappAccount, requestHash, blockHash, txHash})
         }
 
         const paymentInfo = await this.getPaymentInfo(userAccount, blockHash, txHash)
         if (!paymentInfo) {
-            throw new Error(ERRORS.API.PAYMENT_INFO_NOT_FOUND.message)
+            throw new ProsopoEnvError(ERRORS.API.PAYMENT_INFO_NOT_FOUND.message, this.getPaymentInfo.name, {userAccount, blockHash, txHash})
         }
         const partialFee = paymentInfo?.partialFee
-        let response: DappUserSolutionResult = { captchas: [], partialFee: '0' };
-        const { storedCaptchas, receivedCaptchas, captchaIds } = await this.validateCaptchasLength(captchas)
-        const { tree, commitment, commitmentId } = await this.buildTreeAndGetCommitment(receivedCaptchas)
+        let response: DappUserSolutionResult = {captchas: [], partialFee: '0', solutionApproved: false};
+        const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas)
+        const {tree, commitmentId} = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
+        const commitment = await this.getCaptchaSolutionCommitment(commitmentId)
+        if (!commitment) {
+            throw new ProsopoEnvError(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message, this.dappUserSolution.name, {commitmentId: commitmentId})
+        }
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
@@ -218,14 +238,52 @@ export class Tasks {
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
                 response = {
-                    captchas: captchaIds.map((id) => ({ captchaId: id, proof: tree.proof(id) })),
+                    captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
                     partialFee: partialFee.toString(),
+                    solutionApproved: true
                 };
             } else {
                 await this.providerDisapprove(commitmentId)
                 response = {
-                    captchas: captchaIds.map((id) => ({ captchaId: id, proof: [[]] })),
-                    partialFee: partialFee.toString()
+                    captchas: captchaIds.map((id) => ({captchaId: id, proof: [[]]})),
+                    partialFee: partialFee.toString(),
+                    solutionApproved: false
+                }
+            }
+        }
+
+        return response
+    }
+
+    /**
+     * Validate and store the text captcha solution(s) from the Dapp User in a web2 environment
+     * @param {string} userAccount
+     * @param {string} dappAccount
+     * @param {string} requestHash
+     * @param {JSON} captchas
+     * @return {Promise<DappUserSolutionResult>} result containing the contract event
+     */
+    async dappUserSolutionWeb2(userAccount: string, dappAccount: string, requestHash: string, captchas: JSON): Promise<DappUserSolutionResult> {
+        if (!await this.dappIsActive(dappAccount)) {
+            throw new ProsopoEnvError(ERRORS.CONTRACT.DAPP_NOT_ACTIVE.message, this.getPaymentInfo.name, {dappAccount})
+        }
+
+        let response: DappUserSolutionResult = {captchas: [], solutionApproved: false};
+        const {storedCaptchas, receivedCaptchas, captchaIds} = await this.validateCaptchasLength(captchas)
+        const {tree, commitmentId} = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
+        const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
+        // Only do stuff if the request is in the local DB
+        if (pendingRequest) {
+            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
+            if (await compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+                response = {
+                    captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
+                    solutionApproved: true
+                };
+            } else {
+                response = {
+                    captchas: captchaIds.map((id) => ({captchaId: id, proof: [[]]})),
+                    solutionApproved: false
                 }
             }
         }
@@ -257,9 +315,12 @@ export class Tasks {
         const captchaIds = receivedCaptchas.map((captcha) => captcha.captchaId)
         const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
-            throw new Error(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message)
+            throw new ProsopoEnvError(ERRORS.CAPTCHA.INVALID_CAPTCHA_ID.message, this.validateCaptchasLength.name, captchas)
         }
-        return { storedCaptchas, receivedCaptchas, captchaIds }
+        if (!storedCaptchas.every((captcha) => captcha.datasetId === storedCaptchas[0].datasetId)) {
+            throw new ProsopoEnvError(ERRORS.CAPTCHA.DIFFERENT_DATASET_IDS.message, this.validateCaptchasLength.name, captchas)
+        }
+        return {storedCaptchas, receivedCaptchas, captchaIds}
     }
 
     /**
@@ -267,19 +328,16 @@ export class Tasks {
      * @param {CaptchaSolution[]} captchaSolutions
      * @returns {Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }>}
      */
-    async buildTreeAndGetCommitment(captchaSolutions: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitment: CaptchaSolutionCommitment, commitmentId: string }> {
+    async buildTreeAndGetCommitmentId(captchaSolutions: CaptchaSolution[]): Promise<{ tree: CaptchaMerkleTree, commitmentId: string }> {
         const tree = new CaptchaMerkleTree()
         const solutionsHashed = captchaSolutions.map((captcha) => computeCaptchaSolutionHash(captcha))
         tree.build(solutionsHashed)
         const commitmentId = tree.root?.hash
         if (!commitmentId) {
-            throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
+            throw new ProsopoEnvError(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message, this.buildTreeAndGetCommitmentId.name, {commitmentId: commitmentId})
         }
-        const commitment = await this.getCaptchaSolutionCommitment(commitmentId)
-        if (!commitment) {
-            throw new Error(ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message)
-        }
-        return { tree, commitment, commitmentId }
+
+        return {tree, commitmentId}
     }
 
     /**
@@ -326,7 +384,7 @@ export class Tasks {
         const requestHash = computePendingRequestHash(captchas.map((c) => c.captcha.captchaId), userAccount, salt)
 
         await this.db.storeDappUserPending(userAccount, requestHash, salt)
-        return { captchas, requestHash }
+        return {captchas, requestHash}
     }
 
     /**
@@ -367,8 +425,8 @@ export class Tasks {
                         }
                         solutionsToUpdate = solutionsToUpdate.concat(
                             Object.values(solutionsWithCount)
-                                .filter(({ solutionCount }: any) => solutionCount >= winningNumberOfSolutions)
-                                .map(({ solutionCount, ...otherAttributes }: any) => otherAttributes))
+                                .filter(({solutionCount}: any) => solutionCount >= winningNumberOfSolutions)
+                                .map(({solutionCount, ...otherAttributes}: any) => otherAttributes))
                     }
                 }
                 if (solutionsToUpdate.length > 0) {
@@ -382,7 +440,7 @@ export class Tasks {
                 return 0
             }
         } catch (error) {
-            throw new Error(`${ERRORS.GENERAL.CALCULATE_CAPTCHA_SOLUTION.message}:${error}`)
+            throw new ProsopoEnvError(error, ERRORS.GENERAL.CALCULATE_CAPTCHA_SOLUTION.message)
         }
     }
 
@@ -417,7 +475,7 @@ export class Tasks {
             await writeJSONFile(filePath, jsonData)
             return true
         } catch (error) {
-            throw new Error(`${ERRORS.GENERAL.GENERATE_CPATCHAS_JSON_FAILED.message}:${error}`)
+            throw new ProsopoEnvError(error, ERRORS.GENERAL.GENERATE_CPATCHAS_JSON_FAILED.message, filePath)
         }
     }
 
@@ -451,7 +509,7 @@ export class Tasks {
     async validateProviderWasRandomlyChosen(userAccount: string, dappContractAccount: string, datasetId: string | Hash, blockNo: number) {
         const contract = await this.contractApi.getContract();
         if (!contract) {
-            throw new Error(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
+            throw new ProsopoEnvError(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message, this.validateProviderWasRandomlyChosen.name)
         }
 
 
@@ -460,15 +518,21 @@ export class Tasks {
         const isBlockNoValid = await this.isRecentBlock(contract, header, blockNo)
 
         if (!isBlockNoValid) {
-            throw new Error(ERRORS.CAPTCHA.INVALID_BLOCK_NO.message);
+            throw new ProsopoEnvError(ERRORS.CAPTCHA.INVALID_BLOCK_NO.message, this.validateProviderWasRandomlyChosen.name, {
+                userAccount: userAccount,
+                dappContractAccount: dappContractAccount,
+                datasetId: datasetId,
+                header: header,
+                blockNo: blockNo
+            });
         }
 
         const block = await contract.api.rpc.chain.getBlockHash(blockNo)
         const randomProviderAndBlockNo = await this.getRandomProvider(userAccount, dappContractAccount, block)
-        
+
         // @ts-ignore
         if (datasetId.localeCompare(randomProviderAndBlockNo.provider.captcha_dataset_id)) {
-            throw new Error(ERRORS.DATASET.INVALID_DATASET_ID.message)
+            throw new ProsopoEnvError(ERRORS.DATASET.INVALID_DATASET_ID.message, this.validateProviderWasRandomlyChosen.name, randomProviderAndBlockNo)
         }
     }
 

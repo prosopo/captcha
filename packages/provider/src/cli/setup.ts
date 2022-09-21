@@ -1,11 +1,11 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -85,7 +85,7 @@ async function registerProvider(env: Environment, account: IProviderAccount) {
 
     account.address = providerKeyringPair.address;
 
-    await sendFunds(env, account.address, 'Provider', 100000000000000000n); 
+    await sendFunds(env, account.address, 'Provider', 100000000000000000n);
 
     await setupProvider(env, account);
 }
@@ -118,10 +118,7 @@ async function setup() {
         throw new Error('DAPP_CONTRACT_ADDRESS is not set in .env file.');
     }
 
-    if (hasProviderAccount) {
-        console.log('Skipping setup...');
-        process.exit();
-    }
+
 
     const env = new Environment('//Alice');
     await env.isReady();
@@ -136,7 +133,9 @@ async function setup() {
     console.log('Registering dapp...');
     await registerDapp(env, defaultDapp);
 
-    await updateEnvFile({'PROVIDER_MNEMONIC': `"${mnemonic}"`, 'PROVIDER_ADDRESS': address});
+    if (!hasProviderAccount) {
+        await updateEnvFile({'PROVIDER_MNEMONIC': `"${mnemonic}"`, 'PROVIDER_ADDRESS': address});
+    }
 
     process.exit();
 }
