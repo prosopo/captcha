@@ -11,7 +11,9 @@ const config: ProsopoCaptchaConfig = {
     "providerApi.prefix": process.env.REACT_APP_API_PATH_PREFIX || '',
     "dappAccount": process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || '',
     "dappUrl": process.env.REACT_APP_DAPP_CONTRACT_URL || '',
-    "solutionThreshold": 80
+    "solutionThreshold": 80,
+    "web2": process.env.REACT_APP_WEB2 === "true",
+    "prosopoContractAccount": process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || ''
 }
 
 export default config;

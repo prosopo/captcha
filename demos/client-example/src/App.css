@@ -44,3 +44,12 @@
   color: "#555555";
   text-transform: "none";
 }
+
+.flex-container {
+  display: flex;
+}
+
+#json {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}

@@ -7,8 +7,8 @@
     "@emotion/styled": "^11.9.3",
     "@mui/material": "^5.9.1",
     "@mui/styles": "^5.9.1",
-    "@prosopo/procaptcha": "0.1.5",
-    "@prosopo/procaptcha-react": "0.1.5",
+    "@prosopo/procaptcha": "0.1.6",
+    "@prosopo/procaptcha-react": "0.1.6",
     "@testing-library/jest-dom": "^5.16.4",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
@@ -17,13 +17,16 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "cypress": "^10.8.0",
+    "cypress-promise": "^1.1.0",
     "eslint-config-react-app": "^7.0.1"
   },
   "scripts": {
     "start": "NODE_ENV=development PORT=3001 react-scripts start",
     "build": "NODE_ENV=production react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "cypress:open": "cypress open"
   },
   "eslintConfig": {
     "extends": [
