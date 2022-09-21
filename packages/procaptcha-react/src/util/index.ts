@@ -1,19 +1,26 @@
-/**
- * maps dev/test data to data attributes for development environment
- * @param cypressData - data-cy value
- * @param additional - data values mapped to { data-[key]: value }
- * @returns 
- */
-export function devData(
-    cypressData: string,
-    additional: { [key: string]: string } = {}
-) {
-    const _additional = Object.keys(additional).reduce(
-        (prev, curr) => ({ ...prev, [`data-${curr}`]: additional[curr] }),
+function renameKeysForDataAttr(data: { [key: string]: string } = {}) {
+    return Object.keys(data).reduce(
+        (prev, curr) => ({ ...prev, [`data-${curr}`]: data[curr] }),
         {}
     );
+}
 
-    return process.env.NODE_ENV === "development"
-        ? { "data-cy": cypressData, ..._additional }
-        : {};
+/**
+ * maps any data to data attributes (mapped to { data-[key]: value })
+ * 
+ * dev - only in development mode
+ */
+export function addDataAttr({
+    general,
+    dev,
+}: {
+    general?: { [key: string]: string };
+    dev?: { [key: string]: string };
+}) {
+    return {
+        ...renameKeysForDataAttr(general),
+        ...(process.env.NODE_ENV === "development"
+            ? renameKeysForDataAttr(dev)
+            : {}),
+    };
 }
