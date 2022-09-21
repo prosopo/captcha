@@ -23,14 +23,14 @@ export const ExtensionAccountSelect = ({value, options, onChange}:
     return (
         <Autocomplete
             disablePortal
-            id="select-accounts" // TODO
+            id="select-accounts" 
             options={options}
             value={value}
             isOptionEqualToValue={(option, value) => option.address === value.address}
             onChange={(event: SyntheticEvent<Element, Event>, value: TExtensionAccount | null) => onChange(value)}
-            sx={{ width: 550 }} // TODO prop
+            sx={{ width: 550 }} 
             getOptionLabel={(option: any) => `${option.meta.name}\n${option.address}`}
-            renderInput={(props) => <TextField {...props} label="Select account" />} // TODO label
+            renderInput={(props) => <TextField {...props} label="Select account" />} 
         />
     );
 }

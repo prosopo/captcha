@@ -17,27 +17,29 @@ import { Avatar } from "@mui/material";
 import { CaptchaResponseCaptcha } from "@prosopo/procaptcha";
 
 import { useStyles } from "../styles";
+import { addDataAttr } from "../util";
 
 
 export function CaptchaWidget({ challenge, solution, onChange }:
-    {challenge: CaptchaResponseCaptcha, solution: number[], onChange: (index: number) => void}) {
-    // TODO challenge.items
+    {challenge: CaptchaResponseCaptcha, solution: string[], onChange: (hash: string) => void}) {
+    
     //const items = Array.from(Array(9).keys());
     console.log("CHALLENGE", challenge);
     const items = challenge.captcha.items;
     const classes = useStyles();
 
     return (
-      <>
-        {items.map((item, index) => <Avatar
-          key={index}
-          src={item.path} // TODO challenge.items[].path...
-          variant="square"
-          className={classes.captchaItem + " " + (solution.includes(index) ? " " + classes.captchaItemSelected : "")}
-          onClick={() => onChange(index)} />
-        )}
-      </>
+        <>
+            {items.map((item, index) => <Avatar
+                {...addDataAttr({dev: {cy: 'captcha-item', hash: item.hash}})}
+                key={index}
+                src={item.path} 
+                variant="square"
+                className={classes.captchaItem + " " + (solution.includes(item.hash) ? " " + classes.captchaItemSelected : "")}
+                onClick={() => onChange(item.hash)} />
+            )}
+        </>
     );
-  }
+}
 
-  export default CaptchaWidget;
+export default CaptchaWidget;

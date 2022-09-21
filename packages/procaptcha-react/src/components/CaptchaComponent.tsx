@@ -26,6 +26,7 @@ import { CaptchaContextManager } from "./CaptchaManager";
 import { CaptchaWidget } from "./CaptchaWidget";
 
 import { useStyles } from "../styles";
+import { addDataAttr } from "../util";
 
 
 export function CaptchaComponent({ clientInterface }: { clientInterface: ProsopoCaptchaClient }) {
@@ -34,7 +35,6 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
     const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
     const [state, update] = useReducer(captchaStateReducer, { captchaIndex: 0, captchaSolution: [] });
-
     const { account, contractAddress } = manager.state;
     const { captchaChallenge, captchaIndex, captchaSolution } = state;
     const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
@@ -42,8 +42,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     const stateClientInterface = new ProsopoCaptchaStateClient(clientInterface, { state, update });
 
     useEffect(() => {
-
-        clientInterface.onLoad();
+        clientInterface.onLoad(manager.state.config['web2']);
 
     }, []);
 
@@ -67,7 +66,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
         }
     }, [account]);
 
-    // TODO text strings
+
     // https://www.npmjs.com/package/i18next
 
     return (
@@ -82,12 +81,12 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
                         </Typography>
                     </Box>
 
-                    <Box className={classes.captchasBody}>
+                    <Box className={classes.captchasBody} {...addDataAttr({dev: {cy: 'captcha-' + captchaIndex}})}>
 
                         <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex] || []}
                             onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
 
-                        <Box className={classes.dotsContainer}>
+                        <Box className={classes.dotsContainer} {...addDataAttr({dev: {cy: 'dots-captcha'}})}>
                             {captchaChallenge?.captchas.map((_, index) =>
                                 <Box key={index} className={captchaIndex === index ? classes.dot : classes.dotActive} />)}
                         </Box>
@@ -98,7 +97,11 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
                         <Button onClick={() => stateClientInterface.onCancel()} variant="text">
                             Cancel
                         </Button>
-                        <Button onClick={() => stateClientInterface.onSubmit()} variant="contained">
+                        <Button 
+                            onClick={() => stateClientInterface.onSubmit()} 
+                            variant="contained" 
+                            {...addDataAttr({dev: {cy: "button-next"}})}
+                        >
                             {captchaIndex + 1 < totalCaptchas ? "Next" : "Submit"}
                         </Button>
                     </Box>
