@@ -19,6 +19,11 @@ import AsyncFactory from "./AsyncFactory";
 import {decodeAddress, encodeAddress, Keyring} from "@polkadot/keyring";
 import {KeyringPair} from "@polkadot/keyring/types";
 import {cryptoWaitReady, mnemonicGenerate} from "@polkadot/util-crypto";
+import {ProviderInterface} from "@polkadot/rpc-provider/types";
+import FingerprintJS from '@fingerprintjs/fingerprintjs'
+import {entropyToMnemonic} from "@polkadot/util-crypto/mnemonic/bip39";
+import {stringToU8a} from "@polkadot/util";
+import {picassoCanvas} from "../modules/canvas";
 
 export class AccountCreator extends AsyncFactory {
 
@@ -32,7 +37,7 @@ export class AccountCreator extends AsyncFactory {
         return this;
     }
 
-    public async generateMnemonic(keyring: Keyring): Promise<KeyringPair> {
+    public async generateMnemonic(keyring: Keyring, entropy?: string): Promise<KeyringPair> {
         await cryptoWaitReady();
         const mnemonic = mnemonicGenerate();
         return keyring.addFromMnemonic(mnemonic)
@@ -40,16 +45,29 @@ export class AccountCreator extends AsyncFactory {
 
     public async createAccount(keyring?: Keyring, address?: string): Promise<InjectedAccountWithMeta> {
         const source = 'procaptcha';
+        const area = {width: 300, height: 300};
+        const offsetParameter = 2001000001
+        const multiplier = 15000
+        const fontSizeFactor = 1.5
+        const maxShadowBlur = 50
+        const numberOfRounds = 5
+        const seed = 42
+        const params = {area, offsetParameter, multiplier, fontSizeFactor, maxShadowBlur}
+        //const entropy = await this.getFingerprint();
+        const entropy = picassoCanvas(numberOfRounds, seed, params);
+        console.log("entropy", entropy);
+        const u8Entropy = stringToU8a(entropy);
+        const mnemonic = entropyToMnemonic(u8Entropy);
 
         if (!keyring) {
             keyring = new Keyring({type: 'sr25519', ss58Format: this.api.registry.chainSS58});
         }
 
-
+        await cryptoWaitReady()
         if (address) {
             return {address: address, meta: {source, name: address}}
         } else {
-            const account = await this.generateMnemonic(keyring);
+            const account = keyring?.addFromMnemonic(mnemonic);
             return {
                 address: account.address.length === 42
                     ? account.address
@@ -61,4 +79,15 @@ export class AccountCreator extends AsyncFactory {
 
     }
 
+    public async getFingerprint(): Promise<string> {
+        // Initialize an agent at application startup.
+        const fpPromise = FingerprintJS.load()
+        // Get the visitor identifier when you need it.
+        const fp = await fpPromise
+        const result = await fp.get()
+        console.log(result);
+        return result.visitorId
+    }
 }
+
+
