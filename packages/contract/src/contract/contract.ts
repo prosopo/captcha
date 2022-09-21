@@ -21,7 +21,6 @@ import type {AccountId, EventRecord, Weight} from '@polkadot/types/interfaces';
 import {isU8a, stringCamelCase, stringUpperFirst, u8aToHex} from '@polkadot/util';
 import {addressEq} from '@polkadot/util-crypto';
 import BN from 'bn.js';
-// import chalk from 'chalk';
 import {buildTx} from './buildTx';
 import {convertSignerToAddress} from './helpers';
 import {AnyString} from "@polkadot/util/types";
@@ -38,8 +37,9 @@ import {
 import { BigNumber, IContract } from '../types/contract';
 import { ContractAbi } from '../types/artifacts';
 import { Signer } from '../types/signer';
-
 import {logger} from '../logger'
+import {ProsopoContractError} from "../handlers";
+import {ERRORS} from "../errors";
 
 async function populateTransaction(
     contract: Contract,
@@ -49,9 +49,7 @@ async function populateTransaction(
     let overrides: Partial<CallOverrides> = {};
 
     if (overrides.signer) {
-        throw new Error(
-            'Signer is not supported. Use connect instead, e.g. contract.connect(signer)'
-        );
+        throw new ProsopoContractError(ERRORS.CONTRACT.SIGNER_NOT_SUPPORTED.message)
     }
 
     if (
