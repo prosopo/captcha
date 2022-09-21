@@ -1,5 +1,5 @@
 import { useState, createContext, FC, useEffect } from 'react';
-import { TCaptchaSubmitResult, TExtensionAccount, Extension } from '@prosopo/procaptcha';
+import { TCaptchaSubmitResult, TExtensionAccount, getExtension, IExtensionInterface } from '@prosopo/procaptcha';
 import { CaptchaContextManager, useCaptcha } from '@prosopo/procaptcha-react';
 import toast, { ToastBar, Toaster } from 'react-hot-toast';
 
@@ -79,7 +79,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
     }
   };
 
-  const onChange = (solution: number[][]) => {
+  const onChange = (solution: string[][]) => {
     console.log('onChange:', solution);
   };
 
@@ -94,8 +94,8 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   const status = clientInterface.status;
 
   useEffect(() => {
-    Extension.create()
-      .then((extension: Extension) => {
+    getExtension(manager.state.config['web2'])
+      .then(async (extension: IExtensionInterface) => {
         clientInterface.setExtension(extension);
         const defaultAddress = extension.getDefaultAccount()?.address;
         const currUser = extension.getAccounts().find(({ address }) => address == defaultAddress);

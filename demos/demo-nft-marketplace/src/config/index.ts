@@ -12,6 +12,8 @@ const config: ProsopoCaptchaConfig = {
   dappAccount: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '',
   dappUrl: process.env.NEXT_PUBLIC_CONTRACT_URL || '',
   solutionThreshold: 80,
+  web2: false,
+  prosopoContractAccount: process.env.NEXT_PUBLIC_PROSOPO_CONTRACT_ADDRESS || '',
 };
 
 export default config;

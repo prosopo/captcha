@@ -27,7 +27,9 @@ module.exports = {
     },
   }),
   images: {
+    domains: process.env.IMAGE_DOMAINS.split(','),
     disableStaticImages: true,
+    dangerouslyAllowSVG: true,
   },
   typescript: {
     ignoreBuildErrors: true,

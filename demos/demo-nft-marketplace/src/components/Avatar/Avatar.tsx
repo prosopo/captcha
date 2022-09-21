@@ -1,6 +1,6 @@
-import Link from 'components/Link';
+import Image from 'components/Image/Image';
 import makeBlockie from 'ethereum-blockies-base64';
-import React, { FC, Fragment } from 'react';
+import React, { FC } from 'react';
 
 type Props = {
   additionalClasses?: string;
@@ -12,7 +12,7 @@ type Props = {
 const Avatar: FC<Props> = ({ additionalClasses = '', sizeClasses, username, disableHoverEffects }) => {
   return (
     <div className={`relative flex ${disableHoverEffects ? '' : 'cursor-pointer group'}`}>
-      <img
+      <Image
         className={`${additionalClasses} ${
           sizeClasses ?? 'w-10 h-10'
         } flex-shrink-0 border-2 border-gray-700 rounded-full ${disableHoverEffects ? '' : 'group-hover:border-white'}`}
