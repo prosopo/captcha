@@ -18,9 +18,8 @@ import { GetCaptchaResponse } from "../types/api";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
 import {
-    CaptchaSolutionRaw,
+    CaptchaSolution,
     convertCaptchaToCaptchaSolution,
-    matchItemsToSolutions,
     ProsopoEnvError
 } from "@prosopo/contract";
 
@@ -93,14 +92,7 @@ export class ProsopoCaptchaStateClient {
                         signer,
                         captchaChallenge!.requestHash,
                         datasetId!,
-                        solutions.map(({solution, ...rest}, index) => ({
-                            ...rest,
-                            solution: matchItemsToSolutions(
-                                solution,
-                                captchaChallenge?.captchas[index].captcha
-                                    .items
-                            ),
-                        }))
+                        solutions
                     );
             } catch (err) {
                 submitResult = err as Error;
@@ -137,11 +129,11 @@ export class ProsopoCaptchaStateClient {
         }
     }
 
-    public onChange(index: number) {
+    public onChange(hash: string) {
         const { captchaIndex, captchaSolution } = this.manager.state;
 
-        let currentSolution: number[] = captchaSolution[captchaIndex] || [];
-        currentSolution = currentSolution.includes(index) ? currentSolution.filter(item => item !== index) : [...currentSolution, index];
+        let currentSolution: string[] = captchaSolution[captchaIndex] || [];
+        currentSolution = currentSolution.includes(hash) ? currentSolution.filter(item => item !== hash) : [...currentSolution, hash];
 
         captchaSolution[captchaIndex] = currentSolution;
 
@@ -157,8 +149,8 @@ export class ProsopoCaptchaStateClient {
     }
 
 
-    public parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: number[][]): CaptchaSolutionRaw[] {
-        const parsedSolution: CaptchaSolutionRaw[] = [];
+    public parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: string[][]): CaptchaSolution[] {
+        const parsedSolution: CaptchaSolution[] = [];
 
         for (const [index, challenge] of captchaChallenge!.captchas.entries()) {
             const solution = captchaSolution[index] || [];

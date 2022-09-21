@@ -17,10 +17,10 @@ import ExtensionWeb2 from "../api/ExtensionWeb2";
 import ExtensionWeb3 from "../api/ExtensionWeb3";
 import {IExtensionInterface} from "../types/index";
 
-export async function getExtension(web3: boolean): Promise<IExtensionInterface> {
-    if (web3) {
-        return await ExtensionWeb3.create();
+export async function getExtension(web2: boolean): Promise<IExtensionInterface> {
+    if (web2) {
+        return await ExtensionWeb2.create();
     } else {
-        return await ExtensionWeb2.create()
+        return await ExtensionWeb3.create();
     }
 }

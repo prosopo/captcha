@@ -71,7 +71,7 @@ export class ProsopoCaptchaClient {
 
         if (!ProsopoCaptchaClient.extension) {
             try {
-                ProsopoCaptchaClient.extension = await getExtension(this.manager.state.config['web3']);
+                ProsopoCaptchaClient.extension = await getExtension(this.manager.state.config['web2']);
             } catch (err) {
                 throw new ProsopoEnvError(err);
             }
@@ -134,7 +134,7 @@ export class ProsopoCaptchaClient {
         ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract,
             ProsopoCaptchaClient.provider,
             this.providerApi,
-            this.manager.state.config['web3']
+            this.manager.state.config['web2']
         );
 
         if (this.callbacks?.onAccountChange) {

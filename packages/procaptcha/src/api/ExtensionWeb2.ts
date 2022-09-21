@@ -36,7 +36,6 @@ export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
     private account: InjectedAccountWithMeta | undefined;
     private accounts: InjectedAccountWithMeta[];
 
-    protected web3: boolean;
     protected wsProvider: WsProvider
 
     public async init(wsProvider: WsProvider) {

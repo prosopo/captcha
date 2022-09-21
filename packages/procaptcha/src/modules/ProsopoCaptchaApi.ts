@@ -19,7 +19,6 @@ import {
     CaptchaSolution,
     CaptchaMerkleTree,
     CaptchaSolutionCommitment,
-    CaptchaSolutionRaw,
 } from "@prosopo/contract";
 import { Signer } from "@polkadot/api/types";
 
@@ -30,8 +29,6 @@ import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
 import {TCaptchaSubmitResult} from '../types/client';
 import {ProsopoApiError} from "../api/handlers";
-import { matchItemsToSolutions } from '@prosopo/contract';
-
 
 function hexHash(data: string | Uint8Array): string {
     return blake2AsHex(data);
@@ -52,11 +49,11 @@ export class ProsopoCaptchaApi {
     protected providerApi: ProviderApi;
     protected submitCaptchaFn: SubmitFunction
 
-    constructor(contract: ProsopoContract, provider: ProsopoRandomProviderResponse, providerApi: ProviderApi, web3: boolean) {
+    constructor(contract: ProsopoContract, provider: ProsopoRandomProviderResponse, providerApi: ProviderApi, web2: boolean) {
         this.contract = contract;
         this.provider = provider;
         this.providerApi = providerApi;
-        this.submitCaptchaFn = web3 ? this.submitCaptchaSolutionWeb3 : this.submitCaptchaSolutionWeb2;
+        this.submitCaptchaFn = web2 ? this.submitCaptchaSolutionWeb2 : this.submitCaptchaSolutionWeb3;
     }
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
