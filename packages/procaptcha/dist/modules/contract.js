@@ -32,7 +32,7 @@ exports.getProsopoContract = getProsopoContract;
 //     try {
 //         await provider.connect();
 //     } catch (err) {
-//         throw new Error(`${err.message} ${url}`);
+//         throw new ProsopoEnvError(`${err.message} ${url}`);
 //     }
 //     return provider;
 // }

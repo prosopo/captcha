@@ -24,6 +24,7 @@ export declare class ProsopoContractBase extends AsyncFactory {
     getContract(): ContractPromise;
     getAccount(): InjectedAccountWithMeta;
     getDappAddress(): string;
+    disconnect(): Promise<void>;
     query<T>(method: string, args: any[]): Promise<T | AnyJson | null>;
     transaction(signer: Signer, method: string, args: any[]): Promise<TransactionResponse>;
 }

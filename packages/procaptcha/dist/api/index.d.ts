@@ -1,5 +1,6 @@
 export * from './AsyncFactory';
-export * from './Extension';
+export * from './ExtensionWeb3';
+export * from './ExtensionWeb2';
 export * from './HttpClientBase';
 export * from './ProsopoContract';
 export * from './ProsopoContractBase';

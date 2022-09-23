@@ -13,22 +13,13 @@ export interface ProposoProvider {
     serviceOrigin: string;
     status: string;
 }
-export interface CaptchaImageSchema {
-    path: string;
-    type: string;
-}
 export interface CaptchaResponseCaptcha {
-    captcha: Captcha;
+    captcha: Omit<Captcha, 'solution'>;
     proof: string[][];
 }
 export interface GetCaptchaResponse {
     captchas: CaptchaResponseCaptcha[];
     requestHash: string;
-}
-export interface CaptchaSolution {
-    captchaId: string;
-    solution: number[];
-    salt: string;
 }
 export interface CaptchaSolutionResponse {
     captchas: CaptchaResponseCaptcha[];
@@ -41,5 +32,7 @@ export interface ProsopoCaptchaConfig {
     "dappAccount": string;
     "dappUrl": string;
     "solutionThreshold": number;
+    "web2": boolean;
+    "prosopoContractAccount": string;
 }
 //# sourceMappingURL=api.d.ts.map

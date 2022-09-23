@@ -5,13 +5,12 @@ const contract_1 = require("./contract");
 const extension_1 = require("./extension");
 const ProviderApi_1 = require("../api/ProviderApi");
 const ProsopoCaptchaApi_1 = require("./ProsopoCaptchaApi");
-// import { Extension } from "../api";
+const contract_2 = require("@prosopo/contract");
 class ProsopoCaptchaClient {
     manager;
     status;
     callbacks;
     providerApi;
-    // public config: ProsopoCaptchaConfig;
     static extension;
     static contract;
     static provider;
@@ -21,13 +20,12 @@ class ProsopoCaptchaClient {
         this.status = status;
         this.callbacks = callbacks;
         this.providerApi = new ProviderApi_1.ProviderApi(manager.state.config);
-        // this.config = manager.state.config;
     }
     getExtension() {
         return ProsopoCaptchaClient.extension;
     }
     setExtension(extension) {
-        return ProsopoCaptchaClient.extension = extension;
+        ProsopoCaptchaClient.extension = extension;
     }
     getContract() {
         return ProsopoCaptchaClient.contract;
@@ -38,20 +36,37 @@ class ProsopoCaptchaClient {
     getCaptchaApi() {
         return ProsopoCaptchaClient.captchaApi;
     }
-    async onLoad() {
-        let contractAddress = ProsopoCaptchaClient.contract?.address;
-        if (!ProsopoCaptchaClient.extension || !contractAddress) {
+    async onLoad(createAccount) {
+        if (!ProsopoCaptchaClient.extension) {
             try {
-                [ProsopoCaptchaClient.extension, { contractAddress }] = await Promise.all([(0, extension_1.getExtension)(), this.providerApi.getContractAddress()]);
+                ProsopoCaptchaClient.extension = await (0, extension_1.getExtension)(this.manager.state.config['web2']);
             }
             catch (err) {
-                throw new Error(err);
+                throw new contract_2.ProsopoEnvError(err);
             }
         }
         if (this.callbacks?.onLoad) {
-            this.callbacks.onLoad(ProsopoCaptchaClient.extension, contractAddress);
+            this.callbacks.onLoad(ProsopoCaptchaClient.extension, this.manager.state.config['prosopoContractAccount']);
+            this.manager.update({ contractAddress: this.manager.state.config['prosopoContractAccount'] });
         }
-        this.manager.update({ contractAddress });
+        let account;
+        if (createAccount) {
+            try {
+                account = await this.getExtension().createAccount();
+            }
+            catch (err) {
+                throw new contract_2.ProsopoEnvError(err);
+            }
+        }
+        else {
+            try {
+                account = await this.getExtension().getAccount();
+            }
+            catch (err) {
+                throw new contract_2.ProsopoEnvError(err);
+            }
+        }
+        await this.onAccountChange(account);
     }
     async onAccountChange(account) {
         if (!account) {
@@ -62,21 +77,21 @@ class ProsopoCaptchaClient {
             ProsopoCaptchaClient.extension.setAccount(account.address);
         }
         catch (err) {
-            throw new Error(err);
+            throw new contract_2.ProsopoEnvError(err);
         }
         try {
-            ProsopoCaptchaClient.contract = await (0, contract_1.getProsopoContract)(this.manager.state.contractAddress, this.manager.state.config['dappAccount'], account, await (0, contract_1.getWsProvider)(this.manager.state.config['dappUrl']));
+            ProsopoCaptchaClient.contract = await (0, contract_1.getProsopoContract)(this.manager.state.config['prosopoContractAccount'], this.manager.state.config['dappAccount'], account, (0, contract_1.getWsProvider)(this.manager.state.config['dappUrl']));
         }
         catch (err) {
-            throw new Error(err);
+            throw new contract_2.ProsopoEnvError(err);
         }
         try {
             ProsopoCaptchaClient.provider = await ProsopoCaptchaClient.contract.getRandomProvider();
         }
         catch (err) {
-            throw new Error(err);
+            throw new contract_2.ProsopoEnvError(err);
         }
-        ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi_1.ProsopoCaptchaApi(ProsopoCaptchaClient.contract, ProsopoCaptchaClient.provider, this.providerApi);
+        ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi_1.ProsopoCaptchaApi(ProsopoCaptchaClient.contract, ProsopoCaptchaClient.provider, this.providerApi, this.manager.state.config['web2']);
         if (this.callbacks?.onAccountChange) {
             this.callbacks.onAccountChange(account);
         }

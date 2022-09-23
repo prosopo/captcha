@@ -55,6 +55,9 @@ class ProsopoContractBase extends AsyncFactory_1.default {
     getDappAddress() {
         return this.dappAddress;
     }
+    async disconnect() {
+        await this.api.disconnect();
+    }
     async query(method, args) {
         try {
             const abiMessage = this.abi.findMessage(method);

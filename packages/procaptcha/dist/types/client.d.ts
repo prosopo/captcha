@@ -3,16 +3,17 @@ import { ProsopoCaptchaConfig, GetCaptchaResponse, CaptchaSolutionResponse } fro
 import { TransactionResponse } from "../types/contract";
 import { CaptchaSolutionCommitment } from "@prosopo/contract";
 export declare type TExtensionAccount = InjectedAccountWithMeta;
-export declare type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse, CaptchaSolutionCommitment];
+export declare type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse?, CaptchaSolutionCommitment?];
 export interface IExtensionInterface {
     checkExtension(): void;
-    getExtension(): InjectedExtension;
+    getExtension(): InjectedExtension | undefined;
     getAccounts(): InjectedAccountWithMeta[];
     getAccount(): InjectedAccountWithMeta | undefined;
     setAccount(account: string): void;
     unsetAccount(): void;
     getDefaultAccount(): InjectedAccountWithMeta | undefined;
     setDefaultAccount(): void;
+    createAccount(): Promise<InjectedAccountWithMeta | undefined>;
 }
 export interface ICaptchaClientEvents {
     onLoad?: (extension: IExtensionInterface, contractAddress: string) => void;
@@ -21,7 +22,7 @@ export interface ICaptchaClientEvents {
 export interface ICaptchaStateClientEvents {
     onLoadCaptcha?: (captchaChallenge: GetCaptchaResponse | Error) => void;
     onSubmit?: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => void;
-    onChange?: (captchaSolution: number[][], index: number) => void;
+    onChange?: (captchaSolution: string[][], index: number) => void;
     onCancel?: () => void;
     onSolved?: (result: TCaptchaSubmitResult, isHuman?: boolean) => void;
 }
@@ -39,7 +40,7 @@ export interface ICaptchaContextReducer {
 export interface ICaptchaState {
     captchaChallenge?: GetCaptchaResponse;
     captchaIndex: number;
-    captchaSolution: number[][];
+    captchaSolution: string[][];
 }
 export interface ICaptchaStateReducer {
     state: ICaptchaState;

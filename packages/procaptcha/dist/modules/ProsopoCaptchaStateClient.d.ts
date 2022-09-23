@@ -1,6 +1,7 @@
 import { ICaptchaStateReducer, TCaptchaSubmitResult } from "../types/client";
-import { CaptchaSolution, GetCaptchaResponse } from "../types/api";
+import { GetCaptchaResponse } from "../types/api";
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
+import { CaptchaSolution } from "@prosopo/contract";
 export declare class ProsopoCaptchaStateClient {
     context: ProsopoCaptchaClient;
     manager: ICaptchaStateReducer;
@@ -9,9 +10,9 @@ export declare class ProsopoCaptchaStateClient {
     onCancel(): void;
     onSubmit(): Promise<void>;
     onSolved(submitResult: TCaptchaSubmitResult): Promise<void>;
-    onChange(index: number): void;
+    onChange(hash: string): void;
     dismissCaptcha(): void;
-    parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: number[][]): CaptchaSolution[];
+    parseSolution(captchaChallenge: GetCaptchaResponse, captchaSolution: string[][]): CaptchaSolution[];
 }
 export default ProsopoCaptchaStateClient;
 //# sourceMappingURL=ProsopoCaptchaStateClient.d.ts.map
