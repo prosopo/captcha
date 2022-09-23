@@ -17,7 +17,8 @@ const tslib_1 = require("tslib");
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 tslib_1.__exportStar(require("./AsyncFactory"), exports);
-tslib_1.__exportStar(require("./Extension"), exports);
+tslib_1.__exportStar(require("./ExtensionWeb3"), exports);
+tslib_1.__exportStar(require("./ExtensionWeb2"), exports);
 tslib_1.__exportStar(require("./HttpClientBase"), exports);
 tslib_1.__exportStar(require("./ProsopoContract"), exports);
 tslib_1.__exportStar(require("./ProsopoContractBase"), exports);

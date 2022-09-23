@@ -12,12 +12,13 @@ class ProsopoCaptchaStateClient {
     async onLoadCaptcha() {
         let captchaChallenge;
         try {
-            captchaChallenge = await this.context.getCaptchaApi().getCaptchaChallenge();
+            captchaChallenge = await this.context.getCaptchaApi()?.getCaptchaChallenge();
         }
         catch (err) {
             captchaChallenge = err;
+            throw new contract_1.ProsopoEnvError(captchaChallenge);
         }
-        if (this.context.callbacks?.onLoadCaptcha) {
+        if (this.context.callbacks?.onLoadCaptcha && captchaChallenge) {
             this.context.callbacks.onLoadCaptcha(captchaChallenge);
         }
         if (captchaChallenge instanceof Error) {
@@ -39,25 +40,30 @@ class ProsopoCaptchaStateClient {
             this.manager.update({ captchaIndex: nextCaptchaIndex, captchaSolution });
             return;
         }
-        const signer = this.context.getExtension().getExtension().signer;
+        const signer = this.context.getExtension().getExtension()?.signer;
         const currentCaptcha = captchaChallenge.captchas[captchaIndex];
         const { datasetId } = currentCaptcha.captcha;
         const solutions = this.parseSolution(captchaChallenge, captchaSolution);
         let submitResult;
-        try {
-            submitResult = await this.context.getCaptchaApi().submitCaptchaSolution(signer, captchaChallenge.requestHash, datasetId, solutions);
-        }
-        catch (err) {
-            submitResult = err;
-        }
-        if (this.context.callbacks?.onSubmit) {
-            this.context.callbacks.onSubmit(submitResult, this.manager.state);
+        if (signer) {
+            try {
+                submitResult = await this.context
+                    .getCaptchaApi()
+                    .submitCaptchaSolution(signer, captchaChallenge.requestHash, datasetId, solutions);
+            }
+            catch (err) {
+                submitResult = err;
+            }
+            if (this.context.callbacks?.onSubmit) {
+                this.context.callbacks.onSubmit(submitResult, this.manager.state);
+            }
+            this.manager.update({ captchaSolution: [] });
+            if (submitResult instanceof Error) {
+                return;
+            }
+            await this.onSolved(submitResult);
         }
         this.manager.update({ captchaSolution: [] });
-        if (submitResult instanceof Error) {
-            return;
-        }
-        await this.onSolved(submitResult);
     }
     async onSolved(submitResult) {
         let isHuman;
@@ -65,16 +71,17 @@ class ProsopoCaptchaStateClient {
             isHuman = await this.context.getContract()?.dappOperatorIsHumanUser(this.context.manager.state.config['solutionThreshold']);
         }
         catch (err) {
+            console.log("Error determining whether user is human");
         }
         this.dismissCaptcha();
         if (this.context.callbacks?.onSolved) {
             this.context.callbacks.onSolved(submitResult, isHuman);
         }
     }
-    onChange(index) {
+    onChange(hash) {
         const { captchaIndex, captchaSolution } = this.manager.state;
         let currentSolution = captchaSolution[captchaIndex] || [];
-        currentSolution = currentSolution.includes(index) ? currentSolution.filter(item => item !== index) : [...currentSolution, index];
+        currentSolution = currentSolution.includes(hash) ? currentSolution.filter(item => item !== hash) : [...currentSolution, hash];
         captchaSolution[captchaIndex] = currentSolution;
         if (this.context.callbacks?.onChange) {
             this.context.callbacks.onChange(captchaSolution, captchaIndex);
@@ -88,8 +95,8 @@ class ProsopoCaptchaStateClient {
         const parsedSolution = [];
         for (const [index, challenge] of captchaChallenge.captchas.entries()) {
             const solution = captchaSolution[index] || [];
-            challenge.captcha.solution = solution;
-            parsedSolution[index] = (0, contract_1.convertCaptchaToCaptchaSolution)(challenge.captcha);
+            // challenge.captcha.solution = solution;
+            parsedSolution[index] = (0, contract_1.convertCaptchaToCaptchaSolution)({ ...challenge.captcha, solution });
         }
         console.log("CAPTCHA SOLUTIONS", parsedSolution);
         return parsedSolution;

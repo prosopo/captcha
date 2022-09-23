@@ -16,9 +16,10 @@ exports.AsyncFactory = void 0;
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
+const contract_1 = require("@prosopo/contract");
 class AsyncFactory {
     constructor() {
-        throw new Error("Use `create` factory method");
+        throw new contract_1.ProsopoEnvError("Use `create` factory method");
     }
     static async create(...args) {
         return await Object.create(this.prototype).init(...args);

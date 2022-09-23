@@ -1,13 +1,9 @@
 import HttpClientBase from "./HttpClientBase";
-import { ProsopoCaptchaConfig, ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolution, CaptchaSolutionResponse } from '../types';
+import { ProsopoCaptchaConfig, ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolutionResponse } from '../types';
+import { CaptchaSolution } from "@prosopo/contract";
 export declare class ProviderApi extends HttpClientBase {
     private config;
     constructor(config: ProsopoCaptchaConfig);
-    /**
-   *
-   * @deprecated use ProsopoContract$getRandomProvider instead.
-   */
-    getRandomProvider(): Promise<import("axios").AxiosResponse<any, any>>;
     getProviders(): Promise<{
         accounts: string[];
     }>;
@@ -15,7 +11,7 @@ export declare class ProviderApi extends HttpClientBase {
         contractAddress: string;
     }>;
     getCaptchaChallenge(randomProvider: ProsopoRandomProviderResponse): Promise<GetCaptchaResponse>;
-    submitCaptchaSolution(blockHash: string, captchas: CaptchaSolution[], requestHash: string, txHash: string, userAccount: string): Promise<CaptchaSolutionResponse>;
+    submitCaptchaSolution(captchas: CaptchaSolution[], requestHash: string, userAccount: string, salt: string, blockHash?: string, txHash?: string, web2?: boolean): Promise<CaptchaSolutionResponse>;
 }
 export default ProviderApi;
 //# sourceMappingURL=ProviderApi.d.ts.map

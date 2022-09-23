@@ -17,9 +17,15 @@ const tslib_1 = require("tslib");
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-const Extension_1 = tslib_1.__importDefault(require("../api/Extension"));
-async function getExtension() {
-    return await Extension_1.default.create();
+const ExtensionWeb2_1 = tslib_1.__importDefault(require("../api/ExtensionWeb2"));
+const ExtensionWeb3_1 = tslib_1.__importDefault(require("../api/ExtensionWeb3"));
+async function getExtension(web2) {
+    if (web2) {
+        return await ExtensionWeb2_1.default.create();
+    }
+    else {
+        return await ExtensionWeb3_1.default.create();
+    }
 }
 exports.getExtension = getExtension;
 //# sourceMappingURL=extension.js.map

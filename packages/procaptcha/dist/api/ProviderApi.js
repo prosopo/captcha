@@ -25,14 +25,6 @@ class ProviderApi extends HttpClientBase_1.default {
         super(config['providerApi.baseURL'], config['providerApi.prefix']);
         this.config = config;
     }
-    /**
-   *
-   * @deprecated use ProsopoContract$getRandomProvider instead.
-   */
-    getRandomProvider() {
-        const userAccount = storage_1.default.getAccount();
-        return this.axios.get(`/random_provider/${userAccount}/${this.config['dappAccount']}`);
-    }
     getProviders() {
         return this.axios.get(`/providers`);
     }
@@ -46,8 +38,17 @@ class ProviderApi extends HttpClientBase_1.default {
         const userAccount = storage_1.default.getAccount();
         return this.axios.get(`/provider/captcha/${provider.captchaDatasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
     }
-    submitCaptchaSolution(blockHash, captchas, requestHash, txHash, userAccount) {
-        return this.axios.post(`/provider/solution`, { blockHash, captchas, requestHash, txHash, userAccount, dappAccount: this.config['dappAccount'] });
+    submitCaptchaSolution(captchas, requestHash, userAccount, salt, blockHash, txHash, web2) {
+        return this.axios.post(`/provider/solution`, {
+            blockHash,
+            captchas,
+            requestHash,
+            txHash,
+            userAccount,
+            dappAccount: this.config['dappAccount'],
+            web2,
+            salt
+        });
     }
 }
 exports.ProviderApi = ProviderApi;

@@ -17,23 +17,25 @@ exports.ProsopoCaptchaApi = void 0;
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 const util_crypto_1 = require("@polkadot/util-crypto");
-// import {computeCaptchaSolutionHash} from '@prosopo/provider'; 
+// import {computeCaptchaSolutionHash} from '@prosopo/provider';
 const contract_1 = require("@prosopo/contract");
 const handlers_1 = require("../api/handlers");
 function hexHash(data) {
     return (0, util_crypto_1.blake2AsHex)(data);
 }
 function computeCaptchaSolutionHash(captcha) {
-    return hexHash([captcha.captchaId, captcha.solution, captcha.salt].join());
+    return hexHash([captcha.captchaId, [...captcha.solution].sort(), captcha.salt].join());
 }
 class ProsopoCaptchaApi {
     contract;
     provider;
     providerApi;
-    constructor(contract, provider, providerApi) {
+    submitCaptchaFn;
+    constructor(contract, provider, providerApi, web2) {
         this.contract = contract;
         this.provider = provider;
         this.providerApi = providerApi;
+        this.submitCaptchaFn = web2 ? this.submitCaptchaSolutionWeb2 : this.submitCaptchaSolutionWeb3;
     }
     async getCaptchaChallenge() {
         let captchaChallenge;
@@ -46,9 +48,30 @@ class ProsopoCaptchaApi {
         return captchaChallenge;
     }
     async submitCaptchaSolution(signer, requestHash, datasetId, solutions) {
+        return this.submitCaptchaFn(signer, requestHash, datasetId, solutions);
+    }
+    async submitCaptchaSolutionWeb2(signer, requestHash, datasetId, solutions) {
+        const salt = (0, util_crypto_1.randomAsHex)();
+        const captchaSolutionsSalted = solutions.map((captcha) => ({
+            ...captcha,
+            salt,
+        }));
+        let result;
+        try {
+            result = await this.providerApi.submitCaptchaSolution(captchaSolutionsSalted, requestHash, this.contract.getAccount().address, salt, undefined, undefined, true);
+        }
+        catch (err) {
+            throw new handlers_1.ProsopoApiError(err);
+        }
+        return [result, undefined, undefined];
+    }
+    async submitCaptchaSolutionWeb3(signer, requestHash, datasetId, solutions) {
         const salt = (0, util_crypto_1.randomAsHex)();
         const tree = new contract_1.CaptchaMerkleTree();
-        const captchaSolutionsSalted = solutions.map(solution => ({ ...solution, salt: salt }));
+        const captchaSolutionsSalted = solutions.map((captcha) => ({
+            ...captcha,
+            salt,
+        }));
         const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
         tree.build(captchasHashed);
         const commitmentId = tree.root.hash;
@@ -65,7 +88,7 @@ class ProsopoCaptchaApi {
         }
         let result;
         try {
-            result = await this.providerApi.submitCaptchaSolution(tx.blockHash, captchaSolutionsSalted, requestHash, tx.txHash.toString(), this.contract.getAccount().address);
+            result = await this.providerApi.submitCaptchaSolution(captchaSolutionsSalted, requestHash, this.contract.getAccount().address, salt, tx.blockHash, tx.txHash.toString());
         }
         catch (err) {
             throw new handlers_1.ProsopoApiError(err);

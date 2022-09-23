@@ -14,11 +14,11 @@ export declare class ProsopoCaptchaClient {
     private static captchaApi;
     constructor(manager: ICaptchaContextReducer, status: ICaptchaStatusReducer, callbacks?: CaptchaEventCallbacks);
     getExtension(): IExtensionInterface;
-    setExtension(extension: IExtensionInterface): IExtensionInterface;
+    setExtension(extension: IExtensionInterface): void;
     getContract(): ProsopoContract | undefined;
     getProvider(): ProsopoRandomProviderResponse | undefined;
     getCaptchaApi(): ProsopoCaptchaApi | undefined;
-    onLoad(): Promise<void>;
+    onLoad(createAccount?: boolean): Promise<void>;
     onAccountChange(account?: TExtensionAccount): Promise<void>;
     onAccountUnset(): void;
 }
