@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev -p 3002",
     "build": "next build",
     "build-prod": "next build",
-    "start": "next start -p 3001",
+    "start": "next start -p 3002",
     "build:tailwind": "postcss src/scss/base.scss -o src/scss/tailwind.scss",
     "lint": "eslint '*/**/*.{ts,tsx}'",
     "lint:fix": "npm run lint --fix",
