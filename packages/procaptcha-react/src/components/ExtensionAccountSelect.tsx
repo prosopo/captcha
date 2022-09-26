@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
 import { SyntheticEvent } from "react";
-import { Autocomplete, TextField } from "@mui/material";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 import { TExtensionAccount } from "@prosopo/procaptcha";
 
 
