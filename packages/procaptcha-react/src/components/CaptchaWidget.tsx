@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
-import { Avatar } from "@mui/material";
+import Avatar from "@mui/material/Avatar";
 import { CaptchaResponseCaptcha } from "@prosopo/procaptcha";
 
 import { useStyles } from "../styles";

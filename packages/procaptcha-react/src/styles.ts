@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
-import { makeStyles } from "@mui/styles";
+import makeStyles from "@mui/styles/makeStyles";
 
 const dot = {
     width: 7,
