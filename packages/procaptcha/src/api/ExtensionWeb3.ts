@@ -13,19 +13,25 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { web3Enable, web3FromSource, web3Accounts } from "@polkadot/extension-dapp";
+import { web3Enable, web3FromSource, web3Accounts, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types"
 import storage from "../modules/storage";
 import { IExtensionInterface } from "../types/client";
 import AsyncFactory from "./AsyncFactory";
 import {ProsopoEnvError} from "@prosopo/contract";
 
-
+/**
+ * Class to discover web3 accounts from browser extensions
+ */
 export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
 
-    private extension: InjectedExtension;
+    // the extension for the currently selected account, if any
+    private extension?: InjectedExtension;
+    // the currently selected account, if any
     private account: InjectedAccountWithMeta | undefined;
+    // the discovered accounts
     private accounts: InjectedAccountWithMeta[];
+    // the discovered extensions
     private injectedExtensions: InjectedExtension[];
 
     public async init() {
@@ -36,56 +42,64 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
     }
 
     public async checkExtension() {
-        try {
-            this.injectedExtensions = await web3Enable('Prosopo');
-        } catch (err) {
-            throw new ProsopoEnvError(err);
-        }
-        if (!this.injectedExtensions.length) {
-            throw new ProsopoEnvError("No extension found");
-        }
+        // enables extension discovery - must be called before anything else to do with web3 accounts!
+        this.injectedExtensions = await web3Enable('Prosopo');
     }
 
+    /**
+     * Get the extension for the selected account.
+     * @returns the extension holding the selected account. Undefined if no account selected.
+     */
     public getExtension() {
         return this.extension;
     }
 
+    /**
+     * Set the extension for the selected account.
+     */
     private async setExtension() {
-        try {
-            // https://polkadot.js.org/docs/extension/cookbook/
-            this.extension = await web3FromSource(this.accounts[0].meta.source);
-        } catch (err) {
-            throw new ProsopoEnvError(err);
-        }
-        if (!this.extension) {
-            throw new ProsopoEnvError("Extension not found");
+        // if account is selected
+        if(this.account) {
+            // then there will be an extension providing said account
+            this.extension = await web3FromAddress(this.account.address);
+        } else {
+            // no account selected, so set extension to undefined
+            this.extension = undefined;
         }
     }
 
+    /**
+     * Get all accounts across all extensions.
+     * @returns all accounts across all extensions.
+     */
     public getAccounts() {
         return this.accounts;
     }
 
+    /**
+     * Discover accounts across all extensions.
+     */
     private async setAccounts() {
-        try {
-            this.accounts = await web3Accounts();
-        } catch (err) {
-            throw new ProsopoEnvError(err);
-        }
+        this.accounts = await web3Accounts();
         this.setDefaultAccount();
     }
 
+    /**
+     * Get the selected account.
+     * @returns the selected account.
+     */
     public getAccount() {
         return this.account;
     }
 
+    /**
+     * Set the selected account.
+     * @param address the address of the account to be selected.
+     */
     public setAccount(address: string) {
-        if (!this.accounts.length) {
-            throw new ProsopoEnvError("No accounts found");
-        }
         const account = this.accounts.find(acc => acc.address === address);
         if (!account) {
-            throw new ProsopoEnvError("Account not found");
+            throw new ProsopoEnvError("Account " + address + "not found in " + this.accounts);
         }
         this.account = account;
         storage.setAccount(account.address);
@@ -95,6 +109,7 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
         this.account = undefined;
         storage.setAccount("");
     }
+
 
     public getDefaultAccount() {
         const defaultAccount = storage.getAccount();
