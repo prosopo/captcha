@@ -81,7 +81,16 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
      */
     private async setAccounts() {
         this.accounts = await web3Accounts();
-        this.setDefaultAccount();
+        // get the last used account address from storage
+        const lastUsedAccountAddress = storage.getAccount();
+        // lookup this account in the discovered accounts
+        const account = this.accounts.find(acc => acc.address === lastUsedAccountAddress);
+        // if found then set it
+        if(account) {
+            this.account = account;
+        } else {
+            this.account = undefined;
+        }
     }
 
     /**
@@ -97,6 +106,9 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
      * @param address the address of the account to be selected.
      */
     public setAccount(address: string) {
+        if(!this.accounts.length) {
+            throw new ProsopoEnvError("Cannot set account for address " + address + ", no accounts found")
+        }
         const account = this.accounts.find(acc => acc.address === address);
         if (!account) {
             throw new ProsopoEnvError("Account " + address + "not found in " + this.accounts);
@@ -107,15 +119,22 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
 
     public unsetAccount() {
         this.account = undefined;
+        // update the last used account to empty
         storage.setAccount("");
     }
 
-
+    /**
+     * Get the last used account via the address held in local storage.
+     * @returns the account associated with the address held in storage.
+     */
     public getDefaultAccount() {
         const defaultAccount = storage.getAccount();
         return this.accounts.find(acc => acc.address === defaultAccount);
     }
 
+    /**
+     * Select the account using the last used account address held in local storage.
+     */
     public setDefaultAccount() {
         const defaultAccount = storage.getAccount();
         if (defaultAccount) {
