@@ -39,7 +39,7 @@ export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): D
 
         return <DatasetWithIds>dataset;
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.DATASET.HASH_ERROR.message);
+        throw new ProsopoEnvError(err, "DATASET.HASH_ERROR");
     }
 }
 
@@ -52,7 +52,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): Dataset {
     try {
         return DatasetSchema.parse(datasetJSON);
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.DATASET.PARSE_ERROR.message);
+        throw new ProsopoEnvError(err, "DATASET.PARSE_ERROR");
     }
 }
 
@@ -65,7 +65,7 @@ export function parseCaptchas(captchaJSON: JSON): CaptchaWithoutId[] {
     try {
         return CaptchasSchema.parse(captchaJSON);
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.CAPTCHA.PARSE_ERROR.message);
+        throw new ProsopoEnvError(err, "CAPTCHA.PARSE_ERROR");
     }
 }
 
@@ -78,7 +78,7 @@ export function parseCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
     try {
         return CaptchaSolutionSchema.parse(captchaJSON);
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.CAPTCHA.PARSE_ERROR.message);
+        throw new ProsopoEnvError(err, "CAPTCHA.PARSE_ERROR");
     }
 }
 
@@ -127,7 +127,7 @@ export async function computeCaptchaHash(captcha: CaptchaWithoutId) {
             itemHashes.push(hash);
             captcha.items[index].hash = hash;
         } else {
-            throw new ProsopoEnvError(ERRORS.CAPTCHA.INVALID_ITEM_FORMAT.message);
+            throw new ProsopoEnvError("CAPTCHA.INVALID_ITEM_FORMAT");
         }
     }
 

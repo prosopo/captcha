@@ -95,7 +95,7 @@ export class AccountSigner implements PolkadotSigner {
                 pair.lock = (): void => {
                 };
             } catch (error: any) {
-                throw new ProsopoEnvError(error, ERRORS.GENERAL.BAD_SURI.message, account);
+                throw new ProsopoEnvError(error, "GENERAL.BAD_SURI");
             }
         }
     };
