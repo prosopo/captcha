@@ -42,7 +42,7 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
             throw new ProsopoEnvError(err);
         }
         if (!this.injectedExtensions.length) {
-            throw new ProsopoEnvError("No extension found");
+            throw new ProsopoEnvError("WIDGET.NO_EXTENSION_FOUND");
         }
     }
 
@@ -58,7 +58,7 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
             throw new ProsopoEnvError(err);
         }
         if (!this.extension) {
-            throw new ProsopoEnvError("Extension not found");
+            throw new ProsopoEnvError("WIDGET.EXTENSION_NOT_FOUND");
         }
     }
 
@@ -81,11 +81,11 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
 
     public setAccount(address: string) {
         if (!this.accounts.length) {
-            throw new ProsopoEnvError("No accounts found");
+            throw new ProsopoEnvError("WIDGET.NO_ACCOUNTS_FOUND");
         }
         const account = this.accounts.find(acc => acc.address === address);
         if (!account) {
-            throw new ProsopoEnvError("Account not found");
+            throw new ProsopoEnvError("WIDGET.ACCOUNT_NOT_FOUND");
         }
         this.account = account;
         storage.setAccount(account.address);
