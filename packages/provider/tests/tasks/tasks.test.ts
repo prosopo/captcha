@@ -58,7 +58,7 @@ describe("CONTRACT TASKS", () => {
         const databaseAccounts: IDatabaseAccounts = await populateDatabase(mockEnv, accountConfig, false)
         const account = databaseAccounts[accountType].pop()
         if (account === undefined) {
-            throw new ProsopoEnvError(`${accountType} not created by databasePopulator`, 'getUser')
+            throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`), 'getUser')
         }
         return account
     }
@@ -499,7 +499,7 @@ describe("CONTRACT TASKS", () => {
         );
 
         if (!result) {
-            throw new ProsopoEnvError("Result is null");
+            throw new ProsopoEnvError(new Error("Result is null"));
         }
 
         const events = getEventsFromMethodName(result, "dappUserCommit");
@@ -584,6 +584,7 @@ describe("CONTRACT TASKS", () => {
             expect(filteredResult.proof).to.deep.eq(expectedProof);
             expect(filteredResult.captchaId).to.eq(captchaSolutionsSalted[0].captchaId);
         } catch (err) {
+            // TODO: should this be localized?
             throw new ProsopoEnvError(err, "Captcha proofs are returned if commitment found and solution is correct")
         }
     });

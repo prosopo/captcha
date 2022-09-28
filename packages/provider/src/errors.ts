@@ -197,15 +197,10 @@ export class NotFound extends ApiError {
 }
 
 export const handleErrors = (err, req, res, next) => {
-    if (err instanceof ApiError) {
-        return res.status(err.getCode()).json({
-            message: err.message,
-            name: err.name
-        })
-    }
+    const code = err instanceof ApiError ? err.getCode() : 500;
 
-    return res.status(500).json({
-        message: err.message,
+    return res.status(code).json({
+        message: err.getTranslated(req.i18n) ?? err.message,
         name: err.name
     })
 }

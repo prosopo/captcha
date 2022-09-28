@@ -31,7 +31,8 @@ import { ERRORS, handleErrors } from '../errors';
 import { ProsopoEnvironment } from '../types/env';
 
 import { Server } from 'http';
-import {ProsopoEnvError} from "@prosopo/contract";
+import { ProsopoEnvError } from "@prosopo/contract";
+import { i18nMiddleware } from "@prosopo/i18n";
 
 // loadEnv();
 
@@ -44,6 +45,7 @@ function startApi(env: ProsopoEnvironment) {
 
     apiApp.use(cors());
     apiApp.use(express.json());
+    apiApp.use(i18nMiddleware({}));
     apiApp.use(prosopoRouter(env));
 
     if (env.assetsResolver instanceof LocalAssetsResolver) {
@@ -82,7 +84,7 @@ async function start (nodeEnv: string) {
 
     if (nodeEnv !== 'test') {
         if (!process.env.PROVIDER_MNEMONIC) {
-            throw new ProsopoEnvError(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+            throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED");
         }
         env = new Environment(process.env.PROVIDER_MNEMONIC);
     } else {

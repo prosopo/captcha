@@ -25,7 +25,7 @@ export function encodeStringAddress (address: string) {
                 : decodeAddress(address)
         )
     } catch (error) {
-        throw new ProsopoEnvError(error, ERRORS.CONTRACT.INVALID_ADDRESS.message, address)
+        throw new ProsopoEnvError(error, "CONTRACT.INVALID_ADDRESS", {}, address)
     }
 }
 
@@ -47,7 +47,7 @@ export function loadJSONFile (filePath: string, logger?: any) {
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'))
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.GENERAL.JSON_LOAD_FAILED.message, filePath)
+        throw new ProsopoEnvError(err, "GENERAL.JSON_LOAD_FAILED", {}, filePath)
     }
 }
 

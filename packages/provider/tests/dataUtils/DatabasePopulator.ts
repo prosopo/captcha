@@ -147,7 +147,7 @@ implements IDatabaseAccounts, IDatabasePopulatorMethods
       this.mockEnv.contractInterface?.createAccountAndAddToKeyring();
 
         if (!account) {
-            throw new ProsopoEnvError("Could not create an account!");
+            throw new ProsopoEnvError("DEVELOPER.CREATE_ACCOUNT_FAILED");
         }
 
         return account;
@@ -175,7 +175,7 @@ implements IDatabaseAccounts, IDatabasePopulatorMethods
       typeof account === "string" ? account : accountMnemonic(account);
 
         if (!this.mockEnv.contractInterface) {
-            throw new ProsopoEnvError("MockEnvironment not set up");
+            throw new ProsopoEnvError("DEVELOPER.NO_MOCK_ENV");
         }
 
         return this.mockEnv.contractInterface.changeSigner(mnemonic);

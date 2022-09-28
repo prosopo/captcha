@@ -116,7 +116,7 @@ async function setup() {
     loadEnv();
 
     if (!process.env.DAPP_CONTRACT_ADDRESS) {
-        throw new ProsopoEnvError(PROVIDER_ERRORS.DEVELOPER.DAPP_CONTRACT_ADDRESS_MISSING.message);
+        throw new ProsopoEnvError("DEVELOPER.DAPP_CONTRACT_ADDRESS_MISSING");
     }
 
     if (hasProviderAccount) {

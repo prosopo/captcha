@@ -71,7 +71,7 @@ export class ProsopoDatabase implements Database {
             this.tables.pending = db.collection('pending');
 
         } catch (err) {
-            throw new ProsopoEnvError(err, ERRORS.DATABASE.CONNECT_ERROR.message, this.url);
+            throw new ProsopoEnvError(err, "DATABASE.CONNECT_ERROR", {}, this.url);
         }
     }
 
@@ -133,7 +133,7 @@ export class ProsopoDatabase implements Database {
             }
 
         } catch (err) {
-            throw new ProsopoEnvError(err, ERRORS.DATABASE.DATASET_LOAD_FAILED.message);
+            throw new ProsopoEnvError(err, "DATABASE.DATASET_LOAD_FAILED");
         }
     }
 
@@ -145,7 +145,7 @@ export class ProsopoDatabase implements Database {
      */
     async getRandomCaptcha(solved: boolean, datasetId: Hash | string | Uint8Array, size?: number): Promise<Captcha[] | undefined> {
         if (!isHex(datasetId)) {
-            throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.getRandomCaptcha.name, datasetId);
+            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.getRandomCaptcha.name, {}, datasetId);
         }
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
         const cursor = this.tables.captchas?.aggregate([
@@ -164,7 +164,7 @@ export class ProsopoDatabase implements Database {
             return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
         }
 
-        throw new ProsopoEnvError(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message, this.getRandomCaptcha.name, {
+        throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", this.getRandomCaptcha.name, {},{
             solved: solved,
             datasetId: datasetId,
             size: size
@@ -184,7 +184,7 @@ export class ProsopoDatabase implements Database {
             return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
         }
 
-        throw new ProsopoEnvError(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message, this.getCaptchaById.name, captchaId);
+        throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", this.getCaptchaById.name, {}, captchaId);
     }
 
     /**
@@ -194,7 +194,7 @@ export class ProsopoDatabase implements Database {
      */
     async updateCaptcha(captcha: Captcha, datasetId: Hash | string | Uint8Array): Promise<void> {
         if (!isHex(datasetId)) {
-            throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.updateCaptcha.name, datasetId);
+            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.updateCaptcha.name, {}, datasetId);
         }
 
         await this.tables.captchas?.updateOne(
@@ -209,7 +209,7 @@ export class ProsopoDatabase implements Database {
      */
     async getDatasetDetails(datasetId: Hash | string): Promise<DatasetRecord> {
         if (!isHex(datasetId)) {
-            throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.getDatasetDetails.name, datasetId);
+            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.getDatasetDetails.name, {}, datasetId);
         }
 
         const doc = await this.tables.dataset?.findOne({datasetId});
@@ -218,7 +218,7 @@ export class ProsopoDatabase implements Database {
             return doc as DatasetRecord;
         }
 
-        throw new ProsopoEnvError(ERRORS.DATABASE.DATASET_GET_FAILED.message, this.getDatasetDetails.name, datasetId);
+        throw new ProsopoEnvError("DATABASE.DATASET_GET_FAILED", this.getDatasetDetails.name, {}, datasetId);
     }
 
     /**
@@ -226,7 +226,7 @@ export class ProsopoDatabase implements Database {
      */
     async storeDappUserSolution(captchas: CaptchaSolution[], datasetId: string) {
         if (!isHex(datasetId)) {
-            throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.storeDappUserSolution.name, datasetId);
+            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.storeDappUserSolution.name, {}, datasetId);
         }
 
         // create a bulk create operation and execute
@@ -249,7 +249,7 @@ export class ProsopoDatabase implements Database {
      */
     async storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void> {
         if (!isHex(requestHash)) {
-            throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.storeDappUserPending.name, requestHash);
+            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.storeDappUserPending.name, {}, requestHash);
         }
 
         await this.tables.pending?.updateOne(
@@ -264,7 +264,7 @@ export class ProsopoDatabase implements Database {
      */
     async getDappUserPending(requestHash: string): Promise<PendingCaptchaRequestRecord> {
         if (!isHex(requestHash)) {
-            throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.getDappUserPending.name, requestHash);
+            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.getDappUserPending.name, {}, requestHash);
         }
 
         const doc = await this.tables.pending?.findOne({_id: requestHash});
@@ -273,7 +273,7 @@ export class ProsopoDatabase implements Database {
             return doc as PendingCaptchaRequestRecord;
         }
 
-        throw new ProsopoEnvError(ERRORS.DATABASE.PENDING_RECORD_NOT_FOUND.message, this.getDappUserPending.name);
+        throw new ProsopoEnvError("DATABASE.PENDING_RECORD_NOT_FOUND", this.getDappUserPending.name);
     }
 
     /**
@@ -281,7 +281,7 @@ export class ProsopoDatabase implements Database {
      */
     async updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void> {
         if (!isHex(requestHash)) {
-            throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.updateDappUserPendingStatus.name, requestHash);
+            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.updateDappUserPendingStatus.name, {}, requestHash);
         }
 
         await this.tables.pending?.updateOne(
@@ -316,7 +316,7 @@ export class ProsopoDatabase implements Database {
             return docs.map(({_id, ...keepAttrs}) => keepAttrs) as Captcha[];
         }
 
-        throw new ProsopoEnvError(ERRORS.DATABASE.CAPTCHA_GET_FAILED.message);
+        throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED");
     }
 
     /**
@@ -331,7 +331,7 @@ export class ProsopoDatabase implements Database {
             return docs.map(({_id, ...keepAttrs}) => keepAttrs) as CaptchaSolution[];
         }
 
-        throw new ProsopoEnvError(ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
+        throw new ProsopoEnvError("DATABASE.SOLUTION_GET_FAILED");
     }
 
     async getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string> {
@@ -363,14 +363,14 @@ export class ProsopoDatabase implements Database {
             return docs[0]._id
         }
 
-        throw new ProsopoEnvError(ERRORS.DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED.message);
+        throw new ProsopoEnvError("DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED");
 
     }
 
     async getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]> {
         //const datasetId = await this.getDatasetIdWithSolvedCaptchasOfSizeN(size);
         if (!isHex(datasetId)) {
-            throw new ProsopoEnvError(ERRORS.DATABASE.INVALID_HASH.message, this.getRandomSolvedCaptchasFromSingleDataset.name, datasetId);
+            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.getRandomSolvedCaptchasFromSingleDataset.name, {}, datasetId);
         }
 
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1;
@@ -389,7 +389,7 @@ export class ProsopoDatabase implements Database {
             return docs as CaptchaSolution[]
         }
 
-        throw new ProsopoEnvError(ERRORS.DATABASE.SOLUTION_GET_FAILED.message);
+        throw new ProsopoEnvError("DATABASE.SOLUTION_GET_FAILED");
 
     }
 

@@ -60,7 +60,7 @@ export async function sendFunds(env, address, who, amount: BigNumber): Promise<v
     const balance = await env.contractInterface.network.api.query.system.account(pair.address);
 
     if (balance < amount) {
-        throw new ProsopoEnvError(`${mnemonic} balance too low: ${balance}`);
+        throw new ProsopoEnvError("DEVELOPER.BALANCE_TOO_LOW", undefined, {mnemonic, balance});
     }
 
     const api = env.contractInterface.network.api;
@@ -125,7 +125,7 @@ export async function setupDappUser(env, dappUser: IUserAccount, provider: IProv
         await env.contractInterface.changeSigner(dappUser.mnemonic)
         const captchaData = await tasks.getCaptchaData(providerOnChain.captcha_dataset_id.toString())
         if (captchaData.merkle_tree_root.toString() !== providerOnChain.captcha_dataset_id.toString()) {
-            throw new ProsopoEnvError(`Cannot find captcha data id`, setupDappUser.name, providerOnChain.captcha_dataset_id.toString())
+            throw new ProsopoEnvError("DEVELOPER.CAPTCHA_ID_MISSING", setupDappUser.name, {}, providerOnChain.captcha_dataset_id.toString())
         }
         const commitmentId = tree.root?.hash
         logger.info('   - dappUserCommit')
@@ -138,11 +138,11 @@ export async function setupDappUser(env, dappUser: IUserAccount, provider: IProv
             await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.captcha_dataset_id, commitmentId, provider.address)
             const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
         } else {
-            throw new ProsopoEnvError('commitmentId missing')
+            throw new ProsopoEnvError("DEVELOPER.COMMITMENT_ID_MISSING")
         }
         return commitmentId
     } else {
-        throw new ProsopoEnvError('Provider not found')
+        throw new ProsopoEnvError("DEVELOPER.PROVIDER_NOT_FOUND")
     }
 }
 

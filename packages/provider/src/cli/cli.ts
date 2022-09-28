@@ -24,7 +24,7 @@ loadEnv();
 async function main () {
 
     if (!process.env.PROVIDER_MNEMONIC) {
-        throw new ProsopoEnvError(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+        throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED");
     }
 
     mnemonicValidate(process.env.PROVIDER_MNEMONIC);

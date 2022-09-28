@@ -15,13 +15,13 @@ import type { AnyJson } from '@polkadot/types/types';
 import { validateAddress } from '@polkadot/util-crypto';
 import { parseCaptchaAssets, ProsopoContractApi } from '@prosopo/contract';
 import express, { Router } from 'express';
-import { Environment } from './env';
 import { BadRequest, ERRORS } from './errors';
 import { Tasks } from './tasks/tasks';
 import { CaptchaWithProof } from './types/api';
 import { ProsopoEnvironment } from './types/env';
 import { AccountsResponse, CaptchaSolutionBody } from './types/api';
 import { parseBlockNumber } from './util';
+import { i18n } from '@prosopo/i18n';
 
 
 
@@ -58,9 +58,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
 
             return res.json(provider);
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+            return next(new BadRequest(err));
         }
     });
 
@@ -80,9 +78,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         } as AccountsResponse
             );
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+            return next(new BadRequest(err));
         }
     });
 
@@ -102,9 +98,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         } as AccountsResponse
             );
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+            return next(new BadRequest(err));
         }
     });
 
@@ -119,7 +113,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         const {providerAccount} = req.params;
 
         if (!providerAccount) {
-            return next(new BadRequest(ERRORS.API.BAD_REQUEST.message));
+            return next(new BadRequest("API.BAD_REQUEST"));
         }
 
         try {
@@ -129,9 +123,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
 
             return res.json(result.output);
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+            return next(new BadRequest(err));
         }
     });
 
@@ -146,7 +138,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         const {blockNumber, datasetId, userAccount, dappContractAccount} = req.params;
 
         if (!datasetId || !userAccount || !blockNumber || !dappContractAccount) {
-            return next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+            return next(new BadRequest("API.PARAMETER_UNDEFINED"));
         }
 
         try {
@@ -167,10 +159,8 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
             )
             );
             return res.json(taskData);
-        } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+        } catch (err) {
+            return next(new BadRequest(err));
         }
     });
 
@@ -187,12 +177,12 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         try {
             parsed = CaptchaSolutionBody.parse(req.body);
         } catch (err) {
-            return next(new BadRequest(JSON.stringify(err)));
+            return next(new BadRequest(err));
         }
 
         try {
             const result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
-            return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, ...result });
+            return res.json({status: req.i18n.t("API.CAPTCHA_PENDING"), ...result });
         } catch (err: unknown) {
             return next(new BadRequest(err));
         }
