@@ -1,0 +1,11 @@
+{
+    "WIDGET": {
+        "SELECT_ALL": "Izaberite sve slike koje sadrže {{target}}",
+        "NEXT": "Sledeće",
+        "SUBMIT": "Prihvati",
+        "CANCEL": "Otkaži",
+        "SELECT_ACCOUNT": "Odaberi nalog"
+    },"CAPTCHA": {
+        "INVALID_BLOCK_NO": "Broj bloka nije validan"
+    }
+}
