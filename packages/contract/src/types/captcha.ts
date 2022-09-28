@@ -26,31 +26,48 @@ export enum CaptchaStates {Solved = 'solved', Unsolved = 'unsolved'}
 
 const CaptchaItemTypesZod = z.nativeEnum(CaptchaItemTypes)
 
-export type CaptchaWithoutId = {
-    salt: string,
-    items: any[],
-    target: string,
-    solution?: any,
-    solved?: boolean
+export type RawSolution = number;
+export type HashedSolution = string;
+
+type CaptchaWithoutIdBase = {
+    salt: string;
+    items: any[];
+    target: string;
+    solved?: boolean;
+};
+
+export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
+    solution?: HashedSolution[];
+}
+
+export interface CaptchaWithoutIdRaw extends CaptchaWithoutIdBase {
+    solution?: RawSolution[];
 }
 
 export type CaptchaSolutionToUpdate = {
     captchaId: string,
     salt: string,
-    solution: any
+    solution: HashedSolution[]
 }
 
 export interface Captcha extends CaptchaWithoutId {
-    captchaId: string
-    assetURI?: string
-    datasetId? :string
+    captchaId: string;
+    assetURI?: string;
+    datasetId?: string;
 }
 
-export type Dataset = {
-    datasetId?: Hash | string | Uint8Array,
-    captchas: CaptchaWithoutId[] | Captcha[],
-    format: CaptchaTypes,
-    tree?: string[][]
+type DatasetBase = {
+    datasetId?: Hash | string | Uint8Array;
+    format: CaptchaTypes;
+    tree?: string[][];
+};
+
+export interface Dataset extends DatasetBase {
+    captchas: CaptchaWithoutId[] | Captcha[];
+}
+
+export interface DatasetRaw extends DatasetBase {
+    captchas: CaptchaWithoutIdRaw[];
 }
 
 export type DatasetWithIds = {
@@ -75,10 +92,10 @@ export interface CaptchaSolutionCommitment {
     completed_at: u64,
 }
 
-export type CaptchaSolution = {
-    captchaId: string
-    salt: string,
-    solution: (string | number)[]
+export interface CaptchaSolution {
+    captchaId: string;
+    salt: string;
+    solution: HashedSolution[];
 }
 
 export type CaptchaConfig = {
@@ -105,20 +122,8 @@ export type LastCorrectCaptcha = {
 export const CaptchaSchema = z.object({
     captchaId: z.union([z.string(), z.undefined()]),
     salt: z.string(),
-    solution: z.string().array().optional(),
+    solution: z.number().array().optional(),
     timeLimit: z.number().optional()
-})
-
-export const CaptchaWithIdSchema = z.object({
-    captchaId: z.string(),
-    salt: z.string(),
-    solution: z.string().array().optional()
-})
-
-export const CaptchaWithIdAndSolutionSchema = z.object({
-    captchaId: z.string(),
-    salt: z.string(),
-    solution: z.string().array()
 })
 
 const CaptchaItemSchema = z.object({
@@ -136,31 +141,24 @@ export const CaptchaTextSchema = CaptchaItemSchema.extend({
     type: CaptchaItemTypesZod
 })
 
-export const SelectAllCaptchaSchema = CaptchaSchema.extend({
-    solution: z.union([z.string(), z.number()]).array().optional(),
+export const SelectAllCaptchaSchemaRaw = CaptchaSchema.extend({
     items: z.union([z.array(CaptchaImageSchema), z.array(CaptchaTextSchema)]),
     target: z.string()
 })
 
-export const SelectAllSolvedCaptchaSchema = CaptchaWithIdAndSolutionSchema.extend({
-    solution: z.string().array(),
-    items: z.union([z.array(CaptchaImageSchema), z.string().array()]),
-    target: z.string()
+export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
+    solution: z.string().array().optional(),
 })
 
-export const CaptchasSchema = z.array(SelectAllCaptchaSchema)
-
-export const CaptchasWithIdSchema = z.array(CaptchaWithIdSchema)
+export const CaptchasSchema = z.array(SelectAllCaptchaSchemaRaw)
 
 export const CaptchaSolution = z.object({
     captchaId: z.string(),
-    solution: z.union([z.string(), z.number()]).array(),
+    solution: z.string().array(),
     salt: z.string(),
 })
 
 export const CaptchaSolutionSchema = z.array(CaptchaSolution)
-
-export const CaptchasSolvedSchema = z.array(SelectAllSolvedCaptchaSchema)
 
 export const DatasetSchema = z.object({
     datasetId: z.string().optional(),

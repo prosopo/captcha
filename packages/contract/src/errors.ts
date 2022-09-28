@@ -75,6 +75,12 @@ export const ERRORS = {
         },
         INVALID_ITEM_FORMAT : {
             message: 'only image and text item types allowed'
-        }
+        },
+        ID_MISMATCH: {
+            message: 'captcha id mismatch'
+        },
+        MISSING_ITEM_HASH: {
+            message: 'missing item hash'
+        },
     }
 }
