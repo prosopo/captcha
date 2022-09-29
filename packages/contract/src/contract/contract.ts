@@ -39,7 +39,6 @@ import { ContractAbi } from '../types/artifacts';
 import { Signer } from '../types/signer';
 import {logger} from '../logger'
 import {ProsopoContractError} from "../handlers";
-import {ERRORS} from "../errors";
 
 async function populateTransaction(
     contract: Contract,
@@ -49,7 +48,7 @@ async function populateTransaction(
     let overrides: Partial<CallOverrides> = {};
 
     if (overrides.signer) {
-        throw new ProsopoContractError(ERRORS.CONTRACT.SIGNER_NOT_SUPPORTED.message)
+        throw new ProsopoContractError("CONTRACT.SIGNER_NOT_SUPPORTED")
     }
 
     if (

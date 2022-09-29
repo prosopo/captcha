@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
 import { DispatchError } from "@polkadot/types/interfaces";
-import { TranslationKey, i18n as i18next, translationKeys } from "@prosopo/i18n"
+import { TranslationKey, i18n as i18next, translationKeys, i18n } from "@prosopo/i18n"
 
 type TOptions = Record<string, string>;
 
@@ -40,7 +40,7 @@ export abstract class ProsopoBaseError extends Error {
 }
 
 export class ProsopoEnvError extends ProsopoBaseError {
-    constructor(error: ProsopoEnvError);
+    constructor(error: ProsopoBaseError);
     constructor(error: Error, context?: TranslationKey, options?: TOptions, ...params: any[]);
     constructor(error: TranslationKey, context?: string, options?: TOptions, ...params: any[]);
 
@@ -50,9 +50,9 @@ export class ProsopoEnvError extends ProsopoBaseError {
         this.name = context && `${ProsopoEnvError.name}@${translateOrFallback(context, options)}` || ProsopoEnvError.name;
         if (isError) {
             this.cause = error;
-            if (error instanceof ProsopoEnvError) {
-                this.tKey = error.tKey;
-                this.tParams = error.tParams;
+            if (error instanceof ProsopoBaseError) {
+                this.tKey = error['tKey'];
+                this.tParams = error['tParams'];
             } else if (translationKeys.includes(context as TranslationKey)) {
                 this.tKey = context as TranslationKey;        
                 this.tParams = options || {};
@@ -67,15 +67,27 @@ export class ProsopoEnvError extends ProsopoBaseError {
     }
 }
 
-export class ProsopoContractError extends Error {
-    constructor(error: DispatchError | string, context?: string, ...params: any[]) {
+export class ProsopoContractError extends ProsopoBaseError {
+    constructor(error: DispatchError, context?: string, options?: TOptions, ...params: any[]);
+    constructor(error: DispatchError, context?: TranslationKey, options?: TOptions, ...params: any[]);
+    constructor(error: string, context?: string, options?: TOptions, ...params: any[]);
+    constructor(error: TranslationKey, context?: string, options?: TOptions, ...params: any[]);
+
+    constructor(error: DispatchError | string, context?: TranslationKey | string, options?: TOptions, ...params: any[]) {
         if (typeof error === "string") {
-            super(error)
+            super(translateOrFallback(error, options, error, i18n));
+            if (translationKeys.includes(error as TranslationKey)) {
+                this.tKey = context as TranslationKey; 
+            } 
         } else {
             const mod = error.asModule;
             const dispatchError = error.registry.findMetaError(mod);
             super(`${dispatchError.section}.${dispatchError.name}`)
-        }
+            if (translationKeys.includes(context as TranslationKey)) {
+                this.tKey = context as TranslationKey; 
+            } 
+        }       
+        this.tParams = options || {};
 
         this.name = context && `${ProsopoContractError.name}@${context}` || ProsopoContractError.name;
         console.error('\n********************* ERROR *********************\n');

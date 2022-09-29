@@ -17,7 +17,6 @@ import type {AbiMessage} from '@polkadot/api-contract/types';
 import {AnyJson} from '@polkadot/types/types/codec';
 import {Registry} from '@polkadot/types/types';
 import {ContractApiInterface, ContractAbi, AbiMetadata, Network, TransactionResponse} from '../types'; 
-import {ERRORS} from '../errors';
 import {unwrap, encodeStringArgs, handleContractCallOutcomeErrors} from './helpers';
 import {contractDefinitions} from "./definitions";
 import {Signer} from '../signer/signer';
@@ -49,7 +48,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         await this.getSigner()
         await this.getContract()
         if (this.contract === undefined) {
-            throw new ProsopoContractError(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message, 'isReady')
+            throw new ProsopoContractError("CONTRACT.CONTRACT_UNDEFINED", 'isReady')
         }
     }
 
@@ -57,7 +56,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         await this.network.api.isReadyOrError
         const {mnemonic} = this
         if (!mnemonic) {
-            throw new ProsopoContractError(ERRORS.CONTRACT.SIGNER_UNDEFINED.message)
+            throw new ProsopoContractError("CONTRACT.SIGNER_UNDEFINED")
         }
         const keyringPair = this.network.keyring.addFromMnemonic(mnemonic)
         const accountSigner = this.network.signer as unknown as AccountSigner; 
@@ -78,7 +77,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         await this.network.api.isReadyOrError
         const contract = new Contract(this.contractAddress, this.abi, this.network.api, this.signer)
         if (!contract) {
-            throw new ProsopoContractError(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message, 'getContract', [this.contractAddress])
+            throw new ProsopoContractError("CONTRACT.CONTRACT_UNDEFINED", 'getContract', {}, [this.contractAddress])
         }
 
         this.contract = contract
@@ -98,7 +97,7 @@ export class ProsopoContractApi implements ContractApiInterface {
     async beforeCall<T>(contractMethodName: string, args: T[]): Promise<{ encodedArgs: T[]; signedContract: Contract }> {
         const contract = await this.getContract()
         if (!this.signer) {
-            throw new ProsopoContractError(ERRORS.CONTRACT.SIGNER_UNDEFINED.message, 'beforeCall')
+            throw new ProsopoContractError("CONTRACT.SIGNER_UNDEFINED", 'beforeCall')
         }
         const signedContract: Contract = contract.connect(this.signer)
         const methodObj = this.getContractMethod(contractMethodName)
@@ -166,7 +165,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         if (methodObj !== undefined) {
             return methodObj as unknown as AbiMessage
         }
-        throw new ProsopoContractError(ERRORS.CONTRACT.INVALID_METHOD.message, 'contractMethodName')
+        throw new ProsopoContractError("CONTRACT.INVALID_METHOD", 'contractMethodName')
     }
 
     /** Get the storage key from the ABI given a storage name
@@ -174,7 +173,7 @@ export class ProsopoContractApi implements ContractApiInterface {
      */
     getStorageKey(storageName: string): string {
         if (!this.contract) {
-            throw new ProsopoContractError(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
+            throw new ProsopoContractError("CONTRACT.CONTRACT_UNDEFINED")
         }
         const json: AbiMetadata = this.contract.abi.json as AbiMetadata
 
@@ -195,7 +194,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         if (storageEntry) {
             return storageEntry.layout.cell.key
         }
-        throw new ProsopoContractError(ERRORS.CONTRACT.INVALID_STORAGE_NAME.message, 'getStorageKey')
+        throw new ProsopoContractError("CONTRACT.INVALID_STORAGE_NAME", 'getStorageKey')
     }
 
     /**
@@ -206,7 +205,7 @@ export class ProsopoContractApi implements ContractApiInterface {
         await this.getContract()
         const storageKey = this.getStorageKey(name)
         if (!this.contract) {
-            throw new ProsopoContractError(ERRORS.CONTRACT.CONTRACT_UNDEFINED.message)
+            throw new ProsopoContractError("CONTRACT.CONTRACT_UNDEFINED")
         }
         const promiseResult = await this.network.api.rpc.contracts.getStorage(this.contract.address, storageKey)
         const data = promiseResult.unwrapOrDefault()

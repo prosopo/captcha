@@ -22,7 +22,6 @@ import { SignerPayloadJSON, SignerPayloadRaw } from '@polkadot/types/types';
 import { u8aToHex } from '@polkadot/util';
 import {NetworkAccountsUserConfig, LocalKeyringPair} from "../types/signer";
 import {ProsopoContractError, ProsopoEnvError} from "../handlers";
-import {ERRORS} from "../errors";
 
 let id = 0;
 
@@ -53,7 +52,7 @@ export class AccountSigner implements PolkadotSigner {
             this.#registry.createType('AccountId', pair.address).eq(address)
         );
         if (!findKeyringPair) {
-            throw new ProsopoContractError(`Can't find the keyringpair for ${address}`);
+            throw new ProsopoContractError("GENERAL.CANT_FIND_KEYRINGPAIR", undefined, {address});
         }
 
         return findKeyringPair;

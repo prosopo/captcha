@@ -21,7 +21,6 @@ import {AccountSigner} from '../signer/accountsigner';
 import {KeyringPair} from "@polkadot/keyring/types";
 import { Signer } from '../signer/signer';
 import {ProsopoContractError} from "../handlers";
-import {ERRORS} from "../errors";
 
 export function createSigner(signer: AccountSigner, pair: KeyringPair) {
     return new Signer(pair, signer);
@@ -56,7 +55,7 @@ export async function createNetwork(mnemonic: string, networkConfig: NetworkUser
     await addPair(signer, pair)
 
     if (!findKeyringPair) {
-        throw new ProsopoContractError(ERRORS.CONTRACT.CANNOT_FIND_KEYPAIR.message, pair.address);
+        throw new ProsopoContractError("CONTRACT.CANNOT_FIND_KEYPAIR", pair.address);
     }
     const network = {
         provider: provider,
