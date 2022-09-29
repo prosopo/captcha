@@ -8,7 +8,7 @@
         "NO_ACCOUNTS_FOUND": "No accounts found",
         "ACCOUNT_NOT_FOUND": "Account not found",
         "NO_EXTENSION_FOUND": "No extension found",
-        "EXTENSION_NOT_FOUND": "Extension not foundd"
+        "EXTENSION_NOT_FOUND": "Extension not found"
     },
     "GENERAL": {
         "BAD_SURI": "Bad SURI",
@@ -19,7 +19,8 @@
         "GENERATE_CPATCHAS_JSON_FAILED": "Something went wrong while creating captchas json file",
         "CALCULATE_CAPTCHA_SOLUTION": "Something went wrong while calculating captcha solutions",
         "MNEMONIC_UNDEFINED": "Provider mnemonic Undefined. Please set `PROVIDER_MNEMONIC` in environment variables",
-        "ASYNC_FACTORY_CREATE": "Use `create` factory method"
+        "ASYNC_FACTORY_CREATE": "Use `create` factory method",
+        "CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Invalid contract method",
@@ -42,7 +43,7 @@
     "DATASET": {
         "PARSE_ERROR": "Error parsing dataset",
         "HASH_ERROR": "Error hashing dataset",
-        "INVALID_DATASET_ID": "invalid dataset id"
+        "INVALID_DATASET_ID": "Invalid dataset id"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",
@@ -64,7 +65,9 @@
         "SOLUTION_HASH_ERROR": "Error hashing solution",
         "INVALID_ITEM_FORMAT": "Only image and text item types allowed",
         "DIFFERENT_DATASET_IDS": "Dataset ids do not match",
-        "INVALID_BLOCK_NO": "Invalid block number"
+        "INVALID_BLOCK_NO": "Invalid block number",
+        "ID_MISMATCH": "captcha id mismatch",
+        "MISSING_ITEM_HASH": "missing item hash"
     },
     "API": {
         "BODY_UNDEFINED": "Body must be defined in API POST call",
