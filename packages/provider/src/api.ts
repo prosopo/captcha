@@ -15,13 +15,13 @@ import type { AnyJson } from '@polkadot/types/types';
 import { validateAddress } from '@polkadot/util-crypto';
 import { parseCaptchaAssets, ProsopoContractApi } from '@prosopo/contract';
 import express, { Router } from 'express';
-import { BadRequest, ERRORS } from './errors';
+import { BadRequest } from './errors';
 import { Tasks } from './tasks/tasks';
 import { CaptchaWithProof, DappUserSolutionResult } from './types/api';
 import { ProsopoEnvironment } from './types/env';
 import { AccountsResponse, CaptchaSolutionBody } from './types/api';
 import { parseBlockNumber } from './util';
-import { i18n } from '@prosopo/i18n';
+import { ProsopoContractError } from '@prosopo/contract';
 
 
 

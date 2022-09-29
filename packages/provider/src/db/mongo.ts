@@ -17,7 +17,6 @@ import {Db, Document, Filter, MongoClient} from 'mongodb';
 import {Hash} from '@polkadot/types/interfaces';
 import {isHex} from '@polkadot/util';
 
-import {ERRORS} from '../errors';
 import {Database, DatasetRecord, PendingCaptchaRequestRecord, Tables} from '../types';
 import {
     Captcha,

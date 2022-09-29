@@ -26,7 +26,6 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import path from 'path';
 import { LocalAssetsResolver } from "../../src/assets";
 import { loadEnv } from '../../src/env';
-import { ERRORS } from '../../src/errors';
 import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types';
 
 

@@ -14,7 +14,6 @@
 import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
 import fs, { createWriteStream, WriteStream } from 'fs';
-import { ERRORS } from './errors';
 import {ProsopoEnvError} from "@prosopo/contract";
 
 export function encodeStringAddress (address: string) {

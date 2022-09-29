@@ -26,7 +26,6 @@ import consola, { LogLevel } from "consola";
 import dotenv from 'dotenv';
 import path from 'path';
 import { LocalAssetsResolver } from './assets';
-import { ERRORS } from './errors';
 import { Database, ProsopoConfig, ProsopoEnvironment } from './types';
 // import { loadEnvFile } from "./util";
 

@@ -15,7 +15,6 @@ import { mnemonicValidate } from '@polkadot/util-crypto';
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
 import { Environment, loadEnv } from '../env';
-import { ERRORS } from '../errors';
 import { processArgs } from './argv';
 import {ProsopoEnvError} from "@prosopo/contract";
 

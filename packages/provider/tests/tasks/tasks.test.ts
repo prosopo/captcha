@@ -22,7 +22,6 @@ import {
     CaptchaSolution,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
-    ERRORS,
     getEventsFromMethodName,
     hexHash,
     parseCaptchaDataset,
@@ -42,6 +41,7 @@ import {sendFunds} from "../../src/tasks/setup";
 import {MockEnvironment} from "../mocks/mockenv";
 import {populateDatabase} from "../dataUtils/populateDatabase";
 import { DappUserSolutionResult } from "../../src/types/api";
+import { i18n } from "@prosopo/i18n";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -752,7 +752,7 @@ describe("CONTRACT TASKS", () => {
 
         commitmentPromise.catch((e) =>
             e.message.should.match(
-                `/${ERRORS.CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST.message}/`
+                `/${i18n.t("CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST")}/`
             )
         );
     });

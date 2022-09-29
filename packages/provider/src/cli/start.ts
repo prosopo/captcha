@@ -21,7 +21,7 @@ import { prosopoRouter } from '../api';
 import { LocalAssetsResolver } from '../assets';
 import { Environment, loadEnv } from '../env';
 // import { MockEnvironment } from "../tests/mocks/mockenv";
-import { ERRORS, handleErrors } from '../errors';
+import { handleErrors } from '../errors';
 // import { processArgs } from './argv';
 
 // import yargs from 'yargs';
