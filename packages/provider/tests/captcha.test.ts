@@ -11,21 +11,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaMerkleTree, CaptchaSolution, CaptchaTypes, CaptchaWithoutId, Dataset } from '@prosopo/contract';
-import { expect } from 'chai';
-import * as path from 'path';
+import { calculateItemHashes, CaptchaMerkleTree, CaptchaSolution, CaptchaTypes, CaptchaWithoutId, Dataset, matchItemsToSolutions } from '@prosopo/contract';
+import { expect } from "chai";
 import {
     addHashesToDataset, compareCaptchaSolutions,
-    computeCaptchaHash, computeCaptchaHashes, computeCaptchaSolutionHash, computePendingRequestHash,
-    parseCaptchaDataset, parseCaptchas, parseCaptchaSolutions
+    computeCaptchaHash, computeCaptchaSolutionHash, computePendingRequestHash,
+    parseCaptchaDataset, parseCaptchaSolutions, sortAndComputeHashes
 } from '@prosopo/contract';
+import path from 'path';
 
+const MOCK_ITEMS = calculateItemHashes(
+    new Array(9).fill(0).map((_, i) => ({
+        path: path.join(
+            process.cwd(),
+            `/tests/mocks/data/img/01.0${i + 1}.jpeg`
+        ),
+        type: "image",
+    }))
+);
 
 const DATASET = {
     format: 'SelectAll' as CaptchaTypes,
     captchas: [
         {
-            solved: true,
+            solution: [],
             salt: '0x01',
             target: 'bus',
             items: [
@@ -58,16 +67,57 @@ const DATASET = {
         }]
 };
 
+const RECEIVED = [
+    {
+        captchaId:
+            "0x29aa041cdf88e02a27ea3ef9019413112b0184d73f0f44d9b7c753ef00071c16",
+        solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
+        salt: "",
+    },
+    {
+        captchaId:
+            "0xb7e53094e138f1048f4f23f08da14296d4b20e05dd13121f8bc24c94b9a605fc",
+        solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
+        salt: "",
+    },
+];
+
+const STORED = [
+    {
+        captchaId:
+            "0x29aa041cdf88e02a27ea3ef9019413112b0184d73f0f44d9b7c753ef00071c16",
+        salt: "0x1",
+        items: MOCK_ITEMS,
+        target: "",
+        solved: true,
+    },
+    {
+        captchaId:
+            "0xb7e53094e138f1048f4f23f08da14296d4b20e05dd13121f8bc24c94b9a605fc",
+        salt: "0x2",
+        items: MOCK_ITEMS,
+        target: "",
+        solved: true,
+    },
+];
+
 describe('CAPTCHA FUNCTIONS', () => {
     it('Parses a captcha dataset correctly', () => {
         expect(function () { parseCaptchaDataset(JSON.parse(JSON.stringify(DATASET)) as JSON); }).to.not.throw();
     });
 
-    it('Captcha data set is hashed correctly', async () => {
-        const captchasWithHashes = await computeCaptchaHashes(DATASET.captchas);
+    it('Captcha data set is hashed correctly', () => {
+        const dataset = {
+            ...DATASET,
+            captchas: DATASET.captchas.map((captcha) => ({
+                ...captcha,
+                items: calculateItemHashes(captcha.items),
+            })),
+        };
+        const captchaHashes = dataset.captchas.map(computeCaptchaHash);
 
-        expect(captchasWithHashes[0].captchaId).to.equal('0x5ca830bbf3dcb0b080f6a03636c348a86a045a094ba58d687d347c53d2c9524a');
-        expect(captchasWithHashes[1].captchaId).to.equal('0xf371668e49f2b9bfe48e6a1066f0a4155e6604cb721b1aedfc8f50de22fad67b');
+        expect(captchaHashes[0]).to.equal('0x5ca830bbf3dcb0b080f6a03636c348a86a045a094ba58d687d347c53d2c9524a');
+        expect(captchaHashes[1]).to.equal('0xf371668e49f2b9bfe48e6a1066f0a4155e6604cb721b1aedfc8f50de22fad67b');
     });
 
     it('Captcha solutions are successfully parsed', () => {
@@ -84,44 +134,15 @@ describe('CAPTCHA FUNCTIONS', () => {
         }).to.throw();
     });
 
-    it('Text Captchas are successfully parsed', () => {
-        const captchas = JSON.parse('[{ "captchaId": "1", "solution": [1, 2, 3], "salt" : "salt", "items":[{"text":"a", "type":"text"},{"text":"b", "type":"text"}], "target": "vowels" }, { "captchaId": "2", "salt" : "salt", "items":[{"text":"a", "type":"text"},{"text":"b", "type":"text"}], "target": "vowels" }]') as JSON;
-
-        expect(parseCaptchas(captchas).length).to.equal(2);
-    });
-
-    it('Image Captchas are successfully parsed', () => {
-        const captchas = JSON.parse('[{ "captchaId": "1", "solution": [1, 2, 3], "salt" : "salt", "items":[{"path": "path", "type": "image"}, {"path": "path", "type": "image"}], "target": "vowels" }, { "captchaId": "2", "salt" : "salt", "items":[{"path": "path", "type": "image"}, {"path": "path", "type": "image"}], "target": "vowels" }]') as JSON;
-
-        expect(parseCaptchas(captchas).length).to.equal(2);
-    });
-
-    it('Invalid Captchas are not successfully parsed', () => {
-        const captchas = JSON.parse('[{ "captchaId": "1", "solution": [1, 2, 3], "salt" : "salt"}]') as JSON;
-
-        expect(function () {
-            parseCaptchas(captchas);
-        }).to.throw();
-    });
-
-    it('Captchas are hashed properly', async () => {
+    it('Captchas are hashed properly', () => {
         const captcha = {
-            solution: [
-                5,
-                6,
-                7
-            ],
-            salt: '0x03',
-            target: 'plane',
-            items: [
-                {
-                    // This test is expected to run in the integration Provider container
-                    path: path.join(process.cwd(), '/tests/mocks/data/img/01.01.jpeg'),
-                    type: 'image'
-                }]
+            solution: matchItemsToSolutions([0], MOCK_ITEMS),
+            salt: "0x03",
+            target: "plane",
+            items: MOCK_ITEMS,
         } as CaptchaWithoutId;
 
-        expect(await computeCaptchaHash(captcha)).to.be.a('string');
+        expect(computeCaptchaHash(captcha)).to.be.a('string');
     });
 
     it('Captcha hashes are successfully added to dataset', () => {
@@ -153,124 +174,61 @@ describe('CAPTCHA FUNCTIONS', () => {
         }).to.throw();
     });
 
-    it('Matching captcha solutions are correctly compared, returning true', async () => {
+    it('Captcha solutions are correctly sorted and computed', () => {
+        const idsAndHashes = sortAndComputeHashes(RECEIVED, STORED);
+
+        expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true;
+    });
+
+    it('Captcha solutions are correctly sorted and computed - non matching order', () => {
+        const idsAndHashes = sortAndComputeHashes(RECEIVED, [STORED[1], STORED[0]]);
+
+        expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true;
+    });
+
+    it('Matching captcha solutions are correctly compared, returning true', () => {
+        expect(compareCaptchaSolutions(RECEIVED, STORED)).to.be.true;
+    });
+
+    it('Non-matching captcha solutions are correctly compared, throwing an error', () => {
+        const stored = [
+            {
+                ...STORED[0],
+                captchaId:
+                    "0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb",
+            },
+            STORED[1],
+        ];
+
+        expect(() => compareCaptchaSolutions(RECEIVED, stored)).to.throw();
+    });
+
+    it('Mismatched length captcha solutions returns false', () => {
         const received = [
             {
                 captchaId:
-                    "0xe0a072447a0d212f144d5bc3aad77ef00b3be710605f7a53434c6c6d548549ad",
-                solution: [42],
+                    "0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb",
+                solution: matchItemsToSolutions([1, 2, 3], MOCK_ITEMS),
                 salt: "",
             },
-            {
-                captchaId:
-                    "0x8a8c81c8baebcda5061a34f25ef9853477d0d78cf4f4712a8cfdf0f79ae2844d",
-                solution: [42],
-                salt: "",
-            },
+            ...RECEIVED
         ];
         const stored = [
             {
                 captchaId:
-                    "0xe0a072447a0d212f144d5bc3aad77ef00b3be710605f7a53434c6c6d548549ad",
+                    "0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb",
                 salt: "0x1",
                 items: [],
                 target: "",
                 solved: true,
             },
-            {
-                captchaId:
-                    "0x8a8c81c8baebcda5061a34f25ef9853477d0d78cf4f4712a8cfdf0f79ae2844d",
-                salt: "0x2",
-                items: [],
-                target: "",
-                solved: true,
-            },
+            STORED[0],
         ];
 
-        expect(await compareCaptchaSolutions(received, stored)).to.be.true;
+        expect(compareCaptchaSolutions(received, stored)).to.be.false;
     });
 
-    it('Non-matching captcha solutions are correctly compared, returning false', async () => {
-        const received = [
-            {
-                captchaId:
-                    "0xe0a072447a0d212f144d5bc3aad77ef00b3be710605f7a53434c6c6d548549ad",
-                solution: [42],
-                salt: "",
-            },
-            {
-                captchaId:
-                    "0x8a8c81c8baebcda5061a34f25ef9853477d0d78cf4f4712a8cfdf0f79ae2844d",
-                solution: [42],
-                salt: "",
-            },
-        ];
-        const stored = [
-            {
-                captchaId:
-                    "0x2b0f2acf1f143a938115203ef0b056d02008cc396e0467bce14162477d546bcf",
-                salt: "0x1",
-                items: [],
-                target: "",
-                solved: true,
-            },
-            {
-                captchaId:
-                    "0x8a8c81c8baebcda5061a34f25ef9853477d0d78cf4f4712a8cfdf0f79ae2844d",
-                salt: "0x2",
-                items: [],
-                target: "",
-                solved: true,
-            },
-        ];
-
-        expect(await compareCaptchaSolutions(received, stored)).to.be.false;
-    });
-
-    it('Mismatched length captcha solutions returns false', async () => {
-        const received = [
-            {
-                captchaId:
-                    "0x2b0f2acf1f143a938115203ef0b056d02008cc396e0467bce14162477d546bcf",
-                solution: [21],
-                salt: "",
-            },
-            {
-                captchaId:
-                    "0x8a8c81c8baebcda5061a34f25ef9853477d0d78cf4f4712a8cfdf0f79ae2844d",
-                solution: [42],
-                salt: "",
-            },
-            {
-                captchaId:
-                    "0xe0a072447a0d212f144d5bc3aad77ef00b3be710605f7a53434c6c6d548549ad",
-                solution: [42],
-                salt: "",
-            },
-        ];
-        const stored = [
-            {
-                captchaId:
-                    "0x2b0f2acf1f143a938115203ef0b056d02008cc396e0467bce14162477d546bcf",
-                salt: "0x1",
-                items: [],
-                target: "",
-                solved: true,
-            },
-            {
-                captchaId:
-                    "0x8a8c81c8baebcda5061a34f25ef9853477d0d78cf4f4712a8cfdf0f79ae2844d",
-                salt: "0x2",
-                items: [],
-                target: "",
-                solved: true,
-            },
-        ];
-
-        expect(await compareCaptchaSolutions(received, stored)).to.be.false;
-    });
-
-    it('Captchas with mismatching solution lengths are marked as incorrect', async () => {
+    it('Captchas with mismatching solution lengths are marked as incorrect', () => {
         const noSolutions = [
             {
                 captchaId: '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
@@ -304,7 +262,7 @@ describe('CAPTCHA FUNCTIONS', () => {
                 solved: true
             }
         ]
-        expect(await compareCaptchaSolutions(noSolutions, solutions )).to.be.false;
+        expect(compareCaptchaSolutions(noSolutions, solutions )).to.be.false;
 
     })
 
@@ -315,9 +273,8 @@ describe('CAPTCHA FUNCTIONS', () => {
     });
 
     it('Computes a captcha solution hash correctly', () => {
-        const captchaSolution = { captchaId: '1', salt: '', solution: [1, 2] } as CaptchaSolution;
+        const captchaSolution = { captchaId: '1', salt: '', solution: matchItemsToSolutions([1, 2], MOCK_ITEMS) } as CaptchaSolution;
         const hash = computeCaptchaSolutionHash(captchaSolution);
-
-        expect(hash).to.be.equal('0x062117d2877e321aed62daa37674fbe3169761dd9d6c6ee0bd4f1301d1d95c36');
+        expect(hash).to.be.equal('0x9598cced23411f819404454b7c0e256e697d20dc3e108b8394518d5ada976648');
     });
 });

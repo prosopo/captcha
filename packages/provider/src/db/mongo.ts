@@ -25,7 +25,7 @@ import {
     CaptchaStates,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
-    ProsopoEnvError
+    ProsopoEnvError,
 } from '@prosopo/contract';
 import consola from "consola";
 
@@ -95,7 +95,7 @@ export class ProsopoDatabase implements Database {
                     ...captcha,
                     datasetId: parsedDataset.datasetId,
                     index,
-                    solved: !!solution
+                    solved: !!solution?.length
                 }));
 
 
@@ -112,10 +112,10 @@ export class ProsopoDatabase implements Database {
             }
 
             // insert any captcha solutions into the solutions collection
-            const captchaSolutionDocs = parsedDataset.captchas.filter((captcha) => "solution" in captcha)
+            const captchaSolutionDocs = parsedDataset.captchas.filter(({solution}) => solution?.length)
                 .map((captcha) => ({
                     captchaId: captcha.captchaId,
-                    solution: captcha.solution || [],
+                    solution: captcha.solution,
                     salt: captcha.salt,
                     datasetId: parsedDataset.datasetId,
                 }));

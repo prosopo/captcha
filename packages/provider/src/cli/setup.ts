@@ -16,8 +16,7 @@
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { randomAsHex } from '@polkadot/util-crypto';
-import {ERRORS, Payee, ProsopoEnvError} from "@prosopo/contract";
-import {ERRORS as PROVIDER_ERRORS} from "../errors"
+import { Payee, ProsopoEnvError } from "@prosopo/contract";
 import fse from 'fs-extra';
 import path from 'path';
 import { Environment, getEnvFile, loadEnv } from '../env';
@@ -119,10 +118,7 @@ async function setup() {
         throw new ProsopoEnvError("DEVELOPER.DAPP_CONTRACT_ADDRESS_MISSING");
     }
 
-    if (hasProviderAccount) {
-        console.log('Skipping setup...');
-        process.exit();
-    }
+
 
     const env = new Environment('//Alice');
     await env.isReady();
@@ -137,7 +133,9 @@ async function setup() {
     console.log('Registering dapp...');
     await registerDapp(env, defaultDapp);
 
-    await updateEnvFile({'PROVIDER_MNEMONIC': `"${mnemonic}"`, 'PROVIDER_ADDRESS': address});
+    if (!hasProviderAccount) {
+        await updateEnvFile({'PROVIDER_MNEMONIC': `"${mnemonic}"`, 'PROVIDER_ADDRESS': address});
+    }
 
     process.exit();
 }
