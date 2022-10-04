@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { ERRORS } from '../errors';
 import { CaptchaMerkleTree } from './merkle';
 import {
     AssetsResolver,
@@ -40,7 +39,7 @@ export function addHashesToDataset(dataset: Dataset, tree: CaptchaMerkleTree): D
 
         return <DatasetWithIds>dataset;
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.DATASET.HASH_ERROR.message);
+        throw new ProsopoEnvError(err, "DATASET.HASH_ERROR");
     }
 }
 
@@ -53,7 +52,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
     try {
         return DatasetSchema.parse(datasetJSON);
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.DATASET.PARSE_ERROR.message);
+        throw new ProsopoEnvError(err, "DATASET.PARSE_ERROR");
     }
 }
 
@@ -66,7 +65,7 @@ export function parseCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
     try {
         return CaptchaSolutionSchema.parse(captchaJSON);
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.CAPTCHA.PARSE_ERROR.message);
+        throw new ProsopoEnvError(err, "CAPTCHA.PARSE_ERROR");
     }
 }
 
@@ -84,7 +83,7 @@ export function sortAndComputeHashes(
     return stored.map(
         ({ salt, items = [], target = "", captchaId, solved }, index) => {
             if (captchaId != received[index].captchaId) {
-                throw new ProsopoEnvError(ERRORS.CAPTCHA.ID_MISMATCH.message);
+                throw new ProsopoEnvError("CAPTCHA.ID_MISMATCH");
             }
 
             return {
@@ -138,9 +137,7 @@ export function calculateItemHashes(items: any[]): any[] {
         if (item.type === "image" || item.type === "text") {
             return { ...item, hash: hexHash((item.text || item.path) as string) };
         } else {
-            throw new ProsopoEnvError(
-                ERRORS.CAPTCHA.INVALID_ITEM_FORMAT.message
-            );
+            throw new ProsopoEnvError("CAPTCHA.INVALID_ITEM_FORMAT");
         }
     });
 }
@@ -153,7 +150,7 @@ export function matchItemsToSolutions(
         const hash = items?.[solution].hash;
 
         if (!hash) {
-            throw new ProsopoEnvError(ERRORS.CAPTCHA.MISSING_ITEM_HASH.message);
+            throw new ProsopoEnvError("CAPTCHA.MISSING_ITEM_HASH");
         }
 
         return hash;

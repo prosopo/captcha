@@ -85,7 +85,7 @@ export function handleContractCallOutcomeErrors<T>(response: ContractCallOutcome
     if (response.output) {
         const humanOutput = response.output?.toHuman()
         if (humanOutput && typeof (humanOutput) === 'object' && errorKey in humanOutput) {
-            throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, encodedArgs)
+            throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, {}, encodedArgs)
         }
     }
     return response
