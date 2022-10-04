@@ -17,10 +17,12 @@ import { SyntheticEvent } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { TExtensionAccount } from "@prosopo/procaptcha";
-
+import { useTranslation } from "@prosopo/i18n";
 
 export const ExtensionAccountSelect = ({value, options, onChange}: 
         {value?: TExtensionAccount, options: TExtensionAccount[], onChange: (value: TExtensionAccount | null) => void}) => {
+    const { t } = useTranslation();
+
     return (
         <Autocomplete
             disablePortal
@@ -31,7 +33,7 @@ export const ExtensionAccountSelect = ({value, options, onChange}:
             onChange={(event: SyntheticEvent<Element, Event>, value: TExtensionAccount | null) => onChange(value)}
             sx={{ width: 550 }} 
             getOptionLabel={(option: any) => `${option.meta.name}\n${option.address}`}
-            renderInput={(props) => <TextField {...props} label="Select account" />} 
+            renderInput={(props) => <TextField {...props} label={t('WIDGET.SELECT_ACCOUNT')} />} 
         />
     );
 }
