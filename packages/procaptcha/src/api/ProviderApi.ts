@@ -21,7 +21,7 @@ import {
     GetCaptchaResponse,
     CaptchaSolutionResponse
 } from '../types';
-import { CaptchaSolution } from "@prosopo/contract";
+import { CaptchaSolution } from "@prosopo/datasets";
 
 export class ProviderApi extends HttpClientBase {
 

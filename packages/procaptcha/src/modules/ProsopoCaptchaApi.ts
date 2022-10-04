@@ -19,7 +19,7 @@ import {
     CaptchaSolution,
     CaptchaMerkleTree,
     CaptchaSolutionCommitment,
-} from "@prosopo/contract";
+} from "@prosopo/datasets";
 import { Signer } from "@polkadot/api/types";
 
 import { ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";

@@ -18,7 +18,7 @@
 //   export default value;
 // }
 
-import { Captcha } from "@prosopo/contract";
+import { Captcha } from "@prosopo/datasets";
 
 export interface ProsopoRandomProviderResponse {
   providerId: string,

@@ -18,10 +18,12 @@ import { GetCaptchaResponse } from "../types/api";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
 import {
-    CaptchaSolution,
-    convertCaptchaToCaptchaSolution,
     ProsopoEnvError
 } from "@prosopo/contract";
+import {
+    CaptchaSolution,
+    convertCaptchaToCaptchaSolution,
+} from '@prosopo/datasets';
 
 
 export class ProsopoCaptchaStateClient {
