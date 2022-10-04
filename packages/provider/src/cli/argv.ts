@@ -20,7 +20,6 @@ const yargs = require('yargs')
 
 import {Compact, u128} from '@polkadot/types';
 
-import { ERRORS } from '../errors';
 import { Tasks } from '../tasks/tasks';
 import { ProsopoEnvironment } from '../types/env';
 import { encodeStringAddress } from '../util';
@@ -41,13 +40,13 @@ const validatePayee = (argv) => {
 
         return {payee};
     } catch (error) {
-        throw new ProsopoEnvError(error, ERRORS.CLI.PARAMETER_ERROR.message, [argv.payee]);
+        throw new ProsopoEnvError(error, "CLI.PARAMETER_ERROR", {}, [argv.payee]);
     }
 };
 
 const validateValue = (argv) => {
     if (typeof argv.value !== 'number') {
-        throw new ProsopoEnvError(validateValue.name, ERRORS.CLI.PARAMETER_ERROR.message, argv.value);
+        throw new ProsopoEnvError("CLI.PARAMETER_ERROR", validateValue.name, {}, argv.value);
     }
     const value: Compact<u128> = argv.value as Compact<u128>;
     return {value};
@@ -59,7 +58,7 @@ const validateScheduleExpression = (argv) => {
         const result = parser.parseString(argv.schedule as string);
 
         if (argv.schedule in result.errors) {
-            throw new ProsopoEnvError(validateScheduleExpression.name, ERRORS.CLI.PARAMETER_ERROR.message, [argv.schedule]);
+            throw new ProsopoEnvError("CLI.PARAMETER_ERROR", validateScheduleExpression.name, {}, [argv.schedule]);
         }
 
         return {schedule: argv.schedule as string};

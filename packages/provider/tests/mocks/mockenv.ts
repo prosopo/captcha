@@ -26,7 +26,6 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import path from 'path';
 import { LocalAssetsResolver } from "../../src/assets";
 import { loadEnv } from '../../src/env';
-import { ERRORS } from '../../src/errors';
 import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types';
 
 
@@ -107,7 +106,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 serverBaseURL: this.config.server.baseURL,
             });
         } else {
-            throw new ProsopoEnvError(ERRORS.CONFIG.UNKNOWN_ENVIRONMENT.message, this.constructor.name, this.config.defaultEnvironment)
+            throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", this.constructor.name, {}, this.config.defaultEnvironment)
         }
     }
 
@@ -137,7 +136,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 this.logger
             )
         } catch (err) {
-            throw new ProsopoEnvError(err, ERRORS.DATABASE.DATABASE_IMPORT_FAILED.message, this.config.database[this.defaultEnvironment].type)
+            throw new ProsopoEnvError(err, "DATABASE.DATABASE_IMPORT_FAILED", {}, this.config.database[this.defaultEnvironment].type)
         }
     }
 

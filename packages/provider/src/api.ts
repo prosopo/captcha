@@ -11,17 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type {AnyJson} from '@polkadot/types/types';
-import {validateAddress} from '@polkadot/util-crypto';
-import {parseCaptchaAssets, ProsopoContractApi} from '@prosopo/contract';
-import express, {Router} from 'express';
-import {Environment} from './env';
-import {BadRequest, ERRORS} from './errors';
-import {Tasks} from './tasks/tasks';
-import {CaptchaWithProof, DappUserSolutionResult} from './types/api';
-import {ProsopoEnvironment} from './types/env';
-import {AccountsResponse, CaptchaSolutionBody} from './types/api';
-import {parseBlockNumber} from './util';
+import type { AnyJson } from '@polkadot/types/types';
+import { validateAddress } from '@polkadot/util-crypto';
+import { parseCaptchaAssets, ProsopoContractApi } from '@prosopo/contract';
+import express, { Router } from 'express';
+import { BadRequest } from './errors';
+import { Tasks } from './tasks/tasks';
+import { CaptchaWithProof, DappUserSolutionResult } from './types/api';
+import { ProsopoEnvironment } from './types/env';
+import { AccountsResponse, CaptchaSolutionBody } from './types/api';
+import { parseBlockNumber } from './util';
+import { ProsopoContractError } from '@prosopo/contract';
+
 
 
 /**
@@ -57,9 +58,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
 
             return res.json(provider);
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+            return next(new BadRequest(err));
         }
     });
 
@@ -79,9 +78,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
                 } as AccountsResponse
             );
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+            return next(new BadRequest(err));
         }
     });
 
@@ -101,9 +98,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
                 } as AccountsResponse
             );
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.QUERY_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+            return next(new BadRequest(err));
         }
     });
 
@@ -118,7 +113,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         const {providerAccount} = req.params;
 
         if (!providerAccount) {
-            return next(new BadRequest(ERRORS.API.BAD_REQUEST.message));
+            return next(new BadRequest("API.BAD_REQUEST"));
         }
 
         try {
@@ -128,9 +123,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
 
             return res.json(result.output);
         } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+            return next(new BadRequest(err));
         }
     });
 
@@ -145,7 +138,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         const {blockNumber, datasetId, userAccount, dappContractAccount} = req.params;
 
         if (!datasetId || !userAccount || !blockNumber || !dappContractAccount) {
-            return next(new BadRequest(ERRORS.API.PARAMETER_UNDEFINED.message));
+            return next(new BadRequest("API.PARAMETER_UNDEFINED"));
         }
 
         try {
@@ -166,10 +159,8 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
             )
             );
             return res.json(taskData);
-        } catch (err: unknown) {
-            const msg = `${ERRORS.CONTRACT.TX_ERROR.message}: ${err}`;
-
-            return next(new BadRequest(msg));
+        } catch (err) {
+            return next(new BadRequest(err));
         }
     });
 
@@ -186,7 +177,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         try {
             parsed = CaptchaSolutionBody.parse(req.body);
         } catch (err) {
-            return next(new BadRequest(JSON.stringify(err)));
+            return next(new BadRequest(err));
         }
 
         try {
@@ -195,11 +186,11 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
                 // TODO does this open an attack vector when dealing with a web3 dapp user?
                 result = await tasks.dappUserSolutionWeb2(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas);
                 return res.json({
-                    status: result.solutionApproved ? ERRORS.API.CAPTCHA_PASSED.message : ERRORS.API.CAPTCHA_FAILED.message, ...result
+                    status: req.i18n.t(result.solutionApproved ? "API.CAPTCHA_PASSED" : "API.CAPTCHA_FAILED"), ...result
                 });
             } else {
                 result = await tasks.dappUserSolution(parsed.userAccount, parsed.dappAccount, parsed.requestHash, parsed.captchas, parsed.blockHash, parsed.txHash);
-                return res.json({status: ERRORS.API.CAPTCHA_PENDING.message, ...result});
+                return res.json({status: req.t("API.CAPTCHA_PENDING"), ...result});
             }
         } catch (err: unknown) {
             return next(new BadRequest(err));

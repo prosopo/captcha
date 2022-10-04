@@ -15,7 +15,6 @@ import { mnemonicValidate } from '@polkadot/util-crypto';
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
 import { Environment, loadEnv } from '../env';
-import { ERRORS } from '../errors';
 import { processArgs } from './argv';
 import {ProsopoEnvError} from "@prosopo/contract";
 
@@ -24,7 +23,7 @@ loadEnv();
 async function main () {
 
     if (!process.env.PROVIDER_MNEMONIC) {
-        throw new ProsopoEnvError(ERRORS.GENERAL.MNEMONIC_UNDEFINED.message);
+        throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED");
     }
 
     mnemonicValidate(process.env.PROVIDER_MNEMONIC);
