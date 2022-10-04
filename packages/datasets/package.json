@@ -1,0 +1,60 @@
+{
+  "name": "@prosopo/dataset",
+  "version": "0.1.7",
+  "author": "PROSOPO LIMITED <info@prosopo.io>",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./types": "./dist/types/index.js",
+    "./captcha": "./dist/captcha/index.js"
+  },
+  "typesVersions": {
+    "*": {
+      "types": [
+        "dist/types"
+      ],
+      "captcha": [
+        "dist/captcha"
+      ]
+    }
+  },
+  "dependencies": {
+    "@polkadot/api": "^8.13.1",
+    "@polkadot/api-contract": "^8.13.1",
+    "@polkadot/keyring": "^10.0.2",
+    "@polkadot/rpc-provider": "^8.13.1",
+    "@polkadot/types": "^8.13.1",
+    "@polkadot/types-create": "^8.13.1",
+    "@polkadot/util": "^10.0.2",
+    "@polkadot/util-crypto": "^10.0.2",
+    "bn.js": "^5.2.1",
+    "consola": "^2.15.3",
+    "zod": "^3.17.9"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
+    "eslint": "^8.20.0",
+    "typescript": "^4.7.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prosopo-io/datasets.git"
+  },
+  "bugs": {
+    "url": "https://github.com/prosopo-io/datasets/issues"
+  },
+  "homepage": "https://github.com/prosopo-io/datasets#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "description": ""
+}
