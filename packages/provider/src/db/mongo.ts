@@ -13,19 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {Db, Document, Filter, MongoClient} from 'mongodb';
-
 import {Hash} from '@polkadot/types/interfaces';
 import {isHex} from '@polkadot/util';
-
 import {Database, DatasetRecord, PendingCaptchaRequestRecord, Tables} from '../types';
+import {
+    ProsopoEnvError,
+} from '@prosopo/contract';
 import {
     Captcha,
     CaptchaSolution,
     CaptchaStates,
     DatasetWithIdsAndTree,
-    DatasetWithIdsAndTreeSchema,
-    ProsopoEnvError,
-} from '@prosopo/contract';
+    DatasetWithIdsAndTreeSchema
+} from '@prosopo/datasets'
 import consola from "consola";
 
 // mongodb://username:password@127.0.0.1:27017

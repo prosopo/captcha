@@ -14,7 +14,6 @@
 // import { findUpSync } from 'find-up'
 import {
     abiJson,
-    AssetsResolver,
     ContractAbi,
     ContractApiInterface,
     createNetwork,
@@ -22,6 +21,9 @@ import {
     ProsopoContractApi,
     ProsopoEnvError
 } from '@prosopo/contract';
+import {
+    AssetsResolver,
+} from '@prosopo/datasets';
 import consola, { LogLevel } from "consola";
 import dotenv from 'dotenv';
 import path from 'path';
