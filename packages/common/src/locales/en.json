@@ -43,7 +43,8 @@
     "DATASET": {
         "PARSE_ERROR": "Error parsing dataset",
         "HASH_ERROR": "Error hashing dataset",
-        "INVALID_DATASET_ID": "Invalid dataset id"
+        "INVALID_DATASET_ID": "Invalid dataset id",
+        "DATASET_ID_UNDEFINED": "Dataset id undefined"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",
