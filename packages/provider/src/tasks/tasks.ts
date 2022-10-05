@@ -45,8 +45,7 @@ import {
     LastCorrectCaptcha,
     parseCaptchaDataset,
     parseCaptchaSolutions,
-    addCaptchaHashesToDataset,
-    addItemHashesAndSolutionHashesToDataset
+    buildDataset
 } from '@prosopo/datasets';
 import consola from "consola";
 import {buildDecodeVector} from '../codec/codec';
@@ -107,18 +106,15 @@ export class Tasks {
 
     async providerAddDataset(file: string): Promise<TransactionResponse> {
         const datasetRaw = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON);
-        const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw);
-        const datasetContentOnly = await addCaptchaHashesToDataset(dataset, false, false);
-        const datasetContentAndSolutions = await addCaptchaHashesToDataset(dataset, true, true);
-        await this.db?.storeDataset(datasetContentOnly);
-        await this.db?.storeDataset(datasetContentAndSolutions);
-        await writeJSONFile(file, {...datasetRaw, datasetId: datasetContentAndSolutions.datasetId}).catch((err) => {
+        const dataset = await buildDataset(datasetRaw);
+        await this.db?.storeDataset(dataset);
+        await writeJSONFile(file, {...datasetRaw, datasetId: dataset.datasetId}).catch((err) => {
             console.error(`${i18n.t("GENERAL.CREATE_JSON_FILE_FAILED")}:${err}`)
         })
-        if(!datasetContentOnly.datasetId || !datasetContentAndSolutions.datasetId) {
+        if(!dataset.datasetId ) {
             throw new ProsopoEnvError("DATASET.DATASET_ID_UNDEFINED", this.providerAddDataset.name, {file: file});
         }
-        return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(datasetContentOnly.datasetId), hexToU8a(datasetContentAndSolutions.datasetId)]);
+        return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(dataset.datasetId), hexToU8a(dataset.datasetContentId)]);
     }
 
     async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<TransactionResponse> {

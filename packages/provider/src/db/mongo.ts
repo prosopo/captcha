@@ -83,8 +83,10 @@ export class ProsopoDatabase implements Database {
             const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset);
             const datasetDoc = {
                 datasetId: parsedDataset.datasetId,
+                datasetContentId: parsedDataset.datasetContentId,
                 format: parsedDataset.format,
-                tree: parsedDataset.tree
+                contentTree: parsedDataset.contentTree,
+                solutionTree: parsedDataset.solutionTree
             };
 
             await this.tables.dataset?.updateOne({_id: parsedDataset.datasetId}, {$set: datasetDoc}, {upsert: true});
@@ -93,6 +95,7 @@ export class ProsopoDatabase implements Database {
                 .map(({solution, ...captcha}, index) => ({
                     ...captcha,
                     datasetId: parsedDataset.datasetId,
+                    datasetContentId: parsedDataset.datasetContentId,
                     index,
                     solved: !!solution?.length
                 }));
@@ -117,6 +120,7 @@ export class ProsopoDatabase implements Database {
                     solution: captcha.solution,
                     salt: captcha.salt,
                     datasetId: parsedDataset.datasetId,
+                    datasetContentId: parsedDataset.datasetContentId,
                 }));
 
             // create a bulk upsert operation and execute
