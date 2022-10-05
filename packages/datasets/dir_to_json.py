@@ -32,32 +32,27 @@ if __name__ == '__main__':
     labelled_dir = root + "/labelled"
     unlabelled_dir = root + "/unlabelled"
 
-    data = {}
-    data["labelled"] = {}
-    data["unlabelled"] = []
+    items = []
 
     # for each label
     i = 0
     for label in os.listdir(labelled_dir):
-        # make an empty list to store the items
-        items = []
-        data["labelled"][label] = items
-        # then get all items in the label's dir
+        # for each labelled item
         for item in os.listdir(labelled_dir + "/" + label):
-            # and add them to the items list
-            items.append({"url": labelled_dir + "/" + label + "/" + item})
+            # add item to the list
+            items.append({"url": labelled_dir + "/" + label + "/" + item, "label": label})
             i = i + 1
             print("added labelled item", i)
 
     # for each unlabelled item
-    i = 0
     for item in os.listdir(unlabelled_dir):
-        # add the item to the unlabelled data
-        data["unlabelled"].append({"url": unlabelled_dir + "/" + item})
+        # add the unlabelled item
+        items.append({"url": unlabelled_dir + "/" + item, "label": ""})
         i = i + 1
-        print("added labelled item", i)
+        print("added unlabelled item", i)
 
     # dump the data to json
+    data = {"items": items}
     print("writing json")
     with open(config.output, 'w') as file:
         json.dump(data, file, indent=4)
