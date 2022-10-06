@@ -20,7 +20,6 @@ import {ProsopoDappOperatorIsHumanUserResponse, TransactionResponse} from '../ty
 import { ProsopoRandomProviderResponse } from "../types";
 import { CaptchaSolutionCommitment } from "@prosopo/datasets";
 
-
 export class ProsopoContract extends ProsopoContractBase {
 
     public async getRandomProvider(): Promise<ProsopoRandomProviderResponse> {

@@ -36,10 +36,6 @@ export class ProviderApi extends HttpClientBase {
         return this.axios.get(`/providers`);
     }
 
-    public getContractAddress(): Promise<{ contractAddress: string }> {
-        return this.axios.get(`/contract_address`);
-    }
-
     public getCaptchaChallenge(randomProvider: ProsopoRandomProviderResponse): Promise<GetCaptchaResponse> {
         const {provider} = randomProvider;
         let {blockNumber} = randomProvider;

@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
-// import {computeCaptchaSolutionHash} from '@prosopo/provider';
 import {
     CaptchaSolution,
     CaptchaMerkleTree,
-    CaptchaSolutionCommitment,
+    CaptchaSolutionCommitment, verifyProof,
 } from "@prosopo/datasets";
 import { Signer } from "@polkadot/api/types";
 
@@ -29,13 +28,14 @@ import ProviderApi from "../api/ProviderApi";
 import ProsopoContract from "../api/ProsopoContract";
 import {TCaptchaSubmitResult} from '../types/client';
 import {ProsopoApiError} from "../api/handlers";
+import {ProsopoEnvError} from "@prosopo/contract";
 
 function hexHash(data: string | Uint8Array): string {
     return blake2AsHex(data);
 }
 
 function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    return hexHash([captcha.captchaId, [...captcha.solution].sort(), captcha.salt].join());
+    return hexHash([captcha.captchaId, captcha.captchaContentId, [...captcha.solution].sort(), captcha.salt].join());
 }
 
 export type SubmitFunction =
@@ -60,10 +60,23 @@ export class ProsopoCaptchaApi {
         let captchaChallenge: GetCaptchaResponse;
         try {
             captchaChallenge = await this.providerApi.getCaptchaChallenge(this.provider);
+            this.verifyCaptchaChallengeContent(this.provider, captchaChallenge);
         } catch (err) {
             throw new ProsopoApiError(err)
         }
         return captchaChallenge;
+    }
+
+    public verifyCaptchaChallengeContent(provider: ProsopoRandomProviderResponse, captchaChallenge: GetCaptchaResponse): void {
+        // TODO make sure root is equal to root on the provider
+
+        for (const captchaWithProof of captchaChallenge.captchas) {
+            if (!verifyProof(captchaWithProof.captcha.captchaContentId, captchaWithProof.proof)) {
+                throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE")
+            }
+        }
+        console.log("CAPTCHA.CHALLENGE_VERIFIED")
+        return
     }
 
     public async submitCaptchaSolution(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]): Promise<TCaptchaSubmitResult> {
