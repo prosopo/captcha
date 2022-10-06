@@ -27,9 +27,9 @@ import {
     Dataset,
     matchItemsToSolutions,
     hexHash
-} from '@prosopo/datasets';
+} from 'packages/datasets/dist/index';
 import path from 'path';
-import {verifyProof} from "../src/index";
+import {verifyProof} from "../../src/js/index";
 
 const MOCK_ITEMS = calculateItemHashes(
     new Array(9).fill(0).map((_, i) => ({

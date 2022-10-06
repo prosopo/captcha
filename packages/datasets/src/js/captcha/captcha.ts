@@ -25,7 +25,7 @@ import {
     HashedSolution,
     Item,
     RawSolution
-} from '../types';
+} from '../types/index';
 import {hexHash} from './util';
 import {ProsopoEnvError} from "@prosopo/contract";
 
