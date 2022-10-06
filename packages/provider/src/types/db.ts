@@ -32,7 +32,8 @@ export interface Tables {
 export interface DatasetRecord extends WithId<Document> {
     datasetId: string,
     format: string,
-    tree: string[][]
+    contentTree: string[][]
+    solutionTree: string[][]
 }
 
 export interface PendingCaptchaRequestRecord extends WithId<Document> {

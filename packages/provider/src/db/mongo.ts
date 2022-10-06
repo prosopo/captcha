@@ -117,6 +117,7 @@ export class ProsopoDatabase implements Database {
             const captchaSolutionDocs = parsedDataset.captchas.filter(({solution}) => solution?.length)
                 .map((captcha) => ({
                     captchaId: captcha.captchaId,
+                    captchaContentId: captcha.captchaContentId,
                     solution: captcha.solution,
                     salt: captcha.salt,
                     datasetId: parsedDataset.datasetId,
@@ -156,7 +157,7 @@ export class ProsopoDatabase implements Database {
             {$sample: {size: sampleSize}},
             {
                 $project: {
-                    datasetId: 1, captchaId: 1, items: 1, target: 1
+                    datasetId: 1, captchaId: 1, captchaContentId: 1, items: 1, target: 1
                 }
             }
         ]);

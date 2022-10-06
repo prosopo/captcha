@@ -22,7 +22,6 @@ import { CaptchaWithProof, DappUserSolutionResult } from './types/api';
 import { ProsopoEnvironment } from './types/env';
 import { AccountsResponse, CaptchaSolutionBody } from './types/api';
 import { parseBlockNumber } from './util';
-import { ProsopoContractError } from '@prosopo/contract';
 
 
 

@@ -193,8 +193,8 @@ export class Tasks {
             for (const captcha of captchaDocs) {
                 const datasetDetails: DatasetRecord = await this.db.getDatasetDetails(datasetId)
                 const tree = new CaptchaMerkleTree()
-                tree.layers = datasetDetails.tree
-                const proof = tree.proof(captcha.captchaId)
+                tree.layers = datasetDetails.contentTree
+                const proof = tree.proof(captcha.captchaContentId)
                 // cannot pass solution to dapp user as they are required to solve the captcha!
                 delete captcha.solution
                 captcha.items = shuffleArray(captcha.items)
