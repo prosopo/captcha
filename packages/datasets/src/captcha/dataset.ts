@@ -1,13 +1,10 @@
 import {
-
     Dataset,
     DatasetRaw,
-    DatasetWithIds,
 } from "../types/dataset";
 import {
     Captcha,
 } from "../types/captcha";
-
 import {
     computeCaptchaHash,
     matchItemsToSolutions,
@@ -16,17 +13,26 @@ import {
 import {CaptchaMerkleTree} from "./merkle"
 import {ProsopoEnvError} from '@prosopo/contract'
 
-export async function addCaptchaHashesToDataset(dataset: Dataset, includeSolution: boolean, includeSalt: boolean): Promise<DatasetWithIds> {
+export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
+    const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw);
+    const contentTree = await buildCaptchaTree(dataset, false, false, true);
+    const solutionTree = await buildCaptchaTree(dataset, true, true, false);
+    dataset.captchas = dataset.captchas.map((captcha, index) => (
+        {...captcha, captchaId: solutionTree.leaves[index].hash, captchaContentId: contentTree.leaves[index].hash} as Captcha
+    ));
+    dataset.solutionTree = solutionTree.layers;
+    dataset.contentTree = contentTree.layers;
+    dataset.datasetId = contentTree.root?.hash;
+    dataset.datasetContentId = contentTree.root?.hash;
+    return dataset
+}
+
+export async function buildCaptchaTree(dataset: Dataset, includeSolution: boolean, includeSalt: boolean, sortItemHashes: boolean): Promise<CaptchaMerkleTree> {
     try {
         const tree = new CaptchaMerkleTree();
-        const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, includeSolution, includeSalt));
+        const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, includeSolution, includeSalt, sortItemHashes));
         tree.build(captchaHashes);
-        dataset.captchas = dataset.captchas.map((captcha, index) => (
-            {...captcha, captchaId: tree.leaves[index].hash} as Captcha
-        ));
-        dataset.datasetId = tree.root?.hash;
-        dataset.solutionTree = tree.layers;
-        return <DatasetWithIds>dataset;
+        return tree
     } catch (err) {
         throw new ProsopoEnvError("DATASET.HASH_ERROR");
     }

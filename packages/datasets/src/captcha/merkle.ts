@@ -15,6 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { hexHash } from './util'
 import { MerkleNodeInterface } from '../types/merkle'
+import {ProsopoEnvError} from "@prosopo/contract";
 
 class MerkleNode implements MerkleNodeInterface {
     hash: string;
@@ -110,5 +111,25 @@ export class CaptchaMerkleTree {
         }
 
         return proofTree
+    }
+}
+
+export function verifyProof(leaf: string, proof: string[][]): boolean {
+    try {
+        if (proof[0].indexOf(leaf) === -1) {
+            return false
+        }
+        for (const [layerIndex, layer] of proof.entries()) {
+            leaf = hexHash(layer.join())
+            if (proof[layerIndex + 1].indexOf(leaf) === -1) {
+                return false
+            }
+            if (leaf === proof[proof.length - 1][0]) {
+                return true
+            }
+        }
+        return false
+    } catch (err) {
+        return false
     }
 }

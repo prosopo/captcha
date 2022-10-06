@@ -11,10 +11,10 @@ import {
 } from "./captcha";
 import {z} from "zod";
 
-export enum DatasetTreeType {ContentOnly = 'contentOnly', ContentAndSolution = 'contentAndSolution'}
 
 type DatasetBase = {
     datasetId?: HexString | string | null;
+    datasetContentId?: HexString | string | null;
     format: CaptchaTypes;
     contentTree?: string[][];
     solutionTree?: string[][];
@@ -30,6 +30,7 @@ export interface DatasetRaw extends DatasetBase {
 
 export type DatasetWithIds = {
     datasetId: HexString | string,
+    datasetContentId: HexString | string | null;
     captchas: Captcha[],
     format: CaptchaTypes,
     contentTree?: string[][],
@@ -44,20 +45,24 @@ export interface DatasetWithIdsAndTree extends DatasetWithIds {
 
 export const DatasetSchema = z.object({
     datasetId: z.string().optional(),
+    datasetContentId: z.string().optional(),
     captchas: CaptchasSchema,
     format: z.nativeEnum(CaptchaTypes),
-    tree: z.array(z.array(z.string())).optional(),
+    solutionTree: z.array(z.array(z.string())).optional(),
+    contentTree: z.array(z.array(z.string())).optional(),
     timeLimit: z.number().optional(),
-    treeType: z.nativeEnum(DatasetTreeType).optional()
 })
 
 export const DatasetWithIdsSchema = z.object({
     datasetId: z.string(),
+    datasetContentId: z.string().optional(),
     captchas: z.array(SelectAllCaptchaSchema),
     format: z.nativeEnum(CaptchaTypes),
-    tree: z.array(z.array(z.string())).optional()
+    solutionTree: z.array(z.array(z.string())).optional(),
+    contentTree: z.array(z.array(z.string())).optional()
 })
 
 export const DatasetWithIdsAndTreeSchema = DatasetWithIdsSchema.extend({
-    tree: z.array(z.array(z.string()))
+    solutionTree: z.array(z.array(z.string())),
+    contentTree: z.array(z.array(z.string()))
 })

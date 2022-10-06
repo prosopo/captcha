@@ -16,12 +16,14 @@
 import {ERRORS} from '../errors';
 import {
     AssetsResolver,
-    Captcha, CaptchaImage, CaptchaSolution,
+    Captcha,
+    CaptchaSolution,
     CaptchaSolutionSchema,
     CaptchaWithoutId,
     DatasetRaw,
     DatasetSchema,
     HashedSolution,
+    Item,
     RawSolution
 } from '../types';
 import {hexHash} from './util';
@@ -80,7 +82,7 @@ export function sortAndComputeHashes(
                     salt,
                     items,
                     target,
-                }),
+                }, true, true, false),
                 captchaId,
             };
         }
@@ -107,24 +109,29 @@ export function compareCaptchaSolutions(received: CaptchaSolution[], stored: Cap
  * @param  {Captcha} captcha
  * @param  {boolean} includeSolution
  * @param  {boolean} includeSalt
+ * @param  {boolean} sortItemHashes
  * @return {string} the hex string hash
  */
-export function computeCaptchaHash(captcha: CaptchaWithoutId, includeSolution = false, includeSalt = false): string {
-    const itemHashes: string[] = captcha.items.map((item) => item.hash);
-    return hexHash(
-        [
-            captcha.target,
-            ...(includeSolution && captcha.solution ? captcha.solution.sort() : []),
-            includeSalt ? captcha.salt: '',
-            itemHashes,
-        ].join()
-    );
+export function computeCaptchaHash(captcha: CaptchaWithoutId, includeSolution = false, includeSalt= false, sortItemHashes: boolean): string {
+    try {
+        const itemHashes: string[] = captcha.items.map((item, index) => item.hash ? item.hash : calculateItemHashes([item])[0].hash!);
+        return hexHash(
+            [
+                captcha.target,
+                ...(includeSolution && captcha.solution ? captcha.solution.sort() : []),
+                includeSalt ? captcha.salt: '',
+                sortItemHashes ? itemHashes.sort(): itemHashes,
+            ].join()
+        );
+    } catch (err) {
+        throw new ProsopoEnvError(err);
+    }
 }
 
-export function calculateItemHashes(items: any[]): any[] {
+export function calculateItemHashes(items: Item[]): Item[] {
     return items.map((item) => {
         if (item.type === "image" || item.type === "text") {
-            return {...item, hash: hexHash((item.text || item.path) as string)};
+            return {...item, hash: hexHash((item.data) as string)};
         } else {
             throw new ProsopoEnvError(
                 "CAPTCHA.INVALID_ITEM_FORMAT"
@@ -135,7 +142,7 @@ export function calculateItemHashes(items: any[]): any[] {
 
 export function matchItemsToSolutions(
     solutions: RawSolution[] | undefined,
-    items: any[] | undefined
+    items: Item[] | undefined
 ): HashedSolution[] {
     return solutions?.map((solution) => {
         const hash = items?.[solution].hash;
@@ -195,7 +202,7 @@ export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
  * @return {CaptchaSolution}
  */
 export function convertCaptchaToCaptchaSolution(captcha: Captcha): CaptchaSolution {
-    return {captchaId: captcha.captchaId, salt: captcha.salt, solution: captcha.solution || []}
+    return {captchaId: captcha.captchaId, captchaContentId: captcha.captchaContentId, salt: captcha.salt, solution: captcha.solution || []}
 }
 
 /**
@@ -212,7 +219,7 @@ export function computePendingRequestHash(captchaIds: string[], userAccount: str
 /**
  * Parse the image items in a captcha and pass back a URI if they exist
  */
-export function parseCaptchaAssets(item: CaptchaImage, assetsResolver: AssetsResolver | undefined) {
-    return {...item, path: assetsResolver?.resolveAsset(item.path).getURL() || item.path}
+export function parseCaptchaAssets(item: Item, assetsResolver: AssetsResolver | undefined) {
+    return {...item, path: assetsResolver?.resolveAsset(item.data).getURL() || item.data}
 }
 

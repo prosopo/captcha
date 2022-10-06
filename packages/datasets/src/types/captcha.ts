@@ -16,24 +16,17 @@
 import { z } from 'zod'
 import { AccountId, Hash } from '@polkadot/types/interfaces'
 import { u32, u64 } from '@polkadot/types'
-import {HexString} from "@polkadot/util/types";
-import {DatasetTreeType} from "./dataset";
-// import {ProsopoConfigSchema} from "./config";
 
 export enum CaptchaTypes { SelectAll = 'SelectAll'}
-
 export enum CaptchaItemTypes {Text = 'text', Image = 'image'}
-
 export enum CaptchaStates {Solved = 'solved', Unsolved = 'unsolved'}
-
-const CaptchaItemTypesZod = z.nativeEnum(CaptchaItemTypes)
-
 export type RawSolution = number;
 export type HashedSolution = string;
+export type Item = z.infer<typeof CaptchaItemSchema>
 
 type CaptchaWithoutIdBase = {
     salt: string;
-    items: any[];
+    items: Item[];
     target: string;
     solved?: boolean;
 };
@@ -48,17 +41,17 @@ export interface CaptchaWithoutIdRaw extends CaptchaWithoutIdBase {
 
 export type CaptchaSolutionToUpdate = {
     captchaId: string,
+    captchaContentId: string,
     salt: string,
     solution: HashedSolution[]
 }
 
 export interface Captcha extends CaptchaWithoutId {
     captchaId: string;
+    captchaContentId: string;
     assetURI?: string;
     datasetId?: string;
 }
-
-
 
 export enum CaptchaStatus { Pending = 'Pending', Approved = 'Approved', Disapproved = 'Disapproved' }
 
@@ -73,6 +66,7 @@ export interface CaptchaSolutionCommitment {
 
 export interface CaptchaSolution {
     captchaId: string;
+    captchaContentId: string;
     salt: string;
     solution: HashedSolution[];
 }
@@ -100,28 +94,20 @@ export type LastCorrectCaptcha = {
 
 export const CaptchaSchema = z.object({
     captchaId: z.union([z.string(), z.undefined()]),
+    captchaContentId: z.union([z.string(), z.undefined()]),
     salt: z.string(),
     solution: z.number().array().optional(),
     timeLimit: z.number().optional()
 })
 
-const CaptchaItemSchema = z.object({
+export const CaptchaItemSchema = z.object({
     hash: z.string().optional(),
-})
-
-export const CaptchaImageSchema = CaptchaItemSchema.extend({
-    path: z.string(),
-    type: CaptchaItemTypesZod
-})
-export type CaptchaImage = z.infer<typeof CaptchaImageSchema>
-
-export const CaptchaTextSchema = CaptchaItemSchema.extend({
-    text: z.string(),
-    type: CaptchaItemTypesZod
+    data: z.string(),
+    type: z.nativeEnum(CaptchaItemTypes)
 })
 
 export const SelectAllCaptchaSchemaRaw = CaptchaSchema.extend({
-    items: z.union([z.array(CaptchaImageSchema), z.array(CaptchaTextSchema)]),
+    items: z.array(CaptchaItemSchema),
     target: z.string()
 })
 
@@ -133,6 +119,7 @@ export const CaptchasSchema = z.array(SelectAllCaptchaSchemaRaw)
 
 export const CaptchaSolution = z.object({
     captchaId: z.string(),
+    captchaContentId: z.string(),
     solution: z.string().array(),
     salt: z.string(),
 })
