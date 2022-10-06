@@ -121,7 +121,7 @@ pub mod prosopo {
         payee: Payee,
         service_origin: Hash,
         dataset_id: Hash,
-        dataset_id_solutions: Hash,
+        dataset_id_content: Hash,
     }
 
     /// RandomProvider is selected randomly by the contract for the client side application
@@ -323,7 +323,7 @@ pub mod prosopo {
         #[ink(topic)]
         account: AccountId,
         dataset_id: Hash,
-        dataset_id_solutions: Hash
+        dataset_id_content: Hash
     }
 
     // Event emitted when a provider unstakes
@@ -496,7 +496,7 @@ pub mod prosopo {
                 fee,
                 service_origin,
                 dataset_id: Hash::default(),
-                dataset_id_solutions: Hash::default(),
+                dataset_id_content: Hash::default(),
                 payee,
             };
             self.providers.insert(provider_account, &provider);
@@ -564,7 +564,7 @@ pub mod prosopo {
                 fee,
                 service_origin,
                 dataset_id: existing.dataset_id,
-                dataset_id_solutions: existing.dataset_id_solutions,
+                dataset_id_content: existing.dataset_id_content,
                 payee,
             };
 
@@ -658,8 +658,8 @@ pub mod prosopo {
 
         /// Add a new data set
         #[ink(message)]
-        pub fn provider_add_dataset(&mut self, dataset_id: Hash, dataset_id_solutions: Hash) -> Result<(), Error> {
-            if dataset_id == dataset_id_solutions {
+        pub fn provider_add_dataset(&mut self, dataset_id: Hash, dataset_id_content: Hash) -> Result<(), Error> {
+            if dataset_id == dataset_id_content {
                 return Err(Error::DatasetIdSolutionsSame);
             }
             let provider_id = self.env().caller();
@@ -679,7 +679,7 @@ pub mod prosopo {
             // set the captcha data id on the provider
             let mut provider = self.providers.get(&provider_id).unwrap();
             provider.dataset_id = dataset_id;
-            provider.dataset_id_solutions = dataset_id_solutions;
+            provider.dataset_id_content = dataset_id_content;
             let old_status = provider.status;
 
             // change the provider status to active if it was not active
@@ -697,7 +697,7 @@ pub mod prosopo {
             self.env().emit_event(ProviderAddDataset {
                 account: provider_id,
                 dataset_id,
-                dataset_id_solutions
+                dataset_id_content
             });
 
             Ok(())
@@ -1322,6 +1322,7 @@ pub mod prosopo {
             provider_ids
         }
 
+
         fn get_random_number(&self, min: u64, max: u64, user_account: AccountId) -> u64 {
             let random_seed = self.env().random(user_account.as_ref());
             let mut seed_converted: [u8; 32] = Default::default();
@@ -1665,7 +1666,7 @@ pub mod prosopo {
             if let Event::ProviderAddDataset(ProviderAddDataset {
                 account,
                  dataset_id: dataset_id,
-                 dataset_id_solutions: dataset_id_solutions,
+                 dataset_id_content: datset_id_content,
             }) = decoded_event_unstake
             {
                 assert_eq!(
