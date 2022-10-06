@@ -22,7 +22,7 @@ import { addDataAttr } from "../util";
 
 export function CaptchaWidget({ challenge, solution, onChange }:
     {challenge: CaptchaResponseCaptcha, solution: string[], onChange: (hash: string) => void}) {
-    
+
     //const items = Array.from(Array(9).keys());
     console.log("CHALLENGE", challenge);
     const items = challenge.captcha.items;
@@ -31,12 +31,12 @@ export function CaptchaWidget({ challenge, solution, onChange }:
     return (
         <>
             {items.map((item, index) => <Avatar
-                {...addDataAttr({dev: {cy: 'captcha-item', hash: item.hash}})}
+                {...addDataAttr({dev: {cy: 'captcha-item', hash: item.hash ? item.hash : ''}})}
                 key={index}
-                src={item.path} 
+                src={item.data}
                 variant="square"
-                className={classes.captchaItem + " " + (solution.includes(item.hash) ? " " + classes.captchaItemSelected : "")}
-                onClick={() => onChange(item.hash)} />
+                className={classes.captchaItem + " " + (solution.includes(item.hash ? item.hash : '') ? " " + classes.captchaItemSelected : "")}
+                onClick={() => onChange(item.hash ? item.hash : '')} />
             )}
         </>
     );
