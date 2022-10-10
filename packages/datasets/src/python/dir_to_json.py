@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--root", required=True, help="the root directory holding the labelled and unlabelled data")
     parser.add_argument("--output", default="data.json", help="the path to the output file")
+    parser.add_argument("--type", default="data.json", help="the type of the resources", required=True)
     config = parser.parse_args()
 
     root = config.root
@@ -40,14 +41,14 @@ if __name__ == '__main__':
         # for each labelled item
         for item in os.listdir(labelled_dir + "/" + label):
             # add item to the list
-            items.append({"url": labelled_dir + "/" + label + "/" + item, "label": label})
+            items.append({"path": labelled_dir + "/" + label + "/" + item, "label": label, "type": config.type})
             i = i + 1
             print("added labelled item", i)
 
     # for each unlabelled item
     for item in os.listdir(unlabelled_dir):
         # add the unlabelled item
-        items.append({"url": unlabelled_dir + "/" + item, "label": ""})
+        items.append({"path": unlabelled_dir + "/" + item, "label": "", "type": config.type})
         i = i + 1
         print("added unlabelled item", i)
 
