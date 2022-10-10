@@ -29,14 +29,8 @@ import ProsopoContract from "../api/ProsopoContract";
 import {TCaptchaSubmitResult} from '../types/client';
 import {ProsopoApiError} from "../api/handlers";
 import {ProsopoEnvError} from "@prosopo/contract";
+import {computeCaptchaSolutionHash} from "@prosopo/datasets";
 
-function hexHash(data: string | Uint8Array): string {
-    return blake2AsHex(data);
-}
-
-function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    return hexHash([captcha.captchaId, captcha.captchaContentId, [...captcha.solution].sort(), captcha.salt].join());
-}
 
 export type SubmitFunction =
     typeof ProsopoCaptchaApi.prototype.submitCaptchaSolutionWeb3
