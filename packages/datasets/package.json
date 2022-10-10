@@ -10,20 +10,20 @@
     "lint:fix": "npx eslint . --fix",
     "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" --timeout 120000 && exit 0"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/js/index.js",
+  "types": "./dist/js/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./types": "./dist/types/index.js",
-    "./captcha": "./dist/captcha/index.js"
+    ".": "./dist/js/index.js",
+    "./types": "./dist/js/types/index.js",
+    "./captcha": "./dist/js/captcha/index.js"
   },
   "typesVersions": {
     "*": {
       "types": [
-        "dist/types"
+        "dist/js/types"
       ],
       "captcha": [
-        "dist/captcha"
+        "dist/js/captcha"
       ]
     }
   },
@@ -59,5 +59,8 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
-  "description": "Datasets for use with providers"
+  "description": "Datasets for use with providers",
+  "directories": {
+    "test": "tests"
+  }
 }

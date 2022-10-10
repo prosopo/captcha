@@ -51,6 +51,7 @@ export interface Captcha extends CaptchaWithoutId {
     captchaContentId: string;
     assetURI?: string;
     datasetId?: string;
+    datasetContentId?: string;
 }
 
 export enum CaptchaStatus { Pending = 'Pending', Approved = 'Approved', Disapproved = 'Disapproved' }

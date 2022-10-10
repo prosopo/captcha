@@ -1,12 +1,12 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
+    "rootDir": "./src/js",
+    "outDir": "./dist/js",
   },
   "include": [
-    "./src/**/*.ts",
-    "./src/abi/*.json"
+    "./src/js/**/*.ts",
+    "./src/js/abi/*.json"
   ],
   "exclude": ["**/*.test.ts"]
 }
