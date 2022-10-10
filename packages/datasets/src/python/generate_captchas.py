@@ -205,7 +205,7 @@ if __name__ == '__main__':
                              "{\n"
                              "\t\"items\": [\n"
                              "\t\t{\n"
-                             "\t\t\t\"url\": \"<path to resource>\",\n"
+                             "\t\t\t\"path\": \"<path to resource>\",\n"
                              "\t\t\t\"label\": \"<label or empty string if unlabelled\"\n"
                              "\t\t},\n"
                              "\t\t...\n"
@@ -217,7 +217,7 @@ if __name__ == '__main__':
                         required=True)
 
     config = parser.parse_args()
-    # config = parser.parse_args(["--min", "2", "--max", "4", "--count", "10", "--size", "9", "--output", "captchas.json", "--seed", "0", "--data", "data.json", "--unsolved"])
+    # config = parser.parse_args(["--min", "2", "--max", "4", "--count", "10", "--size", "9", "--output", "captchas.json", "--seed", "0", "--data", "../../data.json", "--unsolved"])
 
     print("config:")
     print(config)

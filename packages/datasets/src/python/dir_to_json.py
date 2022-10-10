@@ -48,7 +48,7 @@ if __name__ == '__main__':
     # for each unlabelled item
     for item in os.listdir(unlabelled_dir):
         # add the unlabelled item
-        items.append({"url": unlabelled_dir + "/" + item, "label": ""})
+        items.append({"path": unlabelled_dir + "/" + item, "label": "", "type": config.type})
         i = i + 1
         print("added unlabelled item", i)
 
