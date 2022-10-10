@@ -157,7 +157,7 @@ export class ProsopoDatabase implements Database {
             {$sample: {size: sampleSize}},
             {
                 $project: {
-                    datasetId: 1, captchaId: 1, captchaContentId: 1, items: 1, target: 1
+                    datasetId: 1, datasetContentId: 1, captchaId: 1, captchaContentId: 1, items: 1, target: 1
                 }
             }
         ]);

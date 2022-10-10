@@ -535,7 +535,7 @@ export class Tasks {
         const randomProviderAndBlockNo = await this.getRandomProvider(userAccount, dappContractAccount, block)
 
         // @ts-ignore
-        if (datasetId.localeCompare(randomProviderAndBlockNo.provider.captcha_dataset_id)) {
+        if (datasetId.localeCompare(randomProviderAndBlockNo.provider.dataset_id)) {
             throw new ProsopoEnvError("DATASET.INVALID_DATASET_ID", this.validateProviderWasRandomlyChosen.name, {}, randomProviderAndBlockNo)
         }
     }
