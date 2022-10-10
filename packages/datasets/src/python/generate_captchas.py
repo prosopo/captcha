@@ -233,17 +233,29 @@ if __name__ == '__main__':
 
     creator = CaptchaCreator(data["items"])
 
+    # get a seed for generating solved/unsolved captchas
+    # need to split this into two different rngs otherwise the number of unsolved captchas generated affects the rng
+    # of the solved captchas being generated. E.g. generating 3 unsolved captchas then 1 solved would lead to a
+    # different solved captcha than generating 4 unsolved captchas then 1 solved.
+    # to prevent this, we'll use two different seeds for the unsolved / solved generation.
+
+    # build a rng
+    rng = random.Random(config.seed)
+    # let the rng give us a seed for unsolved / solved generation
+    rng_solved = random.Random(rng.getrandbits(32))  # 32 bits == 4 bytes == standard int
+    rng_unsolved = random.Random(rng.getrandbits(32))  # 32 bits == 4 bytes == standard int
+
     # create captchas with no solutions
-    unsolved = creator.create_captchas_unsolved(config.unsolved, config.size, random.Random(config.seed),
+    unsolved = creator.create_captchas_unsolved(config.unsolved, config.size, rng_unsolved,
                                        progress_callback=lambda i, n: print(i, "/", n, "unsolved"))
     # create captchas with solutions
-    solved = creator.create_captchas_solved(config.solved, config.min, config.max, config.size, random.Random(config.seed),
+    solved = creator.create_captchas_solved(config.solved, config.min, config.max, config.size, rng_solved,
                                               progress_callback=lambda i, n: print(i, "/", n, "solved"))
 
     # unite solved and unsolved into one list to be saved to file
     captchas = []
-    captchas.extend(unsolved)
     captchas.extend(solved)
+    captchas.extend(unsolved)
 
     output = {"captchas": captchas}
 
