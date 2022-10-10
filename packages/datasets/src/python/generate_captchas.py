@@ -69,9 +69,13 @@ class CaptchaCreator:
             # label should not be available in captcha
             del item['label']
 
+        # target should be randomly chosen from all possible labels
+        target = rng.choice(self.labels)
+
         return {
             "items": chosen_items,
-            "salt": bcrypt.gensalt().hex()
+            "salt": bcrypt.gensalt().hex(),
+            "target": target
         }
 
     def create_captcha(self, n_correct, size, target, rng):
@@ -129,7 +133,8 @@ class CaptchaCreator:
         return {
             "solution": solution,
             "items": chosen_items,
-            "salt": bcrypt.gensalt().hex()
+            "salt": bcrypt.gensalt().hex(),
+            "target": target
         }
 
     def create_captchas_unsolved(self, n_captchas, size, rng, progress_callback=lambda x, y: None):
