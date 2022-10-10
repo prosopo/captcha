@@ -15,6 +15,7 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import {AxiosResponse} from "axios";
 
+
 export class ProsopoApiError extends Error {
     constructor(error: AxiosResponse, context?: string, ...params: any[]) {
         console.log(error)

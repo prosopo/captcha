@@ -30,7 +30,8 @@ export type ProsopoDappOperatorIsHumanUserResponse = boolean
 
 export interface ProposoProvider {
   balance: string;
-  captchaDatasetId: string;
+  datasetId: string;
+  datasetIdContent: string;
   fee: string;
   payee: string;
   serviceOrigin: string;

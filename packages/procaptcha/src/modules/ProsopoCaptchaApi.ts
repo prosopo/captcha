@@ -69,6 +69,12 @@ export class ProsopoCaptchaApi {
 
     public verifyCaptchaChallengeContent(provider: ProsopoRandomProviderResponse, captchaChallenge: GetCaptchaResponse): void {
         // TODO make sure root is equal to root on the provider
+        const proofLength = captchaChallenge.captchas[0].proof.length;
+        console.log(provider.provider);
+        console.log(provider.provider.datasetIdContent, captchaChallenge.captchas[0].proof[proofLength - 1][0])
+        if (provider.provider.datasetIdContent !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
+            throw new ProsopoEnvError("CAPTCHA.INVALID_DATASET_CONTENT_ID");
+        }
 
         for (const captchaWithProof of captchaChallenge.captchas) {
             if (!verifyProof(captchaWithProof.captcha.captchaContentId, captchaWithProof.proof)) {
