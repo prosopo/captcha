@@ -78,7 +78,7 @@ class CaptchaCreator:
             "target": target
         }
 
-    def create_captcha(self, n_correct, size, target, rng):
+    def create_captcha_solved(self, n_correct, size, target, rng):
         """
         Create a captcha containing n_correct target images.
 
@@ -158,7 +158,7 @@ class CaptchaCreator:
 
         return captchas
 
-    def create_captchas(self, n_captchas, min_n_correct, max_n_correct, size, rng, progress_callback=lambda x, y: None):
+    def create_captchas_solved(self, n_captchas, min_n_correct, max_n_correct, size, rng, progress_callback=lambda x, y: None):
         """
         Generate many captchas.
 
@@ -180,7 +180,7 @@ class CaptchaCreator:
             n_correct = rng.choice(range(min_n_correct, max_n_correct + 1))
             # randomly choose the target label
             target = rng.choice(self.labels)
-            captcha = self.create_captcha(n_correct, size, target, rng)
+            captcha = self.create_captcha_solved(n_correct, size, target, rng)
             captchas.append(captcha)
             progress_callback(i + 1, n_captchas)
 
@@ -192,15 +192,14 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.set_defaults(unsolved=False)
-    parser.add_argument("--unsolved", action="store_true",
-                        help="whether to use unlabelled data. If this is enabled, there is no solution to the captcha "
-                             "and min/max parameters are ignored.")
     parser.add_argument("--min", default="1", type=int,
                         help="the minimum number of images in the captcha which match the target label")
     parser.add_argument("--max", default="8", type=int,
                         help="the maximum number of images in the captcha which match the target label")
-    parser.add_argument("--count", default="1", type=int,
-                        help="the number of captchas to generate")
+    parser.add_argument("--solved", default="1", type=int,
+                        help="the number of solved captchas to generate")
+    parser.add_argument("--unsolved", default="0", type=int,
+                        help="the number of unsolved captchas to generate")
     parser.add_argument("--size", default="9", type=int,  # 3x3 grid
                         help="the number of images per captcha")
     parser.add_argument("--output", default="captchas.json",
@@ -222,7 +221,6 @@ if __name__ == '__main__':
                         required=True)
 
     config = parser.parse_args()
-    # config = parser.parse_args(["--min", "2", "--max", "4", "--count", "10", "--size", "9", "--output", "captchas.json", "--seed", "0", "--data", "../../data.json", "--unsolved"])
 
     print("config:")
     print(config)
@@ -235,14 +233,17 @@ if __name__ == '__main__':
 
     creator = CaptchaCreator(data["items"])
 
-    if config.unsolved:
-        # create captchas with no solutions
-        captchas = creator.create_captchas_unsolved(config.count, config.size, random.Random(config.seed),
-                                       progress_callback=lambda i, n: print(i, "/", n))
-    else:
-        # create captchas with solutions
-        captchas = creator.create_captchas(config.count, config.min, config.max, config.size, random.Random(config.seed),
-                                       progress_callback=lambda i, n: print(i, "/", n))
+    # create captchas with no solutions
+    unsolved = creator.create_captchas_unsolved(config.unsolved, config.size, random.Random(config.seed),
+                                       progress_callback=lambda i, n: print(i, "/", n, "unsolved"))
+    # create captchas with solutions
+    solved = creator.create_captchas_solved(config.solved, config.min, config.max, config.size, random.Random(config.seed),
+                                              progress_callback=lambda i, n: print(i, "/", n, "solved"))
+
+    # unite solved and unsolved into one list to be saved to file
+    captchas = []
+    captchas.extend(unsolved)
+    captchas.extend(solved)
 
     output = {"captchas": captchas}
 
