@@ -12,12 +12,16 @@ Download the [binary files here](http://ai.stanford.edu/~acoates/stl10/stl10_bin
 
 To generate unsolved captchas, run:
 ```commandline
-python3 generate_captchas.py --count 10000 --size 9 --output captchas_unsolved.json --seed 0 --data data.json  --unsolved
+python3 src/python/generate_captchas.py --count 10000 --size 9 --output captchas_unsolved.json --seed 0 --data data.json  --unsolved
 ```
 
-To generate solved captchas, run:
+To generate solved captchas with 0-9 target images, run:
 ```commandline
-python3 generate_captchas.py --min 2 --max 4 --count 10000 --size 9 --output captchas_0-9_correct.json --seed 0 --data data.json 
+python3 src/python/generate_captchas.py --min 0 --max 9 --count 10000 --size 9 --output captchas_0-9_correct.json --seed 0 --data data.json
+```
+or with 2-4 target images, run:
+```commandline
+python3 src/python/generate_captchas.py --min 2 --max 4 --count 10000 --size 9 --output captchas_2-4_correct.json --seed 0 --data data.json
 ```
 
 Unsure of how the captcha generation works?
