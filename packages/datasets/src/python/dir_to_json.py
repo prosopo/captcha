@@ -41,7 +41,7 @@ if __name__ == '__main__':
         # for each labelled item
         for item in os.listdir(labelled_dir + "/" + label):
             # add item to the list
-            items.append({"url": labelled_dir + "/" + label + "/" + item, "label": label, "type": config.type})
+            items.append({"path": labelled_dir + "/" + label + "/" + item, "label": label, "type": config.type})
             i = i + 1
             print("added labelled item", i)
 
