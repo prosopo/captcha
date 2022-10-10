@@ -70,7 +70,8 @@
         "ID_MISMATCH": "captcha id mismatch",
         "MISSING_ITEM_HASH": "missing item hash",
         "INVALID_LEAF_HASH": "Invalid leaf hash",
-        "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge"
+        "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
+        "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id"
     },
     "API": {
         "BODY_UNDEFINED": "Body must be defined in API POST call",

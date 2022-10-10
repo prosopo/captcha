@@ -68,7 +68,9 @@
         "INVALID_BLOCK_NO": "Broj bloka nije validan",
         "ID_MISMATCH": "ID-ovi captcha-i se ne podudaraju",
         "MISSING_ITEM_HASH": "Nedostaje heš stavke",
-        "INVALID_LEAF_HASH": "Nedostaje heš lista"
+        "INVALID_LEAF_HASH": "Nedostaje heš lista",
+        "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
+        "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id"
     },
     "API": {
         "BODY_UNDEFINED": "Body mora biti definisan u API POST pozivu",
