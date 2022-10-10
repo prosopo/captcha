@@ -174,7 +174,7 @@ export function matchItemsToSolutions(
  * @return {string} the hex string hash
  */
 export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
-    return hexHash([captcha.captchaId, captcha.solution.sort(), captcha.salt].join());
+    return hexHash([captcha.captchaId, captcha.captchaContentId, [...captcha.solution].sort(), captcha.salt].join());
 }
 
 // /**
@@ -222,4 +222,3 @@ export function computePendingRequestHash(captchaIds: string[], userAccount: str
 export function parseCaptchaAssets(item: Item, assetsResolver: AssetsResolver | undefined) {
     return {...item, path: assetsResolver?.resolveAsset(item.data).getURL() || item.data}
 }
-
