@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of procaptcha <https://github.com/prosopo-io/procaptcha>.
+// This file is part of procaptcha <https://github.com/prosopo/procaptcha>.
 //
 // procaptcha is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ import {
     GetCaptchaResponse,
     CaptchaSolutionResponse
 } from '../types';
-import { CaptchaSolution } from "@prosopo/contract";
+import { CaptchaSolution } from "@prosopo/datasets";
 
 export class ProviderApi extends HttpClientBase {
 
@@ -36,16 +36,12 @@ export class ProviderApi extends HttpClientBase {
         return this.axios.get(`/providers`);
     }
 
-    public getContractAddress(): Promise<{ contractAddress: string }> {
-        return this.axios.get(`/contract_address`);
-    }
-
     public getCaptchaChallenge(randomProvider: ProsopoRandomProviderResponse): Promise<GetCaptchaResponse> {
         const {provider} = randomProvider;
         let {blockNumber} = randomProvider;
         blockNumber = blockNumber.replace(/,/g, '');
         const userAccount = Storage.getAccount();
-        return this.axios.get(`/provider/captcha/${provider.captchaDatasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
+        return this.axios.get(`/provider/captcha/${provider.datasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
     }
 
     public submitCaptchaSolution(captchas: CaptchaSolution[], requestHash: string, userAccount: string, salt: string, blockHash?: string, txHash?: string, web2?: boolean): Promise<CaptchaSolutionResponse> {

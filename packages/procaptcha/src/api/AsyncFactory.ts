@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of procaptcha <https://github.com/prosopo-io/procaptcha>.
+// This file is part of procaptcha <https://github.com/prosopo/procaptcha>.
 //
 // procaptcha is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@ import {ProsopoEnvError} from "@prosopo/contract";
 export abstract class AsyncFactory {
 
     constructor() {
-        throw new ProsopoEnvError("Use `create` factory method");
+        throw new ProsopoEnvError("GENERAL.ASYNC_FACTORY_CREATE");
     }
 
     public static async create(...args: any[]) {

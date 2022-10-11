@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of procaptcha <https://github.com/prosopo-io/procaptcha>.
+// This file is part of procaptcha <https://github.com/prosopo/procaptcha>.
 //
 // procaptcha is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,8 +18,7 @@ import ProsopoContractBase from "./ProsopoContractBase";
 import { Signer } from '@polkadot/api/types';
 import {ProsopoDappOperatorIsHumanUserResponse, TransactionResponse} from '../types';
 import { ProsopoRandomProviderResponse } from "../types";
-import { CaptchaSolutionCommitment } from "@prosopo/contract";
-
+import { CaptchaSolutionCommitment } from "@prosopo/datasets";
 
 export class ProsopoContract extends ProsopoContractBase {
 
@@ -36,7 +35,7 @@ export class ProsopoContract extends ProsopoContractBase {
     }
 
     public async dappOperatorIsHumanUser(solutionThreshold: number): Promise<ProsopoDappOperatorIsHumanUserResponse> {
-        
+
         return await this.query('dappOperatorIsHumanUser', [this.account.address, solutionThreshold]) as ProsopoDappOperatorIsHumanUserResponse;
     }
 

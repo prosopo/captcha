@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of procaptcha <https://github.com/prosopo-io/procaptcha>.
+// This file is part of procaptcha <https://github.com/prosopo/procaptcha>.
 //
 // procaptcha is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,10 +18,12 @@ import { GetCaptchaResponse } from "../types/api";
 
 import { ProsopoCaptchaClient } from "./ProsopoCaptchaClient";
 import {
-    CaptchaSolution,
-    convertCaptchaToCaptchaSolution,
     ProsopoEnvError
 } from "@prosopo/contract";
+import {
+    CaptchaSolution,
+    convertCaptchaToCaptchaSolution,
+} from '@prosopo/datasets';
 
 
 export class ProsopoCaptchaStateClient {

@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of procaptcha <https://github.com/prosopo-io/procaptcha>.
+// This file is part of procaptcha <https://github.com/prosopo/procaptcha>.
 //
 // procaptcha is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -102,12 +102,12 @@ export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
     public setAccount(address: string) {
 
         if (!this.accounts.length) {
-            throw new ProsopoEnvError("No accounts found");
+            throw new ProsopoEnvError("WIDGET.NO_ACCOUNTS_FOUND");
         }
 
         const account = this.accounts.find(acc => acc.address === address);
         if (!account) {
-            throw new ProsopoEnvError("Account not found");
+            throw new ProsopoEnvError("WIDGET.ACCOUNT_NOT_FOUND");
         }
         this.account = account;
         storage.setAccount(account.address);

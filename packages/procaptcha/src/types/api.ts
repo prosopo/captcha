@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of procaptcha <https://github.com/prosopo-io/procaptcha>.
+// This file is part of procaptcha <https://github.com/prosopo/procaptcha>.
 //
 // procaptcha is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 //   export default value;
 // }
 
-import { Captcha } from "@prosopo/contract";
+import { Captcha } from "@prosopo/datasets";
 
 export interface ProsopoRandomProviderResponse {
   providerId: string,
@@ -30,7 +30,8 @@ export type ProsopoDappOperatorIsHumanUserResponse = boolean
 
 export interface ProposoProvider {
   balance: string;
-  captchaDatasetId: string;
+  datasetId: string;
+  datasetIdContent: string;
   fee: string;
   payee: string;
   serviceOrigin: string;
