@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/contract",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "scripts": {
@@ -35,6 +35,7 @@
     "@polkadot/types-create": "^8.13.1",
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
+    "@prosopo/i18n": "^0.0.1",
     "bn.js": "^5.2.1",
     "consola": "^2.15.3",
     "zod": "^3.17.9"
@@ -47,12 +48,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo-io/contract.git"
+    "url": "git+https://github.com/prosopo/contract.git"
   },
   "bugs": {
-    "url": "https://github.com/prosopo-io/contract/issues"
+    "url": "https://github.com/prosopo/contract/issues"
   },
-  "homepage": "https://github.com/prosopo-io/contract#readme",
+  "homepage": "https://github.com/prosopo/contract#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },

@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of provider <https://github.com/prosopo-io/provider>.
+// This file is part of provider <https://github.com/prosopo/provider>.
 //
 // provider is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ export function handleContractCallOutcomeErrors<T>(response: ContractCallOutcome
     if (response.output) {
         const humanOutput = response.output?.toHuman()
         if (humanOutput && typeof (humanOutput) === 'object' && errorKey in humanOutput) {
-            throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, encodedArgs)
+            throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, {}, encodedArgs)
         }
     }
     return response

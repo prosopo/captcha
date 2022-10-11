@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of contract <https://github.com/prosopo-io/contract>.
+// This file is part of contract <https://github.com/prosopo/contract>.
 //
 // contract is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

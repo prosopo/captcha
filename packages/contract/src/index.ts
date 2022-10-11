@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of provider <https://github.com/prosopo-io/provider>.
+// This file is part of provider <https://github.com/prosopo/provider>.
 //
 // provider is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 export * from './abi';
-export * from './captcha';
 export * from './contract';
 export * from './network/network';
 export * from './types';
-export * from './errors';
 export * from './handlers';
