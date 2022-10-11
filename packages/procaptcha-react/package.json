@@ -30,12 +30,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo-io/procaptcha-react.git"
+    "url": "git+https://github.com/prosopo/procaptcha-react.git"
   },
   "bugs": {
-    "url": "https://github.com/prosopo-io/procaptcha-react/issues"
+    "url": "https://github.com/prosopo/procaptcha-react/issues"
   },
-  "homepage": "https://github.com/prosopo-io/procaptcha-react#readme",
+  "homepage": "https://github.com/prosopo/procaptcha-react#readme",
   "description": "",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
