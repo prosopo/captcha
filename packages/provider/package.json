@@ -32,7 +32,9 @@
     "@polkadot/types-create": "^8.13.1",
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
-    "@prosopo/contract": "^0.1.7",
+    "@prosopo/contract": "^0.1.8",
+    "@prosopo/datasets": "^0.1.8",
+    "@prosopo/i18n": "^0.0.1",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "consola": "^2.15.3",
@@ -66,11 +68,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/prosopo-io/provider.git"
+    "url": "git+ssh://git@github.com/prosopo/provider.git"
   },
-  "description": "> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to set up the repositories manually.",
+  "description": "> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo/integration/). The following instructions explain how to set up the repositories manually.",
   "bugs": {
-    "url": "https://github.com/prosopo-io/provider/issues"
+    "url": "https://github.com/prosopo/provider/issues"
   },
-  "homepage": "https://github.com/prosopo-io/provider#readme"
+  "homepage": "https://github.com/prosopo/provider#readme"
 }

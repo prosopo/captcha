@@ -107,7 +107,7 @@ async function setup() {
     dotenv.config();
 
     if (!process.env.DAPP_CONTRACT_ADDRESS) {
-        throw new ProsopoEnvError('DAPP_CONTRACT_ADDRESS is not set in .env file.');
+        throw new ProsopoEnvError('DEVELOPER.DAPP_CONTRACT_ADDRESS_MISSING');
     }
 
 

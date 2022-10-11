@@ -14,7 +14,6 @@
 // import { findUpSync } from 'find-up'
 import {
     abiJson,
-    AssetsResolver,
     ContractAbi,
     ContractApiInterface,
     createNetwork,
@@ -22,11 +21,13 @@ import {
     ProsopoContractApi,
     ProsopoEnvError
 } from '@prosopo/contract';
+import {
+    AssetsResolver,
+} from '@prosopo/datasets';
 import consola, { LogLevel } from "consola";
 import dotenv from 'dotenv';
 import path from 'path';
 import { LocalAssetsResolver } from './assets';
-import { ERRORS } from './errors';
 import { Database, ProsopoConfig, ProsopoEnvironment } from './types';
 // import { loadEnvFile } from "./util";
 
@@ -85,7 +86,7 @@ export class Environment implements ProsopoEnvironment {
                 serverBaseURL: this.config.server.baseURL,
             });
         } else {
-            throw new ProsopoEnvError(ERRORS.CONFIG.UNKNOWN_ENVIRONMENT.message, this.constructor.name, this.config.defaultEnvironment)
+            throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", this.constructor.name, {}, this.config.defaultEnvironment)
         }
     }
 
@@ -107,7 +108,7 @@ export class Environment implements ProsopoEnvironment {
                 )
             }
         } catch (err) {
-            throw new ProsopoEnvError(err, ERRORS.DATABASE.DATABASE_IMPORT_FAILED.message, this.config.database[this.defaultEnvironment].type)
+            throw new ProsopoEnvError(err, "DATABASE.DATABASE_IMPORT_FAILED", {}, this.config.database[this.defaultEnvironment].type)
         }
     }
 

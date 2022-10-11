@@ -16,7 +16,7 @@
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { randomAsHex } from '@polkadot/util-crypto';
-import { Payee } from "@prosopo/contract";
+import { Payee, ProsopoEnvError } from "@prosopo/contract";
 import fse from 'fs-extra';
 import path from 'path';
 import { Environment, getEnvFile, loadEnv } from '../env';
@@ -115,7 +115,7 @@ async function setup() {
     loadEnv();
 
     if (!process.env.DAPP_CONTRACT_ADDRESS) {
-        throw new Error('DAPP_CONTRACT_ADDRESS is not set in .env file.');
+        throw new ProsopoEnvError("DEVELOPER.DAPP_CONTRACT_ADDRESS_MISSING");
     }
 
 
