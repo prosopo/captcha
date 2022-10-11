@@ -1295,9 +1295,14 @@ pub mod prosopo {
             }
             let index = self.get_random_number(0, (max - 1) as u64, user_account);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
+            let provider = self.providers.get(provider_id);
+            if provider.is_none() {
+                return Err(Error::NoActiveProviders);
+            }
+
             Ok(RandomProvider {
                 provider_id,
-                provider: self.providers.get(provider_id).unwrap(),
+                provider: provider.unwrap(),
                 block_number: self.env().block_number(),
             })
         }
