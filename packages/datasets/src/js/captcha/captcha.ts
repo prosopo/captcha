@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {ERRORS} from '../errors';
 import {
     AssetsResolver,
     Captcha,
@@ -42,7 +41,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
     try {
         return DatasetSchema.parse(datasetJSON);
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.DATASET.PARSE_ERROR.message);
+        throw new ProsopoEnvError(err, "ERRORS.DATASET.PARSE_ERROR");
     }
 }
 
@@ -55,7 +54,7 @@ export function parseCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
     try {
         return CaptchaSolutionSchema.parse(captchaJSON);
     } catch (err) {
-        throw new ProsopoEnvError(err, ERRORS.CAPTCHA.PARSE_ERROR.message);
+        throw new ProsopoEnvError(err, "ERRORS.CAPTCHA.PARSE_ERROR");
     }
 }
 
