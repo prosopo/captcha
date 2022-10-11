@@ -17,19 +17,36 @@ import {AnyJson} from '@polkadot/types/types/codec';
 import {hexToU8a} from '@polkadot/util';
 import {randomAsHex} from '@polkadot/util-crypto';
 import {
-    addHashesToDataset, BigNumber, Captcha,
-    CaptchaConfig, CaptchaData, CaptchaMerkleTree, CaptchaSolution,
-    CaptchaSolutionCommitment, CaptchaSolutionConfig, CaptchaSolutionToUpdate,
-    CaptchaStates, CaptchaStatus, CaptchaWithoutId, compareCaptchaSolutions,
-    computeCaptchaHash,
-    computeCaptchaSolutionHash,
-    computePendingRequestHash, ContractApiInterface, Dapp, GovernanceStatus, LastCorrectCaptcha, parseCaptchaDataset,
-    parseCaptchaSolutions, Payee, Provider, RandomProvider, TransactionResponse,
+    BigNumber,
+    ContractApiInterface,
+    Dapp,
+    GovernanceStatus,
+    Payee,
+    Provider,
+    RandomProvider,
+    TransactionResponse,
     ProsopoEnvError,
-    Dataset,
-    matchItemsToSolutions,
-    calculateItemHashes
+    CaptchaData,
 } from '@prosopo/contract';
+import {
+    Captcha,
+    CaptchaConfig,
+    CaptchaMerkleTree,
+    CaptchaSolution,
+    CaptchaSolutionCommitment,
+    CaptchaSolutionConfig,
+    CaptchaSolutionToUpdate,
+    CaptchaStates,
+    CaptchaStatus,
+    CaptchaWithoutId,
+    compareCaptchaSolutions,
+    computeCaptchaSolutionHash,
+    computePendingRequestHash,
+    LastCorrectCaptcha,
+    parseCaptchaDataset,
+    parseCaptchaSolutions,
+    buildDataset
+} from '@prosopo/datasets';
 import consola from "consola";
 import {buildDecodeVector} from '../codec/codec';
 import {
@@ -40,6 +57,7 @@ import {
     ProsopoEnvironment
 } from '../types';
 import {loadJSONFile, shuffleArray, writeJSONFile} from '../util';
+
 import {i18n} from '@prosopo/i18n';
 
 /**
@@ -88,29 +106,15 @@ export class Tasks {
 
     async providerAddDataset(file: string): Promise<TransactionResponse> {
         const datasetRaw = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON);
-        const tree = new CaptchaMerkleTree();
-        const dataset = {
-            ...datasetRaw,
-            captchas: datasetRaw.captchas.map((captcha) => {
-                const items = calculateItemHashes(captcha.items);
-
-                return {
-                    ...captcha,
-                    items,
-                    solution: matchItemsToSolutions(captcha.solution, items),
-                };
-            }),
-        } as Dataset;
-        const captchaHashes = dataset.captchas.map(computeCaptchaHash);
-        tree.build(captchaHashes);
-        const datasetHashes = addHashesToDataset(dataset, tree);
-        datasetHashes.datasetId = tree.root?.hash;
-        datasetHashes.tree = tree.layers;
-        await this.db?.storeDataset(datasetHashes);
-        await writeJSONFile(file, {...datasetRaw, datasetId: datasetHashes.datasetId}).catch((err) => {
+        const dataset = await buildDataset(datasetRaw);
+        await this.db?.storeDataset(dataset);
+        await writeJSONFile(file, {...datasetRaw, datasetId: dataset.datasetId}).catch((err) => {
             console.error(`${i18n.t("GENERAL.CREATE_JSON_FILE_FAILED")}:${err}`)
         })
-        return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(tree.root?.hash)]);
+        if(!dataset.datasetId ) {
+            throw new ProsopoEnvError("DATASET.DATASET_ID_UNDEFINED", this.providerAddDataset.name, {file: file});
+        }
+        return await this.contractApi.contractTx('providerAddDataset', [hexToU8a(dataset.datasetId), hexToU8a(dataset.datasetContentId)]);
     }
 
     async dappRegister(dappServiceOrigin: string, dappContractAddress: string, dappOwner?: string): Promise<TransactionResponse> {
@@ -189,8 +193,8 @@ export class Tasks {
             for (const captcha of captchaDocs) {
                 const datasetDetails: DatasetRecord = await this.db.getDatasetDetails(datasetId)
                 const tree = new CaptchaMerkleTree()
-                tree.layers = datasetDetails.tree
-                const proof = tree.proof(captcha.captchaId)
+                tree.layers = datasetDetails.contentTree
+                const proof = tree.proof(captcha.captchaContentId)
                 // cannot pass solution to dapp user as they are required to solve the captcha!
                 delete captcha.solution
                 captcha.items = shuffleArray(captcha.items)
@@ -316,7 +320,7 @@ export class Tasks {
         const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
             throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_ID", this.validateCaptchasLength.name, {}, captchas)
-        } 
+        }
         if (!storedCaptchas.every((captcha) => captcha.datasetId === storedCaptchas[0].datasetId)) {
             throw new ProsopoEnvError("CAPTCHA.DIFFERENT_DATASET_IDS", this.validateCaptchasLength.name, {}, captchas)
         }
@@ -531,7 +535,7 @@ export class Tasks {
         const randomProviderAndBlockNo = await this.getRandomProvider(userAccount, dappContractAccount, block)
 
         // @ts-ignore
-        if (datasetId.localeCompare(randomProviderAndBlockNo.provider.captcha_dataset_id)) {
+        if (datasetId.localeCompare(randomProviderAndBlockNo.provider.dataset_id)) {
             throw new ProsopoEnvError("DATASET.INVALID_DATASET_ID", this.validateProviderWasRandomlyChosen.name, {}, randomProviderAndBlockNo)
         }
     }

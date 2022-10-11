@@ -17,15 +17,17 @@ import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@
 import {
     BigNumber,
     buildTx,
+    getEventsFromMethodName,
+    ProsopoEnvError
+} from '@prosopo/contract'
+import {
     calculateItemHashes,
     CaptchaMerkleTree,
     computeCaptchaSolutionHash,
     convertCaptchaToCaptchaSolution,
-    getEventsFromMethodName,
     hexHash,
     matchItemsToSolutions,
-    ProsopoEnvError
-} from '@prosopo/contract'
+} from '@prosopo/datasets'
 import { IDappAccount, IProviderAccount, IUserAccount } from '../types/accounts'
 import { Tasks } from './tasks'
 

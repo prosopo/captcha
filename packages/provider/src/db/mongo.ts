@@ -13,19 +13,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {Db, Document, Filter, MongoClient} from 'mongodb';
-
 import {Hash} from '@polkadot/types/interfaces';
 import {isHex} from '@polkadot/util';
-
 import {Database, DatasetRecord, PendingCaptchaRequestRecord, Tables} from '../types';
+import {
+    ProsopoEnvError,
+} from '@prosopo/contract';
 import {
     Captcha,
     CaptchaSolution,
     CaptchaStates,
     DatasetWithIdsAndTree,
-    DatasetWithIdsAndTreeSchema,
-    ProsopoEnvError,
-} from '@prosopo/contract';
+    DatasetWithIdsAndTreeSchema
+} from '@prosopo/datasets'
 import consola from "consola";
 
 // mongodb://username:password@127.0.0.1:27017
@@ -83,8 +83,10 @@ export class ProsopoDatabase implements Database {
             const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset);
             const datasetDoc = {
                 datasetId: parsedDataset.datasetId,
+                datasetContentId: parsedDataset.datasetContentId,
                 format: parsedDataset.format,
-                tree: parsedDataset.tree
+                contentTree: parsedDataset.contentTree,
+                solutionTree: parsedDataset.solutionTree
             };
 
             await this.tables.dataset?.updateOne({_id: parsedDataset.datasetId}, {$set: datasetDoc}, {upsert: true});
@@ -93,6 +95,7 @@ export class ProsopoDatabase implements Database {
                 .map(({solution, ...captcha}, index) => ({
                     ...captcha,
                     datasetId: parsedDataset.datasetId,
+                    datasetContentId: parsedDataset.datasetContentId,
                     index,
                     solved: !!solution?.length
                 }));
@@ -114,9 +117,11 @@ export class ProsopoDatabase implements Database {
             const captchaSolutionDocs = parsedDataset.captchas.filter(({solution}) => solution?.length)
                 .map((captcha) => ({
                     captchaId: captcha.captchaId,
+                    captchaContentId: captcha.captchaContentId,
                     solution: captcha.solution,
                     salt: captcha.salt,
                     datasetId: parsedDataset.datasetId,
+                    datasetContentId: parsedDataset.datasetContentId,
                 }));
 
             // create a bulk upsert operation and execute
@@ -152,7 +157,7 @@ export class ProsopoDatabase implements Database {
             {$sample: {size: sampleSize}},
             {
                 $project: {
-                    datasetId: 1, captchaId: 1, items: 1, target: 1
+                    datasetId: 1, datasetContentId: 1, captchaId: 1, captchaContentId: 1, items: 1, target: 1
                 }
             }
         ]);
