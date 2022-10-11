@@ -42,8 +42,14 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
     }
 
     public async checkExtension() {
-        // enables extension discovery - must be called before anything else to do with web3 accounts!
-        this.injectedExtensions = await web3Enable('Prosopo');
+        try {
+            this.injectedExtensions = await web3Enable('Prosopo');
+        } catch (err) {
+            throw new ProsopoEnvError(err);
+        }
+        if (!this.injectedExtensions.length) {
+            throw new ProsopoEnvError("WIDGET.NO_EXTENSION_FOUND");
+        }
     }
 
     /**
@@ -58,13 +64,14 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
      * Set the extension for the selected account.
      */
     private async setExtension() {
-        // if account is selected
-        if(this.account) {
-            // then there will be an extension providing said account
-            this.extension = await web3FromAddress(this.account.address);
-        } else {
-            // no account selected, so set extension to undefined
-            this.extension = undefined;
+        try {
+            // https://polkadot.js.org/docs/extension/cookbook/
+            this.extension = await web3FromSource(this.accounts[0].meta.source);
+        } catch (err) {
+            throw new ProsopoEnvError(err);
+        }
+        if (!this.extension) {
+            throw new ProsopoEnvError("WIDGET.EXTENSION_NOT_FOUND");
         }
     }
 
@@ -106,12 +113,12 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
      * @param address the address of the account to be selected.
      */
     public setAccount(address: string) {
-        if(!this.accounts.length) {
-            throw new ProsopoEnvError(`Cannot set account for address ${address}, no accounts found`)
+        if (!this.accounts.length) {
+            throw new ProsopoEnvError("WIDGET.NO_ACCOUNTS_FOUND");
         }
         const account = this.accounts.find(acc => acc.address === address);
         if (!account) {
-            throw new ProsopoEnvError(`Account ${address} not found in ${this.accounts}`);
+            throw new ProsopoEnvError("WIDGET.ACCOUNT_NOT_FOUND");
         }
         this.account = account;
         storage.setAccount(account.address);
