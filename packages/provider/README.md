@@ -1,6 +1,6 @@
 # Prosopo Provider
 
-> NOTE: For a development environment, the easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to set up the repositories manually.
+> NOTE: For a development environment, the easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo/integration/). The following instructions explain how to set up the repositories manually.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ If you are setting up a development environment, run a development node. For exa
 
 #### Deploy the Prosopo Protocol contract
 
-See [protocol instructions](https://github.com/prosopo-io/protocol/#prosopo-protocol)
+See [protocol instructions](https://github.com/prosopo/protocol/#prosopo-protocol)
 
 #### Live environment
 If you are running in a test or live environment, use a node endpoint of your choice. Make sure you know the contract account of the Prosopo Protocol contract.
@@ -192,7 +192,7 @@ npm run cli -- provider_add_data_set --file /usr/src/data/captchas.json
 | --------------- | --------------- |
 | file | JSON file containing captchas |
 
-File format can be viewed [here](https://github.com/prosopo-io/provider/blob/master/tests/mocks/data/captchas.json).
+File format can be viewed [here](https://github.com/prosopo/provider/blob/master/tests/mocks/data/captchas.json).
 
 ### De-register a Provider
 
@@ -249,7 +249,7 @@ The API contains methods required by the frontend captcha interface.
 
 ## Tests
 
-You can run the Provider integration tests using the command `npm run test`. This will start a substrate container containing a predeployed [prosopo protocol contract](https://github.com/prosopo-io/protocol/#prosopo-protocol)  and [dapp-example contract](https://github.com/prosopo-io/dapp-example#dapp-example). An in-memory mongo database will be used.
+You can run the Provider integration tests using the command `npm run test`. This will start a substrate container containing a predeployed [prosopo protocol contract](https://github.com/prosopo/protocol/#prosopo-protocol)  and [dapp-example contract](https://github.com/prosopo/dapp-example#dapp-example). An in-memory mongo database will be used.
 
 To run the tests with coverage stats use:
 

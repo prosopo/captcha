@@ -67,11 +67,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/prosopo-io/provider.git"
+    "url": "git+ssh://git@github.com/prosopo/provider.git"
   },
-  "description": "> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo-io/integration/). The following instructions explain how to set up the repositories manually.",
+  "description": "> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo/integration/). The following instructions explain how to set up the repositories manually.",
   "bugs": {
-    "url": "https://github.com/prosopo-io/provider/issues"
+    "url": "https://github.com/prosopo/provider/issues"
   },
-  "homepage": "https://github.com/prosopo-io/provider#readme"
+  "homepage": "https://github.com/prosopo/provider#readme"
 }
