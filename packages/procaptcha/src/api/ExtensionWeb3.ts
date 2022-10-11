@@ -107,11 +107,11 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
      */
     public setAccount(address: string) {
         if(!this.accounts.length) {
-            throw new ProsopoEnvError("Cannot set account for address " + address + ", no accounts found")
+            throw new ProsopoEnvError(`Cannot set account for address ${address}, no accounts found`)
         }
         const account = this.accounts.find(acc => acc.address === address);
         if (!account) {
-            throw new ProsopoEnvError("Account " + address + "not found in " + this.accounts);
+            throw new ProsopoEnvError(`Account ${address} not found in ${this.accounts}`);
         }
         this.account = account;
         storage.setAccount(account.address);
