@@ -16,7 +16,7 @@
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
 import { ProsopoCaptchaConfig, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
-import { CaptchaSolutionCommitment} from "@prosopo/contract";
+import { CaptchaSolutionCommitment} from "@prosopo/datasets";
 
 export type TExtensionAccount = InjectedAccountWithMeta;
 
