@@ -43,7 +43,8 @@
     "DATASET": {
         "PARSE_ERROR": "Error parsing dataset",
         "HASH_ERROR": "Error hashing dataset",
-        "INVALID_DATASET_ID": "Invalid dataset id"
+        "INVALID_DATASET_ID": "Invalid dataset id",
+        "DATASET_ID_UNDEFINED": "Dataset id undefined"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",
@@ -67,7 +68,10 @@
         "DIFFERENT_DATASET_IDS": "Dataset ids do not match",
         "INVALID_BLOCK_NO": "Invalid block number",
         "ID_MISMATCH": "captcha id mismatch",
-        "MISSING_ITEM_HASH": "missing item hash"
+        "MISSING_ITEM_HASH": "missing item hash",
+        "INVALID_LEAF_HASH": "Invalid leaf hash",
+        "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
+        "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id"
     },
     "API": {
         "BODY_UNDEFINED": "Body must be defined in API POST call",
