@@ -56,7 +56,8 @@ export const contractDefinitions = {
             'CaptchaSolutionCommitmentDoesNotExist',
             'CaptchaSolutionCommitmentExists',
             'DappUserDoesNotExist',
-            'NoActiveProviders'
+            'NoActiveProviders',
+            'DatasetIdSolutionsSame'
         ]
     },
     Payee: {
@@ -77,7 +78,8 @@ export const contractDefinitions = {
         fee: 'u32',
         payee: 'Payee',
         service_origin: 'Hash',
-        captcha_dataset_id: 'Hash'
+        dataset_id: 'Hash',
+        dataset_id_content: 'Hash'
     },
     ProsopoRandomProvider: {
         provider_id: 'AccountId',

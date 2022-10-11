@@ -1,12 +1,12 @@
 {
   "source": {
-    "hash": "0x3511098063daf604c1849ea9765cdd17175b288c184a4d1a816d20a300956dac",
-    "language": "ink! 3.0.1",
-    "compiler": "rustc 1.63.0-nightly"
+    "hash": "0x1fb33aa2110a3f5bf7e809b03ab1a85e62a7dfe4d1969e183940af2025aeea7c",
+    "language": "ink! 3.3.1",
+    "compiler": "rustc 1.64.0-nightly"
   },
   "contract": {
     "name": "prosopo",
-    "version": "3.0.0-rc9",
+    "version": "3.3.0",
     "authors": [
       "Chris Taylor chris@prosopo.io"
     ]
@@ -140,7 +140,18 @@
             {
               "docs": [],
               "indexed": false,
-              "label": "merkle_tree_root",
+              "label": "dataset_id",
+              "type": {
+                "displayName": [
+                  "Hash"
+                ],
+                "type": 9
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "dataset_id_content",
               "type": {
                 "displayName": [
                   "Hash"
@@ -408,7 +419,7 @@
             {
               "docs": [],
               "indexed": false,
-              "label": "captcha_dataset_id",
+              "label": "dataset_id",
               "type": {
                 "displayName": [
                   "Hash"
@@ -589,7 +600,16 @@
         {
           "args": [
             {
-              "label": "merkle_tree_root",
+              "label": "dataset_id",
+              "type": {
+                "displayName": [
+                  "Hash"
+                ],
+                "type": 9
+              }
+            },
+            {
+              "label": "dataset_id_content",
               "type": {
                 "displayName": [
                   "Hash"
@@ -710,7 +730,7 @@
               }
             },
             {
-              "label": "captcha_dataset_id",
+              "label": "dataset_id",
               "type": {
                 "displayName": [
                   "Hash"
@@ -896,7 +916,7 @@
         {
           "args": [
             {
-              "label": "captcha_dataset_id",
+              "label": "dataset_id",
               "type": {
                 "displayName": [
                   "Hash"
@@ -1457,7 +1477,12 @@
                   "typeName": "Hash"
                 },
                 {
-                  "name": "captcha_dataset_id",
+                  "name": "dataset_id",
+                  "type": 9,
+                  "typeName": "Hash"
+                },
+                {
+                  "name": "dataset_id_content",
                   "type": 9,
                   "typeName": "Hash"
                 }
@@ -1731,7 +1756,7 @@
                   "typeName": "AccountId"
                 },
                 {
-                  "name": "merkle_tree_root",
+                  "name": "dataset_id",
                   "type": 9,
                   "typeName": "Hash"
                 },
@@ -1802,7 +1827,7 @@
                   "typeName": "AccountId"
                 },
                 {
-                  "name": "captcha_dataset_id",
+                  "name": "dataset_id",
                   "type": 9,
                   "typeName": "Hash"
                 },
@@ -2185,6 +2210,10 @@
                 {
                   "index": 17,
                   "name": "NoActiveProviders"
+                },
+                {
+                  "index": 18,
+                  "name": "DatasetIdSolutionsSame"
                 }
               ]
             }
