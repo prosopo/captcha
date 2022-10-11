@@ -1,0 +1,66 @@
+{
+  "name": "@prosopo/datasets",
+  "version": "0.1.8",
+  "author": "PROSOPO LIMITED <info@prosopo.io>",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix",
+    "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" --timeout 120000"
+  },
+  "main": "./dist/js/index.js",
+  "types": "./dist/js/index.d.ts",
+  "exports": {
+    ".": "./dist/js/index.js",
+    "./types": "./dist/js/types/index.js",
+    "./captcha": "./dist/js/captcha/index.js"
+  },
+  "typesVersions": {
+    "*": {
+      "types": [
+        "dist/js/types"
+      ],
+      "captcha": [
+        "dist/js/captcha"
+      ]
+    }
+  },
+  "dependencies": {
+    "@polkadot/api": "^8.13.1",
+    "@polkadot/api-contract": "^8.13.1",
+    "@polkadot/keyring": "^10.0.2",
+    "@polkadot/rpc-provider": "^8.13.1",
+    "@polkadot/types": "^8.13.1",
+    "@polkadot/types-create": "^8.13.1",
+    "@polkadot/util": "^10.0.2",
+    "@polkadot/util-crypto": "^10.0.2",
+    "@prosopo/contract": "^0.1.7",
+    "bn.js": "^5.2.1",
+    "consola": "^2.15.3",
+    "zod": "^3.17.9"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
+    "eslint": "^8.20.0",
+    "typescript": "^4.7.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prosopo-io/datasets.git"
+  },
+  "bugs": {
+    "url": "https://github.com/prosopo-io/datasets/issues"
+  },
+  "homepage": "https://github.com/prosopo-io/datasets#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "description": "Datasets for use with providers",
+  "directories": {
+    "test": "tests"
+  }
+}

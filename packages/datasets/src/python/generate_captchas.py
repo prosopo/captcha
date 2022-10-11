@@ -209,7 +209,7 @@ if __name__ == '__main__':
                              "{\n"
                              "\t\"items\": [\n"
                              "\t\t{\n"
-                             "\t\t\t\"path\": \"<path to resource>\",\n"
+                             "\t\t\t\"data\": \"<e.g. image path or text>\",\n"
                              "\t\t\t\"label\": \"<label or empty string if unlabelled\"\n"
                              "\t\t},\n"
                              "\t\t...\n"
