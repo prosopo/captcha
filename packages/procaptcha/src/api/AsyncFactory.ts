@@ -18,7 +18,7 @@ import {ProsopoEnvError} from "@prosopo/contract";
 export abstract class AsyncFactory {
 
     constructor() {
-        throw new ProsopoEnvError("Use `create` factory method");
+        throw new ProsopoEnvError("GENERAL.ASYNC_FACTORY_CREATE");
     }
 
     public static async create(...args: any[]) {
