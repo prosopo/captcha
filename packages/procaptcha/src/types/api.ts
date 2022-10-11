@@ -54,6 +54,16 @@ export interface CaptchaSolutionResponse {
   partialFee: string;
 }
 
+export interface AccountCreatorConfig {
+  "area" : {width: number, height: number},
+  "offsetParameter" : number,
+  "multiplier" : number,
+  "fontSizeFactor" : number,
+  "maxShadowBlur" : number,
+  "numberOfRounds" : number,
+  "seed" : number
+}
+
 export interface ProsopoCaptchaConfig {
   "providerApi.baseURL": string;
   "providerApi.prefix": string;
@@ -62,4 +72,6 @@ export interface ProsopoCaptchaConfig {
   "solutionThreshold": number;
   "web2": boolean;
   "prosopoContractAccount": string;
+  "accountCreator": AccountCreatorConfig,
+  "dappName": string
 }

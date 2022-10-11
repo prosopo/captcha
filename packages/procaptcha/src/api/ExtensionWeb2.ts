@@ -14,10 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import {
-    InjectedAccounts,
     InjectedAccountWithMeta,
-    InjectedExtension,
-    InjectedMetadata, InjectedProvider
+    InjectedExtension
 } from "@polkadot/extension-inject/types"
 import storage from "../modules/storage";
 import {IExtensionInterface} from "../types/client";
@@ -29,6 +27,7 @@ import Signer from "@polkadot/extension-base/page/Signer";
 import {
     MessageTypesWithNullRequest,
 } from "@polkadot/extension-base/background/types";
+import {AccountCreatorConfig} from "../types/index";
 
 export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
 
@@ -36,11 +35,15 @@ export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
     private account: InjectedAccountWithMeta | undefined;
     private accounts: InjectedAccountWithMeta[];
 
+    protected source: string
+    protected accountCreatorConfig: AccountCreatorConfig
     protected wsProvider: WsProvider
 
-    public async init(wsProvider: WsProvider) {
+    public async init(wsProvider: WsProvider, accountCreatorConfig: AccountCreatorConfig, source: string) {
         await this.setExtension();
         this.wsProvider = wsProvider;
+        this.source = source;
+        this.accountCreatorConfig = accountCreatorConfig;
         return this;
     }
 
@@ -131,7 +134,7 @@ export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
     }
 
     public async createAccount() {
-        const accountCreator = await AccountCreator.create(this.wsProvider);
+        const accountCreator = await AccountCreator.create(this.wsProvider, this.accountCreatorConfig, this.source);
         const storedAccount = storage.getAccount();
         const account = await accountCreator.createAccount(undefined, storedAccount)
         await this.setAccounts([account])

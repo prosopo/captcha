@@ -20,20 +20,27 @@ import {decodeAddress, encodeAddress, Keyring} from "@polkadot/keyring";
 import {KeyringPair} from "@polkadot/keyring/types";
 import {cryptoWaitReady, mnemonicGenerate} from "@polkadot/util-crypto";
 import {ProviderInterface} from "@polkadot/rpc-provider/types";
-import FingerprintJS from '@fingerprintjs/fingerprintjs'
+import FingerprintJS, {componentsToDebugString, hashComponents} from '@fingerprintjs/fingerprintjs'
 import {entropyToMnemonic} from "@polkadot/util-crypto/mnemonic/bip39";
 import {stringToU8a} from "@polkadot/util";
 import {picassoCanvas} from "../modules/canvas";
+import {AccountCreatorConfig} from "../types/index";
+import {hexHash} from "@prosopo/datasets";
 
 export class AccountCreator extends AsyncFactory {
 
     protected api: ApiPromise;
+    protected config: AccountCreatorConfig;
+    protected source: string;
 
     /**
      * @param providerInterface
+     * @param config
      */
-    public async init(providerInterface: ProviderInterface) {
+    public async init(providerInterface: ProviderInterface, config: AccountCreatorConfig, source: string) {
         this.api = await ApiPromise.create({provider: providerInterface});
+        this.source = source;
+        this.config = config;
         return this;
     }
 
@@ -44,18 +51,20 @@ export class AccountCreator extends AsyncFactory {
     }
 
     public async createAccount(keyring?: Keyring, address?: string): Promise<InjectedAccountWithMeta> {
-        const source = 'procaptcha';
-        const area = {width: 300, height: 300};
-        const offsetParameter = 2001000001
-        const multiplier = 15000
-        const fontSizeFactor = 1.5
-        const maxShadowBlur = 50
-        const numberOfRounds = 5
-        const seed = 42
-        const params = {area, offsetParameter, multiplier, fontSizeFactor, maxShadowBlur}
-        //const entropy = await this.getFingerprint();
-        const entropy = picassoCanvas(numberOfRounds, seed, params);
-        console.log("entropy", entropy);
+        const params = {
+            area: this.config.area,
+            offsetParameter: this.config.offsetParameter,
+            multiplier: this.config.multiplier,
+            fontSizeFactor: this.config.fontSizeFactor,
+            maxShadowBlur: this.config.maxShadowBlur
+        }
+
+        const browserEntropy = await this.getFingerprint();
+        const canvasEntropy = picassoCanvas(this.config.numberOfRounds, this.config.seed, params);
+        const entropy = hexHash([canvasEntropy , browserEntropy].join(""), 128).slice(2);
+        console.log("canvas entropy", canvasEntropy)
+        console.log("browserEntropy", browserEntropy)
+        console.log("entropy", entropy)
         const u8Entropy = stringToU8a(entropy);
         const mnemonic = entropyToMnemonic(u8Entropy);
 
@@ -65,14 +74,14 @@ export class AccountCreator extends AsyncFactory {
 
         await cryptoWaitReady()
         if (address) {
-            return {address: address, meta: {source, name: address}}
+            return {address: address, meta: {source: this.source, name: address}}
         } else {
             const account = keyring?.addFromMnemonic(mnemonic);
             return {
                 address: account.address.length === 42
                     ? account.address
                     : encodeAddress(decodeAddress(account.address), this.api.registry.chainSS58),
-                meta: {source, name: account.address},
+                meta: {source: this.source, name: account.address},
             }
         }
 
@@ -80,13 +89,15 @@ export class AccountCreator extends AsyncFactory {
     }
 
     public async getFingerprint(): Promise<string> {
+        // TODO extract the best parts of this into our own module
         // Initialize an agent at application startup.
         const fpPromise = FingerprintJS.load()
         // Get the visitor identifier when you need it.
         const fp = await fpPromise
         const result = await fp.get()
-        console.log(result);
-        return result.visitorId
+        // strip out the components that change in incognito mode
+        const {screenFrame, ...componentsReduced} = result.components
+        return hashComponents(componentsReduced)
     }
 }
 
