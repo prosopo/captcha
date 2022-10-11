@@ -22,7 +22,6 @@ export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     ));
     dataset.solutionTree = solutionTree.layers;
     dataset.contentTree = contentTree.layers;
-    // TODO should this be called datasetSolutionId?
     dataset.datasetId = solutionTree.root?.hash;
     dataset.datasetContentId = contentTree.root?.hash;
     return dataset
