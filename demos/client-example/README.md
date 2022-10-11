@@ -4,9 +4,9 @@ This project is a *minimal* example demonstrating how to include the Prosopo hum
 
 ## Prerequisites
 
-You will need to have access to a substrate node with the [protocol contract](https://github.com/prosopo-io/protocol)
-and also a [provider API instance](https://github.com/prosopo-io/provider) to run the demo. Follow
-the [development environment set up instructions in our integration repository](https://github.com/prosopo-io/integration#development-environment-set-up)
+You will need to have access to a substrate node with the [protocol contract](https://github.com/prosopo/protocol)
+and also a [provider API instance](https://github.com/prosopo/provider) to run the demo. Follow
+the [development environment set up instructions in our integration repository](https://github.com/prosopo/integration#development-environment-set-up)
 to spin up the required containers.
 
 ## Config
@@ -20,7 +20,7 @@ REACT_APP_DAPP_CONTRACT_ADDRESS
 ```
 
 If using
-the [integration development environment](https://github.com/prosopo-io/integration#development-environment-set-up),
+the [integration development environment](https://github.com/prosopo/integration#development-environment-set-up),
 these variables will be as follows:
 
 ```bash
@@ -32,7 +32,7 @@ REACT_APP_DAPP_CONTRACT_ADDRESS=5Go2hCf1WHzKqt1HGCUwhKfUS85477HUHgvaKkMJRYBfyiUP
 ## Implementation
 
 The captcha component is created using the React
-package [procaptcha-react](https://github.com/prosopo-io/procaptcha-react).
+package [procaptcha-react](https://github.com/prosopo/procaptcha-react).
 
 ## How to run locally
 
