@@ -17,8 +17,8 @@ import { blake2AsHex } from '@polkadot/util-crypto';
 
 export const HEX_HASH_BIT_LENGTH = 256;
 
-export function hexHash (data: string | Uint8Array): string {
+export function hexHash (data: string | Uint8Array, bitLength?: 256 | 512 | 64 | 128 | 384 | undefined ): string {
     // default bit length is 256
-    return blake2AsHex(data)
+    return blake2AsHex(data, bitLength)
 }
 
