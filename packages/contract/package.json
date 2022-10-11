@@ -48,12 +48,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo-io/contract.git"
+    "url": "git+https://github.com/prosopo/contract.git"
   },
   "bugs": {
-    "url": "https://github.com/prosopo-io/contract/issues"
+    "url": "https://github.com/prosopo/contract/issues"
   },
-  "homepage": "https://github.com/prosopo-io/contract#readme",
+  "homepage": "https://github.com/prosopo/contract#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
