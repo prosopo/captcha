@@ -50,12 +50,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo-io/datasets.git"
+    "url": "git+https://github.com/prosopo/datasets.git"
   },
   "bugs": {
-    "url": "https://github.com/prosopo-io/datasets/issues"
+    "url": "https://github.com/prosopo/datasets/issues"
   },
-  "homepage": "https://github.com/prosopo-io/datasets#readme",
+  "homepage": "https://github.com/prosopo/datasets#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
