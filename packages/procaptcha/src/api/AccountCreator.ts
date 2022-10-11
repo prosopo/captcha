@@ -89,7 +89,6 @@ export class AccountCreator extends AsyncFactory {
     }
 
     public async getFingerprint(): Promise<string> {
-        // TODO extract the best parts of this into our own module
         // Initialize an agent at application startup.
         const fpPromise = FingerprintJS.load()
         // Get the visitor identifier when you need it.
