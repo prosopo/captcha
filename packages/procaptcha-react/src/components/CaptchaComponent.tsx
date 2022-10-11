@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of procaptcha-react <https://github.com/prosopo-io/procaptcha-react>.
+// This file is part of procaptcha-react <https://github.com/prosopo/procaptcha-react>.
 //
 // procaptcha-react is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
 import { useEffect, useContext, useReducer } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
 import {
     ICaptchaContextReducer,
     ProsopoCaptchaClient,
@@ -25,12 +27,14 @@ import {
 import { CaptchaContextManager } from "./CaptchaManager";
 import { CaptchaWidget } from "./CaptchaWidget";
 
+import { useTranslation } from "@prosopo/i18n";
 import { useStyles } from "../styles";
 import { addDataAttr } from "../util";
 
 
 export function CaptchaComponent({ clientInterface }: { clientInterface: ProsopoCaptchaClient }) {
 
+    const { t } = useTranslation();
     const classes = useStyles();
 
     const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
@@ -77,7 +81,7 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
                     <Box className={classes.captchasHeader}>
                         <Typography className={classes.captchasHeaderLabel}>
-                            Select all images containing a {captchaChallenge.captchas[captchaIndex].captcha.target}
+                            {t("WIDGET.SELECT_ALL", { target: captchaChallenge.captchas[captchaIndex].captcha.target })}
                         </Typography>
                     </Box>
 
@@ -95,14 +99,14 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
 
                     <Box className={classes.captchasFooter}>
                         <Button onClick={() => stateClientInterface.onCancel()} variant="text">
-                            Cancel
+                            {t('WIDGET.CANCEL')}
                         </Button>
                         <Button 
                             onClick={() => stateClientInterface.onSubmit()} 
                             variant="contained" 
                             {...addDataAttr({dev: {cy: "button-next"}})}
                         >
-                            {captchaIndex + 1 < totalCaptchas ? "Next" : "Submit"}
+                            {captchaIndex + 1 < totalCaptchas ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
                         </Button>
                     </Box>
 
