@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/procaptcha-react",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "main": "./dist/index.js",
@@ -16,7 +16,7 @@
     "@mui/material": "^5.8.3",
     "@mui/styles": "^5.8.3",
     "@prosopo/i18n": "0.0.1",
-    "@prosopo/procaptcha": "0.1.6",
+    "@prosopo/procaptcha": "0.1.8",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },
@@ -30,12 +30,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo-io/procaptcha-react.git"
+    "url": "git+https://github.com/prosopo/procaptcha-react.git"
   },
   "bugs": {
-    "url": "https://github.com/prosopo-io/procaptcha-react/issues"
+    "url": "https://github.com/prosopo/procaptcha-react/issues"
   },
-  "homepage": "https://github.com/prosopo-io/procaptcha-react#readme",
+  "homepage": "https://github.com/prosopo/procaptcha-react#readme",
   "description": "",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"

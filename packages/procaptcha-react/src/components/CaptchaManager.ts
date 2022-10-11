@@ -1,5 +1,5 @@
 // Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of procaptcha-react <https://github.com/prosopo-io/procaptcha-react>.
+// This file is part of procaptcha-react <https://github.com/prosopo/procaptcha-react>.
 //
 // procaptcha-react is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,6 +41,16 @@ export const CaptchaContextManager = createContext({
             "solutionThreshold": 0,
             "web2": false,
             "prosopoContractAccount": "",
+            "accountCreator": {
+                "area" : {width: 0, height: 0},
+                "offsetParameter" : 0,
+                "multiplier" : 0,
+                "fontSizeFactor" : 0,
+                "maxShadowBlur" : 0,
+                "numberOfRounds" : 0,
+                "seed" : 0
+            },
+            "dappName" :""
         }
     },
     update: () => {},
