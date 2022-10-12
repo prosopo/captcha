@@ -16,6 +16,8 @@ import {ProsopoEnvError} from "@prosopo/contract";
 export class ApiError extends ProsopoEnvError {
     constructor (err) {
         super(err)
+        this.message = err.message
+        this.name = err.name
     }
 
     getCode () {
