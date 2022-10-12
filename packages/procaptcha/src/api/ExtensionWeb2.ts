@@ -40,9 +40,9 @@ export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
     protected wsProvider: WsProvider
 
     public async init(wsProvider: WsProvider, accountCreatorConfig: AccountCreatorConfig, source: string) {
+        this.source = source;
         await this.setExtension();
         this.wsProvider = wsProvider;
-        this.source = source;
         this.accountCreatorConfig = accountCreatorConfig;
         return this;
     }

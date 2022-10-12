@@ -36,10 +36,10 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
     private source: string
 
     public async init(source: string) {
+        this.source = source;
         await this.checkExtension();
         await this.setAccounts();
         await this.setExtension();
-        this.source = source;
         return this;
     }
 
