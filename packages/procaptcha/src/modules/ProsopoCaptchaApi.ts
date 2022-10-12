@@ -13,15 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { randomAsHex, blake2AsHex } from '@polkadot/util-crypto';
+import { randomAsHex } from '@polkadot/util-crypto';
 import {
-    CaptchaSolution,
     CaptchaMerkleTree,
+    CaptchaSolution,
     CaptchaSolutionCommitment, verifyProof,
 } from "@prosopo/datasets";
 import { Signer } from "@polkadot/api/types";
 
-import { ProsopoRandomProviderResponse, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
+import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoRandomProviderResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
 
 import ProviderApi from "../api/ProviderApi";

@@ -16,10 +16,10 @@
 import HttpClientBase from "./HttpClientBase";
 import Storage from "../modules/storage";
 import {
-    ProsopoCaptchaConfig,
-    ProsopoRandomProviderResponse,
+    CaptchaSolutionResponse,
     GetCaptchaResponse,
-    CaptchaSolutionResponse
+    ProsopoCaptchaConfig,
+    ProsopoRandomProviderResponse
 } from '../types';
 import { CaptchaSolution } from "@prosopo/datasets";
 

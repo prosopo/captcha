@@ -22,6 +22,6 @@ export async function getExtension(wsProvider: WsProvider, web2: boolean, accoun
     if (web2) {
         return await ExtensionWeb2.create(wsProvider, accountCreatorConfig, source);
     } else {
-        return await ExtensionWeb3.create();
+        return await ExtensionWeb3.create(source);
     }
 }

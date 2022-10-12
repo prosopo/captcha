@@ -17,15 +17,12 @@ import { ApiPromise, SubmittableResult } from "@polkadot/api";
 import { Abi, ContractPromise } from "@polkadot/api-contract";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 
-import { abiJson, unwrap, encodeStringArgs, ProsopoContractError } from "@prosopo/contract";
+import { ProsopoContractError, abiJson, encodeStringArgs, unwrap } from "@prosopo/contract";
 import { AnyJson } from "@polkadot/types/types/codec";
 import { ProviderInterface } from "@polkadot/rpc-provider/types";
 import { Signer } from "@polkadot/api/types";
 import { TransactionResponse } from '../types';
 import AsyncFactory from "./AsyncFactory";
-import {decodeAddress, encodeAddress, Keyring} from "@polkadot/keyring";
-import {KeyringPair} from "@polkadot/keyring/types";
-import {cryptoWaitReady, mnemonicGenerate} from "@polkadot/util-crypto";
 
 export class ProsopoContractBase extends AsyncFactory {
 

@@ -16,11 +16,10 @@
 import {ApiPromise} from "@polkadot/api";
 import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
 import AsyncFactory from "./AsyncFactory";
-import {decodeAddress, encodeAddress, Keyring} from "@polkadot/keyring";
-import {KeyringPair} from "@polkadot/keyring/types";
-import {cryptoWaitReady, mnemonicGenerate} from "@polkadot/util-crypto";
+import {Keyring, decodeAddress, encodeAddress} from "@polkadot/keyring";
+import {cryptoWaitReady} from "@polkadot/util-crypto";
 import {ProviderInterface} from "@polkadot/rpc-provider/types";
-import FingerprintJS, {componentsToDebugString, hashComponents} from '@fingerprintjs/fingerprintjs'
+import FingerprintJS, {hashComponents} from '@fingerprintjs/fingerprintjs'
 import {entropyToMnemonic} from "@polkadot/util-crypto/mnemonic/bip39";
 import {stringToU8a} from "@polkadot/util";
 import {picassoCanvas} from "../modules/canvas";
@@ -42,12 +41,6 @@ export class AccountCreator extends AsyncFactory {
         this.source = source;
         this.config = config;
         return this;
-    }
-
-    public async generateMnemonic(keyring: Keyring, entropy?: string): Promise<KeyringPair> {
-        await cryptoWaitReady();
-        const mnemonic = mnemonicGenerate();
-        return keyring.addFromMnemonic(mnemonic)
     }
 
     public async createAccount(keyring?: Keyring, address?: string): Promise<InjectedAccountWithMeta> {

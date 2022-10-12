@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import {
-    ICaptchaContextReducer,
     CaptchaEventCallbacks,
-    TExtensionAccount,
+    ICaptchaContextReducer,
     ICaptchaStatusReducer,
-    IExtensionInterface
+    IExtensionInterface,
+    TExtensionAccount
 } from "../types/client";
 import {ProsopoRandomProviderResponse} from "../types/api";
 import {ProsopoContract} from "../api/ProsopoContract";
