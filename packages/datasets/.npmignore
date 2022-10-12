@@ -2,3 +2,7 @@
 /src/
 /tests/
 /artifacts/
+/stl10/
+captchas_0-9_correct.json
+captchas_2-4_correct.json
+data.json
