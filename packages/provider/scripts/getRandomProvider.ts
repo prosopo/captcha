@@ -13,7 +13,6 @@
 // limitations under the License.
 import { Environment } from '../src/env';
 import { Tasks } from '../src/tasks/tasks';
-import {mnemonicGenerate} from "@polkadot/util-crypto";
 
 require('dotenv').config();
 

@@ -15,7 +15,6 @@
 import {Environment} from "../src/env";
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import {ProsopoContractApi} from '@prosopo/contract';
 
 chai.should();
 chai.use(chaiAsPromised);

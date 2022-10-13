@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {blake2AsHex, decodeAddress, encodeAddress, isAddress} from '@polkadot/util-crypto'
-import {hexToString, isHex, stringToHex, u8aToHex} from '@polkadot/util'
+import {hexToString, isHex, u8aToHex} from '@polkadot/util'
 
 const ss58Format = 42 
 const bitLength = 128 
