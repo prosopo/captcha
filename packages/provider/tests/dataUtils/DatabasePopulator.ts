@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {BigNumber, Payee, hexHash, ProsopoEnvError} from "@prosopo/contract";
+import {BigNumber, Payee, ProsopoEnvError, hexHash} from "@prosopo/contract";
 import path from "path";
 
 import { blake2AsHex, decodeAddress, randomAsHex } from "@polkadot/util-crypto";
@@ -20,9 +20,9 @@ import { sendFunds as _sendFunds } from "../../src/tasks/setup";
 import { Tasks } from "../../src/tasks";
 import {
     Account,
+    IDatabaseAccounts,
     accountAddress,
     accountMnemonic,
-    IDatabaseAccounts,
 } from "./DatabaseAccounts";
 import { Environment } from "../../src/env";
 

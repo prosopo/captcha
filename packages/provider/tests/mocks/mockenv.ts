@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    abiJson,
     AssetsResolver,
     ContractAbi,
     ContractApiInterface,
-    createNetwork,
     Network,
     ProsopoContractApi,
-    ProsopoEnvError
+    ProsopoEnvError,
+    abiJson,
+    createNetwork
 } from '@prosopo/contract';
 import consola, { LogLevel } from 'consola';
 import { MongoMemoryServer } from "mongodb-memory-server";

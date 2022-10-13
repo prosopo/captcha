@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import consola from 'consola';
-import { ContractApiInterface, Network, ContractAbi } from "@prosopo/contract";
+import { ContractAbi, ContractApiInterface, Network } from "@prosopo/contract";
 import { AssetsResolver } from '@prosopo/datasets';
 import { Database } from './db';
 import { ProsopoConfig } from './config';

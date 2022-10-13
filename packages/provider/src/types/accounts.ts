@@ -1,4 +1,4 @@
-import { Payee, BigNumber } from '@prosopo/contract';
+import { BigNumber, Payee } from '@prosopo/contract';
 
 export interface IUserAccount {
     mnemonic: string

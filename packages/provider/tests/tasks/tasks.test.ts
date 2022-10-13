@@ -20,20 +20,20 @@ import {randomAsHex} from "@polkadot/util-crypto";
 import {
     CaptchaMerkleTree,
     CaptchaSolution,
+    ProsopoEnvError,
+    TransactionResponse,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
     getEventsFromMethodName,
     hexHash,
-    parseCaptchaDataset,
-    TransactionResponse,
-    ProsopoEnvError
+    parseCaptchaDataset
 } from "@prosopo/contract";
 import {
     Account,
-    accountAddress,
     AccountKey,
-    accountMnemonic,
     IDatabaseAccounts,
+    accountAddress,
+    accountMnemonic,
 } from "../dataUtils/DatabaseAccounts";
 import {Tasks} from "../../src/tasks/tasks";
 import {DAPP, PROVIDER} from "../mocks/accounts";

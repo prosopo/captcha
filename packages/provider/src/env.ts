@@ -13,13 +13,13 @@
 // limitations under the License.
 // import { findUpSync } from 'find-up'
 import {
-    abiJson,
     ContractAbi,
     ContractApiInterface,
-    createNetwork,
     Network,
     ProsopoContractApi,
-    ProsopoEnvError
+    ProsopoEnvError,
+    abiJson,
+    createNetwork
 } from '@prosopo/contract';
 import {
     AssetsResolver,

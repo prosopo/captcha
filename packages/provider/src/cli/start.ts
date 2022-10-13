@@ -13,7 +13,6 @@
 // limitations under the License.
 import express from 'express';
 import cors from 'cors';
-import { URL } from 'url';
 
 // import { mnemonicValidate } from '@polkadot/util-crypto';
 

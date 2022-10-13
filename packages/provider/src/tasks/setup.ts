@@ -16,13 +16,13 @@ import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
 import {
     BigNumber,
+    ProsopoEnvError,
     buildTx,
-    getEventsFromMethodName,
-    ProsopoEnvError
+    getEventsFromMethodName
 } from '@prosopo/contract'
 import {
-    calculateItemHashes,
     CaptchaMerkleTree,
+    calculateItemHashes,
     computeCaptchaSolutionHash,
     convertCaptchaToCaptchaSolution,
     hexHash,

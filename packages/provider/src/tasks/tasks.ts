@@ -18,15 +18,15 @@ import {hexToU8a} from '@polkadot/util';
 import {randomAsHex} from '@polkadot/util-crypto';
 import {
     BigNumber,
+    CaptchaData,
     ContractApiInterface,
     Dapp,
     GovernanceStatus,
     Payee,
+    ProsopoEnvError,
     Provider,
     RandomProvider,
     TransactionResponse,
-    ProsopoEnvError,
-    CaptchaData,
 } from '@prosopo/contract';
 import {
     Captcha,
@@ -39,19 +39,19 @@ import {
     CaptchaStates,
     CaptchaStatus,
     CaptchaWithoutId,
+    LastCorrectCaptcha,
+    buildDataset,
     compareCaptchaSolutions,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
-    LastCorrectCaptcha,
     parseCaptchaDataset,
-    parseCaptchaSolutions,
-    buildDataset
+    parseCaptchaSolutions
 } from '@prosopo/datasets';
 import consola from "consola";
 import {buildDecodeVector} from '../codec/codec';
 import {
-    DappUserSolutionResult,
     CaptchaWithProof,
+    DappUserSolutionResult,
     Database,
     DatasetRecord,
     ProsopoEnvironment

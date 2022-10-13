@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { promiseQueue } from "../../src/util";
-import {AccountKey, exportDatabaseAccounts, IDatabaseAccounts} from "./DatabaseAccounts";
+import {AccountKey, IDatabaseAccounts, exportDatabaseAccounts} from "./DatabaseAccounts";
 import DatabasePopulator, {
     IDatabasePopulatorMethodNames,
 } from "./DatabasePopulator";
