@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { web3Enable, web3FromSource, web3Accounts, web3FromAddress } from "@polkadot/extension-dapp";
+import { web3Accounts, web3Enable, web3FromSource } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types"
 import storage from "../modules/storage";
 import { IExtensionInterface } from "../types/client";
@@ -33,8 +33,10 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
     private accounts: InjectedAccountWithMeta[];
     // the discovered extensions
     private injectedExtensions: InjectedExtension[];
+    private source: string
 
-    public async init() {
+    public async init(source: string) {
+        this.source = source;
         await this.checkExtension();
         await this.setAccounts();
         await this.setExtension();
@@ -43,7 +45,7 @@ export class ExtensionWeb3 extends AsyncFactory implements IExtensionInterface {
 
     public async checkExtension() {
         try {
-            this.injectedExtensions = await web3Enable('Prosopo');
+            this.injectedExtensions = await web3Enable(this.source);
         } catch (err) {
             throw new ProsopoEnvError(err);
         }

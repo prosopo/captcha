@@ -16,50 +16,81 @@
 import {ApiPromise} from "@polkadot/api";
 import {InjectedAccountWithMeta} from "@polkadot/extension-inject/types";
 import AsyncFactory from "./AsyncFactory";
-import {decodeAddress, encodeAddress, Keyring} from "@polkadot/keyring";
-import {KeyringPair} from "@polkadot/keyring/types";
-import {cryptoWaitReady, mnemonicGenerate} from "@polkadot/util-crypto";
-import { ProviderInterface } from "@polkadot/rpc-provider/types";
+import {Keyring, decodeAddress, encodeAddress} from "@polkadot/keyring";
+import {cryptoWaitReady} from "@polkadot/util-crypto";
+import {ProviderInterface} from "@polkadot/rpc-provider/types";
+import FingerprintJS, {hashComponents} from '@fingerprintjs/fingerprintjs'
+import {entropyToMnemonic} from "@polkadot/util-crypto/mnemonic/bip39";
+import {stringToU8a} from "@polkadot/util";
+import {picassoCanvas} from "../modules/canvas";
+import {AccountCreatorConfig} from "../types/index";
+import {hexHash} from "@prosopo/datasets";
 
 export class AccountCreator extends AsyncFactory {
 
     protected api: ApiPromise;
+    protected config: AccountCreatorConfig;
+    protected source: string;
 
     /**
      * @param providerInterface
+     * @param config
      */
-    public async init(providerInterface: ProviderInterface) {
+    public async init(providerInterface: ProviderInterface, config: AccountCreatorConfig, source: string) {
         this.api = await ApiPromise.create({provider: providerInterface});
+        this.source = source;
+        this.config = config;
         return this;
     }
 
-    public async generateMnemonic(keyring: Keyring): Promise<KeyringPair> {
-        await cryptoWaitReady();
-        const mnemonic = mnemonicGenerate();
-        return keyring.addFromMnemonic(mnemonic)
-    }
-
     public async createAccount(keyring?: Keyring, address?: string): Promise<InjectedAccountWithMeta> {
-        const source = 'procaptcha';
+        const params = {
+            area: this.config.area,
+            offsetParameter: this.config.offsetParameter,
+            multiplier: this.config.multiplier,
+            fontSizeFactor: this.config.fontSizeFactor,
+            maxShadowBlur: this.config.maxShadowBlur
+        }
+
+        const browserEntropy = await this.getFingerprint();
+        const canvasEntropy = picassoCanvas(this.config.numberOfRounds, this.config.seed, params);
+        const entropy = hexHash([canvasEntropy , browserEntropy].join(""), 128).slice(2);
+        console.log("canvas entropy", canvasEntropy)
+        console.log("browserEntropy", browserEntropy)
+        console.log("entropy", entropy)
+        const u8Entropy = stringToU8a(entropy);
+        const mnemonic = entropyToMnemonic(u8Entropy);
 
         if (!keyring) {
             keyring = new Keyring({type: 'sr25519', ss58Format: this.api.registry.chainSS58});
         }
 
-
+        await cryptoWaitReady()
         if (address) {
-            return {address: address, meta: {source, name: address}}
+            return {address: address, meta: {source: this.source, name: address}}
         } else {
-            const account = await this.generateMnemonic(keyring);
+            const account = keyring?.addFromMnemonic(mnemonic);
             return {
                 address: account.address.length === 42
                     ? account.address
                     : encodeAddress(decodeAddress(account.address), this.api.registry.chainSS58),
-                meta: {source, name: account.address},
+                meta: {source: this.source, name: account.address},
             }
         }
 
 
     }
 
+    public async getFingerprint(): Promise<string> {
+        // Initialize an agent at application startup.
+        const fpPromise = FingerprintJS.load()
+        // Get the visitor identifier when you need it.
+        const fp = await fpPromise
+        const result = await fp.get()
+        // strip out the components that change in incognito mode
+        const {screenFrame, ...componentsReduced} = result.components
+        return hashComponents(componentsReduced)
+    }
 }
+
+

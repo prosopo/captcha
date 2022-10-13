@@ -12,10 +12,26 @@ module.exports = {
         "ecmaVersion": "latest",
         "sourceType": "module"
     },
-    "plugins": [
-        "@typescript-eslint"
-    ],
+
+    "plugins": ["unused-imports", "@typescript-eslint"],
     "rules": {
+        "no-unused-vars": "off",
+        "unused-imports/no-unused-imports": "error",
+        "unused-imports/no-unused-vars": [
+            "warn",
+            {
+                "vars": "all",
+                "varsIgnorePattern": "^_",
+                "args": "after-used",
+                "argsIgnorePattern": "^_"
+            }
+        ],
         "indent": ["error", 4],
-    }
+        "sort-imports": [
+            "error",
+            {
+                "ignoreDeclarationSort": true
+            }
+            ]
+    },
 }

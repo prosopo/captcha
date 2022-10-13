@@ -69,7 +69,11 @@ export class ProsopoCaptchaStateClient {
 
         const nextCaptchaIndex = captchaIndex + 1;
 
-        if (nextCaptchaIndex < captchaChallenge!.captchas.length) {
+        if(!captchaChallenge) {
+            throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE");
+        }
+
+        if (nextCaptchaIndex < captchaChallenge.captchas.length) {
             captchaSolution[nextCaptchaIndex] = [];
             this.manager.update({captchaIndex: nextCaptchaIndex, captchaSolution});
 
@@ -78,10 +82,10 @@ export class ProsopoCaptchaStateClient {
 
         const signer = this.context.getExtension().getExtension()?.signer;
 
-        const currentCaptcha = captchaChallenge!.captchas[captchaIndex];
+        const currentCaptcha = captchaChallenge.captchas[captchaIndex];
         const {datasetId} = currentCaptcha.captcha;
 
-        const solutions = this.parseSolution(captchaChallenge!, captchaSolution);
+        const solutions = this.parseSolution(captchaChallenge, captchaSolution);
 
         let submitResult: TCaptchaSubmitResult | Error;
 
@@ -92,7 +96,7 @@ export class ProsopoCaptchaStateClient {
                     .getCaptchaApi()!
                     .submitCaptchaSolution(
                         signer,
-                        captchaChallenge!.requestHash,
+                        captchaChallenge.requestHash,
                         datasetId!,
                         solutions
                     );

@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import {
-    ICaptchaContextReducer,
     CaptchaEventCallbacks,
-    TExtensionAccount,
+    ICaptchaContextReducer,
     ICaptchaStatusReducer,
-    IExtensionInterface
+    IExtensionInterface,
+    TExtensionAccount
 } from "../types/client";
 import {ProsopoRandomProviderResponse} from "../types/api";
 import {ProsopoContract} from "../api/ProsopoContract";
@@ -71,7 +71,11 @@ export class ProsopoCaptchaClient {
 
         if (!ProsopoCaptchaClient.extension) {
             try {
-                ProsopoCaptchaClient.extension = await getExtension(this.manager.state.config['web2']);
+                ProsopoCaptchaClient.extension = await getExtension(
+                    getWsProvider(this.manager.state.config['dappUrl']),
+                    this.manager.state.config['web2'],
+                    this.manager.state.config['accountCreator'],
+                    this.manager.state.config['dappName']);
             } catch (err) {
                 throw new ProsopoEnvError(err);
             }
