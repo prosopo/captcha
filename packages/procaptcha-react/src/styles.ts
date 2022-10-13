@@ -36,15 +36,14 @@ export const useStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         background: "#FFFFFF",
-        border: "1px solid #CFCFCF",
-        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)"
     },
     captchasHeader: {
         display: "flex",
         alignItems: "center",
-        backgroundColor: "#bdbdbd",
-        height: 80,
-        paddingLeft: 20
+        backgroundColor: "#1976d2",
+        minHeight: 80,
+        padding: 20,
+        width: 460,
     },
     captchasBody: {
         display: "flex",
@@ -71,10 +70,11 @@ export const useStyles = makeStyles({
         marginBottom: 10
     },
     captchaItemSelected: {    
-        border: "2px solid #1976d2"
+        border: "4px solid #1976d2"
     },
     captchasHeaderLabel: {
-        color: "#ffffff"
+        color: "#ffffff",
+        fontWeight: 700
     },
     dotsContainer: {
         display: "flex",
