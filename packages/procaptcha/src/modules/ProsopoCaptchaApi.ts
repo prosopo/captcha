@@ -56,7 +56,7 @@ export class ProsopoCaptchaApi {
             captchaChallenge = await this.providerApi.getCaptchaChallenge(this.provider);
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge);
         } catch (err) {
-            throw new ProsopoApiError(err)
+            throw new ProsopoEnvError(err)
         }
         return captchaChallenge;
     }
@@ -126,7 +126,7 @@ export class ProsopoCaptchaApi {
         try {
             tx = await this.contract.dappUserCommit(signer, datasetId as string, commitmentId, this.provider.providerId);
         } catch (err) {
-            throw new ProsopoApiError(err)
+            throw new ProsopoEnvError(err)
         }
 
         let result: CaptchaSolutionResponse;
@@ -143,7 +143,7 @@ export class ProsopoCaptchaApi {
         try {
             commitment = await this.contract.getCaptchaSolutionCommitment(commitmentId);
         } catch (err) {
-            throw new ProsopoApiError(err)
+            throw new ProsopoEnvError(err)
         }
 
         return [result, tx, commitment];
