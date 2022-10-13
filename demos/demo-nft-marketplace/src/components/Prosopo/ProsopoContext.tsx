@@ -1,5 +1,11 @@
 import { useState, createContext, FC, useEffect } from 'react';
-import { TCaptchaSubmitResult, TExtensionAccount, getExtension, IExtensionInterface } from '@prosopo/procaptcha';
+import {
+  TCaptchaSubmitResult,
+  TExtensionAccount,
+  getExtension,
+  IExtensionInterface,
+  getWsProvider
+} from '@prosopo/procaptcha';
 import { CaptchaContextManager, useCaptcha } from '@prosopo/procaptcha-react';
 import toast, { ToastBar, Toaster } from 'react-hot-toast';
 
@@ -52,7 +58,7 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
       return;
     }
     const [result, tx] = submitResult;
-    const txHash = tx.txHash.toHuman().toString();
+    const txHash = tx ? tx.txHash.toHuman().toString() : '';
 
     status.update({ info: ['onSubmit: CAPTCHA SUBMIT STATUS', result.status] });
     toast.loading('Loading ...', { id: txHash });
@@ -61,21 +67,30 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
   const onSolved = ([result, tx, commitment]: TCaptchaSubmitResult, isHuman: boolean | undefined) => {
     console.log({ isHuman });
     setShowCaptchas(!isHuman);
-    status.update({ info: ['onSolved:', `Captcha solution status: ${commitment.status}`] });
-    const txHash = tx.txHash.toHuman().toString();
-    if (commitment.status == 'Approved') {
-      toast.success(`Solution Approved! You've gained reputation. ${formatPrice(result.partialFee)} refunded.`, {
-        id: txHash,
-      });
-      onSolvedCallback(true);
+    status.update({
+      info: ['onSolved:', `Captcha solution status: ${commitment ? commitment.status : result.solutionApproved}`],
+    });
+    const txHash = tx ? tx.txHash.toHuman().toString() : '';
+    if (manager.state.config['web2'] === false) {
+      if (commitment.status == 'Approved') {
+        toast.success(`Solution Approved! You've gained reputation. ${formatPrice(result.partialFee)} refunded.`, {
+          id: txHash,
+        });
+        onSolvedCallback(true);
+      } else {
+        toast.error(`Solution Disapproved! You've lost some reputation. ${formatPrice(result.partialFee)} lost.`, {
+          id: txHash,
+        });
+        onSolvedCallback(false);
+      }
+      if (!isHuman || commitment.status != 'Approved') {
+        setCaptchaReloadKey(Date.now());
+      }
     } else {
-      toast.error(`Solution Disapproved! You've lost some reputation. ${formatPrice(result.partialFee)} lost.`, {
-        id: txHash,
-      });
-      onSolvedCallback(false);
-    }
-    if (!isHuman || commitment.status != 'Approved') {
-      setCaptchaReloadKey(Date.now());
+      onSolvedCallback(result.solutionApproved);
+      if (!result.solutionApproved) {
+        setCaptchaReloadKey(Date.now());
+      }
     }
   };
 
@@ -92,16 +107,25 @@ export const ProsopoProvider: FC<ProviderProps> = ({ children }) => {
 
   const manager = clientInterface.manager;
   const status = clientInterface.status;
+  console.log(manager.state.config);
 
   useEffect(() => {
-    getExtension(manager.state.config['web2'])
+    getExtension(
+      getWsProvider(manager.state.config['dappUrl']),
+      manager.state.config['web2'],
+      manager.state.config['accountCreator'],
+      manager.state.config['dappName']
+    )
       .then(async (extension: IExtensionInterface) => {
         clientInterface.setExtension(extension);
+        if (manager.state.config['web2']) {
+          await extension.createAccount();
+        }
         const defaultAddress = extension.getDefaultAccount()?.address;
         const currUser = extension.getAccounts().find(({ address }) => address == defaultAddress);
 
         if (currUser) {
-          clientInterface.onAccountChange(currUser);
+          await clientInterface.onAccountChange(currUser);
         }
 
         setLoading(false);

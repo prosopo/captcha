@@ -12,8 +12,18 @@ const config: ProsopoCaptchaConfig = {
   dappAccount: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '',
   dappUrl: process.env.NEXT_PUBLIC_CONTRACT_URL || '',
   solutionThreshold: 80,
-  web2: false,
+  web2: process.env.NEXT_PUBLIC_WEB2 === 'true',
   prosopoContractAccount: process.env.NEXT_PUBLIC_PROSOPO_CONTRACT_ADDRESS || '',
+  accountCreator: {
+    area: { width: 300, height: 300 },
+    offsetParameter: 2001000001,
+    multiplier: 15000,
+    fontSizeFactor: 1.5,
+    maxShadowBlur: 50,
+    numberOfRounds: 5,
+    seed: 42,
+  },
+  dappName: process.env.NEXT_PUBLIC_DAPP_NAME || '',
 };
 
 export default config;
