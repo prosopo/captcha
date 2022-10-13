@@ -52,6 +52,7 @@ export interface CaptchaSolutionResponse {
   captchas: CaptchaResponseCaptcha[];
   status: string;
   partialFee: string;
+  solutionApproved: boolean
 }
 
 export interface AccountCreatorConfig {
