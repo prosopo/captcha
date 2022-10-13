@@ -123,7 +123,8 @@ export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
 
     public getDefaultAccount() {
         const defaultAccount = storage.getAccount();
-        return this.accounts.find(acc => acc.address === defaultAccount);
+        const accounts = this.accounts || [];
+        return accounts.find(acc => acc.address === defaultAccount);
     }
 
     public setDefaultAccount() {
