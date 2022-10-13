@@ -1,7 +1,7 @@
 // import { LocalStorageMock } from "../mocks/browser";
 import { ProsopoCaptchaConfig } from "../../src/types/api";
 
-import { captchaContextReducer, captchaStateReducer, captchaStatusReducer } from "../../src/modules/client";
+import { captchaContextReducer, captchaStateReducer } from "../../src/modules/client";
 import { ICaptchaContextState, ICaptchaState } from "../../src/types/client";
 
 import chai from "chai";

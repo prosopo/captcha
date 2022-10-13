@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
-import { ProsopoCaptchaConfig, GetCaptchaResponse, CaptchaSolutionResponse } from "../types/api";
+import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoCaptchaConfig } from "../types/api";
 import { TransactionResponse } from "../types/contract";
 import { CaptchaSolutionCommitment} from "@prosopo/datasets";
 

@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/procaptcha",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "main": "./dist/index.js",
@@ -13,17 +13,18 @@
     "lint:fix": "npx eslint . --fix"
   },
   "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^3.3.6",
     "@polkadot/api": "^8.13.1",
     "@polkadot/api-contract": "^8.13.1",
-    "@polkadot/extension-dapp": "0.44.1",
-    "@polkadot/extension-base": "0.44.1",
-    "@polkadot/extension-inject": "0.44.1",
+    "@polkadot/extension-base": "^0.44.1",
+    "@polkadot/extension-dapp": "^0.44.1",
+    "@polkadot/extension-inject": "^0.44.1",
     "@polkadot/rpc-provider": "^8.13.1",
     "@polkadot/types": "^8.13.1",
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
-    "@prosopo/contract": "0.1.8",
-    "@prosopo/datasets": "0.1.8",
+    "@prosopo/contract": "^0.1.9",
+    "@prosopo/datasets": "^0.1.9",
     "axios": "^0.27.2"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "@typescript-eslint/parser": "^5.30.7",
     "chai": "^4.3.6",
     "eslint": "^8.20.0",
+    "eslint-plugin-unused-imports": "^2.0.0",
     "mocha": "^10.0.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^4.7.4"

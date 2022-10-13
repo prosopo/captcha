@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import ProsopoContract from "../api/ProsopoContract";
-import { WsProvider, HttpProvider } from "@polkadot/rpc-provider";
+import { WsProvider } from "@polkadot/rpc-provider";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { ProviderInterface } from "@polkadot/rpc-provider/types";
 

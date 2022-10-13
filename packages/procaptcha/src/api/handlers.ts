@@ -18,8 +18,13 @@ import {AxiosResponse} from "axios";
 
 export class ProsopoApiError extends Error {
     constructor(error: AxiosResponse, context?: string, ...params: any[]) {
-        console.log(error)
-        super(`${error.data.message ? error.data.message : error.statusText}`)
+        if("data" in error) {
+            super(error.data.message)
+        } else if ("statusText" in error) {
+            super(error.statusText)
+        } else {
+            super(error.toString())
+        }
 
         this.name = context && `${ProsopoApiError.name}@${context}` || ProsopoApiError.name;
 
