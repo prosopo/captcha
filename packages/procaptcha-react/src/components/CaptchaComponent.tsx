@@ -30,15 +30,20 @@ import { CaptchaWidget } from "./CaptchaWidget";
 import { useTranslation } from "@prosopo/i18n";
 import { useStyles } from "../styles";
 import { addDataAttr } from "../util";
+import { Alert } from "@mui/material";
 
 
-export function CaptchaComponent({ clientInterface }: { clientInterface: ProsopoCaptchaClient }) {
+export function CaptchaComponent({ clientInterface, show = false }: { clientInterface: ProsopoCaptchaClient, show: boolean }) {
 
     const { t } = useTranslation();
     const classes = useStyles();
 
     const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
-    const [state, update] = useReducer(captchaStateReducer, { captchaIndex: 0, captchaSolution: [] });
+    // the captcha state + update func
+    const [state, update] = useReducer(captchaStateReducer, { 
+        captchaIndex: 0, // the index of the captcha we're on (1 captcha challenge contains >=1 captcha)
+        captchaSolution: [], // the solutions for the captcha (2d array corresponding to captcha)
+    });
     const { account, contractAddress } = manager.state;
     const { captchaChallenge, captchaIndex, captchaSolution } = state;
     const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
@@ -76,42 +81,45 @@ export function CaptchaComponent({ clientInterface }: { clientInterface: Prosopo
     return (
         <Box className={classes.root}>
 
-            {account && captchaChallenge &&
-                <Box className={classes.captchasContainer}>
+            <Box className={classes.captchasContainer}>
 
-                    <Box className={classes.captchasHeader}>
-                        <Typography className={classes.captchasHeaderLabel}>
-                            {t("WIDGET.SELECT_ALL", { target: captchaChallenge.captchas[captchaIndex].captcha.target })}
-                        </Typography>
-                    </Box>
-
-                    <Box className={classes.captchasBody} {...addDataAttr({dev: {cy: 'captcha-' + captchaIndex}})}>
-
-                        <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex] || []}
-                            onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
-
-                        <Box className={classes.dotsContainer} {...addDataAttr({dev: {cy: 'dots-captcha'}})}>
-                            {captchaChallenge?.captchas.map((_, index) =>
-                                <Box key={index} className={captchaIndex === index ? classes.dot : classes.dotActive} />)}
+                {!(show && captchaChallenge)
+                    // no captcha challenge has been setup yet, render an alert
+                    ? <Alert severity="error">No captcha challenge active.</Alert>
+                    // else captcha challenge has been populated, render the challenge
+                    : <>
+                        <Box className={classes.captchasHeader}>
+                            <Typography className={classes.captchasHeaderLabel}>
+                                {t("WIDGET.SELECT_ALL", { target: captchaChallenge.captchas[captchaIndex].captcha.target })}
+                            </Typography>
                         </Box>
 
-                    </Box>
+                        <Box className={classes.captchasBody} {...addDataAttr({dev: {cy: 'captcha-' + captchaIndex}})}>
+                            <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex] || []}
+                                onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
+                            <Box className={classes.dotsContainer} {...addDataAttr({dev: {cy: 'dots-captcha'}})}>
+                                {captchaChallenge?.captchas.map((_, index) =>
+                                    <Box key={index} className={captchaIndex === index ? classes.dot : classes.dotActive} />)}
+                            </Box>
 
-                    <Box className={classes.captchasFooter}>
-                        <Button onClick={() => stateClientInterface.onCancel()} variant="text">
-                            {t('WIDGET.CANCEL')}
-                        </Button>
-                        <Button 
-                            onClick={() => stateClientInterface.onSubmit()} 
-                            variant="contained" 
-                            {...addDataAttr({dev: {cy: "button-next"}})}
-                        >
-                            {captchaIndex + 1 < totalCaptchas ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
-                        </Button>
-                    </Box>
+                        </Box>
+                        <Box className={classes.captchasFooter}>
+                            <Button onClick={() => stateClientInterface.onCancel()} variant="text">
+                                {t('WIDGET.CANCEL')}
+                            </Button>
+                            <Button 
+                                onClick={() => stateClientInterface.onSubmit()} 
+                                variant="contained" 
+                                {...addDataAttr({dev: {cy: "button-next"}})}
+                            >
+                                {captchaIndex + 1 < totalCaptchas ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
+                            </Button>
+                        </Box>
+                    </>
+                }
 
-                </Box>
-            }
+
+            </Box>
         </Box>
     );
 }
