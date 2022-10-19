@@ -119,7 +119,7 @@ export const useStyles = makeStyles({
         backgroundColor: "#1976d2",
         minHeight: 80,
         padding: 20,
-        width: 460,
+        width: "100%",
     },
     captchasBody: {
         display: "flex",
