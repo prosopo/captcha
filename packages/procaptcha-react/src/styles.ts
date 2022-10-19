@@ -40,11 +40,13 @@ export const useStyles = makeStyles({
     itemContainer: {
         // enable the items in the grid to grow in width to use up excess space
         flexGrow: 1,
-        // default with is 30%. This leaves 10% (minus margins) to be spread between items
-        flexBasis: "30%",
+        // make the width of each item 1/3rd of the width overall, i.e. 3 columns
+        flexBasis: "33.3333%",
         // each item in the grid has padding on left and top
         paddingTop: "4px",
         paddingLeft: "4px",
+        // include the padding / margin / border in the width
+        boxSizing: "border-box",
     },
     itemImage: {
         width: "100%", // image should be full width / height of the item
@@ -105,13 +107,20 @@ export const useStyles = makeStyles({
         alignItems: "center",
         justifyContent: "center",
         width: "100%",
-        height: "100%"
+        height: "100%",
     },
     captchasContainer: {
-        maxWidth: "450px",
         display: "flex",
         flexDirection: "column",
         background: "#FFFFFF",
+        minWidth: "300px",
+    },
+    overflowContainer: {
+        overflowX: "auto",
+        overflowY: "auto",
+        width: "100%",
+        maxWidth: "450px",
+        maxHeight: "100%",
     },
     captchasHeader: {
         display: "flex",
@@ -122,13 +131,6 @@ export const useStyles = makeStyles({
         width: "100%",
     },
     captchasBody: {
-        display: "flex",
-        width: 460,
-        flexWrap: "wrap",
-        height: "max-content",
-        // paddingTop: 10,
-        // paddingLeft: 10,
-        borderBottom: "1px solid #CFCFCF"
     },
     captchasFooter: {
         display: "flex",
@@ -137,16 +139,6 @@ export const useStyles = makeStyles({
         height: 80,
         paddingLeft: 20,
         paddingRight: 20
-    },
-    captchaItem: {
-        width: "140px !important",
-        borderRadius: 2,
-        height: "140px !important",
-        marginRight: 10,
-        marginBottom: 10
-    },
-    captchaItemSelected: {    
-        border: "4px solid #1976d2"
     },
     captchasHeaderLabel: {
         color: "#ffffff",
