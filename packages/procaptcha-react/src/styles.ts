@@ -25,6 +25,81 @@ const dot = {
 }
 
 export const useStyles = makeStyles({
+    imageGrid: {
+        // expand to full height / width of parent
+        width: "100%",
+        height: "100%",
+        // display children in flex, spreading them evenly and wrapping when row length exceeded
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "wrap",
+        // the grid adds padding on right and bottom where items finish
+        paddingRight: "4px",
+        paddingBottom: "4px",
+    },
+    itemContainer: {
+        // enable the items in the grid to grow in width to use up excess space
+        flexGrow: 1,
+        // default with is 30%. This leaves 10% (minus margins) to be spread between items
+        flexBasis: "30%",
+        // each item in the grid has padding on left and top
+        paddingTop: "4px",
+        paddingLeft: "4px",
+    },
+    itemImage: {
+        width: "100%", // image should be full width / height of the item
+        backgroundColor: "black", // colour of the bands when letterboxing and image
+        display: "block", // removes whitespace below imgs
+        objectFit: "contain", // contain the entire image in the img tag
+        aspectRatio: "1/1", // force AR to be 1, letterboxing images with different aspect ratios
+    },
+    itemOverlayContainer: {
+        // relative to where the element _should_ be positioned
+        position: "relative",
+        // make the overlay the full height/width of an item
+        width: "100%",
+        height: "100%",
+        // shift it up 100% to overlay the item element
+        top: "-100%",
+        // transition on opacity upon (de)selection
+        transitionDuration: "300ms",
+        transitionProperty: "opacity",
+    },
+    itemOverlay: {
+        // make the overlay absolute positioned compare to its container
+        position: "absolute",
+        // spread across 100% width/height of the item box
+        top: 0,
+        left: 0,
+        bottom: 0,
+        right: 0,
+        height: "100%",
+        width: "100%",
+        // display overlays in center
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        // make bg half opacity, i.e. shadowing the item's img
+        backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    itemOverlayImage: {
+        // img must be displayed as block otherwise get's a bottom whitespace border
+        display: "block",
+        // how big the overlay icon is
+        width: "35%",
+        height: "35%",
+    },
+    itemSelected: {
+        // when items are selected, make the overlay opacity 1, i.e. show the overlay
+        opacity: 1,
+    },
+    itemUnselected: {
+        // when items are unselected, make the overlay opacity 0, i.e. hide the overlay
+        opacity: 0,
+    },
+
+
+    
     root: {
         display: "flex",
         alignItems: "center",
@@ -33,6 +108,7 @@ export const useStyles = makeStyles({
         height: "100%"
     },
     captchasContainer: {
+        maxWidth: "450px",
         display: "flex",
         flexDirection: "column",
         background: "#FFFFFF",
@@ -50,8 +126,8 @@ export const useStyles = makeStyles({
         width: 460,
         flexWrap: "wrap",
         height: "max-content",
-        paddingTop: 10,
-        paddingLeft: 10,
+        // paddingTop: 10,
+        // paddingLeft: 10,
         borderBottom: "1px solid #CFCFCF"
     },
     captchasFooter: {
