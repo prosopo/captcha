@@ -30,12 +30,15 @@ import { useTranslation } from "@prosopo/i18n";
 import { useStyles } from "../styles";
 import { addDataAttr } from "../util";
 import { Alert, Modal } from "@mui/material";
+import ThemeProvider from "@mui/material/styles/ThemeProvider";
+import rootTheme from "./theme";
 
 
 export function CaptchaComponent({ clientInterface, show = false }: { clientInterface: ProsopoCaptchaClient, show: boolean }) {
 
     const { t } = useTranslation();
     const classes = useStyles();
+    const theme = rootTheme;
 
     const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
     // the captcha state + update func
@@ -85,66 +88,67 @@ export function CaptchaComponent({ clientInterface, show = false }: { clientInte
     // https://www.npmjs.com/package/i18next
 
     return (
-        <Modal open={show}>
+        <ThemeProvider theme={rootTheme}>
+            <Modal open={show}>
 
-            <Box className={classes.root}>
-                <Box className={classes.overflowContainer}>
-                    <Box className={classes.captchasContainer}>
+                <Box className={classes.root}>
+                    <Box className={classes.overflowContainer}>
+                        <Box bgcolor={theme.palette.background.default} className={classes.captchasContainer}>
 
-                        {!(captchaChallenge)
-                            // no captcha challenge has been setup yet, render an alert
-                            ? <Alert severity="error">No captcha challenge active.</Alert>
-                            // else captcha challenge has been populated, render the challenge
-                            : <>
-                                <Box className={classes.captchasHeader}>
-                                    <Typography className={classes.captchasHeaderLabel}>
-                                        {t("WIDGET.SELECT_ALL", { target: captchaChallenge.captchas[captchaIndex].captcha.target })}
-                                    </Typography>
-                                </Box>
+                            {!(captchaChallenge)
+                                // no captcha challenge has been setup yet, render an alert
+                                ? <Alert severity="error">No captcha challenge active.</Alert>
+                                // else captcha challenge has been populated, render the challenge
+                                : <>
+                                    <Box px={2} py={3} className={classes.captchasHeader}>
+                                        <Typography className={classes.captchasHeaderLabel}>
+                                            {t("WIDGET.SELECT_ALL", { target: captchaChallenge.captchas[captchaIndex].captcha.target })}
+                                        </Typography>
+                                    </Box>
 
-                                <Box className={classes.captchasBody} {...addDataAttr({dev: {cy: 'captcha-' + captchaIndex}})}>
-                                    <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex] || []}
-                                        onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
-                                    <Box className={classes.dotsContainer} {...addDataAttr({dev: {cy: 'dots-captcha'}})}>
+                                    <Box className={classes.captchasBody} {...addDataAttr({dev: {cy: 'captcha-' + captchaIndex}})}>
+                                        <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex] || []}
+                                            onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
+                                    </Box>
+                                    <Box px={2} py={1} className={classes.dotsContainer} {...addDataAttr({dev: {cy: 'dots-captcha'}})}>
                                         {captchaChallenge?.captchas.map((_, index) =>
                                             <Box key={index} className={captchaIndex === index ? classes.dot : classes.dotActive} />)}
                                     </Box>
+                                    <Box px={2} pt={0} pb={2} className={classes.captchasFooter}>
+                                        <Button onClick={() => {
+                                            stateClientInterface.onCancel();
+                                            // reset the state of the captcha challenge back to default
+                                            resetState();
+                                        }} variant="text">
+                                            {t('WIDGET.CANCEL')}
+                                        </Button>
+                                        <Button color="primary"
+                                            onClick={() => {
+                                                stateClientInterface.onSubmit();
+                                                // only fire when all captchas have been completed
+                                                if(captchaIndex + 1 < totalCaptchas) {
+                                                    console.log('onNext')
+                                                } else {
+                                                    console.log('onSubmit')
+                                                    // reset the state of the captcha challenge back to default
+                                                    resetState();
+                                                }
+                                            }} 
+                                            variant="contained" 
+                                            {...addDataAttr({dev: {cy: "button-next"}})}
+                                        >
+                                            {captchaIndex + 1 < totalCaptchas ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
+                                        </Button>
+                                    </Box>
+                                </>
+                            }
 
-                                </Box>
-                                <Box className={classes.captchasFooter}>
-                                    <Button onClick={() => {
-                                        stateClientInterface.onCancel();
-                                        // reset the state of the captcha challenge back to default
-                                        resetState();
-                                    }} variant="text">
-                                        {t('WIDGET.CANCEL')}
-                                    </Button>
-                                    <Button 
-                                        onClick={() => {
-                                            stateClientInterface.onSubmit();
-                                            // only fire when all captchas have been completed
-                                            if(captchaIndex + 1 < totalCaptchas) {
-                                                console.log('onNext')
-                                            } else {
-                                                console.log('onSubmit')
-                                                // reset the state of the captcha challenge back to default
-                                                resetState();
-                                            }
-                                        }} 
-                                        variant="contained" 
-                                        {...addDataAttr({dev: {cy: "button-next"}})}
-                                    >
-                                        {captchaIndex + 1 < totalCaptchas ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
-                                    </Button>
-                                </Box>
-                            </>
-                        }
-
+                        </Box>
                     </Box>
                 </Box>
-            </Box>
-            
-        </Modal>
+                
+            </Modal>
+        </ThemeProvider>
     );
 }
 
