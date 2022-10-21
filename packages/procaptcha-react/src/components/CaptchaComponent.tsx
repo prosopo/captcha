@@ -146,10 +146,9 @@ export function CaptchaComponent({ clientInterface, show = false }: { clientInte
                                             <Box key={index} sx={ {
                                                 width: 7,
                                                 height: 7,
-                                                borderRadius: 3.5,
-                                                marginRight: 5,
+                                                borderRadius: "50%",
                                                 border: "1px solid #CFCFCF",
-                                            }} bgcolor={captchaIndex === index ? theme.palette.background.default : "#CFCFCF"}/>)}
+                                            }} mx={0.5} bgcolor={captchaIndex === index ? theme.palette.background.default : "#CFCFCF"}/>)}
                                     </Box>
                                     <Box px={2} pt={0} pb={2} sx={{
                                         display: "flex",
