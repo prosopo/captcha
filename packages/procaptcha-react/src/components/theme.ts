@@ -1,5 +1,4 @@
-import { orange, pink } from "@mui/material/colors";
-import red from "@mui/material/colors/red";
+import orange from "@mui/material/colors/orange";
 import createTheme from "@mui/material/styles/createTheme";
 
 export default createTheme({

@@ -27,18 +27,15 @@ import {
 import { CaptchaContextManager } from "./CaptchaManager";
 import { CaptchaWidget } from "./CaptchaWidget";
 import { useTranslation } from "@prosopo/i18n";
-import { useStyles } from "../styles";
 import { addDataAttr } from "../util";
 import { Alert, Modal } from "@mui/material";
 import ThemeProvider from "@mui/material/styles/ThemeProvider";
-import rootTheme from "./theme";
+import theme from "./theme";
 
 
 export function CaptchaComponent({ clientInterface, show = false }: { clientInterface: ProsopoCaptchaClient, show: boolean }) {
 
     const { t } = useTranslation();
-    const classes = useStyles();
-    const theme = rootTheme;
 
     const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
     // the captcha state + update func
@@ -88,33 +85,77 @@ export function CaptchaComponent({ clientInterface, show = false }: { clientInte
     // https://www.npmjs.com/package/i18next
 
     return (
-        <ThemeProvider theme={rootTheme}>
+        <ThemeProvider theme={theme}>
             <Modal open={show}>
 
-                <Box className={classes.root}>
-                    <Box className={classes.overflowContainer}>
-                        <Box bgcolor={theme.palette.background.default} className={classes.captchasContainer}>
-
+                <Box sx={{
+                    // center the popup horizontally and vertically
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    // fill entire screen
+                    width: "100%",
+                    height: "100%",
+                }}>
+                    <Box sx={{
+                        // introduce scroll bars when screen < minWidth of children
+                        overflowX: "auto",
+                        overflowY: "auto",
+                        width: "100%",
+                        // limit the popup width
+                        maxWidth: "450px",
+                        // maxHeight introduces vertical scroll bars if children content longer than window
+                        maxHeight: "100%",
+                    }}>
+                        <Box bgcolor={theme.palette.background.default} sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            // the min width of the popup before scroll bars appear
+                            minWidth: "300px",
+                        }}>
                             {!(captchaChallenge)
                                 // no captcha challenge has been setup yet, render an alert
                                 ? <Alert severity="error">No captcha challenge active.</Alert>
                                 // else captcha challenge has been populated, render the challenge
                                 : <>
-                                    <Box px={2} py={3} className={classes.captchasHeader}>
-                                        <Typography className={classes.captchasHeaderLabel}>
+                                    <Box px={2} py={3} sx={{
+                                        // center the header
+                                        display: "flex",
+                                        alignItems: "center",
+                                        width: "100%",
+                                    }} bgcolor={theme.palette.primary.main}>
+                                        <Typography sx={{
+                                            color: "#ffffff",
+                                            fontWeight: 700
+                                        }}>
                                             {t("WIDGET.SELECT_ALL", { target: captchaChallenge.captchas[captchaIndex].captcha.target })}
                                         </Typography>
                                     </Box>
 
-                                    <Box className={classes.captchasBody} {...addDataAttr({dev: {cy: 'captcha-' + captchaIndex}})}>
+                                    <Box {...addDataAttr({dev: {cy: 'captcha-' + captchaIndex}})}>
                                         <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex] || []}
                                             onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
                                     </Box>
-                                    <Box px={2} py={1} className={classes.dotsContainer} {...addDataAttr({dev: {cy: 'dots-captcha'}})}>
+                                    <Box px={2} py={1} sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: "100%",
+                                    }} {...addDataAttr({dev: {cy: 'dots-captcha'}})}>
                                         {captchaChallenge?.captchas.map((_, index) =>
-                                            <Box key={index} className={captchaIndex === index ? classes.dot : classes.dotActive} />)}
+                                            <Box key={index} sx={ {
+                                                width: 7,
+                                                height: 7,
+                                                borderRadius: 3.5,
+                                                marginRight: 5,
+                                                border: "1px solid #CFCFCF",
+                                            }} bgcolor={captchaIndex === index ? theme.palette.background.default : "#CFCFCF"}/>)}
                                     </Box>
-                                    <Box px={2} pt={0} pb={2} className={classes.captchasFooter}>
+                                    <Box px={2} pt={0} pb={2} sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                    }}>
                                         <Button onClick={() => {
                                             stateClientInterface.onCancel();
                                             // reset the state of the captcha challenge back to default
