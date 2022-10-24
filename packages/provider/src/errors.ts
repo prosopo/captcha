@@ -13,35 +13,7 @@
 // limitations under the License.
 import {ProsopoEnvError} from "@prosopo/contract";
 
-export class ApiError extends ProsopoEnvError {
-    constructor (err) {
-        super(err)
-    }
-
-    getCode () {
-        if (this instanceof BadRequest) {
-            return 500
-        }
-        if (this instanceof NotFound) {
-            return 404
-        }
-        return 400
-    }
-}
-
-export class BadRequest extends ApiError {
-}
-
-export class NotFound extends ApiError {
-}
-
-export const handleErrors = (err, req, res, next) => {
-    if (err instanceof ApiError) {
-        return res.status(err.getCode()).json({
-            message: err.message,
-            name: err.name
-        })
-    }
+export const handleErrors = (err: ProsopoEnvError, req, res, next) => {
 
     return res.status(500).json({
         message: err.message,

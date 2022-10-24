@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Payee, BigNumber } from '@prosopo/contract';
-import { IProviderAccount, IDappAccount } from '../../src/types/accounts';
+import { Payee } from '@prosopo/contract';
+import { IDappAccount, IProviderAccount } from '../../src/types/accounts';
 
 export const PROVIDER: IProviderAccount = {
     serviceOrigin: 'http://localhost:8282',

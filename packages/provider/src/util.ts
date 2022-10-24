@@ -13,7 +13,7 @@
 // limitations under the License.
 import { decodeAddress, encodeAddress } from '@polkadot/keyring';
 import { hexToU8a, isHex } from '@polkadot/util';
-import fs, { createWriteStream, WriteStream } from 'fs';
+import fs, { WriteStream, createWriteStream } from 'fs';
 import {ProsopoEnvError} from "@prosopo/contract";
 
 export function encodeStringAddress (address: string) {
