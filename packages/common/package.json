@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/i18n",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Prosopo localization",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
