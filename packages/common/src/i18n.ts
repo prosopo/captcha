@@ -9,7 +9,7 @@ import translationSr from "./locales/sr.json";
 import { isClientSide } from "./utils";
 
 const commonOptions: InitOptions = {
-  debug: true,
+  debug: false,
   fallbackLng: "en",
   resources: {
     en: {
