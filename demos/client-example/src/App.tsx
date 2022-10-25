@@ -48,7 +48,7 @@ function App() {
     const onSolved = ([result, tx, commitment]: TCaptchaSubmitResult) => {
         setShowCaptchas(false);
 
-        status.update({info: ["onSolved:", `Captcha solution status: ${commitment.status}`]});
+        status.update({info: ["onSolved:", result.status]});
     }
 
     const onChange = (solution: string[][]) => {
@@ -98,9 +98,9 @@ function App() {
                     </CaptchaContextManager.Provider>
 
                     {!showCaptchas &&
-                      <Button 
-                        onClick={showCaptchaClick} 
-                        className={"iAmHumanButton"} 
+                      <Button
+                        onClick={showCaptchaClick}
+                        className={"iAmHumanButton"}
                         {...addDataAttr({dev: {cy: 'button-human'}})}
                       >
                         <Typography className={"iAmHumanButtonLabel"}>
