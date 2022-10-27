@@ -7,7 +7,6 @@
 import { ProsopoCaptchaConfig } from '@prosopo/procaptcha';
 
 const config: ProsopoCaptchaConfig = {
-    "providerApi.baseURL": process.env.REACT_APP_API_BASE_URL || '',
     "providerApi.prefix": process.env.REACT_APP_API_PATH_PREFIX || '',
     "dappAccount": process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || '',
     "dappUrl": process.env.REACT_APP_DAPP_CONTRACT_URL || '',
@@ -23,7 +22,8 @@ const config: ProsopoCaptchaConfig = {
         "numberOfRounds" : 5,
         "seed" : 42
     },
-    "dappName": "prosopo"
+    "dappName": "prosopo",
+    "serverUrl": process.env.REACT_APP_SERVER_URL || ''
 }
 
 export default config;
