@@ -15,7 +15,6 @@
 // import yargs from 'yargs/yargs';
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types';
-import { randomAsHex } from '@polkadot/util-crypto';
 import { Payee, ProsopoEnvError } from "@prosopo/contract";
 import fse from 'fs-extra';
 import path from 'path';
@@ -26,7 +25,7 @@ import { IDappAccount, IProviderAccount } from '../types/accounts';
 loadEnv();
 
 const defaultProvider: IProviderAccount = {
-    serviceOrigin: 'http://localhost:8282' + randomAsHex().slice(0, 8), // make it "unique"
+    serviceOrigin: 'http://localhost:3000',// + randomAsHex().slice(0, 8), // make it "unique"
     fee: 10,
     payee: Payee.Provider,
     stake: Math.pow(10, 13),

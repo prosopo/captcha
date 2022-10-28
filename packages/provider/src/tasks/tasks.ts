@@ -279,7 +279,7 @@ export class Tasks {
         // Only do stuff if the request is in the local DB
         if (pendingRequest) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
-            if (await compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
+            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 response = {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
                     solutionApproved: true

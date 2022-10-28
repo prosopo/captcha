@@ -196,5 +196,9 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         }
     });
 
+    router.post('/v1/prosopo/provider/verify', async (req, res, next) => {
+        //TODO check if a user has solved a captcha
+    })
+
     return router;
 }

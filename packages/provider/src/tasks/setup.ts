@@ -18,7 +18,8 @@ import {
     BigNumber,
     ProsopoEnvError,
     buildTx,
-    getEventsFromMethodName
+    getEventsFromMethodName,
+    stringToHexPadded
 } from '@prosopo/contract'
 import {
     CaptchaMerkleTree,
@@ -82,9 +83,9 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     const logger = env.logger;
     const tasks = new Tasks(env)
     logger.info('   - providerRegister')
-    await tasks.providerRegister(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address)
+    await tasks.providerRegister(stringToHexPadded(provider.serviceOrigin), provider.fee, provider.payee, provider.address)
     logger.info('   - providerStake')
-    await tasks.providerUpdate(hexHash(provider.serviceOrigin), provider.fee, provider.payee, provider.address, provider.stake)
+    await tasks.providerUpdate(stringToHexPadded(provider.serviceOrigin), provider.fee, provider.payee, provider.address, provider.stake)
     logger.info('   - providerAddDataset')
     const datasetResult = await tasks.providerAddDataset(provider.datasetFile)
     const events = getEventsFromMethodName(datasetResult, 'providerAddDataset')
