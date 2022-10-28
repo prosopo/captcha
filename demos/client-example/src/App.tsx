@@ -154,6 +154,7 @@ function App() {
     }
 
     const onSubmitHandler = () => {
+        setShowCaptchas(true);
         const payload = {
             email,
             name,
@@ -221,7 +222,6 @@ function App() {
 
     const manager = clientInterface.manager;
     const status = clientInterface.status;
-    console.log(manager.state);
 
     return (
         <Box className={"App"}>
@@ -231,7 +231,7 @@ function App() {
                 <div style={{order: 1}}>
                     {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
                     {status.state.error && <Box className={"status error"}>{JSON.stringify(status.state.error)}</Box>}
-                    {clientInterface.getExtension() && !manager.state.account && showCaptchas &&
+                    {clientInterface.getExtension() && !manager.state.account && showCaptchas && clientInterface.getExtension().getAccounts() &&
                         <ExtensionAccountSelect
                         value={manager.state.account}
                         options={clientInterface.getExtension().getAccounts()}
