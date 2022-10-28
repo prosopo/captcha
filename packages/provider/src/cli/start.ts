@@ -58,20 +58,25 @@ function startApi(env: ProsopoEnvironment) {
     });
 }
 
-// function startImg() {
-//   const imgApp = express();
-//   const imgPort = process.env.IMG_SRV_PORT || 4000;
+function startFileSrv() {
+    const app = express();
+    const port = process.env.FILE_SRV_PORT || 4000;
+    const dataPaths = JSON.parse(process.env.FILE_SRV_PATHS || "[]");
+    // if single path given convert to array
+    const locations = Array.isArray(dataPaths) ? dataPaths : [dataPaths];
 
-//   imgApp.use('/img', express.static('./data/img'));
+    locations.forEach(loc => {
+        // allow local filesystem lookup at each location
+        app.use("/", express.static(loc))
+    })
 
-//   imgApp.get('/', (req, res) => {
-//     res.send('Image server');
-//   });
-
-//   imgAppSrv = imgApp.listen(imgPort, () => {
-//     console.log(`Image server running on port ${imgPort} serving images from /data/img`);
-//   });
-// }
+    // only run server if locations have been specified
+    if(locations.length > 0) {
+        app.listen(port, () => {
+            console.log(`File server running on port ${port} serving [${locations}]`);
+        });
+    }
+}
 
 // const argv = yargs(hideBin(process.argv)).argv;
 
@@ -95,8 +100,7 @@ async function start (nodeEnv: string) {
     await env.isReady();
     startApi(env);
 
-    // if (argv['img'])
-    // startImg();
+    startFileSrv();
 }
 
 function stop() {
