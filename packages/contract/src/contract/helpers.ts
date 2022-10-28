@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import {AbiMessage, ContractCallOutcome, DecodedEvent} from '@polkadot/api-contract/types'
-import {isHex, isU8a} from '@polkadot/util'
-import {blake2AsU8a} from '@polkadot/util-crypto'
+import {isHex, isU8a, stringToHex} from '@polkadot/util'
 import {AnyJson} from '@polkadot/types/types/codec'
 import {Signer} from '../types/signer'
 import {TransactionResponse} from '../types/contract'
 import {ProsopoContractError} from "../handlers";
+import {AnyString} from "@polkadot/util/types";
 
 /**
  * Get the event name from the contract method name
@@ -35,7 +35,7 @@ export function getEventNameFromMethodName(contractMethodName: string): string {
  *
  * @return {AnyJson} array of events filtered by calculated event name
  */
-export function getEventsFromMethodName(response: TransactionResponse, contractMethodName: string): AnyJson | DecodedEvent[] | any { 
+export function getEventsFromMethodName(response: TransactionResponse, contractMethodName: string): AnyJson | DecodedEvent[] | any {
     const eventName = getEventNameFromMethodName(contractMethodName)
     if (response && response['events'] ) {
         return response && response['events'] && response["events"].filter((x) => x.name === eventName)
@@ -44,6 +44,7 @@ export function getEventsFromMethodName(response: TransactionResponse, contractM
     }
 
 }
+
 
 /** Encodes arguments that should be hashes using blake2AsU8a
  * @return encoded arguments
@@ -56,7 +57,7 @@ export function encodeStringArgs<T>(methodObj: AbiMessage, args: T[]): T[] {
         const argVal = args[idx]
         // hash values that have been passed as strings
         if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
-            encodedArgs.push(blake2AsU8a(argVal as unknown as string) as unknown as T)
+            encodedArgs.push(stringToHexPadded(argVal as unknown as string) as unknown as T)
         } else {
             encodedArgs.push(argVal)
         }
@@ -95,4 +96,14 @@ export function handleContractCallOutcomeErrors<T>(response: ContractCallOutcome
 export function convertSignerToAddress(signer?: Signer | string): string {
     if (!signer) return '';
     return typeof signer !== 'string' ? signer.address : signer;
+}
+
+/** Hash a string, padding with zeroes until its 32 bytes long
+ * @return {string} string
+ */
+export function stringToHexPadded(data: string): string {
+    // TODO should the 64 reflect system architecture?
+    const bitLength = 64
+    const hexString = stringToHex(data).replace("0x", "");
+    return `0x${Array(bitLength - hexString.length + 1).join("0")}${hexString}`
 }
