@@ -50,7 +50,8 @@ export const CaptchaContextManager = createContext({
                 "numberOfRounds" : 0,
                 "seed" : 0
             },
-            "dappName" :""
+            "dappName" :"",
+            "serverUrl": ""
         }
     },
     update: () => {},

@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/procaptcha-react",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "main": "./dist/index.js",
@@ -18,8 +18,8 @@
     "@mui/icons-material": "^5.10.9",
     "@mui/material": "^5.10.11",
     "@mui/styles": "^5.8.3",
-    "@prosopo/i18n": "^0.0.1",
-    "@prosopo/procaptcha": "^0.1.9",
+    "@prosopo/i18n": "^0.1.10",
+    "@prosopo/procaptcha": "^0.1.10",
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },

@@ -39,7 +39,7 @@ export function CaptchaComponent({ clientInterface, show = false }: { clientInte
 
     const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
     // the captcha state + update func
-    const [state, update] = useReducer(captchaStateReducer, { 
+    const [state, update] = useReducer(captchaStateReducer, {
         captchaIndex: 0, // the index of the captcha we're on (1 captcha challenge contains >=1 captcha)
         captchaSolution: [], // the solutions for the captcha (2d array corresponding to captcha)
     });
@@ -74,7 +74,7 @@ export function CaptchaComponent({ clientInterface, show = false }: { clientInte
     }, [account]);
 
     const resetState = () => {
-        update({ 
+        update({
             captchaIndex: 0, // the index of the captcha we're on (1 captcha challenge contains >=1 captcha)
             captchaSolution: [], // the solutions for the captcha (2d array corresponding to captcha)
             captchaChallenge: undefined,
@@ -173,8 +173,8 @@ export function CaptchaComponent({ clientInterface, show = false }: { clientInte
                                                     // reset the state of the captcha challenge back to default
                                                     resetState();
                                                 }
-                                            }} 
-                                            variant="contained" 
+                                            }}
+                                            variant="contained"
                                             {...addDataAttr({dev: {cy: "button-next"}})}
                                         >
                                             {captchaIndex + 1 < totalCaptchas ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
@@ -186,7 +186,7 @@ export function CaptchaComponent({ clientInterface, show = false }: { clientInte
                         </Box>
                     </Box>
                 </Box>
-                
+
             </Modal>
         </ThemeProvider>
     );
