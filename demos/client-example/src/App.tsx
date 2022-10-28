@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {StyleSheet, Text, View, TextInput, TouchableOpacity} from 'react-native';
-import {Box, Button, Typography} from "@mui/material";
+import {Box, Button, Modal, Typography} from "@mui/material";
 
 import {
     TCaptchaSubmitResult,
@@ -257,20 +257,17 @@ function App() {
                     </View>
 
                     <CaptchaContextManager.Provider value={manager}>
-                        {showCaptchas &&
-                          <CaptchaComponent {...{clientInterface}} />}
+                        <CaptchaComponent {...{clientInterface, show: showCaptchas}} />
                     </CaptchaContextManager.Provider>
-
-                    {!showCaptchas &&
-                      <Button
+                    <Button
                         onClick={showCaptchaClick}
                         className={"iAmHumanButton"}
                         {...addDataAttr({dev: {cy: 'button-human'}})}
                       >
-                        <Typography className={"iAmHumanButtonLabel"}>
-                          I am human
-                        </Typography>
-                      </Button>}
+                      <Typography className={"iAmHumanButtonLabel"}>
+                        I am human
+                      </Typography>
+                    </Button>
                     {manager.state.account && !manager.state.config.web2 &&
                       <Button onClick={disconnectAccount} className={"iAmHumanButton"}>
                         <Typography className={"iAmHumanButtonLabel"}>
