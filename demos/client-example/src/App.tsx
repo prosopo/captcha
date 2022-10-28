@@ -1,5 +1,4 @@
 import {useState} from "react";
-import {StyleSheet, Text, View, TextInput, TouchableOpacity} from 'react-native';
 import {Box, Button, Modal, Typography} from "@mui/material";
 
 import {
@@ -19,7 +18,7 @@ import config from "./config";
 
 import "./App.css";
 
-const styles = StyleSheet.create({
+const styles = {
     image: {
         flex: 1,
         width: '100%',
@@ -29,17 +28,17 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'rgba(255, 255, 255, 0.4)',
         width: '80%',
-        marginTop: '40%',
+        marginTop: '5%',
         borderRadius: 20,
         maxHeight: 380,
-        paddingBottom: '30%',
+        paddingBottom: '5%',
     },
     heading: {
         fontSize: 30,
         fontWeight: 'bold',
         marginLeft: '10%',
         marginTop: '5%',
-        marginBottom: '30%',
+        marginBottom: '5%',
         color: 'black',
     },
     form: {
@@ -95,14 +94,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginVertical: '5%',
     },
-});
+};
 
 
 function App() {
 
     const [showCaptchas, setShowCaptchas] = useState(false);
-    const [email, setEmail] = useState('');
-    const [name, setName] = useState('');
+    const [email, setEmail] = useState<string>('');
+    const [name, setName] = useState<string>('');
     const [password, setPassword] = useState('');
 
     const [isError, setIsError] = useState(false);
@@ -231,43 +230,44 @@ function App() {
 
                 <div style={{order: 1}}>
                     {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
-                    {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
+                    {status.state.error && <Box className={"status error"}>{JSON.stringify(status.state.error)}</Box>}
                     {clientInterface.getExtension() && !manager.state.account && showCaptchas &&
                         <ExtensionAccountSelect
                         value={manager.state.account}
                         options={clientInterface.getExtension().getAccounts()}
                         onChange={clientInterface.onAccountChange.bind(clientInterface)}
                       />}
-                    <View style={styles.card}>
-                        <Text style={styles.heading}>{isLogin ? 'Login' : 'Signup'}</Text>
-                        <View style={styles.form}>
-                            <View style={styles.inputs}>
-                                <TextInput style={styles.input} placeholder="Email" autoCapitalize="none" onChangeText={setEmail}></TextInput>
-                                {!isLogin && <TextInput style={styles.input} placeholder="Name" onChangeText={setName}></TextInput>}
-                                <TextInput secureTextEntry={true} style={styles.input} placeholder="Password" onChangeText={setPassword}></TextInput>
-                                <Text style={[styles.message, {color: isError ? 'red' : 'green'}]}>{message ? getMessage() : null}</Text>
-                                <TouchableOpacity style={styles.button} onPress={onSubmitHandler}>
-                                    <Text style={styles.buttonText}>Done</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.buttonAlt} onPress={onChangeHandler}>
-                                    <Text style={styles.buttonAltText}>{isLogin ? 'Sign Up' : 'Log In'}</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
+                    <div style={styles.card}>
+                        <h1 style={styles.heading}>{isLogin ? 'Login' : 'Signup'}</h1>
+                        <form style={styles.form}>
+                            <div style={styles.inputs}>
+                                <input style={styles.input} placeholder="Email" autoCapitalize="none" onChange={(e) => setEmail(e.target.value)}></input>
+                                {!isLogin && <input style={styles.input} placeholder="Name" onChange={(e) => setName(e.target.value)}></input>}
+                                <input type="password" style={styles.input} placeholder="Password" onChange={(e) => setPassword(e.target.value)}></input>
+                                <span style={styles.message}>{message ? getMessage() : null}</span>
+                                <Button style={styles.button} onClick={onSubmitHandler}>
+                                    <Typography style={styles.buttonText}>Done</Typography>
+                                </Button>
+                                <Button style={styles.buttonAlt} onClick={onChangeHandler}>
+                                    <Typography style={styles.buttonAltText}>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
+                                </Button>
+                                <Button
+                                    onClick={showCaptchaClick}
+                                    className={"iAmHumanButton"}
+                                    {...addDataAttr({dev: {cy: 'button-human'}})}
+                                >
+                                    <Typography className={"iAmHumanButtonLabel"}>
+                                        I am human
+                                    </Typography>
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
 
                     <CaptchaContextManager.Provider value={manager}>
                         <CaptchaComponent {...{clientInterface, show: showCaptchas}} />
                     </CaptchaContextManager.Provider>
-                    <Button
-                        onClick={showCaptchaClick}
-                        className={"iAmHumanButton"}
-                        {...addDataAttr({dev: {cy: 'button-human'}})}
-                      >
-                      <Typography className={"iAmHumanButtonLabel"}>
-                        I am human
-                      </Typography>
-                    </Button>
+
                     {manager.state.account && !manager.state.config.web2 &&
                       <Button onClick={disconnectAccount} className={"iAmHumanButton"}>
                         <Typography className={"iAmHumanButtonLabel"}>
