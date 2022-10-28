@@ -66,7 +66,6 @@ export interface AccountCreatorConfig {
 }
 
 export interface ProsopoCaptchaConfig {
-  "providerApi.baseURL": string;
   "providerApi.prefix": string;
   "dappAccount": string;
   "dappUrl": string;
@@ -74,5 +73,6 @@ export interface ProsopoCaptchaConfig {
   "web2": boolean;
   "prosopoContractAccount": string;
   "accountCreator": AccountCreatorConfig,
-  "dappName": string
+  "dappName": string,
+  "serverUrl": string,
 }

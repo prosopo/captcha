@@ -27,13 +27,13 @@ export class ProviderApi extends HttpClientBase {
 
     private config: ProsopoCaptchaConfig;
 
-    constructor(config: ProsopoCaptchaConfig) {
-        super(config['providerApi.baseURL'], config['providerApi.prefix']);
+    constructor(config: ProsopoCaptchaConfig, providerUrl: string) {
+        super(providerUrl);
         this.config = config;
     }
 
     public getProviders(): Promise<{ accounts: string[] }> {
-        return this.axios.get(`/providers`);
+        return this.axios.get(`/v1/prosopo/providers`);
     }
 
     public getCaptchaChallenge(randomProvider: ProsopoRandomProviderResponse): Promise<GetCaptchaResponse> {
@@ -41,11 +41,11 @@ export class ProviderApi extends HttpClientBase {
         let {blockNumber} = randomProvider;
         blockNumber = blockNumber.replace(/,/g, '');
         const userAccount = Storage.getAccount();
-        return this.axios.get(`/provider/captcha/${provider.datasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
+        return this.axios.get(`/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
     }
 
     public submitCaptchaSolution(captchas: CaptchaSolution[], requestHash: string, userAccount: string, salt: string, blockHash?: string, txHash?: string, web2?: boolean): Promise<CaptchaSolutionResponse> {
-        return this.axios.post(`/provider/solution`, {
+        return this.axios.post(`/v1/prosopo/provider/solution`, {
             blockHash,
             captchas,
             requestHash,

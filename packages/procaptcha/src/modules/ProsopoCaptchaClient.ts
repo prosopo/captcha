@@ -27,13 +27,14 @@ import {getExtension} from "./extension";
 import {ProviderApi} from "../api/ProviderApi";
 import {ProsopoCaptchaApi} from "./ProsopoCaptchaApi";
 import {ProsopoEnvError} from "@prosopo/contract";
+import {hexToString} from '@polkadot/util'
 
 export class ProsopoCaptchaClient {
 
     public manager: ICaptchaContextReducer;
     public status: ICaptchaStatusReducer;
     public callbacks: CaptchaEventCallbacks | undefined;
-    public providerApi: ProviderApi;
+    public providerApi: ProviderApi | undefined;
 
     private static extension: IExtensionInterface;
     private static contract: ProsopoContract | undefined;
@@ -44,7 +45,10 @@ export class ProsopoCaptchaClient {
         this.manager = manager;
         this.status = status;
         this.callbacks = callbacks;
-        this.providerApi = new ProviderApi(manager.state.config);
+    }
+
+    public getProviderApi(providerUrl: string) {
+        return new ProviderApi(this.manager.state.config, providerUrl);
     }
 
     public getExtension() {
@@ -68,7 +72,7 @@ export class ProsopoCaptchaClient {
     }
 
     public async onLoad(createAccount?: boolean) {
-
+        console.log("Captcha client onLoad, createAccount:", createAccount);
         if (!ProsopoCaptchaClient.extension) {
             try {
                 ProsopoCaptchaClient.extension = await getExtension(
@@ -80,7 +84,7 @@ export class ProsopoCaptchaClient {
                 throw new ProsopoEnvError(err);
             }
         }
-
+        console.log("Extension loaded");
         if (this.callbacks?.onLoad) {
             this.callbacks.onLoad(ProsopoCaptchaClient.extension, this.manager.state.config['prosopoContractAccount']);
             this.manager.update({contractAddress: this.manager.state.config['prosopoContractAccount']});
@@ -88,8 +92,11 @@ export class ProsopoCaptchaClient {
 
         let account: TExtensionAccount | undefined;
         if (createAccount) {
+            console.log("creating account")
             try {
+                console.log(this.getExtension())
                 account = await this.getExtension().createAccount()
+                console.log(account)
             } catch (err) {
                 throw new ProsopoEnvError(err);
             }
@@ -100,6 +107,7 @@ export class ProsopoCaptchaClient {
                 throw new ProsopoEnvError(err);
             }
         }
+        console.log("onAccountChange", account)
         await this.onAccountChange(account);
 
 
@@ -134,6 +142,12 @@ export class ProsopoCaptchaClient {
         } catch (err) {
             throw new ProsopoEnvError(err);
         }
+        console.log(ProsopoCaptchaClient.provider);
+        const providerUrl = hexToString(ProsopoCaptchaClient.provider.provider.serviceOrigin)
+
+        console.log("providerUrl", providerUrl)
+
+        this.providerApi = this.getProviderApi(providerUrl);
 
         ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract,
             ProsopoCaptchaClient.provider,
