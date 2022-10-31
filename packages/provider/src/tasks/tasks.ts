@@ -39,13 +39,13 @@ import {
     CaptchaStates,
     CaptchaStatus,
     CaptchaWithoutId,
+    DappUserSolution,
     LastCorrectCaptcha,
     buildDataset,
     compareCaptchaSolutions,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
-    parseCaptchaDataset,
-    parseCaptchaSolutions
+    parseCaptchaDataset, parseCaptchaSolutions
 } from '@prosopo/datasets';
 import consola from "consola";
 import {buildDecodeVector} from '../codec/codec';
@@ -246,6 +246,7 @@ export class Tasks {
                     partialFee: partialFee.toString(),
                     solutionApproved: true
                 };
+                await this.db.approveDappUserSolution(commitmentId);
             } else {
                 await this.providerDisapprove(commitmentId)
                 response = {
@@ -284,6 +285,7 @@ export class Tasks {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: tree.proof(id)})),
                     solutionApproved: true
                 };
+                await this.db.approveDappUserSolution(commitmentId);
             } else {
                 response = {
                     captchas: captchaIds.map((id) => ({captchaId: id, proof: [[]]})),
@@ -563,5 +565,16 @@ export class Tasks {
             return null
         }
         return paymentInfo
+    }
+
+    /*
+    * Get dapp user solution from database
+     */
+    async getDappUserSolution(commitmentId: string): Promise<DappUserSolution> {
+        const dappUserSolution = await this.db.getDappUserSolutionById(commitmentId)
+        if (!dappUserSolution) {
+            throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", this.getDappUserSolution.name, {}, {commitmentId: commitmentId})
+        }
+        return dappUserSolution
     }
 }

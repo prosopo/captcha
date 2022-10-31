@@ -16,7 +16,7 @@ import { Hash } from '@polkadot/types/interfaces'
 import {
     Captcha,
     CaptchaSolution,
-    CaptchaStates,
+    CaptchaStates, DappUserSolution,
     Dataset
 } from '@prosopo/datasets'
 import { PendingCaptchaRequest } from './api'
@@ -75,4 +75,8 @@ export interface Database {
     getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string>;
 
     getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]>;
+
+    getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution | undefined>;
+
+    approveDappUserSolution(commitmentId: string): Promise<void>;
 }

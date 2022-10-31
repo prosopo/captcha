@@ -17,7 +17,7 @@ import {ProsopoContractApi, ProsopoEnvError} from '@prosopo/contract';
 import { parseCaptchaAssets } from '@prosopo/datasets';
 import express, { Router } from 'express';
 import { Tasks } from './tasks/tasks';
-import { CaptchaWithProof, DappUserSolutionResult } from './types/api';
+import {CaptchaWithProof, DappUserSolutionResult, VerifySolutionBody} from './types/api';
 import { ProsopoEnvironment } from './types/env';
 import { AccountsResponse, CaptchaSolutionBody } from './types/api';
 import { parseBlockNumber } from './util';
@@ -197,7 +197,19 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     });
 
     router.post('/v1/prosopo/provider/verify', async (req, res, next) => {
-        //TODO check if a user has solved a captcha
+        let parsed;
+        try {
+            parsed = VerifySolutionBody.parse(req.body);
+        } catch (err) {
+            return next(new ProsopoEnvError(err));
+        }
+        try {
+            const solution = await tasks.getDappUserSolution(parsed.commitmentId);
+            const statusMessage = solution.approved ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED";
+            return res.json({status: req.t(statusMessage), solutionApproved: !!solution.approved});
+        } catch (err) {
+            return next(new ProsopoEnvError(err));
+        }
     })
 
     return router;

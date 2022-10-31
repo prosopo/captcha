@@ -43,6 +43,12 @@ export const CaptchaSolutionBody = z.object({
     web2: z.boolean().optional().default(false)
 })
 
+export const VerifySolutionBody = z.object({
+    userAccount: z.string(),
+    commitmentId: z.string(),
+})
+
+
 export interface PendingCaptchaRequest {
     accountId: string,
     pending: boolean,

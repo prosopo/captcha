@@ -22,7 +22,7 @@ import {
 import {
     Captcha,
     CaptchaSolution,
-    CaptchaStates,
+    CaptchaStates, DappUserSolution,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema
 } from '@prosopo/datasets'
@@ -66,6 +66,7 @@ export class ProsopoDatabase implements Database {
             this.tables.dataset = db.collection('dataset');
             this.tables.captchas = db.collection('captchas');
             this.tables.solutions = db.collection('solutions');
+            this.tables.userSolutions = db.collection('userSolutions');
             this.tables.responses = db.collection('responses');
             this.tables.pending = db.collection('pending');
 
@@ -228,21 +229,22 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Store a Dapp User's captcha solution
      */
-    async storeDappUserSolution(captchas: CaptchaSolution[], datasetId: string) {
-        if (!isHex(datasetId)) {
-            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.storeDappUserSolution.name, {}, datasetId);
+    async storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string) {
+        if (!isHex(commitmentId)) {
+            throw new ProsopoEnvError("DATABASE.INVALID_HASH", this.storeDappUserSolution.name, {}, commitmentId);
         }
 
         // create a bulk create operation and execute
         if (captchas.length) {
-            await this.tables.solutions?.bulkWrite(captchas.map((captchaDoc) => ({
+            await this.tables.userSolutions?.bulkWrite(captchas.map((captchaDoc) => ({
                 insertOne: {
                     document: {
                         captchaId: captchaDoc.captchaId,
                         solution: captchaDoc.solution,
                         salt: captchaDoc.salt,
-                        datasetId: datasetId
-                    }
+                        commitmentId: commitmentId,
+                        approved: false
+                    } as DappUserSolution
                 }
             })));
         }
@@ -396,6 +398,35 @@ export class ProsopoDatabase implements Database {
         throw new ProsopoEnvError("DATABASE.SOLUTION_GET_FAILED");
 
     }
+
+    /**
+     * @description Get dapp user solution by ID
+     * @param {string[]} commitmentId
+     */
+    async getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution | undefined> {
+        const cursor = this.tables.userSolutions?.findOne({commitmentId: commitmentId});
+        const doc = await cursor;
+
+        if (doc) {
+            // drop the _id field
+            return doc.map(({_id, ...keepAttrs}) => keepAttrs) as DappUserSolution;
+        }
+
+        throw new ProsopoEnvError("DATABASE.SOLUTION_GET_FAILED", this.getCaptchaById.name, {}, commitmentId);
+    }
+    /**
+     * @description Approve a dapp user's solution
+     * @param {string[]} commitmentId
+     */
+    async approveDappUserSolution(commitmentId: string): Promise<void> {
+        try {
+            await this.tables.userSolutions?.findOneAndUpdate({commitmentId: commitmentId}, {$set: {approved: true}}, {upsert: false})
+        } catch(err) {
+            throw new ProsopoEnvError(err, "DATABASE.SOLUTION_APPROVE_FAILED", {}, commitmentId);
+        }
+    }
+
+
 
 
 }
