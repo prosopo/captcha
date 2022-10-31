@@ -16,12 +16,14 @@ import { Hash } from '@polkadot/types/interfaces'
 import {
     Captcha,
     CaptchaSolution,
-    CaptchaStates, DappUserSolution,
+    CaptchaStates,
     Dataset
 } from '@prosopo/datasets'
 import { PendingCaptchaRequest } from './api'
 import { WithId } from 'mongodb/mongodb';
 import consola from "consola";
+import { z } from 'zod'
+
 // Other table types from other database engines go here
 export type Table = Collection | undefined
 
@@ -41,6 +43,13 @@ export interface PendingCaptchaRequestRecord extends WithId<Document> {
     pending: boolean,
     salt: string
 }
+
+export const DappUserSolutionSchema = CaptchaSolution.extend({
+    commitmentId: z.string(),
+    approved: z.boolean()
+})
+
+export type DappUserSolution = z.infer<typeof DappUserSolutionSchema>
 
 export interface Database {
     readonly url: string;

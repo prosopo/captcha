@@ -15,14 +15,14 @@
 import {Db, Document, Filter, MongoClient} from 'mongodb';
 import {Hash} from '@polkadot/types/interfaces';
 import {isHex} from '@polkadot/util';
-import {Database, DatasetRecord, PendingCaptchaRequestRecord, Tables} from '../types';
+import {DappUserSolution, Database, DatasetRecord, PendingCaptchaRequestRecord, Tables} from '../types';
 import {
     ProsopoEnvError,
 } from '@prosopo/contract';
 import {
     Captcha,
     CaptchaSolution,
-    CaptchaStates, DappUserSolution,
+    CaptchaStates,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema
 } from '@prosopo/datasets'
