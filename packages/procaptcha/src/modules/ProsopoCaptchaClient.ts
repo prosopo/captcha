@@ -143,7 +143,7 @@ export class ProsopoCaptchaClient {
             throw new ProsopoEnvError(err);
         }
         console.log(ProsopoCaptchaClient.provider);
-        const providerUrl = hexToString(ProsopoCaptchaClient.provider.provider.serviceOrigin)
+        const providerUrl = hexToString(ProsopoCaptchaClient.provider.provider.serviceOrigin).replace(/\0/g, '')
 
         console.log("providerUrl", providerUrl)
 
@@ -161,7 +161,7 @@ export class ProsopoCaptchaClient {
             this.callbacks.onAccountChange(account);
         }
 
-        this.manager.update({account});
+        this.manager.update({account, providerUrl});
     }
 
     public onAccountUnset() {

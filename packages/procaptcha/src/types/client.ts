@@ -55,6 +55,7 @@ export interface ICaptchaContextState {
     config: ProsopoCaptchaConfig;
     contractAddress?: string;
     account?: InjectedAccountWithMeta;
+    providerUrl?: string;
 }
 
 export interface ICaptchaContextReducer {
