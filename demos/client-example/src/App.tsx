@@ -103,6 +103,7 @@ function App() {
     const [email, setEmail] = useState<string>('');
     const [name, setName] = useState<string>('');
     const [password, setPassword] = useState('');
+    const [account, setAccount] = useState<TExtensionAccount | null>(null);
 
     const [isError, setIsError] = useState(false);
     const [message, setMessage] = useState('');
@@ -117,6 +118,7 @@ function App() {
         if(account) {
             //setShowCaptchas(true);
             status.update({info: "Selected account: " + account?.meta.name});
+            setAccount(account);
             console.log("CAPTCHA API", clientInterface.getCaptchaApi());
         }
     };
@@ -155,10 +157,24 @@ function App() {
 
     const onSubmitHandler = () => {
         setShowCaptchas(true);
+    };
+
+    const onChangeHandler = () => {
+        setIsLogin(!isLogin);
+        setMessage('');
+    };
+
+    const onSolved = ([result, commitmentId, tx, commitment]: TCaptchaSubmitResult) => {
+        setShowCaptchas(false);
+
+        status.update({info: ["onSolved:", result.status]});
         const payload = {
             email,
             name,
             password,
+            web3Account: account,
+            providerUrl: manager.state.providerUrl,
+            commitmentId
         };
         fetch(`${manager.state.config.serverUrl}/${isLogin ? 'login' : 'signup'}`, {
             method: 'POST',
@@ -180,22 +196,11 @@ function App() {
                     }
                 } catch (err) {
                     console.log(err);
-                };
+                }
             })
             .catch(err => {
                 console.log(err);
             });
-    };
-
-    const onChangeHandler = () => {
-        setIsLogin(!isLogin);
-        setMessage('');
-    };
-
-    const onSolved = ([result, tx, commitment]: TCaptchaSubmitResult) => {
-        setShowCaptchas(false);
-
-        status.update({info: ["onSolved:", result.status]});
     }
 
     const onChange = (solution: string[][]) => {
@@ -230,7 +235,7 @@ function App() {
 
                 <div style={{order: 1}}>
                     {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
-                    {status.state.error && <Box className={"status error"}>{JSON.stringify(status.state.error)}</Box>}
+                    {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
                     {clientInterface.getExtension() && !manager.state.account && showCaptchas && clientInterface.getExtension().getAccounts() &&
                         <ExtensionAccountSelect
                         value={manager.state.account}
@@ -251,15 +256,6 @@ function App() {
                                 <Button style={styles.buttonAlt} onClick={onChangeHandler}>
                                     <Typography style={styles.buttonAltText}>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
                                 </Button>
-                                <Button
-                                    onClick={showCaptchaClick}
-                                    className={"iAmHumanButton"}
-                                    {...addDataAttr({dev: {cy: 'button-human'}})}
-                                >
-                                    <Typography className={"iAmHumanButtonLabel"}>
-                                        I am human
-                                    </Typography>
-                                </Button>
                             </div>
                         </form>
                     </div>
@@ -267,13 +263,6 @@ function App() {
                     <CaptchaContextManager.Provider value={manager}>
                         <CaptchaComponent {...{clientInterface, show: showCaptchas}} />
                     </CaptchaContextManager.Provider>
-
-                    {manager.state.account && !manager.state.config.web2 &&
-                      <Button onClick={disconnectAccount} className={"iAmHumanButton"}>
-                        <Typography className={"iAmHumanButtonLabel"}>
-                          Disconnect account
-                        </Typography>
-                      </Button>}
                 </div>
             </div>
 
