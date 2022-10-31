@@ -13,10 +13,15 @@ async function main() {
     app.use(express.json());
 
     app.use((_, res, next) => {
+
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
-        res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Origin, Accept, Content-Type, Authorization');
+        res.setHeader('Access-Control-Allow-Headers', 'Origin, Content-Type, X-Auth-Token, Authorization');
         next();
+    });
+
+    app.options('/*', (_, res) => {
+        res.sendStatus(200);
     });
 
     const uri = await memoryServerSetup();
