@@ -36,10 +36,10 @@ const styles = {
     heading: {
         fontSize: 30,
         fontWeight: 'bold',
-        marginLeft: '10%',
         marginTop: '5%',
         marginBottom: '5%',
         color: 'black',
+        textAlign: 'center'
     },
     form: {
         flex: 1,
@@ -54,21 +54,23 @@ const styles = {
         paddingTop: '10%',
     },
     input: {
-        width: '80%',
+        width: '100%',
         borderBottomWidth: 1,
         borderBottomColor: 'black',
         paddingTop: 10,
         fontSize: 16,
         minHeight: 40,
+        margin: '0.5em'
     },
     button: {
-        width: '80%',
+        width: '100%',
         backgroundColor: 'black',
         height: 40,
         borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
         marginVertical: 5,
+        margin: '0.5em'
     },
     buttonText: {
         color: 'white',
@@ -76,7 +78,7 @@ const styles = {
         fontWeight: '400'
     },
     buttonAlt: {
-        width: '80%',
+        width: '100%',
         borderWidth: 1,
         height: 40,
         borderRadius: 50,
@@ -156,6 +158,7 @@ function App() {
     }
 
     const onSubmitHandler = () => {
+        //TODO make this always load CAPTCHA challenges, even if the user has already completed one
         setShowCaptchas(true);
     };
 
@@ -231,9 +234,7 @@ function App() {
     return (
         <Box className={"App"}>
             <div className={"flex-container"}>
-
-
-                <div style={{order: 1}}>
+                <div>
                     {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
                     {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
                     {clientInterface.getExtension() && !manager.state.account && showCaptchas && clientInterface.getExtension().getAccounts() &&
