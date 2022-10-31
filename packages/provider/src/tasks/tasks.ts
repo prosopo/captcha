@@ -39,7 +39,6 @@ import {
     CaptchaStates,
     CaptchaStatus,
     CaptchaWithoutId,
-    DappUserSolution,
     LastCorrectCaptcha,
     buildDataset,
     compareCaptchaSolutions,
@@ -51,6 +50,7 @@ import consola from "consola";
 import {buildDecodeVector} from '../codec/codec';
 import {
     CaptchaWithProof,
+    DappUserSolution,
     DappUserSolutionResult,
     Database,
     DatasetRecord,
