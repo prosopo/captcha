@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 
 import {UserInterface} from '../models/user';
 import {Connection} from "mongoose";
+import {isVerified} from "../utils/ProsopoCaptchaApi";
 
 const signup = async (mongoose: Connection, req, res, next) => {
     try {
@@ -18,27 +19,32 @@ const signup = async (mongoose: Connection, req, res, next) => {
 
         if (dbUser) {
             return res.status(409).json({message: "email already exists"});
-        } else if (req.body.email && req.body.password) {
-            // password hash
-            bcrypt.hash(req.body.password, 12, (err, passwordHash) => {
-                if (err) {
-                    return res.status(500).json({message: "couldnt hash the password"});
-                } else if (passwordHash) {
-                    return User.create(({
-                        email: req.body.email,
-                        name: req.body.name,
-                        password: passwordHash,
-                    }))
-                        .then(() => {
-                            res.status(200).json({message: "user created"});
-                        })
-                        .catch(err => {
-                            console.log(err);
-                            res.status(502).json({message: "error while creating the user"});
-                        });
-                }
+        } else if (req.body.email && req.body.password && req.body.providerUrl && req.body.web3Account && req.body.commitmentId) {
 
-            });
+            if (await isVerified(req.body.providerUrl, req.body.web3Account, req.body.commitmentId)) {
+
+                // password hash
+                bcrypt.hash(req.body.password, 12, (err, passwordHash) => {
+                    if (err) {
+                        return res.status(500).json({message: "couldnt hash the password"});
+                    } else if (passwordHash) {
+                        return User.create(({
+                            email: req.body.email,
+                            name: req.body.name,
+                            password: passwordHash,
+                        }))
+                            .then(() => {
+                                res.status(200).json({message: "user created"});
+                            })
+                            .catch(err => {
+                                console.log(err);
+                                res.status(502).json({message: "error while creating the user"});
+                            });
+                    }
+                });
+            } else {
+                res.status(401).json({message: "user has not completed a captcha"});
+            }
         } else if (!req.body.password) {
             return res.status(400).json({message: "password not provided"});
         } else if (!req.body.email) {
@@ -82,6 +88,7 @@ const login = async (mongoose: Connection, req, res) => {
             res.status(500).json({message: err.message || 'internal server error'});
         });
 }
+
 
 const isAuth = (req, res) => {
     const authHeader = req.get("Authorization");
