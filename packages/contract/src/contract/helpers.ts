@@ -102,8 +102,11 @@ export function convertSignerToAddress(signer?: Signer | string): string {
  * @return {string} string
  */
 export function stringToHexPadded(data: string): string {
-    // TODO should the 64 reflect system architecture?
-    const bitLength = 64
+    const maxLength = 64
+    if (data.length > maxLength) {
+        throw new Error(`stringToHexPadded: string length ${data.length} exceeds ${maxLength}`)
+    }
+
     const hexString = stringToHex(data).replace("0x", "");
-    return `0x${Array(bitLength - hexString.length + 1).join("0")}${hexString}`
+    return `0x${Array(maxLength - hexString.length + 1).join("0")}${hexString}`
 }
