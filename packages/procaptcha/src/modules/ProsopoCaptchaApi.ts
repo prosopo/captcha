@@ -24,7 +24,7 @@ import { Signer } from "@polkadot/api/types";
 import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoRandomProviderResponse } from "../types/api";
 import { TransactionResponse } from "../types/contract";
 
-import ProviderApi from "../api/ProviderApi";
+import {ProviderApi} from "@prosopo/api";
 import ProsopoContract from "../api/ProsopoContract";
 import {TCaptchaSubmitResult} from '../types/client';
 import {ProsopoApiError} from "../api/handlers";
@@ -38,12 +38,14 @@ export type SubmitFunction =
 
 export class ProsopoCaptchaApi {
 
+    protected userAccount: string;
     protected contract: ProsopoContract;
     protected provider: ProsopoRandomProviderResponse;
     protected providerApi: ProviderApi;
     protected submitCaptchaFn: SubmitFunction
 
-    constructor(contract: ProsopoContract, provider: ProsopoRandomProviderResponse, providerApi: ProviderApi, web2: boolean) {
+    constructor(userAccount: string, contract: ProsopoContract, provider: ProsopoRandomProviderResponse, providerApi: ProviderApi, web2: boolean) {
+        this.userAccount = userAccount;
         this.contract = contract;
         this.provider = provider;
         this.providerApi = providerApi;
@@ -53,7 +55,7 @@ export class ProsopoCaptchaApi {
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
         let captchaChallenge: GetCaptchaResponse;
         try {
-            captchaChallenge = await this.providerApi.getCaptchaChallenge(this.provider);
+            captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider);
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge);
         } catch (err) {
             throw new ProsopoEnvError(err)
@@ -85,12 +87,17 @@ export class ProsopoCaptchaApi {
 
     async submitCaptchaSolutionWeb2(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]): Promise<TCaptchaSubmitResult> {
         const salt = randomAsHex();
+        const tree = new CaptchaMerkleTree();
         const captchaSolutionsSalted: CaptchaSolution[] = solutions.map(
             (captcha) => ({
                 ...captcha,
                 salt,
             })
         );
+        const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha));
+
+        tree.build(captchasHashed);
+        const commitmentId = tree.root!.hash;
 
         let result: CaptchaSolutionResponse;
 
@@ -99,7 +106,7 @@ export class ProsopoCaptchaApi {
         } catch (err) {
             throw new ProsopoApiError(err)
         }
-        return [result, undefined, undefined];
+        return [result, commitmentId, undefined, undefined];
     }
 
     public async submitCaptchaSolutionWeb3(signer: Signer, requestHash: string, datasetId: string, solutions: CaptchaSolution[]) : Promise<TCaptchaSubmitResult> {
@@ -146,7 +153,7 @@ export class ProsopoCaptchaApi {
             throw new ProsopoEnvError(err)
         }
 
-        return [result, tx, commitment];
+        return [result, commitmentId, tx, commitment];
     }
 
 }

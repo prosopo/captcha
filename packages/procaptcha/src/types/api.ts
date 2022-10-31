@@ -48,6 +48,11 @@ export interface GetCaptchaResponse {
   requestHash: string;
 }
 
+export interface GetVerificationResponse {
+  status: string,
+  solutionApproved: boolean
+}
+
 export interface CaptchaSolutionResponse {
   captchas: CaptchaResponseCaptcha[];
   status: string;

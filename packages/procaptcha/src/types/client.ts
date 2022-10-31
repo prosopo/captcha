@@ -20,7 +20,9 @@ import { CaptchaSolutionCommitment} from "@prosopo/datasets";
 
 export type TExtensionAccount = InjectedAccountWithMeta;
 
-export type TCaptchaSubmitResult = [CaptchaSolutionResponse, TransactionResponse?, CaptchaSolutionCommitment?];
+export type CaptchaSolutionCommitmentId = string;
+
+export type TCaptchaSubmitResult = [CaptchaSolutionResponse, CaptchaSolutionCommitmentId, TransactionResponse?, CaptchaSolutionCommitment?];
 
 export interface IExtensionInterface {
     checkExtension(): void;

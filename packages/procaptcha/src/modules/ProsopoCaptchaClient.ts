@@ -24,7 +24,7 @@ import {ProsopoRandomProviderResponse} from "../types/api";
 import {ProsopoContract} from "../api/ProsopoContract";
 import {getProsopoContract, getWsProvider} from "./contract";
 import {getExtension} from "./extension";
-import {ProviderApi} from "../api/ProviderApi";
+import {ProviderApi} from "@prosopo/api";
 import {ProsopoCaptchaApi} from "./ProsopoCaptchaApi";
 import {ProsopoEnvError} from "@prosopo/contract";
 import {hexToString} from '@polkadot/util'
@@ -149,7 +149,9 @@ export class ProsopoCaptchaClient {
 
         this.providerApi = this.getProviderApi(providerUrl);
 
-        ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(ProsopoCaptchaClient.contract,
+        ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(
+            account.address,
+            ProsopoCaptchaClient.contract,
             ProsopoCaptchaClient.provider,
             this.providerApi,
             this.manager.state.config['web2']
