@@ -1,5 +1,13 @@
 import {useState} from "react";
-import {Box, Button, Modal, Typography} from "@mui/material";
+import {
+    Box,
+    Button,
+    Typography,
+    FormControl,
+    FormGroup,
+    Stack,
+    TextField
+} from "@mui/material";
 
 import {
     TCaptchaSubmitResult,
@@ -11,93 +19,11 @@ import {
     CaptchaContextManager,
     ExtensionAccountSelect,
     useCaptcha,
-    addDataAttr
 } from "@prosopo/procaptcha-react";
 
 import config from "./config";
 
 import "./App.css";
-
-const styles = {
-    image: {
-        flex: 1,
-        width: '100%',
-        alignItems: 'center',
-    },
-    card: {
-        flex: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.4)',
-        width: '80%',
-        marginTop: '5%',
-        borderRadius: 20,
-        maxHeight: 380,
-        paddingBottom: '5%',
-    },
-    heading: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        marginTop: '5%',
-        marginBottom: '5%',
-        color: 'black',
-        textAlign: 'center'
-    },
-    form: {
-        flex: 1,
-        justifyContent: 'space-between',
-        paddingBottom: '5%',
-    },
-    inputs: {
-        width: '100%',
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingTop: '10%',
-    },
-    input: {
-        width: '100%',
-        borderBottomWidth: 1,
-        borderBottomColor: 'black',
-        paddingTop: 10,
-        fontSize: 16,
-        minHeight: 40,
-        margin: '0.5em'
-    },
-    button: {
-        width: '100%',
-        backgroundColor: 'black',
-        height: 40,
-        borderRadius: 50,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginVertical: 5,
-        margin: '0.5em'
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: 16,
-        fontWeight: '400'
-    },
-    buttonAlt: {
-        width: '100%',
-        borderWidth: 1,
-        height: 40,
-        borderRadius: 50,
-        borderColor: 'black',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginVertical: 5,
-    },
-    buttonAltText: {
-        color: 'black',
-        fontSize: 16,
-        fontWeight: '400',
-    },
-    message: {
-        fontSize: 16,
-        marginVertical: '5%',
-    },
-};
-
 
 function App() {
 
@@ -117,7 +43,7 @@ function App() {
     };
 
     const onAccountChange = (account: TExtensionAccount) => {
-        if(account) {
+        if (account) {
             //setShowCaptchas(true);
             status.update({info: "Selected account: " + account?.meta.name});
             setAccount(account);
@@ -150,7 +76,8 @@ function App() {
                     }
                 } catch (err) {
                     console.log(err);
-                };
+                }
+                ;
             })
             .catch(err => {
                 console.log(err);
@@ -175,7 +102,7 @@ function App() {
             email,
             name,
             password,
-            web3Account: account,
+            web3Account: account.address,
             providerUrl: manager.state.providerUrl,
             commitmentId
         };
@@ -232,40 +159,74 @@ function App() {
     const status = clientInterface.status;
 
     return (
-        <Box className={"App"}>
-            <div className={"flex-container"}>
-                <div>
-                    {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
-                    {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
-                    {clientInterface.getExtension() && !manager.state.account && showCaptchas && clientInterface.getExtension().getAccounts() &&
-                        <ExtensionAccountSelect
-                        value={manager.state.account}
-                        options={clientInterface.getExtension().getAccounts()}
-                        onChange={clientInterface.onAccountChange.bind(clientInterface)}
-                      />}
-                    <div style={styles.card}>
-                        <h1 style={styles.heading}>{isLogin ? 'Login' : 'Signup'}</h1>
-                        <form style={styles.form}>
-                            <div style={styles.inputs}>
-                                <input style={styles.input} placeholder="Email" autoCapitalize="none" onChange={(e) => setEmail(e.target.value)}></input>
-                                {!isLogin && <input style={styles.input} placeholder="Name" onChange={(e) => setName(e.target.value)}></input>}
-                                <input type="password" style={styles.input} placeholder="Password" onChange={(e) => setPassword(e.target.value)}></input>
-                                <span style={styles.message}>{message ? getMessage() : null}</span>
-                                <Button style={styles.button} onClick={onSubmitHandler}>
-                                    <Typography style={styles.buttonText}>Done</Typography>
-                                </Button>
-                                <Button style={styles.buttonAlt} onClick={onChangeHandler}>
-                                    <Typography style={styles.buttonAltText}>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
+        <Box className={"App"} sx={{width: "80%", display: "flex"}}>
+            <Box>
+                {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
+                {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
+                {message ? getMessage() : null}
+                {clientInterface.getExtension() && !manager.state.account && showCaptchas && clientInterface.getExtension().getAccounts() &&
+                  <ExtensionAccountSelect
+                    value={manager.state.account}
+                    options={clientInterface.getExtension().getAccounts()}
+                    onChange={clientInterface.onAccountChange.bind(clientInterface)}
+                  />}
+                <Box>
+                    <h1>{isLogin ? 'Login' : 'Signup'}</h1>
+                    <FormGroup sx={{'& .MuiTextField-root': { m: 1 }}}>
+                        <FormControl>
+                            <TextField
+                                id="email"
+                                label="Email"
+                                type="text"
+                                autoComplete="Email"
+                                autoCapitalize="none"
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </FormControl>
 
-                    <CaptchaContextManager.Provider value={manager}>
-                        <CaptchaComponent {...{clientInterface, show: showCaptchas}} />
-                    </CaptchaContextManager.Provider>
-                </div>
-            </div>
+                        {!isLogin &&
+                          <FormControl>
+                            <TextField
+                              id="name"
+                              label="Name"
+                              type="text"
+                              autoComplete="Name"
+                              onChange={(e) => setName(e.target.value)}
+                            />
+                          </FormControl>
+                        }
+
+                        <FormControl>
+                            <TextField
+                                id="password"
+                                label="Password"
+                                type="password"
+                                autoComplete="Password"
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </FormControl>
+
+                        <div>
+                            <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                <Button variant="contained" onClick={onSubmitHandler}>
+                                    <Typography>Done</Typography>
+                                </Button>
+
+                                <Button variant="text" onClick={onChangeHandler}>
+                                    <Typography>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
+                                </Button>
+                            </Stack>
+                        </div>
+
+                    </FormGroup>
+
+
+                </Box>
+
+                <CaptchaContextManager.Provider value={manager}>
+                    <CaptchaComponent {...{clientInterface, show: showCaptchas}} />
+                </CaptchaContextManager.Provider>
+            </Box>
 
         </Box>
     );
