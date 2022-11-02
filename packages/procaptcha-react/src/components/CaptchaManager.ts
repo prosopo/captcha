@@ -14,45 +14,51 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
 
-import { createContext, useReducer } from "react";
+import { createContext, useReducer } from 'react'
 import {
+    CaptchaEventCallbacks,
+    ICaptchaContextReducer,
     ICaptchaContextState,
+    ProsopoCaptchaClient,
     captchaContextReducer,
     captchaStatusReducer,
-    ICaptchaContextReducer,
-    ProsopoCaptchaClient,
-    CaptchaEventCallbacks,
-} from "@prosopo/procaptcha";
+} from '@prosopo/procaptcha'
 
-
-export function useCaptcha(defaultContext: ICaptchaContextState, callbacks?: CaptchaEventCallbacks): ProsopoCaptchaClient {
-    const [context, updateContext] = useReducer(captchaContextReducer, defaultContext);
-    const [status, updateStatus] = useReducer(captchaStatusReducer, {});
-    return new ProsopoCaptchaClient({ state: context, update: updateContext }, { state: status, update: updateStatus }, callbacks);
+export function useCaptcha(
+    defaultContext: ICaptchaContextState,
+    callbacks?: CaptchaEventCallbacks
+): ProsopoCaptchaClient {
+    const [context, updateContext] = useReducer(captchaContextReducer, defaultContext)
+    const [status, updateStatus] = useReducer(captchaStatusReducer, {})
+    return new ProsopoCaptchaClient(
+        { state: context, update: updateContext },
+        { state: status, update: updateStatus },
+        callbacks
+    )
 }
 
 export const CaptchaContextManager = createContext({
     state: {
         config: {
-            "providerApi.baseURL": "",
-            "providerApi.prefix": "",
-            "dappAccount": "",
-            "dappUrl": "",
-            "solutionThreshold": 0,
-            "web2": false,
-            "prosopoContractAccount": "",
-            "accountCreator": {
-                "area" : {width: 0, height: 0},
-                "offsetParameter" : 0,
-                "multiplier" : 0,
-                "fontSizeFactor" : 0,
-                "maxShadowBlur" : 0,
-                "numberOfRounds" : 0,
-                "seed" : 0
+            'providerApi.baseURL': '',
+            'providerApi.prefix': '',
+            dappAccount: '',
+            dappUrl: '',
+            solutionThreshold: 0,
+            web2: false,
+            prosopoContractAccount: '',
+            accountCreator: {
+                area: { width: 0, height: 0 },
+                offsetParameter: 0,
+                multiplier: 0,
+                fontSizeFactor: 0,
+                maxShadowBlur: 0,
+                numberOfRounds: 0,
+                seed: 0,
             },
-            "dappName" :"",
-            "serverUrl": ""
-        }
+            dappName: '',
+            serverUrl: '',
+        },
     },
     update: () => {},
-} as ICaptchaContextReducer);
+} as ICaptchaContextReducer)

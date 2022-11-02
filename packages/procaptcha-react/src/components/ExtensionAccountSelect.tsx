@@ -13,29 +13,36 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
-import { SyntheticEvent } from "react";
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
-import { TExtensionAccount } from "@prosopo/procaptcha";
-import { useTranslation } from "@prosopo/i18n";
+import { SyntheticEvent } from 'react'
+import Autocomplete from '@mui/material/Autocomplete'
+import TextField from '@mui/material/TextField'
+import { TExtensionAccount } from '@prosopo/procaptcha'
+import { useTranslation } from '@prosopo/i18n'
 
-export const ExtensionAccountSelect = ({value, options, onChange}: 
-        {value?: TExtensionAccount, options: TExtensionAccount[], onChange: (value: TExtensionAccount | null) => void}) => {
-    const { t } = useTranslation();
+export const ExtensionAccountSelect = ({
+    value,
+    options,
+    onChange,
+}: {
+    value?: TExtensionAccount
+    options: TExtensionAccount[]
+    onChange: (value: TExtensionAccount | null) => void
+}) => {
+    const { t } = useTranslation()
 
     return (
         <Autocomplete
             disablePortal
-            id="select-accounts" 
+            id="select-accounts"
             options={options}
             value={value}
             isOptionEqualToValue={(option, value) => option.address === value.address}
             onChange={(event: SyntheticEvent<Element, Event>, value: TExtensionAccount | null) => onChange(value)}
-            sx={{ width: 550 }} 
+            sx={{ width: 550 }}
             getOptionLabel={(option: any) => `${option.meta.name}\n${option.address}`}
-            renderInput={(props) => <TextField {...props} label={t('WIDGET.SELECT_ACCOUNT')} />} 
+            renderInput={(props) => <TextField {...props} label={t('WIDGET.SELECT_ACCOUNT')} />}
         />
-    );
+    )
 }
 
-export default ExtensionAccountSelect;
+export default ExtensionAccountSelect
