@@ -1,11 +1,11 @@
 // Copyright 2021-2022 Prosopo (UK) Ltd.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,53 +17,45 @@ export default () => ({
     logLevel: 'debug',
     defaultEnvironment: 'development',
     contract: {
-        abi: '../contract/src/abi/prosopo.json'
+        abi: '../contract/src/abi/prosopo.json',
     },
     networks: {
         development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL,
+            endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944',
             contract: {
                 address: process.env.CONTRACT_ADDRESS,
-                name: 'prosopo'
+                name: 'prosopo',
             },
-            accounts: [
-                '//Alice',
-                '//Bob',
-                '//Charlie',
-                '//Dave',
-                '//Eve',
-                '//Ferdie'
-            ]
-        }
+            accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
+        },
     },
     captchas: {
         solved: {
-            count: 1
+            count: 1,
         },
         unsolved: {
-            count: 1
-        }
+            count: 1,
+        },
     },
     captchaSolutions: {
         captchaBlockRecency: 10,
         requiredNumberOfSolutions: 3,
         solutionWinningPercentage: 80,
-        captchaFilePath: '../../data/captchas.json'
+        captchaFilePath: '../../data/captchas.json',
     },
     database: {
         development: {
             type: 'mongo',
             endpoint: `mongodb://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}`,
             dbname: process.env.DATABASE_NAME,
-        }
+        },
     },
-    
-    assets : {
-        absolutePath: '',
-        basePath: ''
-    },
-    server : {
-        baseURL: process.env.API_BASE_URL,
-    }
 
-});
+    assets: {
+        absolutePath: '',
+        basePath: '',
+    },
+    server: {
+        baseURL: process.env.API_BASE_URL,
+    },
+})

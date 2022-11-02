@@ -11,12 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {ProsopoEnvError} from "@prosopo/contract";
+import { ProsopoEnvError } from '@prosopo/contract'
 
 export const handleErrors = (err: ProsopoEnvError, req, res, next) => {
-
     return res.status(500).json({
         message: err.message,
-        name: err.name
+        name: err.name,
     })
 }

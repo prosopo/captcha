@@ -11,17 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { blake2AsHex } from '@polkadot/util-crypto';
-import {hexToString, isHex, stringToHex} from '@polkadot/util'
+import { blake2AsHex } from '@polkadot/util-crypto'
+import { hexToString, isHex, stringToHex } from '@polkadot/util'
 
-function main () {
+function main() {
     const arg = process.argv.slice(2)[0]
-    console.log("arg                :", arg);
-    console.log("blake2AsHex        :", blake2AsHex(arg));
-    console.log("isHex              :", isHex(arg))
-    console.log("hexToString        :", hexToString(arg));
-    console.log("stringToHex        :", stringToHex(arg));
-
+    console.log('arg                :', arg)
+    console.log('blake2AsHex        :', blake2AsHex(arg))
+    console.log('isHex              :', isHex(arg))
+    console.log('hexToString        :', hexToString(arg))
+    console.log('stringToHex        :', stringToHex(arg))
 }
 
-main();
+main()

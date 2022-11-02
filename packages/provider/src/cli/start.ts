@@ -11,50 +11,50 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import express from 'express';
-import cors from 'cors';
+import express from 'express'
+import cors from 'cors'
 
 // import { mnemonicValidate } from '@polkadot/util-crypto';
 
-import { prosopoRouter } from '../api';
-import { LocalAssetsResolver } from '../assets';
-import { Environment, loadEnv } from '../env';
+import { prosopoRouter } from '../api'
+import { LocalAssetsResolver } from '../assets'
+import { Environment, loadEnv } from '../env'
 // import { MockEnvironment } from "../tests/mocks/mockenv";
-import { handleErrors } from '../errors';
+import { handleErrors } from '../errors'
 // import { processArgs } from './argv';
 
 // import yargs from 'yargs';
 // import { hideBin } from 'yargs/helpers';
 
 // import dotenv from 'dotenv';
-import { ProsopoEnvironment } from '../types/env';
+import { ProsopoEnvironment } from '../types/env'
 
-import { Server } from 'http';
-import { ProsopoEnvError } from "@prosopo/contract";
-import { i18nMiddleware } from "@prosopo/i18n";
+import { Server } from 'http'
+import { ProsopoEnvError } from '@prosopo/contract'
+import { i18nMiddleware } from '@prosopo/i18n'
 
 // loadEnv();
 
-let apiAppSrv: Server;
+let apiAppSrv: Server
 // let imgAppSrv: Server;
 
 function startApi(env: ProsopoEnvironment) {
-    const apiApp = express();
-    const apiPort = process.env.API_PORT || 3000;
+    const apiApp = express()
+    const apiPort = process.env.API_PORT || 3000
 
-    apiApp.use(cors());
-    apiApp.use(express.json());
-    apiApp.use(i18nMiddleware({}));
-    apiApp.use(prosopoRouter(env));
+    apiApp.use(cors())
+    apiApp.use(express.json())
+    apiApp.use(i18nMiddleware({}))
+    apiApp.use(prosopoRouter(env))
 
     if (env.assetsResolver instanceof LocalAssetsResolver) {
-        env.assetsResolver.injectMiddleware(apiApp); //
+        env.assetsResolver.injectMiddleware(apiApp) //
     }
 
-    apiApp.use(handleErrors);
+    apiApp.use(handleErrors)
     apiAppSrv = apiApp.listen(apiPort, () => {
-        env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`);
-    });
+        env.logger.info(`Prosopo app listening at http://localhost:${apiPort}`)
+    })
 }
 
 // function startImg() {
@@ -74,36 +74,33 @@ function startApi(env: ProsopoEnvironment) {
 
 // const argv = yargs(hideBin(process.argv)).argv;
 
+async function start(nodeEnv: string) {
+    loadEnv()
 
-async function start (nodeEnv: string) {
-
-    loadEnv();
-
-    let env: ProsopoEnvironment;
+    let env: ProsopoEnvironment
 
     if (nodeEnv !== 'test') {
         if (!process.env.PROVIDER_MNEMONIC) {
-            throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED");
+            throw new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED')
         }
-        env = new Environment(process.env.PROVIDER_MNEMONIC);
+        env = new Environment(process.env.PROVIDER_MNEMONIC)
     } else {
-    // env = new MockEnvironment();
-        return;
+        // env = new MockEnvironment();
+        return
     }
 
-    await env.isReady();
-    startApi(env);
+    await env.isReady()
+    startApi(env)
 
     // if (argv['img'])
     // startImg();
 }
 
 function stop() {
-    apiAppSrv.close();
+    apiAppSrv.close()
     // imgAppSrv.close();
 }
 
-start(process.env.NODE_ENV || 'development')
-    .catch((error) => {
-        console.error(error);
-    });
+start(process.env.NODE_ENV || 'development').catch((error) => {
+    console.error(error)
+})
