@@ -1,39 +1,36 @@
-
-
-import {HexString} from "@polkadot/util/types";
+import { HexString } from '@polkadot/util/types'
 import {
     Captcha,
-    CaptchasSchema,
     CaptchaTypes,
     CaptchaWithoutId,
     CaptchaWithoutIdRaw,
-    SelectAllCaptchaSchema
-} from "./captcha";
-import {z} from "zod";
-
+    CaptchasSchema,
+    SelectAllCaptchaSchema,
+} from './captcha'
+import { z } from 'zod'
 
 type DatasetBase = {
-    datasetId?: HexString | string | null;
-    datasetContentId?: HexString | string | null;
-    format: CaptchaTypes;
-    contentTree?: string[][];
-    solutionTree?: string[][];
-};
+    datasetId?: HexString | string | null
+    datasetContentId?: HexString | string | null
+    format: CaptchaTypes
+    contentTree?: string[][]
+    solutionTree?: string[][]
+}
 
 export interface Dataset extends DatasetBase {
-    captchas: CaptchaWithoutId[] | Captcha[];
+    captchas: CaptchaWithoutId[] | Captcha[]
 }
 
 export interface DatasetRaw extends DatasetBase {
-    captchas: CaptchaWithoutIdRaw[];
+    captchas: CaptchaWithoutIdRaw[]
 }
 
 export type DatasetWithIds = {
-    datasetId: HexString | string,
-    datasetContentId: HexString | string | null;
-    captchas: Captcha[],
-    format: CaptchaTypes,
-    contentTree?: string[][],
+    datasetId: HexString | string
+    datasetContentId: HexString | string | null
+    captchas: Captcha[]
+    format: CaptchaTypes
+    contentTree?: string[][]
     solutionTree?: string[][]
 }
 
@@ -59,10 +56,10 @@ export const DatasetWithIdsSchema = z.object({
     captchas: z.array(SelectAllCaptchaSchema),
     format: z.nativeEnum(CaptchaTypes),
     solutionTree: z.array(z.array(z.string())).optional(),
-    contentTree: z.array(z.array(z.string())).optional()
+    contentTree: z.array(z.array(z.string())).optional(),
 })
 
 export const DatasetWithIdsAndTreeSchema = DatasetWithIdsSchema.extend({
     solutionTree: z.array(z.array(z.string())),
-    contentTree: z.array(z.array(z.string()))
+    contentTree: z.array(z.array(z.string())),
 })
