@@ -58,12 +58,8 @@ function startApi(env: ProsopoEnvironment) {
     });
 }
 
-function startFileSrv() {
+function startFileSrv(port: number | string, locations: string[]) {
     const app = express();
-    const port = process.env.FILE_SRV_PORT || 4000;
-    const dataPaths = JSON.parse(process.env.FILE_SRV_PATHS || "[]");
-    // if single path given convert to array
-    const locations = Array.isArray(dataPaths) ? dataPaths : [dataPaths];
 
     locations.forEach(loc => {
         // allow local filesystem lookup at each location
@@ -100,7 +96,14 @@ async function start (nodeEnv: string) {
     await env.isReady();
     startApi(env);
 
-    startFileSrv();
+
+    // setup the file server
+    const port = process.env.FILE_SRV_PORT || 4000;
+    // accept multiple paths for locations of files
+    const paths = JSON.parse(process.env.FILE_SRV_PATHS || "[]");
+    // if single path given convert to array
+    const locations = Array.isArray(paths) ? paths : [paths];
+    startFileSrv(port, locations);
 }
 
 function stop() {
