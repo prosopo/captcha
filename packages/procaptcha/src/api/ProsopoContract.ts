@@ -14,33 +14,44 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 // import {Hash} from '@polkadot/types/interfaces';
-import ProsopoContractBase from "./ProsopoContractBase";
-import { Signer } from '@polkadot/api/types';
-import {ProsopoDappOperatorIsHumanUserResponse, TransactionResponse} from '../types';
-import { ProsopoRandomProviderResponse } from "../types";
-import { CaptchaSolutionCommitment } from "@prosopo/datasets";
+import ProsopoContractBase from './ProsopoContractBase'
+import { Signer } from '@polkadot/api/types'
+import { ProsopoDappOperatorIsHumanUserResponse, TransactionResponse } from '../types'
+import { ProsopoRandomProviderResponse } from '../types'
+import { CaptchaSolutionCommitment } from '@prosopo/datasets'
 
 export class ProsopoContract extends ProsopoContractBase {
-
     public async getRandomProvider(): Promise<ProsopoRandomProviderResponse> {
-        return await this.query('getRandomActiveProvider', [this.account.address, this.dappAddress]) as ProsopoRandomProviderResponse;
+        return (await this.query('getRandomActiveProvider', [
+            this.account.address,
+            this.dappAddress,
+        ])) as ProsopoRandomProviderResponse
     }
 
     public async getCaptchaSolutionCommitment(commitmentId: string) {
-        return await this.query('getCaptchaSolutionCommitment', [commitmentId]) as CaptchaSolutionCommitment;
+        return (await this.query('getCaptchaSolutionCommitment', [commitmentId])) as CaptchaSolutionCommitment
     }
 
-    public async dappUserCommit(signer: Signer, captchaDatasetId: string, userMerkleTreeRoot: string, providerAddress: string): Promise<TransactionResponse> {
-        return await this.transaction(signer, 'dappUserCommit', [this.dappAddress, captchaDatasetId, userMerkleTreeRoot, providerAddress]);
+    public async dappUserCommit(
+        signer: Signer,
+        captchaDatasetId: string,
+        userMerkleTreeRoot: string,
+        providerAddress: string
+    ): Promise<TransactionResponse> {
+        return await this.transaction(signer, 'dappUserCommit', [
+            this.dappAddress,
+            captchaDatasetId,
+            userMerkleTreeRoot,
+            providerAddress,
+        ])
     }
 
     public async dappOperatorIsHumanUser(solutionThreshold: number): Promise<ProsopoDappOperatorIsHumanUserResponse> {
-
-        return await this.query('dappOperatorIsHumanUser', [this.account.address, solutionThreshold]) as ProsopoDappOperatorIsHumanUserResponse;
+        return (await this.query('dappOperatorIsHumanUser', [
+            this.account.address,
+            solutionThreshold,
+        ])) as ProsopoDappOperatorIsHumanUserResponse
     }
-
-
-
 }
 
-export default ProsopoContract;
+export default ProsopoContract

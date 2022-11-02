@@ -13,100 +13,101 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { ApiPromise, SubmittableResult } from "@polkadot/api";
-import { Abi, ContractPromise } from "@polkadot/api-contract";
-import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+import { ApiPromise, SubmittableResult } from '@polkadot/api'
+import { Abi, ContractPromise } from '@polkadot/api-contract'
+import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 
-import { ProsopoContractError, abiJson, encodeStringArgs, unwrap } from "@prosopo/contract";
-import { AnyJson } from "@polkadot/types/types/codec";
-import { ProviderInterface } from "@polkadot/rpc-provider/types";
-import { Signer } from "@polkadot/api/types";
-import { TransactionResponse } from '../types';
-import AsyncFactory from "./AsyncFactory";
+import { ProsopoContractError, abiJson, encodeStringArgs, unwrap } from '@prosopo/contract'
+import { AnyJson } from '@polkadot/types/types/codec'
+import { ProviderInterface } from '@polkadot/rpc-provider/types'
+import { Signer } from '@polkadot/api/types'
+import { TransactionResponse } from '../types'
+import AsyncFactory from './AsyncFactory'
 
 export class ProsopoContractBase extends AsyncFactory {
+    protected api: ApiPromise
+    protected abi: Abi
+    protected contract: ContractPromise
+    protected account: InjectedAccountWithMeta
+    protected dappAddress: string
 
-    protected api: ApiPromise;
-    protected abi: Abi;
-    protected contract: ContractPromise;
-    protected account: InjectedAccountWithMeta;
-    protected dappAddress: string;
-
-    public address: string;
+    public address: string
 
     /**
-   * @param address
-   * @param dappAddress
-   * @param account
-   * @param providerInterface
-   */
-    public async init(address: string, dappAddress: string, account: InjectedAccountWithMeta, providerInterface: ProviderInterface) {
-        this.api = await ApiPromise.create({ provider: providerInterface });
-        this.abi = new Abi(abiJson, this.api.registry.getChainProperties());
-        this.contract = new ContractPromise(this.api, this.abi, address);
-        this.address = address;
-        this.dappAddress = dappAddress;
-        this.account = account;
-        return this;
+     * @param address
+     * @param dappAddress
+     * @param account
+     * @param providerInterface
+     */
+    public async init(
+        address: string,
+        dappAddress: string,
+        account: InjectedAccountWithMeta,
+        providerInterface: ProviderInterface
+    ) {
+        this.api = await ApiPromise.create({ provider: providerInterface })
+        this.abi = new Abi(abiJson, this.api.registry.getChainProperties())
+        this.contract = new ContractPromise(this.api, this.abi, address)
+        this.address = address
+        this.dappAddress = dappAddress
+        this.account = account
+        return this
     }
 
     public getApi(): ApiPromise {
-        return this.api;
+        return this.api
     }
 
     public getContract(): ContractPromise {
-        return this.contract;
+        return this.contract
     }
 
     public getAccount(): InjectedAccountWithMeta {
-        return this.account;
+        return this.account
     }
 
     public getDappAddress(): string {
-        return this.dappAddress;
+        return this.dappAddress
     }
 
     public async disconnect(): Promise<void> {
         await this.api.disconnect()
     }
 
-
     public async query<T>(method: string, args: any[]): Promise<T | AnyJson | null> {
         try {
-            const abiMessage = this.abi.findMessage(method);
+            const abiMessage = this.abi.findMessage(method)
             const response = await this.contract.query[method](
                 this.account.address,
                 {},
                 ...encodeStringArgs(abiMessage, args)
-            );
-            console.log("QUERY RESPONSE", method, args, response);
+            )
+            console.log('QUERY RESPONSE', method, args, response)
             if (response.result.isOk) {
                 if (response.output) {
-                    return unwrap(response.output.toHuman());
+                    return unwrap(response.output.toHuman())
                 } else {
-                    return null;
+                    return null
                 }
             } else {
-                throw new ProsopoContractError(response.result.asErr);
+                throw new ProsopoContractError(response.result.asErr)
             }
         } catch (e) {
-            console.error("ERROR", e);
-            return null;
+            console.error('ERROR', e)
+            return null
         }
     }
 
     // https://polkadot.js.org/docs/api/cookbook/tx/
     // https://polkadot.js.org/docs/api/start/api.tx.subs/
     public async transaction(signer: Signer, method: string, args: any[]): Promise<TransactionResponse> {
+        const queryBeforeTx = await this.query(method, args)
 
+        console.log('QUERY BEFORE TX....................', queryBeforeTx)
 
-        const queryBeforeTx = await this.query(method, args);
+        const abiMessage = this.abi.findMessage(method)
 
-        console.log("QUERY BEFORE TX....................", queryBeforeTx);
-
-        const abiMessage = this.abi.findMessage(method);
-
-        const extrinsic = this.contract.tx[method]({}, ...encodeStringArgs(abiMessage, args));
+        const extrinsic = this.contract.tx[method]({}, ...encodeStringArgs(abiMessage, args))
 
         // this.api.setSigner(signer);
         // const response = await buildTx(this.api.registry, extrinsic, this.account.address, { signer });
@@ -114,61 +115,62 @@ export class ProsopoContractBase extends AsyncFactory {
         // return;
 
         return new Promise((resolve, reject) => {
+            extrinsic
+                .signAndSend(this.account.address, { signer }, (result: SubmittableResult) => {
+                    const { dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex } = result
 
-            extrinsic.signAndSend(this.account.address, { signer }, (result: SubmittableResult) => {
+                    console.log('TX STATUS', status.type)
+                    console.log('IS FINALIZED', status?.isFinalized)
+                    console.log('IN BLOCK', status?.isInBlock)
+                    console.log('EVENTS', events)
 
-                const { dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex } = result;
+                    if (internalError) {
+                        console.error('internalError', internalError)
+                        reject(internalError)
 
-                console.log("TX STATUS", status.type);
-                console.log("IS FINALIZED", status?.isFinalized);
-                console.log("IN BLOCK", status?.isInBlock);
-                console.log("EVENTS", events);
+                        return
+                    }
 
-                if (internalError) {
-                    console.error("internalError", internalError);
-                    reject(internalError);
+                    if (dispatchError) {
+                        console.error('dispatchError', dispatchError)
+                        reject(dispatchError)
 
-                    return;
-                }
+                        return
+                    }
 
-                if (dispatchError) {
-                    console.error("dispatchError", dispatchError);
-                    reject(dispatchError);
+                    // [Ready, InBlock, Finalized...]
 
-                    return;
-                }
+                    // Instant seal ON.
+                    if (status?.isInBlock) {
+                        const blockHash = status.asInBlock.toHex()
 
-                // [Ready, InBlock, Finalized...]
+                        resolve({
+                            dispatchError,
+                            dispatchInfo,
+                            events,
+                            internalError,
+                            status,
+                            txHash,
+                            txIndex,
+                            blockHash,
+                        })
+                    }
 
-                // Instant seal ON.
-                if (status?.isInBlock) {
+                    // Instant seal OFF.
+                    // if (status?.isFinalized) {
 
-                    const blockHash = status.asInBlock.toHex();
+                    //   const blockHash = status.asFinalized.toHex();
 
-                    resolve({ dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex, blockHash });
+                    //   resolve({ dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex, blockHash });
 
-                }
-
-
-                // Instant seal OFF.
-                // if (status?.isFinalized) {
-
-                //   const blockHash = status.asFinalized.toHex();
-
-                //   resolve({ dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex, blockHash });
-
-                // }
-
-            })
+                    // }
+                })
                 .catch((e) => {
-                    console.error("signAndSend ERROR", e);
-                    reject(e);
-                });
-
-        });
-
+                    console.error('signAndSend ERROR', e)
+                    reject(e)
+                })
+        })
     }
-
 }
 
-export default ProsopoContractBase;
+export default ProsopoContractBase

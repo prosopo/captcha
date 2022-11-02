@@ -13,23 +13,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import {AxiosResponse} from "axios";
-
+import { AxiosResponse } from 'axios'
 
 export class ProsopoApiError extends Error {
     constructor(error: AxiosResponse, context?: string, ...params: any[]) {
-        if("data" in error) {
+        if ('data' in error) {
             super(error.data.message)
-        } else if ("statusText" in error) {
+        } else if ('statusText' in error) {
             super(error.statusText)
         } else {
             super(error.toString())
         }
 
-        this.name = context && `${ProsopoApiError.name}@${context}` || ProsopoApiError.name;
+        this.name = (context && `${ProsopoApiError.name}@${context}`) || ProsopoApiError.name
 
-
-        console.error('\n********************* ERROR *********************\n');
-        console.error(this.cause, this.stack, ...params);
+        console.error('\n********************* ERROR *********************\n')
+        console.error(this.cause, this.stack, ...params)
     }
 }

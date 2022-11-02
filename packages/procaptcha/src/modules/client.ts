@@ -14,26 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 
-import { ICaptchaContextState, ICaptchaState, ICaptchaStatusReducerAction, ICaptchaStatusState } from '../types';
-
+import { ICaptchaContextState, ICaptchaState, ICaptchaStatusReducerAction, ICaptchaStatusState } from '../types'
 
 export const captchaContextReducer = (state: ICaptchaContextState, action: Partial<ICaptchaContextState>) => {
-    return { ...state, ...action };
+    return { ...state, ...action }
 }
 
 export const captchaStateReducer = (state: ICaptchaState, action: Partial<ICaptchaState>): ICaptchaState => {
-    return { ...state, ...action };
+    return { ...state, ...action }
 }
 
-export const captchaStatusReducer = (state: ICaptchaStatusState, action: ICaptchaStatusReducerAction): ICaptchaStatusState => {
-    const logger = { info: console.log, error: console.error };
+export const captchaStatusReducer = (
+    state: ICaptchaStatusState,
+    action: ICaptchaStatusReducerAction
+): ICaptchaStatusState => {
+    const logger = { info: console.log, error: console.error }
     for (const key in action) {
-        logger[key](action[key]);
-        let status = Array.isArray(action[key]) ? action[key][1] : action[key];
+        logger[key](action[key])
+        let status = Array.isArray(action[key]) ? action[key][1] : action[key]
         if (status instanceof Error) {
-            status = status.message;
+            status = status.message
         }
-        return { [key]: String(status) };
+        return { [key]: String(status) }
     }
-    return state;
+    return state
 }

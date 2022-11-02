@@ -13,17 +13,22 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import ProsopoContract from "../api/ProsopoContract";
-import { WsProvider } from "@polkadot/rpc-provider";
-import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { ProviderInterface } from "@polkadot/rpc-provider/types";
+import ProsopoContract from '../api/ProsopoContract'
+import { WsProvider } from '@polkadot/rpc-provider'
+import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import { ProviderInterface } from '@polkadot/rpc-provider/types'
 
 export function getWsProvider(url?: string): WsProvider {
-    return new WsProvider(url);
+    return new WsProvider(url)
 }
 
-export async function getProsopoContract(address: string, dappAddress: string, account: InjectedAccountWithMeta, providerInterface?: ProviderInterface): Promise<ProsopoContract> {
-    return await ProsopoContract.create(address, dappAddress, account, providerInterface ?? getWsProvider());
+export async function getProsopoContract(
+    address: string,
+    dappAddress: string,
+    account: InjectedAccountWithMeta,
+    providerInterface?: ProviderInterface
+): Promise<ProsopoContract> {
+    return await ProsopoContract.create(address, dappAddress, account, providerInterface ?? getWsProvider())
 }
 
 // export async function getWsProvider(url?: string): Promise<WsProvider> {

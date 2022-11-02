@@ -18,136 +18,143 @@ import {
     ICaptchaContextReducer,
     ICaptchaStatusReducer,
     IExtensionInterface,
-    TExtensionAccount
-} from "../types/client";
-import {ProsopoRandomProviderResponse} from "../types/api";
-import {ProsopoContract} from "../api/ProsopoContract";
-import {getProsopoContract, getWsProvider} from "./contract";
-import {getExtension} from "./extension";
-import {ProviderApi} from "@prosopo/api";
-import {ProsopoCaptchaApi} from "./ProsopoCaptchaApi";
-import {ProsopoEnvError} from "@prosopo/contract";
-import {hexToString} from '@polkadot/util'
+    TExtensionAccount,
+} from '../types/client'
+import { ProsopoRandomProviderResponse } from '../types/api'
+import { ProsopoContract } from '../api/ProsopoContract'
+import { getProsopoContract, getWsProvider } from './contract'
+import { getExtension } from './extension'
+import { ProviderApi } from '@prosopo/api'
+import { ProsopoCaptchaApi } from './ProsopoCaptchaApi'
+import { ProsopoEnvError } from '@prosopo/contract'
+import { hexToString } from '@polkadot/util'
 
 export class ProsopoCaptchaClient {
+    public manager: ICaptchaContextReducer
+    public status: ICaptchaStatusReducer
+    public callbacks: CaptchaEventCallbacks | undefined
+    public providerApi: ProviderApi | undefined
 
-    public manager: ICaptchaContextReducer;
-    public status: ICaptchaStatusReducer;
-    public callbacks: CaptchaEventCallbacks | undefined;
-    public providerApi: ProviderApi | undefined;
-
-    private static extension: IExtensionInterface;
-    private static contract: ProsopoContract | undefined;
-    private static provider: ProsopoRandomProviderResponse | undefined;
-    private static captchaApi: ProsopoCaptchaApi | undefined;
+    private static extension: IExtensionInterface
+    private static contract: ProsopoContract | undefined
+    private static provider: ProsopoRandomProviderResponse | undefined
+    private static captchaApi: ProsopoCaptchaApi | undefined
 
     constructor(manager: ICaptchaContextReducer, status: ICaptchaStatusReducer, callbacks?: CaptchaEventCallbacks) {
-        this.manager = manager;
-        this.status = status;
-        this.callbacks = callbacks;
+        this.manager = manager
+        this.status = status
+        this.callbacks = callbacks
     }
 
     public getProviderApi(providerUrl: string) {
-        return new ProviderApi(this.manager.state.config, providerUrl);
+        return new ProviderApi(this.manager.state.config, providerUrl)
     }
 
     public getExtension() {
-        return ProsopoCaptchaClient.extension;
+        return ProsopoCaptchaClient.extension
     }
 
     public setExtension(extension: IExtensionInterface) {
-        ProsopoCaptchaClient.extension = extension;
+        ProsopoCaptchaClient.extension = extension
     }
 
     public getContract() {
-        return ProsopoCaptchaClient.contract;
+        return ProsopoCaptchaClient.contract
     }
 
     public getProvider() {
-        return ProsopoCaptchaClient.provider;
+        return ProsopoCaptchaClient.provider
     }
 
     public getCaptchaApi() {
-        return ProsopoCaptchaClient.captchaApi;
+        return ProsopoCaptchaClient.captchaApi
     }
 
-    public async onLoad(createAccount?: boolean) {
-        console.log("Captcha client onLoad, createAccount:", createAccount);
+    public async onLoad(onHuman, createAccount?: boolean) {
+        console.log('Captcha client onLoad, createAccount:', createAccount)
         if (!ProsopoCaptchaClient.extension) {
             try {
                 ProsopoCaptchaClient.extension = await getExtension(
                     getWsProvider(this.manager.state.config['dappUrl']),
                     this.manager.state.config['web2'],
                     this.manager.state.config['accountCreator'],
-                    this.manager.state.config['dappName']);
+                    this.manager.state.config['dappName']
+                )
             } catch (err) {
-                throw new ProsopoEnvError(err);
+                throw new ProsopoEnvError(err)
             }
         }
-        console.log("Extension loaded");
+        console.log('Extension loaded')
         if (this.callbacks?.onLoad) {
-            this.callbacks.onLoad(ProsopoCaptchaClient.extension, this.manager.state.config['prosopoContractAccount']);
-            this.manager.update({contractAddress: this.manager.state.config['prosopoContractAccount']});
+            this.callbacks.onLoad(ProsopoCaptchaClient.extension, this.manager.state.config['prosopoContractAccount'])
+            this.manager.update({ contractAddress: this.manager.state.config['prosopoContractAccount'] })
         }
 
-        let account: TExtensionAccount | undefined;
+        let account: TExtensionAccount | undefined
         if (createAccount) {
-            console.log("creating account")
+            console.log('creating account')
             try {
                 console.log(this.getExtension())
                 account = await this.getExtension().createAccount()
                 console.log(account)
             } catch (err) {
-                throw new ProsopoEnvError(err);
+                throw new ProsopoEnvError(err)
             }
         } else {
             try {
                 account = await this.getExtension().getAccount()
             } catch (err) {
-                throw new ProsopoEnvError(err);
+                throw new ProsopoEnvError(err)
             }
         }
-        console.log("onAccountChange", account)
-        await this.onAccountChange(account);
+        let isHuman: boolean | undefined
 
-
+        // Read the contract to see if this account hasn past activity that shows they are human
+        if (account) {
+            ProsopoCaptchaClient.contract = await this.initContract(account)
+            try {
+                isHuman = await ProsopoCaptchaClient.contract.dappOperatorIsHumanUser(
+                    this.manager.state.config['solutionThreshold']
+                )
+            } catch (err) {
+                console.log('Error determining whether user is human')
+            }
+        }
+        // If the user is already human we don't need to show CAPTCHA challenges
+        if (isHuman) {
+            console.log('onHuman', account)
+            await onHuman()
+        } else {
+            console.log('onAccountChange', account)
+            await this.onAccountChange(account)
+        }
     }
 
     public async onAccountChange(account?: TExtensionAccount) {
-
         if (!account) {
-            this.onAccountUnset();
-            return;
+            this.onAccountUnset()
+            return
         }
 
         try {
-            ProsopoCaptchaClient.extension.setAccount(account.address);
+            ProsopoCaptchaClient.extension.setAccount(account.address)
         } catch (err) {
-            throw new ProsopoEnvError(err);
+            throw new ProsopoEnvError(err)
         }
 
-        try {
-            ProsopoCaptchaClient.contract = await getProsopoContract(
-                this.manager.state.config['prosopoContractAccount'],
-                this.manager.state.config['dappAccount'],
-                account,
-                getWsProvider(this.manager.state.config['dappUrl'])
-            );
-        } catch (err) {
-            throw new ProsopoEnvError(err);
-        }
+        ProsopoCaptchaClient.contract = await this.initContract(account)
 
         try {
-            ProsopoCaptchaClient.provider = await ProsopoCaptchaClient.contract.getRandomProvider();
+            ProsopoCaptchaClient.provider = await ProsopoCaptchaClient.contract.getRandomProvider()
         } catch (err) {
-            throw new ProsopoEnvError(err);
+            throw new ProsopoEnvError(err)
         }
-        console.log(ProsopoCaptchaClient.provider);
+        console.log(ProsopoCaptchaClient.provider)
         const providerUrl = hexToString(ProsopoCaptchaClient.provider.provider.serviceOrigin).replace(/\0/g, '')
 
-        console.log("providerUrl", providerUrl)
+        console.log('providerUrl', providerUrl)
 
-        this.providerApi = this.getProviderApi(providerUrl);
+        this.providerApi = this.getProviderApi(providerUrl)
 
         ProsopoCaptchaClient.captchaApi = new ProsopoCaptchaApi(
             account.address,
@@ -155,27 +162,39 @@ export class ProsopoCaptchaClient {
             ProsopoCaptchaClient.provider,
             this.providerApi,
             this.manager.state.config['web2']
-        );
+        )
 
         if (this.callbacks?.onAccountChange) {
-            this.callbacks.onAccountChange(account);
+            this.callbacks.onAccountChange(account)
         }
 
-        this.manager.update({account, providerUrl});
+        this.manager.update({ account, providerUrl })
     }
 
     public onAccountUnset() {
-        ProsopoCaptchaClient.contract = undefined;
-        ProsopoCaptchaClient.provider = undefined;
-        ProsopoCaptchaClient.captchaApi = undefined;
+        ProsopoCaptchaClient.contract = undefined
+        ProsopoCaptchaClient.provider = undefined
+        ProsopoCaptchaClient.captchaApi = undefined
 
         if (this.callbacks?.onAccountChange) {
-            this.callbacks.onAccountChange(undefined);
+            this.callbacks.onAccountChange(undefined)
         }
 
-        this.manager.update({account: undefined});
+        this.manager.update({ account: undefined })
     }
 
+    private async initContract(account: TExtensionAccount): Promise<ProsopoContract> {
+        try {
+            return await getProsopoContract(
+                this.manager.state.config['prosopoContractAccount'],
+                this.manager.state.config['dappAccount'],
+                account,
+                getWsProvider(this.manager.state.config['dappUrl'])
+            )
+        } catch (err) {
+            throw new ProsopoEnvError(err)
+        }
+    }
 }
 
-export default ProsopoCaptchaClient;
+export default ProsopoCaptchaClient

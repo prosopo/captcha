@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 // import { SubmittableResult } from "@polkadot/api";
-import type { SubmittableResultValue } from '@polkadot/api/types';
+import type { SubmittableResultValue } from '@polkadot/api/types'
 
-export type TransactionResponse = SubmittableResultValue & { 
-    blockHash?: string,
-};
+export type TransactionResponse = SubmittableResultValue & {
+    blockHash?: string
+}

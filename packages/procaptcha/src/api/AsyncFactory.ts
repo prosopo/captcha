@@ -13,20 +13,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import {ProsopoEnvError} from "@prosopo/contract";
+import { ProsopoEnvError } from '@prosopo/contract'
 
 export abstract class AsyncFactory {
-
     constructor() {
-        throw new ProsopoEnvError("GENERAL.ASYNC_FACTORY_CREATE");
+        throw new ProsopoEnvError('GENERAL.ASYNC_FACTORY_CREATE')
     }
 
     public static async create(...args: any[]) {
-        return await Object.create(this.prototype).init(...args);
+        return await Object.create(this.prototype).init(...args)
     }
 
-    public abstract init(...args: any[]): Promise<this>;
-
+    public abstract init(...args: any[]): Promise<this>
 }
 
-export default AsyncFactory;
+export default AsyncFactory

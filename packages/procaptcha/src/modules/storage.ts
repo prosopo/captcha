@@ -13,23 +13,23 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-const CURRENT_ACCOUNT_KEY = "@prosopo/current_account";
+const CURRENT_ACCOUNT_KEY = '@prosopo/current_account'
 
 /**
  * Sets default `account`
  */
 function setAccount(account: string) {
-    localStorage.setItem(CURRENT_ACCOUNT_KEY, account);
+    localStorage.setItem(CURRENT_ACCOUNT_KEY, account)
 }
 
 /**
  * Gets default `account`
  */
 function getAccount(): string | null {
-    return localStorage.getItem(CURRENT_ACCOUNT_KEY);
+    return localStorage.getItem(CURRENT_ACCOUNT_KEY)
 }
 
 export default {
     setAccount,
-    getAccount
+    getAccount,
 }

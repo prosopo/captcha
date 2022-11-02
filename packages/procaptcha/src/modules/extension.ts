@@ -13,15 +13,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import ExtensionWeb2 from "../api/ExtensionWeb2";
-import ExtensionWeb3 from "../api/ExtensionWeb3";
-import {AccountCreatorConfig, IExtensionInterface} from "../types/index";
-import {WsProvider} from "@polkadot/rpc-provider";
+import ExtensionWeb2 from '../api/ExtensionWeb2'
+import ExtensionWeb3 from '../api/ExtensionWeb3'
+import { AccountCreatorConfig, IExtensionInterface } from '../types/index'
+import { WsProvider } from '@polkadot/rpc-provider'
 
-export async function getExtension(wsProvider: WsProvider, web2: boolean, accountCreatorConfig: AccountCreatorConfig, source: string): Promise<IExtensionInterface> {
+export async function getExtension(
+    wsProvider: WsProvider,
+    web2: boolean,
+    accountCreatorConfig: AccountCreatorConfig,
+    source: string
+): Promise<IExtensionInterface> {
     if (web2) {
-        return await ExtensionWeb2.create(wsProvider, accountCreatorConfig, source);
+        return await ExtensionWeb2.create(wsProvider, accountCreatorConfig, source)
     } else {
-        return await ExtensionWeb3.create(source);
+        return await ExtensionWeb3.create(source)
     }
 }
