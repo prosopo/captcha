@@ -13,42 +13,42 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
-import {Abi} from "@polkadot/api-contract";
+import { Abi } from '@polkadot/api-contract'
 
 export interface SpecDef {
-    constructors: any[];
-    docs: any[];
-    events: any[];
+    constructors: any[]
+    docs: any[]
+    events: any[]
     messages: {
-        label: string;
-        name: string[] | string;
-        selector: string;
-    }[];
+        label: string
+        name: string[] | string
+        selector: string
+    }[]
 }
 
 export type AbiMetadata = {
-    metadataVersion: string;
+    metadataVersion: string
     source: {
-        hash: string;
-        language: string;
-        compiler: string;
-        wasm: string;
-    };
+        hash: string
+        language: string
+        compiler: string
+        wasm: string
+    }
     contract: {
-        name: string;
-        version: string;
-        authors: string[];
-    };
-    spec: SpecDef;
+        name: string
+        version: string
+        authors: string[]
+    }
+    spec: SpecDef
     V1: {
-        spec: SpecDef;
-    };
+        spec: SpecDef
+    }
     V2: {
-        spec: SpecDef;
-    };
+        spec: SpecDef
+    }
     V3: {
-        spec: SpecDef;
-    };
-};
+        spec: SpecDef
+    }
+}
 
-export type ContractAbi = Record<string, unknown> | Abi;
+export type ContractAbi = Record<string, unknown> | Abi

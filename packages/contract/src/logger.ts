@@ -13,6 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
-import consola from "consola";
+import consola from 'consola'
 
-export const logger = consola.create({});
+export const logger = consola.create({})

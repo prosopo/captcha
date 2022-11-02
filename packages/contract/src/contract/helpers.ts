@@ -13,13 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import {AbiMessage, ContractCallOutcome, DecodedEvent} from '@polkadot/api-contract/types'
-import {isHex, isU8a, stringToHex} from '@polkadot/util'
-import {AnyJson} from '@polkadot/types/types/codec'
-import {Signer} from '../types/signer'
-import {TransactionResponse} from '../types/contract'
-import {ProsopoContractError} from "../handlers";
-import {AnyString} from "@polkadot/util/types";
+import { AbiMessage, ContractCallOutcome, DecodedEvent } from '@polkadot/api-contract/types'
+import { isHex, isU8a, stringToHex } from '@polkadot/util'
+import { AnyJson } from '@polkadot/types/types/codec'
+import { TransactionResponse } from '../types/contract'
+import { ProsopoContractError } from '../handlers'
 
 /**
  * Get the event name from the contract method name
@@ -35,16 +33,17 @@ export function getEventNameFromMethodName(contractMethodName: string): string {
  *
  * @return {AnyJson} array of events filtered by calculated event name
  */
-export function getEventsFromMethodName(response: TransactionResponse, contractMethodName: string): AnyJson | DecodedEvent[] | any {
+export function getEventsFromMethodName(
+    response: TransactionResponse,
+    contractMethodName: string
+): AnyJson | DecodedEvent[] | any {
     const eventName = getEventNameFromMethodName(contractMethodName)
-    if (response && response['events'] ) {
-        return response && response['events'] && response["events"].filter((x) => x.name === eventName)
+    if (response && response['events']) {
+        return response && response['events'] && response['events'].filter((x) => x.name === eventName)
     } else {
         return []
     }
-
 }
-
 
 /** Encodes arguments that should be hashes using blake2AsU8a
  * @return encoded arguments
@@ -70,7 +69,7 @@ export function encodeStringArgs<T>(methodObj: AbiMessage, args: T[]): T[] {
  */
 export function unwrap(item: AnyJson): AnyJson {
     const prop = 'Ok'
-    if (item && typeof (item) === 'object') {
+    if (item && typeof item === 'object') {
         if (prop in item) {
             return item[prop]
         }
@@ -81,21 +80,19 @@ export function unwrap(item: AnyJson): AnyJson {
 /** Handle errors returned from contract queries by throwing them
  * @return {ContractCallOutcome} response
  */
-export function handleContractCallOutcomeErrors<T>(response: ContractCallOutcome, contractMethodName: string, encodedArgs: T[]): ContractCallOutcome {
+export function handleContractCallOutcomeErrors<T>(
+    response: ContractCallOutcome,
+    contractMethodName: string,
+    encodedArgs: T[]
+): ContractCallOutcome {
     const errorKey = 'Err'
     if (response.output) {
         const humanOutput = response.output?.toHuman()
-        if (humanOutput && typeof (humanOutput) === 'object' && errorKey in humanOutput) {
+        if (humanOutput && typeof humanOutput === 'object' && errorKey in humanOutput) {
             throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, {}, encodedArgs)
         }
     }
     return response
-}
-
-
-export function convertSignerToAddress(signer?: Signer | string): string {
-    if (!signer) return '';
-    return typeof signer !== 'string' ? signer.address : signer;
 }
 
 /** Hash a string, padding with zeroes until its 32 bytes long
@@ -107,6 +104,6 @@ export function stringToHexPadded(data: string): string {
         throw new Error(`stringToHexPadded: string length ${data.length} exceeds ${maxLength}`)
     }
 
-    const hexString = stringToHex(data).replace("0x", "");
-    return `0x${Array(maxLength - hexString.length + 1).join("0")}${hexString}`
+    const hexString = stringToHex(data).replace('0x', '')
+    return `0x${Array(maxLength - hexString.length + 1).join('0')}${hexString}`
 }
