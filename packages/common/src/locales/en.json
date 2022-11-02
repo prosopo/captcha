@@ -20,7 +20,8 @@
         "CALCULATE_CAPTCHA_SOLUTION": "Something went wrong while calculating captcha solutions",
         "MNEMONIC_UNDEFINED": "Provider mnemonic Undefined. Please set `PROVIDER_MNEMONIC` in environment variables",
         "ASYNC_FACTORY_CREATE": "Use `create` factory method",
-        "CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}"
+        "CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}",
+        "ENVIRONMENT_NOT_READY": "Environment not ready"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Invalid contract method",
@@ -58,7 +59,8 @@
         "PENDING_RECORD_NOT_FOUND": "No pending record found",
         "INVALID_HASH": "Invalid hash",
         "SOLUTION_GET_FAILED": "Failed to get solution",
-        "DATASET_WITH_SOLUTIONS_GET_FAILED": "No datasets found with required number of solutions"
+        "DATASET_WITH_SOLUTIONS_GET_FAILED": "No datasets found with required number of solutions",
+        "SOLUTION_APPROVE_FAILED": "Failed to approve solution"
     },
     "CAPTCHA": {
         "PARSE_ERROR": "Error parsing captcha",
@@ -71,7 +73,8 @@
         "MISSING_ITEM_HASH": "missing item hash",
         "INVALID_LEAF_HASH": "Invalid leaf hash",
         "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
-        "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id"
+        "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id",
+        "DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found"
     },
     "API": {
         "BODY_UNDEFINED": "Body must be defined in API POST call",
@@ -80,7 +83,9 @@
         "CAPTCHA_PENDING": "Captcha solutions submitted and awaiting approval",
         "CAPTCHA_PASSED": "You correctly answered the captchas",
         "BAD_REQUEST": "BadRequest",
-        "PAYMENT_INFO_NOT_FOUND": "Payment info not found for given block and transaction hashes"
+        "PAYMENT_INFO_NOT_FOUND": "Payment info not found for given block and transaction hashes",
+        "USER_VERIFIED": "User verified",
+        "USER_NOT_VERIFIED": "User not verified"
     },
     "CLI": {
         "PARAMETER_ERROR": "Invalid parameter"
