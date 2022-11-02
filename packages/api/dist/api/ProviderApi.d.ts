@@ -1,6 +1,6 @@
-import HttpClientBase from "./HttpClientBase";
+import HttpClientBase from './HttpClientBase';
 import { CaptchaSolutionResponse, GetCaptchaResponse, GetVerificationResponse, ProsopoCaptchaConfig, ProsopoRandomProviderResponse } from '../types';
-import { CaptchaSolution } from "@prosopo/datasets";
+import { CaptchaSolution } from '@prosopo/datasets';
 export declare class ProviderApi extends HttpClientBase {
     private config;
     constructor(config: ProsopoCaptchaConfig, providerUrl: string);

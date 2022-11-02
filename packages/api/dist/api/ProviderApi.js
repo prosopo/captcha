@@ -42,7 +42,7 @@ class ProviderApi extends HttpClientBase_1.default {
             userAccount,
             dappAccount: this.config['dappAccount'],
             web2,
-            salt
+            salt,
         });
     }
     verifySolution(userAccount, commitmentId) {

@@ -20,13 +20,13 @@ const tslib_1 = require("tslib");
 const axios_1 = tslib_1.__importDefault(require("axios"));
 class HttpClientBase {
     axios;
-    constructor(baseURL, prefix = "") {
+    constructor(baseURL, prefix = '') {
         baseURL = baseURL + prefix;
         this.axios = axios_1.default.create({ baseURL });
         this.axios.interceptors.response.use(this.responseHandler, this.errorHandler);
     }
     responseHandler = (response) => {
-        console.log("API REQUEST", response.request);
+        console.log('API REQUEST', response.request);
         return response.data;
     };
     errorHandler = (error) => Promise.reject(error.response);

@@ -1,4 +1,4 @@
-import { Captcha } from "@prosopo/datasets";
+import { Captcha } from '@prosopo/datasets';
 export interface ProsopoRandomProviderResponse {
     providerId: string;
     blockNumber: string;
@@ -33,26 +33,26 @@ export interface CaptchaSolutionResponse {
     solutionApproved: boolean;
 }
 export interface AccountCreatorConfig {
-    "area": {
+    area: {
         width: number;
         height: number;
     };
-    "offsetParameter": number;
-    "multiplier": number;
-    "fontSizeFactor": number;
-    "maxShadowBlur": number;
-    "numberOfRounds": number;
-    "seed": number;
+    offsetParameter: number;
+    multiplier: number;
+    fontSizeFactor: number;
+    maxShadowBlur: number;
+    numberOfRounds: number;
+    seed: number;
 }
 export interface ProsopoCaptchaConfig {
-    "providerApi.prefix": string;
-    "dappAccount": string;
-    "dappUrl": string;
-    "solutionThreshold": number;
-    "web2": boolean;
-    "prosopoContractAccount": string;
-    "accountCreator": AccountCreatorConfig;
-    "dappName": string;
-    "serverUrl": string;
+    'providerApi.prefix': string;
+    dappAccount: string;
+    dappUrl: string;
+    solutionThreshold: number;
+    web2: boolean;
+    prosopoContractAccount: string;
+    accountCreator: AccountCreatorConfig;
+    dappName: string;
+    serverUrl: string;
 }
 //# sourceMappingURL=api.d.ts.map
