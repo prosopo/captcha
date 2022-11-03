@@ -47,7 +47,7 @@ function App() {
             //setShowCaptchas(true);
             status.update({info: "Selected account: " + account?.meta.name});
             setAccount(account);
-            console.log("CAPTCHA API", clientInterface.getCaptchaApi());
+            console.log("CAPTCHA API", clientInterface.captchaApi);
         }
     };
 
@@ -164,10 +164,10 @@ function App() {
                 {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
                 {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
                 {message ? getMessage() : null}
-                {clientInterface.getExtension() && !manager.state.account && showCaptchas && clientInterface.getExtension().getAccounts() &&
+                {clientInterface.extension && !manager.state.account && showCaptchas && clientInterface.extension.getAccounts() &&
                   <ExtensionAccountSelect
                     value={manager.state.account}
-                    options={clientInterface.getExtension().getAccounts()}
+                    options={clientInterface.extension.getAccounts()}
                     onChange={clientInterface.onAccountChange.bind(clientInterface)}
                   />}
                 <Box>
