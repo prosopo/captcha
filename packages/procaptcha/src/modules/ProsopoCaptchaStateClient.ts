@@ -33,7 +33,7 @@ export class ProsopoCaptchaStateClient {
         let captchaChallenge: GetCaptchaResponse | Error | undefined
 
         try {
-            captchaChallenge = await this.context.getCaptchaApi()?.getCaptchaChallenge()
+            captchaChallenge = await this.context.captchaApi?.getCaptchaChallenge()
         } catch (err) {
             captchaChallenge = err as Error
             throw new ProsopoEnvError(captchaChallenge)
@@ -73,7 +73,7 @@ export class ProsopoCaptchaStateClient {
             return
         }
 
-        const signer = this.context.getExtension().getExtension()?.signer
+        const signer = this.context.extension.getExtension()?.signer
 
         const currentCaptcha = captchaChallenge.captchas[captchaIndex]
         const { datasetId } = currentCaptcha.captcha
@@ -85,7 +85,7 @@ export class ProsopoCaptchaStateClient {
         if (signer) {
             try {
                 submitResult = await this.context
-                    .getCaptchaApi()!
+                    .captchaApi!
                     .submitCaptchaSolution(signer, captchaChallenge.requestHash, datasetId!, solutions)
             } catch (err) {
                 submitResult = err as Error
@@ -110,7 +110,7 @@ export class ProsopoCaptchaStateClient {
         let isHuman: boolean | undefined
         try {
             isHuman = await this.context
-                .getContract()
+                .contract
                 ?.dappOperatorIsHumanUser(this.context.manager.state.config['solutionThreshold'])
         } catch (err) {
             console.log('Error determining whether user is human')
