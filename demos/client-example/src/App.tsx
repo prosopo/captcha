@@ -19,6 +19,7 @@ import {
     CaptchaContextManager,
     ExtensionAccountSelect,
     useCaptcha,
+    Procaptcha
 } from "@prosopo/procaptcha-react";
 
 import config from "./config";
@@ -159,76 +160,79 @@ function App() {
     const status = clientInterface.status;
 
     return (
-        <Box className={"App"} sx={{width: "80%", display: "flex"}}>
-            <Box>
-                {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
-                {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
-                {message ? getMessage() : null}
-                {clientInterface.extension && !manager.state.account && showCaptchas && clientInterface.extension.getAccounts() &&
-                  <ExtensionAccountSelect
-                    value={manager.state.account}
-                    options={clientInterface.extension.getAccounts()}
-                    onChange={clientInterface.onAccountChange.bind(clientInterface)}
-                  />}
+        <div>
+            <Procaptcha/>
+            <Box className={"App"} sx={{width: "80%", display: "flex"}}>
                 <Box>
-                    <h1>{isLogin ? 'Login' : 'Signup'}</h1>
-                    <FormGroup sx={{'& .MuiTextField-root': { m: 1 }}}>
-                        <FormControl>
-                            <TextField
-                                id="email"
-                                label="Email"
+                    {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
+                    {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
+                    {message ? getMessage() : null}
+                    {clientInterface.extension && !manager.state.account && showCaptchas && clientInterface.extension.getAccounts() &&
+                    <ExtensionAccountSelect
+                        value={manager.state.account}
+                        options={clientInterface.extension.getAccounts()}
+                        onChange={clientInterface.onAccountChange.bind(clientInterface)}
+                    />}
+                    <Box>
+                        <h1>{isLogin ? 'Login' : 'Signup'}</h1>
+                        <FormGroup sx={{'& .MuiTextField-root': { m: 1 }}}>
+                            <FormControl>
+                                <TextField
+                                    id="email"
+                                    label="Email"
+                                    type="text"
+                                    autoComplete="Email"
+                                    autoCapitalize="none"
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </FormControl>
+
+                            {!isLogin &&
+                            <FormControl>
+                                <TextField
+                                id="name"
+                                label="Name"
                                 type="text"
-                                autoComplete="Email"
-                                autoCapitalize="none"
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </FormControl>
+                                autoComplete="Name"
+                                onChange={(e) => setName(e.target.value)}
+                                />
+                            </FormControl>
+                            }
 
-                        {!isLogin &&
-                          <FormControl>
-                            <TextField
-                              id="name"
-                              label="Name"
-                              type="text"
-                              autoComplete="Name"
-                              onChange={(e) => setName(e.target.value)}
-                            />
-                          </FormControl>
-                        }
+                            <FormControl>
+                                <TextField
+                                    id="password"
+                                    label="Password"
+                                    type="password"
+                                    autoComplete="Password"
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </FormControl>
 
-                        <FormControl>
-                            <TextField
-                                id="password"
-                                label="Password"
-                                type="password"
-                                autoComplete="Password"
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </FormControl>
+                            <div>
+                                <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                    <Button variant="contained" onClick={onSubmitHandler}>
+                                        <Typography>Done</Typography>
+                                    </Button>
 
-                        <div>
-                            <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                <Button variant="contained" onClick={onSubmitHandler}>
-                                    <Typography>Done</Typography>
-                                </Button>
+                                    <Button variant="text" onClick={onChangeHandler}>
+                                        <Typography>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
+                                    </Button>
+                                </Stack>
+                            </div>
 
-                                <Button variant="text" onClick={onChangeHandler}>
-                                    <Typography>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
-                                </Button>
-                            </Stack>
-                        </div>
-
-                    </FormGroup>
+                        </FormGroup>
 
 
+                    </Box>
+
+                    <CaptchaContextManager.Provider value={manager}>
+                        <CaptchaComponent {...{clientInterface, show: showCaptchas}} />
+                    </CaptchaContextManager.Provider>
                 </Box>
 
-                <CaptchaContextManager.Provider value={manager}>
-                    <CaptchaComponent {...{clientInterface, show: showCaptchas}} />
-                </CaptchaContextManager.Provider>
             </Box>
-
-        </Box>
+        </div>
     );
 }
 
