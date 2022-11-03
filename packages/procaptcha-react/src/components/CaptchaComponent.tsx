@@ -54,7 +54,7 @@ export function CaptchaComponent({ clientInterface, show = false }: { clientInte
     }, []);
 
     useEffect(() => {
-        const extension = clientInterface.getExtension();
+        const extension = clientInterface.extension;
         if (contractAddress && extension) {
             extension.setDefaultAccount();
             const defaultAccount = extension.getAccount();
