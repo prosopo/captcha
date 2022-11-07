@@ -19,6 +19,7 @@
 // }
 
 import { Captcha } from '@prosopo/datasets'
+import { ProsopoServerConfig } from '@prosopo/api'
 
 export interface ProsopoRandomProviderResponse {
     providerId: string
@@ -70,14 +71,6 @@ export interface AccountCreatorConfig {
     seed: number
 }
 
-export interface ProsopoCaptchaConfig {
-    'providerApi.prefix': string
-    dappAccount: string
-    dappUrl: string
-    solutionThreshold: number
-    web2: boolean
-    prosopoContractAccount: string
+export interface ProsopoClientConfig extends ProsopoServerConfig {
     accountCreator: AccountCreatorConfig
-    dappName: string
-    serverUrl: string
 }

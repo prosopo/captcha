@@ -47,7 +47,10 @@ export class ProsopoCaptchaClient {
     }
 
     public getProviderApi(providerUrl: string) {
-        return new ProviderApi(this.manager.state.config, providerUrl)
+        return new ProviderApi(
+            this.manager.state.config.networks[this.manager.state.config.defaultEnvironment],
+            providerUrl
+        )
     }
 
     public getExtension() {
@@ -117,10 +120,11 @@ export class ProsopoCaptchaClient {
                     this.manager.state.config['solutionThreshold']
                 )
             } catch (err) {
-                console.log('Error determining whether user is human')
+                console.log(`Error determining whether user is human: ${err}`)
             }
         }
         // If the user is already human we don't need to show CAPTCHA challenges
+        console.log('isHuman:', isHuman)
         if (isHuman) {
             console.log('onHuman', account)
             await onHuman()
@@ -184,12 +188,13 @@ export class ProsopoCaptchaClient {
     }
 
     private async initContract(account: TExtensionAccount): Promise<ProsopoContract> {
+        const defaultEnvironment = this.manager.state.config.defaultEnvironment
         try {
             return await getProsopoContract(
-                this.manager.state.config['prosopoContractAccount'],
-                this.manager.state.config['dappAccount'],
+                this.manager.state.config.networks[defaultEnvironment].prosopoContract.address,
+                this.manager.state.config.networks[defaultEnvironment].dappContract.address,
                 account,
-                getWsProvider(this.manager.state.config['dappUrl'])
+                getWsProvider(this.manager.state.config.networks[defaultEnvironment].endpoint)
             )
         } catch (err) {
             throw new ProsopoEnvError(err)

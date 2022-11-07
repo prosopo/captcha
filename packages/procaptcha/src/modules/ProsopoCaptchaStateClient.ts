@@ -106,18 +106,20 @@ export class ProsopoCaptchaStateClient {
         this.manager.update({ captchaSolution: [] })
     }
 
-    public async onSolved(submitResult: TCaptchaSubmitResult) {
+    onSolved = async (submitResult: TCaptchaSubmitResult) => {
         let isHuman: boolean | undefined
+
         try {
             isHuman = await this.context
                 .getContract()
                 ?.dappOperatorIsHumanUser(this.context.manager.state.config['solutionThreshold'])
         } catch (err) {
-            console.log('Error determining whether user is human')
+            console.log(`Error determining whether user is human: ${err}`)
         }
         this.dismissCaptcha()
+
         if (this.context.callbacks?.onSolved) {
-            this.context.callbacks.onSolved(submitResult, isHuman)
+            this.context.callbacks.onSolved(submitResult)
         }
     }
 
