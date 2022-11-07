@@ -18,17 +18,17 @@ import {
     CaptchaSolutionResponse,
     GetCaptchaResponse,
     GetVerificationResponse,
-    ProsopoCaptchaConfig,
+    ProsopoNetwork,
     ProsopoRandomProviderResponse,
 } from '../types'
 import { CaptchaSolution } from '@prosopo/datasets'
 
 export class ProviderApi extends HttpClientBase {
-    private config: ProsopoCaptchaConfig
+    private network: ProsopoNetwork
 
-    constructor(config: ProsopoCaptchaConfig, providerUrl: string) {
+    constructor(network: ProsopoNetwork, providerUrl: string) {
         super(providerUrl)
-        this.config = config
+        this.network = network
     }
 
     public getProviders(): Promise<{ accounts: string[] }> {
@@ -43,7 +43,7 @@ export class ProviderApi extends HttpClientBase {
         let { blockNumber } = randomProvider
         blockNumber = blockNumber.replace(/,/g, '')
         return this.axios.get(
-            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`
+            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.network.dappContract.address}/${blockNumber}`
         )
     }
 
@@ -62,7 +62,7 @@ export class ProviderApi extends HttpClientBase {
             requestHash,
             txHash,
             userAccount,
-            dappAccount: this.config['dappAccount'],
+            dappAccount: this.network.dappContract.address,
             web2,
             salt,
         })

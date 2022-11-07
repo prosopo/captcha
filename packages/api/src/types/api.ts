@@ -70,14 +70,24 @@ export interface AccountCreatorConfig {
     seed: number
 }
 
-export interface ProsopoCaptchaConfig {
-    'providerApi.prefix': string
-    dappAccount: string
-    dappUrl: string
-    solutionThreshold: number
+export interface ProsopoNetwork {
+    endpoint: string
+    prosopoContract: {
+        address: string
+        name: string
+    }
+    dappContract: {
+        address: string
+        name: string
+    }
+}
+
+export interface ProsopoServerConfig {
+    logLevel: string
+    defaultEnvironment: string
     web2: boolean
-    prosopoContractAccount: string
-    accountCreator: AccountCreatorConfig
-    dappName: string
     serverUrl: string
+    solutionThreshold: number
+    dappName: string
+    networks: { [key: string]: ProsopoNetwork }
 }

@@ -1,9 +1,9 @@
 import HttpClientBase from './HttpClientBase';
-import { CaptchaSolutionResponse, GetCaptchaResponse, GetVerificationResponse, ProsopoCaptchaConfig, ProsopoRandomProviderResponse } from '../types';
+import { CaptchaSolutionResponse, GetCaptchaResponse, GetVerificationResponse, ProsopoNetwork, ProsopoRandomProviderResponse } from '../types';
 import { CaptchaSolution } from '@prosopo/datasets';
 export declare class ProviderApi extends HttpClientBase {
-    private config;
-    constructor(config: ProsopoCaptchaConfig, providerUrl: string);
+    private network;
+    constructor(network: ProsopoNetwork, providerUrl: string);
     getProviders(): Promise<{
         accounts: string[];
     }>;
