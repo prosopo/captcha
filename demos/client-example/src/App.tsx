@@ -46,6 +46,7 @@ function App() {
     }
 
     const onLoggedIn = (token) => {
+        console.log('getting private resource with token ', token)
         fetch(`${manager.state.config.serverUrl}/private`, {
             method: 'GET',
             headers: {
@@ -106,7 +107,9 @@ function App() {
                         setIsError(true)
                         setMessage(jsonRes.message)
                     } else {
-                        onLoggedIn(jsonRes.token)
+                        if (isLogin) {
+                            onLoggedIn(jsonRes.token)
+                        }
                         setIsError(false)
                         setMessage(jsonRes.message)
                     }
