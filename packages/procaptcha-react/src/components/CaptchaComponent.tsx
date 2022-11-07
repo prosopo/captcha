@@ -46,7 +46,6 @@ export function CaptchaComponent({
     const [state, update] = useReducer(captchaStateReducer, {
         captchaIndex: 0, // the index of the captcha we're on (1 captcha challenge contains >=1 captcha)
         captchaSolution: [], // the solutions for the captcha (2d array corresponding to captcha)
-        captchaChallenge: {}, // the challenge object
     })
     const { account, contractAddress } = manager.state
     const { captchaChallenge, captchaIndex, captchaSolution } = state
