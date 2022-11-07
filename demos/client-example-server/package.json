@@ -23,7 +23,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.7.0",
     "mongoose-sequence": "^5.3.1",
-    "@prosopo/procaptcha": "^0.1.10",
+    "@prosopo/contract": "^0.1.10",
     "@prosopo/api": "^0.1.10"
   }
 }
