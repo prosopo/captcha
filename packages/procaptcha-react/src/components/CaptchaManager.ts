@@ -20,6 +20,7 @@ import {
     ICaptchaContextReducer,
     ICaptchaContextState,
     ProsopoCaptchaClient,
+    ProsopoClientConfig,
     captchaContextReducer,
     captchaStatusReducer,
 } from '@prosopo/procaptcha'
@@ -40,13 +41,24 @@ export function useCaptcha(
 export const CaptchaContextManager = createContext({
     state: {
         config: {
-            'providerApi.baseURL': '',
-            'providerApi.prefix': '',
-            dappAccount: '',
-            dappUrl: '',
+            defaultEnvironment: 'development',
+            logLevel: 'info',
             solutionThreshold: 0,
             web2: false,
-            prosopoContractAccount: '',
+            networks: {
+                development: {
+                    endpoint: '',
+                    prosopoContract: {
+                        address: '',
+                        name: '',
+                    },
+                    dappContract: {
+                        address: '',
+                        name: '',
+                    },
+                    accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
+                },
+            },
             accountCreator: {
                 area: { width: 0, height: 0 },
                 offsetParameter: 0,
@@ -58,7 +70,7 @@ export const CaptchaContextManager = createContext({
             },
             dappName: '',
             serverUrl: '',
-        },
+        } as ProsopoClientConfig,
     },
     update: () => {},
 } as ICaptchaContextReducer)
