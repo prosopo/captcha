@@ -428,14 +428,16 @@ export class ProsopoDatabase implements Database {
      * @param {string[]} commitmentId
      */
     async getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution | undefined> {
-        const cursor = this.tables.userSolutions?.findOne({
-            commitmentId: commitmentId,
-        })
+        const cursor = this.tables.userSolutions?.findOne(
+            {
+                commitmentId: commitmentId,
+            },
+            { projection: { _id: 0 } }
+        )
         const doc = await cursor
 
         if (doc) {
-            // drop the _id field
-            return doc.map(({ _id, ...keepAttrs }) => keepAttrs) as DappUserSolution
+            return doc as unknown as DappUserSolution
         }
 
         throw new ProsopoEnvError('DATABASE.SOLUTION_GET_FAILED', this.getCaptchaById.name, {}, commitmentId)

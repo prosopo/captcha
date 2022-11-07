@@ -173,7 +173,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     router.post('/v1/prosopo/provider/solution', async (req, res, next) => {
         let parsed
         try {
-            parsed = CaptchaSolutionBody.parse(req.params)
+            parsed = CaptchaSolutionBody.parse(req.body)
         } catch (err) {
             return next(new ProsopoEnvError(err))
         }
@@ -211,10 +211,10 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         }
     })
 
-    router.get('/v1/prosopo/provider/verify/:userAccount/:dappAccount', async (req, res, next) => {
+    router.get('/v1/prosopo/provider/verify/:userAccount/:commitmentId', async (req, res, next) => {
         let parsed
         try {
-            parsed = VerifySolutionBody.parse(req.body)
+            parsed = VerifySolutionBody.parse(req.params)
         } catch (err) {
             return next(new ProsopoEnvError(err))
         }
