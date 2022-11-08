@@ -19,10 +19,11 @@ import {
     GetCaptchaResponse,
     ProsopoClientConfig,
     ProsopoRandomProviderResponse,
-    CaptchaSolutionCommitmentId
 } from '../types/api'
 import { TransactionResponse } from '../types/contract'
 import { CaptchaSolutionCommitment } from '@prosopo/datasets'
+import { SolvedData } from '../modules/index'
+import { CaptchaSolutionCommitmentId, VerificationResponse } from '@prosopo/api'
 import { ProsopoContract } from '../api'
 import { ProsopoCaptchaApi } from '../modules'
 

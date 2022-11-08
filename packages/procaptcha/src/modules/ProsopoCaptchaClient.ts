@@ -32,7 +32,6 @@ import storage from './storage'
 
 export class ProsopoCaptchaClient {
     public status: ICaptchaStatusReducer
-    public provider: ProsopoRandomProviderResponse | undefined
     public providerUrl: string | undefined
     manager: ICaptchaContextReducer
     callbacks: CaptchaEventCallbacks | undefined
@@ -156,9 +155,7 @@ export class ProsopoCaptchaClient {
 
         this.contract = await this.initContract(account)
 
-        const isHuman = await ProsopoCaptchaClient.contract.dappOperatorIsHumanUser(
-            this.manager.state.config['solutionThreshold']
-        )
+        const isHuman = await this.contract.dappOperatorIsHumanUser(this.manager.state.config['solutionThreshold'])
 
         // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
         if (isHuman && this.callbacks?.onSolved) {
@@ -170,13 +167,14 @@ export class ProsopoCaptchaClient {
         if (provider) {
             this.provider = provider
         } else {
-            this.provider = await ProsopoCaptchaClient.contract.getRandomProvider()
-            storage.setProvider(this.provider)
+            this.provider = await this.contract.getRandomProvider()
         }
 
         if (!this.provider) {
             throw new ProsopoEnvError('DEVELOPER.PROVIDER_NOT_FOUND')
         }
+
+        storage.setProvider(this.provider)
 
         this.providerUrl = ProsopoCaptchaClient.trimProviderUrl(this.provider.provider)
 
@@ -197,6 +195,8 @@ export class ProsopoCaptchaClient {
         }
 
         this.manager.update({ account, providerUrl: this.providerUrl })
+
+        console.log('providerUrl', this.providerUrl)
 
         if (this.callbacks?.onSolved && verifyDappUserResponse.solutionApproved) {
             this.callbacks?.onSolved(account, undefined, verifyDappUserResponse)

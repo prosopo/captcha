@@ -29,6 +29,7 @@ export interface SolvedData {
     commitmentId?: CaptchaSolutionCommitmentId
     tx?: TransactionResponse
     commitment?: CaptchaSolutionCommitment
+    human: boolean
 }
 
 export class ProsopoCaptchaStateClient {
@@ -127,6 +128,7 @@ export class ProsopoCaptchaStateClient {
         verificationResponse?: VerificationResponse
     ): Promise<void> => {
         this.dismissCaptcha()
+        console.log('providerUrl', this.context.providerUrl)
         if (!this.context.providerUrl) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_PROVIDER_URL')
         }
@@ -138,6 +140,7 @@ export class ProsopoCaptchaStateClient {
                 commitmentId: undefined,
                 tx: undefined,
                 commitment: undefined,
+                human: true,
             }
             if (submitResult) {
                 const [result, commitmentId, tx, commitment] = submitResult as TCaptchaSubmitResult
@@ -145,6 +148,7 @@ export class ProsopoCaptchaStateClient {
                 solvedData['commitmentId'] = commitmentId
                 solvedData['tx'] = tx
                 solvedData['commitment'] = commitment
+                solvedData['human'] = result.solutionApproved
             }
             if (verificationResponse) {
                 solvedData['commitmentId'] = verificationResponse.commitmentId
