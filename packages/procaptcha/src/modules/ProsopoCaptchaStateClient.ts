@@ -30,6 +30,7 @@ export class ProsopoCaptchaStateClient {
     }
 
     public async onLoadCaptcha() {
+        console.log('onLoadCaptcha')
         let captchaChallenge: GetCaptchaResponse | Error | undefined
 
         try {
@@ -73,7 +74,7 @@ export class ProsopoCaptchaStateClient {
             return
         }
 
-        const signer = this.context.extension.getExtension()?.signer
+        const signer = this.context.extension?.getExtension()?.signer
 
         const currentCaptcha = captchaChallenge.captchas[captchaIndex]
         const { datasetId } = currentCaptcha.captcha
@@ -84,9 +85,12 @@ export class ProsopoCaptchaStateClient {
 
         if (signer) {
             try {
-                submitResult = await this.context
-                    .captchaApi!
-                    .submitCaptchaSolution(signer, captchaChallenge.requestHash, datasetId!, solutions)
+                submitResult = await this.context.captchaApi!.submitCaptchaSolution(
+                    signer,
+                    captchaChallenge.requestHash,
+                    datasetId!,
+                    solutions
+                )
             } catch (err) {
                 submitResult = err as Error
             }
@@ -109,9 +113,9 @@ export class ProsopoCaptchaStateClient {
     public async onSolved(submitResult: TCaptchaSubmitResult) {
         let isHuman: boolean | undefined
         try {
-            isHuman = await this.context
-                .contract
-                ?.dappOperatorIsHumanUser(this.context.manager.state.config['solutionThreshold'])
+            isHuman = await this.context.contract?.dappOperatorIsHumanUser(
+                this.context.manager.state.config['solutionThreshold']
+            )
         } catch (err) {
             console.log('Error determining whether user is human')
         }
