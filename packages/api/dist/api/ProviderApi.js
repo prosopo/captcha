@@ -45,8 +45,12 @@ class ProviderApi extends HttpClientBase_1.default {
             salt,
         });
     }
-    verifySolution(userAccount, commitmentId) {
-        return this.axios.get(`/v1/prosopo/provider/verify/${userAccount}/${commitmentId}`);
+    verifyDappUser(userAccount, commitmentId) {
+        const payload = { userAccount };
+        if (commitmentId) {
+            payload['commitmentId'] = commitmentId;
+        }
+        return this.axios.post(`/v1/prosopo/provider/verify`, payload);
     }
 }
 exports.ProviderApi = ProviderApi;

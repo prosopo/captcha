@@ -17,9 +17,9 @@ import HttpClientBase from './HttpClientBase'
 import {
     CaptchaSolutionResponse,
     GetCaptchaResponse,
-    GetVerificationResponse,
     ProsopoNetwork,
     ProsopoRandomProviderResponse,
+    VerificationResponse,
 } from '../types'
 import { CaptchaSolution } from '@prosopo/datasets'
 
@@ -68,8 +68,12 @@ export class ProviderApi extends HttpClientBase {
         })
     }
 
-    public verifySolution(userAccount: string, commitmentId: string): Promise<GetVerificationResponse> {
-        return this.axios.get(`/v1/prosopo/provider/verify/${userAccount}/${commitmentId}`)
+    public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
+        const payload = { userAccount }
+        if (commitmentId) {
+            payload['commitmentId'] = commitmentId
+        }
+        return this.axios.post(`/v1/prosopo/provider/verify`, payload)
     }
 }
 

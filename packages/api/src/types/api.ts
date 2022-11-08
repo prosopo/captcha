@@ -26,6 +26,8 @@ export interface ProsopoRandomProviderResponse {
     provider: ProposoProvider
 }
 
+export type CaptchaSolutionCommitmentId = string
+
 export type ProsopoDappOperatorIsHumanUserResponse = boolean
 
 export interface ProposoProvider {
@@ -48,9 +50,10 @@ export interface GetCaptchaResponse {
     requestHash: string
 }
 
-export interface GetVerificationResponse {
+export interface VerificationResponse {
     status: string
     solutionApproved: boolean
+    commitmentId: CaptchaSolutionCommitmentId
 }
 
 export interface CaptchaSolutionResponse {
