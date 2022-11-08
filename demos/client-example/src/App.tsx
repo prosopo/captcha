@@ -8,8 +8,7 @@ import { CaptchaComponent, CaptchaContextManager, ExtensionAccountSelect, useCap
 import config from './config'
 
 import './App.css'
-import { Simulate } from 'react-dom/test-utils'
-import submit = Simulate.submit
+import { VerificationResponse } from '@prosopo/api'
 
 function App() {
     const [showCaptchas, setShowCaptchas] = useState(false)
@@ -79,19 +78,13 @@ function App() {
         setMessage('')
     }
 
-    const onSolved = (submitResult: TCaptchaSubmitResult) => {
-        const [result, commitmentId, tx, commitment] = submitResult
-        console.log('submitResult', submitResult)
+    const onHuman = async (onSolvedData) => {
         setShowCaptchas(false)
-
-        status.update({ info: ['onSolved:', result.status] })
         const payload = {
             email,
             name,
             password,
-            web3Account: account.address,
-            providerUrl: manager.state.providerUrl,
-            commitmentId,
+            prosopo: onSolvedData,
         }
         fetch(`${manager.state.config.serverUrl}/${isLogin ? 'login' : 'signup'}`, {
             method: 'POST',
@@ -131,7 +124,7 @@ function App() {
         status.update({ info: '' })
     }
 
-    const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onSolved, onCancel })
+    const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onHuman, onCancel })
 
     const disconnectAccount = () => {
         clientInterface.onAccountUnset()
