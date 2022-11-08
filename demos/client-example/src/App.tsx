@@ -3,7 +3,13 @@ import { Box, Button, Typography, FormControl, FormGroup, Stack, TextField, Aler
 
 import { TCaptchaSubmitResult, TExtensionAccount } from '@prosopo/procaptcha'
 
-import { CaptchaComponent, CaptchaContextManager, ExtensionAccountSelect, useCaptcha } from '@prosopo/procaptcha-react'
+import {
+    CaptchaComponent,
+    CaptchaContextManager,
+    ExtensionAccountSelect,
+    useCaptcha,
+    Procaptcha
+} from "@prosopo/procaptcha-react";
 
 import config from './config'
 
@@ -23,25 +29,25 @@ function App() {
 
     const showCaptchaClick = () => {
         setShowCaptchas(true)
-        status.update({ info: '' })
+        console.log({ info: '' })
     }
 
     const onAccountChange = (account: TExtensionAccount) => {
         if (account) {
             //setShowCaptchas(true);
-            status.update({ info: 'Selected account: ' + account?.meta.name })
+            console.log({ info: 'Selected account: ' + account?.meta.name })
             setAccount(account)
-            console.log('CAPTCHA API', clientInterface.getCaptchaApi())
+            console.log('CAPTCHA API', clientInterface.captchaApi)
         }
     }
 
     const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
         if (submitResult instanceof Error) {
-            status.update({ error: ['onSubmit: CAPTCHA SUBMIT ERROR', submitResult] })
+            console.log({ error: ['onSubmit: CAPTCHA SUBMIT ERROR', submitResult] })
             return
         }
         const [result, tx] = submitResult
-        status.update({ info: ['onSubmit: CAPTCHA SUBMIT STATUS', result.status] })
+        console.log({ info: ['onSubmit: CAPTCHA SUBMIT STATUS', result.status] })
     }
 
     const onLoggedIn = (token) => {
@@ -121,14 +127,14 @@ function App() {
 
     const onCancel = () => {
         setShowCaptchas(false)
-        status.update({ info: '' })
+        console.log({ info: '' })
     }
 
     const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onHuman, onCancel })
 
     const disconnectAccount = () => {
         clientInterface.onAccountUnset()
-        status.update({ info: '' })
+        console.log({ info: '' })
     }
 
     const getMessage = () => {
@@ -139,48 +145,33 @@ function App() {
         }
     }
 
-    const manager = clientInterface.manager
-    const status = clientInterface.status
+    const manager = clientInterface.manager;
 
     return (
-        <Box className={'App'} sx={{ display: 'flex' }}>
-            <Box>
-                <Box sx={{ '& .MuiAlert-root': { m: 1 } }}>
-                    {status.state.info && (
-                        <Alert severity="info" className={'status'}>
-                            {status.state.info}
-                        </Alert>
-                    )}
-                    {status.state.error && (
-                        <Alert severity="error" className={'status error'}>
-                            {status.state.error}
-                        </Alert>
-                    )}
-                    {message ? getMessage() : null}
-                </Box>
-                {clientInterface.getExtension() &&
-                    !manager.state.account &&
-                    showCaptchas &&
-                    clientInterface.getExtension().getAccounts() && (
-                        <ExtensionAccountSelect
-                            value={manager.state.account}
-                            options={clientInterface.getExtension().getAccounts()}
-                            onChange={clientInterface.onAccountChange.bind(clientInterface)}
-                        />
-                    )}
+        <div>
+            <Procaptcha config={config} callbacks={{onAccountChange, onChange, onSubmit, onSolved, onCancel}}/>
+            <Box className={"App"} sx={{ display: "flex"}}>
                 <Box>
-                    <h1>{isLogin ? 'Login' : 'Signup'}</h1>
-                    <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
-                        <FormControl>
-                            <TextField
-                                id="email"
-                                label="Email"
-                                type="text"
-                                autoComplete="Email"
-                                autoCapitalize="none"
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </FormControl>
+                    {message ? getMessage() : null}
+                    {clientInterface.extension && !manager.state.account && showCaptchas && clientInterface.extension.getAccounts() &&
+                    <ExtensionAccountSelect
+                        value={manager.state.account}
+                        options={clientInterface.extension.getAccounts()}
+                        onChange={clientInterface.onAccountChange.bind(clientInterface)}
+                    />}
+                    <Box>
+                        <h1>{isLogin ? 'Login' : 'Signup'}</h1>
+                        <FormGroup sx={{'& .MuiTextField-root': { m: 1 }}}>
+                            <FormControl>
+                                <TextField
+                                    id="email"
+                                    label="Email"
+                                    type="text"
+                                    autoComplete="Email"
+                                    autoCapitalize="none"
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </FormControl>
 
                         {!isLogin && (
                             <FormControl>
@@ -194,21 +185,21 @@ function App() {
                             </FormControl>
                         )}
 
-                        <FormControl>
-                            <TextField
-                                id="password"
-                                label="Password"
-                                type="password"
-                                autoComplete="Password"
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </FormControl>
+                            <FormControl>
+                                <TextField
+                                    id="password"
+                                    label="Password"
+                                    type="password"
+                                    autoComplete="Password"
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </FormControl>
 
-                        <div>
-                            <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                <Button variant="contained" onClick={onSubmitHandler}>
-                                    <Typography>Done</Typography>
-                                </Button>
+                            <div>
+                                <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                    <Button variant="contained" onClick={onSubmitHandler}>
+                                        <Typography>Done</Typography>
+                                    </Button>
 
                                 <Button variant="text" onClick={onChangeHandler}>
                                     <Typography>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
@@ -223,6 +214,7 @@ function App() {
                 </CaptchaContextManager.Provider>
             </Box>
         </Box>
+    </div>
     )
 }
 
