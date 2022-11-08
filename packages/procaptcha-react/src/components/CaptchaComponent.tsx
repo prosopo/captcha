@@ -32,6 +32,7 @@ import { Alert, Modal } from '@mui/material'
 import ThemeProvider from '@mui/material/styles/ThemeProvider'
 import theme from './theme'
 
+export function CaptchaComponent({ clientInterface, show }: { clientInterface: ProsopoCaptchaClient, show: boolean }) {
 export function CaptchaComponent({
     clientInterface,
     show = false,
@@ -41,7 +42,7 @@ export function CaptchaComponent({
 }) {
     const { t } = useTranslation()
 
-    const manager: ICaptchaContextReducer = useContext(CaptchaContextManager)
+    const manager = useContext(CaptchaContextManager);
     // the captcha state + update func
     const [state, update] = useReducer(captchaStateReducer, {
         captchaIndex: 0, // the index of the captcha we're on (1 captcha challenge contains >=1 captcha)
@@ -54,27 +55,35 @@ export function CaptchaComponent({
     const stateClientInterface = new ProsopoCaptchaStateClient(clientInterface, { state, update })
 
     useEffect(() => {
-        clientInterface.onLoad(manager.state.config['web2'])
-    }, [])
-
-    useEffect(() => {
-        const extension = clientInterface.getExtension()
-        if (contractAddress && extension) {
-            extension.setDefaultAccount()
-            const defaultAccount = extension.getAccount()
-            if (defaultAccount) {
-                clientInterface.onAccountChange(defaultAccount)
-            }
+        console.log('useEffect show')
+        if(show) {
+            console.log('useEffect show true')
+            stateClientInterface.onLoadCaptcha()
+                .catch(error => {
+                    console.log(error)
+                });
         }
-    }, [contractAddress])
+    }, [show]);
 
-    useEffect(() => {
-        if (account && !captchaChallenge) {
-            stateClientInterface.onLoadCaptcha().catch((error) => {
-                clientInterface.status.update({ error })
-            })
-        }
-    }, [account])
+    // useEffect(() => {
+    //     const extension = clientInterface.extension;
+    //     if (contractAddress && extension) {
+    //         extension.setDefaultAccount();
+    //         const defaultAccount = extension.getAccount();
+    //         if (defaultAccount) {
+    //             clientInterface.onAccountChange(defaultAccount);
+    //         }
+    //     }
+    // }, [contractAddress]);
+
+    // useEffect(() => {
+    //     if (account && !captchaChallenge) {
+    //         stateClientInterface.onLoadCaptcha()
+    //             .catch(error => {
+    //                 console.log(error)
+    //             });
+    //     }
+    // }, [account])
 
     const resetState = () => {
         update({
