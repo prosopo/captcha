@@ -17,12 +17,7 @@ import { useContext, useEffect, useReducer } from 'react'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
-import {
-    ICaptchaContextReducer,
-    ProsopoCaptchaClient,
-    ProsopoCaptchaStateClient,
-    captchaStateReducer,
-} from '@prosopo/procaptcha'
+import { ProsopoCaptchaClient, ProsopoCaptchaStateClient, captchaStateReducer } from '@prosopo/procaptcha'
 
 import { CaptchaContextManager } from './CaptchaManager'
 import { CaptchaWidget } from './CaptchaWidget'
@@ -32,7 +27,6 @@ import { Alert, Modal } from '@mui/material'
 import ThemeProvider from '@mui/material/styles/ThemeProvider'
 import theme from './theme'
 
-export function CaptchaComponent({ clientInterface, show }: { clientInterface: ProsopoCaptchaClient, show: boolean }) {
 export function CaptchaComponent({
     clientInterface,
     show = false,
@@ -42,7 +36,7 @@ export function CaptchaComponent({
 }) {
     const { t } = useTranslation()
 
-    const manager = useContext(CaptchaContextManager);
+    const manager = useContext(CaptchaContextManager)
     // the captcha state + update func
     const [state, update] = useReducer(captchaStateReducer, {
         captchaIndex: 0, // the index of the captcha we're on (1 captcha challenge contains >=1 captcha)
@@ -56,14 +50,13 @@ export function CaptchaComponent({
 
     useEffect(() => {
         console.log('useEffect show')
-        if(show) {
+        if (show) {
             console.log('useEffect show true')
-            stateClientInterface.onLoadCaptcha()
-                .catch(error => {
-                    console.log(error)
-                });
+            stateClientInterface.onLoadCaptcha().catch((error) => {
+                console.log(error)
+            })
         }
-    }, [show]);
+    }, [show])
 
     // useEffect(() => {
     //     const extension = clientInterface.extension;
