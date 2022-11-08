@@ -14,11 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { InjectedAccountWithMeta, InjectedExtension } from '@polkadot/extension-inject/types'
-import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoClientConfig } from '../types/api'
+import {
+    CaptchaSolutionResponse,
+    GetCaptchaResponse,
+    ProsopoClientConfig,
+    ProsopoRandomProviderResponse,
+    CaptchaSolutionCommitmentId
+} from '../types/api'
 import { TransactionResponse } from '../types/contract'
 import { CaptchaSolutionCommitment } from '@prosopo/datasets'
-import { SolvedData } from '../modules/index'
-import { CaptchaSolutionCommitmentId, VerificationResponse } from '@prosopo/api'
+import { ProsopoContract } from '../api'
+import { ProsopoCaptchaApi } from '../modules'
 
 export type TExtensionAccount = InjectedAccountWithMeta
 
@@ -66,6 +72,10 @@ export interface ICaptchaContextState {
     contractAddress?: string
     account?: InjectedAccountWithMeta
     providerUrl?: string
+    extension?: IExtensionInterface
+    contract?: ProsopoContract
+    provider?: ProsopoRandomProviderResponse
+    captchaApi?: ProsopoCaptchaApi
 }
 
 export interface ICaptchaContextReducer {

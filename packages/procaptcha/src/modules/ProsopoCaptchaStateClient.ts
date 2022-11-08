@@ -41,10 +41,11 @@ export class ProsopoCaptchaStateClient {
     }
 
     public async onLoadCaptcha() {
+        console.log('onLoadCaptcha')
         let captchaChallenge: GetCaptchaResponse | Error | undefined
 
         try {
-            captchaChallenge = await this.context.getCaptchaApi()?.getCaptchaChallenge()
+            captchaChallenge = await this.context.captchaApi?.getCaptchaChallenge()
         } catch (err) {
             captchaChallenge = err as Error
             throw new ProsopoEnvError(captchaChallenge)
@@ -84,7 +85,7 @@ export class ProsopoCaptchaStateClient {
             return
         }
 
-        const signer = this.context.getExtension().getExtension()?.signer
+        const signer = this.context.extension?.getExtension()?.signer
 
         const currentCaptcha = captchaChallenge.captchas[captchaIndex]
         const { datasetId } = currentCaptcha.captcha
@@ -95,9 +96,12 @@ export class ProsopoCaptchaStateClient {
 
         if (signer) {
             try {
-                submitResult = await this.context
-                    .getCaptchaApi()!
-                    .submitCaptchaSolution(signer, captchaChallenge.requestHash, datasetId!, solutions)
+                submitResult = await this.context.captchaApi!.submitCaptchaSolution(
+                    signer,
+                    captchaChallenge.requestHash,
+                    datasetId!,
+                    solutions
+                )
             } catch (err) {
                 submitResult = err as Error
             }
