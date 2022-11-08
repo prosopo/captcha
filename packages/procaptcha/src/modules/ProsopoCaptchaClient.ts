@@ -32,7 +32,6 @@ import storage from './storage'
 
 export class ProsopoCaptchaClient {
     public status: ICaptchaStatusReducer
-    public providerUrl: string | undefined
     manager: ICaptchaContextReducer
     callbacks: CaptchaEventCallbacks | undefined
     providerApi: ProviderApi | undefined
@@ -176,9 +175,9 @@ export class ProsopoCaptchaClient {
 
         storage.setProvider(this.provider)
 
-        this.providerUrl = ProsopoCaptchaClient.trimProviderUrl(this.provider.provider)
+        const providerUrl = ProsopoCaptchaClient.trimProviderUrl(this.provider.provider)
 
-        this.providerApi = this.getProviderApi(this.providerUrl)
+        this.providerApi = this.getProviderApi(providerUrl)
 
         const verifyDappUserResponse = await this.providerApi.verifyDappUser(account.address, undefined)
 
@@ -194,9 +193,9 @@ export class ProsopoCaptchaClient {
             this.callbacks.onAccountChange(account)
         }
 
-        this.manager.update({ account, providerUrl: this.providerUrl })
+        this.manager.update({ account, providerUrl: providerUrl })
 
-        console.log('providerUrl', this.providerUrl)
+        console.log('providerUrl', providerUrl)
 
         if (this.callbacks?.onSolved && verifyDappUserResponse.solutionApproved) {
             this.callbacks?.onSolved(account, undefined, verifyDappUserResponse)

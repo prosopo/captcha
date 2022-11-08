@@ -128,14 +128,14 @@ export class ProsopoCaptchaStateClient {
         verificationResponse?: VerificationResponse
     ): Promise<void> => {
         this.dismissCaptcha()
-        console.log('providerUrl', this.context.providerUrl)
-        if (!this.context.providerUrl) {
+        console.log('providerUrl', this.context.manager.state.providerUrl)
+        if (!this.context.manager.state.providerUrl) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_PROVIDER_URL')
         }
         if (this.context.callbacks?.onHuman) {
             const solvedData: SolvedData = {
                 userAccount: account.address,
-                providerUrl: this.context.providerUrl,
+                providerUrl: this.context.manager.state.providerUrl,
                 result: undefined,
                 commitmentId: undefined,
                 tx: undefined,
