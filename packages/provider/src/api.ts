@@ -211,19 +211,34 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         }
     })
 
-    router.get('/v1/prosopo/provider/verify/:userAccount/:commitmentId', async (req, res, next) => {
+    router.post('/v1/prosopo/provider/verify', async (req, res, next) => {
         let parsed
         try {
-            parsed = VerifySolutionBody.parse(req.params)
+            parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
             return next(new ProsopoEnvError(err))
         }
         try {
-            const solution = await tasks.getDappUserSolution(parsed.commitmentId)
-            const statusMessage = solution.approved ? 'API.USER_VERIFIED' : 'API.USER_NOT_VERIFIED'
+            let solution
+            let statusMessage = 'API.USER_NOT_VERIFIED'
+            if (!parsed.commitmentId) {
+                solution = await tasks.getDappUserSolutionByAccount(parsed.userAccount)
+            } else {
+                solution = await tasks.getDappUserSolutionById(parsed.commitmentId)
+            }
+            if (solution) {
+                if (solution.approved) {
+                    statusMessage = 'API.USER_VERIFIED'
+                }
+                return res.json({
+                    status: req.t(statusMessage),
+                    solutionApproved: !!solution.approved,
+                    commitmentId: solution.commitmentId,
+                })
+            }
             return res.json({
                 status: req.t(statusMessage),
-                solutionApproved: !!solution.approved,
+                solutionApproved: false,
             })
         } catch (err) {
             return next(new ProsopoEnvError(err))

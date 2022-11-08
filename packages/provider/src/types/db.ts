@@ -40,9 +40,8 @@ export interface PendingCaptchaRequestRecord extends WithId<Document> {
 }
 
 export const DappUserSolutionSchema = z.object({
-    captchaId: z.string(),
-    solution: z.string().array(),
-    salt: z.string(),
+    userAccount: z.string(),
+    captchas: z.array(CaptchaSolution),
     commitmentId: z.string(),
     approved: z.boolean(),
     datetime: z.string(),
@@ -68,7 +67,7 @@ export interface Database {
 
     getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetRecord>
 
-    storeDappUserSolution(captchas: CaptchaSolution[], treeRoot: string): Promise<void>
+    storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string, userAccount: string): Promise<void>
 
     storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void>
 
@@ -85,6 +84,8 @@ export interface Database {
     getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]>
 
     getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution | undefined>
+
+    getDappUserSolutionByAccount(accountId: string): Promise<DappUserSolution[]>
 
     approveDappUserSolution(commitmentId: string): Promise<void>
 }

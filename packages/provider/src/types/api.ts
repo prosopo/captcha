@@ -45,7 +45,7 @@ export const CaptchaSolutionBody = z.object({
 
 export const VerifySolutionBody = z.object({
     userAccount: z.string(),
-    commitmentId: z.string(),
+    commitmentId: z.string().optional(),
 })
 
 export interface PendingCaptchaRequest {

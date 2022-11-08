@@ -242,27 +242,19 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Store a Dapp User's captcha solution
      */
-    async storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string) {
+    async storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string, userAccount: string) {
         if (!isHex(commitmentId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.storeDappUserSolution.name, {}, commitmentId)
         }
 
-        // create a bulk create operation and execute
         if (captchas.length) {
-            await this.tables.userSolutions?.bulkWrite(
-                captchas.map((captchaDoc) => ({
-                    insertOne: {
-                        document: {
-                            captchaId: captchaDoc.captchaId,
-                            solution: captchaDoc.solution,
-                            salt: captchaDoc.salt,
-                            commitmentId: commitmentId,
-                            approved: false,
-                            datetime: new Date().toISOString(),
-                        } as DappUserSolution,
-                    },
-                }))
-            )
+            await this.tables.userSolutions?.insertOne({
+                userAccount,
+                captchas,
+                commitmentId: commitmentId,
+                approved: false,
+                datetime: new Date().toISOString(),
+            } as DappUserSolution)
         }
     }
 
@@ -442,6 +434,24 @@ export class ProsopoDatabase implements Database {
 
         throw new ProsopoEnvError('DATABASE.SOLUTION_GET_FAILED', this.getCaptchaById.name, {}, commitmentId)
     }
+
+    /**
+     * @description Get dapp user solution by account
+     * @param {string[]} userAccount
+     */
+    async getDappUserSolutionByAccount(userAccount: string): Promise<DappUserSolution[]> {
+        const cursor = this.tables.userSolutions?.find(
+            {
+                userAccount: userAccount,
+            },
+            { projection: { _id: 0 } }
+        )
+        const docs = await cursor?.toArray()
+        console.log(docs)
+
+        return docs ? (docs as unknown as DappUserSolution[]) : []
+    }
+
     /**
      * @description Approve a dapp user's solution
      * @param {string[]} commitmentId

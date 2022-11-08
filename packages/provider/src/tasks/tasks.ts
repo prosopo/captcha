@@ -318,7 +318,7 @@ export class Tasks {
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
-            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
+            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId, userAccount)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.providerApprove(commitmentId, partialFee)
                 response = {
@@ -373,7 +373,7 @@ export class Tasks {
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the request is in the local DB
         if (pendingRequest) {
-            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId)
+            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId, userAccount)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 response = {
                     captchas: captchaIds.map((id) => ({
@@ -719,16 +719,29 @@ export class Tasks {
     /*
      * Get dapp user solution from database
      */
-    async getDappUserSolution(commitmentId: string): Promise<DappUserSolution> {
+    async getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution> {
         const dappUserSolution = await this.db.getDappUserSolutionById(commitmentId)
         if (!dappUserSolution) {
             throw new ProsopoEnvError(
                 'CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND',
-                this.getDappUserSolution.name,
+                this.getDappUserSolutionById.name,
                 {},
                 { commitmentId: commitmentId }
             )
         }
         return dappUserSolution
+    }
+
+    /* Check if dapp user has verified solution in cache */
+    async getDappUserSolutionByAccount(userAccount: string): Promise<DappUserSolution | undefined> {
+        const dappUserSolutions = await this.db.getDappUserSolutionByAccount(userAccount)
+        if (dappUserSolutions.length > 0) {
+            for (const dappUserSolution of dappUserSolutions) {
+                if (dappUserSolution.approved === true) {
+                    return dappUserSolution
+                }
+            }
+        }
+        return undefined
     }
 }
