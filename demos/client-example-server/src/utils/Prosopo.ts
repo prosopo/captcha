@@ -78,8 +78,10 @@ export class ProsopoServer {
     public async isVerified(web3Account: string, providerUrl?: string, commitmentId?: string): Promise<boolean> {
         if (providerUrl && commitmentId) {
             console.log('providerUrl', providerUrl)
+            console.log('web3Account', web3Account)
+            console.log('commitmentId', commitmentId)
             const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifySolution(web3Account, commitmentId)
+            const result = await providerApi.verifyDappUser(web3Account, commitmentId)
             return result.solutionApproved
         } else {
             const contractApi = await this.getContractApi()
