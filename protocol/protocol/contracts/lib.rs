@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 #![cfg_attr(not(feature = "std"), no_std)]
-
+#![feature(derive_default_enum)]
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
 use ink_lang as ink;
@@ -1060,13 +1060,14 @@ pub mod prosopo {
             &self,
             user: AccountId,
             threshold: u8,
-        ) -> Result<bool, Error> {
-            let user = self.get_dapp_user(user)?;
-            // determine if correct captchas is greater than or equal to threshold
-            Ok(
-                user.correct_captchas * 100 / (user.correct_captchas + user.incorrect_captchas)
-                    >= threshold.into(),
-            )
+        ) -> bool {
+            match self.get_dapp_user(user) {
+                Err(_e) => return false,
+                Ok(user) =>
+                    // determine if correct captchas is greater than or equal to threshold
+                    user.correct_captchas * 100 / (user.correct_captchas + user.incorrect_captchas)
+                        >= threshold.into()
+            }
         }
 
         #[ink(message)]
@@ -2197,8 +2198,7 @@ pub mod prosopo {
 
             // Now make sure that the dapp user does not pass the human test
             let result = contract
-                .dapp_operator_is_human_user(dapp_user_account, 80)
-                .unwrap();
+                .dapp_operator_is_human_user(dapp_user_account, 80);
             assert_eq!(result, false);
         }
 
