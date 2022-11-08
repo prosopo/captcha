@@ -73,7 +73,8 @@
         "INVALID_LEAF_HASH": "Nedostaje heš lista",
         "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
         "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id",
-        "DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found"
+        "DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
+        "INVALID_PROVIDER_URL": "Invalid provider url"
     },
     "API": {
         "BODY_UNDEFINED": "Body mora biti definisan u API POST pozivu",
