@@ -27,8 +27,7 @@ import {
 
 export function useCaptcha(defaultContext: ICaptchaContextState, callbacks?: CaptchaEventCallbacks): ProsopoCaptchaClient {
     const [context, updateContext] = useReducer(captchaContextReducer, defaultContext);
-    const [status, updateStatus] = useReducer(captchaStatusReducer, {});
-    return new ProsopoCaptchaClient({ state: context, update: updateContext }, { state: status, update: updateStatus }, callbacks);
+    return new ProsopoCaptchaClient({ state: context, update: updateContext }, callbacks);
 }
 
 export const CaptchaContextManager = createContext({
