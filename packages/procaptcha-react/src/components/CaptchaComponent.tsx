@@ -54,7 +54,7 @@ export function CaptchaComponent({
     const stateClientInterface = new ProsopoCaptchaStateClient(clientInterface, { state, update })
 
     useEffect(() => {
-        clientInterface.onLoad(stateClientInterface.onSolved, manager.state.config['web2'])
+        clientInterface.onLoad(manager.state.config['web2'])
     }, [])
 
     useEffect(() => {
