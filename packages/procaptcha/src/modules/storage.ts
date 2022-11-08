@@ -13,7 +13,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
+import { ProsopoRandomProviderResponse } from '../types/index'
+
 const CURRENT_ACCOUNT_KEY = '@prosopo/current_account'
+const PROVIDER_URL_KEY = '@prosopo/provider'
 
 /**
  * Sets default `account`
@@ -29,7 +32,27 @@ function getAccount(): string | null {
     return localStorage.getItem(CURRENT_ACCOUNT_KEY)
 }
 
+/**
+ * Sets `providerUrl` for `account`
+ */
+function setProvider(provider: ProsopoRandomProviderResponse) {
+    localStorage.setItem(PROVIDER_URL_KEY, JSON.stringify(provider))
+}
+
+/**
+ * Gets default `account`
+ */
+function getProvider(): ProsopoRandomProviderResponse | null {
+    const providerString = localStorage.getItem(PROVIDER_URL_KEY)
+    if (providerString) {
+        return JSON.parse(providerString)
+    }
+    return null
+}
+
 export default {
     setAccount,
     getAccount,
+    setProvider,
+    getProvider,
 }

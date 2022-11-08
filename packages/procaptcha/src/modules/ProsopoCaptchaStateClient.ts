@@ -13,12 +13,23 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { ICaptchaStateReducer, TCaptchaSubmitResult } from '../types/client'
+import { ICaptchaStateReducer, TCaptchaSubmitResult, TExtensionAccount } from '../types/client'
 import { GetCaptchaResponse } from '../types/api'
 
 import { ProsopoCaptchaClient } from './ProsopoCaptchaClient'
 import { ProsopoEnvError } from '@prosopo/contract'
-import { CaptchaSolution, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
+import { CaptchaSolution, CaptchaSolutionCommitment, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
+import { CaptchaSolutionCommitmentId, CaptchaSolutionResponse, VerificationResponse } from '@prosopo/api'
+import { TransactionResponse } from '../types/index'
+
+export interface SolvedData {
+    userAccount: string
+    providerUrl: string
+    result?: CaptchaSolutionResponse
+    commitmentId?: CaptchaSolutionCommitmentId
+    tx?: TransactionResponse
+    commitment?: CaptchaSolutionCommitment
+}
 
 export class ProsopoCaptchaStateClient {
     public context: ProsopoCaptchaClient
@@ -101,25 +112,40 @@ export class ProsopoCaptchaStateClient {
                 return
             }
 
-            await this.onSolved(submitResult)
+            await this.onSolved(this.context.manager.state.account!, submitResult)
         }
         this.manager.update({ captchaSolution: [] })
     }
 
-    onSolved = async (submitResult: TCaptchaSubmitResult) => {
-        let isHuman: boolean | undefined
-
-        try {
-            isHuman = await this.context
-                .getContract()
-                ?.dappOperatorIsHumanUser(this.context.manager.state.config['solutionThreshold'])
-        } catch (err) {
-            console.log(`Error determining whether user is human: ${err}`)
-        }
+    onSolved = async (
+        account: TExtensionAccount,
+        submitResult?: TCaptchaSubmitResult,
+        verificationResponse?: VerificationResponse
+    ): Promise<void> => {
         this.dismissCaptcha()
-
-        if (this.context.callbacks?.onSolved) {
-            this.context.callbacks.onSolved(submitResult)
+        if (!this.context.providerUrl) {
+            throw new ProsopoEnvError('CAPTCHA.INVALID_PROVIDER_URL')
+        }
+        if (this.context.callbacks?.onHuman) {
+            const solvedData: SolvedData = {
+                userAccount: account.address,
+                providerUrl: this.context.providerUrl,
+                result: undefined,
+                commitmentId: undefined,
+                tx: undefined,
+                commitment: undefined,
+            }
+            if (submitResult) {
+                const [result, commitmentId, tx, commitment] = submitResult as TCaptchaSubmitResult
+                solvedData['result'] = result
+                solvedData['commitmentId'] = commitmentId
+                solvedData['tx'] = tx
+                solvedData['commitment'] = commitment
+            }
+            if (verificationResponse) {
+                solvedData['commitmentId'] = verificationResponse.commitmentId
+            }
+            this.context.callbacks.onHuman(solvedData)
         }
     }
 

@@ -17,10 +17,10 @@ import { InjectedAccountWithMeta, InjectedExtension } from '@polkadot/extension-
 import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoClientConfig } from '../types/api'
 import { TransactionResponse } from '../types/contract'
 import { CaptchaSolutionCommitment } from '@prosopo/datasets'
+import { SolvedData } from '../modules/index'
+import { CaptchaSolutionCommitmentId, VerificationResponse } from '@prosopo/api'
 
 export type TExtensionAccount = InjectedAccountWithMeta
-
-export type CaptchaSolutionCommitmentId = string
 
 export type TCaptchaSubmitResult = [
     CaptchaSolutionResponse,
@@ -51,7 +51,12 @@ export interface ICaptchaStateClientEvents {
     onSubmit?: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => void
     onChange?: (captchaSolution: string[][], index: number) => void
     onCancel?: () => void
-    onSolved?: (result: TCaptchaSubmitResult, isHuman?: boolean) => void
+    onSolved?: (
+        account: TExtensionAccount,
+        submitResult?: TCaptchaSubmitResult,
+        verificationResponse?: VerificationResponse
+    ) => void
+    onHuman?: (solvedData: SolvedData) => void
 }
 
 export interface CaptchaEventCallbacks extends ICaptchaClientEvents, ICaptchaStateClientEvents {}
