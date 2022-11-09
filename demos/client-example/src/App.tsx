@@ -160,7 +160,6 @@ function App() {
 
     return (
         <div>
-            <Procaptcha config={config} callbacks={{onAccountChange, onChange, onSubmit, onSolved, onCancel}}/>
             <Box className={"App"} sx={{width: "80%", display: "flex"}}>
                 <Box>
                     {message ? getMessage() : null}
@@ -206,6 +205,8 @@ function App() {
                                 />
                             </FormControl>
 
+                            <Procaptcha config={config} callbacks={{onAccountChange, onChange, onSubmit, onSolved, onCancel}}/>
+
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
                                     <Button variant="contained" onClick={onSubmitHandler}>
@@ -220,12 +221,8 @@ function App() {
 
                         </FormGroup>
 
-
                     </Box>
-
-                    <CaptchaContextManager.Provider value={manager}>
-                        <CaptchaComponent {...{clientInterface, show: showCaptchas}} />
-                    </CaptchaContextManager.Provider>
+                    
                 </Box>
 
             </Box>
