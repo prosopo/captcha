@@ -38,7 +38,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
         {
             onHuman: (solvedData: SolvedData) => {
                 callbacks.onHuman?.(solvedData)
-                setTicked(!solvedData.human)
+                setTicked(solvedData.human)
                 setShowCaptcha(false)
             },
             onCancel: () => {
