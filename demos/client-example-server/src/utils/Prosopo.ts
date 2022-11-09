@@ -75,17 +75,17 @@ export class ProsopoServer {
         this.pair = this.keyring.addFromMnemonic(mnemonic)
     }
 
-    public async isVerified(web3Account: string, providerUrl?: string, commitmentId?: string): Promise<boolean> {
+    public async isVerified(userAccount: string, providerUrl?: string, commitmentId?: string): Promise<boolean> {
         if (providerUrl && commitmentId) {
             console.log('providerUrl', providerUrl)
-            console.log('web3Account', web3Account)
+            console.log('web3Account', userAccount)
             console.log('commitmentId', commitmentId)
             const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifyDappUser(web3Account, commitmentId)
+            const result = await providerApi.verifyDappUser(userAccount, commitmentId)
             return result.solutionApproved
         } else {
             const contractApi = await this.getContractApi()
-            return await contractApi.dappOperatorIsHumanUser(web3Account, this.config.solutionThreshold)
+            return await contractApi.dappOperatorIsHumanUser(userAccount, this.config.solutionThreshold)
         }
     }
 
