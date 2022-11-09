@@ -17,7 +17,7 @@ import { ICaptchaStateReducer, TCaptchaSubmitResult, TExtensionAccount } from '.
 import { GetCaptchaResponse } from '../types/api'
 
 import { ProsopoCaptchaClient } from './ProsopoCaptchaClient'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import { CaptchaSolution, CaptchaSolutionCommitment, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
 import { CaptchaSolutionCommitmentId, CaptchaSolutionResponse, VerificationResponse } from '@prosopo/api'
 import { TransactionResponse } from '../types/index'
