@@ -26,7 +26,7 @@ import {
     RawSolution,
 } from '../types/index'
 import { hexHash } from './util'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '../types/error'
 
 // import {encodeAddress} from "@polkadot/util-crypto";
 

@@ -2,7 +2,7 @@ import { Dataset, DatasetRaw } from '../types/dataset'
 import { Captcha } from '../types/captcha'
 import { calculateItemHashes, computeCaptchaHash, matchItemsToSolutions } from './captcha'
 import { CaptchaMerkleTree } from './merkle'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '../types/error'
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw)
