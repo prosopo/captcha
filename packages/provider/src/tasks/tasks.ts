@@ -23,7 +23,6 @@ import {
     Dapp,
     GovernanceStatus,
     Payee,
-    ProsopoEnvError,
     Provider,
     RandomProvider,
     TransactionResponse,
@@ -46,6 +45,7 @@ import {
     computePendingRequestHash,
     parseCaptchaDataset,
     parseCaptchaSolutions,
+    ProsopoEnvError
 } from '@prosopo/datasets'
 import consola from 'consola'
 import { buildDecodeVector } from '../codec/codec'

@@ -15,12 +15,13 @@
 // import yargs from 'yargs/yargs';
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types'
-import { Payee, ProsopoEnvError } from '@prosopo/contract'
+import { Payee } from '@prosopo/contract'
 import fse from 'fs-extra'
 import path from 'path'
 import { Environment, getEnvFile, loadEnv } from '../env'
 import { generateMnemonic, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
+import { ProsopoEnvError } from '@prosopo/datasets'
 
 loadEnv()
 

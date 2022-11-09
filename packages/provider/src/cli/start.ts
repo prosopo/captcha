@@ -30,7 +30,7 @@ import { handleErrors } from '../errors'
 import { ProsopoEnvironment } from '../types/env'
 
 import { Server } from 'http'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import { i18nMiddleware } from '@prosopo/i18n'
 
 // loadEnv();

@@ -16,7 +16,7 @@ import { Db, Document, Filter, MongoClient } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
 import { isHex } from '@polkadot/util'
 import { DappUserSolution, Database, DatasetRecord, PendingCaptchaRequestRecord, Tables } from '../types'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import {
     Captcha,
     CaptchaSolution,

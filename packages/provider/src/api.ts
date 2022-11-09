@@ -13,7 +13,7 @@
 // limitations under the License.
 import type { AnyJson } from '@polkadot/types/types'
 import { validateAddress } from '@polkadot/util-crypto'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'

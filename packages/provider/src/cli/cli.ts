@@ -16,7 +16,7 @@ import { mnemonicValidate } from '@polkadot/util-crypto'
 // import { LocalAssetsResolver } from '../assets';
 import { Environment, loadEnv } from '../env'
 import { processArgs } from './argv'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 
 loadEnv()
 

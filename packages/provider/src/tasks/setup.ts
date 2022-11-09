@@ -14,7 +14,7 @@
 import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
-import { BigNumber, ProsopoEnvError, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { BigNumber, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import {
     CaptchaMerkleTree,
     calculateItemHashes,
@@ -22,6 +22,7 @@ import {
     convertCaptchaToCaptchaSolution,
     hexHash,
     matchItemsToSolutions,
+    ProsopoEnvError
 } from '@prosopo/datasets'
 import { IDappAccount, IProviderAccount, IUserAccount } from '../types/accounts'
 import { Tasks } from './tasks'
