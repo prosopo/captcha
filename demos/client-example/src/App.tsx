@@ -149,7 +149,6 @@ function App() {
 
     return (
         <div>
-            <Procaptcha config={config} callbacks={{onAccountChange, onChange, onSubmit, onSolved, onCancel}}/>
             <Box className={"App"} sx={{ display: "flex"}}>
                 <Box>
                     {message ? getMessage() : null}
@@ -173,17 +172,17 @@ function App() {
                                 />
                             </FormControl>
 
-                        {!isLogin && (
-                            <FormControl>
-                                <TextField
-                                    id="name"
-                                    label="Name"
-                                    type="text"
-                                    autoComplete="Name"
-                                    onChange={(e) => setName(e.target.value)}
-                                />
-                            </FormControl>
-                        )}
+                            {!isLogin && (
+                                <FormControl>
+                                    <TextField
+                                        id="name"
+                                        label="Name"
+                                        type="text"
+                                        autoComplete="Name"
+                                        onChange={(e) => setName(e.target.value)}
+                                    />
+                                </FormControl>
+                            )}
 
                             <FormControl>
                                 <TextField
@@ -195,7 +194,7 @@ function App() {
                                 />
                             </FormControl>
 
-                            <Procaptcha config={config} callbacks={{onAccountChange, onChange, onSubmit, onSolved, onCancel}}/>
+                            <Procaptcha config={config} callbacks={{onAccountChange, onChange, onSubmit, onCancel}}/>
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
@@ -203,20 +202,17 @@ function App() {
                                         <Typography>Done</Typography>
                                     </Button>
 
-                                <Button variant="text" onClick={onChangeHandler}>
-                                    <Typography>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
-                                </Button>
-                            </Stack>
-                        </div>
-                    </FormGroup>
-                </Box>
+                                    <Button variant="text" onClick={onChangeHandler}>
+                                        <Typography>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
+                                    </Button>
+                                </Stack>
+                            </div>
+                        </FormGroup>
+                    </Box>
 
-                <CaptchaContextManager.Provider value={manager}>
-                    <CaptchaComponent {...{ clientInterface, show: showCaptchas }} />
-                </CaptchaContextManager.Provider>
+                </Box>
             </Box>
-        </Box>
-    </div>
+        </div>
     )
 }
 
