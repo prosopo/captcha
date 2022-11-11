@@ -27,18 +27,13 @@ function App() {
     const [message, setMessage] = useState('')
     const [isLogin, setIsLogin] = useState(true)
 
-    const showCaptchaClick = () => {
-        setShowCaptchas(true)
-        console.log({ info: '' })
-    }
-
     const onAccountChange = (account: TExtensionAccount) => {
-        if (account) {
-            //setShowCaptchas(true);
-            console.log({ info: 'Selected account: ' + account?.meta.name })
-            setAccount(account)
-            console.log('CAPTCHA API', clientInterface.captchaApi)
-        }
+        // if (account) {
+        //     //setShowCaptchas(true);
+        //     console.log({ info: 'Selected account: ' + account?.meta.name })
+        //     setAccount(account)
+        //     console.log('CAPTCHA API', clientInterface.captchaApi)
+        // }
     }
 
     const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
@@ -52,7 +47,7 @@ function App() {
 
     const onLoggedIn = (token) => {
         console.log('getting private resource with token ', token)
-        fetch(`${manager.state.config.serverUrl}/private`, {
+        fetch(`${config.serverUrl}/private`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -92,7 +87,7 @@ function App() {
             password,
             prosopo: onSolvedData,
         }
-        fetch(`${manager.state.config.serverUrl}/${isLogin ? 'login' : 'signup'}`, {
+        fetch(`${config.serverUrl}/${isLogin ? 'login' : 'signup'}`, { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -130,10 +125,10 @@ function App() {
         console.log({ info: '' })
     }
 
-    const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onHuman, onCancel })
+    // const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onHuman, onCancel })
 
     const disconnectAccount = () => {
-        clientInterface.onAccountUnset()
+        // clientInterface.onAccountUnset()
         console.log({ info: '' })
     }
 
@@ -145,19 +140,19 @@ function App() {
         }
     }
 
-    const manager = clientInterface.manager;
+    // const manager = clientInterface.manager;
 
     return (
         <div>
             <Box className={"App"} sx={{ display: "flex"}}>
                 <Box>
-                    {message ? getMessage() : null}
+                    {/* {message ? getMessage() : null}
                     {clientInterface.extension && !manager.state.account && showCaptchas && clientInterface.extension.getAccounts() &&
                     <ExtensionAccountSelect
                         value={manager.state.account}
                         options={clientInterface.extension.getAccounts()}
                         onChange={clientInterface.onAccountChange.bind(clientInterface)}
-                    />}
+                    />} */}
                     <Box>
                         <h1>{isLogin ? 'Login' : 'Signup'}</h1>
                         <FormGroup sx={{'& .MuiTextField-root': { m: 1 }}}>
