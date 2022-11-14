@@ -3,8 +3,9 @@ import Box from '@mui/material/Box'
 import Checkbox from '@mui/material/Checkbox'
 import { useRef, useState } from 'react'
 import Link from '@mui/material/Link'
-import { ProcaptchaCallbacks } from '@prosopo/procaptcha'
+import { GetCaptchaResponse, ProcaptchaCallbacks, ProsopoCaptchaApi, ProsopoContract, ProsopoRandomProviderResponse } from '@prosopo/procaptcha'
 import { Manager, ProcaptchaConfig, ProcaptchaState, StateUpdateFn } from '@prosopo/procaptcha'
+import { ProviderApi } from '@prosopo/api'
 
 export interface ProcaptchaProps {
     config: ProcaptchaConfig
@@ -27,18 +28,28 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
 
     const [isHuman, setIsHuman] = useState(false)
     const [index, setIndex] = useState(-1)
-    const [solutions, setSolutions] = useState<string[][]>([])
-    const [providerUrl, setProviderUrl] = useRefAsState<string>('')
+    const [solutions, setSolutions] = useRefAsState<string[][]>([])
     // take a deep copy of the config and store in state. This stops the config from being updated externally to this state management
     const [config] = useState<ProcaptchaConfig>(() => {
         return JSON.parse(JSON.stringify(initConfig))
     })
+    const [contract, setContract] = useRefAsState<ProsopoContract | undefined>(undefined)
+    const [provider, setProvider] = useRefAsState<ProsopoRandomProviderResponse | undefined>(undefined)
+    const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
+    const [showChallenge, setShowChallenge] = useState(false)
+    const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(undefined)
+    const [providerApi, setProviderApi] = useRefAsState<ProviderApi | undefined>(undefined)
 
     const map = {
         isHuman: setIsHuman,
         index: setIndex,
         solutions: setSolutions,
-        providerUrl: setProviderUrl,
+        contract: setContract,
+        provider: setProvider,
+        captchaApi: setCaptchaApi,
+        showChallenge: setShowChallenge,
+        challenge: setChallenge,
+        providerApi: setProviderApi,
         // don't provide method for updating config, should remain constant
     }
 
@@ -48,8 +59,13 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
             isHuman,
             index,
             solutions,
-            providerUrl,
-            config: config,
+            config,
+            contract,
+            provider,
+            captchaApi,
+            showChallenge,
+            challenge,
+            providerApi,
         },
         // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
