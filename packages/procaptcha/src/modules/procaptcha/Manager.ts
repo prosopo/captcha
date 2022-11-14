@@ -20,16 +20,12 @@ export interface ProcaptchaConfig {
  * The state of Procaptcha. This is mutated as required to reflect the captcha process.
  */
 export interface ProcaptchaState {
-    // is the user human?
-    isHuman: boolean
-    // the index of the captcha round currently being shown
-    index: number
-    // the solutions for each captcha round
-    solutions: string[][]
-    // the url of the provider for the captcha challenge. undefined if no provider is set
+    isHuman: boolean // is the user human?
+    index: number // the index of the captcha round currently being shown
+    solutions: string[][] // the solutions for each captcha round
     providerUrl: string // set to empty string for no provider
-    // the config / env variables for the captcha process
-    config: ProcaptchaConfig
+    config: ProcaptchaConfig // the config / env variables for the captcha process
+    contract?: ProsopoContract // the contract instance, contains api, abi, contract, etc. undefined if not set up
 }
 
 export type StateUpdateFn = (state: Partial<ProcaptchaState>) => void
@@ -90,8 +86,13 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             // account has been found, check if account is already marked as human
             // first, ask the smart contract
             await loadContract()
-            // const contract = await initContract(config, state)
-            // updateState({ contract })
+
+            if (!state.contract) {
+                throw new Error('Contract not loaded')
+            }
+            const contract: ProsopoContract = state.contract
+
+            
         } catch (err) {
             // dispatch error to error callback
             events.onError(err)
@@ -124,7 +125,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             new WsProvider(state.config.endpoint)
         )
 
-        // updateState({ contract })
+        updateState({ contract })
     }
 
     return {
