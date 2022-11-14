@@ -142,6 +142,24 @@ function App() {
 
     // const manager = clientInterface.manager;
 
+    const onError = (error: Error) => {
+        alert(error.message)
+    }
+
+    const onAccountNotFound = (address: string) => {
+        alert(`Account ${address} not found`)
+    }
+
+    const conf = {
+        userAccountAddress: '5EXaAvaSP1T4BMeHdtF2AudXq7ooRo6jHwi6HywenfSkedNa',
+        web2: false,
+        dappName: 'Prosopo',
+        dappUrl: 'https://localhost:3001',
+        endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || '',
+        prosopoContractAddress: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || '',
+        dappContractAddress: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || '',
+    }
+
     return (
         <div>
             <Box className={"App"} sx={{ display: "flex"}}>
@@ -189,7 +207,7 @@ function App() {
                                 />
                             </FormControl>
 
-                            <Procaptcha config={config} callbacks={{onAccountChange, onChange, onSubmit, onCancel}}/>
+                            <Procaptcha config={conf} callbacks={{onAccountNotFound, onError}}/>
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
