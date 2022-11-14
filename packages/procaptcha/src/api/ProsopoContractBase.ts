@@ -31,24 +31,24 @@ export class ProsopoContractBase extends AsyncFactory {
     protected account: InjectedAccountWithMeta
     protected dappAddress: string
 
-    public address: string
+    public contractAddress: string
 
     /**
-     * @param address
+     * @param contractAddress
      * @param dappAddress
      * @param account
      * @param providerInterface
      */
     public async init(
-        address: string,
+        contractAddress: string,
         dappAddress: string,
         account: InjectedAccountWithMeta,
         providerInterface: ProviderInterface
     ) {
         this.api = await ApiPromise.create({ provider: providerInterface })
         this.abi = new Abi(abiJson, this.api.registry.getChainProperties())
-        this.contract = new ContractPromise(this.api, this.abi, address)
-        this.address = address
+        this.contract = new ContractPromise(this.api, this.abi, contractAddress)
+        this.contractAddress = contractAddress
         this.dappAddress = dappAddress
         this.account = account
         return this
