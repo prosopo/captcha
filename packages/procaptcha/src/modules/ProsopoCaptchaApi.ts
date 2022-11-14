@@ -53,13 +53,8 @@ export class ProsopoCaptchaApi {
     }
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
-        let captchaChallenge: GetCaptchaResponse
-        try {
-            captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
-            this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
-        } catch (err) {
-            throw new ProsopoEnvError(err)
-        }
+        const captchaChallenge: GetCaptchaResponse = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
+        this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
         return captchaChallenge
     }
 
