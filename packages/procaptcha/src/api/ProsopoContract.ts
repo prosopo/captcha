@@ -22,9 +22,9 @@ import { CaptchaSolutionCommitment } from '@prosopo/datasets'
 
 export class ProsopoContract extends ProsopoContractBase {
     public async getRandomProvider(): Promise<ProsopoRandomProviderResponse> {
-        console.log('getRandomProvider', this.account.address, this.dappAddress)
+        console.log('getRandomProvider', this.userAccountAddress, this.dappAddress)
         return (await this.query('getRandomActiveProvider', [
-            this.account.address,
+            this.userAccountAddress,
             this.dappAddress,
         ])) as ProsopoRandomProviderResponse
     }
@@ -50,7 +50,7 @@ export class ProsopoContract extends ProsopoContractBase {
     public async dappOperatorIsHumanUser(solutionThreshold: number): Promise<ProsopoDappOperatorIsHumanUserResponse> {
         let response
         try {
-            response = await this.query('dappOperatorIsHumanUser', [this.account.address, solutionThreshold])
+            response = await this.query('dappOperatorIsHumanUser', [this.userAccountAddress, solutionThreshold])
             // TODO make the contract always return true or false
             if (response !== true) {
                 throw new Error('dappOperatorIsHumanUser returned false')

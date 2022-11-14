@@ -25,24 +25,24 @@ import { TransactionResponse } from '../types'
 import AsyncFactory from './AsyncFactory'
 
 export class ProsopoContractBase extends AsyncFactory {
-    protected api: ApiPromise
-    protected abi: Abi
-    protected contract: ContractPromise
-    protected account: InjectedAccountWithMeta
-    protected dappAddress: string
+    api: ApiPromise
+    abi: Abi
+    contract: ContractPromise
+    userAccountAddress: string
+    dappAddress: string
 
     public contractAddress: string
 
     /**
      * @param contractAddress
      * @param dappAddress
-     * @param account
+     * @param userAccountAddress
      * @param providerInterface
      */
     public async init(
         contractAddress: string,
         dappAddress: string,
-        account: InjectedAccountWithMeta,
+        userAccountAddress: string,
         providerInterface: ProviderInterface
     ) {
         this.api = await ApiPromise.create({ provider: providerInterface })
@@ -50,7 +50,7 @@ export class ProsopoContractBase extends AsyncFactory {
         this.contract = new ContractPromise(this.api, this.abi, contractAddress)
         this.contractAddress = contractAddress
         this.dappAddress = dappAddress
-        this.account = account
+        this.userAccountAddress = userAccountAddress
         return this
     }
 
@@ -60,10 +60,6 @@ export class ProsopoContractBase extends AsyncFactory {
 
     public getContract(): ContractPromise {
         return this.contract
-    }
-
-    public getAccount(): InjectedAccountWithMeta {
-        return this.account
     }
 
     public getDappAddress(): string {
@@ -78,7 +74,7 @@ export class ProsopoContractBase extends AsyncFactory {
         try {
             const abiMessage = this.abi.findMessage(method)
             const response = await this.contract.query[method](
-                this.account.address,
+                this.userAccountAddress,
                 {},
                 ...encodeStringArgs(abiMessage, args)
             )
@@ -116,7 +112,7 @@ export class ProsopoContractBase extends AsyncFactory {
 
         return new Promise((resolve, reject) => {
             extrinsic
-                .signAndSend(this.account.address, { signer }, (result: SubmittableResult) => {
+                .signAndSend(this.userAccountAddress, { signer }, (result: SubmittableResult) => {
                     const { dispatchError, dispatchInfo, events, internalError, status, txHash, txIndex } = result
 
                     console.log('TX STATUS', status.type)

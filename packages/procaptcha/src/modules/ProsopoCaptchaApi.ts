@@ -116,7 +116,7 @@ export class ProsopoCaptchaApi {
             result = await this.providerApi.submitCaptchaSolution(
                 captchaSolutionsSalted,
                 requestHash,
-                this.contract.getAccount().address,
+                this.contract.userAccountAddress,
                 salt,
                 undefined,
                 undefined,
@@ -164,7 +164,7 @@ export class ProsopoCaptchaApi {
             result = await this.providerApi.submitCaptchaSolution(
                 captchaSolutionsSalted,
                 requestHash,
-                this.contract.getAccount().address,
+                this.contract.userAccountAddress,
                 salt,
                 tx.blockHash!,
                 tx.txHash.toString()
