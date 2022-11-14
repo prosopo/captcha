@@ -220,7 +220,7 @@ export class ProsopoCaptchaClient {
             return await getProsopoContract(
                 this.manager.state.config.networks[defaultEnvironment].prosopoContract.address,
                 this.manager.state.config.networks[defaultEnvironment].dappContract.address,
-                account,
+                account.address,
                 getWsProvider(this.manager.state.config.networks[defaultEnvironment].endpoint)
             )
         } catch (err) {
