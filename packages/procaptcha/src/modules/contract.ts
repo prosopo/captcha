@@ -25,10 +25,10 @@ export function getWsProvider(url?: string): WsProvider {
 export async function getProsopoContract(
     contractAddress: string,
     dappAddress: string,
-    account: InjectedAccountWithMeta,
+    userAccountAddress: string,
     providerInterface?: ProviderInterface
 ): Promise<ProsopoContract> {
-    return await ProsopoContract.create(contractAddress, dappAddress, account, providerInterface ?? getWsProvider())
+    return await ProsopoContract.create(contractAddress, dappAddress, userAccountAddress, providerInterface ?? getWsProvider())
 }
 
 // export async function getWsProvider(url?: string): Promise<WsProvider> {
