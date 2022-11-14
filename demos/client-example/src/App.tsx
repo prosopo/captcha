@@ -155,9 +155,18 @@ function App() {
         web2: false,
         dappName: 'Prosopo',
         dappUrl: 'https://localhost:3001',
-        endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || '',
-        prosopoContractAddress: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || '',
-        dappContractAddress: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || '',
+        network: {
+            endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
+            prosopoContract: {
+                address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+                name: 'prosopo',
+            },
+            dappContract: {
+                address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
+                name: 'dapp',
+            },
+        },
+        solutionThreshold: 0.8,
     }
 
     return (
