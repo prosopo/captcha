@@ -3,15 +3,15 @@ import Box from '@mui/material/Box'
 import Checkbox from '@mui/material/Checkbox'
 import { useRef, useState } from 'react'
 import Link from '@mui/material/Link'
-import { CaptchaEventCallbacks, ProsopoClientConfig } from '@prosopo/procaptcha'
-import { Manager, ProcaptchaConfig, ProcaptchaState, ProcaptchaStateUpdater } from '@prosopo/procaptcha'
+import { ProcaptchaCallbacks } from '@prosopo/procaptcha'
+import { Manager, ProcaptchaConfig, ProcaptchaState, StateUpdateFn } from '@prosopo/procaptcha'
 
 export interface ProcaptchaProps {
-    config: ProsopoClientConfig
-    callbacks: CaptchaEventCallbacks
+    config: ProcaptchaConfig
+    callbacks?: Partial<ProcaptchaCallbacks>
 }
 
-const useRefAsState = <T,>(defaultValue): [T, (value: T) => void] => {
+const useRefAsState = <T,>(defaultValue: T): [T, (value: T) => void] => {
     const ref = useRef<T>(defaultValue)
     const setter = (value: T) => {
         ref.current = value
@@ -20,7 +20,7 @@ const useRefAsState = <T,>(defaultValue): [T, (value: T) => void] => {
     return [value, setter]
 }
 
-const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdater] => {
+const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpdateFn] => {
     // useRef == do not render on variable change
     // useState == do render on variable change
     // only need to render on visible variables changing
@@ -29,24 +29,29 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdater] => {
     const [index, setIndex] = useState(-1)
     const [solutions, setSolutions] = useState<string[][]>([])
     const [providerUrl, setProviderUrl] = useRefAsState<string>('')
-    const [config, setConfig] = useRefAsState<ProcaptchaConfig>({})
+    // take a deep copy of the config and store in state. This stops the config from being updated externally to this state management
+    const [config] = useState<ProcaptchaConfig>(() => {
+        return JSON.parse(JSON.stringify(initConfig))
+    })
 
     const map = {
         isHuman: setIsHuman,
         index: setIndex,
         solutions: setSolutions,
         providerUrl: setProviderUrl,
-        config: setConfig,
+        // don't provide method for updating config, should remain constant
     }
 
     return [
+        // the state
         {
             isHuman,
             index,
             solutions,
             providerUrl,
-            config,
+            config: config,
         },
+        // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
             if (nextState.solutions) {
                 // force a copy of the array to ensure a re-render
@@ -64,197 +69,16 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdater] => {
         },
     ]
 
-    // const state = {
-    //     isHuman,
-    // }
-    // Object.defineProperty(state, 'isHuman', {
-    //     get: () => isHuman,
-    //     set: (value) => {
-    //         console.log('setting ishuman in obj def')
-    //         isHuman = value
-    //         setIsHuman(value)
-    //     },
-    // })
-    // return state
-
-    // class State {
-    //     get isHuman() {
-    //         return isHuman
-    //     }
-
-    //     set isHuman(value) {
-    //         console.log('setting ishuman in class')
-    //         isHuman = value
-    //         setIsHuman(value)
-    //     }
-    // }
-
-    // const state = new State()
-
-    // Object.defineProperty(state, 'isHuman', {
-    //     enumerable: true,
-    //     writable: true,
-    //     // get: () => isHuman,
-    //     // set: (value) => {
-    //     //     console.log('setting ishuman in obj def')
-    //     //     isHuman = value
-    //     //     setIsHuman(value)
-    //     // },
-    // })
-
-    // return state
-
-    // class State {
-
-    //     isHuman: boolean
-
-    //     constructor() {
-    //         this.isHuman = isHuman
-    //         Object.defineProperty(this, 'isHuman', {
-    //             enumerable: true,
-    //             get: () => isHuman,
-    //             set: (value) => {
-    //                 console.log('setting ishuman in obj def')
-    //                 isHuman = value
-    //                 setIsHuman(value)
-    //             },
-    //         })
-    //     }
-
-    //     // get index() {
-    //     //     return index
-    //     // }
-
-    //     // set index(value) {
-    //     //     index = value
-    //     //     setIndex(value)
-    //     // }
-
-    //     // get solutions() {
-    //     //     return solutions
-    //     // }
-
-    //     // set solutions(value) {
-    //     //     solutions = value
-    //     //     setSolutions(value)
-    //     // }
-
-    //     // get providerUrl() {
-    //     //     return providerUrl
-    //     // }
-
-    //     // set providerUrl(value) {
-    //     //     providerUrl = value
-    //     //     setProviderUrl(value)
-    //     // }
-    // }
-
-    // return new State()
 }
 
 export const Procaptcha = (props: ProcaptchaProps) => {
-    const callbacks = props.callbacks
     const config = props.config
+    const callbacks = props.callbacks || {}
 
-    // // check all expected props are present
-    // // TODO validate account can be found in the polk js extension
-    // // TODO validate other props
-
-    // const [ticked, setTicked] = useState(false)
-    // const [showCaptcha, setShowCaptcha] = useState(false)
-    // const [preApproveChecked, setPreApproveChecked] = useState(false)
-
-    // const [state, updateState] = useReducer(captchaContextReducer, { config })
-    // const client = new ProsopoCaptchaClient(
-    //     { state: state, update: updateState },
-    //     {
-    //         onHuman: (solvedData: SolvedData) => {
-    //             callbacks.onHuman?.(solvedData)
-    //             setTicked(solvedData.human)
-    //             setShowCaptcha(false)
-    //         },
-    //         onCancel: () => {
-    //             callbacks.onCancel?.()
-    //             setShowCaptcha(false)
-    //             setTicked(false)
-    //         },
-    //         onLoadCaptcha: (captchaChallenge: GetCaptchaResponse | Error) => {
-    //             callbacks.onLoadCaptcha?.(captchaChallenge)
-    //         },
-    //         onSubmit: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => {
-    //             callbacks.onSubmit?.(result, captchaState)
-    //             setShowCaptcha(false)
-    //         },
-    //         onChange: (captchaSolution: string[][], index: number) => {
-    //             callbacks.onChange?.(captchaSolution, index)
-    //         },
-    //     }
-    // )
-
-    // console.log(client)
-    // console.log({
-    //     ticked,
-    //     showCaptcha,
-    //     preApproveChecked,
-    // })
-
-    // useEffect(() => {
-    //     console.log(props)
-    //     console.log('Procaptcha: checking whether user is already approved')
-    //     client
-    //         .onLoad(async () => {
-    //             // only called if human, i.e. preapproved
-    //             console.log('preapproved')
-    //             setShowCaptcha(false)
-    //             setTicked(true)
-    //             // props.onPreApproved?.();
-    //         }, config.web2)
-    //         .then(() => {
-    //             console.log('on load finished')
-    //             // onLoad() completed, preapprove checks complete
-    //             setPreApproveChecked(true)
-    //         })
-    // }, [])
-
-    // const onTick = () => {
-    //     if (ticked) {
-    //         // already approved, so do nothing
-    //         alert('You are already human')
-    //     } else {
-    //         if (!preApproveChecked) {
-    //             // still waiting on preapprove checks, do nothing
-    //             console.log('cannot trigger challenge, waiting for preapprove checks to complete')
-    //         } else {
-    //             // preapprove checks complete, not preapproved, so trigger captcha
-    //             setShowCaptcha(true)
-    //         }
-    //     }
-    // }
-
-    const [state, updateState] = useProcaptcha()
-    const manager = Manager(state, updateState, {})
+    const [state, updateState] = useProcaptcha(config)
+    const manager = Manager(state, updateState, callbacks)
     const onTick = () => {
-        console.log('onTick')
-        manager.start({
-            address: '5EXaAvaSP1T4BMeHdtF2AudXq7ooRo6jHwi6HywenfSkedNa',
-            web2: false,
-            dappName: 'Prosopo',
-            dappUrl: 'https://localhost:9944',
-            defaultEnvironment: 'development',
-            networks: {
-                development: {
-                    endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || '',
-                    prosopoContract: {
-                        address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || '',
-                        name: 'prosopo',
-                    },
-                    dappContract: {
-                        address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || '',
-                        name: 'dapp',
-                    },
-                },
-            },
-        })
+        manager.start()
     }
     const ticked = false
 
