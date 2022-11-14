@@ -40,7 +40,7 @@ function setProvider(provider: ProsopoRandomProviderResponse) {
 }
 
 /**
- * Gets default `account`
+ * Gets `providerUrl`
  */
 function getProvider(): ProsopoRandomProviderResponse | null {
     const providerString = localStorage.getItem(PROVIDER_URL_KEY)
