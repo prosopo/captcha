@@ -1,107 +1,266 @@
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import Checkbox from '@mui/material/Checkbox'
-import { useEffect, useReducer, useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from '@mui/material/Link'
-import {
-    CaptchaEventCallbacks,
-    GetCaptchaResponse,
-    ICaptchaState,
-    ProsopoCaptchaClient,
-    ProsopoClientConfig,
-    SolvedData,
-    TCaptchaSubmitResult,
-    captchaContextReducer,
-} from '@prosopo/procaptcha'
-import { CaptchaComponent } from '.'
+import { CaptchaEventCallbacks, ProsopoClientConfig } from '@prosopo/procaptcha'
+import { Manager, ProcaptchaConfig, ProcaptchaState, ProcaptchaStateUpdater } from '@prosopo/procaptcha'
 
 export interface ProcaptchaProps {
     config: ProsopoClientConfig
     callbacks: CaptchaEventCallbacks
 }
 
+const useRefAsState = <T,>(defaultValue): [T, (value: T) => void] => {
+    const ref = useRef<T>(defaultValue)
+    const setter = (value: T) => {
+        ref.current = value
+    }
+    const value: T = ref.current
+    return [value, setter]
+}
+
+const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdater] => {
+    // useRef == do not render on variable change
+    // useState == do render on variable change
+    // only need to render on visible variables changing
+
+    const [isHuman, setIsHuman] = useState(false)
+    const [index, setIndex] = useState(-1)
+    const [solutions, setSolutions] = useState<string[][]>([])
+    const [providerUrl, setProviderUrl] = useRefAsState<string>('')
+    const [config, setConfig] = useRefAsState<ProcaptchaConfig>({})
+
+    const map = {
+        isHuman: setIsHuman,
+        index: setIndex,
+        solutions: setSolutions,
+        providerUrl: setProviderUrl,
+        config: setConfig,
+    }
+
+    return [
+        {
+            isHuman,
+            index,
+            solutions,
+            providerUrl,
+            config,
+        },
+        (nextState: Partial<ProcaptchaState>) => {
+            if (nextState.solutions) {
+                // force a copy of the array to ensure a re-render
+                // nutshell: react doesn't look inside an array for changes, hence changes to the array need to result in a fresh array
+                nextState.solutions = nextState.solutions.slice()
+            }
+
+            for (const key in nextState) {
+                const setter = map[key]
+                if (!setter) {
+                    throw new Error(`Unknown key ${key}, cannot set state`)
+                }
+                setter(nextState[key])
+            }
+        },
+    ]
+
+    // const state = {
+    //     isHuman,
+    // }
+    // Object.defineProperty(state, 'isHuman', {
+    //     get: () => isHuman,
+    //     set: (value) => {
+    //         console.log('setting ishuman in obj def')
+    //         isHuman = value
+    //         setIsHuman(value)
+    //     },
+    // })
+    // return state
+
+    // class State {
+    //     get isHuman() {
+    //         return isHuman
+    //     }
+
+    //     set isHuman(value) {
+    //         console.log('setting ishuman in class')
+    //         isHuman = value
+    //         setIsHuman(value)
+    //     }
+    // }
+
+    // const state = new State()
+
+    // Object.defineProperty(state, 'isHuman', {
+    //     enumerable: true,
+    //     writable: true,
+    //     // get: () => isHuman,
+    //     // set: (value) => {
+    //     //     console.log('setting ishuman in obj def')
+    //     //     isHuman = value
+    //     //     setIsHuman(value)
+    //     // },
+    // })
+
+    // return state
+
+    // class State {
+
+    //     isHuman: boolean
+
+    //     constructor() {
+    //         this.isHuman = isHuman
+    //         Object.defineProperty(this, 'isHuman', {
+    //             enumerable: true,
+    //             get: () => isHuman,
+    //             set: (value) => {
+    //                 console.log('setting ishuman in obj def')
+    //                 isHuman = value
+    //                 setIsHuman(value)
+    //             },
+    //         })
+    //     }
+
+    //     // get index() {
+    //     //     return index
+    //     // }
+
+    //     // set index(value) {
+    //     //     index = value
+    //     //     setIndex(value)
+    //     // }
+
+    //     // get solutions() {
+    //     //     return solutions
+    //     // }
+
+    //     // set solutions(value) {
+    //     //     solutions = value
+    //     //     setSolutions(value)
+    //     // }
+
+    //     // get providerUrl() {
+    //     //     return providerUrl
+    //     // }
+
+    //     // set providerUrl(value) {
+    //     //     providerUrl = value
+    //     //     setProviderUrl(value)
+    //     // }
+    // }
+
+    // return new State()
+}
+
 export const Procaptcha = (props: ProcaptchaProps) => {
     const callbacks = props.callbacks
     const config = props.config
 
-    // check all expected props are present
-    // TODO validate account can be found in the polk js extension
-    // TODO validate other props
+    // // check all expected props are present
+    // // TODO validate account can be found in the polk js extension
+    // // TODO validate other props
 
-    const [ticked, setTicked] = useState(false)
-    const [showCaptcha, setShowCaptcha] = useState(false)
-    const [preApproveChecked, setPreApproveChecked] = useState(false)
+    // const [ticked, setTicked] = useState(false)
+    // const [showCaptcha, setShowCaptcha] = useState(false)
+    // const [preApproveChecked, setPreApproveChecked] = useState(false)
 
-    const [state, updateState] = useReducer(captchaContextReducer, { config })
-    const client = new ProsopoCaptchaClient(
-        { state: state, update: updateState },
-        {
-            onHuman: (solvedData: SolvedData) => {
-                callbacks.onHuman?.(solvedData)
-                setTicked(solvedData.human)
-                setShowCaptcha(false)
-            },
-            onCancel: () => {
-                callbacks.onCancel?.()
-                setShowCaptcha(false)
-                setTicked(false)
-            },
-            onLoadCaptcha: (captchaChallenge: GetCaptchaResponse | Error) => {
-                callbacks.onLoadCaptcha?.(captchaChallenge)
-            },
-            onSubmit: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => {
-                callbacks.onSubmit?.(result, captchaState)
-                setShowCaptcha(false)
-            },
-            onChange: (captchaSolution: string[][], index: number) => {
-                callbacks.onChange?.(captchaSolution, index)
-            },
-        }
-    )
+    // const [state, updateState] = useReducer(captchaContextReducer, { config })
+    // const client = new ProsopoCaptchaClient(
+    //     { state: state, update: updateState },
+    //     {
+    //         onHuman: (solvedData: SolvedData) => {
+    //             callbacks.onHuman?.(solvedData)
+    //             setTicked(solvedData.human)
+    //             setShowCaptcha(false)
+    //         },
+    //         onCancel: () => {
+    //             callbacks.onCancel?.()
+    //             setShowCaptcha(false)
+    //             setTicked(false)
+    //         },
+    //         onLoadCaptcha: (captchaChallenge: GetCaptchaResponse | Error) => {
+    //             callbacks.onLoadCaptcha?.(captchaChallenge)
+    //         },
+    //         onSubmit: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => {
+    //             callbacks.onSubmit?.(result, captchaState)
+    //             setShowCaptcha(false)
+    //         },
+    //         onChange: (captchaSolution: string[][], index: number) => {
+    //             callbacks.onChange?.(captchaSolution, index)
+    //         },
+    //     }
+    // )
 
-    console.log(client)
-    console.log({
-        ticked,
-        showCaptcha,
-        preApproveChecked,
-    })
+    // console.log(client)
+    // console.log({
+    //     ticked,
+    //     showCaptcha,
+    //     preApproveChecked,
+    // })
 
-    useEffect(() => {
-        console.log(props)
-        console.log('Procaptcha: checking whether user is already approved')
-        client
-            .onLoad(async () => {
-                // only called if human, i.e. preapproved
-                console.log('preapproved')
-                setShowCaptcha(false)
-                setTicked(true)
-                // props.onPreApproved?.();
-            }, config.web2)
-            .then(() => {
-                console.log('on load finished')
-                // onLoad() completed, preapprove checks complete
-                setPreApproveChecked(true)
-            })
-    }, [])
+    // useEffect(() => {
+    //     console.log(props)
+    //     console.log('Procaptcha: checking whether user is already approved')
+    //     client
+    //         .onLoad(async () => {
+    //             // only called if human, i.e. preapproved
+    //             console.log('preapproved')
+    //             setShowCaptcha(false)
+    //             setTicked(true)
+    //             // props.onPreApproved?.();
+    //         }, config.web2)
+    //         .then(() => {
+    //             console.log('on load finished')
+    //             // onLoad() completed, preapprove checks complete
+    //             setPreApproveChecked(true)
+    //         })
+    // }, [])
 
+    // const onTick = () => {
+    //     if (ticked) {
+    //         // already approved, so do nothing
+    //         alert('You are already human')
+    //     } else {
+    //         if (!preApproveChecked) {
+    //             // still waiting on preapprove checks, do nothing
+    //             console.log('cannot trigger challenge, waiting for preapprove checks to complete')
+    //         } else {
+    //             // preapprove checks complete, not preapproved, so trigger captcha
+    //             setShowCaptcha(true)
+    //         }
+    //     }
+    // }
+
+    const [state, updateState] = useProcaptcha()
+    const manager = Manager(state, updateState, {})
     const onTick = () => {
-        if (ticked) {
-            // already approved, so do nothing
-            alert('You are already human')
-        } else {
-            if (!preApproveChecked) {
-                // still waiting on preapprove checks, do nothing
-                console.log('cannot trigger challenge, waiting for preapprove checks to complete')
-            } else {
-                // preapprove checks complete, not preapproved, so trigger captcha
-                setShowCaptcha(true)
-            }
-        }
+        console.log('onTick')
+        manager.start({
+            address: '5EXaAvaSP1T4BMeHdtF2AudXq7ooRo6jHwi6HywenfSkedNa',
+            web2: false,
+            dappName: 'Prosopo',
+            dappUrl: 'https://localhost:9944',
+            defaultEnvironment: 'development',
+            networks: {
+                development: {
+                    endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || '',
+                    prosopoContract: {
+                        address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || '',
+                        name: 'prosopo',
+                    },
+                    dappContract: {
+                        address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || '',
+                        name: 'dapp',
+                    },
+                },
+            },
+        })
     }
+    const ticked = false
 
     return (
         <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-            <CaptchaComponent clientInterface={client} show={showCaptcha} />
+            {/* <CaptchaComponent clientInterface={client} show={showCaptcha} /> */}
 
             <Box p={1} sx={{ maxWidth: '600px', minWidth: '200px' }}>
                 <Box
