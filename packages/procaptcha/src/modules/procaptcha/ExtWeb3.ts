@@ -9,7 +9,7 @@ import { ProcaptchaConfig } from './Manager'
  */
 export default class ExtWeb3 extends Ext {
     public async getAccount(config: ProcaptchaConfig): Promise<InjectedAccount> {
-        const { dappName, address } = config
+        const { dappName, userAccountAddress: address } = config
 
         // enable access to all extensions
         const extensions: InjectedExtension[] = await web3Enable(dappName)
