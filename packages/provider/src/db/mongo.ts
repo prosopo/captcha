@@ -122,7 +122,7 @@ export class ProsopoDatabase implements Database {
                     captchaDocs.map((captchaDoc) => ({
                         updateOne: {
                             filter: { captchaId: captchaDoc.captchaId },
-                            update: { captchaDoc },
+                            update: { $set: captchaDoc },
                             upsert: true,
                         },
                     })),

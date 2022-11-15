@@ -20,6 +20,7 @@ import {
     Dataset,
     DatasetBase,
     DatasetWithIds,
+    Item,
 } from '@prosopo/datasets'
 import { PendingCaptchaRequest } from './api'
 import consola from 'consola'
@@ -44,6 +45,20 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
     assetURI: { type: String, required: false },
     datasetId: { type: String, required: false },
     datasetContentId: { type: String, required: false },
+    solved: { type: Boolean, required: true },
+    items: {
+        type: [
+            new Schema<Item>(
+                {
+                    hash: String,
+                    data: String,
+                    type: String,
+                },
+                { _id: false }
+            ),
+        ],
+        required: true,
+    },
 })
 
 export const DatasetRecordSchema = new Schema<DatasetBase>({
