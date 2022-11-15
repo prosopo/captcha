@@ -15,6 +15,9 @@ import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import fs, { WriteStream, createWriteStream } from 'fs'
 import { ProsopoEnvError } from '@prosopo/contract'
+import { CaptchaSolution, arrayJoin, captchaSort } from '@prosopo/datasets'
+import { DappUserSolution } from './types/index'
+import pl from 'nodejs-polars'
 
 export function encodeStringAddress(address: string) {
     try {
@@ -130,3 +133,29 @@ export function parseBlockNumber(blockNumberString: string) {
 //         : undefined;
 //     config(envPath);
 // }
+
+export function extractSolutionsFromDappUserSolutions(
+    captchaIds: string[],
+    dappUserCommitments: DappUserSolution[]
+): CaptchaSolution[] {
+    // This could be simplified by storing solutions in a separate table to avoid the need to filter
+    // solutions = [{captchaId: '0x123', solution: ['0x123', '0x456']}, {captchaId: '0x456', solution: ['0x123', '0x456']}]
+    return dappUserCommitments
+        .map((commitment) => commitment.captchas)
+        .flat()
+        .filter((captcha: CaptchaSolution) => captchaIds.indexOf(captcha.captchaId) !== -1)
+        .sort(captchaSort)
+}
+
+export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumberOfSolutions: number) {
+    const solutionsNoEmptyArrays = solutions.map(({ solution, ...otherAttrs }) => {
+        return { solutionKey: arrayJoin(solution, ','), ...otherAttrs }
+    })
+    let df = pl.readRecords(solutionsNoEmptyArrays)
+    df = df.drop('salt')
+    const group = df.groupBy(['captchaId', 'solutionKey']).agg(pl.count('captchaContentId').alias('count'))
+    const filtered = group.filter(pl.col('count').gt(winningNumberOfSolutions))
+    return filtered.withColumn(filtered['solutionKey'].str.split(',').rename('solution'))
+}
+
+export function reconstructDataset(newSolutions: CaptchaSolution[]) {}

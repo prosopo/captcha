@@ -217,7 +217,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const captchaFilePath = path.resolve(__dirname, '../../tests/mocks/data/captchas.json')
 
-        await tasks.providerAddDataset(captchaFilePath)
+        await tasks.providerAddDatasetFromFile(captchaFilePath)
     }
 
     public async registerProviderWithStakeAndDataset(): Promise<Account> {

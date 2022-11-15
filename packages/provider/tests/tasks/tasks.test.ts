@@ -198,7 +198,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = await changeSigner(providerAccount)
 
         const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json')
-        const result: TransactionResponse = await tasks.providerAddDataset(captchaFilePath)
+        const result: TransactionResponse = await tasks.providerAddDatasetFromFile(captchaFilePath)
         const eventData = getEventsFromMethodName(result, 'providerAddDataset')
 
         expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
@@ -210,7 +210,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = await changeSigner(providerAccount)
 
         const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json')
-        const datasetPromise = tasks.providerAddDataset(captchaFilePath)
+        const datasetPromise = tasks.providerAddDatasetFromFile(captchaFilePath)
 
         datasetPromise.catch((e) => e.message.should.match('/ProviderInactive/'))
     })
@@ -775,7 +775,7 @@ describe('CONTRACT TASKS', () => {
         )
 
         const insuficientFundsTransaction = await tasks
-            .providerAddDataset(captchaFilePath)
+            .providerAddDatasetFromFile(captchaFilePath)
             .then(() => false)
             .catch(() => true)
 
@@ -789,7 +789,7 @@ describe('CONTRACT TASKS', () => {
             providerStakeDefault
         )
 
-        await tasks.providerAddDataset(captchaFilePath)
+        await tasks.providerAddDatasetFromFile(captchaFilePath)
 
         const dappAccount = await getUser(AccountKey.dappsWithStake)
         const dappUser = await getUser(AccountKey.dappUsers)

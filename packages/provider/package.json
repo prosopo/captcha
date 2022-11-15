@@ -44,6 +44,8 @@
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
     "mongodb": "4.8.1",
+    "mongoose": "^6.7.2",
+    "nodejs-polars": "^0.6.0",
     "pm2": "^5.2.0",
     "yargs": "^17.5.1",
     "yargs-parser": "^21.0.1",

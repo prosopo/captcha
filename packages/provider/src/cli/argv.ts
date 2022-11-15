@@ -200,7 +200,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.providerAddDataset(argv.file)
+                    const result = await tasks.providerAddDatasetFromFile(argv.file)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {

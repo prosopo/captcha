@@ -39,25 +39,27 @@ import {
     CaptchaStates,
     CaptchaStatus,
     CaptchaWithoutId,
+    DatasetBase,
+    DatasetRaw,
     LastCorrectCaptcha,
     buildDataset,
+    captchaSort,
     compareCaptchaSolutions,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
+    parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
-    parseCaptchaSolutions,
 } from '@prosopo/datasets'
 import consola from 'consola'
 import { buildDecodeVector } from '../codec/codec'
+import { CaptchaWithProof, DappUserSolution, DappUserSolutionResult, Database, ProsopoEnvironment } from '../types'
 import {
-    CaptchaWithProof,
-    DappUserSolution,
-    DappUserSolutionResult,
-    Database,
-    DatasetRecord,
-    ProsopoEnvironment,
-} from '../types'
-import { loadJSONFile, shuffleArray, writeJSONFile } from '../util'
+    calculateNewSolutions,
+    extractSolutionsFromDappUserSolutions,
+    loadJSONFile,
+    shuffleArray,
+    writeJSONFile,
+} from '../util'
 
 import { i18n } from '@prosopo/i18n'
 
@@ -121,19 +123,25 @@ export class Tasks {
         return await this.contractApi.contractTx('providerUnstake', [], value)
     }
 
-    async providerAddDataset(file: string): Promise<TransactionResponse> {
+    async providerAddDatasetFromFile(file: string): Promise<TransactionResponse> {
         const datasetRaw = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON)
+        return await this.providerAddDataset(datasetRaw, file)
+    }
+
+    async providerAddDataset(datasetRaw: DatasetRaw, file?: string): Promise<TransactionResponse> {
         const dataset = await buildDataset(datasetRaw)
-        await this.db?.storeDataset(dataset)
-        await writeJSONFile(file, {
-            ...datasetRaw,
-            datasetId: dataset.datasetId,
-        }).catch((err) => {
-            console.error(`${i18n.t('GENERAL.CREATE_JSON_FILE_FAILED')}:${err}`)
-        })
         if (!dataset.datasetId) {
-            throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerAddDataset.name, { file: file })
+            throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerAddDataset.name)
         }
+        if (file) {
+            await writeJSONFile(file, {
+                ...datasetRaw,
+                datasetId: dataset.datasetId,
+            }).catch((err) => {
+                console.error(`${i18n.t('GENERAL.CREATE_JSON_FILE_FAILED')}:${err}`)
+            })
+        }
+        await this.db?.storeDataset(dataset)
         return await this.contractApi.contractTx('providerAddDataset', [
             hexToU8a(dataset.datasetId),
             hexToU8a(dataset.datasetContentId),
@@ -240,14 +248,16 @@ export class Tasks {
         if (captchaDocs) {
             const captchas: CaptchaWithProof[] = []
             for (const captcha of captchaDocs) {
-                const datasetDetails: DatasetRecord = await this.db.getDatasetDetails(datasetId)
+                const datasetDetails: DatasetBase = await this.db.getDatasetDetails(datasetId)
                 const tree = new CaptchaMerkleTree()
-                tree.layers = datasetDetails.contentTree
-                const proof = tree.proof(captcha.captchaContentId)
-                // cannot pass solution to dapp user as they are required to solve the captcha!
-                delete captcha.solution
-                captcha.items = shuffleArray(captcha.items)
-                captchas.push({ captcha, proof })
+                if (datasetDetails.contentTree) {
+                    tree.layers = datasetDetails.contentTree
+                    const proof = tree.proof(captcha.captchaContentId)
+                    // cannot pass solution to dapp user as they are required to solve the captcha!
+                    delete captcha.solution
+                    captcha.items = shuffleArray(captcha.items)
+                    captchas.push({ captcha, proof })
+                }
             }
             return captchas
         }
@@ -421,7 +431,7 @@ export class Tasks {
         receivedCaptchas: CaptchaSolution[]
         captchaIds: string[]
     }> {
-        const receivedCaptchas = parseCaptchaSolutions(captchas)
+        const receivedCaptchas = parseAndSortCaptchaSolutions(captchas)
         const captchaIds = receivedCaptchas.map((captcha) => captcha.captchaId)
         const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
@@ -520,60 +530,54 @@ export class Tasks {
      */
     async calculateCaptchaSolutions() {
         try {
-            const captchaFilePath = this.captchaSolutionConfig.captchaFilePath
-            const currentDataset = parseCaptchaDataset(loadJSONFile(captchaFilePath, this.logger) as JSON)
-            if (!currentDataset.datasetId) {
-                return 0
-            }
+            // Get the current datasetId from the contract
+            const providerDetails = await this.getProviderDetails(this.contractApi.pair.address)
+
+            // Get any unsolved CAPTCHA challenges from the database for this datasetId
             const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(
-                currentDataset.datasetId as string,
+                providerDetails.dataset_id as string,
                 CaptchaStates.Unsolved
             )
 
+            // edge case when a captcha dataset contains no unsolved CAPTCHA challenges
             if (!unsolvedCaptchas) {
-                // edge case when a captcha dataset contains no unsolved captchas
                 return 0
             }
 
-            const totalNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
-            const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
-            const winningNumberOfSolutions = Math.round(totalNumberOfSolutions * (winningPercentage / 100))
-            let solutionsToUpdate: CaptchaSolutionToUpdate[] = []
+            // Sort the unsolved CAPTCHA challenges by their captchaId
+            const unsolvedSorted = unsolvedCaptchas.sort(captchaSort)
+            consola.debug(`There are ${unsolvedSorted.length} unsolved CAPTCHA challenges`)
 
-            if (unsolvedCaptchas && unsolvedCaptchas.length > 0) {
-                for (
-                    let unsolvedCaptchaCount = 0;
-                    unsolvedCaptchaCount < unsolvedCaptchas.length;
-                    unsolvedCaptchaCount++
-                ) {
-                    const solutions = await this.db.getAllSolutions(unsolvedCaptchas[unsolvedCaptchaCount].captchaId)
-                    if (solutions && solutions.length >= totalNumberOfSolutions) {
-                        const solutionsWithCount = {}
-                        for (let solutionsIndex = 0; solutionsIndex < solutions.length; solutionsIndex++) {
-                            const previousCount =
-                                solutionsWithCount[JSON.stringify(solutions[solutionsIndex].solution)]?.solutionCount ||
-                                0
-                            solutionsWithCount[JSON.stringify(solutions[solutionsIndex].solution)] = {
-                                captchaId: solutions[solutionsIndex].captchaId,
-                                solution: solutions[solutionsIndex].solution,
-                                salt: solutions[solutionsIndex].salt,
-                                solutionCount: previousCount + 1,
+            // Get the solution configuration from the config file
+            const requiredNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
+            const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
+            const winningNumberOfSolutions = Math.round(requiredNumberOfSolutions * (winningPercentage / 100))
+
+            if (unsolvedSorted && unsolvedSorted.length > 0) {
+                const captchaIds = unsolvedSorted.map((captcha) => captcha.captchaId)
+                const dappUserCommitments = (await this.db.getAllDappUserSolutions(captchaIds)) || []
+                const solutions = extractSolutionsFromDappUserSolutions(captchaIds, dappUserCommitments)
+                console.log(solutions)
+                const solutionsToUpdate = calculateNewSolutions(solutions, winningNumberOfSolutions)
+                console.log(solutionsToUpdate)
+                if (solutionsToUpdate.rows().length > 0) {
+                    try {
+                        const dataset = await this.db.getDataset(providerDetails.dataset_id)
+                        for (const [index, captcha] of dataset.captchas.entries()) {
+                            const solutionRow = solutionsToUpdate.filter((s) => s.captchaId === captcha.captchaId)
+                            if (solutionRow.rows().length === 1) {
+                                dataset.captchas[index].solution = solutionRow['solution']
                             }
                         }
-                        solutionsToUpdate = solutionsToUpdate.concat(
-                            Object.values(solutionsWithCount)
-                                .filter(({ solutionCount }: any) => solutionCount >= winningNumberOfSolutions)
-                                .map(({ solutionCount, ...otherAttributes }: any) => otherAttributes)
-                        )
+                        // store new solutions in database
+                        await this.providerAddDataset(dataset)
+
+                        return solutionsToUpdate.rows().length
+                    } catch (error) {
+                        consola.error(error)
                     }
                 }
-                if (solutionsToUpdate.length > 0) {
-                    await this.updateCaptchasJSON(captchaFilePath, solutionsToUpdate)
-                    await this.providerAddDataset(captchaFilePath)
-                    return solutionsToUpdate.length
-                } else {
-                    return 0
-                }
+                return 0
             } else {
                 return 0
             }

@@ -17,10 +17,10 @@ import {
     Dataset,
     calculateItemHashes,
     computeCaptchaHash,
-    hexHash,
     matchItemsToSolutions,
 } from '@prosopo/contract'
 import { expect } from 'chai'
+import { hexHashArray } from '@prosopo/datasets'
 
 const DATASET: Dataset = {
     datasetId: '0x01',
@@ -93,10 +93,10 @@ describe('PROVIDER MERKLE TREE', () => {
 
         tree.build(captchaHashes)
         const proof = tree.proof('0x0712abea4b4307c161ea64227ae1f9400f6844287ec4d574b9facfddbf5f542a')
-        const layerZeroHash = hexHash(proof[0].join())
+        const layerZeroHash = hexHashArray(proof[0])
 
         expect(tree.layers[1].indexOf(layerZeroHash) > -1)
-        const layerOneHash = hexHash(proof[1].join())
+        const layerOneHash = hexHashArray(proof[1])
 
         expect(tree.layers[2].indexOf(layerOneHash) > -1)
     })
@@ -119,10 +119,10 @@ describe('PROVIDER MERKLE TREE', () => {
 
         tree.build(['1', '2', '3'])
         const proof = tree.proof('1')
-        const layerZeroHash = hexHash(proof[0].join())
+        const layerZeroHash = hexHashArray(proof[0])
 
         expect(tree.layers[1].indexOf(layerZeroHash) > -1)
-        const layerOneHash = hexHash(proof[1].join())
+        const layerOneHash = hexHashArray(proof[1])
 
         expect(tree.layers[2].indexOf(layerOneHash) > -1)
     })
