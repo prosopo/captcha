@@ -308,7 +308,7 @@ export class ProsopoDatabase implements Database {
         }
 
         if (captchas.length) {
-            await this.tables.userSolutions.create({
+            await this.tables.usersolution.create({
                 userAccount,
                 captchas,
                 commitmentId: commitmentId,
