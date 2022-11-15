@@ -165,13 +165,13 @@ export class ProsopoDatabase implements Database {
      */
     async getDataset(datasetId: string): Promise<DatasetWithIds> {
         try {
-            const datasetDoc = await this.tables.dataset?.findOne({ datasetId: datasetId })
+            const datasetDoc = await this.tables.dataset?.findOne({ datasetId: datasetId }).lean()
 
             const { datasetContentId, format, contentTree, solutionTree } = datasetDoc
 
-            const captchas = (await this.tables.captcha?.find({ datasetId })) || []
+            const captchas = (await this.tables.captcha?.find({ datasetId }).lean()) || []
 
-            const solutions = (await this.tables.solution?.find({ datasetId })) || []
+            const solutions = (await this.tables.solution?.find({ datasetId }).lean()) || []
 
             const solutionsKeyed = {}
             for (const solution of solutions) {
@@ -184,7 +184,7 @@ export class ProsopoDatabase implements Database {
                 format,
                 contentTree,
                 solutionTree,
-                captchas: captchas.map((captchaDoc: Captcha) => {
+                captchas: captchas.map((captchaDoc) => {
                     const { captchaId, captchaContentId, items, target, salt, solved } = captchaDoc
                     return {
                         captchaId,
@@ -258,7 +258,7 @@ export class ProsopoDatabase implements Database {
      * @param {string[]} captchaId
      */
     async getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
-        const cursor = this.tables.captcha?.find({ captchaId: { $in: captchaId } })
+        const cursor = this.tables.captcha?.find({ captchaId: { $in: captchaId } }).lean()
         const docs = await cursor
 
         if (docs && docs.length) {
@@ -290,7 +290,7 @@ export class ProsopoDatabase implements Database {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getDatasetDetails.name, {}, datasetId)
         }
 
-        const doc = await this.tables.dataset?.findOne({ datasetId })
+        const doc = await this.tables.dataset?.findOne({ datasetId }).lean()
 
         if (doc) {
             return doc
@@ -341,7 +341,7 @@ export class ProsopoDatabase implements Database {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getDappUserPending.name, {}, requestHash)
         }
 
-        const doc = await this.tables.pending?.findOne({ requestHash: requestHash })
+        const doc = await this.tables.pending?.findOne({ requestHash: requestHash }).lean()
 
         if (doc) {
             return doc
@@ -376,10 +376,12 @@ export class ProsopoDatabase implements Database {
      * @description Get all unsolved captchas
      */
     async getAllCaptchasByDatasetId(datasetId: string, state?: CaptchaStates): Promise<Captcha[] | undefined> {
-        const cursor = this.tables.captcha.find({
-            datasetId,
-            solved: !!state,
-        })
+        const cursor = this.tables.captcha
+            .find({
+                datasetId,
+                solved: !!state,
+            })
+            .lean()
         const docs = await cursor
 
         if (docs) {
@@ -394,7 +396,7 @@ export class ProsopoDatabase implements Database {
      * @description Get all dapp user's solutions
      */
     async getAllDappUserSolutions(captchaId: string[]): Promise<DappUserSolution[] | undefined> {
-        const cursor = this.tables.userSolutions?.find({ 'captchas.captchaId': { $in: captchaId } })
+        const cursor = this.tables.userSolutions?.find({ 'captchas.captchaId': { $in: captchaId } }).lean()
         const docs = await cursor
 
         if (docs) {
@@ -471,12 +473,14 @@ export class ProsopoDatabase implements Database {
      * @param {string[]} commitmentId
      */
     async getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution | undefined> {
-        const cursor = this.tables.userSolutions?.findOne(
-            {
-                commitmentId: commitmentId,
-            },
-            { projection: { _id: 0 } }
-        )
+        const cursor = this.tables.userSolutions
+            ?.findOne(
+                {
+                    commitmentId: commitmentId,
+                },
+                { projection: { _id: 0 } }
+            )
+            .lean()
         const doc = await cursor
 
         if (doc) {
@@ -491,12 +495,14 @@ export class ProsopoDatabase implements Database {
      * @param {string[]} userAccount
      */
     async getDappUserSolutionByAccount(userAccount: string): Promise<DappUserSolution[]> {
-        const cursor = this.tables.userSolutions?.find(
-            {
-                userAccount: userAccount,
-            },
-            { projection: { _id: 0 } }
-        )
+        const cursor = this.tables.userSolutions
+            ?.find(
+                {
+                    userAccount: userAccount,
+                },
+                { projection: { _id: 0 } }
+            )
+            .lean()
         const docs = await cursor
         console.log(docs)
 
@@ -509,12 +515,14 @@ export class ProsopoDatabase implements Database {
      */
     async approveDappUserSolution(commitmentId: string): Promise<void> {
         try {
-            await this.tables.userSolutions?.findOneAndUpdate(
-                { commitmentId: commitmentId },
-                { $set: { approved: true } },
-                { upsert: false },
-                callbackFn
-            )
+            await this.tables.userSolutions
+                ?.findOneAndUpdate(
+                    { commitmentId: commitmentId },
+                    { $set: { approved: true } },
+                    { upsert: false },
+                    callbackFn
+                )
+                .lean()
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)
         }

@@ -557,9 +557,7 @@ export class Tasks {
                 const captchaIds = unsolvedSorted.map((captcha) => captcha.captchaId)
                 const dappUserCommitments = (await this.db.getAllDappUserSolutions(captchaIds)) || []
                 const solutions = extractSolutionsFromDappUserSolutions(captchaIds, dappUserCommitments)
-                console.log(solutions)
                 const solutionsToUpdate = calculateNewSolutions(solutions, winningNumberOfSolutions)
-                console.log(solutionsToUpdate)
                 if (solutionsToUpdate.rows().length > 0) {
                     try {
                         const dataset = await this.db.getDataset(providerDetails.dataset_id)
