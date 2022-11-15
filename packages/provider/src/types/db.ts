@@ -46,6 +46,7 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
     datasetId: { type: String, required: false },
     datasetContentId: { type: String, required: false },
     solved: { type: Boolean, required: true },
+    target: { type: String, required: true },
     items: {
         type: [
             new Schema<Item>(
@@ -80,12 +81,15 @@ export const UserSolutionRecordSchema = new Schema<UserSolution>({
     userAccount: { type: String, required: true },
     captchas: {
         type: [
-            new Schema<CaptchaSolution>({
-                captchaId: String,
-                captchaContentId: String,
-                salt: String,
-                solution: [String],
-            }),
+            new Schema<CaptchaSolution>(
+                {
+                    captchaId: String,
+                    captchaContentId: String,
+                    salt: String,
+                    solution: [String],
+                },
+                { _id: false }
+            ),
         ],
         required: true,
     },
@@ -98,6 +102,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     accountId: { type: String, required: true },
     pending: { type: Boolean, required: true },
     salt: { type: String, required: true },
+    requestHash: { type: String, required: true },
 })
 
 export const DappUserSolutionSchema = z.object({

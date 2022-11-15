@@ -165,7 +165,7 @@ export class ProsopoDatabase implements Database {
      */
     async getDataset(datasetId: string): Promise<DatasetWithIds> {
         try {
-            const datasetDoc = await this.tables.dataset?.findOne({ _id: datasetId })
+            const datasetDoc = await this.tables.dataset?.findOne({ datasetId: datasetId })
 
             const { datasetContentId, format, contentTree, solutionTree } = datasetDoc
 
@@ -258,7 +258,7 @@ export class ProsopoDatabase implements Database {
      * @param {string[]} captchaId
      */
     async getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined> {
-        const cursor = this.tables.captcha?.find({ _id: { $in: captchaId } })
+        const cursor = this.tables.captcha?.find({ captchaId: { $in: captchaId } })
         const docs = await cursor
 
         if (docs && docs.length) {
@@ -327,10 +327,9 @@ export class ProsopoDatabase implements Database {
         }
 
         await this.tables.pending?.updateOne(
-            { requestHash },
-            { $set: { accountId: userAccount, pending: true, salt } },
-            { upsert: true },
-            callbackFn
+            { requestHash: requestHash },
+            { $set: { accountId: userAccount, pending: true, salt, requestHash } },
+            { upsert: true }
         )
     }
 
@@ -342,7 +341,7 @@ export class ProsopoDatabase implements Database {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getDappUserPending.name, {}, requestHash)
         }
 
-        const doc = await this.tables.pending?.findOne({ _id: requestHash })
+        const doc = await this.tables.pending?.findOne({ requestHash: requestHash })
 
         if (doc) {
             return doc
@@ -360,16 +359,16 @@ export class ProsopoDatabase implements Database {
         }
 
         await this.tables.pending?.updateOne(
-            { _id: requestHash },
+            { requestHash: requestHash },
             {
                 $set: {
                     accountId: userAccount,
                     pending: false,
                     approved: approve,
+                    requestHash,
                 },
             },
-            { upsert: true },
-            callbackFn
+            { upsert: true }
         )
     }
 
