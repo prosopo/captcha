@@ -39,13 +39,13 @@ import {
     CaptchaStatus,
     CaptchaWithoutId,
     LastCorrectCaptcha,
+    ProsopoEnvError,
     buildDataset,
     compareCaptchaSolutions,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
+    parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
-    parseCaptchaSolutions,
-    ProsopoEnvError
 } from '@prosopo/datasets'
 import consola from 'consola'
 import { buildDecodeVector } from '../codec/codec'
@@ -421,7 +421,7 @@ export class Tasks {
         receivedCaptchas: CaptchaSolution[]
         captchaIds: string[]
     }> {
-        const receivedCaptchas = parseCaptchaSolutions(captchas)
+        const receivedCaptchas = parseAndSortCaptchaSolutions(captchas)
         const captchaIds = receivedCaptchas.map((captcha) => captcha.captchaId)
         const storedCaptchas = await this.db.getCaptchaById(captchaIds)
         if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {

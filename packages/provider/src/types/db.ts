@@ -13,7 +13,7 @@
 // limitations under the License.
 import { Collection, Document } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
-import { Captcha, CaptchaSolution, CaptchaStates, Dataset } from '@prosopo/datasets'
+import { Captcha, CaptchaSolution, CaptchaSolutionSchema, CaptchaStates, Dataset } from '@prosopo/datasets'
 import { PendingCaptchaRequest } from './api'
 import { WithId } from 'mongodb/mongodb'
 import consola from 'consola'
@@ -41,7 +41,7 @@ export interface PendingCaptchaRequestRecord extends WithId<Document> {
 
 export const DappUserSolutionSchema = z.object({
     userAccount: z.string(),
-    captchas: z.array(CaptchaSolution),
+    captchas: z.array(CaptchaSolutionSchema),
     commitmentId: z.string(),
     approved: z.boolean(),
     datetime: z.string(),

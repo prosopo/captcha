@@ -12,12 +12,9 @@
   "files": [
     "./src/prosopo.config.js"
   ],
-  "references": [ 
-    { 
+  "references": [
+    {
       "path": "../contract"
-    },
-    { 
-      "path": "../i18n"
     }
   ]
 }

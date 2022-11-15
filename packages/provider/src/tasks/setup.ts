@@ -17,12 +17,12 @@ import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@
 import { BigNumber, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import {
     CaptchaMerkleTree,
+    CaptchaSolution,
+    ProsopoEnvError,
     calculateItemHashes,
     computeCaptchaSolutionHash,
-    convertCaptchaToCaptchaSolution,
     hexHash,
     matchItemsToSolutions,
-    ProsopoEnvError
 } from '@prosopo/datasets'
 import { IDappAccount, IProviderAccount, IUserAccount } from '../types/accounts'
 import { Tasks } from './tasks'
@@ -141,11 +141,16 @@ export async function setupDappUser(
         unsolved[0].captcha.salt = '0xuser2'
         const tree = new CaptchaMerkleTree()
         const captchas = [solved[0].captcha, unsolved[0].captcha]
-        const captchaSols = captchas.map((captcha) => convertCaptchaToCaptchaSolution(captcha))
+        const captchaSols = captchas.map((captcha) => ({
+            captchaId: captcha.captchaId,
+            captchaContentId: captcha.captchaContentId,
+            salt: captcha.salt,
+            solution: captcha.solution,
+        }))
         const captchaSolHashes = captchaSols.map((captcha, i) => {
             captchas[i].items = calculateItemHashes(captchas[i].items)
 
-            return computeCaptchaSolutionHash(captcha)
+            return computeCaptchaSolutionHash(captcha as CaptchaSolution)
         })
         tree.build(captchaSolHashes)
         await env.changeSigner(dappUser.mnemonic)
