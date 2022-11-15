@@ -26,7 +26,7 @@ import { getProsopoContract, getWsProvider } from './contract'
 import { getExtension } from './extension'
 import { ProviderApi } from '@prosopo/api'
 import { ProsopoCaptchaApi } from './ProsopoCaptchaApi'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import { hexToString } from '@polkadot/util'
 import storage from './storage'
 
