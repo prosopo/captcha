@@ -18,7 +18,7 @@ import { GetCaptchaResponse } from '../types/api'
 
 import { ProsopoCaptchaClient } from './ProsopoCaptchaClient'
 import { ProsopoEnvError } from '@prosopo/contract'
-import { CaptchaSolution, CaptchaSolutionCommitment, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
+import { CaptchaSolution, CaptchaSolutionCommitment } from '@prosopo/datasets'
 import { CaptchaSolutionCommitmentId, CaptchaSolutionResponse, VerificationResponse } from '@prosopo/api'
 import { TransactionResponse } from '../types/index'
 
@@ -184,7 +184,13 @@ export class ProsopoCaptchaStateClient {
         for (const [index, challenge] of captchaChallenge!.captchas.entries()) {
             const solution = captchaSolution[index] || []
             // challenge.captcha.solution = solution;
-            parsedSolution[index] = convertCaptchaToCaptchaSolution({ ...challenge.captcha, solution })
+            //parsedSolution[index] = convertCaptchaToCaptchaSolution({ ...challenge.captcha, solution })
+            parsedSolution[index] = {
+                captchaId: challenge.captcha.captchaId,
+                captchaContentId: challenge.captcha.captchaContentId,
+                salt: challenge.captcha.salt,
+                solution,
+            }
         }
 
         console.log('CAPTCHA SOLUTIONS', parsedSolution)

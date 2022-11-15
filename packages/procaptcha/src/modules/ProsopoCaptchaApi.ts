@@ -76,6 +76,7 @@ export class ProsopoCaptchaApi {
         }
 
         for (const captchaWithProof of captchaChallenge.captchas) {
+            //TODO calculate the captchaId from the captcha content
             if (!verifyProof(captchaWithProof.captcha.captchaContentId, captchaWithProof.proof)) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
             }
