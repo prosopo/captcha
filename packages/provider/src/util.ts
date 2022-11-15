@@ -157,5 +157,3 @@ export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumbe
     const filtered = group.filter(pl.col('count').gt(winningNumberOfSolutions))
     return filtered.withColumn(filtered['solutionKey'].str.split(',').rename('solution'))
 }
-
-export function reconstructDataset(newSolutions: CaptchaSolution[]) {}
