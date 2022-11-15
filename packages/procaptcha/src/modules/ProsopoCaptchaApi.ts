@@ -24,7 +24,7 @@ import { ProviderApi } from '@prosopo/api'
 import ProsopoContract from '../api/ProsopoContract'
 import { TCaptchaSubmitResult } from '../types/client'
 import { ProsopoApiError } from '../api/handlers'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import { computeCaptchaSolutionHash } from '@prosopo/datasets'
 
 export type SubmitFunction =

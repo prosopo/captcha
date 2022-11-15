@@ -1,4 +1,4 @@
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 
 function x64Add(m, n) {
     m = [m[0] >>> 16, m[0] & 0xffff, m[1] >>> 16, m[1] & 0xffff]

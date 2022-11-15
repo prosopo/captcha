@@ -18,7 +18,7 @@ import { InjectedAccountWithMeta, InjectedExtension } from '@polkadot/extension-
 import storage from '../modules/storage'
 import { IExtensionInterface } from '../types/client'
 import AsyncFactory from './AsyncFactory'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 
 /**
  * Class to discover web3 accounts from browser extensions

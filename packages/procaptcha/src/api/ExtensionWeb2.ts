@@ -17,7 +17,7 @@ import { InjectedAccountWithMeta, InjectedExtension } from '@polkadot/extension-
 import storage from '../modules/storage'
 import { IExtensionInterface } from '../types/client'
 import AsyncFactory from './AsyncFactory'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import { AccountCreator } from './AccountCreator'
 import { WsProvider } from '@polkadot/rpc-provider'
 import Signer from '@polkadot/extension-base/page/Signer'
