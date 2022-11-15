@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { hexHash } from './util'
+import { hexHashArray } from './util'
 import { MerkleNodeInterface } from '../types/merkle'
 
 class MerkleNode implements MerkleNodeInterface {
@@ -80,7 +80,7 @@ export class CaptchaMerkleTree {
     }
 
     createParent(leftChild, rightChild): MerkleNode {
-        const parent = new MerkleNode(hexHash([leftChild.hash, rightChild.hash].join()))
+        const parent = new MerkleNode(hexHashArray([leftChild.hash, rightChild.hash]))
         leftChild.parent = parent
         rightChild.parent = parent
         return parent
@@ -106,7 +106,7 @@ export class CaptchaMerkleTree {
             }
             proofTree.push(pair)
             layerNum += 1
-            leafHash = hexHash(pair.join())
+            leafHash = hexHashArray(pair)
         }
 
         return proofTree
@@ -119,7 +119,7 @@ export function verifyProof(leaf: string, proof: string[][]): boolean {
             return false
         }
         for (const [layerIndex, layer] of proof.entries()) {
-            leaf = hexHash(layer.join())
+            leaf = hexHashArray(layer)
             if (proof[layerIndex + 1].indexOf(leaf) === -1) {
                 return false
             }

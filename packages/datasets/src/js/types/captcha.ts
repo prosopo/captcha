@@ -40,11 +40,7 @@ type CaptchaWithoutIdBase = {
 }
 
 export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
-    solution?: HashedSolution[]
-}
-
-export interface CaptchaWithoutIdRaw extends CaptchaWithoutIdBase {
-    solution?: RawSolution[]
+    solution?: HashedSolution[] | RawSolution[]
 }
 
 export type CaptchaSolutionToUpdate = {
@@ -130,11 +126,11 @@ export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
 
 export const CaptchasSchema = z.array(SelectAllCaptchaSchemaRaw)
 
-export const CaptchaSolution = z.object({
+export const CaptchaSolutionSchema = z.object({
     captchaId: z.string(),
     captchaContentId: z.string(),
     solution: z.string().array(),
     salt: z.string(),
 })
 
-export const CaptchaSolutionSchema = z.array(CaptchaSolution)
+export const CaptchaSolutionArraySchema = z.array(CaptchaSolutionSchema)
