@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ContractAbi, ContractApiInterface, ProsopoContractApi, ProsopoEnvError, abiJson } from '@prosopo/contract'
-import { AssetsResolver } from '@prosopo/datasets'
+import { ContractAbi, ContractApiInterface, ProsopoContractApi, abiJson } from '@prosopo/contract'
+import { AssetsResolver, ProsopoEnvError } from '@prosopo/datasets'
 import consola, { LogLevel } from 'consola'
 import dotenv from 'dotenv'
 import path from 'path'
@@ -25,10 +25,11 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 
 export function loadEnv() {
-    dotenv.config({ path: getEnvFile() })
+    const args = { path: getEnvFile() }
+    dotenv.config(args)
 }
 
-export function getEnvFile(filename = '.env', filepath = './') {
+export function getEnvFile(filename = '.env', filepath = path.join(__dirname, '..')) {
     const env = process.env.NODE_ENV || 'development'
     return path.join(filepath, `${filename}.${env}`)
 }

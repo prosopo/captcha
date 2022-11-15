@@ -15,7 +15,7 @@
 import parser from 'cron-parser'
 import pm2 from 'pm2'
 import { cwd } from 'process'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 const yargs = require('yargs')
 
 import { Compact, u128 } from '@polkadot/types'

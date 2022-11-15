@@ -25,7 +25,7 @@ import {
     Tables,
     UserSolutionRecordSchema,
 } from '../types'
-import { ProsopoEnvError } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import {
     Captcha,
     CaptchaSolution,

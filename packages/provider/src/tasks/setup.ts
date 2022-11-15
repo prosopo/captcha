@@ -14,8 +14,8 @@
 import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
-import { BigNumber, ProsopoEnvError, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
-import { hexHash } from '@prosopo/datasets'
+import { BigNumber, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { hexHash, ProsopoEnvError } from '@prosopo/datasets'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
 import { Tasks } from './tasks'
 
