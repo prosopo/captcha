@@ -194,6 +194,17 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         resetState()
     }
 
+    const click = () => {
+        if(state.challenge) {
+            // todo
+            // const solution = state.challenge.captchas[state.index].solution
+            // const solutions = state.solutions
+            // solutions[state.index] = solution
+            // updateState({ solutions })
+            // next()
+        }
+    }
+
     const loadCaptchaApi = async () => {
         // setup the captcha api to carry out a challenge
         const captchaApi = new ProsopoCaptchaApi(
@@ -289,6 +300,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         start,
         cancel,
         submit,
+        click,
     }
 }
 
