@@ -138,12 +138,17 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
 
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
-                const verifyDappUserResponse = await providerApi.verifyDappUser(state.config.userAccountAddress)
-                if (verifyDappUserResponse.solutionApproved) {
-                    updateState({ isHuman: true })
-                    events.onHuman()
-                    return
-                } // else the provider doesn't have the user's captcha in cache. Continue with process of selecting random provider as normal
+                try {
+                    const verifyDappUserResponse = await providerApi.verifyDappUser(state.config.userAccountAddress)
+                    if (verifyDappUserResponse.solutionApproved) {
+                        updateState({ isHuman: true })
+                        events.onHuman()
+                        return
+                    }
+                } catch (err) {
+                    // if the provider is down, we should continue with the process of selecting a random provider
+                    console.log('Error contacting provider', providerFromStorage, err)
+                }
             }
 
             const provider = await contract.getRandomProvider()
