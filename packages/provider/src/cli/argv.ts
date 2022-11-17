@@ -24,6 +24,7 @@ import { Tasks } from '../tasks/tasks'
 import { ProsopoEnvironment } from '../types/env'
 import { encodeStringAddress } from '../util'
 import { Payee, PayeeSchema } from '@prosopo/contract'
+import consola from 'consola'
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)
@@ -315,7 +316,8 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         )
                     })
                 } else {
-                    await tasks.calculateCaptchaSolutions()
+                    const result = await tasks.calculateCaptchaSolutions()
+                    consola.info(`Updated ${result} captcha solutions`)
                 }
             },
             [validateScheduleExpression]

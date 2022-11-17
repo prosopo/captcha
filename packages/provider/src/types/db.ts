@@ -25,7 +25,7 @@ import {
 import { PendingCaptchaRequest } from './api'
 import consola from 'consola'
 import { z } from 'zod'
-import { Model, Schema } from 'mongoose'
+import { Connection, Model, Schema } from 'mongoose'
 
 export interface UserSolution {
     userAccount: string
@@ -36,7 +36,11 @@ export interface UserSolution {
 }
 
 export interface Tables {
-    [key: string]: typeof Model
+    captcha: typeof Model
+    dataset: typeof Model
+    solution: typeof Model
+    usersolution: typeof Model
+    pending: typeof Model
 }
 
 export const CaptchaRecordSchema = new Schema<Captcha>({
@@ -47,6 +51,7 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
     datasetContentId: { type: String, required: false },
     solved: { type: Boolean, required: true },
     target: { type: String, required: true },
+    salt: { type: String, required: true },
     items: {
         type: [
             new Schema<Item>(
@@ -117,8 +122,9 @@ export type DappUserSolution = z.infer<typeof DappUserSolutionSchema>
 
 export interface Database {
     readonly url: string
-    tables: Tables
+    tables?: Tables
     dbname: string
+    connection?: Connection
     logger: typeof consola
 
     connect(): Promise<void>
@@ -156,4 +162,6 @@ export interface Database {
     getDappUserSolutionByAccount(accountId: string): Promise<DappUserSolution[]>
 
     approveDappUserSolution(commitmentId: string): Promise<void>
+
+    removeDappUserSolutions(captchaIds: string[]): Promise<void>
 }

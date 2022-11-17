@@ -58,6 +58,7 @@ import {
     extractSolutionsFromDappUserSolutions,
     loadJSONFile,
     shuffleArray,
+    updateSolutions,
     writeJSONFile,
 } from '../util'
 
@@ -528,7 +529,7 @@ export class Tasks {
     /**
      * Apply new captcha solutions to captcha dataset and recalculate merkle tree
      */
-    async calculateCaptchaSolutions() {
+    async calculateCaptchaSolutions(): Promise<number> {
         try {
             // Get the current datasetId from the contract
             const providerDetails = await this.getProviderDetails(this.contractApi.pair.address)
@@ -546,7 +547,7 @@ export class Tasks {
 
             // Sort the unsolved CAPTCHA challenges by their captchaId
             const unsolvedSorted = unsolvedCaptchas.sort(captchaSort)
-            consola.debug(`There are ${unsolvedSorted.length} unsolved CAPTCHA challenges`)
+            consola.info(`There are ${unsolvedSorted.length} unsolved CAPTCHA challenges`)
 
             // Get the solution configuration from the config file
             const requiredNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
@@ -559,17 +560,16 @@ export class Tasks {
                 const solutions = extractSolutionsFromDappUserSolutions(captchaIds, dappUserCommitments)
                 const solutionsToUpdate = calculateNewSolutions(solutions, winningNumberOfSolutions)
                 if (solutionsToUpdate.rows().length > 0) {
+                    consola.info(
+                        `There are ${solutionsToUpdate.rows().length} CAPTCHA challenges to update with solutions`
+                    )
                     try {
                         const dataset = await this.db.getDataset(providerDetails.dataset_id)
-                        for (const [index, captcha] of dataset.captchas.entries()) {
-                            const solutionRow = solutionsToUpdate.filter((s) => s.captchaId === captcha.captchaId)
-                            if (solutionRow.rows().length === 1) {
-                                dataset.captchas[index].solution = solutionRow['solution']
-                            }
-                        }
+                        dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
                         // store new solutions in database
                         await this.providerAddDataset(dataset)
-
+                        // TODO only removed solutions that have been processed and are on-chain
+                        // await this.db.removeDappUserSolutions([...solutionsToUpdate['captchaId'].values()])
                         return solutionsToUpdate.rows().length
                     } catch (error) {
                         consola.error(error)
@@ -577,6 +577,7 @@ export class Tasks {
                 }
                 return 0
             } else {
+                consola.info(`There are no CAPTCHA challenges that require their solutions to be updated`)
                 return 0
             }
         } catch (error) {
