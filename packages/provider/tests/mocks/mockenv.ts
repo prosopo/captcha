@@ -11,35 +11,35 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    AssetsResolver,
-    ContractAbi,
-    ContractApiInterface,
-    Network,
-    ProsopoContractApi,
-    ProsopoEnvError,
-    abiJson,
-    createNetwork,
-} from '@prosopo/contract'
+import { ContractAbi, ContractApiInterface, ProsopoContractApi, abiJson } from '@prosopo/contract'
+import { AssetsResolver, ProsopoEnvError } from '@prosopo/datasets'
 import consola, { LogLevel } from 'consola'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import path from 'path'
 import { LocalAssetsResolver } from '../../src/assets'
 import { loadEnv } from '../../src/env'
 import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
+import { ApiPromise } from '@polkadot/api'
+import { WsProvider } from '@polkadot/rpc-provider'
+import { Keyring } from '@polkadot/keyring'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { mnemonicGenerate } from '@polkadot/util-crypto'
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
+    contractInterface: ContractApiInterface
     mnemonic: string
     contractAddress: string
     defaultEnvironment: string
     contractName: string
-    contractInterface: ContractApiInterface | undefined
     abi: ContractAbi
-    network!: Network
     logger: typeof consola
     assetsResolver: AssetsResolver | undefined
+    wsProvider: WsProvider
+    keyring: Keyring
+    pair: KeyringPair
+    api: ApiPromise
 
     constructor(mnemonic?: string) {
         loadEnv()
@@ -95,6 +95,9 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
             this.logger = consola.create({ level: LogLevel.Info })
             this.abi = MockEnvironment.getContractAbi(this.config.contract.abi, this.logger)
+            this.keyring = new Keyring({
+                type: 'sr25519', // TODO get this from the chain
+            })
             this.assetsResolver = new LocalAssetsResolver({
                 absolutePath: this.config.assets.absolutePath,
                 basePath: this.config.assets.basePath,
@@ -110,23 +113,51 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
     }
 
-    async isReady(): Promise<void> {
-        this.network = await createNetwork(this.mnemonic, this.config.networks![this.defaultEnvironment])
-        this.contractInterface = new ProsopoContractApi(
+    public createAccountAndAddToKeyring(): [string, string] {
+        const mnemonic: string = mnemonicGenerate()
+        const account = this.keyring.addFromMnemonic(mnemonic)
+        const { address } = account
+        return [mnemonic, address]
+    }
+
+    async getSigner(): Promise<void> {
+        this.api = await ApiPromise.create({ provider: this.wsProvider })
+        await this.api.isReadyOrError
+        const { mnemonic } = this
+        if (!mnemonic) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED')
+        }
+        this.pair = this.keyring.addFromMnemonic(mnemonic)
+    }
+
+    async changeSigner(mnemonic: string): Promise<void> {
+        await this.api.isReadyOrError
+        this.mnemonic = mnemonic
+        await this.getSigner()
+        await this.getContractApi()
+    }
+
+    async getContractApi(): Promise<ProsopoContractApi> {
+        this.contractInterface = await ProsopoContractApi.create(
             this.contractAddress,
-            this.mnemonic,
+            this.pair,
             this.contractName,
             this.abi,
-            this.network
+            this.api
         )
-        // Persist database state for tests
-        if (!this.db) {
-            consola.debug('Starting database...')
+        return this.contractInterface
+    }
+
+    async isReady() {
+        try {
+            this.api = await ApiPromise.create({ provider: this.wsProvider })
+            await this.getSigner()
+            await this.getContractApi()
             await this.importDatabase()
-            // @ts-ignore
             await this.db?.connect()
+        } catch (err) {
+            throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
         }
-        await this.contractInterface?.isReady()
     }
 
     async importDatabase(): Promise<void> {

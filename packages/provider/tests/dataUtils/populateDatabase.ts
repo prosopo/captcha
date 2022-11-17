@@ -96,7 +96,7 @@ export async function populateDatabase(
 
 if (require.main === module) {
     const startDate = Date.now()
-    populateDatabase(new Environment(process.env.PROVIDER_MNEMONIC), DEFAULT_USER_COUNT, true)
+    populateDatabase(new Environment(process.env.PROVIDER_MNEMONIC || ''), DEFAULT_USER_COUNT, true)
         .then(() => console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`))
         .catch(console.error)
         .finally(() => process.exit())

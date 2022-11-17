@@ -46,10 +46,7 @@ describe('CONTRACT HELPERS', () => {
 
         // @ts-ignore
         expect(encodeStringArgs(methodObj, args)).to.deep.equal([
-            new Uint8Array([
-                9, 253, 81, 160, 217, 224, 208, 123, 233, 170, 171, 6, 67, 225, 21, 44, 34, 205, 17, 217, 209, 40, 35,
-                85, 82, 212, 118, 37, 107, 115, 81, 222,
-            ]),
+            '0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a38323832',
         ])
     })
 })

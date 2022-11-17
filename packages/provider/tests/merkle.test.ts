@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
+    CaptchaItemTypes,
     CaptchaMerkleTree,
     CaptchaTypes,
     Dataset,
+    RawSolution,
     calculateItemHashes,
     computeCaptchaHash,
+    hexHashArray,
     matchItemsToSolutions,
-} from '@prosopo/contract'
+} from '@prosopo/datasets'
 import { expect } from 'chai'
-import { hexHashArray } from '@prosopo/datasets'
 
 const DATASET: Dataset = {
     datasetId: '0x01',
@@ -28,31 +30,31 @@ const DATASET: Dataset = {
         {
             salt: '0x01020304',
             items: calculateItemHashes([
-                { type: 'text', text: '1' },
-                { type: 'text', text: 'b' },
-                { type: 'text', text: 'c' },
+                { type: CaptchaItemTypes.Text, data: '1' },
+                { type: CaptchaItemTypes.Text, data: 'b' },
+                { type: CaptchaItemTypes.Text, data: 'c' },
             ]),
             target: 'letters',
-            solution: [] as any[],
+            solution: [0] as RawSolution[],
         },
         {
             salt: '0x02020304',
             items: calculateItemHashes([
-                { type: 'text', text: 'c' },
-                { type: 'text', text: 'e' },
-                { type: 'text', text: '3' },
+                { type: CaptchaItemTypes.Text, data: 'c' },
+                { type: CaptchaItemTypes.Text, data: 'e' },
+                { type: CaptchaItemTypes.Text, data: '3' },
             ]),
             target: 'letters',
         },
         {
             salt: '0x03020304',
             items: calculateItemHashes([
-                { type: 'text', text: 'h' },
-                { type: 'text', text: 'f' },
-                { type: 'text', text: '5' },
+                { type: CaptchaItemTypes.Text, data: 'h' },
+                { type: CaptchaItemTypes.Text, data: 'f' },
+                { type: CaptchaItemTypes.Text, data: '5' },
             ]),
             target: 'letters',
-            solution: [] as any[],
+            solution: [1] as RawSolution[],
         },
     ],
     format: CaptchaTypes.SelectAll,
@@ -64,32 +66,35 @@ describe('PROVIDER MERKLE TREE', () => {
         DATASET.captchas[1].solution = matchItemsToSolutions([2], DATASET.captchas[1].items)
     })
 
+    after(() => {
+        process.exit()
+    })
+
     it('Tree contains correct leaf hashes when computing leaf hashes', () => {
         const dataset = DATASET
         const tree = new CaptchaMerkleTree()
-        const captchaHashes = dataset.captchas.map(computeCaptchaHash)
+        const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, false, false, false))
 
         tree.build(captchaHashes)
         const leafHashes = tree.leaves.map((leaf) => leaf.hash)
-
         expect(leafHashes).to.deep.equal([
-            '0xea255faf38902386cdde900db14f633ba75d28695636efc1a3164284ea1b6d50',
-            '0x448236c56c0ca484c545395acffc4b3c7358725dc84d2bd9d3ba099873913356',
-            '0xc1c2b16f0e979b65b53c080f1bb787d0492248d388234d2aab149ef20ddbfe77',
+            '0xa0957907fd7c36747f92d31753d295c2affa6c6b04f5e84e1228f40568ddda0c',
+            '0xbefa0a7c4eb127459e01561e0a4d87108581fc8f6c75128ceafa8f6c2c036fa4',
+            '0xfd248874ff5b5606fbad7f2327a31e7ca8833f9f4c8f9afedc3b6483d9866abc',
         ])
     })
     it('Tree root is correct when computing leaf hashes', () => {
         const dataset = DATASET
         const tree = new CaptchaMerkleTree()
-        const captchaHashes = dataset.captchas.map(computeCaptchaHash)
+        const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, false, false, false))
 
         tree.build(captchaHashes)
-        expect(tree.root!.hash).to.equal('0x6b789beb90a4b7cda7c5e8ea863f114a122241a5278884bad94575089645d36e')
+        expect(tree.root!.hash).to.equal('0x460059c537d10c5b41964968e4158a9a14fcb63ea1d75591eab4222b845a9d36')
     })
     it('Tree proof works when computing leaf hashes', () => {
         const dataset = DATASET
         const tree = new CaptchaMerkleTree()
-        const captchaHashes = dataset.captchas.map(computeCaptchaHash)
+        const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, false, false, false))
 
         tree.build(captchaHashes)
         const proof = tree.proof('0x0712abea4b4307c161ea64227ae1f9400f6844287ec4d574b9facfddbf5f542a')
@@ -112,7 +117,7 @@ describe('PROVIDER MERKLE TREE', () => {
         const tree = new CaptchaMerkleTree()
 
         tree.build(['1', '2', '3'])
-        expect(tree.root!.hash).to.equal('0x940abe0b0c80705b3a2563f171adf819a946a4d1b353755afc44e6c5a4224a8a')
+        expect(tree.root!.hash).to.equal('0x8fd940838c54e2406976e8c4745f39457fe27c7555a21a572b665efcc5d27bd6')
     })
     it('Tree proof works when not computing leaf hashes', () => {
         const tree = new CaptchaMerkleTree()

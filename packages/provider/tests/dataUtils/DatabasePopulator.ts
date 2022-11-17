@@ -11,10 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BigNumber, Payee, ProsopoEnvError, hexHash } from '@prosopo/contract'
+import { BigNumber, Payee } from '@prosopo/contract'
+import { ProsopoEnvError, hexHash } from '@prosopo/datasets'
 import path from 'path'
 
-import { blake2AsHex, decodeAddress, randomAsHex } from '@polkadot/util-crypto'
+import { blake2AsHex, decodeAddress, mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
 
 import { sendFunds as _sendFunds } from '../../src/tasks/setup'
 import { Tasks } from '../../src/tasks'
@@ -133,13 +134,20 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
     }
 
     private createAccount(): Account {
-        const account = this.mockEnv.contractInterface?.createAccountAndAddToKeyring()
+        const account = this.createAccountAndAddToKeyring()
 
         if (!account) {
             throw new ProsopoEnvError('DEVELOPER.CREATE_ACCOUNT_FAILED')
         }
 
         return account
+    }
+
+    private createAccountAndAddToKeyring(): [string, string] {
+        const mnemonic: string = mnemonicGenerate()
+        const account = this.mockEnv.keyring.addFromMnemonic(mnemonic)
+        const { address } = account
+        return [mnemonic, address]
     }
 
     private sendFunds(account: Account, payee: Payee, amount: BigNumber)
@@ -161,7 +169,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             throw new ProsopoEnvError('DEVELOPER.NO_MOCK_ENV')
         }
 
-        return this.mockEnv.contractInterface.changeSigner(mnemonic)
+        return this.mockEnv.changeSigner(mnemonic)
     }
 
     public async registerProvider(serviceOrigin?: string, noPush?: boolean): Promise<Account> {
