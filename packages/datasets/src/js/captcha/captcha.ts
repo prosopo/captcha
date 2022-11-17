@@ -27,6 +27,7 @@ import {
 } from '../types/index'
 import { hexHash, hexHashArray } from './util'
 import { ProsopoEnvError } from '../types/error'
+import { isHex } from '@polkadot/util'
 
 // import {encodeAddress} from "@polkadot/util-crypto";
 
@@ -146,16 +147,26 @@ export function calculateItemHashes(items: Item[]): Item[] {
     })
 }
 
+/**
+ * Converts an indexed captcha solution to a hashed captcha solution or simply returns the hash if it is already hashed
+ * @return {HashedSolution[]}
+ * @param {RawSolution[] | HashedSolution[]} solutions
+ * @param {Item[]} items
+ */
 export function matchItemsToSolutions(
     solutions: RawSolution[] | HashedSolution[] | undefined,
     items: Item[] | undefined
 ): HashedSolution[] {
     return (
-        solutions?.map((solution) => {
-            const hash = items?.[solution].hash
+        solutions?.map((solution: string | number) => {
+            const hash = items && items[solution] && items[solution].hash ? items[solution].hash : solution
 
             if (!hash) {
                 throw new ProsopoEnvError('CAPTCHA.MISSING_ITEM_HASH')
+            }
+
+            if (!isHex(hash)) {
+                throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_HASH')
             }
 
             return hash
