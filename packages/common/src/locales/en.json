@@ -67,6 +67,7 @@
         "INVALID_CAPTCHA_ID": "Invalid captcha id",
         "SOLUTION_HASH_ERROR": "Error hashing solution",
         "INVALID_ITEM_FORMAT": "Only image and text item types allowed",
+        "INVALID_ITEM_HASH": "Invalid item hash",
         "DIFFERENT_DATASET_IDS": "Dataset ids do not match",
         "INVALID_BLOCK_NO": "Invalid block number",
         "ID_MISMATCH": "captcha id mismatch",
