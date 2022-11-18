@@ -12,6 +12,7 @@ import {
 } from '@prosopo/api'
 import { hexToString } from '@polkadot/util'
 import ProsopoCaptchaApi from '../ProsopoCaptchaApi'
+import { InjectedAccount } from '@polkadot/extension-inject/types'
 
 /**
  * The configuration of Procaptcha. This is passed it to Procaptcha as a prop. Values here are not updated by Procaptcha and are considered immutable from within Procaptcha.
@@ -116,9 +117,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
 
             // account has been found, check if account is already marked as human
             // first, ask the smart contract
-            await loadContract()
-
-            const contract = getContract()
+            const contract = await loadContract()
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
             const contractIsHuman = await contract.dappOperatorIsHumanUser(state.config.solutionThreshold)
 
@@ -133,8 +132,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             if (providerFromStorage) {
                 updateState({ provider: providerFromStorage })
 
-                await loadProviderApi()
-                const providerApi = getProviderApi()
+                const providerApi = await loadProviderApi()
 
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
@@ -147,7 +145,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                     }
                 } catch (err) {
                     // if the provider is down, we should continue with the process of selecting a random provider
-                    console.log('Error contacting provider', providerFromStorage, err)
+                    console.log('Error contacting provider from storage', providerFromStorage)
                 }
             }
 
@@ -160,12 +158,11 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             storage.setProvider(provider)
 
             // get the provider api inst
-            await loadProviderApi()
-            const providerApi = await getProviderApi()
-            updateState({ providerApi })
+            const providerApi = await loadProviderApi()
 
             // get the captcha challenge and begin the challenge
-            const challenge: GetCaptchaResponse = await getCaptchaApi().getCaptchaChallenge()
+            const captchaApi = await loadCaptchaApi()
+            const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
 
             if (challenge.captchas.length <= 0) {
                 throw new Error('No captchas returned from provider')
@@ -179,6 +176,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 solutions: challenge.captchas.map(() => []),
             })
         } catch (err) {
+            console.error(err)
             updateState({ isHuman: false })
             // dispatch error to error callback
             events.onError(err)
@@ -195,7 +193,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
     }
 
     const click = () => {
-        if(state.challenge) {
+        if (state.challenge) {
             // todo
             // const solution = state.challenge.captchas[state.index].solution
             // const solutions = state.solutions
@@ -216,6 +214,8 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         )
 
         updateState({ captchaApi })
+
+        return getCaptchaApi()
     }
 
     const loadProviderApi = async () => {
@@ -225,6 +225,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         const providerUrl = state.provider.provider.serviceOrigin
         const providerApi = new ProviderApi(state.config.network, providerUrl)
         updateState({ providerApi })
+        return getProviderApi()
     }
 
     const resetState = () => {
@@ -279,7 +280,19 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             events.onAccountNotFound(state.config.userAccountAddress)
         }
 
+        // updateState({ account })
         console.log('Using account:', account)
+
+        return account
+        // return getAccount()
+    }
+
+    const getAccount = () => {
+        // if (!state.account) {
+            throw new Error('Account not loaded')
+        // }
+        // const account: Account = state.account
+        // return account
     }
 
     /**
@@ -294,6 +307,8 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         )
 
         updateState({ contract })
+
+        return getContract()
     }
 
     return {
