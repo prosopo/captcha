@@ -13,6 +13,7 @@ import {
 import { hexToString } from '@polkadot/util'
 import ProsopoCaptchaApi from '../ProsopoCaptchaApi'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
+import { AccountNotFoundError, ExtensionNotFoundError } from './errors'
 
 /**
  * The configuration of Procaptcha. This is passed it to Procaptcha as a prop. Values here are not updated by Procaptcha and are considered immutable from within Procaptcha.
@@ -64,6 +65,7 @@ interface Events {
     onError: (error: Error) => void
     onAccountNotFound: (address: string) => void
     onHuman: () => void
+    onExtensionNotFound: () => void
 }
 
 const buildUpdateState = (state: ProcaptchaState, onStateUpdate: StateUpdateFn) => {
@@ -92,10 +94,13 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 alert(`Account ${address} not found`)
             },
             onError: (error) => {
-                console.error(error)
+                alert(error ? error.message : 'An error occurred')
             },
             onHuman: () => {
                 console.log('onHuman event triggered')
+            },
+            onExtensionNotFound: () => {
+                alert('No extension found')
             },
         },
         callbacks
@@ -162,19 +167,24 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
 
             // get the captcha challenge and begin the challenge
             const captchaApi = await loadCaptchaApi()
-            const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
+            try {
+                const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
 
-            if (challenge.captchas.length <= 0) {
-                throw new Error('No captchas returned from provider')
+            } catch(err) {
+                console.log('here', err)
             }
 
-            // update state with new challenge
-            updateState({
-                challenge,
-                index: 0,
-                showChallenge: true,
-                solutions: challenge.captchas.map(() => []),
-            })
+            // if (challenge.captchas.length <= 0) {
+            //     throw new Error('No captchas returned from provider')
+            // }
+
+            // // update state with new challenge
+            // updateState({
+            //     challenge,
+            //     index: 0,
+            //     showChallenge: true,
+            //     solutions: challenge.captchas.map(() => []),
+            // })
         } catch (err) {
             console.error(err)
             updateState({ isHuman: false })
@@ -277,7 +287,14 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         try {
             account = await ext.getAccount(state.config) // todo don't pass the whole config
         } catch (err) {
-            events.onAccountNotFound(state.config.userAccountAddress)
+            console.error(err)
+            if(err instanceof AccountNotFoundError) {
+                events.onAccountNotFound(state.config.userAccountAddress)
+            } else if(err instanceof ExtensionNotFoundError) {
+                events.onExtensionNotFound()
+            } else {
+                events.onError(err)
+            }
         }
 
         // updateState({ account })

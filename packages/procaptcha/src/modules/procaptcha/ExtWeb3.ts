@@ -1,7 +1,7 @@
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
 import { web3Enable } from '@polkadot/extension-dapp'
 import Ext from './Ext'
-import { NoAccountFoundError } from './errors'
+import { AccountNotFoundError, ExtensionNotFoundError } from './errors'
 import { ProcaptchaConfig } from './Manager'
 
 /**
@@ -13,6 +13,9 @@ export default class ExtWeb3 extends Ext {
 
         // enable access to all extensions
         const extensions: InjectedExtension[] = await web3Enable(dappName)
+        if (extensions.length === 0) {
+            throw new ExtensionNotFoundError()
+        }
 
         // search through all extensions for the one that has the account
         for (const extension of extensions) {
@@ -23,6 +26,6 @@ export default class ExtWeb3 extends Ext {
             }
         }
 
-        throw new NoAccountFoundError('No account found matching ' + address)
+        throw new AccountNotFoundError('No account found matching ' + address)
     }
 }

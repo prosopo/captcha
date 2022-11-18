@@ -10,8 +10,14 @@ export class AccountCreationUnsupportedError extends Error {
     }
 }
 
-export class NoAccountFoundError extends Error {
+export class AccountNotFoundError extends Error {
     constructor(msg?: string) {
         super(msg || 'No account found')
+    }
+}
+
+export class ExtensionNotFoundError extends Error {
+    constructor(msg?: string) {
+        super(msg || 'No extensions found')
     }
 }
