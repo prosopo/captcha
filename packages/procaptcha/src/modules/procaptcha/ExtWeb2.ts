@@ -16,10 +16,10 @@ import { InjectedAccount } from '@polkadot/extension-inject/types'
 /**
  * Class for interfacing with web3 accounts.
  */
-export default class ExtWeb3 extends Ext {
+export default class ExtWeb2 extends Ext {
     public async getAccount(config: ProcaptchaConfig): Promise<Account> {
-        const wsProvider = new WsProvider(config.dappUrl)
-        
+        const wsProvider = new WsProvider(config.network.endpoint)
+
         const account: InjectedAccount = await this.createAccount(wsProvider)
         const extension: InjectedExtension = await this.createExtension(account)
 
