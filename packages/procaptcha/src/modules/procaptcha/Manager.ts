@@ -183,16 +183,10 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 }
             }
 
-            const provider = await contract.getRandomProvider()
-            provider.provider.serviceOrigin = trimProviderUrl(provider.provider.serviceOrigin)
-
-            // record provider
-            updateState({ provider })
-            storage.setProvider(provider)
-
+            // get a random provider
+            const provider = await loadRandomProvider()
             // get the provider api inst
             const providerApi = await loadProviderApi()
-
             // get the captcha challenge and begin the challenge
             const captchaApi = await loadCaptchaApi()
             const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
@@ -216,6 +210,20 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
         }
+    }
+
+    const loadRandomProvider = async () => {
+        const contract = await getContract()
+        const provider = await contract.getRandomProvider()
+        console.log('Got provider', provider)
+        if (!provider || !provider.provider || !provider.provider.serviceOrigin) {
+            throw new Error('No provider found: ' + JSON.stringify(provider))
+        }
+        provider.provider.serviceOrigin = trimProviderUrl(provider.provider.serviceOrigin)
+        // record provider
+        updateState({ provider })
+        storage.setProvider(provider)
+        return provider
     }
 
     const submit = async () => {
