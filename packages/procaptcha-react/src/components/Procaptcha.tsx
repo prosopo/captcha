@@ -12,8 +12,9 @@ import {
 } from '@prosopo/procaptcha'
 import { Manager, ProcaptchaConfig, ProcaptchaState, StateUpdateFn } from '@prosopo/procaptcha'
 import { ProviderApi } from '@prosopo/api'
-import { Alert, Modal } from '@mui/material'
+import { Alert, Backdrop, CircularProgress } from '@mui/material'
 import CaptchaComponent from './CaptchaComponent'
+import theme from './theme'
 
 export interface ProcaptchaProps {
     config: ProcaptchaConfig
@@ -36,7 +37,7 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
 
     const [isHuman, setIsHuman] = useState(false)
     const [index, setIndex] = useState(-1)
-    const [solutions, setSolutions] = useRefAsState<string[][]>([])
+    const [solutions, setSolutions] = useState([])
     // take a deep copy of the config and store in state. This stops the config from being updated externally to this state management
     const [config] = useState<ProcaptchaConfig>(() => {
         return JSON.parse(JSON.stringify(initConfig))
@@ -44,9 +45,10 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
     const [contract, setContract] = useRefAsState<ProsopoContract | undefined>(undefined)
     const [provider, setProvider] = useRefAsState<ProsopoRandomProviderResponse | undefined>(undefined)
     const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
-    const [showChallenge, setShowChallenge] = useState(false)
+    const [showModal, setShowModal] = useState(false)
     const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(undefined)
     const [providerApi, setProviderApi] = useRefAsState<ProviderApi | undefined>(undefined)
+    const [loading, setLoading] = useState(false)
 
     const map = {
         isHuman: setIsHuman,
@@ -55,9 +57,10 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
         contract: setContract,
         provider: setProvider,
         captchaApi: setCaptchaApi,
-        showChallenge: setShowChallenge,
+        showModal: setShowModal,
         challenge: setChallenge,
         providerApi: setProviderApi,
+        loading: setLoading,
         // don't provide method for updating config, should remain constant
     }
 
@@ -71,9 +74,10 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
             contract,
             provider,
             captchaApi,
-            showChallenge,
+            showModal,
             challenge,
             providerApi,
+            loading,
         },
         // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
@@ -92,7 +96,6 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
             }
         },
     ]
-
 }
 
 export const Procaptcha = (props: ProcaptchaProps) => {
@@ -108,7 +111,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
 
     return (
         <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-            <Modal open={state.showChallenge}>
+            <Backdrop open={state.showModal} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
                 {state.challenge ? (
                     <CaptchaComponent
                         challenge={state.challenge}
@@ -116,12 +119,12 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                         solutions={state.solutions}
                         onSubmit={manager.submit}
                         onCancel={manager.cancel}
-                        onClick={manager.click}
-                    />
+                        onClick={manager.onClick}
+                    ></CaptchaComponent>
                 ) : (
-                    <Alert severity="error">No challenge</Alert>
+                    <Alert>No challenge set.</Alert>
                 )}
-            </Modal>
+            </Backdrop>
 
             <Box p={1} sx={{ maxWidth: '600px', minWidth: '200px' }}>
                 <Box
@@ -140,13 +143,39 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                 flexWrap: 'wrap',
                             }}
                         >
-                            <Box>
-                                <Checkbox
-                                    onChange={onTick}
-                                    checked={ticked}
-                                    inputProps={{ 'aria-label': 'controlled' }}
-                                    sx={{ '& .MuiSvgIcon-root': { fontSize: 32 } }}
-                                />
+                            <Box
+                                sx={{
+                                    height: '50px',
+                                    width: '50px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexDirection: 'column',
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        display: !state.loading ? 'block' : 'none',
+                                    }}
+                                >
+                                    <Checkbox
+                                        onChange={onTick}
+                                        checked={ticked}
+                                        inputProps={{ 'aria-label': 'controlled' }}
+                                        sx={{
+                                            '& .MuiSvgIcon-root': { fontSize: 32 },
+                                        }}
+                                    />
+                                </Box>
+                                <Box
+                                    sx={{
+                                        display: state.loading ? 'block' : 'none',
+                                    }}
+                                >
+                                    <Box pt={'5px'}>
+                                        <CircularProgress size={'24px'} />
+                                    </Box>
+                                </Box>
                             </Box>
                             <Box p={1}>
                                 <Typography>I am a human</Typography>
