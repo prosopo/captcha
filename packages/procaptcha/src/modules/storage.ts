@@ -35,24 +35,20 @@ function getAccount(): string | null {
 /**
  * Sets `providerUrl` for `account`
  */
-function setProvider(provider: ProsopoRandomProviderResponse) {
-    localStorage.setItem(PROVIDER_URL_KEY, JSON.stringify(provider))
+function setProviderUrl(providerUrl: string) {
+    localStorage.setItem(PROVIDER_URL_KEY, providerUrl)
 }
 
 /**
  * Gets `providerUrl`
  */
-function getProvider(): ProsopoRandomProviderResponse | null {
-    const providerString = localStorage.getItem(PROVIDER_URL_KEY)
-    if (providerString) {
-        return JSON.parse(providerString)
-    }
-    return null
+function getProviderUrl(): string | null {
+    return localStorage.getItem(PROVIDER_URL_KEY)
 }
 
 export default {
     setAccount,
     getAccount,
-    setProvider,
-    getProvider,
+    setProviderUrl,
+    getProviderUrl,
 }

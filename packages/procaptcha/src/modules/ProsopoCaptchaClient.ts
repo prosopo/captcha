@@ -162,7 +162,7 @@ export class ProsopoCaptchaClient {
         }
 
         // Check if there is a provider in local storage or get a random one from the contract
-        const provider = storage.getProvider()
+        const provider = null
         if (provider) {
             this.provider = provider
         } else {
@@ -173,7 +173,7 @@ export class ProsopoCaptchaClient {
             throw new ProsopoEnvError('DEVELOPER.PROVIDER_NOT_FOUND')
         }
 
-        storage.setProvider(this.provider)
+        // storage.setProvider(this.provider)
 
         const providerUrl = ProsopoCaptchaClient.trimProviderUrl(this.provider.provider)
 

@@ -37,10 +37,7 @@ export interface ProcaptchaState {
     isHuman: boolean // is the user human?
     index: number // the index of the captcha round currently being shown
     solutions: string[][] // the solutions for each captcha round
-    provider: ProsopoRandomProviderResponse | undefined // undefined if no provider is selected
     config: ProcaptchaConfig // the config / env variables for the captcha process
-    contract: ProsopoContract | undefined // the contract instance, contains api, abi, contract, etc. undefined if not set up
-    providerApi: ProviderApi | undefined // the provider api instance for talking to the provider. undefined if not set up
     captchaApi: ProsopoCaptchaApi | undefined // the captcha api instance for managing captcha challenge. undefined if not set up
     challenge: GetCaptchaResponse | undefined // the captcha challenge from the provider. undefined if not set up
     showModal: boolean // whether to show the modal or not
@@ -58,9 +55,6 @@ export const defaultState = (): Partial<ProcaptchaState> => {
         solutions: [],
         index: -1,
         isHuman: false,
-        provider: undefined,
-        contract: undefined,
-        providerApi: undefined,
         captchaApi: undefined,
         account: undefined,
     }
@@ -146,7 +140,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             updateState({ loading: true })
 
             // check accounts / setup accounts
-            await loadAccount()
+            const account = await loadAccount()
 
             // account has been found, check if account is already marked as human
             // first, ask the smart contract
@@ -161,11 +155,11 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             }
 
             // Check if there is a provider in local storage or get a random one from the contract
-            const providerFromStorage = storage.getProvider()
-            if (providerFromStorage) {
-                updateState({ provider: providerFromStorage })
+            const providerUrlFromStorage = storage.getProviderUrl()
+            let providerApi: ProviderApi
+            if (providerUrlFromStorage) {
 
-                const providerApi = await loadProviderApi()
+                providerApi = await loadProviderApi(providerUrlFromStorage)
 
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
@@ -178,17 +172,21 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                     }
                 } catch (err) {
                     // if the provider is down, we should continue with the process of selecting a random provider
-                    console.error('Error contacting provider from storage', providerFromStorage)
+                    console.error('Error contacting provider from storage', providerUrlFromStorage)
                     // continue as if the provider was not in storage
                 }
             }
 
             // get a random provider
-            const provider = await loadRandomProvider()
+            const provider = await loadRandomProvider(contract)
+            console.log('provider', provider)
+            const providerUrl = provider.provider.serviceOrigin
             // get the provider api inst
-            const providerApi = await loadProviderApi()
+            providerApi = await loadProviderApi(providerUrl)
+            console.log('providerApi', providerApi)
             // get the captcha challenge and begin the challenge
-            const captchaApi = await loadCaptchaApi()
+            const captchaApi = await loadCaptchaApi(contract, provider, providerApi)
+            console.log('captchaApi', captchaApi)
             const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
 
             if (challenge.captchas.length <= 0) {
@@ -212,17 +210,15 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         }
     }
 
-    const loadRandomProvider = async () => {
-        const contract = await getContract()
-        const provider = await contract.getRandomProvider()
-        console.log('Got provider', provider)
+    const loadRandomProvider = async (contract: ProsopoContract) => {
+        const provider: ProsopoRandomProviderResponse = await contract.getRandomProvider()
+        console.log('Got random provider', provider)
         if (!provider || !provider.provider || !provider.provider.serviceOrigin) {
             throw new Error('No provider found: ' + JSON.stringify(provider))
         }
         provider.provider.serviceOrigin = trimProviderUrl(provider.provider.serviceOrigin)
-        // record provider
-        updateState({ provider })
-        storage.setProvider(provider)
+        // record provider in localstorage for subsequent human checks (i.e. if the user has already solved some captchas but they have not been put on chain yet, contact the provider in the local storage to verify)
+        storage.setProviderUrl(provider.provider.serviceOrigin)
         return provider
     }
 
@@ -323,13 +319,17 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         updateState({ index: state.index + 1 })
     }
 
-    const loadCaptchaApi = async () => {
+    const loadCaptchaApi = async (
+        contract: ProsopoContract,
+        provider: ProsopoRandomProviderResponse,
+        providerApi: ProviderApi
+    ) => {
         // setup the captcha api to carry out a challenge
         const captchaApi = new ProsopoCaptchaApi(
             state.config.userAccountAddress,
-            getContract(),
-            getProvider(),
-            getProviderApi(),
+            contract,
+            provider,
+            providerApi,
             state.config.web2
         )
 
@@ -338,14 +338,9 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         return getCaptchaApi()
     }
 
-    const loadProviderApi = async () => {
-        if (!state.provider?.provider.serviceOrigin) {
-            throw new Error('Provider origin not set, cannot get provider api')
-        }
-        const providerUrl = state.provider.provider.serviceOrigin
+    const loadProviderApi = async (providerUrl: string) => {
         const providerApi = new ProviderApi(state.config.network, providerUrl)
-        updateState({ providerApi })
-        return getProviderApi()
+        return providerApi
     }
 
     const resetState = () => {
@@ -357,29 +352,6 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             throw new Error('Captcha api not set')
         }
         return state.captchaApi
-    }
-
-    const getProvider = () => {
-        if (!state.provider) {
-            throw new Error('Provider not set')
-        }
-        return state.provider
-    }
-
-    const getProviderApi = () => {
-        if (!state.providerApi) {
-            throw new Error('ProviderApi not loaded')
-        }
-        const providerApi: ProviderApi = state.providerApi
-        return providerApi
-    }
-
-    const getContract = () => {
-        if (!state.contract) {
-            throw new Error('Contract not loaded')
-        }
-        const contract: ProsopoContract = state.contract
-        return contract
     }
 
     /**
@@ -420,9 +392,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             new WsProvider(state.config.network.endpoint)
         )
 
-        updateState({ contract })
-
-        return getContract()
+        return contract
     }
 
     return {
