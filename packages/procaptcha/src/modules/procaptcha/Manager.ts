@@ -131,8 +131,6 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
             updateState({ loading: true })
 
-            await sleep(10000)
-
             // check accounts / setup accounts
             await loadAccount()
 
@@ -224,23 +222,40 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         resetState()
     }
 
-    const onClick = (hash: string) => {
-        console.log('onClick', hash)
+    /**
+     * (De)Select an image from the solution for the current round. If the hash is already in the solutions list, it will be removed (deselected) and if not it will be added (selected).
+     * @param hash the hash of the image
+     */
+    const select = (hash: string) => {
         if (state.challenge) {
             const index = state.index
             const solutions = state.solutions
             const solution = solutions[index]
             if (solution.includes(hash)) {
-                console.log('already selected, removing')
+                console.log('deselecting', hash)
                 // remove the hash from the solution
                 solution.splice(solution.indexOf(hash), 1)
             } else {
-                console.log('adding to solution')
+                console.log('selecting', hash)
                 // add the hash to the solution
                 solution.push(hash)
             }
             updateState({ solutions })
         }
+    }
+
+    /**
+     * Proceed to the next round of the challenge.
+     */
+    const nextRound = () => {
+        if (!state.challenge) {
+            throw new Error('cannot proceed to next round, no challenge found')
+        }
+        if (state.index >= state.challenge.captchas.length - 1) {
+            throw new Error('cannot proceed to next round, already at last round')
+        }
+        console.log('proceeding to next round')
+        updateState({ index: state.index + 1 })
     }
 
     const loadCaptchaApi = async () => {
@@ -318,9 +333,9 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             account = await ext.getAccount(state.config) // todo don't pass the whole config
         } catch (err) {
             console.error(err)
-            if(err instanceof AccountNotFoundError) {
+            if (err instanceof AccountNotFoundError) {
                 events.onAccountNotFound(state.config.userAccountAddress)
-            } else if(err instanceof ExtensionNotFoundError) {
+            } else if (err instanceof ExtensionNotFoundError) {
                 events.onExtensionNotFound()
             } else {
                 events.onError(err)
@@ -362,7 +377,8 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         start,
         cancel,
         submit,
-        onClick,
+        select,
+        nextRound,
     }
 }
 
