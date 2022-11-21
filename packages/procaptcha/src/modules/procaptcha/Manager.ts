@@ -40,18 +40,20 @@ export interface ProcaptchaState {
     providerApi: ProviderApi | undefined // the provider api instance for talking to the provider. undefined if not set up
     captchaApi: ProsopoCaptchaApi | undefined // the captcha api instance for managing captcha challenge. undefined if not set up
     challenge: GetCaptchaResponse | undefined // the captcha challenge from the provider. undefined if not set up
-    showChallenge: boolean // whether to show the challenge or not
+    showModal: boolean // whether to show the modal or not
+    loading: boolean // whether the captcha is loading or not
 }
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
-        isHuman: false,
-        index: -1,
+        showModal: false,
+        loading: false,
+        challenge: undefined,
         solutions: [],
+        index: -1,
+        isHuman: false,
         provider: undefined,
         contract: undefined,
-        showChallenge: false,
-        challenge: undefined,
         providerApi: undefined,
         captchaApi: undefined,
     }
@@ -70,7 +72,8 @@ interface Events {
 
 const buildUpdateState = (state: ProcaptchaState, onStateUpdate: StateUpdateFn) => {
     const updateCurrentState = (nextState: Partial<ProcaptchaState>) => {
-        // mutate the current state
+        // mutate the current state. Note that this is in order of properties in the nextState object.
+        // e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
         for (const key in nextState) {
             state[key] = nextState[key]
         }
@@ -81,6 +84,10 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: StateUpdateFn) 
     }
 
     return updateCurrentState
+}
+
+const sleep = (ms) => {
+    return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
@@ -114,8 +121,17 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
      */
     const start = async () => {
         try {
+            if (state.loading) {
+                console.log('Procaptcha already loading')
+                return
+            }
+            
             console.log('Starting procaptcha', state.config)
             resetState()
+            // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
+            updateState({ loading: true })
+
+            await sleep(10000)
 
             // check accounts / setup accounts
             await loadAccount()
@@ -127,7 +143,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             const contractIsHuman = await contract.dappOperatorIsHumanUser(state.config.solutionThreshold)
 
             if (contractIsHuman) {
-                updateState({ isHuman: true })
+                updateState({ isHuman: true, loading: false })
                 events.onHuman()
                 return
             }
@@ -144,7 +160,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 try {
                     const verifyDappUserResponse = await providerApi.verifyDappUser(state.config.userAccountAddress)
                     if (verifyDappUserResponse.solutionApproved) {
-                        updateState({ isHuman: true })
+                        updateState({ isHuman: true, loading: false })
                         events.onHuman()
                         return
                     }
@@ -167,49 +183,63 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
 
             // get the captcha challenge and begin the challenge
             const captchaApi = await loadCaptchaApi()
+            let challenge: GetCaptchaResponse
             try {
-                const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
-
-            } catch(err) {
-                console.log('here', err)
+                challenge = await captchaApi.getCaptchaChallenge()
+            } catch (err) {
+                console.log('Error getting captcha challenge', err)
+                events.onError(err) // todo provider unresponsive?
+                return
             }
 
-            // if (challenge.captchas.length <= 0) {
-            //     throw new Error('No captchas returned from provider')
-            // }
+            if (challenge.captchas.length <= 0) {
+                throw new Error('No captchas returned from provider')
+            }
 
-            // // update state with new challenge
-            // updateState({
-            //     challenge,
-            //     index: 0,
-            //     showChallenge: true,
-            //     solutions: challenge.captchas.map(() => []),
-            // })
+            // update state with new challenge
+            updateState({
+                index: 0,
+                solutions: challenge.captchas.map(() => []),
+                challenge,
+                showModal: true,
+                loading: false,
+            })
         } catch (err) {
             console.error(err)
-            updateState({ isHuman: false })
+            // hit an error, disallow user's claim to be human
+            updateState({ isHuman: false, loading: false })
             // dispatch error to error callback
             events.onError(err)
         }
     }
 
     const submit = async () => {
-        console.log('submit todo')
+        console.log('submit')
+
     }
 
     const cancel = async () => {
+        console.log('cancel')
         // abandon the captcha process
         resetState()
     }
 
-    const click = () => {
+    const onClick = (hash: string) => {
+        console.log('onClick', hash)
         if (state.challenge) {
-            // todo
-            // const solution = state.challenge.captchas[state.index].solution
-            // const solutions = state.solutions
-            // solutions[state.index] = solution
-            // updateState({ solutions })
-            // next()
+            const index = state.index
+            const solutions = state.solutions
+            const solution = solutions[index]
+            if (solution.includes(hash)) {
+                console.log('already selected, removing')
+                // remove the hash from the solution
+                solution.splice(solution.indexOf(hash), 1)
+            } else {
+                console.log('adding to solution')
+                // add the hash to the solution
+                solution.push(hash)
+            }
+            updateState({ solutions })
         }
     }
 
@@ -332,7 +362,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         start,
         cancel,
         submit,
-        click,
+        onClick,
     }
 }
 
