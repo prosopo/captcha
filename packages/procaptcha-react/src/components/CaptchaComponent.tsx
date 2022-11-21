@@ -31,12 +31,13 @@ export interface CaptchaComponentProps {
     onSubmit: () => void
     onCancel: () => void
     onClick: (hash: string) => void
+    onNext: () => void
 }
 
 export const CaptchaComponent = (props: CaptchaComponentProps) => {
     const { t } = useTranslation()
     console.log('CaptchaComponent', props)
-    const { challenge, index, solutions, onSubmit, onCancel, onClick } = props
+    const { challenge, index, solutions, onSubmit, onCancel, onClick, onNext } = props
     const captcha = challenge.captchas[index]
     const solution = solutions[index]
 
@@ -140,7 +141,7 @@ export const CaptchaComponent = (props: CaptchaComponentProps) => {
                             </Button>
                             <Button
                                 color="primary"
-                                onClick={onSubmit}
+                                onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
                                 variant="contained"
                                 {...addDataAttr({ dev: { cy: 'button-next' } })}
                             >

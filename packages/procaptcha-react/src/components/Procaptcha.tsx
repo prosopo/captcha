@@ -119,7 +119,8 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                         solutions={state.solutions}
                         onSubmit={manager.submit}
                         onCancel={manager.cancel}
-                        onClick={manager.onClick}
+                        onClick={manager.select}
+                        onNext={manager.nextRound}
                     ></CaptchaComponent>
                 ) : (
                     <Alert>No challenge set.</Alert>
