@@ -71,6 +71,7 @@ export const CaptchaWidget = (props: CaptchaWidgetProps) => {
                             key={index}
                         >
                             <Box
+
                                 sx={{ cursor: 'pointer', height: '100%', width: '100%' }}
                                 onClick={() => onClick(hash)}
                             >
@@ -78,7 +79,7 @@ export const CaptchaWidget = (props: CaptchaWidgetProps) => {
                                     <img
                                         style={{
                                             width: '100%', // image should be full width / height of the item
-                                            backgroundColor: 'black', // colour of the bands when letterboxing and image
+                                            backgroundColor: 'lightgray', // colour of the bands when letterboxing and image
                                             display: 'block', // removes whitespace below imgs
                                             objectFit: 'contain', // contain the entire image in the img tag
                                             aspectRatio: '1/1', // force AR to be 1, letterboxing images with different aspect ratios
