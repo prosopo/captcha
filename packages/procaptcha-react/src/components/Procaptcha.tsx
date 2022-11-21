@@ -3,9 +3,17 @@ import Box from '@mui/material/Box'
 import Checkbox from '@mui/material/Checkbox'
 import { useRef, useState } from 'react'
 import Link from '@mui/material/Link'
-import { GetCaptchaResponse, ProcaptchaCallbacks, ProsopoCaptchaApi, ProsopoContract, ProsopoRandomProviderResponse } from '@prosopo/procaptcha'
+import {
+    GetCaptchaResponse,
+    ProcaptchaCallbacks,
+    ProsopoCaptchaApi,
+    ProsopoContract,
+    ProsopoRandomProviderResponse,
+} from '@prosopo/procaptcha'
 import { Manager, ProcaptchaConfig, ProcaptchaState, StateUpdateFn } from '@prosopo/procaptcha'
 import { ProviderApi } from '@prosopo/api'
+import { Alert, Modal } from '@mui/material'
+import CaptchaComponent from './CaptchaComponent'
 
 export interface ProcaptchaProps {
     config: ProcaptchaConfig
@@ -100,7 +108,20 @@ export const Procaptcha = (props: ProcaptchaProps) => {
 
     return (
         <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
-            {/* <CaptchaComponent clientInterface={client} show={showCaptcha} /> */}
+            <Modal open={state.showChallenge}>
+                {state.challenge ? (
+                    <CaptchaComponent
+                        challenge={state.challenge}
+                        index={state.index}
+                        solutions={state.solutions}
+                        onSubmit={manager.submit}
+                        onCancel={manager.cancel}
+                        onClick={manager.click}
+                    />
+                ) : (
+                    <Alert severity="error">No challenge</Alert>
+                )}
+            </Modal>
 
             <Box p={1} sx={{ maxWidth: '600px', minWidth: '200px' }}>
                 <Box

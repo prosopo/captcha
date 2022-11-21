@@ -18,17 +18,24 @@ import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
 import CheckIcon from '@mui/icons-material/Check'
 import { Box, Fade, Theme } from '@mui/material'
 import useTheme from '@mui/styles/useTheme'
+import { Item } from '@prosopo/datasets'
 
-export function CaptchaWidget({
-    challenge,
-    solution,
-    onChange,
-}: {
+export interface CaptchaWidgetProps {
     challenge: CaptchaResponseCaptcha
     solution: string[]
-    onChange: (hash: string) => void
-}) {
-    console.log('CHALLENGE', challenge)
+    onClick: (hash: string) => void
+}
+
+const getHash = (item: Item) => {
+    if (!item.hash) {
+        throw new Error('item.hash is undefined')
+    }
+    return item.hash
+}
+
+export const CaptchaWidget = (props: CaptchaWidgetProps) => {
+    console.log('CaptchaWidget', props)
+    const { challenge, solution, onClick } = props
     const items = challenge.captcha.items
     const theme: Theme = useTheme()
 
@@ -48,6 +55,7 @@ export function CaptchaWidget({
                 }}
             >
                 {items.map((item, index) => {
+                    const hash = getHash(item)
                     return (
                         <Box
                             pt={0.5}
@@ -61,68 +69,72 @@ export function CaptchaWidget({
                                 boxSizing: 'border-box',
                             }}
                             key={index}
-                            onClick={() => onChange(item.hash ? item.hash : '')}
                         >
-                            <Box sx={{ border: 1, borderColor: 'lightgray' }}>
-                                <img
-                                    style={{
-                                        width: '100%', // image should be full width / height of the item
-                                        backgroundColor: 'black', // colour of the bands when letterboxing and image
-                                        display: 'block', // removes whitespace below imgs
-                                        objectFit: 'contain', // contain the entire image in the img tag
-                                        aspectRatio: '1/1', // force AR to be 1, letterboxing images with different aspect ratios
-                                    }}
-                                    src={item.data}
-                                    alt={`Captcha image ${index + 1}`}
-                                />
-                            </Box>
-                            <Fade in={solution.includes(item.hash ? item.hash : '')}>
-                                <Box
-                                    sx={{
-                                        // relative to where the element _should_ be positioned
-                                        position: 'relative',
-                                        // make the overlay the full height/width of an item
-                                        width: '100%',
-                                        height: '100%',
-                                        // shift it up 100% to overlay the item element
-                                        top: '-100%',
-                                        // transition on opacity upon (de)selection
-                                        transitionDuration: '300ms',
-                                        transitionProperty: 'opacity',
-                                    }}
-                                >
+                            <Box
+                                sx={{ cursor: 'pointer', height: '100%', width: '100%' }}
+                                onClick={() => onClick(hash)}
+                            >
+                                <Box sx={{ border: 1, borderColor: 'lightgray' }}>
+                                    <img
+                                        style={{
+                                            width: '100%', // image should be full width / height of the item
+                                            backgroundColor: 'black', // colour of the bands when letterboxing and image
+                                            display: 'block', // removes whitespace below imgs
+                                            objectFit: 'contain', // contain the entire image in the img tag
+                                            aspectRatio: '1/1', // force AR to be 1, letterboxing images with different aspect ratios
+                                        }}
+                                        src={item.data}
+                                        alt={`Captcha image ${index + 1}`}
+                                    />
+                                </Box>
+                                <Fade in={solution.includes(hash)}>
                                     <Box
                                         sx={{
-                                            // make the overlay absolute positioned compare to its container
-                                            position: 'absolute',
-                                            // spread across 100% width/height of the item box
-                                            top: 0,
-                                            left: 0,
-                                            bottom: 0,
-                                            right: 0,
-                                            height: '100%',
+                                            // relative to where the element _should_ be positioned
+                                            position: 'relative',
+                                            // make the overlay the full height/width of an item
                                             width: '100%',
-                                            // display overlays in center
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            // make bg half opacity, i.e. shadowing the item's img
-                                            backgroundColor: 'rgba(0,0,0,0.5)',
+                                            height: '100%',
+                                            // shift it up 100% to overlay the item element
+                                            top: '-100%',
+                                            // transition on opacity upon (de)selection
+                                            transitionDuration: '300ms',
+                                            transitionProperty: 'opacity',
                                         }}
                                     >
-                                        <CheckIcon
-                                            htmlColor={theme.palette.background.default}
+                                        <Box
                                             sx={{
-                                                // img must be displayed as block otherwise get's a bottom whitespace border
-                                                display: 'block',
-                                                // how big the overlay icon is
-                                                width: '35%',
-                                                height: '35%',
+                                                // make the overlay absolute positioned compare to its container
+                                                position: 'absolute',
+                                                // spread across 100% width/height of the item box
+                                                top: 0,
+                                                left: 0,
+                                                bottom: 0,
+                                                right: 0,
+                                                height: '100%',
+                                                width: '100%',
+                                                // display overlays in center
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                // make bg half opacity, i.e. shadowing the item's img
+                                                backgroundColor: 'rgba(0,0,0,0.5)',
                                             }}
-                                        />
+                                        >
+                                            <CheckIcon
+                                                htmlColor={theme.palette.background.default}
+                                                sx={{
+                                                    // img must be displayed as block otherwise get's a bottom whitespace border
+                                                    display: 'block',
+                                                    // how big the overlay icon is
+                                                    width: '35%',
+                                                    height: '35%',
+                                                }}
+                                            />
+                                        </Box>
                                     </Box>
-                                </Box>
-                            </Fade>
+                                </Fade>
+                            </Box>
                         </Box>
                     )
                 })}

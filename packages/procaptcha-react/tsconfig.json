@@ -13,13 +13,5 @@
   },
   "include": [
     "src"
-  ],
-  "references": [ 
-    { 
-      "path": "../i18n"
-    },
-    { 
-      "path": "../procaptcha"
-    }
   ]
 }
