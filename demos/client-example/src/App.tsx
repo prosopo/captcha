@@ -143,6 +143,7 @@ function App() {
     // const manager = clientInterface.manager;
 
     const onError = (error: Error) => {
+        console.error(error)
         alert(error.message)
     }
 
@@ -166,7 +167,7 @@ function App() {
                 name: 'dapp',
             },
         },
-        solutionThreshold: 0.8,
+        solutionThreshold: 1,
     }
 
     return (
