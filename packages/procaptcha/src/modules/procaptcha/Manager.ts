@@ -3,17 +3,20 @@ import ExtWeb2 from './ExtWeb2'
 import ProsopoContract from '../../api/ProsopoContract'
 import { WsProvider } from '@polkadot/rpc-provider'
 import storage from '../storage'
-import {
-    GetCaptchaResponse,
-    ProposoProvider,
-    ProsopoNetwork,
-    ProsopoRandomProviderResponse,
-    ProviderApi,
-} from '@prosopo/api'
+import { GetCaptchaResponse, ProsopoNetwork, ProsopoRandomProviderResponse, ProviderApi } from '@prosopo/api'
 import { hexToString } from '@polkadot/util'
 import ProsopoCaptchaApi from '../ProsopoCaptchaApi'
-import { InjectedAccount } from '@polkadot/extension-inject/types'
-import { AccountNotFoundError, ExtensionNotFoundError } from './errors'
+import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
+import { CaptchaSolution, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
+import { TCaptchaSubmitResult } from '../../types'
+
+/**
+ * House the account and associated extension.
+ */
+export interface Account {
+    account: InjectedAccount
+    extension: InjectedExtension
+}
 
 /**
  * The configuration of Procaptcha. This is passed it to Procaptcha as a prop. Values here are not updated by Procaptcha and are considered immutable from within Procaptcha.
@@ -42,10 +45,13 @@ export interface ProcaptchaState {
     challenge: GetCaptchaResponse | undefined // the captcha challenge from the provider. undefined if not set up
     showModal: boolean // whether to show the modal or not
     loading: boolean // whether the captcha is loading or not
+    account: Account | undefined // the account operating the challenge. undefined if not set
+    submission: TCaptchaSubmitResult | undefined // the result of the captcha submission. undefined if not submitted
 }
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
+        // note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
         showModal: false,
         loading: false,
         challenge: undefined,
@@ -56,6 +62,7 @@ export const defaultState = (): Partial<ProcaptchaState> => {
         contract: undefined,
         providerApi: undefined,
         captchaApi: undefined,
+        account: undefined,
     }
 }
 
@@ -113,6 +120,13 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         callbacks
     )
 
+    // mapping of type of error to relevant event callback
+    const errorToEventMap = {
+        AccountNotFoundError: events.onAccountNotFound,
+        ExtensionNotFoundError: events.onExtensionNotFound,
+        Error: events.onError,
+    }
+
     // get the state update mechanism
     const updateState = buildUpdateState(state, onStateUpdate)
 
@@ -125,7 +139,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 console.log('Procaptcha already loading')
                 return
             }
-            
+
             console.log('Starting procaptcha', state.config)
             resetState()
             // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
@@ -164,12 +178,12 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                     }
                 } catch (err) {
                     // if the provider is down, we should continue with the process of selecting a random provider
-                    console.log('Error contacting provider from storage', providerFromStorage)
+                    console.error('Error contacting provider from storage', providerFromStorage)
+                    // continue as if the provider was not in storage
                 }
             }
 
             const provider = await contract.getRandomProvider()
-            // trim the provider url
             provider.provider.serviceOrigin = trimProviderUrl(provider.provider.serviceOrigin)
 
             // record provider
@@ -181,14 +195,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
 
             // get the captcha challenge and begin the challenge
             const captchaApi = await loadCaptchaApi()
-            let challenge: GetCaptchaResponse
-            try {
-                challenge = await captchaApi.getCaptchaChallenge()
-            } catch (err) {
-                console.log('Error getting captcha challenge', err)
-                events.onError(err) // todo provider unresponsive?
-                return
-            }
+            const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
 
             if (challenge.captchas.length <= 0) {
                 throw new Error('No captchas returned from provider')
@@ -200,20 +207,66 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 solutions: challenge.captchas.map(() => []),
                 challenge,
                 showModal: true,
-                loading: false,
             })
         } catch (err) {
             console.error(err)
+            // dispatch relevant error event
+            const event = errorToEventMap[err.constructor] || events.onError
+            event(err)
             // hit an error, disallow user's claim to be human
-            updateState({ isHuman: false, loading: false })
-            // dispatch error to error callback
-            events.onError(err)
+            updateState({ isHuman: false, showModal: false, loading: false })
         }
     }
 
     const submit = async () => {
-        console.log('submit')
+        try {
+            console.log('submitting solutions')
+            if (!state.challenge) {
+                throw new Error('cannot submit, no challenge found')
+            }
 
+            // hide the modal, no further input required from user
+            updateState({ showModal: false })
+
+            const challenge: GetCaptchaResponse = state.challenge
+
+            // append solution to each captcha in the challenge
+            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
+                const solution = state.solutions[index]
+                return convertCaptchaToCaptchaSolution({ ...captcha.captcha, solution })
+            })
+
+            const account = getAccount()
+            const signer = account.extension.signer
+            if (!challenge.captchas[0].captcha.datasetId) {
+                throw new Error('No datasetId set for challenge')
+            }
+            const captchaApi = getCaptchaApi()
+
+            // send the commitment to the provider
+            const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
+                signer,
+                challenge.requestHash,
+                challenge.captchas[0].captcha.datasetId,
+                captchaSolution
+            )
+
+            // update the state with the result of the submission
+            updateState({
+                submission,
+                // mark as is human if solution has been approved
+                isHuman: submission[0].solutionApproved,
+            })
+            if (state.isHuman) {
+                events.onHuman()
+            }
+        } catch (err) {
+            // dispatch relevant error event
+            const event = errorToEventMap[err.constructor] || events.onError
+            event(err)
+            // hit an error, disallow user's claim to be human
+            updateState({ isHuman: false, showModal: false, loading: false })
+        }
     }
 
     const cancel = async () => {
@@ -227,21 +280,25 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
      * @param hash the hash of the image
      */
     const select = (hash: string) => {
-        if (state.challenge) {
-            const index = state.index
-            const solutions = state.solutions
-            const solution = solutions[index]
-            if (solution.includes(hash)) {
-                console.log('deselecting', hash)
-                // remove the hash from the solution
-                solution.splice(solution.indexOf(hash), 1)
-            } else {
-                console.log('selecting', hash)
-                // add the hash to the solution
-                solution.push(hash)
-            }
-            updateState({ solutions })
+        if (!state.challenge) {
+            throw new Error('cannot select, no challenge found')
         }
+        if (state.index >= state.challenge.captchas.length || state.index < 0) {
+            throw new Error('cannot select, round index out of range')
+        }
+        const index = state.index
+        const solutions = state.solutions
+        const solution = solutions[index]
+        if (solution.includes(hash)) {
+            console.log('deselecting', hash)
+            // remove the hash from the solution
+            solution.splice(solution.indexOf(hash), 1)
+        } else {
+            console.log('selecting', hash)
+            // add the hash to the solution
+            solution.push(hash)
+        }
+        updateState({ solutions })
     }
 
     /**
@@ -251,7 +308,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         if (!state.challenge) {
             throw new Error('cannot proceed to next round, no challenge found')
         }
-        if (state.index >= state.challenge.captchas.length - 1) {
+        if (state.index + 1 >= state.challenge.captchas.length) {
             throw new Error('cannot proceed to next round, already at last round')
         }
         console.log('proceeding to next round')
@@ -328,33 +385,20 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
 
         // check if account exists in extension
         const ext = state.config.web2 ? new ExtWeb2() : new ExtWeb3()
-        let account
-        try {
-            account = await ext.getAccount(state.config) // todo don't pass the whole config
-        } catch (err) {
-            console.error(err)
-            if (err instanceof AccountNotFoundError) {
-                events.onAccountNotFound(state.config.userAccountAddress)
-            } else if (err instanceof ExtensionNotFoundError) {
-                events.onExtensionNotFound()
-            } else {
-                events.onError(err)
-            }
-        }
+        const account = await ext.getAccount(state.config) // todo don't pass the whole config
 
-        // updateState({ account })
         console.log('Using account:', account)
+        updateState({ account })
 
-        return account
-        // return getAccount()
+        return getAccount()
     }
 
     const getAccount = () => {
-        // if (!state.account) {
+        if (!state.account) {
             throw new Error('Account not loaded')
-        // }
-        // const account: Account = state.account
-        // return account
+        }
+        const account: Account = state.account
+        return account
     }
 
     /**

@@ -1,13 +1,12 @@
-import { InjectedAccount, InjectedExtension } from "@polkadot/extension-inject/types";
-import { WsProvider } from "@polkadot/rpc-provider";
-import Ext from "./Ext";
-import { ProcaptchaConfig } from "./Manager";
+import { WsProvider } from '@polkadot/rpc-provider'
+import Ext from './Ext'
+import { Account, ProcaptchaConfig } from './Manager'
 
 /**
  * Class for interfacing with web3 accounts.
  */
- export default class ExtWeb3 extends Ext {
-    public async getAccount(config: ProcaptchaConfig): Promise<InjectedAccount> {
+export default class ExtWeb3 extends Ext {
+    public async getAccount(config: ProcaptchaConfig): Promise<Account> {
         const wsProvider = new WsProvider(config.dappUrl)
         const canvasConfig = {
             area: { width: 300, height: 300 },
