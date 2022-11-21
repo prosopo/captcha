@@ -260,6 +260,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 submission,
                 // mark as is human if solution has been approved
                 isHuman: submission[0].solutionApproved,
+                loading: false,
             })
             if (state.isHuman) {
                 events.onHuman()
