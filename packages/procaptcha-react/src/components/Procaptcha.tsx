@@ -4,11 +4,13 @@ import Checkbox from '@mui/material/Checkbox'
 import { useRef, useState } from 'react'
 import Link from '@mui/material/Link'
 import {
+    Account,
     GetCaptchaResponse,
     ProcaptchaCallbacks,
     ProsopoCaptchaApi,
     ProsopoContract,
     ProsopoRandomProviderResponse,
+    TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
 import { Manager, ProcaptchaConfig, ProcaptchaState, StateUpdateFn } from '@prosopo/procaptcha'
 import { ProviderApi } from '@prosopo/api'
@@ -49,6 +51,8 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
     const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(undefined)
     const [providerApi, setProviderApi] = useRefAsState<ProviderApi | undefined>(undefined)
     const [loading, setLoading] = useState(false)
+    const [account, setAccount] = useState<Account | undefined>(undefined)
+    const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
 
     const map = {
         isHuman: setIsHuman,
@@ -61,6 +65,8 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
         challenge: setChallenge,
         providerApi: setProviderApi,
         loading: setLoading,
+        account: setAccount,
+        submission: setSubmission,
         // don't provide method for updating config, should remain constant
     }
 
@@ -78,6 +84,8 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
             challenge,
             providerApi,
             loading,
+            account,
+            submission,
         },
         // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
