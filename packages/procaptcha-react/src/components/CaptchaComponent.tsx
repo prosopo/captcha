@@ -36,7 +36,7 @@ export interface CaptchaComponentProps {
 
 export const CaptchaComponent = (props: CaptchaComponentProps) => {
     const { t } = useTranslation()
-    console.log('CaptchaComponent', props)
+    // console.log('CaptchaComponent', props)
     const { challenge, index, solutions, onSubmit, onCancel, onClick, onNext } = props
     const captcha = challenge.captchas[index]
     const solution = solutions[index]

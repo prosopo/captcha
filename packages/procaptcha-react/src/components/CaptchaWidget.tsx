@@ -34,7 +34,7 @@ const getHash = (item: Item) => {
 }
 
 export const CaptchaWidget = (props: CaptchaWidgetProps) => {
-    console.log('CaptchaWidget', props)
+    // console.log('CaptchaWidget', props)
     const { challenge, solution, onClick } = props
     const items = challenge.captcha.items
     const theme: Theme = useTheme()

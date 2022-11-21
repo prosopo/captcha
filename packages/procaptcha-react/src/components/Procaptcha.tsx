@@ -44,12 +44,9 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
     const [config] = useState<ProcaptchaConfig>(() => {
         return JSON.parse(JSON.stringify(initConfig))
     })
-    const [contract, setContract] = useRefAsState<ProsopoContract | undefined>(undefined)
-    const [provider, setProvider] = useRefAsState<ProsopoRandomProviderResponse | undefined>(undefined)
     const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
     const [showModal, setShowModal] = useState(false)
     const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(undefined)
-    const [providerApi, setProviderApi] = useRefAsState<ProviderApi | undefined>(undefined)
     const [loading, setLoading] = useState(false)
     const [account, setAccount] = useState<Account | undefined>(undefined)
     const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
@@ -58,12 +55,9 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
         isHuman: setIsHuman,
         index: setIndex,
         solutions: setSolutions,
-        contract: setContract,
-        provider: setProvider,
         captchaApi: setCaptchaApi,
         showModal: setShowModal,
         challenge: setChallenge,
-        providerApi: setProviderApi,
         loading: setLoading,
         account: setAccount,
         submission: setSubmission,
@@ -77,12 +71,9 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
             index,
             solutions,
             config,
-            contract,
-            provider,
             captchaApi,
             showModal,
             challenge,
-            providerApi,
             loading,
             account,
             submission,
@@ -112,10 +103,6 @@ export const Procaptcha = (props: ProcaptchaProps) => {
 
     const [state, updateState] = useProcaptcha(config)
     const manager = Manager(state, updateState, callbacks)
-    const onTick = () => {
-        manager.start()
-    }
-    const ticked = false
 
     return (
         <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
@@ -168,8 +155,8 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                     }}
                                 >
                                     <Checkbox
-                                        onChange={onTick}
-                                        checked={ticked}
+                                        onChange={manager.start}
+                                        checked={state.isHuman}
                                         inputProps={{ 'aria-label': 'controlled' }}
                                         sx={{
                                             '& .MuiSvgIcon-root': { fontSize: 32 },
