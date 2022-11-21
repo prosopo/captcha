@@ -30,8 +30,7 @@ export default class ExtWeb2 extends Ext {
     }
 
     private async createExtension(account: InjectedAccount): Promise<InjectedExtension> {
-
-        const sendMessage = async <TMessageType extends MessageTypesWithNullRequest, TResponse>(
+        const sendMessage = async <TMessageType extends MessageTypesWithNullRequest>(
             message: TMessageType
         ): Promise<void> => {
             return new Promise<void>((resolve, reject) => {
@@ -50,15 +49,16 @@ export default class ExtWeb2 extends Ext {
                 },
                 subscribe: () => {
                     // do nothing, there will never be account changes
-                    return () => {}
+                    return () => {
+                        return
+                    }
                 },
             },
             name: 'procaptcha-web2',
             version: '0.0.1',
-            signer
+            signer,
         }
     }
-
 
     private async createAccount(wsProvider: WsProvider): Promise<InjectedAccount> {
         const params = {

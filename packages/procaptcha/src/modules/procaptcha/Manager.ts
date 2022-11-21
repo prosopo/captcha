@@ -22,10 +22,9 @@ export interface Account {
  * The configuration of Procaptcha. This is passed it to Procaptcha as a prop. Values here are not updated by Procaptcha and are considered immutable from within Procaptcha.
  */
 export interface ProcaptchaConfig {
-    userAccountAddress: string // set to empty string for no account
+    userAccountAddress: string // address of the user's account, undefined if not set / in web2 mode
     web2: boolean // set to true to use the web2 version of Procaptcha, else web3 version
     dappName: string // the name of the dapp accessing accounts (e.g. Prosopo)
-    dappUrl: string // the url of the dapp
     network: ProsopoNetwork // the network to use, e.g. "moonbeam", "edgeware", etc
     solutionThreshold: number // the threshold of solutions solved by the user to be considered human
 }
@@ -134,10 +133,13 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 return
             }
 
-            console.log('Starting procaptcha', state.config)
+            console.log('Starting procaptcha using config:', state.config)
             resetState()
             // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
             updateState({ loading: true })
+
+            // allow UI to catch up with the loading state
+            await sleep(100)
 
             // check accounts / setup accounts
             const account = await loadAccount()
@@ -164,7 +166,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
                 // so contact the provider to check if this is the case
                 try {
-                    const verifyDappUserResponse = await providerApi.verifyDappUser(state.config.userAccountAddress)
+                    const verifyDappUserResponse = await providerApi.verifyDappUser(account.account.address)
                     if (verifyDappUserResponse.solutionApproved) {
                         updateState({ isHuman: true, loading: false })
                         events.onHuman()
@@ -327,7 +329,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
     ) => {
         // setup the captcha api to carry out a challenge
         const captchaApi = new ProsopoCaptchaApi(
-            state.config.userAccountAddress,
+            getAccount().account.address,
             contract,
             provider,
             providerApi,
@@ -359,14 +361,14 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
      * Load the account using address specified in config, or generate new address if not found in local storage for web2 mode.
      */
     const loadAccount = async () => {
-        // check if account has been provided in config
-        if (!state.config.userAccountAddress) {
-            throw new Error('Procaptcha: account address has not been set')
+        // check if account has been provided in config (doesn't matter in web2 mode)
+        if (!state.config.web2 && !state.config.userAccountAddress) {
+            throw new Error('Account address has not been set for web3 mode')
         }
 
         // check if account exists in extension
         const ext = state.config.web2 ? new ExtWeb2() : new ExtWeb3()
-        const account = await ext.getAccount(state.config) // todo don't pass the whole config
+        const account = await ext.getAccount(state.config)
 
         console.log('Using account:', account)
         updateState({ account })
@@ -389,7 +391,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         const contract = await ProsopoContract.create(
             state.config.network.prosopoContract.address,
             state.config.network.dappContract.address,
-            state.config.userAccountAddress,
+            getAccount().account.address,
             new WsProvider(state.config.network.endpoint)
         )
 

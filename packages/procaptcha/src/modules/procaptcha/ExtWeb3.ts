@@ -11,6 +11,10 @@ export default class ExtWeb3 extends Ext {
     public async getAccount(config: ProcaptchaConfig): Promise<Account> {
         const { dappName, userAccountAddress: address } = config
 
+        if (!address) {
+            throw new AccountNotFoundError('No account address provided')
+        }
+
         // enable access to all extensions
         const extensions: InjectedExtension[] = await web3Enable(dappName)
         if (extensions.length === 0) {
