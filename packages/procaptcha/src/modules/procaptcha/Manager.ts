@@ -132,6 +132,10 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 console.log('Procaptcha already loading')
                 return
             }
+            if (state.isHuman) {
+                console.log('already human')
+                return
+            }
 
             console.log('Starting procaptcha using config:', state.config)
             resetState()
