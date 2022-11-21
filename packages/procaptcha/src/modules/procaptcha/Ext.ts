@@ -1,6 +1,4 @@
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { Account, ProcaptchaConfig } from './Manager'
-import { AccountCreationUnsupportedError } from './errors'
 
 /**
  * Class to interface with accounts.
@@ -15,7 +13,4 @@ export default abstract class Ext {
      */
     public abstract getAccount(config: ProcaptchaConfig): Promise<Account>
 
-    public createAccount(): Promise<InjectedAccountWithMeta> {
-        throw new AccountCreationUnsupportedError()
-    }
 }
