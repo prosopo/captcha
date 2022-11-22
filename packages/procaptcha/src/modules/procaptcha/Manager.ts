@@ -29,6 +29,10 @@ export interface ProcaptchaConfig {
     solutionThreshold: number // the threshold of solutions solved by the user to be considered human
 }
 
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<T>
+
+export type ProcaptchaConfigOptional = Optional<Optional<ProcaptchaConfig, 'userAccountAddress'>, 'web2'>
+
 /**
  * The state of Procaptcha. This is mutated as required to reflect the captcha process.
  */
@@ -36,7 +40,6 @@ export interface ProcaptchaState {
     isHuman: boolean // is the user human?
     index: number // the index of the captcha round currently being shown
     solutions: string[][] // the solutions for each captcha round
-    config: ProcaptchaConfig // the config / env variables for the captcha process
     captchaApi: ProsopoCaptchaApi | undefined // the captcha api instance for managing captcha challenge. undefined if not set up
     challenge: GetCaptchaResponse | undefined // the captcha challenge from the provider. undefined if not set up
     showModal: boolean // whether to show the modal or not
@@ -93,7 +96,12 @@ const sleep = (ms) => {
 /**
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
-export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, callbacks: ProcaptchaCallbacks) => {
+export const Manager = (
+    configOptional: ProcaptchaConfigOptional,
+    state: ProcaptchaState,
+    onStateUpdate: StateUpdateFn,
+    callbacks: ProcaptchaCallbacks
+) => {
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
     const events: Events = Object.assign(
         {
@@ -124,6 +132,23 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
     const updateState = buildUpdateState(state, onStateUpdate)
 
     /**
+     * Build the config on demand, using the optional config passed in from the outside. State may override various config values depending on the state of the captcha process. E.g. if the process has been started using account "ABC" and then the user changes account to "DEF" via the optional config prop, the account in use will not change. This is because the captcha process has already been started using account "ABC".
+     * @returns the config for procaptcha
+     */
+    const getConfig = () => {
+        const config: ProcaptchaConfig = {
+            web2: false,
+            userAccountAddress: '',
+            ...configOptional,
+        }
+        // overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user changes account in the middle of the captcha process.
+        if (state.account) {
+            config.userAccountAddress = state.account.account.address
+        }
+        return config
+    }
+
+    /**
      * Called on start of user verification. This is when the user ticks the box to claim they are human.
      */
     const start = async () => {
@@ -137,10 +162,13 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
                 return
             }
 
-            console.log('Starting procaptcha using config:', state.config)
             resetState()
             // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
             updateState({ loading: true })
+
+            // snapshot the config into the state
+            const config = getConfig()
+            console.log('Starting procaptcha using config:', config)
 
             // allow UI to catch up with the loading state
             await sleep(100)
@@ -152,7 +180,7 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             // first, ask the smart contract
             const contract = await loadContract()
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-            const contractIsHuman = await contract.dappOperatorIsHumanUser(state.config.solutionThreshold)
+            const contractIsHuman = await contract.dappOperatorIsHumanUser(config.solutionThreshold)
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
@@ -164,7 +192,6 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
             const providerUrlFromStorage = storage.getProviderUrl()
             let providerApi: ProviderApi
             if (providerUrlFromStorage) {
-
                 providerApi = await loadProviderApi(providerUrlFromStorage)
 
                 // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
@@ -331,13 +358,14 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
         provider: ProsopoRandomProviderResponse,
         providerApi: ProviderApi
     ) => {
+        const config = getConfig()
         // setup the captcha api to carry out a challenge
         const captchaApi = new ProsopoCaptchaApi(
             getAccount().account.address,
             contract,
             provider,
             providerApi,
-            state.config.web2
+            config.web2
         )
 
         updateState({ captchaApi })
@@ -346,7 +374,8 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
     }
 
     const loadProviderApi = async (providerUrl: string) => {
-        const providerApi = new ProviderApi(state.config.network, providerUrl)
+        const config = getConfig()
+        const providerApi = new ProviderApi(config.network, providerUrl)
         return providerApi
     }
 
@@ -365,14 +394,15 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
      * Load the account using address specified in config, or generate new address if not found in local storage for web2 mode.
      */
     const loadAccount = async () => {
+        const config = getConfig()
         // check if account has been provided in config (doesn't matter in web2 mode)
-        if (!state.config.web2 && !state.config.userAccountAddress) {
+        if (!config.web2 && !config.userAccountAddress) {
             throw new Error('Account address has not been set for web3 mode')
         }
 
         // check if account exists in extension
-        const ext = state.config.web2 ? new ExtWeb2() : new ExtWeb3()
-        const account = await ext.getAccount(state.config)
+        const ext = config.web2 ? new ExtWeb2() : new ExtWeb3()
+        const account = await ext.getAccount(config)
 
         console.log('Using account:', account)
         updateState({ account })
@@ -392,11 +422,12 @@ export const Manager = (state: ProcaptchaState, onStateUpdate: StateUpdateFn, ca
      * Load the contract instance using addresses from config.
      */
     const loadContract = async () => {
+        const config = getConfig()
         const contract = await ProsopoContract.create(
-            state.config.network.prosopoContract.address,
-            state.config.network.dappContract.address,
+            config.network.prosopoContract.address,
+            config.network.dappContract.address,
             getAccount().account.address,
-            new WsProvider(state.config.network.endpoint)
+            new WsProvider(config.network.endpoint)
         )
 
         return contract
