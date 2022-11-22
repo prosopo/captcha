@@ -1,40 +1,33 @@
 import { useState } from 'react'
 import { Box, Button, Typography, FormControl, FormGroup, Stack, TextField, Alert } from '@mui/material'
 
-import { TCaptchaSubmitResult, TExtensionAccount } from '@prosopo/procaptcha'
+import { TCaptchaSubmitResult } from '@prosopo/procaptcha'
 
 import {
     CaptchaComponent,
     CaptchaContextManager,
-    ExtensionAccountSelect,
     useCaptcha,
-    Procaptcha
+    Procaptcha,
+    ExtensionAccountSelect
 } from "@prosopo/procaptcha-react";
-
-import config from './config'
 
 import './App.css'
 import { VerificationResponse } from '@prosopo/api'
 
 function App() {
-    const [showCaptchas, setShowCaptchas] = useState(false)
     const [email, setEmail] = useState<string>('')
     const [name, setName] = useState<string>('')
     const [password, setPassword] = useState('')
-    const [account, setAccount] = useState<TExtensionAccount | null>(null)
+    const [account, setAccount] = useState<string>('')
 
     const [isError, setIsError] = useState(false)
     const [message, setMessage] = useState('')
     const [isLogin, setIsLogin] = useState(true)
 
-    const onAccountChange = (account: TExtensionAccount) => {
-        // if (account) {
-        //     //setShowCaptchas(true);
-        //     console.log({ info: 'Selected account: ' + account?.meta.name })
-        //     setAccount(account)
-        //     console.log('CAPTCHA API', clientInterface.captchaApi)
-        // }
-    }
+    const serverUrl = process.env.REACT_APP_SERVER_URL || ''
+
+    const label = isLogin ? 'Login' : 'Signup'
+    const urlPath = isLogin ? 'login' : 'signup'
 
     const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
         if (submitResult instanceof Error) {
@@ -47,7 +40,7 @@ function App() {
 
     const onLoggedIn = (token) => {
         console.log('getting private resource with token ', token)
-        fetch(`${config.serverUrl}/private`, {
+        fetch(`${serverUrl}/private`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -69,25 +62,19 @@ function App() {
             })
     }
 
-    const onSubmitHandler = () => {
-        //TODO make this always load CAPTCHA challenges, even if the user has already completed one
-        setShowCaptchas(true)
-    }
-
     const onChangeHandler = () => {
         setIsLogin(!isLogin)
         setMessage('')
     }
 
-    const onHuman = async (onSolvedData) => {
-        setShowCaptchas(false)
+    const onHuman = async (data) => {
         const payload = {
             email,
             name,
             password,
-            prosopo: onSolvedData,
+            prosopo: data,
         }
-        fetch(`${config.serverUrl}/${isLogin ? 'login' : 'signup'}`, { 
+        fetch(`${serverUrl}/${urlPath}`, { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -116,22 +103,6 @@ function App() {
             })
     }
 
-    const onChange = (solution: string[][]) => {
-        console.log('onChange:', solution)
-    }
-
-    const onCancel = () => {
-        setShowCaptchas(false)
-        console.log({ info: '' })
-    }
-
-    // const clientInterface = useCaptcha({ config }, { onAccountChange, onChange, onSubmit, onHuman, onCancel })
-
-    const disconnectAccount = () => {
-        // clientInterface.onAccountUnset()
-        console.log({ info: '' })
-    }
-
     const getMessage = () => {
         if (isError) {
             return <Alert severity="error">{message}</Alert>
@@ -140,10 +111,7 @@ function App() {
         }
     }
 
-    // const manager = clientInterface.manager;
-
     const onError = (error: Error) => {
-        console.error(error)
         alert(error.message)
     }
 
@@ -151,11 +119,11 @@ function App() {
         alert(`Account ${address} not found`)
     }
 
-    const conf = {
-        userAccountAddress: '5EXaAvaSP1T4BMeHdtF2AudXq7ooRo6jHwi6HywenfSkedNa',
-        web2: false,
+    const config = {
+        userAccountAddress: account,
+        // userAccountAddress: '5EXaAvaSP1T4BMeHdtF2AudXq7ooRo6jHwi6HywenfSkedNa',
+        web2: process.env.REACT_APP_WEB2 === 'true',
         dappName: 'Prosopo',
-        dappUrl: 'https://localhost:3001',
         network: {
             endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
             prosopoContract: {
@@ -167,22 +135,29 @@ function App() {
                 name: 'dapp',
             },
         },
-        solutionThreshold: 1,
+        solutionThreshold: 80,
     }
 
     return (
         <div>
             <Box className={"App"} sx={{ display: "flex"}}>
                 <Box>
-                    {/* {message ? getMessage() : null}
-                    {clientInterface.extension && !manager.state.account && showCaptchas && clientInterface.extension.getAccounts() &&
-                    <ExtensionAccountSelect
-                        value={manager.state.account}
-                        options={clientInterface.extension.getAccounts()}
-                        onChange={clientInterface.onAccountChange.bind(clientInterface)}
-                    />} */}
+                    <Typography>
+                        {message ? getMessage() : null}    
+                    </Typography>
+                    {
+                        !config.web2 ? (
+                            <ExtensionAccountSelect
+                                dappName={config.dappName}
+                                value={account}
+                                onChange={setAccount}
+                            />
+                        ) : (
+                            <></>
+                        )
+                    }
                     <Box>
-                        <h1>{isLogin ? 'Login' : 'Signup'}</h1>
+                        <h1>{label}</h1>
                         <FormGroup sx={{'& .MuiTextField-root': { m: 1 }}}>
                             <FormControl>
                                 <TextField
@@ -217,16 +192,14 @@ function App() {
                                 />
                             </FormControl>
 
-                            <Procaptcha config={conf} callbacks={{onAccountNotFound, onError}}/>
+                            <Procaptcha config={config} callbacks={{onAccountNotFound, onError, onHuman: () => {
+                                onHuman(null)
+                            }}}/>
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                    <Button variant="contained" onClick={onSubmitHandler}>
-                                        <Typography>Done</Typography>
-                                    </Button>
-
-                                    <Button variant="text" onClick={onChangeHandler}>
-                                        <Typography>{isLogin ? 'Sign Up' : 'Log In'}</Typography>
+                                    <Button variant="contained" onClick={onChangeHandler}>
+                                        <Typography>{label}</Typography>
                                     </Button>
                                 </Stack>
                             </div>
