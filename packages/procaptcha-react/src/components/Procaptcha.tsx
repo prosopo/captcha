@@ -8,18 +8,14 @@ import {
     GetCaptchaResponse,
     ProcaptchaCallbacks,
     ProsopoCaptchaApi,
-    ProsopoContract,
-    ProsopoRandomProviderResponse,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
-import { Manager, ProcaptchaConfig, ProcaptchaState, StateUpdateFn } from '@prosopo/procaptcha'
-import { ProviderApi } from '@prosopo/api'
+import { Manager, ProcaptchaConfigOptional, ProcaptchaState, StateUpdateFn } from '@prosopo/procaptcha'
 import { Alert, Backdrop, CircularProgress } from '@mui/material'
 import CaptchaComponent from './CaptchaComponent'
-import theme from './theme'
 
 export interface ProcaptchaProps {
-    config: ProcaptchaConfig
+    config: ProcaptchaConfigOptional
     callbacks?: Partial<ProcaptchaCallbacks>
 }
 
@@ -32,7 +28,7 @@ const useRefAsState = <T,>(defaultValue: T): [T, (value: T) => void] => {
     return [value, setter]
 }
 
-const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpdateFn] => {
+const useProcaptcha = (): [ProcaptchaState, StateUpdateFn] => {
     // useRef == do not render on variable change
     // useState == do render on variable change
     // only need to render on visible variables changing
@@ -40,10 +36,6 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
     const [isHuman, setIsHuman] = useState(false)
     const [index, setIndex] = useState(-1)
     const [solutions, setSolutions] = useState([])
-    // take a deep copy of the config and store in state. This stops the config from being updated externally to this state management
-    const [config] = useState<ProcaptchaConfig>(() => {
-        return JSON.parse(JSON.stringify(initConfig))
-    })
     const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
     const [showModal, setShowModal] = useState(false)
     const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(undefined)
@@ -70,7 +62,6 @@ const useProcaptcha = (initConfig: ProcaptchaConfig): [ProcaptchaState, StateUpd
             isHuman,
             index,
             solutions,
-            config,
             captchaApi,
             showModal,
             challenge,
@@ -101,8 +92,8 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const config = props.config
     const callbacks = props.callbacks || {}
 
-    const [state, updateState] = useProcaptcha(config)
-    const manager = Manager(state, updateState, callbacks)
+    const [state, updateState] = useProcaptcha()
+    const manager = Manager(config, state, updateState, callbacks)
 
     return (
         <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
@@ -169,7 +160,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                     }}
                                 >
                                     <Box pt={'5px'}>
-                                        <CircularProgress size={'24px'} />
+                                        <CircularProgress size={'24px'} disableShrink />
                                     </Box>
                                 </Box>
                             </Box>
