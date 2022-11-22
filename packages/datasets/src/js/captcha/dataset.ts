@@ -44,14 +44,16 @@ export async function buildCaptchaTree(
 export async function addItemHashesAndSolutionHashesToDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     return {
         ...datasetRaw,
-        captchas: datasetRaw.captchas.map((captcha) => {
-            const items = calculateItemHashes(captcha.items)
+        captchas: await Promise.all(
+            datasetRaw.captchas.map(async (captcha) => {
+                const items = await calculateItemHashes(captcha.items)
 
-            return {
-                ...captcha,
-                items,
-                solution: matchItemsToSolutions(captcha.solution, items),
-            }
-        }),
+                return {
+                    ...captcha,
+                    items,
+                    solution: matchItemsToSolutions(captcha.solution, items),
+                }
+            })
+        ),
     } as Dataset
 }

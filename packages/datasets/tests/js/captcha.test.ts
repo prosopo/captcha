@@ -289,8 +289,7 @@ describe('CAPTCHA FUNCTIONS', () => {
 
     it('Pending request hash is calculated properly', () => {
         const hash = computePendingRequestHash(['1', '2', '3'], '0x01', '0x02')
-
-        expect(hash).to.equal('0xc9fcde85cfc0267d8717b5276257022e22e2873c505d8dc3b3d3f972a37c53e9')
+        expect(hash).to.equal('0x0c85e41f84c1b6b29ee2f7eae88512caa28fa82c3389fad3b875fd06dcab9da5')
     })
 
     it('Computes a captcha solution hash correctly', () => {
@@ -300,34 +299,34 @@ describe('CAPTCHA FUNCTIONS', () => {
             solution: matchItemsToSolutions([1, 2], MOCK_ITEMS),
         } as CaptchaSolution
         const hash = computeCaptchaSolutionHash(captchaSolution)
-        expect(hash).to.be.equal('0xa26f49212be76e31a140a728e5ce405101f262558b0e08ab59cf9e23c4f1614f')
+        expect(hash).to.be.equal('0xfdf822f1c56ad8e96da77f18f5927f24e988c684fd276150b37e5b936c2e899c')
     })
 
     it('Verifies a valid merkle proof', () => {
         const proof = [
             [
-                '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16',
-                '0xff4b64779f85d48204aea342d1b976a57a31f5f8eaa0f264fc5308f098b0e887',
+                '0xb2b33ccc7d240ab8ed24b8f77a32fd2825e78972c8a8cea359f11edc9ac26734',
+                '0x946e6735cf57db19ed353dfc9b9fb515e219438225706bfcf20366739eb07176',
             ],
             [
-                '0x23eef831153a067d5b4376ea7e933bbe21d7382d9c0ce79d7018a05c3281d69a',
-                '0xb9f0bdbeff385c4b39172fd7fa9282d136468bee4c35fe55d04bc21010b975aa',
+                '0xa6597728483934391c473f854ccfbce98c2f93edd9984ea7c473d3c4d86574b5',
+                '0x208f6d9d66f06b6859ea00921fe46dc775610330c746f6fa9d9da9bb9cce1409',
             ],
             [
-                '0x867a0a6b3e67c083233988d912ea93a0f71ed01f07e74d720e27e041fb4a229b',
-                '0x26698f2a3fc5f93fd51dd8153c8d246eaafa7dd0f215b9c0135d3e41710a14e9',
+                '0xc0a845f2457f68504398277783c1d4c35ace06296e7ae599114f314cd1168137',
+                '0x4d865bc0d29808adac611017b690bc685d8dd166b757cf95b11207ba9510d6b5',
             ],
             [
-                '0x8230f43abcd6e97c6748affa840d31a9ead5733e3c4063e217c6621cd0f98b84',
-                '0x97f0025c96ac960a33c551ae6a2a50a3c39045006eed5a896fa8a9463e44ee29',
+                '0xc9400eaa4374786917ac6df0ee2481f63a008486d8e10fe00e88f267f9d2a5dd',
+                '0xdf2f96bd502a7b1e075f9e8e70ce70a778dbaf81a56ab5bb6570b70afbf626af',
             ],
             [
-                '0xd173b71900767ac305747c2c627dee7d0b95aaeb2324c74ef9316edf2b072de9',
-                '0x4d487ca588902640e2867a0da3c1d8525527eb89c8271a8908ee1c4cd642d61c',
+                '0xa2224c0acf395506f8bbc2635e03abb2ea4b239c3bf93c95379b4823764e0494',
+                '0x2add79b6e2c7253a98d751df9df8fae644c3ff761fe4684b836a4338804e017b',
             ],
-            ['0xa49817ec0fc10a22888882c4b7676a997b159d0cd42501f2d5f1e114afd332cd'],
+            ['0xeee6c87e8ad5cd1fc05ea0d8874067d87918f1b141fdabd12352ad59b779cc80'],
         ]
-        const leaf = '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16'
+        const leaf = '0xb2b33ccc7d240ab8ed24b8f77a32fd2825e78972c8a8cea359f11edc9ac26734'
         const verification = verifyProof(leaf, proof)
         expect(verification).to.be.true
     })

@@ -25,7 +25,7 @@ import {
     Item,
     RawSolution,
 } from '../types/index'
-import { hexHash, hexHashArray } from './util'
+import { downloadImage, hexHash, hexHashArray } from './util'
 import { ProsopoEnvError } from '../types/error'
 import { isHex } from '@polkadot/util'
 
@@ -136,15 +136,18 @@ export function computeCaptchaHash(
     }
 }
 
-export function calculateItemHashes(items: Item[]): Item[] {
-    //TODO actually hash the images
-    return items.map((item) => {
-        if (item.type === 'image' || item.type === 'text') {
-            return { ...item, hash: hexHash(item.data as string) }
-        } else {
-            throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_FORMAT')
-        }
-    })
+export async function calculateItemHashes(items: Item[]): Promise<Item[]> {
+    return Promise.all(
+        items.map(async (item) => {
+            if (item.type === 'text') {
+                return { ...item, hash: hexHash(item.data as string) }
+            } else if (item.type === 'image') {
+                return { ...item, hash: hexHash(await downloadImage(item.data)) }
+            } else {
+                throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_FORMAT')
+            }
+        })
+    )
 }
 
 /**
@@ -191,7 +194,7 @@ export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
  * @return {string}
  */
 export function computePendingRequestHash(captchaIds: string[], userAccount: string, salt: string): string {
-    return hexHash([...captchaIds.sort(), userAccount, salt].join(''))
+    return hexHashArray([...captchaIds.sort(), userAccount, salt])
 }
 
 /**
