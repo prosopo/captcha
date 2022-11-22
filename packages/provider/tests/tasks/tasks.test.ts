@@ -41,6 +41,15 @@ chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function sleep(timeout) {
+    await delay(timeout)
+    console.log('Timeout reached')
+}
+
 describe('CONTRACT TASKS', () => {
     let providerStakeDefault: bigint
     const mockEnv = new MockEnvironment()
@@ -109,6 +118,7 @@ describe('CONTRACT TASKS', () => {
         const dappContractAccount = await getUser(AccountKey.dappsWithStake)
         const tasks = await changeSigner(providerAccount)
         const providerDetails = await tasks.getProviderDetails(accountAddress(providerAccount))
+        //await sleep(132000)
         const solvedCaptchas = await mockEnv.db!.getRandomSolvedCaptchasFromSingleDataset(providerDetails.dataset_id, 2)
         await mockEnv.changeSigner(accountMnemonic(dappUserAccount))
 
@@ -720,6 +730,7 @@ describe('CONTRACT TASKS', () => {
                 accountAddress(dappUserAccount),
                 accountAddress(dappAccount)
             )
+
             const { captchas, requestHash } = await dappUserTasks.getRandomCaptchasAndRequestHash(
                 provider.dataset_id as string,
                 hexHash(accountAddress(dappUserAccount))

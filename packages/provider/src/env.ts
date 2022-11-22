@@ -88,7 +88,9 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getSigner(): Promise<void> {
-        this.api = await ApiPromise.create({ provider: this.wsProvider })
+        if (!this.api) {
+            this.api = await ApiPromise.create({ provider: this.wsProvider })
+        }
         await this.api.isReadyOrError
         const { mnemonic } = this
         if (!mnemonic) {

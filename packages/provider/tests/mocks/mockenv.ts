@@ -121,7 +121,9 @@ export class MockEnvironment implements ProsopoEnvironment {
     }
 
     async getSigner(): Promise<void> {
-        this.api = await ApiPromise.create({ provider: this.wsProvider })
+        if (!this.api) {
+            this.api = await ApiPromise.create({ provider: this.wsProvider })
+        }
         await this.api.isReadyOrError
         const { mnemonic } = this
         if (!mnemonic) {
@@ -150,7 +152,6 @@ export class MockEnvironment implements ProsopoEnvironment {
 
     async isReady() {
         try {
-            console.log('env isReady function')
             this.api = await ApiPromise.create({ provider: this.wsProvider })
             await this.getSigner()
             await this.getContractApi()

@@ -78,7 +78,7 @@ export class ProsopoDatabase implements Database {
             if (this.connection) {
                 return resolve()
             }
-            this.logger.debug(`mongo url: ${this.url}`)
+            this.logger.info(`mongo url: ${this.url}`)
             mongoose.connect(this.url, { dbName: this.dbname })
             this.connection = mongoose.connection
             this.tables = {
@@ -136,7 +136,7 @@ export class ProsopoDatabase implements Database {
                     captchaDocs.map((captchaDoc) => ({
                         updateOne: {
                             filter: { captchaId: captchaDoc.captchaId },
-                            update: { captchaDoc },
+                            update: { $set: captchaDoc },
                             upsert: true,
                         },
                     }))
@@ -474,6 +474,7 @@ export class ProsopoDatabase implements Database {
             {
                 $project: {
                     captchaId: 1,
+                    captchaContentId: 1,
                     solution: 1,
                 },
             },

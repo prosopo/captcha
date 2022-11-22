@@ -47,8 +47,8 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
     captchaId: { type: String, required: true },
     captchaContentId: { type: String, required: true },
     assetURI: { type: String, required: false },
-    datasetId: { type: String, required: false },
-    datasetContentId: { type: String, required: false },
+    datasetId: { type: String, required: true },
+    datasetContentId: { type: String, required: true },
     solved: { type: Boolean, required: true },
     target: { type: String, required: true },
     salt: { type: String, required: true },
@@ -56,9 +56,9 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
         type: [
             new Schema<Item>(
                 {
-                    hash: String,
-                    data: String,
-                    type: String,
+                    hash: { type: String, required: true },
+                    data: { type: String, required: true },
+                    type: { type: String, required: true },
                 },
                 { _id: false }
             ),

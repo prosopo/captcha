@@ -14,7 +14,7 @@
     "start": "node ./dist/cli/start.js",
     "serve": "npm run setup && npm run start",
     "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
-    "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" --timeout 120000 && exit 0",
+    "test": "NODE_ENV=test ts-mocha tests/**/*.test.ts --timeout 120000 --recursive --exit",
     "coverage": "npx c8 npm run test",
     "populate-data": "ts-node ./src/dataUtils/populateDatabase.ts",
     "dev-provider-register": "npm run cli -- provider_register --fee=10 --origin=https://localhost:8282 --payee=Provider --address=$PROVIDER_ADDRESS",

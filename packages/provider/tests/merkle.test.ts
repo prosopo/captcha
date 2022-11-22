@@ -66,10 +66,6 @@ describe('PROVIDER MERKLE TREE', () => {
         DATASET.captchas[1].solution = matchItemsToSolutions([2], DATASET.captchas[1].items)
     })
 
-    after(() => {
-        process.exit()
-    })
-
     it('Tree contains correct leaf hashes when computing leaf hashes', () => {
         const dataset = DATASET
         const tree = new CaptchaMerkleTree()
