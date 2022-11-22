@@ -35,7 +35,7 @@ import { MockEnvironment } from '../mocks/mockenv'
 import { populateDatabase } from '../dataUtils/populateDatabase'
 import { DappUserSolutionResult } from '../../src/types/api'
 import { i18n } from '@prosopo/i18n'
-import { after, before } from 'mocha'
+import { before } from 'mocha'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -109,7 +109,6 @@ describe('CONTRACT TASKS', () => {
         const dappContractAccount = await getUser(AccountKey.dappsWithStake)
         const tasks = await changeSigner(providerAccount)
         const providerDetails = await tasks.getProviderDetails(accountAddress(providerAccount))
-
         const solvedCaptchas = await mockEnv.db!.getRandomSolvedCaptchasFromSingleDataset(providerDetails.dataset_id, 2)
         await mockEnv.changeSigner(accountMnemonic(dappUserAccount))
 

@@ -69,7 +69,9 @@ export class Environment implements ProsopoEnvironment {
                 type: 'sr25519', // TODO get this from the chain
             })
             this.abi = abiJson as ContractAbi
-
+            this.importDatabase().catch((err) => {
+                this.logger.error(err)
+            })
             this.assetsResolver = new LocalAssetsResolver({
                 absolutePath: this.config.assets.absolutePath,
                 basePath: this.config.assets.basePath,
@@ -118,7 +120,6 @@ export class Environment implements ProsopoEnvironment {
             this.api = await ApiPromise.create({ provider: this.wsProvider })
             await this.getSigner()
             await this.getContractApi()
-            await this.importDatabase()
             await this.db?.connect()
         } catch (err) {
             throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
@@ -131,7 +132,8 @@ export class Environment implements ProsopoEnvironment {
                 const { ProsopoDatabase } = await import(`./db/${this.config.database[this.defaultEnvironment].type}`)
                 this.db = new ProsopoDatabase(
                     this.config.database[this.defaultEnvironment].endpoint,
-                    this.config.database[this.defaultEnvironment].dbname
+                    this.config.database[this.defaultEnvironment].dbname,
+                    this.config.database[this.defaultEnvironment].authSource
                 )
             }
         } catch (err) {

@@ -72,7 +72,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 captchaBlockRecency: 10,
             },
             database: {
-                development: { type: 'mongo', endpoint: '', dbname: '' },
+                development: { type: 'mongo', endpoint: '', dbname: 'prosopo' },
             },
             assets: {
                 absolutePath: '',
@@ -150,10 +150,16 @@ export class MockEnvironment implements ProsopoEnvironment {
 
     async isReady() {
         try {
+            console.log('env isReady function')
             this.api = await ApiPromise.create({ provider: this.wsProvider })
             await this.getSigner()
             await this.getContractApi()
-            await this.importDatabase()
+            if (!this.db) {
+                await this.importDatabase().catch((err) => {
+                    this.logger.error(err)
+                })
+            }
+
             await this.db?.connect()
         } catch (err) {
             throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')

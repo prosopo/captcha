@@ -63,8 +63,9 @@ export class ProsopoDatabase implements Database {
 
     connection?: Connection
 
-    constructor(url, dbname, logger) {
-        this.url = `${url || DEFAULT_ENDPOINT}/${dbname}?authSource=admin`
+    constructor(url: string, dbname: string, logger: typeof consola, authSource?: string) {
+        const authSourceString = authSource ? `?authSource=${authSource}` : ''
+        this.url = `${url || DEFAULT_ENDPOINT}/${dbname}${authSourceString}`
         this.dbname = dbname
         this.logger = logger
     }
@@ -73,8 +74,13 @@ export class ProsopoDatabase implements Database {
      * @description Connect to the database and set the dataset and captcha tables
      */
     async connect(): Promise<void> {
-        try {
-            this.connection = await mongoose.createConnection(this.url)
+        return new Promise((resolve, reject) => {
+            if (this.connection) {
+                return resolve()
+            }
+            this.logger.debug(`mongo url: ${this.url}`)
+            mongoose.connect(this.url, { dbName: this.dbname })
+            this.connection = mongoose.connection
             this.tables = {
                 captcha: this.connection.model('Captcha', CaptchaRecordSchema),
                 dataset: this.connection.model('Dataset', DatasetRecordSchema),
@@ -82,9 +88,17 @@ export class ProsopoDatabase implements Database {
                 usersolution: this.connection.model('UserSolution', UserSolutionRecordSchema),
                 pending: this.connection.model('Pending', PendingRecordSchema),
             }
-        } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.CONNECT_ERROR', {}, this.url)
-        }
+            this.connection.once('open', resolve).on('error', (e) => {
+                if (e.message.code === 'ETIMEDOUT') {
+                    this.logger.error(e)
+
+                    mongoose.connect(this.url)
+                }
+
+                this.logger.error(e)
+                reject(new ProsopoEnvError(e, 'DATABASE.CONNECT_ERROR', {}, this.url))
+            })
+        })
     }
 
     /**
@@ -122,11 +136,10 @@ export class ProsopoDatabase implements Database {
                     captchaDocs.map((captchaDoc) => ({
                         updateOne: {
                             filter: { captchaId: captchaDoc.captchaId },
-                            update: { $set: captchaDoc },
+                            update: { captchaDoc },
                             upsert: true,
                         },
-                    })),
-                    callbackFn
+                    }))
                 )
             }
 
@@ -321,7 +334,6 @@ export class ProsopoDatabase implements Database {
      * @param {[string]} captchaIds
      */
     async removeDappUserSolutions(captchaIds: string[]): Promise<void> {
-        console.log('removeDappUserSolutions', captchaIds)
         await this.tables?.usersolution.deleteMany({ 'captchas.captchaId': { $in: captchaIds } })
     }
 

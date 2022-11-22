@@ -75,9 +75,16 @@ export const DatasetRecordSchema = new Schema<DatasetBase>({
     solutionTree: { type: [[String]], required: true },
 })
 
-export const SolutionRecordSchema = new Schema<CaptchaSolution>({
+export interface SolutionRecord extends CaptchaSolution {
+    datasetId: string
+    datasetContentId: string
+}
+
+export const SolutionRecordSchema = new Schema<SolutionRecord>({
     captchaId: { type: String, required: true },
     captchaContentId: { type: String, required: true },
+    datasetId: { type: String, required: true },
+    datasetContentId: { type: String, required: true },
     salt: { type: String, required: true },
     solution: { type: [String], required: true },
 })
