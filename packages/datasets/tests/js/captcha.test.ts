@@ -24,12 +24,13 @@ import {
     computeCaptchaSolutionHash,
     computePendingRequestHash,
     matchItemsToSolutions,
+    parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
-    parseCaptchaSolutions,
     sortAndComputeHashes,
     verifyProof,
 } from '@prosopo/datasets'
 import path from 'path'
+import { after, it } from 'mocha'
 
 const MOCK_ITEMS = calculateItemHashes(
     new Array(9).fill(0).map((_, i) => ({
@@ -168,7 +169,7 @@ describe('CAPTCHA FUNCTIONS', () => {
             '[{ "captchaId": "1", "captchaContentId": "1", "solution": ["0x1", "0x2", "0x3"], "salt" : "salt" }, { "captchaId": "2", "captchaContentId": "2", "solution": ["0x1", "0x2", "0x3"], "salt" : "salt" }]'
         ) as JSON
 
-        expect(parseCaptchaSolutions(captchaSolutions).length).to.equal(2)
+        expect(parseAndSortCaptchaSolutions(captchaSolutions).length).to.equal(2)
     })
 
     it('Invalid Captcha solutions are not successfully parsed', () => {
@@ -177,7 +178,7 @@ describe('CAPTCHA FUNCTIONS', () => {
         ) as JSON
 
         expect(function () {
-            parseCaptchaSolutions(captchaSolutions)
+            parseAndSortCaptchaSolutions(captchaSolutions)
         }).to.throw()
     })
 
@@ -224,6 +225,7 @@ describe('CAPTCHA FUNCTIONS', () => {
         const received = [
             {
                 captchaId: '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
+                captchaContentId: '',
                 solution: matchItemsToSolutions([1, 2, 3], MOCK_ITEMS),
                 salt: '',
             },
@@ -232,6 +234,7 @@ describe('CAPTCHA FUNCTIONS', () => {
         const stored = [
             {
                 captchaId: '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
+                captchaContentId: '',
                 salt: '0x1',
                 items: [],
                 target: '',
@@ -247,11 +250,13 @@ describe('CAPTCHA FUNCTIONS', () => {
         const noSolutions = [
             {
                 captchaId: '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
+                captchaContentId: '',
                 solution: [],
                 salt: '',
             },
             {
                 captchaId: '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
+                captchaContentId: '',
                 solution: [],
                 salt: '',
             },
@@ -260,6 +265,7 @@ describe('CAPTCHA FUNCTIONS', () => {
             {
                 // created using [ 2, 5, 7 ] as solution
                 captchaId: '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
+                captchaContentId: '',
                 datasetId: '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
                 index: 13,
                 items: [],
@@ -269,6 +275,7 @@ describe('CAPTCHA FUNCTIONS', () => {
             },
             {
                 captchaId: '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
+                captchaContentId: '',
                 datasetId: '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
                 index: 3,
                 items: [],
@@ -355,7 +362,7 @@ describe('CAPTCHA FUNCTIONS', () => {
     it('Fails to verify junk data', () => {
         const proof = 'junk'
         const leaf = '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16'
-        const verification = verifyProof(leaf, proof)
+        const verification = verifyProof(leaf, [[proof]])
         expect(verification).to.be.false
     })
 })
