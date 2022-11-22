@@ -13,33 +13,56 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
-import { SyntheticEvent } from 'react'
+import { SyntheticEvent, useEffect, useState } from 'react'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
-import { TExtensionAccount } from '@prosopo/procaptcha'
 import { useTranslation } from '@prosopo/i18n'
+import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'
+import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 
 export const ExtensionAccountSelect = ({
     value,
-    options,
+    dappName,
     onChange,
 }: {
-    value?: TExtensionAccount
-    options: TExtensionAccount[]
-    onChange: (value: TExtensionAccount | null) => void
+    value?: string
+    dappName: string
+    onChange: (value: string) => void
 }) => {
     const { t } = useTranslation()
+    const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
+
+    useEffect(() => {
+        const prom = web3Enable(dappName).then(() => {
+            console.log('subscribe')
+            return web3AccountsSubscribe(setAccounts)
+        })
+        return () => {
+            console.log('unsubscribe')
+            prom.then((unsub) => unsub())
+        }
+    }, [])
+
+    const account: InjectedAccountWithMeta | null = accounts.find((a) => a.address === value) || null
 
     return (
         <Autocomplete
             disablePortal
-            id="select-accounts"
-            options={options}
-            value={value}
+            id="select-account"
+            options={accounts}
+            value={account}
             isOptionEqualToValue={(option, value) => option.address === value.address}
-            onChange={(event: SyntheticEvent<Element, Event>, value: TExtensionAccount | null) => onChange(value)}
+            onChange={(event: SyntheticEvent<Element, Event>, value: InjectedAccountWithMeta | null) => {
+                if (value) {
+                    console.log('Selected account:', value)
+                    onChange(value.address)
+                } else {
+                    console.log('Deselected account')
+                    onChange('')
+                }
+            }}
             sx={{ width: 550 }}
-            getOptionLabel={(option: any) => `${option.meta.name}\n${option.address}`}
+            getOptionLabel={(option: InjectedAccountWithMeta) => `${option.meta.name}: ${option.address}`}
             renderInput={(props) => <TextField {...props} label={t('WIDGET.SELECT_ACCOUNT')} />}
         />
     )
