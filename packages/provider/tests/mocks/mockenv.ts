@@ -150,18 +150,27 @@ export class MockEnvironment implements ProsopoEnvironment {
         return this.contractInterface
     }
 
-    async isReady() {
+    async isReady(): Promise<void> {
         try {
-            this.api = await ApiPromise.create({ provider: this.wsProvider })
+            if (!this.api) {
+                this.api = await ApiPromise.create({ provider: this.wsProvider })
+            }
             await this.getSigner()
             await this.getContractApi()
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
                     this.logger.error(err)
                 })
+            } else if (this.db?.connection?.readyState !== 1) {
+                this.db
+                    .connect()
+                    .then(() => {
+                        this.logger.info(`connected to db`)
+                    })
+                    .catch((err) => {
+                        this.logger.error(err)
+                    })
             }
-
-            await this.db?.connect()
         } catch (err) {
             throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
         }

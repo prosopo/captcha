@@ -65,7 +65,8 @@ export class ProsopoDatabase implements Database {
 
     constructor(url: string, dbname: string, logger: typeof consola, authSource?: string) {
         const authSourceString = authSource ? `?authSource=${authSource}` : ''
-        this.url = `${url || DEFAULT_ENDPOINT}/${dbname}${authSourceString}`
+        const separator = url.slice(-1) === '/' ? '' : '/'
+        this.url = `${url || DEFAULT_ENDPOINT}${separator}${dbname}${authSourceString}`
         this.dbname = dbname
         this.logger = logger
     }
@@ -76,7 +77,7 @@ export class ProsopoDatabase implements Database {
     async connect(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.connection) {
-                return resolve()
+                resolve()
             }
             this.logger.info(`mongo url: ${this.url}`)
             mongoose.connect(this.url, { dbName: this.dbname })
@@ -89,9 +90,9 @@ export class ProsopoDatabase implements Database {
                 pending: this.connection.model('Pending', PendingRecordSchema),
             }
             this.connection.once('open', resolve).on('error', (e) => {
+                this.logger.info(`mongoose connection  error`)
                 if (e.message.code === 'ETIMEDOUT') {
                     this.logger.error(e)
-
                     mongoose.connect(this.url)
                 }
 

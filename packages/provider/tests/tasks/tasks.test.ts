@@ -35,7 +35,7 @@ import { MockEnvironment } from '../mocks/mockenv'
 import { populateDatabase } from '../dataUtils/populateDatabase'
 import { DappUserSolutionResult } from '../../src/types/api'
 import { i18n } from '@prosopo/i18n'
-import { before } from 'mocha'
+import { after, before } from 'mocha'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -56,22 +56,26 @@ describe('CONTRACT TASKS', () => {
 
     // Create a user of specified type using the databasePopulator
     async function getUser(accountType: AccountKey): Promise<Account> {
-        const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
-        accountConfig[accountType] = 1
-        const databaseAccounts: IDatabaseAccounts = await populateDatabase(mockEnv, accountConfig, false)
-        const account = databaseAccounts[accountType].pop()
-        if (account === undefined) {
-            throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
+        try {
+            const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
+            accountConfig[accountType] = 1
+            const databaseAccounts: IDatabaseAccounts = await populateDatabase(mockEnv, accountConfig, false)
+            const account = databaseAccounts[accountType].pop()
+            if (account === undefined) {
+                throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
+            }
+            return account
+        } catch (e) {
+            throw new ProsopoEnvError(e)
         }
-        return account
     }
 
     before(async () => {
-        try {
-            await mockEnv.isReady()
-        } catch (e) {
-            throw new ProsopoEnvError(e, 'isReady')
-        }
+        // try {
+        await mockEnv.isReady()
+        // } catch (e) {
+        //     throw new ProsopoEnvError(e, 'isReady')
+        // }
 
         // try {
         //   // Seed some initial accounts
