@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 #![cfg_attr(not(feature = "std"), no_std)]
-
+#![feature(derive_default_enum)]
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
 use ink_lang as ink;
@@ -323,7 +323,7 @@ pub mod prosopo {
         #[ink(topic)]
         account: AccountId,
         dataset_id: Hash,
-        dataset_id_content: Hash
+        dataset_id_content: Hash,
     }
 
     // Event emitted when a provider unstakes
@@ -443,7 +443,7 @@ pub mod prosopo {
         /// Returned if there are no active providers
         NoActiveProviders,
         /// Returned if the dataset ID and dataset ID with solutions are identical
-        DatasetIdSolutionsSame
+        DatasetIdSolutionsSame,
     }
 
     impl Prosopo {
@@ -551,9 +551,7 @@ pub mod prosopo {
             let mut new_status = existing.status;
             let balance = existing.balance + self.env().transferred_value();
 
-            if balance >= self.provider_stake_default
-                && existing.dataset_id != Hash::default()
-            {
+            if balance >= self.provider_stake_default && existing.dataset_id != Hash::default() {
                 new_status = GovernanceStatus::Active;
             }
 
@@ -658,7 +656,11 @@ pub mod prosopo {
 
         /// Add a new data set
         #[ink(message)]
-        pub fn provider_add_dataset(&mut self, dataset_id: Hash, dataset_id_content: Hash) -> Result<(), Error> {
+        pub fn provider_add_dataset(
+            &mut self,
+            dataset_id: Hash,
+            dataset_id_content: Hash,
+        ) -> Result<(), Error> {
             if dataset_id == dataset_id_content {
                 return Err(Error::DatasetIdSolutionsSame);
             }
@@ -697,7 +699,7 @@ pub mod prosopo {
             self.env().emit_event(ProviderAddDataset {
                 account: provider_id,
                 dataset_id,
-                dataset_id_content
+                dataset_id_content,
             });
 
             Ok(())
@@ -1056,17 +1058,16 @@ pub mod prosopo {
         /// Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
         /// Threshold is decided by the calling user
         #[ink(message)]
-        pub fn dapp_operator_is_human_user(
-            &self,
-            user: AccountId,
-            threshold: u8,
-        ) -> Result<bool, Error> {
-            let user = self.get_dapp_user(user)?;
-            // determine if correct captchas is greater than or equal to threshold
-            Ok(
-                user.correct_captchas * 100 / (user.correct_captchas + user.incorrect_captchas)
-                    >= threshold.into(),
-            )
+        pub fn dapp_operator_is_human_user(&self, user: AccountId, threshold: u8) -> bool {
+            match self.get_dapp_user(user) {
+                Err(_e) => return false,
+                Ok(user) =>
+                // determine if correct captchas is greater than or equal to threshold
+                {
+                    user.correct_captchas * 100 / (user.correct_captchas + user.incorrect_captchas)
+                        >= threshold.into()
+                }
+            }
         }
 
         #[ink(message)]
@@ -1326,7 +1327,6 @@ pub mod prosopo {
             }
             provider_ids
         }
-
 
         fn get_random_number(&self, min: u64, max: u64, user_account: AccountId) -> u64 {
             let random_seed = self.env().random(user_account.as_ref());
@@ -1670,8 +1670,8 @@ pub mod prosopo {
 
             if let Event::ProviderAddDataset(ProviderAddDataset {
                 account,
-                 dataset_id: dataset_id,
-                 dataset_id_content: datset_id_content,
+                dataset_id: dataset_id,
+                dataset_id_content: datset_id_content,
             }) = decoded_event_unstake
             {
                 assert_eq!(
@@ -2196,9 +2196,7 @@ pub mod prosopo {
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
 
             // Now make sure that the dapp user does not pass the human test
-            let result = contract
-                .dapp_operator_is_human_user(dapp_user_account, 80)
-                .unwrap();
+            let result = contract.dapp_operator_is_human_user(dapp_user_account, 80);
             assert_eq!(result, false);
         }
 
