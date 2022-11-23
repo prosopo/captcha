@@ -4,8 +4,8 @@ export interface ProsopoRandomProviderResponse {
     blockNumber: string;
     provider: ProposoProvider;
 }
-export declare type CaptchaSolutionCommitmentId = string;
-export declare type ProsopoDappOperatorIsHumanUserResponse = boolean;
+export type CaptchaSolutionCommitmentId = string;
+export type ProsopoDappOperatorIsHumanUserResponse = boolean;
 export interface ProposoProvider {
     balance: string;
     datasetId: string;

@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/api",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Wrapper for the provider API",
   "main": "dist/index.js",
   "scripts": {
@@ -21,6 +21,6 @@
   },
   "homepage": "https://github.com/prosopo/api#readme",
   "dependencies": {
-    "@prosopo/datasets": "^0.1.9"
+    "@prosopo/datasets": "^0.1.11"
   }
 }
