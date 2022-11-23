@@ -1,9 +1,9 @@
-import ProsopoContract from '../../api/ProsopoContract'
+import ProsopoContract from '../api/ProsopoContract'
 import { WsProvider } from '@polkadot/rpc-provider'
-import storage from '../storage'
+import storage from './storage'
 import { GetCaptchaResponse, ProsopoRandomProviderResponse, ProviderApi } from '@prosopo/api'
 import { hexToString } from '@polkadot/util'
-import ProsopoCaptchaApi from '../ProsopoCaptchaApi'
+import ProsopoCaptchaApi from './ProsopoCaptchaApi'
 import { CaptchaSolution, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
 import {
     Account,
@@ -13,11 +13,11 @@ import {
     ProcaptchaConfigOptional,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
-} from '../../types/manager'
+} from '../types/manager'
 import { sleep } from '../utils/utils'
-import ExtensionWeb2 from '../../api/ExtensionWeb2'
-import ExtensionWeb3 from '../../api/ExtensionWeb3'
-import { TCaptchaSubmitResult } from '../../types/client'
+import ExtensionWeb2 from '../api/ExtensionWeb2'
+import ExtensionWeb3 from '../api/ExtensionWeb3'
+import { TCaptchaSubmitResult } from '../types/client'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
