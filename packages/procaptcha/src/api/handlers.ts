@@ -17,9 +17,9 @@ import { AxiosResponse } from 'axios'
 
 export class ProsopoApiError extends Error {
     constructor(error: AxiosResponse, context?: string, ...params: any[]) {
-        if ('data' in error) {
+        if (error.data) {
             super(error.data.message)
-        } else if ('statusText' in error) {
+        } else if (error.statusText) {
             super(error.statusText)
         } else {
             super(error.toString())
