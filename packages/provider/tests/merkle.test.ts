@@ -24,44 +24,48 @@ import {
 } from '@prosopo/datasets'
 import { expect } from 'chai'
 
-const DATASET: Dataset = {
-    datasetId: '0x01',
-    captchas: [
-        {
-            salt: '0x01020304',
-            items: calculateItemHashes([
-                { type: CaptchaItemTypes.Text, data: '1' },
-                { type: CaptchaItemTypes.Text, data: 'b' },
-                { type: CaptchaItemTypes.Text, data: 'c' },
-            ]),
-            target: 'letters',
-            solution: [0] as RawSolution[],
-        },
-        {
-            salt: '0x02020304',
-            items: calculateItemHashes([
-                { type: CaptchaItemTypes.Text, data: 'c' },
-                { type: CaptchaItemTypes.Text, data: 'e' },
-                { type: CaptchaItemTypes.Text, data: '3' },
-            ]),
-            target: 'letters',
-        },
-        {
-            salt: '0x03020304',
-            items: calculateItemHashes([
-                { type: CaptchaItemTypes.Text, data: 'h' },
-                { type: CaptchaItemTypes.Text, data: 'f' },
-                { type: CaptchaItemTypes.Text, data: '5' },
-            ]),
-            target: 'letters',
-            solution: [1] as RawSolution[],
-        },
-    ],
-    format: CaptchaTypes.SelectAll,
+async function getDataset(): Promise<Dataset> {
+    return {
+        datasetId: '0x01',
+        captchas: [
+            {
+                salt: '0x01020304',
+                items: await calculateItemHashes([
+                    { type: CaptchaItemTypes.Text, data: '1' },
+                    { type: CaptchaItemTypes.Text, data: 'b' },
+                    { type: CaptchaItemTypes.Text, data: 'c' },
+                ]),
+                target: 'letters',
+                solution: [0] as RawSolution[],
+            },
+            {
+                salt: '0x02020304',
+                items: await calculateItemHashes([
+                    { type: CaptchaItemTypes.Text, data: 'c' },
+                    { type: CaptchaItemTypes.Text, data: 'e' },
+                    { type: CaptchaItemTypes.Text, data: '3' },
+                ]),
+                target: 'letters',
+            },
+            {
+                salt: '0x03020304',
+                items: await calculateItemHashes([
+                    { type: CaptchaItemTypes.Text, data: 'h' },
+                    { type: CaptchaItemTypes.Text, data: 'f' },
+                    { type: CaptchaItemTypes.Text, data: '5' },
+                ]),
+                target: 'letters',
+                solution: [1] as RawSolution[],
+            },
+        ],
+        format: CaptchaTypes.SelectAll,
+    }
 }
 
 describe('PROVIDER MERKLE TREE', () => {
-    before(() => {
+    let DATASET: Dataset
+    before(async () => {
+        DATASET = await getDataset()
         DATASET.captchas[0].solution = matchItemsToSolutions([1, 2], DATASET.captchas[0].items)
         DATASET.captchas[1].solution = matchItemsToSolutions([2], DATASET.captchas[1].items)
     })

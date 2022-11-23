@@ -17,7 +17,7 @@ import consola, { LogLevel } from 'consola'
 import dotenv from 'dotenv'
 import path from 'path'
 import { LocalAssetsResolver } from './assets'
-import { Database, ProsopoConfig, ProsopoEnvironment } from './types'
+import { Database, EnvironmentTypes, ProsopoConfig, ProsopoEnvironment } from './types'
 import prosopoConfig from './prosopo.config'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -40,7 +40,7 @@ export class Environment implements ProsopoEnvironment {
     contractInterface: ContractApiInterface
     mnemonic: string
     contractAddress: string
-    defaultEnvironment: string
+    defaultEnvironment: EnvironmentTypes
     contractName: string
     abi: ContractAbi
     logger: typeof consola
@@ -135,6 +135,7 @@ export class Environment implements ProsopoEnvironment {
                 this.db = new ProsopoDatabase(
                     this.config.database[this.defaultEnvironment].endpoint,
                     this.config.database[this.defaultEnvironment].dbname,
+                    this.logger,
                     this.config.database[this.defaultEnvironment].authSource
                 )
             }

@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-import { loadJSONFile, parseBlockNumber } from '../../src/util'
+import { DappUserSolutionResult, Tasks, loadJSONFile, parseBlockNumber, sendFunds } from '@prosopo/provider'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import path from 'path'
@@ -28,12 +28,9 @@ import {
 } from '@prosopo/datasets'
 import { TransactionResponse, getEventsFromMethodName } from '@prosopo/contract'
 import { Account, AccountKey, IDatabaseAccounts, accountAddress, accountMnemonic } from '../dataUtils/DatabaseAccounts'
-import { Tasks } from '../../src/tasks/tasks'
 import { DAPP, PROVIDER } from '../mocks/accounts'
-import { sendFunds } from '../../src/tasks/setup'
 import { MockEnvironment } from '../mocks/mockenv'
 import { populateDatabase } from '../dataUtils/populateDatabase'
-import { DappUserSolutionResult } from '../../src/types/api'
 import { i18n } from '@prosopo/i18n'
 import { after, before } from 'mocha'
 

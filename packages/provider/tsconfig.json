@@ -1,15 +1,13 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "rootDirs": ["./src", "./tests"],
+    "rootDir": "./src",
     "outDir": "./dist",
     "module": "commonjs",
-    "target": "esnext",
-    "types": ["jest"]
+    "target": "esnext"
   },
   "include": [
-    "./src/**/*.ts",
-    "./tests/**/*.ts"
+    "./src/**/*.ts"
   ],
   "files": [
     "./src/prosopo.config.js"
@@ -17,6 +15,9 @@
   "references": [
     {
       "path": "../contract"
+    },
+    {
+      "path": "../datasets"
     }
   ]
 }

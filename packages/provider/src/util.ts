@@ -15,8 +15,7 @@ import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import fs, { WriteStream, createWriteStream } from 'fs'
 import { Captcha, ProsopoEnvError } from '@prosopo/datasets'
-import { CaptchaSolution, arrayJoin, captchaSort } from '@prosopo/datasets'
-import { DappUserSolution } from './types/index'
+import { CaptchaSolution, arrayJoin } from '@prosopo/datasets'
 import pl from 'nodejs-polars'
 import consola from 'consola'
 
@@ -112,7 +111,7 @@ export async function promiseQueue<T>(array: (() => Promise<T>)[]): Promise<Prom
                 if (res) {
                     ret.push({ data: res })
                 }
-                return curr()
+                return curr() as any
             })
             .catch((err) => {
                 ret.push({ data: err })
@@ -134,19 +133,6 @@ export function parseBlockNumber(blockNumberString: string) {
 //         : undefined;
 //     config(envPath);
 // }
-
-export function extractSolutionsFromDappUserSolutions(
-    captchaIds: string[],
-    dappUserCommitments: DappUserSolution[]
-): CaptchaSolution[] {
-    // This could be simplified by storing solutions in a separate table to avoid the need to filter
-    // solutions = [{captchaId: '0x123', solution: ['0x123', '0x456']}, {captchaId: '0x456', solution: ['0x123', '0x456']}]
-    return dappUserCommitments
-        .map((commitment) => commitment.captchas)
-        .flat()
-        .filter((captcha: CaptchaSolution) => captchaIds.indexOf(captcha.captchaId) !== -1)
-        .sort(captchaSort)
-}
 
 export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumberOfSolutions: number) {
     if (solutions.length === 0) {

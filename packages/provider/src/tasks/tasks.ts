@@ -52,15 +52,15 @@ import {
 } from '@prosopo/datasets'
 import consola from 'consola'
 import { buildDecodeVector } from '../codec/codec'
-import { CaptchaWithProof, DappUserSolution, DappUserSolutionResult, Database, ProsopoEnvironment } from '../types'
 import {
-    calculateNewSolutions,
-    extractSolutionsFromDappUserSolutions,
-    loadJSONFile,
-    shuffleArray,
-    updateSolutions,
-    writeJSONFile,
-} from '../util'
+    CaptchaWithProof,
+    DappUserSolutionResult,
+    Database,
+    ProsopoEnvironment,
+    UserCommitmentRecord,
+    UserSolutionRecord,
+} from '../types'
+import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
 
 import { i18n } from '@prosopo/i18n'
 
@@ -340,7 +340,7 @@ export class Tasks {
                     partialFee: partialFee.toString(),
                     solutionApproved: true,
                 }
-                await this.db.approveDappUserSolution(commitmentId)
+                await this.db.approveDappUserCommitment(commitmentId)
             } else {
                 await this.providerDisapprove(commitmentId)
                 response = {
@@ -393,7 +393,7 @@ export class Tasks {
                     })),
                     solutionApproved: true,
                 }
-                await this.db.approveDappUserSolution(commitmentId)
+                await this.db.approveDappUserCommitment(commitmentId)
             } else {
                 response = {
                     captchas: captchaIds.map((id) => ({
@@ -556,8 +556,7 @@ export class Tasks {
 
             if (unsolvedSorted && unsolvedSorted.length > 0) {
                 const captchaIds = unsolvedSorted.map((captcha) => captcha.captchaId)
-                const dappUserCommitments = (await this.db.getAllDappUserSolutions(captchaIds)) || []
-                const solutions = extractSolutionsFromDappUserSolutions(captchaIds, dappUserCommitments)
+                const solutions = (await this.db.getAllDappUserSolutions(captchaIds)) || []
                 const solutionsToUpdate = calculateNewSolutions(solutions, winningNumberOfSolutions)
                 if (solutionsToUpdate.rows().length > 0) {
                     consola.info(
@@ -568,7 +567,7 @@ export class Tasks {
                         dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
                         // store new solutions in database
                         await this.providerAddDataset(dataset)
-                        // TODO only removed solutions that have been processed and are on-chain
+                        // TODO mark user solutions as used to calculate new solutions
                         // await this.db.removeDappUserSolutions([...solutionsToUpdate['captchaId'].values()])
                         return solutionsToUpdate.rows().length
                     } catch (error) {
@@ -722,7 +721,7 @@ export class Tasks {
     /*
      * Get dapp user solution from database
      */
-    async getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution> {
+    async getDappUserSolutionById(commitmentId: string): Promise<UserSolutionRecord> {
         const dappUserSolution = await this.db.getDappUserSolutionById(commitmentId)
         if (!dappUserSolution) {
             throw new ProsopoEnvError(
@@ -736,8 +735,8 @@ export class Tasks {
     }
 
     /* Check if dapp user has verified solution in cache */
-    async getDappUserSolutionByAccount(userAccount: string): Promise<DappUserSolution | undefined> {
-        const dappUserSolutions = await this.db.getDappUserSolutionByAccount(userAccount)
+    async getDappUserSolutionByAccount(userAccount: string): Promise<UserCommitmentRecord | undefined> {
+        const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(userAccount)
         if (dappUserSolutions.length > 0) {
             for (const dappUserSolution of dappUserSolutions) {
                 if (dappUserSolution.approved === true) {

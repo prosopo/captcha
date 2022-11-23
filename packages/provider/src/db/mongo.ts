@@ -16,13 +16,15 @@ import { Hash } from '@polkadot/types/interfaces'
 import { isHex } from '@polkadot/util'
 import {
     CaptchaRecordSchema,
-    DappUserSolution,
     Database,
     DatasetRecordSchema,
     PendingCaptchaRequest,
     PendingRecordSchema,
     SolutionRecordSchema,
     Tables,
+    UserCommitmentRecord,
+    UserCommitmentRecordSchema,
+    UserSolutionRecord,
     UserSolutionRecordSchema,
 } from '../types'
 import { ProsopoEnvError } from '@prosopo/datasets'
@@ -86,6 +88,7 @@ export class ProsopoDatabase implements Database {
                 captcha: this.connection.model('Captcha', CaptchaRecordSchema),
                 dataset: this.connection.model('Dataset', DatasetRecordSchema),
                 solution: this.connection.model('Solution', SolutionRecordSchema),
+                commitment: this.connection.model('UserCommitment', UserCommitmentRecordSchema),
                 usersolution: this.connection.model('UserSolution', UserSolutionRecordSchema),
                 pending: this.connection.model('Pending', PendingRecordSchema),
             }
@@ -321,13 +324,18 @@ export class ProsopoDatabase implements Database {
         }
 
         if (captchas.length) {
-            await this.tables?.usersolution.create({
+            await this.tables?.commitment.create({
                 userAccount,
-                captchas,
                 commitmentId: commitmentId,
                 approved: false,
                 datetime: new Date().toISOString(),
-            } as DappUserSolution)
+            })
+
+            await this.tables?.usersolution.insertMany(
+                captchas.map(
+                    (captcha: CaptchaSolution): UserSolutionRecord => ({ ...captcha, commitmentId, processed: false })
+                )
+            )
         }
     }
 
@@ -413,15 +421,15 @@ export class ProsopoDatabase implements Database {
     }
 
     /**
-     * @description Get all dapp user's solutions
+     * @description Get all dapp user solutions by captchaIds
      */
-    async getAllDappUserSolutions(captchaId: string[]): Promise<DappUserSolution[] | undefined> {
-        const cursor = this.tables?.usersolution?.find({ 'captchas.captchaId': { $in: captchaId } }).lean()
+    async getAllDappUserSolutions(captchaId: string[]): Promise<UserSolutionRecord[] | undefined> {
+        const cursor = this.tables?.usersolution?.find({ captchaId: { $in: captchaId } }).lean()
         const docs = await cursor
 
         if (docs) {
             // drop the _id field
-            return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as DappUserSolution[]
+            return docs.map(({ _id, ...keepAttrs }) => keepAttrs) as UserSolutionRecord[]
         }
 
         throw new ProsopoEnvError('DATABASE.SOLUTION_GET_FAILED')
@@ -493,7 +501,7 @@ export class ProsopoDatabase implements Database {
      * @description Get dapp user solution by ID
      * @param {string[]} commitmentId
      */
-    async getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution | undefined> {
+    async getDappUserSolutionById(commitmentId: string): Promise<UserSolutionRecord | undefined> {
         const cursor = this.tables?.usersolution
             ?.findOne(
                 {
@@ -505,7 +513,7 @@ export class ProsopoDatabase implements Database {
         const doc = await cursor
 
         if (doc) {
-            return doc as unknown as DappUserSolution
+            return doc as unknown as UserSolutionRecord
         }
 
         throw new ProsopoEnvError('DATABASE.SOLUTION_GET_FAILED', this.getCaptchaById.name, {}, commitmentId)
@@ -515,28 +523,36 @@ export class ProsopoDatabase implements Database {
      * @description Get dapp user solution by account
      * @param {string[]} userAccount
      */
-    async getDappUserSolutionByAccount(userAccount: string): Promise<DappUserSolution[]> {
-        const cursor = this.tables?.usersolution
-            ?.find(
-                {
-                    userAccount: userAccount,
-                },
-                { projection: { _id: 0 } }
-            )
-            .lean()
-        const docs = await cursor
+    async getDappUserCommitmentByAccount(userAccount: string): Promise<UserCommitmentRecord[]> {
+        const commitmentCursor = this.tables?.commitment?.find({ userAccount }).lean()
 
-        return docs ? (docs as unknown as DappUserSolution[]) : []
+        const docs = await commitmentCursor
+
+        return docs ? (docs as UserCommitmentRecord[]) : []
     }
 
     /**
      * @description Approve a dapp user's solution
      * @param {string[]} commitmentId
      */
-    async approveDappUserSolution(commitmentId: string): Promise<void> {
+    async approveDappUserCommitment(commitmentId: string): Promise<void> {
+        try {
+            await this.tables?.commitment
+                ?.findOneAndUpdate({ commitmentId: commitmentId }, { $set: { approved: true } }, { upsert: false })
+                .lean()
+        } catch (err) {
+            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)
+        }
+    }
+
+    /**
+     * @description Flag a dapp user's solutions as used
+     * @param {string[]} commitmentId
+     */
+    async flagUsedDappUserSolution(commitmentId: string): Promise<void> {
         try {
             await this.tables?.usersolution
-                ?.findOneAndUpdate({ commitmentId: commitmentId }, { $set: { approved: true } }, { upsert: false })
+                ?.findOneAndUpdate({ commitmentId: commitmentId }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)

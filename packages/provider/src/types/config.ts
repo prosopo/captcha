@@ -14,10 +14,29 @@
 
 import { z } from 'zod'
 
+enum DatabaseTypes {
+    mongo = 'mongo',
+}
+
+export enum EnvironmentTypes {
+    development = 'development',
+}
+
+export const DatabaseConfigSchema = z.object({
+    [EnvironmentTypes.development]: z.object({
+        type: z.nativeEnum(DatabaseTypes),
+        endpoint: z.string(),
+        dbname: z.string(),
+        authSource: z.string(),
+    }),
+})
+
+export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
+
 export const ProsopoConfigSchema = z.object({
     logLevel: z.string(),
     contract: z.object({ abi: z.string() }),
-    defaultEnvironment: z.string(),
+    defaultEnvironment: z.nativeEnum(EnvironmentTypes),
     networks: z.object({
         development: z.object({
             endpoint: z.string().url(),
@@ -42,13 +61,7 @@ export const ProsopoConfigSchema = z.object({
         captchaFilePath: z.string(),
         captchaBlockRecency: z.number().positive().min(2),
     }),
-    database: z.object({
-        development: z.object({
-            type: z.string(),
-            endpoint: z.string().url(),
-            dbname: z.string(),
-        }),
-    }),
+    database: DatabaseConfigSchema,
     assets: z.object({
         absolutePath: z.string(),
         basePath: z.string(),

@@ -27,12 +27,16 @@ import consola from 'consola'
 import { z } from 'zod'
 import { Connection, Model, Schema } from 'mongoose'
 
-export interface UserSolution {
+export interface UserCommitmentRecord {
     userAccount: string
-    captchas: CaptchaSolution[]
     commitmentId: string
     approved: boolean
     datetime: Date
+}
+
+export interface SolutionRecord extends CaptchaSolution {
+    datasetId: string
+    datasetContentId: string
 }
 
 export interface Tables {
@@ -40,6 +44,7 @@ export interface Tables {
     dataset: typeof Model
     solution: typeof Model
     usersolution: typeof Model
+    commitment: typeof Model
     pending: typeof Model
 }
 
@@ -67,6 +72,13 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
     },
 })
 
+export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
+    userAccount: { type: String, required: true },
+    commitmentId: { type: String, required: true },
+    approved: { type: Boolean, required: true },
+    datetime: { type: Date, required: true },
+})
+
 export const DatasetRecordSchema = new Schema<DatasetBase>({
     contentTree: { type: [[String]], required: true },
     datasetContentId: { type: String, required: true },
@@ -74,11 +86,6 @@ export const DatasetRecordSchema = new Schema<DatasetBase>({
     format: { type: String, required: true },
     solutionTree: { type: [[String]], required: true },
 })
-
-export interface SolutionRecord extends CaptchaSolution {
-    datasetId: string
-    datasetContentId: string
-}
 
 export const SolutionRecordSchema = new Schema<SolutionRecord>({
     captchaId: { type: String, required: true },
@@ -89,26 +96,22 @@ export const SolutionRecordSchema = new Schema<SolutionRecord>({
     solution: { type: [String], required: true },
 })
 
-export const UserSolutionRecordSchema = new Schema<UserSolution>({
-    userAccount: { type: String, required: true },
-    captchas: {
-        type: [
-            new Schema<CaptchaSolution>(
-                {
-                    captchaId: String,
-                    captchaContentId: String,
-                    salt: String,
-                    solution: [String],
-                },
-                { _id: false }
-            ),
-        ],
-        required: true,
-    },
-    commitmentId: { type: String, required: true },
-    approved: { type: Boolean, required: true },
-    datetime: { type: Date, required: true },
+export const UserSolutionSchema = CaptchaSolutionSchema.extend({
+    processed: z.boolean(),
+    commitmentId: z.string(),
 })
+export type UserSolutionRecord = z.infer<typeof UserSolutionSchema>
+export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
+    {
+        captchaId: { type: String, required: true },
+        captchaContentId: { type: String, required: true },
+        salt: { type: String, required: true },
+        solution: [{ type: String, required: true }],
+        processed: { type: Boolean, required: true },
+        commitmentId: { type: String, required: true },
+    },
+    { _id: false }
+)
 
 export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     accountId: { type: String, required: true },
@@ -116,16 +119,6 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     salt: { type: String, required: true },
     requestHash: { type: String, required: true },
 })
-
-export const DappUserSolutionSchema = z.object({
-    userAccount: z.string(),
-    captchas: z.array(CaptchaSolutionSchema),
-    commitmentId: z.string(),
-    approved: z.boolean(),
-    datetime: z.string(),
-})
-
-export type DappUserSolution = z.infer<typeof DappUserSolutionSchema>
 
 export interface Database {
     readonly url: string
@@ -158,17 +151,17 @@ export interface Database {
 
     getAllCaptchasByDatasetId(datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined>
 
-    getAllDappUserSolutions(captchaId: string[]): Promise<DappUserSolution[] | undefined>
+    getAllDappUserSolutions(captchaId: string[]): Promise<UserSolutionRecord[] | undefined>
 
     getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string>
 
     getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]>
 
-    getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution | undefined>
+    getDappUserSolutionById(commitmentId: string): Promise<UserSolutionRecord | undefined>
 
-    getDappUserSolutionByAccount(accountId: string): Promise<DappUserSolution[]>
+    getDappUserCommitmentByAccount(accountId: string): Promise<UserCommitmentRecord[]>
 
-    approveDappUserSolution(commitmentId: string): Promise<void>
+    approveDappUserCommitment(commitmentId: string): Promise<void>
 
     removeDappUserSolutions(captchaIds: string[]): Promise<void>
 }
