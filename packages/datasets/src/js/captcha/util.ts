@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { blake2AsHex } from '@polkadot/util-crypto'
-import client from 'https'
+import client from 'axios'
+import { ProsopoEnvError } from '../types/index'
 
 export const HEX_HASH_BIT_LENGTH = 256
 export const ARRAY_JOINER = ''
@@ -32,20 +33,12 @@ export function arrayJoin<T>(arr: T[], joiner?: string): string {
     return arr.join(joiner ? joiner : ARRAY_JOINER)
 }
 
-export async function downloadImage(url: string): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-        client.get(url, (res) => {
-            const chunks: Uint8Array[] = []
-            res.on('data', (chunk) => {
-                chunks.push(chunk)
-            })
-            res.on('end', () => {
-                const buffer = Buffer.concat(chunks)
-                resolve(buffer)
-            })
-            res.on('error', (err) => {
-                reject(err)
-            })
-        })
-    })
+export async function downloadImage(url: string): Promise<Uint8Array> {
+    try {
+        return new Uint8Array(
+            (await client.get<ArrayBuffer>(url, { url, method: 'GET', responseType: 'arraybuffer' })).data
+        )
+    } catch (error) {
+        throw new ProsopoEnvError(error, downloadImage.name)
+    }
 }

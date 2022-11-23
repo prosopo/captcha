@@ -140,7 +140,7 @@ export async function calculateItemHashes(items: Item[]): Promise<Item[]> {
     return Promise.all(
         items.map(async (item) => {
             if (item.type === 'text') {
-                return { ...item, hash: hexHash(item.data as string) }
+                return { ...item, hash: hexHash(item.data) }
             } else if (item.type === 'image') {
                 return { ...item, hash: hexHash(await downloadImage(item.data)) }
             } else {
