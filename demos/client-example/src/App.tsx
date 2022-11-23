@@ -4,9 +4,6 @@ import { Box, Button, Typography, FormControl, FormGroup, Stack, TextField, Aler
 import { TCaptchaSubmitResult } from '@prosopo/procaptcha'
 
 import {
-    CaptchaComponent,
-    CaptchaContextManager,
-    useCaptcha,
     Procaptcha,
     ExtensionAccountSelect
 } from "@prosopo/procaptcha-react";
@@ -22,11 +19,12 @@ function App() {
 
     const [isError, setIsError] = useState(false)
     const [message, setMessage] = useState('')
+    // whether the form is doing a login or a signup action
     const [isLogin, setIsLogin] = useState(true)
 
     const serverUrl = process.env.REACT_APP_SERVER_URL || ''
 
-    const label = isLogin ? 'Login' : 'Signup'
+    const label = isLogin ? 'Login' : 'Sign up'
     const urlPath = isLogin ? 'login' : 'signup'
 
     const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
@@ -121,7 +119,6 @@ function App() {
 
     const config = {
         userAccountAddress: account,
-        // userAccountAddress: '5EXaAvaSP1T4BMeHdtF2AudXq7ooRo6jHwi6HywenfSkedNa',
         web2: process.env.REACT_APP_WEB2 === 'true',
         dappName: 'Prosopo',
         network: {
@@ -199,7 +196,15 @@ function App() {
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
                                     <Button variant="contained" onClick={onChangeHandler}>
-                                        <Typography>{label}</Typography>
+                                        {isLogin ? 'Login' : 'Sign up'}
+                                    </Button>
+                                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                                        <Box>
+                                            <Typography>- or -</Typography>
+                                        </Box>
+                                    </Box>
+                                    <Button onClick={onChangeHandler}>
+                                        {isLogin ? 'Signup' : 'Login'}
                                     </Button>
                                 </Stack>
                             </div>
