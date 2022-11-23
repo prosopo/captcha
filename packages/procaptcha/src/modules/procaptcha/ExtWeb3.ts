@@ -2,7 +2,7 @@ import { InjectedExtension } from '@polkadot/extension-inject/types'
 import { web3Enable } from '@polkadot/extension-dapp'
 import Ext from './Ext'
 import { AccountNotFoundError, ExtensionNotFoundError } from './errors'
-import { Account, ProcaptchaConfig } from './Manager'
+import { Account, ProcaptchaConfig } from '../../types/manager'
 
 /**
  * Class for interfacing with web3 accounts.

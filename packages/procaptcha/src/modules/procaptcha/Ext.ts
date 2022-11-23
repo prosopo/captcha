@@ -1,4 +1,4 @@
-import { Account, ProcaptchaConfig } from './Manager'
+import { Account, ProcaptchaConfig } from '../../types/manager'
 
 /**
  * Class to interface with accounts.
@@ -12,5 +12,4 @@ export default abstract class Ext {
      * @throws if the account is not found
      */
     public abstract getAccount(config: ProcaptchaConfig): Promise<Account>
-
 }

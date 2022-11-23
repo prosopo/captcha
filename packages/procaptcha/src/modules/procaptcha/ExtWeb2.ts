@@ -2,16 +2,16 @@ import { ApiPromise, Keyring } from '@polkadot/api'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { stringToU8a } from '@polkadot/util'
-import { cryptoWaitReady, encodeAddress, decodeAddress } from '@polkadot/util-crypto'
+import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
 import { hexHash } from '@prosopo/datasets'
 import { picassoCanvas } from '../canvas'
 import Ext from './Ext'
-import { Account, ProcaptchaConfig } from './Manager'
 import FingerprintJS, { hashComponents } from '@fingerprintjs/fingerprintjs'
 import { MessageTypesWithNullRequest } from '@polkadot/extension-base/background/types'
 import Signer from '@polkadot/extension-base/page/Signer'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
+import { Account, ProcaptchaConfig } from '../../types/manager'
 
 /**
  * Class for interfacing with web3 accounts.
@@ -80,7 +80,7 @@ export default class ExtWeb2 extends Ext {
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
 
-        const api = await ApiPromise.create({ provider: wsProvider })        
+        const api = await ApiPromise.create({ provider: wsProvider })
         const type = 'sr25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
 
