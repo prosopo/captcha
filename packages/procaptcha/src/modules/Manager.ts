@@ -67,8 +67,8 @@ export const Manager = (
             onError: (error) => {
                 alert(error ? error.message : 'An error occurred')
             },
-            onHuman: () => {
-                console.log('onHuman event triggered')
+            onHuman: (output) => {
+                console.log('onHuman event triggered', output)
             },
             onExtensionNotFound: () => {
                 alert('No extension found')
@@ -140,7 +140,9 @@ export const Manager = (
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
-                events.onHuman()
+                events.onHuman({
+                    userAccountAddress: account.account.address,
+                })
                 return
             }
 
@@ -156,7 +158,11 @@ export const Manager = (
                     const verifyDappUserResponse = await providerApi.verifyDappUser(account.account.address)
                     if (verifyDappUserResponse.solutionApproved) {
                         updateState({ isHuman: true, loading: false })
-                        events.onHuman()
+                        events.onHuman({
+                            providerUrl: providerUrlFromStorage,
+                            userAccountAddress: account.account.address,
+                            commitmentId: verifyDappUserResponse.commitmentId,
+                        })
                         return
                     }
                 } catch (err) {
@@ -252,7 +258,11 @@ export const Manager = (
                 loading: false,
             })
             if (state.isHuman) {
-                events.onHuman()
+                events.onHuman({
+                    providerUrl: captchaApi.provider.provider.serviceOrigin,
+                    userAccountAddress: account.account.address,
+                    commitmentId: submission[1],
+                })
             }
         } catch (err) {
             // dispatch relevant error event
@@ -379,7 +389,7 @@ export const Manager = (
      */
     const loadContract = async () => {
         const config = getConfig()
-        const contract = await ProsopoContract.create(
+        const contract: ProsopoContract = await ProsopoContract.create(
             config.network.prosopoContract.address,
             config.network.dappContract.address,
             getAccount().account.address,

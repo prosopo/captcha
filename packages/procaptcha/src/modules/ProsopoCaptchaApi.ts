@@ -32,11 +32,11 @@ export type SubmitFunction =
     | typeof ProsopoCaptchaApi.prototype.submitCaptchaSolutionWeb2
 
 export class ProsopoCaptchaApi {
-    protected userAccount: string
-    protected contract: ProsopoContract
-    protected provider: ProsopoRandomProviderResponse
-    protected providerApi: ProviderApi
-    protected submitCaptchaFn: SubmitFunction
+    userAccount: string
+    contract: ProsopoContract
+    provider: ProsopoRandomProviderResponse
+    providerApi: ProviderApi
+    private submitCaptchaFn: SubmitFunction
 
     constructor(
         userAccount: string,

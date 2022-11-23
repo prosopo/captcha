@@ -60,6 +60,15 @@ export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
 export interface ProcaptchaEvents {
     onError: (error: Error) => void
     onAccountNotFound: (address: string) => void
-    onHuman: () => void
+    onHuman: (output: ProcaptchaOutput) => void
     onExtensionNotFound: () => void
+}
+
+/**
+ * The information produced by procaptcha on completion of the captcha process, whether verified by smart contract, a pending commitment in the cache of a provider or a captcha challenge.
+ */
+export interface ProcaptchaOutput {
+    commitmentId?: string
+    providerUrl?: string
+    userAccountAddress: string
 }
