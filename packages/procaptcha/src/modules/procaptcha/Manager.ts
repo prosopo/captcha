@@ -1,5 +1,3 @@
-import ExtWeb3 from './ExtWeb3'
-import ExtWeb2 from './ExtWeb2'
 import ProsopoContract from '../../api/ProsopoContract'
 import { WsProvider } from '@polkadot/rpc-provider'
 import storage from '../storage'
@@ -7,7 +5,6 @@ import { GetCaptchaResponse, ProsopoRandomProviderResponse, ProviderApi } from '
 import { hexToString } from '@polkadot/util'
 import ProsopoCaptchaApi from '../ProsopoCaptchaApi'
 import { CaptchaSolution, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
-import { TCaptchaSubmitResult } from '../../types'
 import {
     Account,
     Events,
@@ -18,6 +15,9 @@ import {
     StateUpdateFn,
 } from '../../types/manager'
 import { sleep } from '../utils/utils'
+import ExtensionWeb2 from '../../api/ExtensionWeb2'
+import ExtensionWeb3 from '../../api/ExtensionWeb3'
+import { TCaptchaSubmitResult } from '../../types/client'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -357,7 +357,7 @@ export const Manager = (
         }
 
         // check if account exists in extension
-        const ext = config.web2 ? new ExtWeb2() : new ExtWeb3()
+        const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3()
         const account = await ext.getAccount(config)
 
         console.log('Using account:', account)

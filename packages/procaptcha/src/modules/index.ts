@@ -13,11 +13,4 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-export * from './contract'
-export * from './extension'
-export * from './storage'
-export * from './client'
-export * from './ProsopoCaptchaApi'
-export * from './ProsopoCaptchaClient'
-export * from './ProsopoCaptchaStateClient'
 export * from './procaptcha/Manager'

@@ -15,5 +15,4 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 export * from './api'
 export * from './contract'
-export * from './client'
 export * from './manager'

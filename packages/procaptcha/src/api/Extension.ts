@@ -1,9 +1,9 @@
-import { Account, ProcaptchaConfig } from '../../types/manager'
+import { Account, ProcaptchaConfig } from '../types'
 
 /**
  * Class to interface with accounts.
  */
-export default abstract class Ext {
+export default abstract class Extension {
     /**
      * Find an account given an address.
      * @param address the address of the account
