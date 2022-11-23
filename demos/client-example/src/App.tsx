@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Box, Button, Typography, FormControl, FormGroup, Stack, TextField, Alert } from '@mui/material'
 
-import { TCaptchaSubmitResult } from '@prosopo/procaptcha'
+import { ProcaptchaOutput, TCaptchaSubmitResult } from '@prosopo/procaptcha'
 
 import {
     Procaptcha,
@@ -56,12 +56,12 @@ function App() {
         setMessage('')
     }
 
-    const onHuman = async (data) => {
+    const onHuman = async (procaptchaOutput: ProcaptchaOutput) => {
         const payload = {
             email,
             name,
             password,
-            prosopo: data,
+            prosopo: procaptchaOutput,
         }
         fetch(`${serverUrl}/${urlPath}`, { 
             method: 'POST',
@@ -180,9 +180,7 @@ function App() {
                                 />
                             </FormControl>
 
-                            <Procaptcha config={config} callbacks={{onAccountNotFound, onError, onHuman: () => {
-                                onHuman(null)
-                            }}}/>
+                            <Procaptcha config={config} callbacks={{onAccountNotFound, onError, onHuman}}/>
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
