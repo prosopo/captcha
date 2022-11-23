@@ -7,12 +7,12 @@ import ProsopoCaptchaApi from '../ProsopoCaptchaApi'
 import { CaptchaSolution, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
 import {
     Account,
-    Events,
+    ProcaptchaEvents,
     ProcaptchaCallbacks,
     ProcaptchaConfig,
     ProcaptchaConfigOptional,
     ProcaptchaState,
-    StateUpdateFn,
+    ProcaptchaStateUpdateFn,
 } from '../../types/manager'
 import { sleep } from '../utils/utils'
 import ExtensionWeb2 from '../../api/ExtensionWeb2'
@@ -33,7 +33,7 @@ export const defaultState = (): Partial<ProcaptchaState> => {
     }
 }
 
-const buildUpdateState = (state: ProcaptchaState, onStateUpdate: StateUpdateFn) => {
+const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaStateUpdateFn) => {
     const updateCurrentState = (nextState: Partial<ProcaptchaState>) => {
         // mutate the current state. Note that this is in order of properties in the nextState object.
         // e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
@@ -55,11 +55,11 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: StateUpdateFn) 
 export const Manager = (
     configOptional: ProcaptchaConfigOptional,
     state: ProcaptchaState,
-    onStateUpdate: StateUpdateFn,
+    onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
 ) => {
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
-    const events: Events = Object.assign(
+    const events: ProcaptchaEvents = Object.assign(
         {
             onAccountNotFound: (address) => {
                 alert(`Account ${address} not found`)

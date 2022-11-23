@@ -24,6 +24,9 @@ export interface ProcaptchaConfig {
     solutionThreshold: number // the threshold of solutions solved by the user to be considered human
 }
 
+/**
+ * The config to be passed to procaptcha. Some fields can be optional, e.g. userAccountAddress and web2, depending on the mode of Procaptcha (web2 or web3).
+ */
 export type ProcaptchaConfigOptional = Optional<Optional<ProcaptchaConfig, 'userAccountAddress'>, 'web2'>
 
 /**
@@ -41,11 +44,20 @@ export interface ProcaptchaState {
     submission: TCaptchaSubmitResult | undefined // the result of the captcha submission. undefined if not submitted
 }
 
-export type StateUpdateFn = (state: Partial<ProcaptchaState>) => void
+/**
+ * Function to update the state of the Procaptcha component. This is a partial state which is coalesced with the existing state, replacing any fields that are defined and using values from the current state for any undefined state variables.
+ */
+export type ProcaptchaStateUpdateFn = (state: Partial<ProcaptchaState>) => void
 
-export type ProcaptchaCallbacks = Partial<Events>
+/**
+ * A set of callbacks called by Procaptcha on certain events. These are optional as the client can decide which events they wish to listen for.
+ */
+export type ProcaptchaCallbacks = Partial<ProcaptchaEvents>
 
-export interface Events {
+/**
+ * A list of all events which can occur during the Procaptcha process.
+ */
+export interface ProcaptchaEvents {
     onError: (error: Error) => void
     onAccountNotFound: (address: string) => void
     onHuman: () => void
