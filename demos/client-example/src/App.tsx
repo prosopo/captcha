@@ -27,15 +27,6 @@ function App() {
     const label = isLogin ? 'Login' : 'Sign up'
     const urlPath = isLogin ? 'login' : 'signup'
 
-    const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
-        if (submitResult instanceof Error) {
-            console.log({ error: ['onSubmit: CAPTCHA SUBMIT ERROR', submitResult] })
-            return
-        }
-        const [result, tx] = submitResult
-        console.log({ info: ['onSubmit: CAPTCHA SUBMIT STATUS', result.status] })
-    }
-
     const onLoggedIn = (token) => {
         console.log('getting private resource with token ', token)
         fetch(`${serverUrl}/private`, {
