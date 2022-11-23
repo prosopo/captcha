@@ -33,7 +33,7 @@ import storage from './storage'
 export class ProsopoCaptchaClient {
     public status: ICaptchaStatusReducer
     manager: ICaptchaContextReducer
-    callbacks: CaptchaEventCallbacks | undefined
+    callbacks: CaptchaEventCallbacks
     providerApi: ProviderApi | undefined
 
     private _extension?: IExtensionInterface
@@ -43,7 +43,7 @@ export class ProsopoCaptchaClient {
 
     constructor(manager: ICaptchaContextReducer, callbacks?: CaptchaEventCallbacks) {
         this.manager = manager
-        this.callbacks = callbacks
+        this.callbacks = callbacks || {}
         this._extension = manager.state.extension
         this._contract = manager.state.contract
         this._provider = manager.state.provider
@@ -111,7 +111,7 @@ export class ProsopoCaptchaClient {
             }
         }
         console.log('Extension loaded')
-        if (this.callbacks?.onLoad) {
+        if (this.callbacks.onLoad) {
             this.callbacks.onLoad(this.extension, this.manager.state.config['prosopoContractAccount'])
             this.manager.update({ contractAddress: this.manager.state.config['prosopoContractAccount'] })
         }
@@ -157,12 +157,12 @@ export class ProsopoCaptchaClient {
         const isHuman = await this.contract.dappOperatorIsHumanUser(this.manager.state.config['solutionThreshold'])
 
         // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-        if (isHuman && this.callbacks?.onSolved) {
-            await this.callbacks?.onSolved(account, undefined, undefined)
+        if (isHuman && this.callbacks.onSolved) {
+            await this.callbacks.onSolved(account, undefined, undefined)
         }
 
         // Check if there is a provider in local storage or get a random one from the contract
-        const provider = storage.getProvider()
+        const provider = null
         if (provider) {
             this.provider = provider
         } else {
@@ -173,7 +173,7 @@ export class ProsopoCaptchaClient {
             throw new ProsopoEnvError('DEVELOPER.PROVIDER_NOT_FOUND')
         }
 
-        storage.setProvider(this.provider)
+        // storage.setProvider(this.provider)
 
         const providerUrl = ProsopoCaptchaClient.trimProviderUrl(this.provider.provider)
 
@@ -189,7 +189,7 @@ export class ProsopoCaptchaClient {
             this.manager.state.config['web2']
         )
 
-        if (this.callbacks?.onAccountChange) {
+        if (this.callbacks.onAccountChange) {
             this.callbacks.onAccountChange(account)
         }
 
@@ -197,8 +197,8 @@ export class ProsopoCaptchaClient {
 
         console.log('providerUrl', providerUrl)
 
-        if (this.callbacks?.onSolved && verifyDappUserResponse.solutionApproved) {
-            this.callbacks?.onSolved(account, undefined, verifyDappUserResponse)
+        if (this.callbacks.onSolved && verifyDappUserResponse.solutionApproved) {
+            this.callbacks.onSolved(account, undefined, verifyDappUserResponse)
         }
     }
 
@@ -207,7 +207,7 @@ export class ProsopoCaptchaClient {
         this.provider = undefined
         this.captchaApi = undefined
 
-        if (this.callbacks?.onAccountChange) {
+        if (this.callbacks.onAccountChange) {
             this.callbacks.onAccountChange(undefined)
         }
 
@@ -220,7 +220,7 @@ export class ProsopoCaptchaClient {
             return await getProsopoContract(
                 this.manager.state.config.networks[defaultEnvironment].prosopoContract.address,
                 this.manager.state.config.networks[defaultEnvironment].dappContract.address,
-                account,
+                account.address,
                 getWsProvider(this.manager.state.config.networks[defaultEnvironment].endpoint)
             )
         } catch (err) {
