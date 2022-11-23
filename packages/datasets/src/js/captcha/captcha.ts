@@ -21,6 +21,7 @@ import {
     CaptchaWithoutId,
     DatasetRaw,
     DatasetSchema,
+    HashedItem,
     HashedSolution,
     Item,
     RawSolution,
@@ -122,9 +123,13 @@ export function computeCaptchaHash(
     sortItemHashes: boolean
 ): string {
     try {
-        const itemHashes: string[] = captcha.items.map((item, index) =>
-            item.hash ? item.hash : calculateItemHashes([item])[0].hash!
-        )
+        const itemHashes: string[] = captcha.items.map((item, index) => {
+            if (item.hash) {
+                return item.hash
+            } else {
+                throw new ProsopoEnvError('CAPTCHA.MISSING_ITEM_HASH', computeCaptchaHash.name, undefined, index)
+            }
+        })
         return hexHashArray([
             captcha.target,
             ...(includeSolution && captcha.solution ? captcha.solution.sort() : []),
@@ -136,18 +141,14 @@ export function computeCaptchaHash(
     }
 }
 
-export async function calculateItemHashes(items: Item[]): Promise<Item[]> {
-    return Promise.all(
-        items.map(async (item) => {
-            if (item.type === 'text') {
-                return { ...item, hash: hexHash(item.data) }
-            } else if (item.type === 'image') {
-                return { ...item, hash: hexHash(await downloadImage(item.data)) }
-            } else {
-                throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_FORMAT')
-            }
-        })
-    )
+export async function computeItemHash(item: Item): Promise<HashedItem> {
+    if (item.type === 'text') {
+        return { ...item, hash: hexHash(item.data) }
+    } else if (item.type === 'image') {
+        return { ...item, hash: hexHash(await downloadImage(item.data)) }
+    } else {
+        throw new ProsopoEnvError('CAPTCHA.INVALID_ITEM_FORMAT')
+    }
 }
 
 /**

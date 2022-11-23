@@ -46,7 +46,6 @@ describe('CAPTCHA FUNCTIONS', () => {
                 type: CaptchaItemTypes.Text,
             }))
         )
-        console.log(MOCK_ITEMS)
 
         const ITEMS = [
             {
@@ -100,7 +99,7 @@ describe('CAPTCHA FUNCTIONS', () => {
             format: CaptchaTypes.SelectAll,
             captchas: [
                 {
-                    captchaId: '0xc3a68449e450122480b498f67779aedbb406346382a48d35f6db8780afe9920d',
+                    captchaId: '0x7e6d425c3aae7194e06ff5f6f40ae7ce3f28f3cedff572d94141294af357bec2',
                     captchaContentId: '0x01',
                     solution: [],
                     salt: '0x01',
@@ -108,7 +107,7 @@ describe('CAPTCHA FUNCTIONS', () => {
                     items: ITEMS,
                 },
                 {
-                    captchaId: '0xc904ae6a26bdf248d88dc878fee3fbb2af70e4fb41986b9a42fefb434e2a929b',
+                    captchaId: '0xff104b75ea2eff08e9cbc8deeee26be24c1e731f3f64eee430dccfe2687be289',
                     captchaContentId: '0x01',
                     salt: '0x02',
                     target: 'train',
@@ -150,7 +149,6 @@ describe('CAPTCHA FUNCTIONS', () => {
                 solved: true,
             },
         ]
-        console.log(RECEIVED)
     })
 
     after(async () => {
@@ -163,18 +161,20 @@ describe('CAPTCHA FUNCTIONS', () => {
         }).to.not.throw()
     })
 
-    it('Captcha data set is hashed correctly', () => {
-        const dataset = {
-            ...DATASET,
-            captchas: DATASET.captchas.map((captcha) => ({
+    it('Captcha data set is hashed correctly', async () => {
+        const dataset = { ...DATASET }
+        dataset.captchas = await Promise.all(
+            dataset.captchas.map(async (captcha) => ({
                 ...captcha,
-                items: calculateItemHashes(captcha.items),
-            })),
-        }
-        console.log(dataset)
+                items: await calculateItemHashes(captcha.items),
+            }))
+        )
+
+        console.log(dataset.captchas)
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, true, true, false))
-        expect(captchaHashes[0]).to.equal(dataset.captchas[0].captchaId)
-        expect(captchaHashes[1]).to.equal(dataset.captchas[1].captchaId)
+        console.log(captchaHashes)
+        expect(captchaHashes[0]).to.equal('captchaId' in dataset.captchas[0] ? dataset.captchas[0].captchaId : '')
+        expect(captchaHashes[1]).to.equal('captchaId' in dataset.captchas[1] ? dataset.captchas[1].captchaId : '')
     })
 
     it('Captcha solutions are successfully parsed', () => {

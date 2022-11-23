@@ -31,6 +31,9 @@ export enum CaptchaStates {
 export type RawSolution = number
 export type HashedSolution = string
 export type Item = z.infer<typeof CaptchaItemSchema>
+export interface HashedItem extends Omit<Item, 'hash'> {
+    hash: string
+}
 
 type CaptchaWithoutIdBase = {
     salt: string

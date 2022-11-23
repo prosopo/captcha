@@ -1,6 +1,6 @@
 import { Dataset, DatasetRaw } from '../types/dataset'
-import { Captcha } from '../types/captcha'
-import { calculateItemHashes, computeCaptchaHash, matchItemsToSolutions } from './captcha'
+import { Captcha, HashedItem } from '../types/captcha'
+import { calculateItemHashes, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
 import { CaptchaMerkleTree } from './merkle'
 import { ProsopoEnvError } from '../types/error'
 
@@ -31,7 +31,15 @@ export async function buildCaptchaTree(
 ): Promise<CaptchaMerkleTree> {
     try {
         const tree = new CaptchaMerkleTree()
-        const captchaHashes = dataset.captchas.map((captcha) =>
+        const datasetWithItemHashes = await Promise.all(
+            dataset.captchas.map(
+                async (captcha): Promise<HashedItem> => ({
+                    ...captcha,
+                    items: captcha.items.map(async (item) => ({ ...item, hash: await computeItemHash(item) })),
+                })
+            )
+        )
+        const captchaHashes = datasetWithItemHashes.captchas.map((captcha) =>
             computeCaptchaHash(captcha, includeSolution, includeSalt, sortItemHashes)
         )
         tree.build(captchaHashes)
