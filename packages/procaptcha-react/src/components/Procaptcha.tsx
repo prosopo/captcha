@@ -10,15 +10,25 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
-import { Manager, ProcaptchaConfigOptional, ProcaptchaState, StateUpdateFn } from '@prosopo/procaptcha'
+import { Manager, ProcaptchaConfigOptional, ProcaptchaState, ProcaptchaStateUpdateFn } from '@prosopo/procaptcha'
 import { Alert, Backdrop, CircularProgress } from '@mui/material'
 import CaptchaComponent from './CaptchaComponent'
 
+/**
+ * The props for the Procaptcha component.
+ */
 export interface ProcaptchaProps {
+    // the configuration for procaptcha
     config: ProcaptchaConfigOptional
+    // optional set of callbacks for various captcha events
     callbacks?: Partial<ProcaptchaCallbacks>
 }
 
+/**
+ * Wrap a ref to be the same format as useState.
+ * @param defaultValue the default value if the state is not already initialised
+ * @returns a ref in the same format as a state, e.g. [value, setValue]
+ */
 const useRefAsState = <T,>(defaultValue: T): [T, (value: T) => void] => {
     const ref = useRef<T>(defaultValue)
     const setter = (value: T) => {
@@ -28,7 +38,7 @@ const useRefAsState = <T,>(defaultValue: T): [T, (value: T) => void] => {
     return [value, setter]
 }
 
-const useProcaptcha = (): [ProcaptchaState, StateUpdateFn] => {
+const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     // useRef == do not render on variable change
     // useState == do render on variable change
     // only need to render on visible variables changing
