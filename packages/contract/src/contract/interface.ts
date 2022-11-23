@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { AbiMessage } from '@polkadot/api-contract/types'
 import { AnyJson } from '@polkadot/types/types/codec'
-import { Registry } from '@polkadot/types/types'
+import { Observable, Registry } from '@polkadot/types/types'
 import { AbiMetadata, ContractAbi, ContractApiInterface, TransactionResponse } from '../types'
 import { encodeStringArgs, handleContractCallOutcomeErrors, unwrap } from './helpers'
 import { contractDefinitions } from './definitions'
@@ -25,6 +25,7 @@ import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import AsyncFactory from './AsyncFactory'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { Bytes, Option } from '@polkadot/types-codec'
 
 export class ProsopoContractApi extends AsyncFactory implements ContractApiInterface {
     contract: ContractPromise
@@ -151,7 +152,7 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         if (!this.contract) {
             throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
         }
-        const promiseResult = await this.api.rpc.contracts.getStorage(this.contract.address, storageKey)
+        const promiseResult: Observable<Option<Bytes>> = await this.api.rpc.contracts.getStorage(this.contract.address, storageKey)
         const data = promiseResult.unwrapOrDefault()
         return decodingFn(this.api.registry, data)
     }
