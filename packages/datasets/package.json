@@ -9,7 +9,7 @@
     "build": "tsc --build --verbose",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
-    "test": "NODE_ENV=test ts-mocha \"tests/**/*.test.ts\" --timeout 120000"
+    "test": "NODE_ENV=test ts-mocha \"./tests/**/*.test.ts\" --timeout 120000"
   },
   "main": "./dist/js/index.js",
   "types": "./dist/js/index.d.ts",
