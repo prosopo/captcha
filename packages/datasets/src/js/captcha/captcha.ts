@@ -158,7 +158,7 @@ export async function computeItemHash(item: Item): Promise<HashedItem> {
  * @param {Item[]} items
  */
 export function matchItemsToSolutions(
-    solutions: RawSolution[] | HashedSolution[] | undefined,
+    solutions: RawSolution[] | HashedSolution[],
     items: Item[] | undefined
 ): HashedSolution[] {
     return (

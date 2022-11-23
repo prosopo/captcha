@@ -1,11 +1,18 @@
 import { Dataset, DatasetRaw } from '../types/dataset'
-import { Captcha, HashedItem } from '../types/captcha'
-import { calculateItemHashes, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
+import { Captcha } from '../types/captcha'
+import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
 import { CaptchaMerkleTree } from './merkle'
 import { ProsopoEnvError } from '../types/error'
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw)
+    // console.log(dataset.captchas[0])
+    // dataset.captchas.map((captcha: CaptchaWithoutId) => {
+    //     if (captcha.target === 'car') {
+    //         console.log(captcha)
+    //     }
+    // })
+    // process.exit(0)
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(
@@ -31,14 +38,7 @@ export async function buildCaptchaTree(
 ): Promise<CaptchaMerkleTree> {
     try {
         const tree = new CaptchaMerkleTree()
-        const datasetWithItemHashes = await Promise.all(
-            dataset.captchas.map(
-                async (captcha): Promise<HashedItem> => ({
-                    ...captcha,
-                    items: captcha.items.map(async (item) => ({ ...item, hash: await computeItemHash(item) })),
-                })
-            )
-        )
+        const datasetWithItemHashes = { ...dataset }
         const captchaHashes = datasetWithItemHashes.captchas.map((captcha) =>
             computeCaptchaHash(captcha, includeSolution, includeSalt, sortItemHashes)
         )
@@ -54,12 +54,13 @@ export async function addItemHashesAndSolutionHashesToDataset(datasetRaw: Datase
         ...datasetRaw,
         captchas: await Promise.all(
             datasetRaw.captchas.map(async (captcha) => {
-                const items = await calculateItemHashes(captcha.items)
+                const items = await Promise.all(captcha.items.map(async (item) => await computeItemHash(item)))
 
                 return {
                     ...captcha,
                     items,
-                    solution: matchItemsToSolutions(captcha.solution, items),
+                    // some captcha challenges will not have a solution
+                    ...(captcha.solution !== undefined && { solution: matchItemsToSolutions(captcha.solution, items) }),
                 }
             })
         ),
