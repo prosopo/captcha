@@ -7,8 +7,9 @@ import { GetCaptchaResponse, ProsopoNetwork, ProsopoRandomProviderResponse, Prov
 import { hexToString } from '@polkadot/util'
 import ProsopoCaptchaApi from '../ProsopoCaptchaApi'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { CaptchaSolution, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
+import { CaptchaSolution } from '@prosopo/datasets'
 import { TCaptchaSubmitResult } from '../../types'
+import { randomAsHex } from '@polkadot/util-crypto'
 
 /**
  * House the account and associated extension.
@@ -267,10 +268,17 @@ export const Manager = (
 
             const challenge: GetCaptchaResponse = state.challenge
 
+            const salt = randomAsHex()
+
             // append solution to each captcha in the challenge
             const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
                 const solution = state.solutions[index]
-                return convertCaptchaToCaptchaSolution({ ...captcha.captcha, solution })
+                return {
+                    captchaId: captcha.captcha.captchaId,
+                    captchaContentId: captcha.captcha.captchaContentId,
+                    salt,
+                    solution,
+                }
             })
 
             const account = getAccount()
