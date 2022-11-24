@@ -15,27 +15,19 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 export const contractDefinitions = {
     GovernanceStatus: {
-        _enum: [
-            'Active',
-            'Suspended',
-            'Deactivated'
-        ]
+        _enum: ['Active', 'Suspended', 'Deactivated'],
     },
     CaptchaStatus: {
-        _enum: [
-            'Pending',
-            'Approved',
-            'Disapproved'
-        ]
+        _enum: ['Pending', 'Approved', 'Disapproved'],
     },
     DappAccounts: 'Vec<AccountId>',
     ProsopoDapp: {
-    // eslint-disable-next-line sort-keys
+        // eslint-disable-next-line sort-keys
         status: 'GovernanceStatus',
         balance: 'Balance',
         owner: 'AccountId',
         min_difficulty: 'u16',
-        client_origin: 'Hash'
+        client_origin: 'Hash',
     },
     ProsopoError: {
         _enum: [
@@ -57,19 +49,15 @@ export const contractDefinitions = {
             'CaptchaSolutionCommitmentExists',
             'DappUserDoesNotExist',
             'NoActiveProviders',
-            'DatasetIdSolutionsSame'
-        ]
+            'DatasetIdSolutionsSame',
+        ],
     },
     Payee: {
-        _enum: [
-            'Provider',
-            'Dapp',
-            'None'
-        ]
+        _enum: ['Provider', 'Dapp', 'None'],
     },
     User: {
         correct_captchas: 'u64',
-        incorrect_captchas: 'u64'
+        incorrect_captchas: 'u64',
     },
     ProviderAccounts: 'Vec<AccountId>',
     ProsopoProvider: {
@@ -79,18 +67,18 @@ export const contractDefinitions = {
         payee: 'Payee',
         service_origin: 'Hash',
         dataset_id: 'Hash',
-        dataset_id_content: 'Hash'
+        dataset_id_content: 'Hash',
     },
     ProsopoRandomProvider: {
         provider_id: 'AccountId',
         provider: 'ProsopoProvider',
-        block_number: 'u32'
+        block_number: 'u32',
     },
     ProviderMap: '{"AccountId":"Provider"}',
     ProsopoCaptchaData: {
         provider: 'AccountId',
         merkle_tree_root: 'Hash',
-        captcha_type: 'u16'
+        captcha_type: 'u16',
     },
     ProsopoCaptchaSolutionCommitment: {
         account: 'AccountId',
@@ -98,15 +86,15 @@ export const contractDefinitions = {
         status: 'CaptchaStatus',
         contract: 'AccountId',
         provider: 'AccountId',
-        completed_at: 'u64'
+        completed_at: 'u64',
     },
     CaptchaData: {
         provider: 'AccountId',
         merkle_tree_root: 'Hash',
-        captcha_type: 'u16'
+        captcha_type: 'u16',
     },
     ProsopoLastCorrectCaptcha: {
         before_ms: 'u32',
         dapp_id: 'AccountId',
-    }
+    },
 }
