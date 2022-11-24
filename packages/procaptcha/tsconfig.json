@@ -15,10 +15,13 @@
   ],
   "references": [
     {
-      "path": "../provider"
+      "path": "../api"
+    },
+    {
+      "path": "../datasets"
     },
     {
       "path": "../contract"
-    }
+    },
   ]
 }
