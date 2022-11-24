@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/demo-nft-marketplace",
-  "version": "0.1.0",
+  "version": "0.1.100",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
@@ -23,7 +23,6 @@
     "@polkadot/rpc-provider": "^8.13.1",
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
-    "@prosopo/procaptcha": "^0.1.9",
     "@prosopo/procaptcha-react": "^0.1.9",
     "axios": "^0.27.2",
     "browserify-fs": "^1.0.0",
