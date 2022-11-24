@@ -67,6 +67,7 @@
         "INVALID_CAPTCHA_ID": "Invalid captcha id",
         "SOLUTION_HASH_ERROR": "Error hashing solution",
         "INVALID_ITEM_FORMAT": "Only image and text item types allowed",
+        "INVALID_ITEM_HASH": "Invalid item hash",
         "DIFFERENT_DATASET_IDS": "Dataset ids do not match",
         "INVALID_BLOCK_NO": "Invalid block number",
         "ID_MISMATCH": "captcha id mismatch",
@@ -98,6 +99,7 @@
         "COMMITMENT_ID_MISSING": "Commitment id missing",
         "PROVIDER_NOT_FOUND": "Provider not found",
         "CREATE_ACCOUNT_FAILED": "Could not create an account!",
+        "CREATE_ACCOUNT_FAILED_OUT_OF_FUNDS": "Could not create an account as there are no funds. Restart the substrate node.",
         "NO_MOCK_ENV": "MockEnvironment not set up",
         "ACCOUNT_TYPE_MISSING": "{{accountType}} not created by databasePopulator"
     }

@@ -97,6 +97,7 @@
         "COMMITMENT_ID_MISSING": "Nedostaje ID predaje",
         "PROVIDER_NOT_FOUND": "Snabdevač nije pronađen",
         "CREATE_ACCOUNT_FAILED": "Nije moguće kreirati nalog!",
+        "CREATE_ACCOUNT_FAILED_OUT_OF_FUNDS": "Could not create an account as there are no funds. Restart the substrate node.",
         "NO_MOCK_ENV": "MockEnvironment nije podešen",
         "ACCOUNT_TYPE_MISSING": "{{accountType}} nije kreiran od strane databasePopulator-a"
     }
