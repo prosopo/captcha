@@ -1,6 +1,6 @@
 {
   "name": "client-example",
-  "version": "0.1.11",
+  "version": "0.1.10",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.9.3",
