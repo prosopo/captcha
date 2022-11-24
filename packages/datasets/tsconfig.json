@@ -8,5 +8,10 @@
     "./src/js/**/*.ts",
     "./src/js/abi/*.json"
   ],
-  "exclude": ["**/*.test.ts"]
+  "exclude": ["**/*.test.ts"],
+  "references": [
+    {
+      "path": "../i18n"
+    },
+  ]
 }

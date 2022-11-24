@@ -17,11 +17,11 @@ import { hexHash } from './util'
 import { MerkleNodeInterface } from '../types/merkle'
 
 class MerkleNode implements MerkleNodeInterface {
-    hash: string;
+    hash: string
 
-    parent: string | null;
+    parent: string | null
 
-    constructor (hash) {
+    constructor(hash) {
         this.hash = hash
         this.parent = null
     }
@@ -34,12 +34,12 @@ export class CaptchaMerkleTree {
 
     root: MerkleNode | undefined
 
-    constructor () {
+    constructor() {
         this.leaves = []
         this.layers = []
     }
 
-    build (leaves: string[]) {
+    build(leaves: string[]) {
         // allow rebuild
         if (this.layers.length) {
             this.layers = []
@@ -54,7 +54,7 @@ export class CaptchaMerkleTree {
         this.root = this.buildMerkleTree(this.leaves)
     }
 
-    buildMerkleTree (leaves) {
+    buildMerkleTree(leaves) {
         // Builds the Merkle tree from a list of leaves. In case of an odd number of leaves, the last leaf is duplicated.
 
         const numLeaves = leaves.length
@@ -68,7 +68,7 @@ export class CaptchaMerkleTree {
         const newLayer: string[] = []
         while (leafIndex < numLeaves) {
             const leftChild = leaves[leafIndex]
-            const rightChild = (leafIndex + 1 < numLeaves) ? leaves[leafIndex + 1] : leftChild
+            const rightChild = leafIndex + 1 < numLeaves ? leaves[leafIndex + 1] : leftChild
             const parentNode = this.createParent(leftChild, rightChild)
             newLayer.push(parentNode.hash)
             parents.push(parentNode)
@@ -79,21 +79,21 @@ export class CaptchaMerkleTree {
         return this.buildMerkleTree(parents)
     }
 
-    createParent (leftChild, rightChild): MerkleNode {
+    createParent(leftChild, rightChild): MerkleNode {
         const parent = new MerkleNode(hexHash([leftChild.hash, rightChild.hash].join()))
         leftChild.parent = parent
         rightChild.parent = parent
         return parent
     }
 
-    proof (leafHash: string): string[][] {
+    proof(leafHash: string): string[][] {
         const proofTree: string[][] = []
         let layerNum = 0
         while (layerNum < this.layers.length) {
             const leafIndex = this.layers[layerNum].indexOf(leafHash)
             // if layer 0 leaf index is 3, it should be partnered with 2: [L0,L1],[L2,L3],[L3,L4],...
             // layer one pairs looks like [L0L1, L2L3], [L3L4, L5L6],...etc
-            const partnerIndex = (leafIndex % 2 && leafIndex > 0) ? leafIndex - 1 : leafIndex + 1
+            const partnerIndex = leafIndex % 2 && leafIndex > 0 ? leafIndex - 1 : leafIndex + 1
             const pair = [leafHash]
             const layer = this.layers[layerNum]
             if (partnerIndex < layer.length) {

@@ -22,5 +22,5 @@ export interface MerkleNodeInterface {
 
 export const MerkleNodeSchema = z.object({
     hash: z.string(),
-    parent: z.union([z.string(), z.null()])
+    parent: z.union([z.string(), z.null()]),
 })
