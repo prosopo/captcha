@@ -15,14 +15,13 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { ApiPromise, SubmittableResult } from '@polkadot/api'
 import { Abi, ContractPromise } from '@polkadot/api-contract'
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-
 import { ProsopoContractError, abiJson, encodeStringArgs, unwrap } from '@prosopo/contract'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { ProviderInterface } from '@polkadot/rpc-provider/types'
 import { Signer } from '@polkadot/api/types'
 import { TransactionResponse } from '../types'
 import AsyncFactory from './AsyncFactory'
+import { ContractExecResult } from '@polkadot/types/interfaces'
 
 export class ProsopoContractBase extends AsyncFactory {
     api: ApiPromise
@@ -73,7 +72,7 @@ export class ProsopoContractBase extends AsyncFactory {
     public async query<T>(method: string, args: any[]): Promise<T | AnyJson | null> {
         try {
             const abiMessage = this.abi.findMessage(method)
-            const response = await this.contract.query[method](
+            const response: any = await this.contract.query[method](
                 this.userAccountAddress,
                 {},
                 ...encodeStringArgs(abiMessage, args)
