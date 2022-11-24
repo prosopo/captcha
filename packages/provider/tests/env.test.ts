@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Environment} from "../src/env";
-import chai from "chai";
-import chaiAsPromised from "chai-as-promised";
+import { Environment } from '../src/env'
+import chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 
-chai.should();
-chai.use(chaiAsPromised);
-const expect = chai.expect;
+chai.should()
+chai.use(chaiAsPromised)
+const expect = chai.expect
 
 describe('ENV TESTS', () => {
-
     it('Initiliases an environment', () => {
-        const mnemonic = "unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat"
+        const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
         const env = new Environment(mnemonic)
         expect(env.mnemonic).to.equal(mnemonic)
         expect(env.config).to.not.be.null
@@ -32,9 +31,7 @@ describe('ENV TESTS', () => {
         expect(env.contractName).to.be.a.string
         expect(env.db).to.be.undefined
         expect(env.contractInterface).to.be.undefined
-        expect(env.network).to.be.undefined
-    }
-    )
+    })
     // it('Initiliases an environment and waits till it is ready', async () => {
     //     const mnemonic = "unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat"
     //     const env = new Environment(mnemonic)

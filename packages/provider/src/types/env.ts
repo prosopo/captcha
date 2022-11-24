@@ -11,23 +11,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import consola from 'consola';
-import { ContractAbi, ContractApiInterface, Network } from "@prosopo/contract";
-import { AssetsResolver } from '@prosopo/datasets';
-import { Database } from './db';
-import { ProsopoConfig } from './config';
+import consola from 'consola'
+import { ContractAbi, ContractApiInterface } from '@prosopo/contract'
+import { AssetsResolver } from '@prosopo/datasets'
+import { Database } from './db'
+import { ProsopoConfig } from './config'
+import { WsProvider } from '@polkadot/rpc-provider'
+import { Keyring } from '@polkadot/keyring'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { ApiPromise } from '@polkadot/api'
 export interface ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: ContractApiInterface | undefined
-    abi: ContractAbi
+    contractInterface: ContractApiInterface
     mnemonic: string
     contractAddress: string
     defaultEnvironment: string
     contractName: string
-    network: Network
+    abi: ContractAbi
     logger: typeof consola
+    assetsResolver: AssetsResolver | undefined
+    wsProvider: WsProvider
+    keyring: Keyring
+    pair: KeyringPair
+    api: ApiPromise
     isReady(): Promise<void>
     importDatabase(): Promise<void>
-    assetsResolver: AssetsResolver | undefined
 }
