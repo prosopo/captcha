@@ -8,4 +8,9 @@
     "./src/**/*.ts",
     "./src/abi/*.json"
   ],
+  "references": [
+    {
+      "path": "../datasets"
+    },
+  ]
 }

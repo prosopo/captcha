@@ -20,7 +20,6 @@ import { createTypeUnsafe } from '@polkadot/types'
 import type { AccountId, ContractExecResult, EventRecord, Weight } from '@polkadot/types/interfaces'
 import { isU8a, stringCamelCase, stringUpperFirst, u8aToHex } from '@polkadot/util'
 import { addressEq } from '@polkadot/util-crypto'
-import type { Observable } from '@polkadot/types/types';
 import BN from 'bn.js'
 import { buildTx } from './buildTx'
 import { AnyString } from '@polkadot/util/types'
@@ -176,7 +175,7 @@ export function buildCall(
 
         const _contractCallFn = contract.api.rpc.contracts.call
 
-        const json: Observable<ContractExecResult> = await (at ? _contractCallFn(rpcParams, at) : _contractCallFn(rpcParams))
+        const json: any = await (at ? _contractCallFn(rpcParams, at) : _contractCallFn(rpcParams))
 
         const { debugMessage, gasRequired, gasConsumed, result, storageDeposit } = json
 

@@ -152,7 +152,7 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         if (!this.contract) {
             throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
         }
-        const promiseResult: Observable<Option<Bytes>> = await this.api.rpc.contracts.getStorage(this.contract.address, storageKey)
+        const promiseResult: any = await this.api.rpc.contracts.getStorage(this.contract.address, storageKey)
         const data = promiseResult.unwrapOrDefault()
         return decodingFn(this.api.registry, data)
     }
