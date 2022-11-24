@@ -1,123 +1,205 @@
-import {useState} from "react";
-import {Box, Button, Typography} from "@mui/material";
+import { useState } from 'react'
+import { Box, Button, Typography, FormControl, FormGroup, Stack, TextField, Alert } from '@mui/material'
 
-import {
-    TCaptchaSubmitResult,
-    TExtensionAccount,
-} from "@prosopo/procaptcha";
+import { ProcaptchaOutput, TCaptchaSubmitResult } from '@prosopo/procaptcha'
 
-import {
-    CaptchaComponent,
-    CaptchaContextManager,
-    ExtensionAccountSelect,
-    useCaptcha,
-    addDataAttr
-} from "@prosopo/procaptcha-react";
+import { Procaptcha, ExtensionAccountSelect } from '@prosopo/procaptcha-react'
 
-import config from "./config";
-
-import "./App.css";
-
+import './App.css'
+import { VerificationResponse } from '@prosopo/api'
 
 function App() {
+    const [email, setEmail] = useState<string>('')
+    const [name, setName] = useState<string>('')
+    const [password, setPassword] = useState('')
+    const [account, setAccount] = useState<string>('')
 
-    const [showCaptchas, setShowCaptchas] = useState(false);
+    const [isError, setIsError] = useState(false)
+    const [message, setMessage] = useState('')
+    // whether the form is doing a login or a signup action
+    const [isLogin, setIsLogin] = useState(true)
+    // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
+    const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
-    const showCaptchaClick = () => {
-        setShowCaptchas(true);
-        status.update({info: ""});
-    };
+    const serverUrl = process.env.REACT_APP_SERVER_URL || ''
 
-    const onAccountChange = (account: TExtensionAccount) => {
-        if(account) {
-            //setShowCaptchas(true);
-            status.update({info: "Selected account: " + account?.meta.name});
-            console.log("CAPTCHA API", clientInterface.getCaptchaApi());
-        }
-    };
+    const label = isLogin ? 'Login' : 'Sign up'
+    const urlPath = isLogin ? 'login' : 'signup'
 
-    const onSubmit = (submitResult: TCaptchaSubmitResult | Error) => {
-        if (submitResult instanceof Error) {
-            status.update({error: ["onSubmit: CAPTCHA SUBMIT ERROR", submitResult]});
-            return;
-        }
-        const [result, tx] = submitResult;
-        status.update({info: ["onSubmit: CAPTCHA SUBMIT STATUS", result.status]});
-    };
-
-    const onSolved = ([result, tx, commitment]: TCaptchaSubmitResult) => {
-        setShowCaptchas(false);
-
-        status.update({info: ["onSolved:", result.status]});
+    const onLoggedIn = (token) => {
+        console.log('getting private resource with token ', token)
+        fetch(`${serverUrl}/private`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        })
+            .then(async (res) => {
+                try {
+                    const jsonRes = await res.json()
+                    if (res.status === 200) {
+                        setMessage(jsonRes.message)
+                    }
+                } catch (err) {
+                    console.log(err)
+                }
+            })
+            .catch((err) => {
+                console.log(err)
+            })
     }
 
-    const onChange = (solution: string[][]) => {
-        console.log("onChange:", solution);
-    };
+    const onActionHandler = () => {
+        if (!procaptchaOutput) {
+            alert('Must complete captcha')
+        }
+        const payload = {
+            email,
+            name,
+            password,
+            prosopo: procaptchaOutput,
+        }
+        fetch(`${serverUrl}/${urlPath}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+            .then(async (res) => {
+                try {
+                    const jsonRes = await res.json()
+                    if (res.status !== 200) {
+                        setIsError(true)
+                        setMessage(jsonRes.message)
+                    } else {
+                        if (isLogin) {
+                            onLoggedIn(jsonRes.token)
+                        }
+                        setIsError(false)
+                        setMessage(jsonRes.message)
+                    }
+                } catch (err) {
+                    console.log(err)
+                }
+            })
+            .catch((err) => {
+                console.log(err)
+            })
+    }
 
-    const onCancel = () => {
-        setShowCaptchas(false);
-        status.update({info: ""});
-    };
+    const onChangeHandler = () => {
+        setIsLogin(!isLogin)
+        setMessage('')
+    }
 
-    const clientInterface = useCaptcha({config}, {onAccountChange, onChange, onSubmit, onSolved, onCancel});
+    const onHuman = async (procaptchaOutput: ProcaptchaOutput) => {
+        console.log('onHuman', procaptchaOutput)
+        setProcaptchaOutput(procaptchaOutput)
+    }
 
-    const disconnectAccount = () => {
-        clientInterface.onAccountUnset()
-        status.update({info: ""});
-    };
+    const getMessage = () => {
+        if (isError) {
+            return <Alert severity="error">{message}</Alert>
+        } else {
+            return <Alert severity="success">{message}</Alert>
+        }
+    }
 
+    const onError = (error: Error) => {
+        alert(error.message)
+    }
 
-    const manager = clientInterface.manager;
-    const status = clientInterface.status;
-    console.log("manager", manager);
+    const onAccountNotFound = (address: string) => {
+        alert(`Account ${address} not found`)
+    }
+
+    const config = {
+        userAccountAddress: account,
+        web2: process.env.REACT_APP_WEB2 === 'true',
+        dappName: 'Prosopo',
+        network: {
+            endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
+            prosopoContract: {
+                address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+                name: 'prosopo',
+            },
+            dappContract: {
+                address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
+                name: 'dapp',
+            },
+        },
+        solutionThreshold: 80,
+    }
 
     return (
-        <Box className={"App"}>
-            <div className={"flex-container"}>
-                <div style={{order: 1}}>
-                    <span>
-                      <pre id="json">{JSON.stringify(manager.state, null, 2)}</pre>
-                    </span>
-                </div>
+        <div>
+            <Box className={'App'} sx={{ display: 'flex' }}>
+                <Box>
+                    <Typography>{message ? getMessage() : null}</Typography>
+                    {!config.web2 ? (
+                        <ExtensionAccountSelect dappName={config.dappName} value={account} onChange={setAccount} />
+                    ) : (
+                        <></>
+                    )}
+                    <Box>
+                        <h1>{label}</h1>
+                        <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
+                            <FormControl>
+                                <TextField
+                                    id="email"
+                                    label="Email"
+                                    type="text"
+                                    autoComplete="Email"
+                                    autoCapitalize="none"
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </FormControl>
 
-                <div style={{order: 2}}>
-                    {status.state.info && <Box className={"status"}>{status.state.info}</Box>}
-                    {status.state.error && <Box className={"status error"}>{status.state.error}</Box>}
-                    {clientInterface.getExtension() && !manager.state.account && showCaptchas &&
-                        <ExtensionAccountSelect
-                        value={manager.state.account}
-                        options={clientInterface.getExtension().getAccounts()}
-                        onChange={clientInterface.onAccountChange.bind(clientInterface)}
-                      />}
+                            {!isLogin && (
+                                <FormControl>
+                                    <TextField
+                                        id="name"
+                                        label="Name"
+                                        type="text"
+                                        autoComplete="Name"
+                                        onChange={(e) => setName(e.target.value)}
+                                    />
+                                </FormControl>
+                            )}
 
+                            <FormControl>
+                                <TextField
+                                    id="password"
+                                    label="Password"
+                                    type="password"
+                                    autoComplete="Password"
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </FormControl>
 
-                    <CaptchaContextManager.Provider value={manager}>
-                        {showCaptchas &&
-                          <CaptchaComponent {...{clientInterface}} />}
-                    </CaptchaContextManager.Provider>
+                            <Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman }} />
 
-                    {!showCaptchas &&
-                      <Button
-                        onClick={showCaptchaClick}
-                        className={"iAmHumanButton"}
-                        {...addDataAttr({dev: {cy: 'button-human'}})}
-                      >
-                        <Typography className={"iAmHumanButtonLabel"}>
-                          I am human
-                        </Typography>
-                      </Button>}
-                    {manager.state.account && !manager.state.config.web2 &&
-                      <Button onClick={disconnectAccount} className={"iAmHumanButton"}>
-                        <Typography className={"iAmHumanButtonLabel"}>
-                          Disconnect account
-                        </Typography>
-                      </Button>}
-                </div>
-            </div>
-
-        </Box>
-    );
+                            <div>
+                                <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
+                                    <Button variant="contained" onClick={onActionHandler} disabled={!procaptchaOutput}>
+                                        {isLogin ? 'Login' : 'Sign up'}
+                                    </Button>
+                                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                                        <Box>
+                                            <Typography>- or -</Typography>
+                                        </Box>
+                                    </Box>
+                                    <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
+                                </Stack>
+                            </div>
+                        </FormGroup>
+                    </Box>
+                </Box>
+            </Box>
+        </div>
+    )
 }
 
-export default App;
+export default App

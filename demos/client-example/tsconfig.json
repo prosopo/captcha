@@ -16,13 +16,7 @@
   ],
   "references": [
     {
-      "path": "../packages/procaptcha"
-    },
-    {
       "path": "../packages/procaptcha-react"
-    },
-    {
-      "path": "../packages/provider"
     }
   ]
 }
