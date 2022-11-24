@@ -4,13 +4,13 @@ import storage from './storage'
 import { GetCaptchaResponse, ProsopoRandomProviderResponse, ProviderApi } from '@prosopo/api'
 import { hexToString } from '@polkadot/util'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
-import { CaptchaSolution, convertCaptchaToCaptchaSolution } from '@prosopo/datasets'
+import { CaptchaSolution } from '@prosopo/datasets'
 import {
     Account,
-    ProcaptchaEvents,
     ProcaptchaCallbacks,
     ProcaptchaConfig,
     ProcaptchaConfigOptional,
+    ProcaptchaEvents,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
 } from '../types/manager'
@@ -18,6 +18,7 @@ import { sleep } from '../utils/utils'
 import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import { TCaptchaSubmitResult } from '../types/client'
+import { randomAsHex } from '@polkadot/util-crypto'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -228,11 +229,17 @@ export const Manager = (
             updateState({ showModal: false })
 
             const challenge: GetCaptchaResponse = state.challenge
+            const salt = randomAsHex()
 
             // append solution to each captcha in the challenge
             const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
                 const solution = state.solutions[index]
-                return convertCaptchaToCaptchaSolution({ ...captcha.captcha, solution })
+                return {
+                    captchaId: captcha.captcha.captchaId,
+                    captchaContentId: captcha.captcha.captchaContentId,
+                    salt,
+                    solution,
+                }
             })
 
             const account = getAccount()
@@ -247,7 +254,8 @@ export const Manager = (
                 signer,
                 challenge.requestHash,
                 challenge.captchas[0].captcha.datasetId,
-                captchaSolution
+                captchaSolution,
+                salt
             )
 
             // update the state with the result of the submission
