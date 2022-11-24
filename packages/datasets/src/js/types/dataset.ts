@@ -1,15 +1,8 @@
 import { HexString } from '@polkadot/util/types'
-import {
-    Captcha,
-    CaptchaTypes,
-    CaptchaWithoutId,
-    CaptchaWithoutIdRaw,
-    CaptchasSchema,
-    SelectAllCaptchaSchema,
-} from './captcha'
+import { Captcha, CaptchaTypes, CaptchaWithoutId, CaptchasSchema, SelectAllCaptchaSchema } from './captcha'
 import { z } from 'zod'
 
-type DatasetBase = {
+export type DatasetBase = {
     datasetId?: HexString | string | null
     datasetContentId?: HexString | string | null
     format: CaptchaTypes
@@ -22,7 +15,7 @@ export interface Dataset extends DatasetBase {
 }
 
 export interface DatasetRaw extends DatasetBase {
-    captchas: CaptchaWithoutIdRaw[]
+    captchas: CaptchaWithoutId[]
 }
 
 export type DatasetWithIds = {

@@ -1,11 +1,18 @@
 import { Dataset, DatasetRaw } from '../types/dataset'
 import { Captcha } from '../types/captcha'
-import { calculateItemHashes, computeCaptchaHash, matchItemsToSolutions } from './captcha'
+import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
 import { CaptchaMerkleTree } from './merkle'
 import { ProsopoEnvError } from '../types/error'
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw)
+    // console.log(dataset.captchas[0])
+    // dataset.captchas.map((captcha: CaptchaWithoutId) => {
+    //     if (captcha.target === 'car') {
+    //         console.log(captcha)
+    //     }
+    // })
+    // process.exit(0)
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(
@@ -31,7 +38,8 @@ export async function buildCaptchaTree(
 ): Promise<CaptchaMerkleTree> {
     try {
         const tree = new CaptchaMerkleTree()
-        const captchaHashes = dataset.captchas.map((captcha) =>
+        const datasetWithItemHashes = { ...dataset }
+        const captchaHashes = datasetWithItemHashes.captchas.map((captcha) =>
             computeCaptchaHash(captcha, includeSolution, includeSalt, sortItemHashes)
         )
         tree.build(captchaHashes)
@@ -44,14 +52,17 @@ export async function buildCaptchaTree(
 export async function addItemHashesAndSolutionHashesToDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     return {
         ...datasetRaw,
-        captchas: datasetRaw.captchas.map((captcha) => {
-            const items = calculateItemHashes(captcha.items)
+        captchas: await Promise.all(
+            datasetRaw.captchas.map(async (captcha) => {
+                const items = await Promise.all(captcha.items.map(async (item) => await computeItemHash(item)))
 
-            return {
-                ...captcha,
-                items,
-                solution: matchItemsToSolutions(captcha.solution, items),
-            }
-        }),
+                return {
+                    ...captcha,
+                    items,
+                    // some captcha challenges will not have a solution
+                    ...(captcha.solution !== undefined && { solution: matchItemsToSolutions(captcha.solution, items) }),
+                }
+            })
+        ),
     } as Dataset
 }
