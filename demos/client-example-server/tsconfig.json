@@ -28,12 +28,4 @@
     "./src/**/*.js"
   ],
   "exclude": ["node_modules", "dist"],
-  "references": [
-    {
-      "path": "../api"
-    },
-    {
-      "path": "../contract"
-    }
-  ]
 }
