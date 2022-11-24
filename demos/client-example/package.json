@@ -7,7 +7,6 @@
     "@emotion/styled": "^11.9.3",
     "@mui/material": "^5.9.1",
     "@mui/styles": "^5.9.1",
-    "@prosopo/procaptcha": "^0.1.10",
     "@prosopo/procaptcha-react": "^0.1.10",
     "@testing-library/jest-dom": "^5.16.4",
     "bootstrap": "^5.2.2",
