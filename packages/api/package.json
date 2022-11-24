@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/prosopo/api#readme",
   "dependencies": {
-    "@prosopo/datasets": "^0.1.9"
+    "@prosopo/datasets": "^0.1.9",
+    "axios": "^1.2.0"
   }
 }
