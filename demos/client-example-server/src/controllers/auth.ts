@@ -14,21 +14,13 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
             email: req.body.email,
         })
         await prosopoServer.isReady()
-        console.log(req.body)
-
         if (dbUser) {
             return res.status(409).json({ message: 'email already exists' })
-        } else if (
-            req.body.email &&
-            req.body.password &&
-            req.body.prosopo &&
-            req.body.prosopo.userAccount &&
-            req.body.prosopo.providerUrl
-        ) {
+        } else if (req.body.email && req.body.password && req.body.prosopo && req.body.prosopo.userAccountAddress) {
             console.log(req.body)
             if (
                 await prosopoServer.isVerified(
-                    req.body.prosopo.userAccount,
+                    req.body.prosopo.userAccountAddress,
                     req.body.prosopo.providerUrl,
                     req.body.prosopo.commitmentId
                 )
@@ -59,6 +51,8 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
             return res.status(400).json({ message: 'password not provided' })
         } else if (!req.body.email) {
             return res.status(400).json({ message: 'email not provided' })
+        } else {
+            return res.status(500).json({ message: 'internal server error' })
         }
     } catch (err) {
         console.error('error', err)
