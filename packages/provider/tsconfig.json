@@ -14,10 +14,13 @@
   ],
   "references": [
     {
+      "path": "../datasets"
+    },
+    {
       "path": "../contract"
     },
     {
-      "path": "../datasets"
+      "path": "../i18n"
     }
   ]
 }
