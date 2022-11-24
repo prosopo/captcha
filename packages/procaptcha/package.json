@@ -24,11 +24,11 @@
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
     "@prosopo/api": "^0.1.10",
+    "@prosopo/contract": "^0.1.10",
+    "@prosopo/datasets": "^0.1.10",
     "axios": "^0.27.2"
   },
   "devDependencies": {
-    "@prosopo/contract": "^0.1.10",
-    "@prosopo/datasets": "^0.1.10",
     "@types/chai": "^4.3.1",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
