@@ -13,4 +13,9 @@
     "include": [
         "./src/**/*.ts"
     ],
+    "references": [
+        {
+            "path": "../datasets"
+        },
+    ]
 }
