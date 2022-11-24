@@ -52,14 +52,7 @@ import {
 } from '@prosopo/datasets'
 import consola from 'consola'
 import { buildDecodeVector } from '../codec/codec'
-import {
-    CaptchaWithProof,
-    DappUserSolutionResult,
-    Database,
-    ProsopoEnvironment,
-    UserCommitmentRecord,
-    UserSolutionRecord,
-} from '../types'
+import { CaptchaWithProof, DappUserSolutionResult, Database, ProsopoEnvironment, UserCommitmentRecord } from '../types'
 import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
 
 import { i18n } from '@prosopo/i18n'
@@ -721,12 +714,12 @@ export class Tasks {
     /*
      * Get dapp user solution from database
      */
-    async getDappUserSolutionById(commitmentId: string): Promise<UserSolutionRecord> {
-        const dappUserSolution = await this.db.getDappUserSolutionById(commitmentId)
+    async getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord> {
+        const dappUserSolution = await this.db.getDappUserCommitmentById(commitmentId)
         if (!dappUserSolution) {
             throw new ProsopoEnvError(
                 'CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND',
-                this.getDappUserSolutionById.name,
+                this.getDappUserCommitmentById.name,
                 {},
                 { commitmentId: commitmentId }
             )
@@ -735,7 +728,7 @@ export class Tasks {
     }
 
     /* Check if dapp user has verified solution in cache */
-    async getDappUserSolutionByAccount(userAccount: string): Promise<UserCommitmentRecord | undefined> {
+    async getDappUserCommitmentByAccount(userAccount: string): Promise<UserCommitmentRecord | undefined> {
         const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(userAccount)
         if (dappUserSolutions.length > 0) {
             for (const dappUserSolution of dappUserSolutions) {

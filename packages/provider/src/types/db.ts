@@ -159,6 +159,8 @@ export interface Database {
 
     getDappUserSolutionById(commitmentId: string): Promise<UserSolutionRecord | undefined>
 
+    getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord | undefined>
+
     getDappUserCommitmentByAccount(accountId: string): Promise<UserCommitmentRecord[]>
 
     approveDappUserCommitment(commitmentId: string): Promise<void>

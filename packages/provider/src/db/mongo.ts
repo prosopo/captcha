@@ -520,7 +520,19 @@ export class ProsopoDatabase implements Database {
     }
 
     /**
-     * @description Get dapp user solution by account
+     * @description Get dapp user commitment by user account
+     * @param {string[]} userAccount
+     */
+    async getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord | undefined> {
+        const commitmentCursor = this.tables?.commitment?.findOne({ commitmentId: commitmentId }).lean()
+
+        const doc = await commitmentCursor
+
+        return doc ? (doc as UserCommitmentRecord) : undefined
+    }
+
+    /**
+     * @description Get dapp user commitment by user account
      * @param {string[]} userAccount
      */
     async getDappUserCommitmentByAccount(userAccount: string): Promise<UserCommitmentRecord[]> {

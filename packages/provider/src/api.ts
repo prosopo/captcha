@@ -222,9 +222,9 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
             let solution
             let statusMessage = 'API.USER_NOT_VERIFIED'
             if (!parsed.commitmentId) {
-                solution = await tasks.getDappUserSolutionByAccount(parsed.userAccount)
+                solution = await tasks.getDappUserCommitmentByAccount(parsed.userAccount)
             } else {
-                solution = await tasks.getDappUserSolutionById(parsed.commitmentId)
+                solution = await tasks.getDappUserCommitmentById(parsed.commitmentId)
             }
             if (solution) {
                 if (solution.approved) {
