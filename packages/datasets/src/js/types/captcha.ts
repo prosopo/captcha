@@ -17,80 +17,91 @@ import { z } from 'zod'
 import { AccountId, Hash } from '@polkadot/types/interfaces'
 import { u32, u64 } from '@polkadot/types'
 
-export enum CaptchaTypes { SelectAll = 'SelectAll'}
-export enum CaptchaItemTypes {Text = 'text', Image = 'image'}
-export enum CaptchaStates {Solved = 'solved', Unsolved = 'unsolved'}
-export type RawSolution = number;
-export type HashedSolution = string;
+export enum CaptchaTypes {
+    SelectAll = 'SelectAll',
+}
+export enum CaptchaItemTypes {
+    Text = 'text',
+    Image = 'image',
+}
+export enum CaptchaStates {
+    Solved = 'solved',
+    Unsolved = 'unsolved',
+}
+export type RawSolution = number
+export type HashedSolution = string
 export type Item = z.infer<typeof CaptchaItemSchema>
-
-type CaptchaWithoutIdBase = {
-    salt: string;
-    items: Item[];
-    target: string;
-    solved?: boolean;
-};
-
-export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
-    solution?: HashedSolution[];
+export interface HashedItem extends Omit<Item, 'hash'> {
+    hash: string
 }
 
-export interface CaptchaWithoutIdRaw extends CaptchaWithoutIdBase {
-    solution?: RawSolution[];
+type CaptchaWithoutIdBase = {
+    salt: string
+    items: Item[]
+    target: string
+    solved?: boolean
+}
+
+export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
+    solution?: HashedSolution[] | RawSolution[]
 }
 
 export type CaptchaSolutionToUpdate = {
-    captchaId: string,
-    captchaContentId: string,
-    salt: string,
+    captchaId: string
+    captchaContentId: string
+    salt: string
     solution: HashedSolution[]
 }
 
 export interface Captcha extends CaptchaWithoutId {
-    captchaId: string;
-    captchaContentId: string;
-    assetURI?: string;
-    datasetId?: string;
-    datasetContentId?: string;
+    captchaId: string
+    captchaContentId: string
+    assetURI?: string
+    datasetId?: string
+    datasetContentId?: string
 }
 
-export enum CaptchaStatus { Pending = 'Pending', Approved = 'Approved', Disapproved = 'Disapproved' }
+export enum CaptchaStatus {
+    Pending = 'Pending',
+    Approved = 'Approved',
+    Disapproved = 'Disapproved',
+}
 
 export interface CaptchaSolutionCommitment {
-    account: AccountId,
-    captchaDatasetId: Hash,
-    status: CaptchaStatus,
-    contract: AccountId,
-    provider: AccountId,
-    completed_at: u64,
+    account: AccountId
+    captchaDatasetId: Hash
+    status: CaptchaStatus
+    contract: AccountId
+    provider: AccountId
+    completed_at: u64
 }
 
 export interface CaptchaSolution {
-    captchaId: string;
-    captchaContentId: string;
-    salt: string;
-    solution: HashedSolution[];
+    captchaId: string
+    captchaContentId: string
+    salt: string
+    solution: HashedSolution[]
 }
 
 export type CaptchaConfig = {
     solved: {
         count: number
-    },
+    }
     unsolved: {
         count: number
     }
 }
 
 export type CaptchaSolutionConfig = {
-    requiredNumberOfSolutions: number,
-    solutionWinningPercentage: number,
-    captchaFilePath: string,
+    requiredNumberOfSolutions: number
+    solutionWinningPercentage: number
+    captchaFilePath: string
     captchaBlockRecency: number
 }
 
 export type LastCorrectCaptcha = {
-    before_ms: u32,
-    dapp_id: AccountId,
+    before_ms: u32
+    dapp_id: AccountId
 }
 
 export const CaptchaSchema = z.object({
@@ -98,18 +109,18 @@ export const CaptchaSchema = z.object({
     captchaContentId: z.union([z.string(), z.undefined()]),
     salt: z.string(),
     solution: z.number().array().optional(),
-    timeLimit: z.number().optional()
+    timeLimit: z.number().optional(),
 })
 
 export const CaptchaItemSchema = z.object({
     hash: z.string().optional(),
     data: z.string(),
-    type: z.nativeEnum(CaptchaItemTypes)
+    type: z.nativeEnum(CaptchaItemTypes),
 })
 
 export const SelectAllCaptchaSchemaRaw = CaptchaSchema.extend({
     items: z.array(CaptchaItemSchema),
-    target: z.string()
+    target: z.string(),
 })
 
 export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
@@ -118,13 +129,11 @@ export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
 
 export const CaptchasSchema = z.array(SelectAllCaptchaSchemaRaw)
 
-export const CaptchaSolution = z.object({
+export const CaptchaSolutionSchema = z.object({
     captchaId: z.string(),
     captchaContentId: z.string(),
     solution: z.string().array(),
     salt: z.string(),
 })
 
-export const CaptchaSolutionSchema = z.array(CaptchaSolution)
-
-
+export const CaptchaSolutionArraySchema = z.array(CaptchaSolutionSchema)

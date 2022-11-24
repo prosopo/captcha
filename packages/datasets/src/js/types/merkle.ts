@@ -13,14 +13,18 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { z } from 'zod'
 
 export interface MerkleNodeInterface {
     hash: string
     parent: string | null
 }
 
-export const MerkleNodeSchema = z.object({
-    hash: z.string(),
-    parent: z.union([z.string(), z.null()])
-})
+export type MerkleLeaf = string
+
+export type MerkleLayer = MerkleLeaf[]
+
+export type MerkleProofLayer = [MerkleLeaf, MerkleLeaf]
+
+export type MerkleRootLayer = [MerkleLeaf]
+
+export type MerkleProof = [...MerkleProofLayer[], MerkleRootLayer]
