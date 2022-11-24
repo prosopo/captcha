@@ -24,3 +24,13 @@ export const MerkleNodeSchema = z.object({
     hash: z.string(),
     parent: z.union([z.string(), z.null()]),
 })
+
+export type MerkleLeaf = string
+
+export type MerkleLayer = MerkleLeaf[]
+
+export type MerkleProofLayer = [MerkleLeaf, MerkleLeaf]
+
+export type MerkleRootLayer = [MerkleLeaf]
+
+export type MerkleProof = [...MerkleProofLayer[], MerkleRootLayer]
