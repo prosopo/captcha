@@ -1,53 +1,24 @@
-import ExtWeb3 from './ExtWeb3'
-import ExtWeb2 from './ExtWeb2'
-import ProsopoContract from '../../api/ProsopoContract'
+import ProsopoContract from '../api/ProsopoContract'
 import { WsProvider } from '@polkadot/rpc-provider'
-import storage from '../storage'
-import { GetCaptchaResponse, ProsopoNetwork, ProsopoRandomProviderResponse, ProviderApi } from '@prosopo/api'
+import storage from './storage'
+import { GetCaptchaResponse, ProsopoRandomProviderResponse, ProviderApi } from '@prosopo/api'
 import { hexToString } from '@polkadot/util'
-import ProsopoCaptchaApi from '../ProsopoCaptchaApi'
-import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
+import ProsopoCaptchaApi from './ProsopoCaptchaApi'
 import { CaptchaSolution } from '@prosopo/datasets'
-import { TCaptchaSubmitResult } from '../../types'
+import {
+    Account,
+    ProcaptchaCallbacks,
+    ProcaptchaConfig,
+    ProcaptchaConfigOptional,
+    ProcaptchaEvents,
+    ProcaptchaState,
+    ProcaptchaStateUpdateFn,
+} from '../types/manager'
+import { sleep } from '../utils/utils'
+import ExtensionWeb2 from '../api/ExtensionWeb2'
+import ExtensionWeb3 from '../api/ExtensionWeb3'
+import { TCaptchaSubmitResult } from '../types/client'
 import { randomAsHex } from '@polkadot/util-crypto'
-
-/**
- * House the account and associated extension.
- */
-export interface Account {
-    account: InjectedAccount
-    extension: InjectedExtension
-}
-
-/**
- * The configuration of Procaptcha. This is passed it to Procaptcha as a prop. Values here are not updated by Procaptcha and are considered immutable from within Procaptcha.
- */
-export interface ProcaptchaConfig {
-    userAccountAddress: string // address of the user's account, undefined if not set / in web2 mode
-    web2: boolean // set to true to use the web2 version of Procaptcha, else web3 version
-    dappName: string // the name of the dapp accessing accounts (e.g. Prosopo)
-    network: ProsopoNetwork // the network to use, e.g. "moonbeam", "edgeware", etc
-    solutionThreshold: number // the threshold of solutions solved by the user to be considered human
-}
-
-export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<T>
-
-export type ProcaptchaConfigOptional = Optional<Optional<ProcaptchaConfig, 'userAccountAddress'>, 'web2'>
-
-/**
- * The state of Procaptcha. This is mutated as required to reflect the captcha process.
- */
-export interface ProcaptchaState {
-    isHuman: boolean // is the user human?
-    index: number // the index of the captcha round currently being shown
-    solutions: string[][] // the solutions for each captcha round
-    captchaApi: ProsopoCaptchaApi | undefined // the captcha api instance for managing captcha challenge. undefined if not set up
-    challenge: GetCaptchaResponse | undefined // the captcha challenge from the provider. undefined if not set up
-    showModal: boolean // whether to show the modal or not
-    loading: boolean // whether the captcha is loading or not
-    account: Account | undefined // the account operating the challenge. undefined if not set
-    submission: TCaptchaSubmitResult | undefined // the result of the captcha submission. undefined if not submitted
-}
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -63,18 +34,7 @@ export const defaultState = (): Partial<ProcaptchaState> => {
     }
 }
 
-export type StateUpdateFn = (state: Partial<ProcaptchaState>) => void
-
-export type ProcaptchaCallbacks = Partial<Events>
-
-interface Events {
-    onError: (error: Error) => void
-    onAccountNotFound: (address: string) => void
-    onHuman: () => void
-    onExtensionNotFound: () => void
-}
-
-const buildUpdateState = (state: ProcaptchaState, onStateUpdate: StateUpdateFn) => {
+const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaStateUpdateFn) => {
     const updateCurrentState = (nextState: Partial<ProcaptchaState>) => {
         // mutate the current state. Note that this is in order of properties in the nextState object.
         // e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
@@ -90,21 +50,17 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: StateUpdateFn) 
     return updateCurrentState
 }
 
-const sleep = (ms) => {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 /**
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
 export const Manager = (
     configOptional: ProcaptchaConfigOptional,
     state: ProcaptchaState,
-    onStateUpdate: StateUpdateFn,
+    onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
 ) => {
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
-    const events: Events = Object.assign(
+    const events: ProcaptchaEvents = Object.assign(
         {
             onAccountNotFound: (address) => {
                 alert(`Account ${address} not found`)
@@ -112,8 +68,8 @@ export const Manager = (
             onError: (error) => {
                 alert(error ? error.message : 'An error occurred')
             },
-            onHuman: () => {
-                console.log('onHuman event triggered')
+            onHuman: (output) => {
+                console.log('onHuman event triggered', output)
             },
             onExtensionNotFound: () => {
                 alert('No extension found')
@@ -185,7 +141,9 @@ export const Manager = (
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
-                events.onHuman()
+                events.onHuman({
+                    userAccountAddress: account.account.address,
+                })
                 return
             }
 
@@ -201,7 +159,11 @@ export const Manager = (
                     const verifyDappUserResponse = await providerApi.verifyDappUser(account.account.address)
                     if (verifyDappUserResponse.solutionApproved) {
                         updateState({ isHuman: true, loading: false })
-                        events.onHuman()
+                        events.onHuman({
+                            providerUrl: providerUrlFromStorage,
+                            userAccountAddress: account.account.address,
+                            commitmentId: verifyDappUserResponse.commitmentId,
+                        })
                         return
                     }
                 } catch (err) {
@@ -267,7 +229,6 @@ export const Manager = (
             updateState({ showModal: false })
 
             const challenge: GetCaptchaResponse = state.challenge
-
             const salt = randomAsHex()
 
             // append solution to each captcha in the challenge
@@ -293,7 +254,8 @@ export const Manager = (
                 signer,
                 challenge.requestHash,
                 challenge.captchas[0].captcha.datasetId,
-                captchaSolution
+                captchaSolution,
+                salt
             )
 
             // update the state with the result of the submission
@@ -304,7 +266,11 @@ export const Manager = (
                 loading: false,
             })
             if (state.isHuman) {
-                events.onHuman()
+                events.onHuman({
+                    providerUrl: captchaApi.provider.provider.serviceOrigin,
+                    userAccountAddress: account.account.address,
+                    commitmentId: submission[1],
+                })
             }
         } catch (err) {
             // dispatch relevant error event
@@ -409,7 +375,7 @@ export const Manager = (
         }
 
         // check if account exists in extension
-        const ext = config.web2 ? new ExtWeb2() : new ExtWeb3()
+        const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3()
         const account = await ext.getAccount(config)
 
         console.log('Using account:', account)
@@ -431,7 +397,7 @@ export const Manager = (
      */
     const loadContract = async () => {
         const config = getConfig()
-        const contract = await ProsopoContract.create(
+        const contract: ProsopoContract = await ProsopoContract.create(
             config.network.prosopoContract.address,
             config.network.dappContract.address,
             getAccount().account.address,

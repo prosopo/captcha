@@ -13,21 +13,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { InjectedAccountWithMeta, InjectedExtension } from '@polkadot/extension-inject/types'
-import {
-    CaptchaSolutionResponse,
-    GetCaptchaResponse,
-    ProsopoClientConfig,
-    ProsopoRandomProviderResponse,
-} from '../types/api'
+import { CaptchaSolutionResponse } from '../types/api'
 import { TransactionResponse } from '../types/contract'
 import { CaptchaSolutionCommitment } from '@prosopo/datasets'
-import { SolvedData } from '../modules/index'
-import { CaptchaSolutionCommitmentId, VerificationResponse } from '@prosopo/api'
-import { ProsopoContract } from '../api'
-import { ProsopoCaptchaApi } from '../modules'
-
-export type TExtensionAccount = InjectedAccountWithMeta
+import { CaptchaSolutionCommitmentId } from '@prosopo/api'
 
 export type TCaptchaSubmitResult = [
     CaptchaSolutionResponse,
@@ -35,78 +24,3 @@ export type TCaptchaSubmitResult = [
     TransactionResponse?,
     CaptchaSolutionCommitment?
 ]
-
-export interface IExtensionInterface {
-    checkExtension(): void
-    getExtension(): InjectedExtension | undefined
-    getAccounts(): InjectedAccountWithMeta[]
-    getAccount(): InjectedAccountWithMeta | undefined
-    setAccount(account: string): void
-    unsetAccount(): void
-    getDefaultAccount(): InjectedAccountWithMeta | undefined
-    setDefaultAccount(): void
-    createAccount(): Promise<InjectedAccountWithMeta | undefined>
-}
-
-export interface ICaptchaClientEvents {
-    onLoad?: (extension: IExtensionInterface, contractAddress: string) => void
-    onAccountChange?: (account?: TExtensionAccount) => void
-}
-
-export interface ICaptchaStateClientEvents {
-    onLoadCaptcha?: (captchaChallenge: GetCaptchaResponse | Error) => void
-    onSubmit?: (result: TCaptchaSubmitResult | Error, captchaState: ICaptchaState) => void
-    onChange?: (captchaSolution: string[][], index: number) => void
-    onCancel?: () => void
-    onSolved?: (
-        account: TExtensionAccount,
-        submitResult?: TCaptchaSubmitResult,
-        verificationResponse?: VerificationResponse
-    ) => void
-    onHuman?: (solvedData: SolvedData) => void
-}
-
-export interface CaptchaEventCallbacks extends ICaptchaClientEvents, ICaptchaStateClientEvents {}
-
-export interface ICaptchaContextState {
-    config: ProsopoClientConfig
-    contractAddress?: string
-    account?: InjectedAccountWithMeta
-    providerUrl?: string
-    extension?: IExtensionInterface
-    contract?: ProsopoContract
-    provider?: ProsopoRandomProviderResponse
-    captchaApi?: ProsopoCaptchaApi
-}
-
-export interface ICaptchaContextReducer {
-    state: ICaptchaContextState
-    update: (value: Partial<ICaptchaContextState>) => void
-}
-
-export interface ICaptchaState {
-    captchaChallenge?: GetCaptchaResponse
-    captchaIndex: number
-    captchaSolution: string[][]
-    // captchaSolutions: CaptchaSolution[];
-}
-
-export interface ICaptchaStateReducer {
-    state: ICaptchaState
-    update: (value: Partial<ICaptchaState>) => void
-}
-
-export interface ICaptchaStatusState {
-    info?: string
-    error?: string
-}
-
-export interface ICaptchaStatusReducerAction {
-    info?: [string, any] | string
-    error?: [string, any] | string | Error
-}
-
-export interface ICaptchaStatusReducer {
-    state: ICaptchaStatusState
-    update: (value: Partial<ICaptchaStatusReducerAction>) => void
-}

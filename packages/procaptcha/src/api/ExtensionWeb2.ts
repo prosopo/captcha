@@ -1,70 +1,38 @@
-// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
-// This file is part of procaptcha <https://github.com/prosopo/procaptcha>.
-//
-// procaptcha is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// procaptcha is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { InjectedAccountWithMeta, InjectedExtension } from '@polkadot/extension-inject/types'
-import storage from '../modules/storage'
-import { IExtensionInterface } from '../types/client'
-import AsyncFactory from './AsyncFactory'
-import { ProsopoEnvError } from '@prosopo/datasets'
-import { AccountCreator } from './AccountCreator'
+import { ApiPromise, Keyring } from '@polkadot/api'
+import { InjectedExtension } from '@polkadot/extension-inject/types'
 import { WsProvider } from '@polkadot/rpc-provider'
-import Signer from '@polkadot/extension-base/page/Signer'
+import { stringToU8a } from '@polkadot/util'
+import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto'
+import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
+import { hexHash } from '@prosopo/datasets'
+import Extension from './Extension'
+import FingerprintJS, { hashComponents } from '@fingerprintjs/fingerprintjs'
 import { MessageTypesWithNullRequest } from '@polkadot/extension-base/background/types'
-import { AccountCreatorConfig } from '../types/index'
+import Signer from '@polkadot/extension-base/page/Signer'
+import { InjectedAccount } from '@polkadot/extension-inject/types'
+import { Account, ProcaptchaConfig } from '../types'
+import { picassoCanvas } from '../modules/canvas'
 
-export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
-    private extension?: InjectedExtension
-    private account: InjectedAccountWithMeta | undefined
-    private accounts: InjectedAccountWithMeta[]
+/**
+ * Class for interfacing with web3 accounts.
+ */
+export default class ExtWeb2 extends Extension {
+    public async getAccount(config: ProcaptchaConfig): Promise<Account> {
+        const wsProvider = new WsProvider(config.network.endpoint)
 
-    protected source: string
-    protected accountCreatorConfig: AccountCreatorConfig
-    protected wsProvider: WsProvider
+        const account: InjectedAccount = await this.createAccount(wsProvider)
+        const extension: InjectedExtension = await this.createExtension(account)
 
-    public async init(wsProvider: WsProvider, accountCreatorConfig: AccountCreatorConfig, source: string) {
-        this.source = source
-        await this.setExtension()
-        this.wsProvider = wsProvider
-        this.accountCreatorConfig = accountCreatorConfig
-        return this
-    }
-
-    public async checkExtension() {
-        return
-    }
-
-    public getExtension() {
-        return this.extension
-    }
-
-    private async setExtension() {
-        /*
-        InjectedAccounts
-        get: (anyType?: boolean) => Promise<InjectedAccount[]>;
-        subscribe: (cb: (accounts: InjectedAccount[]) => void | Promise<void>) => Unsubcall;
-         */
-        const injectedAccounts = {
-            get: () => Promise.resolve([]),
-            subscribe: () => () => {
-                console.info('web2: no injected accounts')
-            },
+        return {
+            account,
+            extension,
         }
+    }
 
-        async function sendMessage<TMessageType extends MessageTypesWithNullRequest, TResponse>(
+    private async createExtension(account: InjectedAccount): Promise<InjectedExtension> {
+        const sendMessage = async <TMessageType extends MessageTypesWithNullRequest>(
             message: TMessageType
-        ): Promise<void> {
+        ): Promise<void> => {
             return new Promise<void>((resolve, reject) => {
                 resolve()
             })
@@ -72,71 +40,68 @@ export class ExtensionWeb2 extends AsyncFactory implements IExtensionInterface {
 
         await sendMessage('pub(authorize.tab)' as MessageTypesWithNullRequest)
         const signer = new Signer(sendMessage)
-        this.extension = {
-            name: 'polkadot-js-web2',
-            version: 'procaptcha',
-            accounts: injectedAccounts,
-            signer: signer,
-        }
-        return
-    }
 
-    public getAccounts() {
-        return this.accounts
-    }
-
-    private async setAccounts(accounts: InjectedAccountWithMeta[]) {
-        try {
-            this.accounts = accounts
-        } catch (err) {
-            throw new ProsopoEnvError(err)
-        }
-        this.setDefaultAccount()
-    }
-
-    public getAccount() {
-        return this.account
-    }
-
-    public setAccount(address: string) {
-        if (!this.accounts.length) {
-            throw new ProsopoEnvError('WIDGET.NO_ACCOUNTS_FOUND')
-        }
-
-        const account = this.accounts.find((acc) => acc.address === address)
-        if (!account) {
-            throw new ProsopoEnvError('WIDGET.ACCOUNT_NOT_FOUND')
-        }
-        this.account = account
-        storage.setAccount(account.address)
-    }
-
-    public unsetAccount() {
-        this.account = undefined
-        storage.setAccount('')
-    }
-
-    public getDefaultAccount() {
-        const defaultAccount = storage.getAccount()
-        const accounts = this.accounts || []
-        return accounts.find((acc) => acc.address === defaultAccount)
-    }
-
-    public setDefaultAccount() {
-        const defaultAccount = storage.getAccount()
-        if (defaultAccount) {
-            this.setAccount(defaultAccount)
+        return {
+            accounts: {
+                get: async () => {
+                    // there is only ever 1 account
+                    return [account]
+                },
+                subscribe: () => {
+                    // do nothing, there will never be account changes
+                    return () => {
+                        return
+                    }
+                },
+            },
+            name: 'procaptcha-web2',
+            version: '0.0.1',
+            signer,
         }
     }
 
-    public async createAccount() {
-        const accountCreator = await AccountCreator.create(this.wsProvider, this.accountCreatorConfig, this.source)
-        const storedAccount = storage.getAccount()
-        const account = await accountCreator.createAccount(undefined, storedAccount)
-        await this.setAccounts([account])
-        this.setAccount(account.address)
-        return account
+    private async createAccount(wsProvider: WsProvider): Promise<InjectedAccount> {
+        const params = {
+            area: { width: 300, height: 300 },
+            offsetParameter: 2001000001,
+            multiplier: 15000,
+            fontSizeFactor: 1.5,
+            maxShadowBlur: 50,
+            numberOfRounds: 5,
+            seed: 42,
+        }
+
+        const browserEntropy = await this.getFingerprint()
+        const canvasEntropy = picassoCanvas(params.numberOfRounds, params.seed, params)
+        const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
+        console.log('canvas entropy', canvasEntropy)
+        console.log('browserEntropy', browserEntropy)
+        console.log('entropy', entropy)
+        const u8Entropy = stringToU8a(entropy)
+        const mnemonic = entropyToMnemonic(u8Entropy)
+
+        const api = await ApiPromise.create({ provider: wsProvider })
+        const type = 'sr25519'
+        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
+
+        await cryptoWaitReady()
+        const account = keyring.addFromMnemonic(mnemonic)
+        const address = account.address.length === 42 ? account.address : encodeAddress(decodeAddress(account.address))
+        return {
+            address,
+            type,
+            name: address,
+        }
+    }
+
+    private async getFingerprint(): Promise<string> {
+        // Initialize an agent at application startup.
+        const fpPromise = FingerprintJS.load()
+        // Get the visitor identifier when you need it.
+        const fp = await fpPromise
+        const result = await fp.get()
+        // strip out the components that change in incognito mode
+        const { screenFrame, ...componentsReduced } = result.components
+        return hashComponents(componentsReduced)
     }
 }
-
-export default ExtensionWeb2
