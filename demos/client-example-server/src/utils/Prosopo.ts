@@ -1,5 +1,6 @@
 import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
-import { ContractAbi, ProsopoContractMethods, ProsopoEnvError, abiJson } from '@prosopo/contract'
+import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
