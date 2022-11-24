@@ -36,6 +36,7 @@
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
     "@prosopo/datasets": "^0.1.10",
+    "@prosopo/i18n": "^0.1.10",
     "bn.js": "^5.2.1",
     "consola": "^2.15.3",
     "zod": "^3.17.9"
