@@ -48,6 +48,7 @@ export default () => ({
             type: 'mongo',
             endpoint: `mongodb://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}`,
             dbname: process.env.DATABASE_NAME,
+            authSource: 'admin',
         },
     },
 

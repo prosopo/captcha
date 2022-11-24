@@ -31,7 +31,6 @@ describe('ENV TESTS', () => {
         expect(env.contractName).to.be.a.string
         expect(env.db).to.be.undefined
         expect(env.contractInterface).to.be.undefined
-        expect(env.network).to.be.undefined
     })
     // it('Initiliases an environment and waits till it is ready', async () => {
     //     const mnemonic = "unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat"

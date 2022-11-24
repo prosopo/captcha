@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { z } from 'zod'
-import { Captcha, CaptchaSolutionSchema } from '@prosopo/datasets'
+import { Captcha, CaptchaSolutionArraySchema } from '@prosopo/datasets'
 import { AnyJson } from '@polkadot/types/types/codec'
 
 export interface CaptchaWithProof {
@@ -36,7 +36,7 @@ export interface CaptchaIdAndProof {
 export const CaptchaSolutionBody = z.object({
     userAccount: z.string(),
     dappAccount: z.string(),
-    captchas: CaptchaSolutionSchema,
+    captchas: CaptchaSolutionArraySchema,
     requestHash: z.string(),
     blockHash: z.string().optional(),
     txHash: z.string().optional(),
@@ -52,6 +52,7 @@ export interface PendingCaptchaRequest {
     accountId: string
     pending: boolean
     salt: string
+    requestHash: string
 }
 
 export interface AccountsResponse {

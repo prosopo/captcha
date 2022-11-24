@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { MockEnvironment } from '../mocks/mockenv'
-
-const chai = require('chai')
-const chaiAsPromised = require('chai-as-promised')
+import { before } from 'mocha'
+import chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 
 chai.should()
 chai.use(chaiAsPromised)

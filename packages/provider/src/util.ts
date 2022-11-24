@@ -14,7 +14,10 @@
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import fs, { WriteStream, createWriteStream } from 'fs'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { Captcha, ProsopoEnvError } from '@prosopo/datasets'
+import { CaptchaSolution, arrayJoin } from '@prosopo/datasets'
+import pl from 'nodejs-polars'
+import consola from 'consola'
 
 export function encodeStringAddress(address: string) {
     try {
@@ -108,7 +111,7 @@ export async function promiseQueue<T>(array: (() => Promise<T>)[]): Promise<Prom
                 if (res) {
                     ret.push({ data: res })
                 }
-                return curr()
+                return curr() as any
             })
             .catch((err) => {
                 ret.push({ data: err })
@@ -130,3 +133,36 @@ export function parseBlockNumber(blockNumberString: string) {
 //         : undefined;
 //     config(envPath);
 // }
+
+export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumberOfSolutions: number) {
+    if (solutions.length === 0) {
+        return pl.DataFrame([])
+    }
+    const solutionsNoEmptyArrays = solutions.map(({ solution, ...otherAttrs }) => {
+        return { solutionKey: arrayJoin(solution, ','), ...otherAttrs }
+    })
+    let df = pl.readRecords(solutionsNoEmptyArrays)
+    df = df.drop('salt')
+    const group = df.groupBy(['captchaId', 'solutionKey']).agg(pl.count('captchaContentId').alias('count'))
+    const filtered = group.filter(pl.col('count').gt(winningNumberOfSolutions))
+    return filtered.withColumn(filtered['solutionKey'].str.split(',').rename('solution'))
+}
+
+export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], logger: typeof consola): Captcha[] {
+    // Note - loading the dataset in nodejs-polars doesn't work because of nested objects, which is why this is done in
+    // a map instead of a join
+    return captchas.map((captcha) => {
+        // try to find the solution in the solutions dataframe
+        if (!captcha.solution) {
+            try {
+                captcha.solution = solutions
+                    .filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId)))
+                    ['solution'].values()
+                    .collect()
+            } catch {
+                logger.debug('No solution found for captchaId', captcha.captchaId)
+            }
+        }
+        return captcha
+    })
+}

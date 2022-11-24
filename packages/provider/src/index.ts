@@ -19,6 +19,6 @@
 // export * from './cli'
 // export * from './codec'
 // export * from './db'
-// export * from './tasks'
+export * from './tasks'
 export * from './types'
 export * from './util'

@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-import { loadJSONFile, parseBlockNumber } from '../../src/util'
+import { DappUserSolutionResult, Tasks, loadJSONFile, parseBlockNumber, sendFunds } from '@prosopo/provider'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import path from 'path'
@@ -21,25 +21,31 @@ import {
     CaptchaMerkleTree,
     CaptchaSolution,
     ProsopoEnvError,
-    TransactionResponse,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
-    getEventsFromMethodName,
     hexHash,
     parseCaptchaDataset,
-} from '@prosopo/contract'
+} from '@prosopo/datasets'
+import { TransactionResponse, getEventsFromMethodName } from '@prosopo/contract'
 import { Account, AccountKey, IDatabaseAccounts, accountAddress, accountMnemonic } from '../dataUtils/DatabaseAccounts'
-import { Tasks } from '../../src/tasks/tasks'
 import { DAPP, PROVIDER } from '../mocks/accounts'
-import { sendFunds } from '../../src/tasks/setup'
 import { MockEnvironment } from '../mocks/mockenv'
 import { populateDatabase } from '../dataUtils/populateDatabase'
-import { DappUserSolutionResult } from '../../src/types/api'
 import { i18n } from '@prosopo/i18n'
+import { before } from 'mocha'
 
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
+
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function sleep(timeout) {
+    await delay(timeout)
+    console.log('Timeout reached')
+}
 
 describe('CONTRACT TASKS', () => {
     let providerStakeDefault: bigint
@@ -47,14 +53,18 @@ describe('CONTRACT TASKS', () => {
 
     // Create a user of specified type using the databasePopulator
     async function getUser(accountType: AccountKey): Promise<Account> {
-        const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
-        accountConfig[accountType] = 1
-        const databaseAccounts: IDatabaseAccounts = await populateDatabase(mockEnv, accountConfig, false)
-        const account = databaseAccounts[accountType].pop()
-        if (account === undefined) {
-            throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`), 'getUser')
+        try {
+            const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
+            accountConfig[accountType] = 1
+            const databaseAccounts: IDatabaseAccounts = await populateDatabase(mockEnv, accountConfig, false)
+            const account = databaseAccounts[accountType].pop()
+            if (account === undefined) {
+                throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
+            }
+            return account
+        } catch (e) {
+            throw new ProsopoEnvError(e)
         }
-        return account
     }
 
     before(async () => {
@@ -63,7 +73,6 @@ describe('CONTRACT TASKS', () => {
         } catch (e) {
             throw new ProsopoEnvError(e, 'isReady')
         }
-
         // try {
         //   // Seed some initial accounts
         //   databaseAccounts = await populateDatabase(TEST_USER_COUNT)
@@ -74,7 +83,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = new Tasks(mockEnv)
 
         try {
-            await mockEnv.contractInterface!.changeSigner('//Alice')
+            await mockEnv.changeSigner('//Alice')
         } catch (e) {
             throw new ProsopoEnvError(e, 'changeSigner')
         }
@@ -92,10 +101,6 @@ describe('CONTRACT TASKS', () => {
         // }
     })
 
-    after(() => {
-        process.exit()
-    })
-
     /** Gets some static solved captchas and constructions captcha solutions from them
      *  Computes the request hash for these captchas and the dappUser and then stores the request hash in the mock db
      *  @return {CaptchaSolution[], string} captchaSolutions and requestHash
@@ -109,15 +114,16 @@ describe('CONTRACT TASKS', () => {
         const dappContractAccount = await getUser(AccountKey.dappsWithStake)
         const tasks = await changeSigner(providerAccount)
         const providerDetails = await tasks.getProviderDetails(accountAddress(providerAccount))
-
+        //await sleep(132000)
         const solvedCaptchas = await mockEnv.db!.getRandomSolvedCaptchasFromSingleDataset(providerDetails.dataset_id, 2)
-        await mockEnv.contractInterface!.changeSigner(accountMnemonic(dappUserAccount))
+        await mockEnv.changeSigner(accountMnemonic(dappUserAccount))
 
         const userSalt = randomAsHex()
         const captchaSolutions: CaptchaSolution[] = solvedCaptchas.map((captcha) => ({
             captchaId: captcha.captchaId,
             salt: userSalt,
             solution: captcha.solution,
+            captchaContentId: captcha.captchaContentId,
         }))
         const pendingRequestSalt = randomAsHex()
         const requestHash = computePendingRequestHash(
@@ -145,16 +151,13 @@ describe('CONTRACT TASKS', () => {
     }
 
     async function changeSigner(account: Account): Promise<Tasks> {
-        await mockEnv.contractInterface!.changeSigner(accountMnemonic(account))
+        await mockEnv.changeSigner(accountMnemonic(account))
 
         return new Tasks(mockEnv)
     }
 
     it('Provider registration', async () => {
-        const [providerMnemonic, providerAddress] = mockEnv.contractInterface!.createAccountAndAddToKeyring() || [
-            '',
-            '',
-        ]
+        const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring() || ['', '']
 
         await sendFunds(mockEnv, providerAddress, 'Provider', 10000n * providerStakeDefault)
 
@@ -198,7 +201,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = await changeSigner(providerAccount)
 
         const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json')
-        const result: TransactionResponse = await tasks.providerAddDataset(captchaFilePath)
+        const result: TransactionResponse = await tasks.providerAddDatasetFromFile(captchaFilePath)
         const eventData = getEventsFromMethodName(result, 'providerAddDataset')
 
         expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
@@ -210,7 +213,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = await changeSigner(providerAccount)
 
         const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json')
-        const datasetPromise = tasks.providerAddDataset(captchaFilePath)
+        const datasetPromise = tasks.providerAddDatasetFromFile(captchaFilePath)
 
         datasetPromise.catch((e) => e.message.should.match('/ProviderInactive/'))
     })
@@ -360,7 +363,7 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Dapp registration', async () => {
-        const newAccount = mockEnv.contractInterface!.createAccountAndAddToKeyring() || ['', '']
+        const newAccount = mockEnv.createAccountAndAddToKeyring() || ['', '']
 
         const tasks = await changeSigner(newAccount)
 
@@ -723,6 +726,7 @@ describe('CONTRACT TASKS', () => {
                 accountAddress(dappUserAccount),
                 accountAddress(dappAccount)
             )
+
             const { captchas, requestHash } = await dappUserTasks.getRandomCaptchasAndRequestHash(
                 provider.dataset_id as string,
                 hexHash(accountAddress(dappUserAccount))
@@ -775,7 +779,7 @@ describe('CONTRACT TASKS', () => {
         )
 
         const insuficientFundsTransaction = await tasks
-            .providerAddDataset(captchaFilePath)
+            .providerAddDatasetFromFile(captchaFilePath)
             .then(() => false)
             .catch(() => true)
 
@@ -789,7 +793,7 @@ describe('CONTRACT TASKS', () => {
             providerStakeDefault
         )
 
-        await tasks.providerAddDataset(captchaFilePath)
+        await tasks.providerAddDatasetFromFile(captchaFilePath)
 
         const dappAccount = await getUser(AccountKey.dappsWithStake)
         const dappUser = await getUser(AccountKey.dappUsers)

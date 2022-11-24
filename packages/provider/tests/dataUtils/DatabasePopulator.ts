@@ -11,15 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BigNumber, Payee, ProsopoEnvError, hexHash } from '@prosopo/contract'
+import { BigNumber, Payee, stringToHexPadded } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/datasets'
 import path from 'path'
 
-import { blake2AsHex, decodeAddress, randomAsHex } from '@polkadot/util-crypto'
+import { blake2AsHex, decodeAddress, mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
 
 import { sendFunds as _sendFunds } from '../../src/tasks/setup'
 import { Tasks } from '../../src/tasks'
 import { Account, IDatabaseAccounts, accountAddress, accountMnemonic } from './DatabaseAccounts'
 import { Environment } from '../../src/env'
+import { TranslationKey } from '@prosopo/i18n'
 
 const serviceOriginBase = 'http://localhost:'
 
@@ -133,13 +135,20 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
     }
 
     private createAccount(): Account {
-        const account = this.mockEnv.contractInterface?.createAccountAndAddToKeyring()
+        const account = this.createAccountAndAddToKeyring()
 
         if (!account) {
             throw new ProsopoEnvError('DEVELOPER.CREATE_ACCOUNT_FAILED')
         }
 
         return account
+    }
+
+    private createAccountAndAddToKeyring(): [string, string] {
+        const mnemonic: string = mnemonicGenerate()
+        const account = this.mockEnv.keyring.addFromMnemonic(mnemonic)
+        const { address } = account
+        return [mnemonic, address]
     }
 
     private sendFunds(account: Account, payee: Payee, amount: BigNumber)
@@ -161,101 +170,125 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             throw new ProsopoEnvError('DEVELOPER.NO_MOCK_ENV')
         }
 
-        return this.mockEnv.contractInterface.changeSigner(mnemonic)
+        return this.mockEnv.changeSigner(mnemonic)
     }
 
     public async registerProvider(serviceOrigin?: string, noPush?: boolean): Promise<Account> {
-        const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
+        try {
+            const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
-        const account = this.createAccount()
+            const account = this.createAccount()
 
-        await this.sendFunds(accountAddress(account), 'Provider', 10000000n * this.providerStakeDefault)
-
-        await this.changeSigner(accountMnemonic(account))
-
-        const tasks = new Tasks(this.mockEnv)
-
-        await tasks.providerRegister(hexHash(_serviceOrigin), PROVIDER_FEE, PROVIDER_PAYEE, accountAddress(account))
-
-        if (!noPush) {
-            this._registeredProviders.push(account)
+            await this.sendFunds(accountAddress(account), 'Provider', 10000000n * this.providerStakeDefault)
+            await this.changeSigner(accountMnemonic(account))
+            const tasks = new Tasks(this.mockEnv)
+            await tasks.providerRegister(
+                stringToHexPadded(_serviceOrigin),
+                PROVIDER_FEE,
+                PROVIDER_PAYEE,
+                accountAddress(account)
+            )
+            if (!noPush) {
+                this._registeredProviders.push(account)
+            }
+            return account
+        } catch (e) {
+            throw this.createError(e)
         }
-
-        return account
     }
 
     private async updateProvider(account: Account, serviceOrigin: string) {
-        await this.changeSigner(account)
+        try {
+            await this.changeSigner(account)
 
-        const tasks = new Tasks(this.mockEnv)
+            const tasks = new Tasks(this.mockEnv)
 
-        await tasks.providerUpdate(
-            hexHash(serviceOrigin),
-            PROVIDER_FEE,
-            PROVIDER_PAYEE,
-            accountAddress(account),
-            this.providerStakeDefault
-        )
+            await tasks.providerUpdate(
+                stringToHexPadded(serviceOrigin),
+                PROVIDER_FEE,
+                PROVIDER_PAYEE,
+                accountAddress(account),
+                this.providerStakeDefault
+            )
+        } catch (e) {
+            throw this.createError(e)
+        }
     }
 
     public async registerProviderWithStake(): Promise<Account> {
-        const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
+        try {
+            const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
 
-        const account = await this.registerProvider(serviceOrigin, true)
+            const account = await this.registerProvider(serviceOrigin, true)
 
-        await this.updateProvider(account, serviceOrigin)
+            await this.updateProvider(account, serviceOrigin)
 
-        this._registeredProvidersWithStake.push(account)
+            this._registeredProvidersWithStake.push(account)
 
-        return account
+            return account
+        } catch (e) {
+            throw this.createError(e)
+        }
     }
 
     private async addDataset(account: Account) {
-        await this.changeSigner(account)
+        try {
+            await this.changeSigner(account)
 
-        const tasks = new Tasks(this.mockEnv)
+            const tasks = new Tasks(this.mockEnv)
 
-        const captchaFilePath = path.resolve(__dirname, '../../tests/mocks/data/captchas.json')
+            const captchaFilePath = path.resolve(__dirname, '../../tests/mocks/data/captchas.json')
 
-        await tasks.providerAddDataset(captchaFilePath)
+            await tasks.providerAddDatasetFromFile(captchaFilePath)
+        } catch (e) {
+            throw this.createError(e)
+        }
     }
 
     public async registerProviderWithStakeAndDataset(): Promise<Account> {
-        const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
+        try {
+            const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
 
-        const account = await this.registerProvider(serviceOrigin, true)
+            const account = await this.registerProvider(serviceOrigin, true)
 
-        await this.updateProvider(account, serviceOrigin)
+            await this.updateProvider(account, serviceOrigin)
 
-        await this.addDataset(account)
+            await this.addDataset(account)
 
-        this._registeredProvidersWithStakeAndDataset.push(account)
+            this._registeredProvidersWithStakeAndDataset.push(account)
 
-        return account
+            return account
+        } catch (e) {
+            throw this.createError(e)
+        }
     }
 
     public async registerDapp(serviceOrigin?: string, noPush?: boolean): Promise<Account> {
-        const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
+        try {
+            const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
-        const account = this.createAccount()
+            const account = this.createAccount()
 
-        await this.sendFunds(accountAddress(account), 'Provider', 10000000n * this.providerStakeDefault)
+            await this.sendFunds(accountAddress(account), 'Provider', 10000000n * this.providerStakeDefault)
 
-        await this.changeSigner(accountMnemonic(account))
+            await this.changeSigner(accountMnemonic(account))
 
-        const tasks = new Tasks(this.mockEnv)
+            const tasks = new Tasks(this.mockEnv)
 
-        await tasks.dappRegister(
-            hexHash(_serviceOrigin),
-            accountAddress(account),
-            blake2AsHex(decodeAddress(accountAddress(account)))
-        )
+            await tasks.dappRegister(
+                stringToHexPadded(_serviceOrigin),
+                accountAddress(account),
+                blake2AsHex(decodeAddress(accountAddress(account)))
+            )
 
-        if (!noPush) {
-            this._registeredDapps.push(account)
+            if (!noPush) {
+                this._registeredDapps.push(account)
+            }
+
+            return account
+        } catch (e) {
+            throw this.createError(e)
         }
-
-        return account
     }
 
     private async dappFund(account: Account) {
@@ -286,6 +319,14 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         this._registeredDappUsers.push(account)
 
         return account
+    }
+
+    createError(e): ProsopoEnvError {
+        let errorKey: TranslationKey = 'DEVELOPER.CREATE_ACCOUNT_FAILED'
+        if (e.error.message === 'Module') {
+            errorKey = 'DEVELOPER.CREATE_ACCOUNT_FAILED_OUT_OF_FUNDS' as TranslationKey
+        }
+        return new ProsopoEnvError(errorKey, this.registerDapp.name, undefined, e)
     }
 }
 
