@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/i18n",
-  "version": "0.0.2",
+  "version": "0.1.10",
   "description": "Prosopo localization",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/react": "^18.0.25",
     "i18next": "^21.9.2",
     "i18next-browser-languagedetector": "^6.1.5",
     "i18next-http-backend": "^1.4.4",

@@ -20,7 +20,8 @@
         "CALCULATE_CAPTCHA_SOLUTION": "Nešto je pošlo naopako pri izračunavanju captcha rešenja",
         "MNEMONIC_UNDEFINED": "Mnemonik snabdevača nedefinisan. Podesite `PROVIDER_MNEMONIC` u promenljivama okruženja",
         "ASYNC_FACTORY_CREATE": "Koristite factory metodu „kreiraj“.",
-        "CANT_FIND_KEYRINGPAIR": "Keyringpair nije pronađen za {{address}}"
+        "CANT_FIND_KEYRINGPAIR": "Keyringpair nije pronađen za {{address}}",
+        "ENVIRONMENT_NOT_READY": "Environment not ready"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Nevažeća metoda ugovora",
@@ -57,7 +58,8 @@
         "PENDING_RECORD_NOT_FOUND": "Nije pronađen nijedan zapis na čekanju",
         "INVALID_HASH": "Nevažeći heš",
         "SOLUTION_GET_FAILED": "Preuzimanje rešenja nije uspelo",
-        "DATASET_WITH_SOLUTIONS_GET_FAILED": "Nisu pronađeni skupovi podataka sa potrebnim brojem rešenja"
+        "DATASET_WITH_SOLUTIONS_GET_FAILED": "Nisu pronađeni skupovi podataka sa potrebnim brojem rešenja",
+        "SOLUTION_APPROVE_FAILED": "Failed to approve solution"
     },
     "CAPTCHA": {
         "PARSE_ERROR": "Greška pri parsiranju captcha",
@@ -70,7 +72,9 @@
         "MISSING_ITEM_HASH": "Nedostaje heš stavke",
         "INVALID_LEAF_HASH": "Nedostaje heš lista",
         "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
-        "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id"
+        "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id",
+        "DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
+        "INVALID_PROVIDER_URL": "Invalid provider url"
     },
     "API": {
         "BODY_UNDEFINED": "Body mora biti definisan u API POST pozivu",
@@ -79,7 +83,9 @@
         "CAPTCHA_PENDING": "Captcha rešenja su predata i čekaju odobrenje",
         "CAPTCHA_PASSED": "Tačno ste odgovorili na captcha-e",
         "BAD_REQUEST": "Neispravan zahtev",
-        "PAYMENT_INFO_NOT_FOUND": "Informacije o plaćanju nisu pronađene za date hešove bloka i transakcije"
+        "PAYMENT_INFO_NOT_FOUND": "Informacije o plaćanju nisu pronađene za date hešove bloka i transakcije",
+        "USER_VERIFIED": "User verified",
+        "USER_NOT_VERIFIED": "User not verified"
     },
     "CLI": {
         "PARAMETER_ERROR": "Nevažeći parametar"
