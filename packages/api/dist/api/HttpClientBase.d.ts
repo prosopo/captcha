@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosResponse } from "axios";
+import { AxiosInstance, AxiosResponse } from 'axios';
 export declare class HttpClientBase {
     protected readonly axios: AxiosInstance;
     constructor(baseURL: string, prefix?: string);

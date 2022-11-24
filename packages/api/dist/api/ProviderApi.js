@@ -19,10 +19,10 @@ const tslib_1 = require("tslib");
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 const HttpClientBase_1 = tslib_1.__importDefault(require("./HttpClientBase"));
 class ProviderApi extends HttpClientBase_1.default {
-    config;
-    constructor(config, providerUrl) {
+    network;
+    constructor(network, providerUrl) {
         super(providerUrl);
-        this.config = config;
+        this.network = network;
     }
     getProviders() {
         return this.axios.get(`/v1/prosopo/providers`);
@@ -31,7 +31,7 @@ class ProviderApi extends HttpClientBase_1.default {
         const { provider } = randomProvider;
         let { blockNumber } = randomProvider;
         blockNumber = blockNumber.replace(/,/g, '');
-        return this.axios.get(`/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
+        return this.axios.get(`/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.network.dappContract.address}/${blockNumber}`);
     }
     submitCaptchaSolution(captchas, requestHash, userAccount, salt, blockHash, txHash, web2) {
         return this.axios.post(`/v1/prosopo/provider/solution`, {
@@ -40,13 +40,17 @@ class ProviderApi extends HttpClientBase_1.default {
             requestHash,
             txHash,
             userAccount,
-            dappAccount: this.config['dappAccount'],
+            dappAccount: this.network.dappContract.address,
             web2,
-            salt
+            salt,
         });
     }
-    verifySolution(userAccount, commitmentId) {
-        return this.axios.get(`/v1/prosopo/provider/verify/${userAccount}/${commitmentId}`);
+    verifyDappUser(userAccount, commitmentId) {
+        const payload = { userAccount };
+        if (commitmentId) {
+            payload['commitmentId'] = commitmentId;
+        }
+        return this.axios.post(`/v1/prosopo/provider/verify`, payload);
     }
 }
 exports.ProviderApi = ProviderApi;

@@ -13,25 +13,23 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import axios, { AxiosInstance, AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosResponse } from 'axios'
 
 export class HttpClientBase {
+    protected readonly axios: AxiosInstance
 
-    protected readonly axios: AxiosInstance;
-
-    constructor(baseURL: string, prefix = "") {
-        baseURL = baseURL + prefix;
-        this.axios = axios.create({ baseURL });
-        this.axios.interceptors.response.use(this.responseHandler, this.errorHandler);
+    constructor(baseURL: string, prefix = '') {
+        baseURL = baseURL + prefix
+        this.axios = axios.create({ baseURL })
+        this.axios.interceptors.response.use(this.responseHandler, this.errorHandler)
     }
 
     protected responseHandler = (response: AxiosResponse) => {
-        console.log("API REQUEST", response.request);
-        return response.data;
+        console.log('API REQUEST', response.request)
+        return response.data
     }
 
-    protected errorHandler = (error: any) => Promise.reject(error.response);
-
+    protected errorHandler = (error: any) => Promise.reject(error.response)
 }
 
-export default HttpClientBase;
+export default HttpClientBase

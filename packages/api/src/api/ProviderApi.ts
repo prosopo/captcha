@@ -13,53 +13,68 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import HttpClientBase from "./HttpClientBase";
+import HttpClientBase from './HttpClientBase'
 import {
     CaptchaSolutionResponse,
     GetCaptchaResponse,
-    GetVerificationResponse,
-    ProsopoCaptchaConfig,
-    ProsopoRandomProviderResponse
-} from '../types';
-import { CaptchaSolution } from "@prosopo/datasets";
+    ProsopoNetwork,
+    ProsopoRandomProviderResponse,
+    VerificationResponse,
+} from '../types'
+import { CaptchaSolution } from '@prosopo/datasets'
 
 export class ProviderApi extends HttpClientBase {
+    private network: ProsopoNetwork
 
-    private config: ProsopoCaptchaConfig;
-
-    constructor(config: ProsopoCaptchaConfig, providerUrl: string) {
-        super(providerUrl);
-        this.config = config;
+    constructor(network: ProsopoNetwork, providerUrl: string) {
+        super(providerUrl)
+        this.network = network
     }
 
     public getProviders(): Promise<{ accounts: string[] }> {
-        return this.axios.get(`/v1/prosopo/providers`);
+        return this.axios.get(`/v1/prosopo/providers`)
     }
 
-    public getCaptchaChallenge(userAccount: string, randomProvider: ProsopoRandomProviderResponse): Promise<GetCaptchaResponse> {
-        const {provider} = randomProvider;
-        let {blockNumber} = randomProvider;
-        blockNumber = blockNumber.replace(/,/g, '');
-        return this.axios.get(`/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.config['dappAccount']}/${blockNumber}`);
+    public getCaptchaChallenge(
+        userAccount: string,
+        randomProvider: ProsopoRandomProviderResponse
+    ): Promise<GetCaptchaResponse> {
+        const { provider } = randomProvider
+        let { blockNumber } = randomProvider
+        blockNumber = blockNumber.replace(/,/g, '')
+        return this.axios.get(
+            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.network.dappContract.address}/${blockNumber}`
+        )
     }
 
-    public submitCaptchaSolution(captchas: CaptchaSolution[], requestHash: string, userAccount: string, salt: string, blockHash?: string, txHash?: string, web2?: boolean): Promise<CaptchaSolutionResponse> {
+    public submitCaptchaSolution(
+        captchas: CaptchaSolution[],
+        requestHash: string,
+        userAccount: string,
+        salt: string,
+        blockHash?: string,
+        txHash?: string,
+        web2?: boolean
+    ): Promise<CaptchaSolutionResponse> {
         return this.axios.post(`/v1/prosopo/provider/solution`, {
             blockHash,
             captchas,
             requestHash,
             txHash,
             userAccount,
-            dappAccount: this.config['dappAccount'],
+            dappAccount: this.network.dappContract.address,
             web2,
-            salt
-        });
+            salt,
+        })
     }
 
-    public verifySolution(userAccount: string, commitmentId: string): Promise<GetVerificationResponse> {
-        return this.axios.get(`/v1/prosopo/provider/verify/${userAccount}/${commitmentId}`);
+    public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
+        const payload = { userAccount }
+        if (commitmentId) {
+            payload['commitmentId'] = commitmentId
+        }
+        return this.axios.post(`/v1/prosopo/provider/verify`, payload)
     }
-
 }
 
-export default ProviderApi;
+export default ProviderApi
