@@ -21,6 +21,8 @@ function App() {
     const [message, setMessage] = useState('')
     // whether the form is doing a login or a signup action
     const [isLogin, setIsLogin] = useState(true)
+    // the result of the captcha process. Submit this to your backend server to verify the user is human on the backend
+    const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
     const serverUrl = process.env.REACT_APP_SERVER_URL || ''
 
@@ -51,12 +53,10 @@ function App() {
             })
     }
 
-    const onChangeHandler = () => {
-        setIsLogin(!isLogin)
-        setMessage('')
-    }
-
-    const onHuman = async (procaptchaOutput: ProcaptchaOutput) => {
+    const onActionHandler = () => {
+        if(!procaptchaOutput) {
+            alert('Must complete captcha')
+        }
         const payload = {
             email,
             name,
@@ -90,6 +90,16 @@ function App() {
             .catch((err) => {
                 console.log(err)
             })
+    }
+
+    const onChangeHandler = () => {
+        setIsLogin(!isLogin)
+        setMessage('')
+    }
+
+    const onHuman = async (procaptchaOutput: ProcaptchaOutput) => {
+        console.log('onHuman', procaptchaOutput)
+        setProcaptchaOutput(procaptchaOutput)
     }
 
     const getMessage = () => {
@@ -184,7 +194,7 @@ function App() {
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                    <Button variant="contained" onClick={onChangeHandler}>
+                                    <Button variant="contained" onClick={onActionHandler}>
                                         {isLogin ? 'Login' : 'Sign up'}
                                     </Button>
                                     <Box sx={{display: 'flex', justifyContent: 'center'}}>
