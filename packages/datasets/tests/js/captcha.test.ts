@@ -19,11 +19,12 @@ import {
     CaptchaTypes,
     CaptchaWithoutId,
     Dataset,
+    HashedItem,
     Item,
-    calculateItemHashes,
     compareCaptchaSolutions,
     computeCaptchaHash,
     computeCaptchaSolutionHash,
+    computeItemHash,
     computePendingRequestHash,
     matchItemsToSolutions,
     parseAndSortCaptchaSolutions,
@@ -32,7 +33,7 @@ import {
     verifyProof,
 } from '@prosopo/datasets'
 import path from 'path'
-import { after, it } from 'mocha'
+import { it } from 'mocha'
 
 describe('CAPTCHA FUNCTIONS', () => {
     let MOCK_ITEMS: Item[]
@@ -40,11 +41,13 @@ describe('CAPTCHA FUNCTIONS', () => {
     let RECEIVED: CaptchaSolution[]
     let STORED: Captcha[]
     before(async () => {
-        MOCK_ITEMS = await calculateItemHashes(
-            new Array(9).fill(0).map((_, i) => ({
-                data: path.join('http://localhost', `/tests/js/mocks/data/img/01.0${i + 1}.jpeg`),
-                type: CaptchaItemTypes.Text,
-            }))
+        MOCK_ITEMS = await Promise.all(
+            new Array(9).fill(0).map((_, i) =>
+                computeItemHash({
+                    data: path.join('http://localhost', `/tests/js/mocks/data/img/01.0${i + 1}.jpeg`),
+                    type: CaptchaItemTypes.Text,
+                })
+            )
         )
 
         const ITEMS = [
@@ -151,10 +154,6 @@ describe('CAPTCHA FUNCTIONS', () => {
         ]
     })
 
-    after(async () => {
-        process.exit()
-    })
-
     it('Parses a captcha dataset correctly', () => {
         expect(function () {
             parseCaptchaDataset(JSON.parse(JSON.stringify({ ...DATASET })) as JSON)
@@ -164,15 +163,17 @@ describe('CAPTCHA FUNCTIONS', () => {
     it('Captcha data set is hashed correctly', async () => {
         const dataset = { ...DATASET }
         dataset.captchas = await Promise.all(
-            dataset.captchas.map(async (captcha) => ({
-                ...captcha,
-                items: await calculateItemHashes(captcha.items),
-            }))
+            dataset.captchas.map(
+                async (captcha): Promise<Captcha> => ({
+                    ...captcha,
+                    items: await Promise.all(
+                        captcha.items.map(async (item): Promise<HashedItem> => await computeItemHash(item))
+                    ),
+                })
+            )
         )
 
-        console.log(dataset.captchas)
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, true, true, false))
-        console.log(captchaHashes)
         expect(captchaHashes[0]).to.equal('captchaId' in dataset.captchas[0] ? dataset.captchas[0].captchaId : '')
         expect(captchaHashes[1]).to.equal('captchaId' in dataset.captchas[1] ? dataset.captchas[1].captchaId : '')
     })

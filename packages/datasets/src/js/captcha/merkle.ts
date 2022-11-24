@@ -90,10 +90,20 @@ export class CaptchaMerkleTree {
         const proofTree: string[][] = []
         let layerNum = 0
         while (layerNum < this.layers.length) {
+            // drop out if its the last layer
+            if (layerNum === this.layers.length - 1) {
+                proofTree.push(this.layers[layerNum])
+                layerNum += 1
+                continue
+            }
             const leafIndex = this.layers[layerNum].indexOf(leafHash)
             // if layer 0 leaf index is 3, it should be partnered with 2: [L0,L1],[L2,L3],[L3,L4],...
             // layer one pairs looks like [L0L1, L2L3], [L3L4, L5L6],...etc
-            const partnerIndex = leafIndex % 2 && leafIndex > 0 ? leafIndex - 1 : leafIndex + 1
+            let partnerIndex = leafIndex % 2 && leafIndex > 0 ? leafIndex - 1 : leafIndex + 1
+            // if there are an odd number of leaves in the layer, the last leaf is duplicated
+            if (partnerIndex > this.layers[layerNum].length - 1) {
+                partnerIndex = leafIndex
+            }
             const pair = [leafHash]
             const layer = this.layers[layerNum]
             if (partnerIndex < layer.length) {
