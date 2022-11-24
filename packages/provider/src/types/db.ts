@@ -13,15 +13,12 @@
 // limitations under the License.
 import { Collection, Document } from 'mongodb'
 import { Hash } from '@polkadot/types/interfaces'
-import {
-    Captcha,
-    CaptchaSolution,
-    CaptchaStates,
-    Dataset
-} from '@prosopo/datasets'
+import { Captcha, CaptchaSolution, CaptchaSolutionSchema, CaptchaStates, Dataset } from '@prosopo/datasets'
 import { PendingCaptchaRequest } from './api'
-import { WithId } from 'mongodb/mongodb';
-import consola from "consola";
+import { WithId } from 'mongodb/mongodb'
+import consola from 'consola'
+import { z } from 'zod'
+
 // Other table types from other database engines go here
 export type Table = Collection | undefined
 
@@ -30,49 +27,65 @@ export interface Tables {
 }
 
 export interface DatasetRecord extends WithId<Document> {
-    datasetId: string,
-    format: string,
+    datasetId: string
+    format: string
     contentTree: string[][]
     solutionTree: string[][]
 }
 
 export interface PendingCaptchaRequestRecord extends WithId<Document> {
-    accountId: string,
-    pending: boolean,
+    accountId: string
+    pending: boolean
     salt: string
 }
 
+export const DappUserSolutionSchema = z.object({
+    userAccount: z.string(),
+    captchas: z.array(CaptchaSolutionSchema),
+    commitmentId: z.string(),
+    approved: z.boolean(),
+    datetime: z.string(),
+})
+
+export type DappUserSolution = z.infer<typeof DappUserSolutionSchema>
+
 export interface Database {
-    readonly url: string;
+    readonly url: string
     tables: Tables
-    dbname: string;
+    dbname: string
     logger: typeof consola
 
-    connect(): Promise<void>;
+    connect(): Promise<void>
 
-    storeDataset(dataset: Dataset): Promise<void>;
+    storeDataset(dataset: Dataset): Promise<void>
 
-    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>;
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>
 
-    getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>;
+    getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>
 
-    updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>;
+    updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>
 
-    getDatasetDetails (datasetId: Hash | string | Uint8Array): Promise<DatasetRecord>;
+    getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetRecord>
 
-    storeDappUserSolution(captchas: CaptchaSolution[], treeRoot: string): Promise<void>;
+    storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string, userAccount: string): Promise<void>
 
-    storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void>;
+    storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void>
 
     getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>
 
-    updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void>;
+    updateDappUserPendingStatus(userAccount: string, requestHash: string, approve: boolean): Promise<void>
 
-    getAllCaptchasByDatasetId(datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined>;
+    getAllCaptchasByDatasetId(datasetId: string, captchaState?: CaptchaStates): Promise<Captcha[] | undefined>
 
-    getAllSolutions(captchaId: string): Promise<CaptchaSolution[] | undefined>;
+    getAllSolutions(captchaId: string): Promise<CaptchaSolution[] | undefined>
 
-    getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string>;
+    getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string>
 
-    getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]>;
+    getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]>
+
+    getDappUserSolutionById(commitmentId: string): Promise<DappUserSolution | undefined>
+
+    getDappUserSolutionByAccount(accountId: string): Promise<DappUserSolution[]>
+
+    approveDappUserSolution(commitmentId: string): Promise<void>
 }

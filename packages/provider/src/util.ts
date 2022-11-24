@@ -11,20 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { decodeAddress, encodeAddress } from '@polkadot/keyring';
-import { hexToU8a, isHex } from '@polkadot/util';
-import fs, { WriteStream, createWriteStream } from 'fs';
-import {ProsopoEnvError} from "@prosopo/contract";
+import { decodeAddress, encodeAddress } from '@polkadot/keyring'
+import { hexToU8a, isHex } from '@polkadot/util'
+import fs, { WriteStream, createWriteStream } from 'fs'
+import { ProsopoEnvError } from '@prosopo/datasets'
 
-export function encodeStringAddress (address: string) {
+export function encodeStringAddress(address: string) {
     try {
-        return encodeAddress(
-            isHex(address)
-                ? hexToU8a(address)
-                : decodeAddress(address)
-        )
+        return encodeAddress(isHex(address) ? hexToU8a(address) : decodeAddress(address))
     } catch (error) {
-        throw new ProsopoEnvError(error, "CONTRACT.INVALID_ADDRESS", {}, address)
+        throw new ProsopoEnvError(error, 'CONTRACT.INVALID_ADDRESS', {}, address)
     }
 }
 
@@ -40,17 +36,16 @@ export function encodeStringAddress (address: string) {
 //     return parsedFilePath
 // }
 
-
-export function loadJSONFile (filePath: string, logger?: any) {
+export function loadJSONFile(filePath: string, logger?: any) {
     // const parsedFilePath = handleFileProtocol(filePath, logger)
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'))
     } catch (err) {
-        throw new ProsopoEnvError(err, "GENERAL.JSON_LOAD_FAILED", {}, filePath)
+        throw new ProsopoEnvError(err, 'GENERAL.JSON_LOAD_FAILED', {}, filePath)
     }
 }
 
-export function writeJSONFile (filePath: string, jsonData) {
+export function writeJSONFile(filePath: string, jsonData) {
     return new Promise((resolve, reject) => {
         const writeStream: WriteStream = createWriteStream(filePath)
 
@@ -75,7 +70,7 @@ export function writeJSONFile (filePath: string, jsonData) {
     })
 }
 
-export async function readFile (filePath): Promise<Buffer> {
+export async function readFile(filePath): Promise<Buffer> {
     // const parsedFilePath = handleFileProtocol(filePath, undefined)
     return new Promise((resolve, reject) => {
         fs.readFile(filePath, (err, data) => {
@@ -85,27 +80,25 @@ export async function readFile (filePath): Promise<Buffer> {
     })
 }
 
-export function shuffleArray<T> (array: T[]): T[] {
+export function shuffleArray<T>(array: T[]): T[] {
     for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
-        const randIndex = Math.floor(Math.random() * (arrayIndex + 1));
-        [array[arrayIndex], array[randIndex]] = [array[randIndex], array[arrayIndex]]
+        const randIndex = Math.floor(Math.random() * (arrayIndex + 1))
+        ;[array[arrayIndex], array[randIndex]] = [array[randIndex], array[arrayIndex]]
     }
     return array
 }
 
 type PromiseQueueRes<T> = {
-    data?: T;
-    error?: Error;
-}[];
+    data?: T
+    error?: Error
+}[]
 
 /**
  * Executes promises in order
  * @param array - array of promises
  * @returns PromiseQueueRes\<T\>
  */
-export async function promiseQueue<T> (
-    array: (() => Promise<T>)[]
-): Promise<PromiseQueueRes<T>> {
+export async function promiseQueue<T>(array: (() => Promise<T>)[]): Promise<PromiseQueueRes<T>> {
     const ret: PromiseQueueRes<T> = []
 
     await [...array, () => Promise.resolve(undefined)].reduce((promise, curr, i) => {

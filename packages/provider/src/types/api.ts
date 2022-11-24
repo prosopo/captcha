@@ -24,7 +24,7 @@ export type CaptchaResponse = CaptchaWithProof[]
 
 export interface DappUserSolutionResult {
     captchas: CaptchaIdAndProof[]
-    partialFee?: string,
+    partialFee?: string
     solutionApproved: boolean
 }
 
@@ -40,12 +40,17 @@ export const CaptchaSolutionBody = z.object({
     requestHash: z.string(),
     blockHash: z.string().optional(),
     txHash: z.string().optional(),
-    web2: z.boolean().optional().default(false)
+    web2: z.boolean().optional().default(false),
+})
+
+export const VerifySolutionBody = z.object({
+    userAccount: z.string(),
+    commitmentId: z.string().optional(),
 })
 
 export interface PendingCaptchaRequest {
-    accountId: string,
-    pending: boolean,
+    accountId: string
+    pending: boolean
     salt: string
 }
 

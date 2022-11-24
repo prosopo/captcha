@@ -19,15 +19,14 @@ import {
     ProsopoContractApi,
     ProsopoEnvError,
     abiJson,
-    createNetwork
-} from '@prosopo/contract';
-import consola, { LogLevel } from 'consola';
-import { MongoMemoryServer } from "mongodb-memory-server";
-import path from 'path';
-import { LocalAssetsResolver } from "../../src/assets";
-import { loadEnv } from '../../src/env';
-import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types';
-
+    createNetwork,
+} from '@prosopo/contract'
+import consola, { LogLevel } from 'consola'
+import { MongoMemoryServer } from 'mongodb-memory-server'
+import path from 'path'
+import { LocalAssetsResolver } from '../../src/assets'
+import { loadEnv } from '../../src/env'
+import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -43,80 +42,86 @@ export class MockEnvironment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
 
     constructor(mnemonic?: string) {
-        loadEnv();
+        loadEnv()
         this.config = {
             logLevel: 'info',
-            contract: {abi: '../contract/src/abi/prosopo.json'}, // Deprecated for abiJson.
+            contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.
             defaultEnvironment: 'development',
             networks: {
                 development: {
                     endpoint: process.env.SUBSTRATE_NODE_URL!,
                     contract: {
                         address: process.env.CONTRACT_ADDRESS!,
-                        name: 'prosopo'
+                        name: 'prosopo',
                     },
-                    accounts: [
-                        '//Alice',
-                        '//Bob',
-                        '//Charlie',
-                        '//Dave',
-                        '//Eve',
-                        '//Ferdie'
-                    ]
-                }
+                    accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
+                },
             },
             captchas: {
                 solved: {
-                    count: 1
+                    count: 1,
                 },
                 unsolved: {
-                    count: 1
-                }
+                    count: 1,
+                },
             },
             captchaSolutions: {
                 requiredNumberOfSolutions: 3,
                 solutionWinningPercentage: 80,
                 captchaFilePath: path.join(process.cwd(), './tests/mocks/data/captchas.json'),
-                captchaBlockRecency: 10
+                captchaBlockRecency: 10,
             },
             database: {
-                development: {type: 'mongo', endpoint: '', dbname: ''}
+                development: { type: 'mongo', endpoint: '', dbname: '' },
             },
-            assets : {
+            assets: {
                 absolutePath: '',
-                basePath: ''
+                basePath: '',
             },
-            server : {
-                baseURL: ''
-            }
+            server: {
+                baseURL: '',
+            },
         }
         if (!mnemonic) {
             this.mnemonic = '//Alice'
         }
 
-        if (this.config.defaultEnvironment && Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)) {
+        if (
+            this.config.defaultEnvironment &&
+            Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
+        ) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.logger = consola.create({level: LogLevel.Info});
+            this.logger = consola.create({ level: LogLevel.Info })
             this.abi = MockEnvironment.getContractAbi(this.config.contract.abi, this.logger)
             this.assetsResolver = new LocalAssetsResolver({
                 absolutePath: this.config.assets.absolutePath,
                 basePath: this.config.assets.basePath,
                 serverBaseURL: this.config.server.baseURL,
-            });
+            })
         } else {
-            throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", this.constructor.name, {}, this.config.defaultEnvironment)
+            throw new ProsopoEnvError(
+                'CONFIG.UNKNOWN_ENVIRONMENT',
+                this.constructor.name,
+                {},
+                this.config.defaultEnvironment
+            )
         }
     }
 
-
     async isReady(): Promise<void> {
         this.network = await createNetwork(this.mnemonic, this.config.networks![this.defaultEnvironment])
-        this.contractInterface = new ProsopoContractApi(this.contractAddress, this.mnemonic, this.contractName, this.abi, this.network)
+        this.contractInterface = new ProsopoContractApi(
+            this.contractAddress,
+            this.mnemonic,
+            this.contractName,
+            this.abi,
+            this.network
+        )
         // Persist database state for tests
         if (!this.db) {
-            consola.debug("Starting database...")
+            consola.debug('Starting database...')
             await this.importDatabase()
             // @ts-ignore
             await this.db?.connect()
@@ -126,22 +131,26 @@ export class MockEnvironment implements ProsopoEnvironment {
 
     async importDatabase(): Promise<void> {
         try {
-            const dbPath = path.join(`../../src/db/${this.config.database[this.defaultEnvironment].type}`);
-            const {ProsopoDatabase} = await import(dbPath)
-            const mongod = await MongoMemoryServer.create();
-            const databaseUrl = mongod.getUri();
+            const dbPath = path.join(`../../src/db/${this.config.database[this.defaultEnvironment].type}`)
+            const { ProsopoDatabase } = await import(dbPath)
+            const mongod = await MongoMemoryServer.create()
+            const databaseUrl = mongod.getUri()
             this.db = new ProsopoDatabase(
                 databaseUrl,
                 this.config.database[this.defaultEnvironment].dbname,
                 this.logger
             )
         } catch (err) {
-            throw new ProsopoEnvError(err, "DATABASE.DATABASE_IMPORT_FAILED", {}, this.config.database[this.defaultEnvironment].type)
+            throw new ProsopoEnvError(
+                err,
+                'DATABASE.DATABASE_IMPORT_FAILED',
+                {},
+                this.config.database[this.defaultEnvironment].type
+            )
         }
     }
 
     private static getContractAbi(path, logger): ContractAbi {
-        return abiJson;
+        return abiJson
     }
-
 }
