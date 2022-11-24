@@ -55,7 +55,7 @@ export default class ExtWeb2 extends Extension {
                 },
             },
             name: 'procaptcha-web2',
-            version: '0.0.1',
+            version: '0.1.10',
             signer,
         }
     }
