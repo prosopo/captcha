@@ -32,7 +32,7 @@ import { DAPP, PROVIDER } from '../mocks/accounts'
 import { MockEnvironment } from '../mocks/mockenv'
 import { populateDatabase } from '../dataUtils/populateDatabase'
 import { i18n } from '@prosopo/i18n'
-import { after, before } from 'mocha'
+import { before } from 'mocha'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -68,12 +68,11 @@ describe('CONTRACT TASKS', () => {
     }
 
     before(async () => {
-        // try {
-        await mockEnv.isReady()
-        // } catch (e) {
-        //     throw new ProsopoEnvError(e, 'isReady')
-        // }
-
+        try {
+            await mockEnv.isReady()
+        } catch (e) {
+            throw new ProsopoEnvError(e, 'isReady')
+        }
         // try {
         //   // Seed some initial accounts
         //   databaseAccounts = await populateDatabase(TEST_USER_COUNT)
@@ -100,10 +99,6 @@ describe('CONTRACT TASKS', () => {
         // } catch (e) {
         //   throw new ProsopoEnvError(e, 'importDatabaseAccounts');
         // }
-    })
-
-    after(() => {
-        process.exit()
     })
 
     /** Gets some static solved captchas and constructions captcha solutions from them
