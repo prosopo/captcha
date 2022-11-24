@@ -13,107 +13,146 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
-import { useEffect, useContext, useReducer } from "react";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
-import {
-    ICaptchaContextReducer,
-    ProsopoCaptchaClient,
-    ProsopoCaptchaStateClient,
-    captchaStateReducer
-} from "@prosopo/procaptcha";
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Typography from '@mui/material/Typography'
+import { GetCaptchaResponse } from '@prosopo/procaptcha'
 
-import { CaptchaContextManager } from "./CaptchaManager";
-import { CaptchaWidget } from "./CaptchaWidget";
+import { CaptchaWidget } from './CaptchaWidget'
+import { useTranslation } from '@prosopo/i18n'
+import { addDataAttr } from '../util'
+import ThemeProvider from '@mui/material/styles/ThemeProvider'
+import theme from './theme'
 
-import { useTranslation } from "@prosopo/i18n";
-import { useStyles } from "../styles";
-import { addDataAttr } from "../util";
-
-
-export function CaptchaComponent({ clientInterface }: { clientInterface: ProsopoCaptchaClient }) {
-
-    const { t } = useTranslation();
-    const classes = useStyles();
-
-    const manager: ICaptchaContextReducer = useContext(CaptchaContextManager);
-    const [state, update] = useReducer(captchaStateReducer, { captchaIndex: 0, captchaSolution: [] });
-    const { account, contractAddress } = manager.state;
-    const { captchaChallenge, captchaIndex, captchaSolution } = state;
-    const totalCaptchas = captchaChallenge?.captchas.length ?? 0;
-
-    const stateClientInterface = new ProsopoCaptchaStateClient(clientInterface, { state, update });
-
-    useEffect(() => {
-        clientInterface.onLoad(manager.state.config['web2']);
-
-    }, []);
-
-    useEffect(() => {
-        const extension = clientInterface.getExtension();
-        if (contractAddress && extension) {
-            extension.setDefaultAccount();
-            const defaultAccount = extension.getAccount();
-            if (defaultAccount) {
-                clientInterface.onAccountChange(defaultAccount);
-            }
-        }
-    }, [contractAddress]);
-
-    useEffect(() => {
-        if (account && !captchaChallenge) {
-            stateClientInterface.onLoadCaptcha()
-                .catch(error => {
-                    clientInterface.status.update({ error });
-                });
-        }
-    }, [account]);
-
-
-    // https://www.npmjs.com/package/i18next
-
-    return (
-        <Box className={classes.root}>
-
-            {account && captchaChallenge &&
-                <Box className={classes.captchasContainer}>
-
-                    <Box className={classes.captchasHeader}>
-                        <Typography className={classes.captchasHeaderLabel}>
-                            {t("WIDGET.SELECT_ALL", { target: captchaChallenge.captchas[captchaIndex].captcha.target })}
-                        </Typography>
-                    </Box>
-
-                    <Box className={classes.captchasBody} {...addDataAttr({dev: {cy: 'captcha-' + captchaIndex}})}>
-
-                        <CaptchaWidget challenge={captchaChallenge.captchas[captchaIndex]} solution={captchaSolution[captchaIndex] || []}
-                            onChange={stateClientInterface.onChange.bind(stateClientInterface)} />
-
-                        <Box className={classes.dotsContainer} {...addDataAttr({dev: {cy: 'dots-captcha'}})}>
-                            {captchaChallenge?.captchas.map((_, index) =>
-                                <Box key={index} className={captchaIndex === index ? classes.dot : classes.dotActive} />)}
-                        </Box>
-
-                    </Box>
-
-                    <Box className={classes.captchasFooter}>
-                        <Button onClick={() => stateClientInterface.onCancel()} variant="text">
-                            {t('WIDGET.CANCEL')}
-                        </Button>
-                        <Button 
-                            onClick={() => stateClientInterface.onSubmit()} 
-                            variant="contained" 
-                            {...addDataAttr({dev: {cy: "button-next"}})}
-                        >
-                            {captchaIndex + 1 < totalCaptchas ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
-                        </Button>
-                    </Box>
-
-                </Box>
-            }
-        </Box>
-    );
+export interface CaptchaComponentProps {
+    challenge: GetCaptchaResponse
+    index: number
+    solutions: string[][]
+    onSubmit: () => void
+    onCancel: () => void
+    onClick: (hash: string) => void
+    onNext: () => void
 }
 
-export default CaptchaComponent;
+export const CaptchaComponent = (props: CaptchaComponentProps) => {
+    const { t } = useTranslation()
+    // console.log('CaptchaComponent', props)
+    const { challenge, index, solutions, onSubmit, onCancel, onClick, onNext } = props
+    const captcha = challenge.captchas[index]
+    const solution = solutions[index]
+
+    return (
+        <ThemeProvider theme={theme}>
+            <Box
+                sx={{
+                    // center the popup horizontally and vertically
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    // fill entire screen
+                    width: '100%',
+                    height: '100%',
+                }}
+            >
+                <Box
+                    sx={{
+                        // introduce scroll bars when screen < minWidth of children
+                        overflowX: 'auto',
+                        overflowY: 'auto',
+                        width: '100%',
+                        // limit the popup width
+                        maxWidth: '450px',
+                        // maxHeight introduces vertical scroll bars if children content longer than window
+                        maxHeight: '100%',
+                    }}
+                >
+                    <Box
+                        bgcolor={theme.palette.background.default}
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            // the min width of the popup before scroll bars appear
+                            minWidth: '300px',
+                        }}
+                    >
+                        <Box
+                            px={2}
+                            py={3}
+                            sx={{
+                                // center the header
+                                display: 'flex',
+                                alignItems: 'center',
+                                width: '100%',
+                            }}
+                            bgcolor={theme.palette.primary.main}
+                        >
+                            <Typography
+                                sx={{
+                                    color: '#ffffff',
+                                    fontWeight: 700,
+                                }}
+                            >
+                                {t('WIDGET.SELECT_ALL', {
+                                    target: props.challenge.captchas[props.index].captcha.target,
+                                })}
+                            </Typography>
+                        </Box>
+
+                        <Box {...addDataAttr({ dev: { cy: 'captcha-' + props.index } })}>
+                            <CaptchaWidget challenge={captcha} solution={solution} onClick={onClick} />
+                        </Box>
+                        <Box
+                            px={2}
+                            py={1}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '100%',
+                            }}
+                            {...addDataAttr({ dev: { cy: 'dots-captcha' } })}
+                        >
+                            {challenge.captchas.map((_, i) => (
+                                <Box
+                                    key={i}
+                                    sx={{
+                                        width: 7,
+                                        height: 7,
+                                        borderRadius: '50%',
+                                        border: '1px solid #CFCFCF',
+                                    }}
+                                    mx={0.5}
+                                    bgcolor={index === i ? theme.palette.background.default : '#CFCFCF'}
+                                />
+                            ))}
+                        </Box>
+                        <Box
+                            px={2}
+                            pt={0}
+                            pb={2}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                            }}
+                        >
+                            <Button onClick={onCancel} variant="text">
+                                {t('WIDGET.CANCEL')}
+                            </Button>
+                            <Button
+                                color="primary"
+                                onClick={index < challenge.captchas.length - 1 ? onNext : onSubmit}
+                                variant="contained"
+                                {...addDataAttr({ dev: { cy: 'button-next' } })}
+                            >
+                                {index < challenge.captchas.length - 1 ? t('WIDGET.NEXT') : t('WIDGET.SUBMIT')}
+                            </Button>
+                        </Box>
+                    </Box>
+                </Box>
+            </Box>
+        </ThemeProvider>
+    )
+}
+
+export default CaptchaComponent
