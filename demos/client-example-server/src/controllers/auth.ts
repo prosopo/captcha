@@ -21,12 +21,18 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
         } else if (
             req.body.email &&
             req.body.password &&
-            req.body.providerUrl &&
-            req.body.web3Account &&
-            req.body.commitmentId
+            req.body.prosopo &&
+            req.body.prosopo.userAccount &&
+            req.body.prosopo.providerUrl
         ) {
             console.log(req.body)
-            if (await prosopoServer.isVerified(req.body.web3Account, req.body.providerUrl, req.body.commitmentId)) {
+            if (
+                await prosopoServer.isVerified(
+                    req.body.prosopo.userAccount,
+                    req.body.prosopo.providerUrl,
+                    req.body.prosopo.commitmentId
+                )
+            ) {
                 // password hash
                 bcrypt.hash(req.body.password, 12, (err, passwordHash) => {
                     if (err) {
