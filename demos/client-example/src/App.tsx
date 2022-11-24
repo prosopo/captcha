@@ -3,10 +3,7 @@ import { Box, Button, Typography, FormControl, FormGroup, Stack, TextField, Aler
 
 import { ProcaptchaOutput, TCaptchaSubmitResult } from '@prosopo/procaptcha'
 
-import {
-    Procaptcha,
-    ExtensionAccountSelect
-} from "@prosopo/procaptcha-react";
+import { Procaptcha, ExtensionAccountSelect } from '@prosopo/procaptcha-react'
 
 import './App.css'
 import { VerificationResponse } from '@prosopo/api'
@@ -54,7 +51,7 @@ function App() {
     }
 
     const onActionHandler = () => {
-        if(!procaptchaOutput) {
+        if (!procaptchaOutput) {
             alert('Must complete captcha')
         }
         const payload = {
@@ -63,7 +60,7 @@ function App() {
             password,
             prosopo: procaptchaOutput,
         }
-        fetch(`${serverUrl}/${urlPath}`, { 
+        fetch(`${serverUrl}/${urlPath}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -138,25 +135,17 @@ function App() {
 
     return (
         <div>
-            <Box className={"App"} sx={{ display: "flex"}}>
+            <Box className={'App'} sx={{ display: 'flex' }}>
                 <Box>
-                    <Typography>
-                        {message ? getMessage() : null}    
-                    </Typography>
-                    {
-                        !config.web2 ? (
-                            <ExtensionAccountSelect
-                                dappName={config.dappName}
-                                value={account}
-                                onChange={setAccount}
-                            />
-                        ) : (
-                            <></>
-                        )
-                    }
+                    <Typography>{message ? getMessage() : null}</Typography>
+                    {!config.web2 ? (
+                        <ExtensionAccountSelect dappName={config.dappName} value={account} onChange={setAccount} />
+                    ) : (
+                        <></>
+                    )}
                     <Box>
                         <h1>{label}</h1>
-                        <FormGroup sx={{'& .MuiTextField-root': { m: 1 }}}>
+                        <FormGroup sx={{ '& .MuiTextField-root': { m: 1 } }}>
                             <FormControl>
                                 <TextField
                                     id="email"
@@ -190,26 +179,23 @@ function App() {
                                 />
                             </FormControl>
 
-                            <Procaptcha config={config} callbacks={{onAccountNotFound, onError, onHuman}}/>
+                            <Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman }} />
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
-                                    <Button variant="contained" onClick={onActionHandler}>
+                                    <Button variant="contained" onClick={onActionHandler} disabled={!procaptchaOutput}>
                                         {isLogin ? 'Login' : 'Sign up'}
                                     </Button>
-                                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                         <Box>
                                             <Typography>- or -</Typography>
                                         </Box>
                                     </Box>
-                                    <Button onClick={onChangeHandler}>
-                                        {isLogin ? 'Signup' : 'Login'}
-                                    </Button>
+                                    <Button onClick={onChangeHandler}>{isLogin ? 'Signup' : 'Login'}</Button>
                                 </Stack>
                             </div>
                         </FormGroup>
                     </Box>
-
                 </Box>
             </Box>
         </div>
