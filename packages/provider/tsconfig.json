@@ -14,7 +14,13 @@
   ],
   "references": [
     {
+      "path": "../datasets"
+    },
+    {
       "path": "../contract"
+    },
+    {
+      "path": "../i18n"
     }
   ]
 }
