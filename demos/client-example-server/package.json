@@ -1,5 +1,5 @@
 {
-  "name": "client-example-server",
+  "name": "@prosopo/client-example-server",
   "version": "0.1.10",
   "description": "Backend for client-example",
   "main": "build/app.js",
