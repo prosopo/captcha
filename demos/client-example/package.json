@@ -1,5 +1,5 @@
 {
-  "name": "client-example",
+  "name": "@prosopo/client-example",
   "version": "0.1.10",
   "private": true,
   "dependencies": {
