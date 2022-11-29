@@ -839,7 +839,7 @@ describe('CONTRACT TASKS', () => {
         expect(events![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
     })
 
-    it('Calculate captcha solution on the basis of Dapp users provided solutions', async () => {
+    it('Calculate captcha solution on the basis of Dapp users provided solutions - old', async () => {
         try {
             const providerAccount = await getUser(AccountKey.providersWithStakeAndDataset)
             const providerTasks = await changeSigner(providerAccount)
@@ -864,5 +864,43 @@ describe('CONTRACT TASKS', () => {
         } catch (err) {
             throw new ProsopoEnvError(err, 'Calculate captcha solution on the basis of Dapp users provided solutions')
         }
+    })
+
+    it('Calculate captcha solution on the basis of Dapp users provided solutions', async () => {
+        const providerAccount = await getUser(AccountKey.providersWithStakeAndDataset)
+        const providerTasks = await changeSigner(providerAccount)
+        const providerDetails = await providerTasks.getProviderDetails(accountAddress(providerAccount))
+        const unsolvedCaptcha = (await providerTasks.db.getRandomCaptcha(false, providerDetails.dataset_id))[0]
+        const solution = [unsolvedCaptcha.items[0].hash, unsolvedCaptcha.items[2].hash, unsolvedCaptcha.items[3].hash]
+        const captchaSolution = { ...unsolvedCaptcha, solution, salt: 'blah' }
+        const commitments: string[] = []
+        for (let count = 0; count < 10; count++) {
+            const commitmentId = hexHash(`test${count}`)
+            commitments.push(commitmentId)
+            await providerTasks.db.storeDappUserSolution([captchaSolution], commitmentId, 'test')
+            const userSolutions = await providerTasks.db.getDappUserSolutionById(commitmentId)
+            expect(userSolutions).to.be.not.empty
+        }
+
+        const result = await providerTasks.calculateCaptchaSolutions()
+        expect(result).to.equal(1)
+
+        for (const commitment of commitments) {
+            const userSolution = await providerTasks.db.getDappUserSolutionById(commitment)
+            expect(userSolution.processed).to.be.true
+        }
+
+        const providerDetailsNew = await providerTasks.getProviderDetails(accountAddress(providerAccount))
+
+        const captchas = await providerTasks.db.getAllCaptchasByDatasetId(providerDetailsNew.dataset_id)
+        expect(captchas.every((captcha) => captcha.datasetId === providerDetailsNew.dataset_id)).to.be.true
+
+        expect(providerDetails.dataset_id).to.not.equal(providerDetailsNew.dataset_id)
+
+        expect(Promise.resolve(providerTasks.db.getCaptchaById(unsolvedCaptcha.captchaId))).to.be.rejected.then(
+            (error) => {
+                expect(error.message).to.equal('Failed to get captcha')
+            }
+        )
     })
 })

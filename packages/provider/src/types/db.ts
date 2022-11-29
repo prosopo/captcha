@@ -139,6 +139,8 @@ export interface Database {
 
     updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>
 
+    removeCaptchas(captchaIds: string[]): Promise<void>
+
     getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetBase>
 
     storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string, userAccount: string): Promise<void>
@@ -166,4 +168,6 @@ export interface Database {
     approveDappUserCommitment(commitmentId: string): Promise<void>
 
     removeDappUserSolutions(captchaIds: string[]): Promise<void>
+
+    flagUsedDappUserSolutions(captchaIds: string[]): Promise<void>
 }
