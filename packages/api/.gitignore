@@ -1,3 +1,36 @@
+**/node_modules/
+dist/
+
+# Ignore build artifacts from the local tests sub-crate.
+/target/
+/core/target/
+/model/target/
+/lang/target/
+/primitives/target/
+/examples/**/target/
+/design/
+/artifacts
+
+# Ignore backup files creates by cargo fmt.
+**/*.rs.bk
+
+# Remove Cargo.lock when creating an executable, leave it for libraries
+# More information here http://doc.crates.io/guide.html#cargotoml-vs-cargolock
+Cargo.lock
+
+# Ignore history files.
+**/.history/**
+
+/.idea
+*.tsbuildinfo
+.DS_Store
+tsconfig.tsbuildinfo
+*.d.ts
+dist
+
+# Below is Github's node gitignore template,
+# ignoring the node_modules part, as it'd ignore every node_modules, and we have some for testing
+
 # Logs
 logs
 *.log
@@ -38,7 +71,7 @@ bower_components
 build/Release
 
 # Dependency directories
-node_modules/
+#node_modules/
 jspm_packages/
 
 # TypeScript v1 declaration files
@@ -52,12 +85,6 @@ typings/
 
 # Optional eslint cache
 .eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -87,6 +114,14 @@ dist
 # Comment in the public line in if your project uses Gatsby and *not* Next.js
 # https://nextjs.org/blog/next-9-1#public-directory-support
 # public
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
 
 # vuepress build output
 .vuepress/dist
@@ -100,5 +135,12 @@ dist
 # DynamoDB Local files
 .dynamodb/
 
-# TernJS port file
-.tern-port
+/.yarn/cache
+# This is the Yarn build state; it's local to each clone
+/.yarn/build-state.yml
+
+# This is the Yarn install state cache, it can be rebuilt anytime
+/.yarn/install-state.gz
+
+secrets.json
+.env
