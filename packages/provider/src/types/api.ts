@@ -12,13 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { z } from 'zod'
-import { Captcha, CaptchaSolutionArraySchema } from '@prosopo/datasets'
+import { CaptchaSolutionArraySchema } from '@prosopo/datasets'
 import { AnyJson } from '@polkadot/types/types/codec'
-
-export interface CaptchaWithProof {
-    captcha: Captcha
-    proof: string[][]
-}
+import { CaptchaWithProof } from '@prosopo/datasets'
 
 export type CaptchaResponse = CaptchaWithProof[]
 
