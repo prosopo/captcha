@@ -25,6 +25,7 @@ import { TCaptchaSubmitResult } from '../types/client'
 import { ProsopoApiError } from '../api/handlers'
 import { ProsopoEnvError } from '@prosopo/datasets'
 import { computeCaptchaSolutionHash } from '@prosopo/datasets'
+import { stringToHex } from '@polkadot/util'
 
 export class ProsopoCaptchaApi {
     userAccount: string
@@ -115,6 +116,21 @@ export class ProsopoCaptchaApi {
             }
         }
 
+        let signature: string | undefined = undefined
+
+        if (this.web2) {
+            if (!signer || !signer.signRaw) {
+                throw new Error('Signer is not defined, cannot sign message to prove account ownership')
+            }
+            // sign the request hash to prove account ownership
+            const signed = await signer.signRaw({
+                address: this.userAccount,
+                data: stringToHex(requestHash),
+                type: 'bytes',
+            })
+            signature = signed.signature
+        }
+
         let result: CaptchaSolutionResponse
 
         try {
@@ -125,7 +141,8 @@ export class ProsopoCaptchaApi {
                 salt,
                 tx ? tx?.blockHash : undefined,
                 tx ? tx?.txHash.toString() : undefined,
-                this.web2
+                this.web2,
+                signature
             )
         } catch (err) {
             throw new ProsopoApiError(err)
