@@ -14,7 +14,7 @@
 import { Hash } from '@polkadot/types/interfaces'
 import type { RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment'
 import { AnyJson } from '@polkadot/types/types/codec'
-import { hexToU8a, u8aToHex } from '@polkadot/util'
+import { hexToU8a, stringToHex, u8aToHex } from '@polkadot/util'
 import { decodeAddress, randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import {
     BigNumber,
@@ -364,15 +364,14 @@ export class Tasks {
         dappAccount: string,
         requestHash: string,
         captchas: JSON,
-        signature: string, // the signature of the message
-        signedMessage: string // the message which has been signed using the user's private key or the client UI side
+        signature: string // the signature to indicate ownership of account (web2 only)
     ): Promise<DappUserSolutionResult> {
         if (!(await this.dappIsActive(dappAccount))) {
             throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', this.getPaymentInfo.name, {}, { dappAccount })
         }
 
         // check that the signature is valid (i.e. the web2 user has signed the message with their private key, proving they own their account)
-        const verification = signatureVerify(signedMessage, signature, userAccount)
+        const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
         if (!verification.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
             throw new Error('Invalid signature')
