@@ -37,6 +37,8 @@ export const CaptchaSolutionBody = z.object({
     blockHash: z.string().optional(),
     txHash: z.string().optional(),
     web2: z.boolean().optional().default(false),
+    signature: z.string().optional(), // the signature of the signed message (web2 only)
+    signedMessage: z.string().optional(), // the signed message, signed by the user's account (web2 only)
 })
 
 export const VerifySolutionBody = z.object({
