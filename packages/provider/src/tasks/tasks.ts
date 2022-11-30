@@ -37,6 +37,7 @@ import {
     CaptchaSolutionToUpdate,
     CaptchaStates,
     CaptchaStatus,
+    CaptchaWithProof,
     CaptchaWithoutId,
     DatasetBase,
     DatasetRaw,
@@ -52,7 +53,7 @@ import {
 } from '@prosopo/datasets'
 import consola from 'consola'
 import { buildDecodeVector } from '../codec/codec'
-import { CaptchaWithProof, DappUserSolutionResult, Database, ProsopoEnvironment, UserCommitmentRecord } from '../types'
+import { DappUserSolutionResult, Database, ProsopoEnvironment, UserCommitmentRecord } from '../types'
 import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
 
 import { i18n } from '@prosopo/i18n'
