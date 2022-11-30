@@ -13,7 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { CaptchaMerkleTree, CaptchaSolution, CaptchaSolutionCommitment, verifyProof } from '@prosopo/datasets'
+import {
+    CaptchaMerkleTree,
+    CaptchaSolution,
+    CaptchaSolutionCommitment,
+    CaptchaWithProof,
+    computeCaptchaHash,
+    computeItemHash,
+    verifyProof,
+} from '@prosopo/datasets'
 import { Signer } from '@polkadot/api/types'
 
 import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoRandomProviderResponse } from '../types/api'
@@ -70,9 +78,9 @@ export class ProsopoCaptchaApi {
 
         for (const captchaWithProof of captchaChallenge.captchas) {
             //TODO calculate the captchaId from the captcha content
-            // if (!verifyCaptchaData(captchaWithProof.captcha, captchaWithProof.proof)) {
-            //     throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
-            // }
+            if (!verifyCaptchaData(captchaWithProof)) {
+                throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
+            }
 
             if (!verifyProof(captchaWithProof.captcha.captchaContentId, captchaWithProof.proof)) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
@@ -143,6 +151,32 @@ export class ProsopoCaptchaApi {
 
         return [result, commitmentId, tx, commitment]
     }
+}
+
+/**
+ * Verify the captcha data by hashing the images and checking the hashes correspond to the hashes passed in the captcha
+ * Verify the captcha content id is present in the first layer of the proof
+ * @param {CaptchaWithProof} captchaWithProof
+ * @returns {boolean}
+ */
+async function verifyCaptchaData(captchaWithProof: CaptchaWithProof): Promise<boolean> {
+    const captcha = captchaWithProof.captcha
+    const proof = captchaWithProof.proof
+    // Check that all the item hashes are equal to the provided item hashes in the captcha
+    if (
+        !(await Promise.all(captcha.items.map(async (item) => (await computeItemHash(item)).hash === item.hash))).every(
+            (hash) => hash === true
+        )
+    ) {
+        return false
+    }
+    // Check that the computed captcha content id is equal to the provided captcha content id
+    const captchaHash = computeCaptchaHash(captcha, false, false, false)
+    if (captchaHash !== captcha.captchaContentId) {
+        return false
+    }
+    // Check that the captcha content id is present in the first layer of the proof
+    return proof[0].indexOf(captchaHash) !== -1
 }
 
 export default ProsopoCaptchaApi
