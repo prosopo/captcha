@@ -133,28 +133,6 @@ export const Manager = (
             // check accounts / setup accounts
             const account = await loadAccount()
 
-
-            // if in web2 mode, a signature is required to prove ownership of the account
-            const message = 'I am the owner of this accountt' // note the extra 't'
-            if (!account.extension.signer.signRaw) {
-                throw new Error('Signer cannot sign raw messages')
-            }
-            const { signature } = await account.extension.signer.signRaw({
-                address: account.account.address,
-                data: stringToHex(message),
-                type: 'bytes',
-            })
-            console.log('sig', signature, signature.length)
-            const verification = signatureVerify(message, signature, account.account.address)
-            console.log('veri', verification)
-            const dodgSig =
-                '0xc6455a84f37d85651483e959b2a0700344308002bde32988dc0db7ce4ebedb0b8a2607cbf80f68fd9f8edbe56816448416f240be8e111a0a865088607726c18a' // sig to 'I am the owner of this account' with no extra 't'
-            console.log('dsig', dodgSig, dodgSig.length)
-            const verification2 = signatureVerify(message, dodgSig, account.account.address)
-            console.log('veri2', verification2)
-
-
-
             // account has been found, check if account is already marked as human
             // first, ask the smart contract
             const contract = await loadContract()
