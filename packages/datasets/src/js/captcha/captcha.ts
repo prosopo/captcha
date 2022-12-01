@@ -141,6 +141,10 @@ export function computeCaptchaHash(
     }
 }
 
+/** Compute the hash of a captcha item, downloading the image if necessary
+ * @param  {Item} item
+ * @return {Promise<HashedItem>} the hex string hash of the item
+ */
 export async function computeItemHash(item: Item): Promise<HashedItem> {
     if (item.type === 'text') {
         return { ...item, hash: hexHash(item.data) }
