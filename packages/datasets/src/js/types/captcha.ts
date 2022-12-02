@@ -84,6 +84,11 @@ export interface CaptchaSolution {
     solution: HashedSolution[]
 }
 
+export interface CaptchaWithProof {
+    captcha: Captcha
+    proof: string[][]
+}
+
 export type CaptchaConfig = {
     solved: {
         count: number
