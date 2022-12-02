@@ -21,3 +21,9 @@ export class ExtensionNotFoundError extends Error {
         super(msg || 'No extensions found')
     }
 }
+
+export class ExpiredError extends Error {
+    constructor(msg?: string) {
+        super(msg || 'The challenge has expired')
+    }
+}

@@ -19,6 +19,7 @@ import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import { TCaptchaSubmitResult } from '../types/client'
 import { randomAsHex } from '@polkadot/util-crypto'
+import { ExpiredError } from '../api/errors'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -74,6 +75,9 @@ export const Manager = (
             onExtensionNotFound: () => {
                 alert('No extension found')
             },
+            onExpired: () => {
+                alert('Challenge has expired')
+            },
         },
         callbacks
     )
@@ -83,6 +87,7 @@ export const Manager = (
         AccountNotFoundError: events.onAccountNotFound,
         ExtensionNotFoundError: events.onExtensionNotFound,
         Error: events.onError,
+        ExpiredError: events.onExpired,
     }
 
     // get the state update mechanism
@@ -194,7 +199,7 @@ export const Manager = (
                 .map((captcha) => captcha.timeLimitMillis || 30 * 1000)
                 .reduce((a, b) => a + b)
             const timeout = setTimeout(() => {
-                
+                throw new ExpiredError()
             }, timeMillis)
             // update state with new challenge
             updateState({

@@ -62,6 +62,7 @@ export interface ProcaptchaEvents {
     onAccountNotFound: (address: string) => void
     onHuman: (output: ProcaptchaOutput) => void
     onExtensionNotFound: () => void
+    onExpired: () => void
 }
 
 /**
