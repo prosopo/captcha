@@ -189,6 +189,13 @@ export const Manager = (
                 throw new Error('No captchas returned from provider')
             }
 
+            // setup timeout
+            const timeMillis: number = challenge.captchas
+                .map((captcha) => captcha.timeLimitMillis || 30 * 1000)
+                .reduce((a, b) => a + b)
+            const timeout = setTimeout(() => {
+                
+            }, timeMillis)
             // update state with new challenge
             updateState({
                 index: 0,
