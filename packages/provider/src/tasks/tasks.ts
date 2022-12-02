@@ -547,7 +547,6 @@ export class Tasks {
             const requiredNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
             const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
             const winningNumberOfSolutions = Math.round(requiredNumberOfSolutions * (winningPercentage / 100))
-
             if (unsolvedSorted && unsolvedSorted.length > 0) {
                 const captchaIds = unsolvedSorted.map((captcha) => captcha.captchaId)
                 const solutions = (await this.db.getAllDappUserSolutions(captchaIds)) || []
@@ -561,8 +560,10 @@ export class Tasks {
                         dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
                         // store new solutions in database
                         await this.providerAddDataset(dataset)
-                        // TODO mark user solutions as used to calculate new solutions
-                        // await this.db.removeDappUserSolutions([...solutionsToUpdate['captchaId'].values()])
+                        // mark user solutions as used to calculate new solutions
+                        await this.db.flagUsedDappUserSolutions([...solutionsToUpdate['captchaId'].values()])
+                        // remove old captcha challenges from database
+                        await this.db.removeCaptchas([...solutionsToUpdate['captchaId'].values()])
                         return solutionsToUpdate.rows().length
                     } catch (error) {
                         consola.error(error)
