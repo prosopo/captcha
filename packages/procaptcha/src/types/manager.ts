@@ -42,6 +42,7 @@ export interface ProcaptchaState {
     loading: boolean // whether the captcha is loading or not
     account: Account | undefined // the account operating the challenge. undefined if not set
     submission: TCaptchaSubmitResult | undefined // the result of the captcha submission. undefined if not submitted
+    timeout: NodeJS.Timeout | undefined // the timer for the captcha challenge. undefined if not set
 }
 
 /**

@@ -32,6 +32,7 @@ export const defaultState = (): Partial<ProcaptchaState> => {
         isHuman: false,
         captchaApi: undefined,
         account: undefined,
+        // don't handle timeout here, this should be handled by the state management
     }
 }
 
@@ -196,17 +197,22 @@ export const Manager = (
 
             // setup timeout
             const timeMillis: number = challenge.captchas
-                .map((captcha) => captcha.timeLimitMillis || 30 * 1000)
+                .map((captcha) => captcha.captcha.timeLimitMillis || 30 * 1000)
                 .reduce((a, b) => a + b)
             const timeout = setTimeout(() => {
-                throw new ExpiredError()
+                console.log('challenge expired after ' + timeMillis + 'ms')
+                events.onExpired()
+                // expired, disallow user's claim to be human
+                updateState({ isHuman: false, showModal: false, loading: false })
             }, timeMillis)
+
             // update state with new challenge
             updateState({
                 index: 0,
                 solutions: challenge.captchas.map(() => []),
                 challenge,
                 showModal: true,
+                timeout,
             })
         } catch (err) {
             console.error(err)
@@ -233,6 +239,9 @@ export const Manager = (
     const submit = async () => {
         try {
             console.log('submitting solutions')
+            // disable the time limit, user has submitted their solution in time
+            clearTimeout()
+
             if (!state.challenge) {
                 throw new Error('cannot submit, no challenge found')
             }
@@ -295,6 +304,8 @@ export const Manager = (
 
     const cancel = async () => {
         console.log('cancel')
+        // disable the time limit
+        clearTimeout()
         // abandon the captcha process
         resetState()
     }
@@ -365,7 +376,16 @@ export const Manager = (
         return providerApi
     }
 
+    const clearTimeout = () => {
+        // clear the timeout
+        window.clearTimeout(state.timeout)
+        // then clear the timeout from the state
+        updateState({ timeout: undefined })
+    }
+
     const resetState = () => {
+        // clear timeout just in case a timer is still active (shouldn't be)
+        clearTimeout()
         updateState(defaultState())
     }
 
