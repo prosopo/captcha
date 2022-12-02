@@ -279,11 +279,19 @@ export const Manager = (
                 salt
             )
 
+            // mark as is human if solution has been approved
+            const isHuman = submission[0].solutionApproved
+
+            if (!isHuman) {
+                // user failed the captcha for some reason according to the provider
+                // let the user know
+                alert('Captcha challenge failed. Please try again.')
+            }
+
             // update the state with the result of the submission
             updateState({
                 submission,
-                // mark as is human if solution has been approved
-                isHuman: submission[0].solutionApproved,
+                isHuman,
                 loading: false,
             })
             if (state.isHuman) {
