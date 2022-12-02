@@ -118,6 +118,7 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     pending: { type: Boolean, required: true },
     salt: { type: String, required: true },
     requestHash: { type: String, required: true },
+    deadline: { type: Number, required: true }, // unix timestamp
 })
 
 export interface Database {
@@ -145,7 +146,7 @@ export interface Database {
 
     storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string, userAccount: string): Promise<void>
 
-    storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void>
+    storeDappUserPending(userAccount: string, requestHash: string, salt: string, deadline: number): Promise<void>
 
     getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>
 
