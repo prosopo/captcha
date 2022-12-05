@@ -44,31 +44,36 @@ function getTypes(types: AbiType[], path: string[]): AbiType[] {
 
 /**
  * Convert ABI types to definitions for typegen
+ * @param {AbiType[]} filteredTypes
  * @param {AbiType[]} types
  */
-function typesToDefinition(types: AbiType[]): Record<string, string> {
+function typesToDefinition(filteredTypes: AbiType[], types: AbiType[]): Record<string, string> {
     const definitions = {}
-    for (const type of types) {
-        if (type.type.path) {
-            let definitionKey = type.type.path.slice(-1)[0]
-            if (definitionKey === 'Error') {
-                const firstWord = type.type.path.slice(-2)[0]
-                const capitalised = capitalizeFirstLetter(snakeCaseToCamelCase(firstWord))
-                definitionKey = `${capitalised}Error`
-            }
-            if (type.type.def.composite) {
-                definitions[definitionKey] = {}
-                type.type.def.composite.fields.map((field) => {
-                    definitions[definitionKey][field.name] = field.typeName
-                })
-            } else if (type.type.def.variant) {
-                definitions[definitionKey] = {
-                    _enum: type.type.def.variant.variants.map((variant) => {
-                        return variant.name
-                    }),
+    try {
+        for (const type of filteredTypes) {
+            if (type.type.path) {
+                let definitionKey = type.type.path.slice(-1)[0]
+                if (definitionKey === 'Error') {
+                    const firstWord = type.type.path.slice(-2)[0]
+                    const capitalised = capitalizeFirstLetter(snakeCaseToCamelCase(firstWord))
+                    definitionKey = `${capitalised}Error`
+                }
+                if (type.type.def.composite) {
+                    definitions[definitionKey] = {}
+                    type.type.def.composite.fields.map((field) => {
+                        definitions[definitionKey][field.name] = defStr(types[field.type])
+                    })
+                } else if (type.type.def.variant) {
+                    definitions[definitionKey] = {
+                        _enum: type.type.def.variant.variants.map((variant) => {
+                            return variant.name
+                        }),
+                    }
                 }
             }
         }
+    } catch (e) {
+        throw new ProsopoEnvError(e)
     }
     return definitions
 }
@@ -197,24 +202,34 @@ function storageTypesToDefinitions(storageTypes: StorageFieldTypesObject): Recor
  * @param {AbiType} innerType
  */
 function defStr(type: AbiType, innerType?: AbiType): string {
+    let definition = ''
+    console.log(type)
     if (type.type.path && type.type.path.slice(0, 2).join('::') === 'ink_env::types') {
-        return type.type.path.slice(-1)[0]
+        definition = type.type.path.slice(-1)[0]
     } else if (type.type.def.primitive) {
-        return type.type.def.primitive
+        definition = type.type.def.primitive
     } else if (type.type.def.array) {
-        return '[]'
+        definition = '[]'
     } else if (type.type.def.tuple) {
-        return '()'
+        definition = '()'
     } else if (type.type.def.sequence) {
-        return `Vec<${innerType?.type.path?.slice(-1)[0]}>`
+        definition = `Vec<${innerType?.type.path?.slice(-1)[0]}>`
     } else if (type.type.def.composite) {
-        return `${type.type.path?.slice(-1)[0]}`
+        const typeName = `${type.type.path?.slice(-1)[0]}`
+        if (typeName === 'Mapping') {
+            definition = 'Map'
+        } else if (typeName === `Timestamp`) {
+            definition = `Vec<u8`
+        } else {
+            definition = typeName
+        }
     } else if (type.type.def.variant) {
-        return `${type.type.path?.slice(-1)[0]}`
+        definition = `${type.type.path?.slice(-1)[0]}`
     } else {
         console.error(type)
         throw new ProsopoEnvError('CONTRACT.INVALID_TYPE')
     }
+    return definition
 }
 
 /**
@@ -264,11 +279,11 @@ export function generateDefinitions(path: string[]): TypegenDefinitions {
         throw new ProsopoEnvError('CONTRACT.INVALID_ABI')
     }
 
-    const types = getTypes(abiTypes, path)
-    const typeDefinitions = typesToDefinition(types)
+    const filteredTypes = getTypes(abiTypes, path)
+    const typeDefinitions = typesToDefinition(filteredTypes, abiTypes)
     const storageTypes = getStorageTypes(abiStorage, abiTypes)
     const storageDefinitions = storageTypesToDefinitions(storageTypes)
     return { types: { ...storageDefinitions, ...typeDefinitions } }
 }
 
-//console.log(generateDefinitions(['prosopo', 'prosopo']))
+//console.log(JSON.stringify(generateDefinitions(['prosopo', 'prosopo']), null, 4))
