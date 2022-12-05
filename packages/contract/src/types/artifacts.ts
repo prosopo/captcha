@@ -189,3 +189,5 @@ export type AbiMetadata = z.infer<typeof AbiMetaDataSpec>
 export type ContractAbi = Record<string, unknown> | Abi
 
 export type AbiType = z.infer<typeof AbiTypeSpec>
+
+export type TypegenDefinitions = { types: Record<string, string> }

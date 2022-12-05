@@ -15,7 +15,6 @@
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
 export * from './buildTx'
 export * from './contract'
-export * from './definitions'
 export * from './helpers'
 export * from './interface'
 export * from './methods'

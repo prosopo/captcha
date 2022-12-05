@@ -1,5 +1,5 @@
 import { abiJson } from '../abi/index'
-import { AbiMetaDataSpec, AbiStorage, AbiType, ContractAbi } from '../types/index'
+import { AbiMetaDataSpec, AbiStorage, AbiType, ContractAbi, TypegenDefinitions } from '../types/index'
 import { ProsopoEnvError } from '@prosopo/datasets'
 
 function snakeCaseToCamelCase(str: string) {
@@ -42,6 +42,10 @@ function getTypes(types: AbiType[], path: string[]): AbiType[] {
     return typeDefs
 }
 
+/**
+ * Convert ABI types to definitions for typegen
+ * @param {AbiType[]} types
+ */
 function typesToDefinition(types: AbiType[]): Record<string, string> {
     const definitions = {}
     for (const type of types) {
@@ -72,6 +76,12 @@ function typesToDefinition(types: AbiType[]): Record<string, string> {
 type StorageFieldTypes = AbiType[][]
 type StorageFieldTypesObject = { [key: string]: StorageFieldTypes }
 
+/**
+ * Get an object containing storage types and each of their subtypes as a nested array
+ * @param {AbiStorage} storage
+ * @param {AbiType[]} types
+ * @returns {StorageFieldTypesObject}
+ */
 function getStorageTypes(storage: AbiStorage, types: AbiType[]): StorageFieldTypesObject {
     const fieldTypesObject: StorageFieldTypesObject = {}
     try {
@@ -88,7 +98,7 @@ function getStorageTypes(storage: AbiStorage, types: AbiType[]): StorageFieldTyp
                         innerType = innerTypes.pop()
                         if (innerType) {
                             if (innerType.type.def.composite) {
-                                innerTypes = handleComposite(innerType, types)
+                                innerTypes = expandCompositeType(innerType, types)
                                 if (innerTypes.length > 0) {
                                     fieldTypesObject[outerKey].push([...innerTypes])
                                 }
@@ -103,30 +113,34 @@ function getStorageTypes(storage: AbiStorage, types: AbiType[]): StorageFieldTyp
                             } else if (innerType.type.def.primitive) {
                                 fieldTypesObject[outerKey].push([innerType])
                             } else {
-                                console.log(innerType)
-                                console.log('unknown')
+                                console.debug(innerType)
+                                console.debug('Unknown type')
                             }
                         }
                     }
                 }
             } else {
-                console.log(`${outerKey} has no type`)
-                console.log(JSON.stringify(field, null, 4))
+                console.debug(`${outerKey} has no type`)
+                console.debug(JSON.stringify(field, null, 4))
             }
         }
     } catch (e) {
-        throw new Error(e)
+        throw new ProsopoEnvError(e)
     }
 
     return fieldTypesObject
 }
 
+/**
+ * Convert the storage types object to definitions for typegen
+ * @param {StorageFieldTypesObject} storageTypes
+ */
 function storageTypesToDefinitions(storageTypes: StorageFieldTypesObject): Record<string, string> {
     const definitions = {}
     for (const [outerKey, fieldTypesArr] of Object.entries(storageTypes)) {
         let definition = ''
         if (fieldTypesArr && fieldTypesArr.length > 0 && fieldTypesArr[0][0]) {
-            let outerLayer = 0
+            const outerLayer = 0
             let innerLayer = outerLayer + 1
             let outerType = fieldTypesArr[outerLayer][0]
             let outerParams = outerType.type.params
@@ -135,20 +149,19 @@ function storageTypesToDefinitions(storageTypes: StorageFieldTypesObject): Recor
 
             if (outerParams !== undefined && outerParams.length !== 2) {
                 // don't know if this can happen or not
-                throw new Error('not handled')
+                throw new ProsopoEnvError('CONTRACT.NOT_HANDLED')
             } else if (outerParams !== undefined && outerParams.length == 2 && outerPath && fieldTypesArr[innerLayer]) {
                 innerType = fieldTypesArr[innerLayer][1]
                 // case where outer type has params and there are 2 inner types
                 if (innerType.type.params) {
                     while (innerType !== undefined && innerLayer < fieldTypesArr.length - 1) {
                         if (outerParams !== undefined && outerParams.length !== 2) {
-                            throw new Error('not handled')
+                            throw new ProsopoEnvError('CONTRACT.NOT_HANDLED')
                         } else if (outerParams !== undefined && outerParams.length == 2 && outerPath && innerType) {
                             definition += `${defStr(outerType)}<${defStr(fieldTypesArr[innerLayer][0])}<${defStr(
                                 fieldTypesArr[innerLayer][1]
                             )},`
                         }
-                        outerLayer++
                         innerLayer++
                         outerType = fieldTypesArr[innerLayer][0]
                         innerType = fieldTypesArr[innerLayer][1]
@@ -158,7 +171,7 @@ function storageTypesToDefinitions(storageTypes: StorageFieldTypesObject): Recor
                             if (outerPath) {
                                 definition += `${outerPath.slice(-1)}`
                             }
-                            definition += '>'
+                            definition += '>>'
                             break
                         }
                     }
@@ -178,6 +191,11 @@ function storageTypesToDefinitions(storageTypes: StorageFieldTypesObject): Recor
     return definitions
 }
 
+/**
+ * Get the definition string for a type
+ * @param {AbiType} type
+ * @param {AbiType} innerType
+ */
 function defStr(type: AbiType, innerType?: AbiType): string {
     if (type.type.path && type.type.path.slice(0, 2).join('::') === 'ink_env::types') {
         return type.type.path.slice(-1)[0]
@@ -199,7 +217,12 @@ function defStr(type: AbiType, innerType?: AbiType): string {
     }
 }
 
-function handleComposite(type: AbiType, types: AbiType[]): AbiType[] {
+/**
+ * Return an array of types from a composite type
+ * @param type
+ * @param types
+ */
+function expandCompositeType(type: AbiType, types: AbiType[]): AbiType[] {
     if (type.type.params !== undefined) {
         const params = type.type.params
         if (type.type.params.length == 1) {
@@ -213,6 +236,8 @@ function handleComposite(type: AbiType, types: AbiType[]): AbiType[] {
             if (keyTypeIndex && valueTypeIndex) {
                 return [types[keyTypeIndex], types[valueTypeIndex]]
             }
+        } else {
+            throw new ProsopoEnvError('CONTRACT.NOT_HANDLED')
         }
     }
 
@@ -227,7 +252,7 @@ export function parseParamType(paramType: string | number): number {
     }
 }
 
-export function generateDefinitions(path: string[]): Record<string, string> {
+export function generateDefinitions(path: string[]): TypegenDefinitions {
     const abi = AbiMetaDataSpec.parse(abiJson)
     const version = getABIVersion(abi)
     let abiTypes: AbiType[]
@@ -236,14 +261,14 @@ export function generateDefinitions(path: string[]): Record<string, string> {
         abiTypes = abi[version].types
         abiStorage = abi[version].storage
     } else {
-        throw new Error('No ABI version found')
+        throw new ProsopoEnvError('CONTRACT.INVALID_ABI')
     }
 
     const types = getTypes(abiTypes, path)
     const typeDefinitions = typesToDefinition(types)
     const storageTypes = getStorageTypes(abiStorage, abiTypes)
     const storageDefinitions = storageTypesToDefinitions(storageTypes)
-    return { ...storageDefinitions, ...typeDefinitions }
+    return { types: { ...storageDefinitions, ...typeDefinitions } }
 }
 
-console.log(generateDefinitions(['prosopo', 'prosopo']))
+//console.log(generateDefinitions(['prosopo', 'prosopo']))
