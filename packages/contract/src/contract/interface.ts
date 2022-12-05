@@ -15,17 +15,17 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { AbiMessage } from '@polkadot/api-contract/types'
 import { AnyJson } from '@polkadot/types/types/codec'
-import { Observable, Registry } from '@polkadot/types/types'
+import { Registry } from '@polkadot/types/types'
 import { AbiMetadata, ContractAbi, ContractApiInterface, TransactionResponse } from '../types'
 import { encodeStringArgs, handleContractCallOutcomeErrors, unwrap } from './helpers'
-import { contractDefinitions } from './definitions'
+//import { contractDefinitions } from './definitions'
 import { buildCall, buildSend } from './contract'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import AsyncFactory from './AsyncFactory'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { Bytes, Option } from '@polkadot/types-codec'
+import { generateDefinitions, getABIVersion } from '../util/definitionGen'
 
 export class ProsopoContractApi extends AsyncFactory implements ContractApiInterface {
     contract: ContractPromise
@@ -47,6 +47,7 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         this.contractAddress = contractAddress
         this.abi = abi
         await this.api.isReadyOrError
+        const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
         await this.api.registry.register(contractDefinitions)
         this.contract = new ContractPromise(this.api, this.abi, this.contractAddress)
         return this
@@ -124,11 +125,11 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         const json: AbiMetadata = this.contract.abi.json as AbiMetadata
 
         // Find the different metadata version key, V1, V2, V3, etc.
-        const storageKey = Object.keys(json).filter((key) => key.search(/V\d/) > -1)
+        const storageKey = getABIVersion(json)
 
         let data
-        if (storageKey.length) {
-            data = json[storageKey[0]]
+        if (storageKey) {
+            data = json[storageKey]
         } else {
             // The metadata version is not present, and it's the old AbiMetadata
             data = json

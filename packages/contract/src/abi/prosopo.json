@@ -1654,7 +1654,7 @@
           "params": [
             {
               "name": "T",
-              "type": 1
+              "type": "1"
             }
           ],
           "path": [

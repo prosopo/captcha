@@ -1,0 +1,249 @@
+import { abiJson } from '../abi/index'
+import { AbiMetaDataSpec, AbiStorage, AbiType, ContractAbi } from '../types/index'
+import { ProsopoEnvError } from '@prosopo/datasets'
+
+function snakeCaseToCamelCase(str: string) {
+    return str.replace(/([-_][a-z])/gi, ($1) => {
+        return $1.toUpperCase().replace('-', '').replace('_', '')
+    })
+}
+
+function capitalizeFirstLetter(str: string) {
+    return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+/**
+ *     Get the contract ABI version
+ */
+export function getABIVersion(json: ContractAbi): string | undefined {
+    try {
+        return Object.keys(json).filter((key) => key.search(/V\d/) > -1)[0]
+    } catch (e) {
+        console.debug(e)
+        return undefined
+    }
+}
+
+/**
+ * Get the relevant type definition from the ABI
+ * @param types
+ * @param {string[]} path
+ */
+function getTypes(types: AbiType[], path: string[]): AbiType[] {
+    const typeDefs: AbiType[] = []
+    for (const type of types) {
+        if (type.type.path) {
+            if (type.type.path.slice(0, -1).join('::') === path.join('::')) {
+                typeDefs.push(type)
+            }
+        }
+    }
+
+    return typeDefs
+}
+
+function typesToDefinition(types: AbiType[]): Record<string, string> {
+    const definitions = {}
+    for (const type of types) {
+        if (type.type.path) {
+            let definitionKey = type.type.path.slice(-1)[0]
+            if (definitionKey === 'Error') {
+                const firstWord = type.type.path.slice(-2)[0]
+                const capitalised = capitalizeFirstLetter(snakeCaseToCamelCase(firstWord))
+                definitionKey = `${capitalised}Error`
+            }
+            if (type.type.def.composite) {
+                definitions[definitionKey] = {}
+                type.type.def.composite.fields.map((field) => {
+                    definitions[definitionKey][field.name] = field.typeName
+                })
+            } else if (type.type.def.variant) {
+                definitions[definitionKey] = {
+                    _enum: type.type.def.variant.variants.map((variant) => {
+                        return variant.name
+                    }),
+                }
+            }
+        }
+    }
+    return definitions
+}
+
+type StorageFieldTypes = AbiType[][]
+type StorageFieldTypesObject = { [key: string]: StorageFieldTypes }
+
+function getStorageTypes(storage: AbiStorage, types: AbiType[]): StorageFieldTypesObject {
+    const fieldTypesObject: StorageFieldTypesObject = {}
+    try {
+        for (const field of storage.struct.fields) {
+            const outerKey = capitalizeFirstLetter(snakeCaseToCamelCase(field.name))
+            fieldTypesObject[outerKey] = []
+            if (field.layout.cell && field.layout.cell.ty !== undefined) {
+                const outerTypeIndex: number | undefined = field.layout.cell.ty
+                let innerTypes: AbiType[] = [types[outerTypeIndex]]
+                let innerType: AbiType | undefined
+                fieldTypesObject[outerKey].push([...innerTypes])
+                if (innerTypes.length > 0) {
+                    while (innerTypes.length > 0) {
+                        innerType = innerTypes.pop()
+                        if (innerType) {
+                            if (innerType.type.def.composite) {
+                                innerTypes = handleComposite(innerType, types)
+                                if (innerTypes.length > 0) {
+                                    fieldTypesObject[outerKey].push([...innerTypes])
+                                }
+                            } else if (innerType.type.def.variant) {
+                                fieldTypesObject[outerKey].push([innerType])
+                            } else if (innerType.type.def.tuple) {
+                                fieldTypesObject[outerKey].push([innerType])
+                            } else if (innerType.type.def.sequence) {
+                                fieldTypesObject[outerKey].push([types[innerType.type.def.sequence.type]])
+                            } else if (innerType.type.def.array) {
+                                fieldTypesObject[outerKey].push([innerType])
+                            } else if (innerType.type.def.primitive) {
+                                fieldTypesObject[outerKey].push([innerType])
+                            } else {
+                                console.log(innerType)
+                                console.log('unknown')
+                            }
+                        }
+                    }
+                }
+            } else {
+                console.log(`${outerKey} has no type`)
+                console.log(JSON.stringify(field, null, 4))
+            }
+        }
+    } catch (e) {
+        throw new Error(e)
+    }
+
+    return fieldTypesObject
+}
+
+function storageTypesToDefinitions(storageTypes: StorageFieldTypesObject): Record<string, string> {
+    const definitions = {}
+    for (const [outerKey, fieldTypesArr] of Object.entries(storageTypes)) {
+        let definition = ''
+        if (fieldTypesArr && fieldTypesArr.length > 0 && fieldTypesArr[0][0]) {
+            let outerLayer = 0
+            let innerLayer = outerLayer + 1
+            let outerType = fieldTypesArr[outerLayer][0]
+            let outerParams = outerType.type.params
+            let outerPath = outerType.type.path
+            let innerType = fieldTypesArr[outerLayer][0]
+
+            if (outerParams !== undefined && outerParams.length !== 2) {
+                // don't know if this can happen or not
+                throw new Error('not handled')
+            } else if (outerParams !== undefined && outerParams.length == 2 && outerPath && fieldTypesArr[innerLayer]) {
+                innerType = fieldTypesArr[innerLayer][1]
+                // case where outer type has params and there are 2 inner types
+                if (innerType.type.params) {
+                    while (innerType !== undefined && innerLayer < fieldTypesArr.length - 1) {
+                        if (outerParams !== undefined && outerParams.length !== 2) {
+                            throw new Error('not handled')
+                        } else if (outerParams !== undefined && outerParams.length == 2 && outerPath && innerType) {
+                            definition += `${defStr(outerType)}<${defStr(fieldTypesArr[innerLayer][0])}<${defStr(
+                                fieldTypesArr[innerLayer][1]
+                            )},`
+                        }
+                        outerLayer++
+                        innerLayer++
+                        outerType = fieldTypesArr[innerLayer][0]
+                        innerType = fieldTypesArr[innerLayer][1]
+                        outerPath = outerType.type.path
+                        outerParams = outerType.type.params
+                        if (!innerType && outerPath) {
+                            if (outerPath) {
+                                definition += `${outerPath.slice(-1)}`
+                            }
+                            definition += '>'
+                            break
+                        }
+                    }
+                } else {
+                    const inner1 = fieldTypesArr[innerLayer][0]
+                    const inner2 = fieldTypesArr[innerLayer][1]
+                    definition = `${defStr(outerType)}<${defStr(inner1)},${defStr(inner2)}>`
+                }
+            } else {
+                definition += defStr(outerType, fieldTypesArr[innerLayer] ? fieldTypesArr[innerLayer][0] : undefined)
+            }
+        }
+        if (definition.length) {
+            definitions[outerKey] = definition
+        }
+    }
+    return definitions
+}
+
+function defStr(type: AbiType, innerType?: AbiType): string {
+    if (type.type.path && type.type.path.slice(0, 2).join('::') === 'ink_env::types') {
+        return type.type.path.slice(-1)[0]
+    } else if (type.type.def.primitive) {
+        return type.type.def.primitive
+    } else if (type.type.def.array) {
+        return '[]'
+    } else if (type.type.def.tuple) {
+        return '()'
+    } else if (type.type.def.sequence) {
+        return `Vec<${innerType?.type.path?.slice(-1)[0]}>`
+    } else if (type.type.def.composite) {
+        return `${type.type.path?.slice(-1)[0]}`
+    } else if (type.type.def.variant) {
+        return `${type.type.path?.slice(-1)[0]}`
+    } else {
+        console.error(type)
+        throw new ProsopoEnvError('CONTRACT.INVALID_TYPE')
+    }
+}
+
+function handleComposite(type: AbiType, types: AbiType[]): AbiType[] {
+    if (type.type.params !== undefined) {
+        const params = type.type.params
+        if (type.type.params.length == 1) {
+            const valueTypeIndex = params && params[0] ? parseParamType(params[0].type) : undefined
+            if (valueTypeIndex) {
+                return [types[valueTypeIndex]]
+            }
+        } else if (type.type.params.length == 2) {
+            const keyTypeIndex = params && params[0] ? parseParamType(params[0].type) : undefined
+            const valueTypeIndex = params && params[1] ? parseParamType(params[1].type) : undefined
+            if (keyTypeIndex && valueTypeIndex) {
+                return [types[keyTypeIndex], types[valueTypeIndex]]
+            }
+        }
+    }
+
+    return []
+}
+
+export function parseParamType(paramType: string | number): number {
+    if (typeof paramType === 'number') {
+        return paramType
+    } else {
+        return parseInt(paramType)
+    }
+}
+
+export function generateDefinitions(path: string[]): Record<string, string> {
+    const abi = AbiMetaDataSpec.parse(abiJson)
+    const version = getABIVersion(abi)
+    let abiTypes: AbiType[]
+    let abiStorage: AbiStorage
+    if (version) {
+        abiTypes = abi[version].types
+        abiStorage = abi[version].storage
+    } else {
+        throw new Error('No ABI version found')
+    }
+
+    const types = getTypes(abiTypes, path)
+    const typeDefinitions = typesToDefinition(types)
+    const storageTypes = getStorageTypes(abiStorage, abiTypes)
+    const storageDefinitions = storageTypesToDefinitions(storageTypes)
+    return { ...storageDefinitions, ...typeDefinitions }
+}
+
+console.log(generateDefinitions(['prosopo', 'prosopo']))
