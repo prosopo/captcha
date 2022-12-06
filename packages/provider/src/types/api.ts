@@ -37,6 +37,7 @@ export const CaptchaSolutionBody = z.object({
     blockHash: z.string().optional(),
     txHash: z.string().optional(),
     web2: z.boolean().optional().default(false),
+    signature: z.string().optional(), // the signature to prove account ownership (web2 only)
 })
 
 export const VerifySolutionBody = z.object({
