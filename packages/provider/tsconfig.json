@@ -10,8 +10,14 @@
     "./src/**/*.ts"
   ],
   "files": [
-    "./src/prosopo.config.js"
+    "./src/prosopo.config.ts"
   ],
+  "paths": {
+    // here we replace the @polkadot/api augmentation with our own, generated from chain
+    "@polkadot/api/augment": ["@prosopo/contract/interfaces/augment-api.ts"],
+    // replace the augmented types with our own, as generated from definitions
+    "@polkadot/types/augment": ["@prosopo/contract/interfaces/augment-types.ts"]
+  },
   "references": [
     {
       "path": "../datasets"

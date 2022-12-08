@@ -17,6 +17,7 @@ import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopu
 import { Environment } from '../../src/env'
 import { ProsopoEnvironment } from '../../src/types'
 import consola from 'consola'
+import { ProsopoEnvError } from '@prosopo/datasets'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
@@ -60,7 +61,13 @@ async function populateStep(
 
     logger.debug(` [ ${msToSecString(time)} ]\n`)
 
-    promise.filter(({ error }) => error).forEach(({ error }) => logger.error(['ERROR', error]))
+    promise
+        .filter(({ error }) => error)
+        .forEach(({ error }) => {
+            if (error) {
+                throw new ProsopoEnvError(error)
+            }
+        })
 }
 
 export async function populateDatabase(
@@ -83,14 +90,16 @@ export async function populateDatabase(
             )
         }
     })
-
-    await Promise.all(userPromises)
+    try {
+        await Promise.all(userPromises)
+    } catch (e) {
+        throw new Error(e)
+    }
 
     if (exportData) {
         env.logger.info('Exporting accounts...')
         await exportDatabaseAccounts(databasePopulator)
     }
-
     return databasePopulator
 }
 
@@ -98,6 +107,5 @@ if (require.main === module) {
     const startDate = Date.now()
     populateDatabase(new Environment(process.env.PROVIDER_MNEMONIC || ''), DEFAULT_USER_COUNT, true)
         .then(() => console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`))
-        .catch(console.error)
         .finally(() => process.exit())
 }

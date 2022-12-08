@@ -11,22 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BigNumber, Payee, stringToHexPadded } from '@prosopo/contract'
+import { BigNumber, Payee, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/datasets'
 import path from 'path'
 
-import { blake2AsHex, decodeAddress, mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
+import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
 
 import { sendFunds as _sendFunds } from '../../src/tasks/setup'
 import { Tasks } from '../../src/tasks'
 import { Account, IDatabaseAccounts, accountAddress, accountMnemonic } from './DatabaseAccounts'
 import { Environment } from '../../src/env'
-import { TranslationKey } from '@prosopo/i18n'
+import { TranslationKey } from '@prosopo/common'
+import { createType } from '@polkadot/types'
+import { BN } from '@polkadot/util'
 
 const serviceOriginBase = 'http://localhost:'
 
 const PROVIDER_FEE = 10
-const PROVIDER_PAYEE = Payee.Provider
+const PROVIDER_PAYEE = 'Provider'
 
 export enum IDatabasePopulatorMethodNames {
     registerProvider = 'registerProvider',
@@ -67,19 +69,17 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     constructor(env) {
         this.mockEnv = env
-        this._isReady = this.mockEnv
-            .isReady()
-            .then(() => {
+        this._isReady = this.mockEnv.isReady().then(() => {
+            try {
                 const tasks = new Tasks(this.mockEnv)
 
-                return tasks
-                    .getProviderStakeDefault()
-                    .then((res) => {
-                        this.providerStakeDefault = res
-                    })
-                    .catch(console.error)
-            })
-            .catch(console.error)
+                return tasks.contractApi.getProviderStakeDefault().then((res) => {
+                    this.providerStakeDefault = BigInt(new BN(res).toNumber())
+                })
+            } catch (e) {
+                throw new Error(e)
+            }
+        })
     }
 
     get providers(): Account[] {
@@ -178,14 +178,17 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
             const account = this.createAccount()
-
-            await this.sendFunds(accountAddress(account), 'Provider', 10000000n * this.providerStakeDefault)
+            await this.sendFunds(
+                accountAddress(account),
+                createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+                10000000n * this.providerStakeDefault
+            )
             await this.changeSigner(accountMnemonic(account))
             const tasks = new Tasks(this.mockEnv)
-            await tasks.providerRegister(
+            await tasks.contractApi.providerRegister(
                 stringToHexPadded(_serviceOrigin),
                 PROVIDER_FEE,
-                PROVIDER_PAYEE,
+                createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(account)
             )
             if (!noPush) {
@@ -203,10 +206,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const tasks = new Tasks(this.mockEnv)
 
-            await tasks.providerUpdate(
+            await tasks.contractApi.providerUpdate(
                 stringToHexPadded(serviceOrigin),
                 PROVIDER_FEE,
-                PROVIDER_PAYEE,
+                createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(account),
                 this.providerStakeDefault
             )
@@ -268,19 +271,22 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
             const account = this.createAccount()
-
-            await this.sendFunds(accountAddress(account), 'Provider', 10000000n * this.providerStakeDefault)
+            await this.sendFunds(
+                accountAddress(account),
+                createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+                10000000n * this.providerStakeDefault
+            )
 
             await this.changeSigner(accountMnemonic(account))
 
             const tasks = new Tasks(this.mockEnv)
-
-            await tasks.dappRegister(
+            const result = await tasks.contractApi.dappRegister(
                 stringToHexPadded(_serviceOrigin),
                 accountAddress(account),
-                blake2AsHex(decodeAddress(accountAddress(account)))
+                createType(this.mockEnv.api.registry, 'AccountId', accountAddress(account)).toString()
             )
-
+            const events = getEventsFromMethodName(result, 'DappRegister')
+            events[0].args.map((arg) => console.debug(arg.toPrimitive()))
             if (!noPush) {
                 this._registeredDapps.push(account)
             }
@@ -296,25 +302,31 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const tasks = new Tasks(this.mockEnv)
 
-        await tasks.dappFund(accountAddress(account), 1000000n * this.providerStakeDefault)
+        await tasks.contractApi.dappFund(accountAddress(account), 1000000n * this.providerStakeDefault)
     }
 
     public async registerDappWithStake(): Promise<Account> {
-        const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
+        try {
+            const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
+            const account = await this.registerDapp(serviceOrigin, true)
+            await this.dappFund(account)
 
-        const account = await this.registerDapp(serviceOrigin, true)
+            this._registeredDappsWithStake.push(account)
 
-        await this.dappFund(account)
-
-        this._registeredDappsWithStake.push(account)
-
-        return account
+            return account
+        } catch (e) {
+            throw new Error(e)
+        }
     }
 
     public async registerDappUser(): Promise<Account> {
         const account = this.createAccount()
 
-        await this.sendFunds(accountAddress(account), 'Provider', 10000000n * this.providerStakeDefault)
+        await this.sendFunds(
+            accountAddress(account),
+            createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+            10000000n * this.providerStakeDefault
+        )
 
         this._registeredDappUsers.push(account)
 

@@ -20,6 +20,7 @@ import {
     DatasetRecordSchema,
     PendingCaptchaRequest,
     PendingRecordSchema,
+    SchedulerRecordSchema,
     SolutionRecordSchema,
     Tables,
     UserCommitmentRecord,
@@ -39,6 +40,7 @@ import {
 } from '@prosopo/datasets'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'
+import { ScheduledTaskNames, ScheduledTaskStatus } from '../types/scheduler'
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
@@ -91,6 +93,7 @@ export class ProsopoDatabase implements Database {
                 commitment: this.connection.model('UserCommitment', UserCommitmentRecordSchema),
                 usersolution: this.connection.model('UserSolution', UserSolutionRecordSchema),
                 pending: this.connection.model('Pending', PendingRecordSchema),
+                scheduler: this.connection.model('Scheduler', SchedulerRecordSchema),
             }
             this.connection.once('open', resolve).on('error', (e) => {
                 this.logger.info(`mongoose connection  error`)
@@ -365,11 +368,16 @@ export class ProsopoDatabase implements Database {
         }
     }
 
-    /** @description Remove Dapp User captcha solutions from the usersolution table by captchaId
-     * @param {[string]} captchaIds
+    /** @description Get processed Dapp User captcha solutions from the user solution table
      */
-    async removeDappUserSolutions(captchaIds: string[]): Promise<void> {
-        await this.tables?.usersolution.deleteMany({ 'captchas.captchaId': { $in: captchaIds } })
+    async getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]> {
+        return (await this.tables?.usersolution.find({ processed: true }).lean()) || []
+    }
+
+    /** @description Remove processed Dapp User captcha solutions from the user solution table
+     */
+    async removeProcessedDappUserSolutions(): Promise<void> {
+        await this.tables?.usersolution.deleteMany({ processed: true })
     }
 
     /**
@@ -595,5 +603,22 @@ export class ProsopoDatabase implements Database {
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, captchaIds)
         }
+    }
+
+    /**
+     * @description Get the last batch commit time or return 0 if none
+     */
+    async getLastBatchCommitTime(): Promise<number> {
+        const cursor = this.tables?.scheduler
+            ?.findOne({ processName: ScheduledTaskNames.BatchCommitment, status: ScheduledTaskStatus.Completed })
+            .sort({ timestamp: -1 })
+            .lean()
+        const doc = await cursor
+
+        if (doc) {
+            return doc.timestamp
+        }
+
+        return 0
     }
 }

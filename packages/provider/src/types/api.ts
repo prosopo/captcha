@@ -13,8 +13,9 @@
 // limitations under the License.
 import { z } from 'zod'
 import { CaptchaSolutionArraySchema } from '@prosopo/datasets'
-import { AnyJson } from '@polkadot/types/types/codec'
 import { CaptchaWithProof } from '@prosopo/datasets'
+import { AnyJson } from '@polkadot/types/types'
+import { Providers } from '@prosopo/contract'
 
 export type CaptchaResponse = CaptchaWithProof[]
 
@@ -51,6 +52,10 @@ export interface PendingCaptchaRequest {
     requestHash: string
 }
 
-export interface AccountsResponse {
+export interface ProvidersAccountsResponse {
+    accounts: Providers
+}
+
+export interface DappsAccountsResponse {
     accounts: AnyJson
 }

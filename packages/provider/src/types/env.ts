@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import consola from 'consola'
-import { ContractAbi, ContractApiInterface } from '@prosopo/contract'
+import { ContractAbi, ProsopoContractMethods } from '@prosopo/contract'
 import { AssetsResolver } from '@prosopo/datasets'
 import { Database } from './db'
 import { ProsopoConfig } from './config'
@@ -23,7 +23,7 @@ import { ApiPromise } from '@polkadot/api'
 export interface ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: ContractApiInterface
+    contractInterface: ProsopoContractMethods
     mnemonic: string
     contractAddress: string
     defaultEnvironment: string

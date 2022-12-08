@@ -17,10 +17,16 @@ import { ProsopoEnvError } from '@prosopo/datasets'
 import { CaptchaWithProof, parseCaptchaAssets } from '@prosopo/datasets'
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'
-import { DappUserSolutionResult, VerifySolutionBody } from './types/api'
+import {
+    DappUserSolutionResult,
+    DappsAccountsResponse,
+    ProvidersAccountsResponse,
+    VerifySolutionBody,
+} from './types/api'
 import { ProsopoEnvironment } from './types/env'
-import { AccountsResponse, CaptchaSolutionBody } from './types/api'
+import { CaptchaSolutionBody } from './types/api'
 import { parseBlockNumber } from './util'
+import { Providers } from '@prosopo/contract'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -51,7 +57,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         const { userAccount, dappContractAccount } = req.params
 
         try {
-            const provider = await tasks.getRandomProvider(userAccount, dappContractAccount)
+            const provider = await tasks.contractApi.getRandomProvider(userAccount, dappContractAccount)
 
             return res.json(provider)
         } catch (err) {
@@ -67,11 +73,11 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     router.get('/v1/prosopo/providers/', async (req, res, next) => {
         try {
             await env.isReady()
-            const providers: AnyJson = await tasks.getProviderAccounts()
+            const providers: Providers = await tasks.contractApi.getProviderAccounts()
 
             return res.json({
                 accounts: providers,
-            } as AccountsResponse)
+            } as ProvidersAccountsResponse)
         } catch (err) {
             return next(new ProsopoEnvError(err))
         }
@@ -85,11 +91,11 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     router.get('/v1/prosopo/dapps/', async (req, res, next) => {
         try {
             await env.isReady()
-            const dapps: AnyJson = await tasks.getDappAccounts()
+            const dapps: AnyJson = await tasks.contractApi.getDappAccounts()
 
             return res.json({
                 accounts: dapps,
-            } as AccountsResponse)
+            } as DappsAccountsResponse)
         } catch (err) {
             return next(new ProsopoEnvError(err))
         }

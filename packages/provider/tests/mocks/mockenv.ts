@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ContractAbi, ContractApiInterface, ProsopoContractApi, abiJson } from '@prosopo/contract'
+import { ContractAbi, ProsopoContractMethods, abiJson, generateDefinitions } from '@prosopo/contract'
 import { AssetsResolver, ProsopoEnvError } from '@prosopo/datasets'
 import consola, { LogLevel } from 'consola'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import path from 'path'
 import { LocalAssetsResolver } from '../../src/assets'
 import { loadEnv } from '../../src/env'
-import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
+import { Database, DatabaseTypes, EnvironmentTypes, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
@@ -28,7 +28,7 @@ import { mnemonicGenerate } from '@polkadot/util-crypto'
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: ContractApiInterface
+    contractInterface: ProsopoContractMethods
     mnemonic: string
     contractAddress: string
     defaultEnvironment: string
@@ -46,7 +46,7 @@ export class MockEnvironment implements ProsopoEnvironment {
         this.config = {
             logLevel: 'info',
             contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.
-            defaultEnvironment: 'development',
+            defaultEnvironment: EnvironmentTypes.development,
             networks: {
                 development: {
                     endpoint: process.env.SUBSTRATE_NODE_URL!,
@@ -72,7 +72,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 captchaBlockRecency: 10,
             },
             database: {
-                development: { type: 'mongo', endpoint: '', dbname: 'prosopo' },
+                development: { type: DatabaseTypes.mongo, endpoint: '', dbname: 'prosopo', authSource: '' },
             },
             assets: {
                 absolutePath: '',
@@ -80,6 +80,9 @@ export class MockEnvironment implements ProsopoEnvironment {
             },
             server: {
                 baseURL: '',
+            },
+            batchCommit: {
+                interval: 1000000,
             },
         }
         if (!mnemonic) {
@@ -92,6 +95,7 @@ export class MockEnvironment implements ProsopoEnvironment {
         ) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
+            console.info('contract address', this.contractAddress)
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
             this.logger = consola.create({ level: LogLevel.Info })
             this.abi = MockEnvironment.getContractAbi(this.config.contract.abi, this.logger)
@@ -123,6 +127,8 @@ export class MockEnvironment implements ProsopoEnvironment {
     async getSigner(): Promise<void> {
         if (!this.api) {
             this.api = await ApiPromise.create({ provider: this.wsProvider })
+            const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
+            await this.api.registry.register(contractDefinitions.types)
         }
         await this.api.isReadyOrError
         const { mnemonic } = this
@@ -139,8 +145,8 @@ export class MockEnvironment implements ProsopoEnvironment {
         await this.getContractApi()
     }
 
-    async getContractApi(): Promise<ProsopoContractApi> {
-        this.contractInterface = await ProsopoContractApi.create(
+    async getContractApi(): Promise<ProsopoContractMethods> {
+        this.contractInterface = await ProsopoContractMethods.create(
             this.contractAddress,
             this.pair,
             this.contractName,
@@ -154,6 +160,8 @@ export class MockEnvironment implements ProsopoEnvironment {
         try {
             if (!this.api) {
                 this.api = await ApiPromise.create({ provider: this.wsProvider })
+                const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
+                await this.api.registry.register(contractDefinitions.types)
             }
             await this.getSigner()
             await this.getContractApi()
