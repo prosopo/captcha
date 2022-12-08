@@ -34,7 +34,10 @@
         "CONTRACT_UNDEFINED": "Contract undefined",
         "SIGNER_UNDEFINED": "Signer undefined",
         "SIGNER_NOT_SUPPORTED": "Signer is not supported. Use connect instead, e.g. contract.connect(signer)",
-        "CANNOT_FIND_KEYPAIR": "Cannot find keypair"
+        "CANNOT_FIND_KEYPAIR": "Cannot find keypair",
+        "INVALID_TYPE": "Invalid type",
+        "INVALID_ABI": "Invalid ABI",
+        "NOT_HANDLED": "Not handled",
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",

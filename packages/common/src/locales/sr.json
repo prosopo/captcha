@@ -34,7 +34,10 @@
         "CONTRACT_UNDEFINED": "Ugovor nedefinisan",
         "SIGNER_UNDEFINED": "Signer nedefinisan",
         "SIGNER_NOT_SUPPORTED": "Signer nije podržan. Umesto toga koristite connect, npr. contract.connect(signer)",
-        "CANNOT_FIND_KEYPAIR": "Nije moguće pronaći par ključeva"
+        "CANNOT_FIND_KEYPAIR": "Nije moguće pronaći par ključeva",
+        "INVALID_TYPE": "Invalid type",
+        "INVALID_ABI": "Invalid ABI",
+        "NOT_HANDLED": "Not handled"
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Zatraženo je nepoznato okruženje",
