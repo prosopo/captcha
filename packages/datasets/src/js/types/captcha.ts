@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { z } from 'zod'
-import { AccountId, Hash } from '@polkadot/types/interfaces'
-import { u32, u64 } from '@polkadot/types'
+import { AccountId } from '@polkadot/types/interfaces'
+import { u32 } from '@polkadot/types'
 
 export enum CaptchaTypes {
     SelectAll = 'SelectAll',
@@ -61,21 +61,6 @@ export interface Captcha extends CaptchaWithoutId {
     datasetContentId?: string
 }
 
-export enum CaptchaStatus {
-    Pending = 'Pending',
-    Approved = 'Approved',
-    Disapproved = 'Disapproved',
-}
-
-export interface CaptchaSolutionCommitment {
-    account: AccountId
-    captchaDatasetId: Hash
-    status: CaptchaStatus
-    contract: AccountId
-    provider: AccountId
-    completed_at: u64
-}
-
 export interface CaptchaSolution {
     captchaId: string
     captchaContentId: string
@@ -104,9 +89,9 @@ export type CaptchaSolutionConfig = {
     captchaBlockRecency: number
 }
 
-export type LastCorrectCaptcha = {
-    before_ms: u32
-    dapp_id: AccountId
+export type LastCorrectCaptchaSchema = {
+    beforeMs: u32
+    dappId: AccountId
 }
 
 export const CaptchaSchema = z.object({

@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { blake2AsHex } from '@polkadot/util-crypto'
 import client from 'axios'
-import { ProsopoEnvError } from '../types/index'
+import { ProsopoEnvError } from '@prosopo/common'
 
 export const HEX_HASH_BIT_LENGTH = 256
 export const ARRAY_JOINER = ''

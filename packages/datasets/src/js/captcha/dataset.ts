@@ -1,8 +1,8 @@
 import { Dataset, DatasetRaw } from '../types/dataset'
-import { Captcha } from '../types/captcha'
+import { Captcha, CaptchaWithoutId } from '../types/captcha'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
 import { CaptchaMerkleTree } from './merkle'
-import { ProsopoEnvError } from '../types/error'
+import { ProsopoEnvError } from '@prosopo/common'
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw)
@@ -16,11 +16,13 @@ export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(
-        (captcha, index) =>
+        (captcha: CaptchaWithoutId, index: number) =>
             ({
                 ...captcha,
                 captchaId: solutionTree.leaves[index].hash,
                 captchaContentId: contentTree.leaves[index].hash,
+                datasetId: solutionTree.root?.hash,
+                datasetContentId: contentTree.root?.hash,
             } as Captcha)
     )
     dataset.solutionTree = solutionTree.layers

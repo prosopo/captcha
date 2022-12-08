@@ -11,7 +11,7 @@
   "exclude": ["**/*.test.ts"],
   "references": [
     {
-      "path": "../i18n"
+      "path": "../common"
     },
   ]
 }
