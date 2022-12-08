@@ -18,7 +18,7 @@ import ProsopoContractBase from './ProsopoContractBase'
 import { Signer } from '@polkadot/api/types'
 import { ProsopoDappOperatorIsHumanUserResponse, TransactionResponse } from '../types'
 import { ProsopoRandomProviderResponse } from '../types'
-import { CaptchaSolutionCommitment } from '@prosopo/datasets'
+import { CaptchaSolutionCommitment } from '@prosopo/contract'
 
 export class ProsopoContract extends ProsopoContractBase {
     public async getRandomProvider(): Promise<ProsopoRandomProviderResponse> {
