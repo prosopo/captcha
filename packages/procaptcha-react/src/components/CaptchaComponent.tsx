@@ -19,7 +19,7 @@ import Typography from '@mui/material/Typography'
 import { GetCaptchaResponse } from '@prosopo/procaptcha'
 
 import { CaptchaWidget } from './CaptchaWidget'
-import { useTranslation } from '@prosopo/i18n'
+import { useTranslation } from '@prosopo/common'
 import { addDataAttr } from '../util'
 import ThemeProvider from '@mui/material/styles/ThemeProvider'
 import theme from './theme'
