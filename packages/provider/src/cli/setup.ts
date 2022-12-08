@@ -20,7 +20,7 @@ import path from 'path'
 import { Environment, getEnvFile, loadEnv } from '../env'
 import { generateMnemonic, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 
 loadEnv()
 

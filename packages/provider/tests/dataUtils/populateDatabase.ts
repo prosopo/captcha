@@ -17,7 +17,7 @@ import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopu
 import { Environment } from '../../src/env'
 import { ProsopoEnvironment } from '../../src/types'
 import consola from 'consola'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 

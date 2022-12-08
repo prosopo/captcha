@@ -18,7 +18,8 @@ import {
     abiJson,
     generateDefinitions,
 } from '@prosopo/contract'
-import { AssetsResolver, ProsopoEnvError } from '@prosopo/datasets'
+import { AssetsResolver } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import consola, { LogLevel } from 'consola'
 import dotenv from 'dotenv'
 import path from 'path'

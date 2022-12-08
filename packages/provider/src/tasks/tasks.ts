@@ -24,12 +24,10 @@ import {
     CaptchaSolutionConfig,
     CaptchaSolutionToUpdate,
     CaptchaStates,
-    CaptchaStatus,
     CaptchaWithProof,
     CaptchaWithoutId,
     DatasetBase,
     DatasetRaw,
-    ProsopoEnvError,
     buildDataset,
     captchaSort,
     compareCaptchaSolutions,
@@ -38,11 +36,14 @@ import {
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import consola from 'consola'
 import { DappUserSolutionResult, Database, ProsopoEnvironment, UserCommitmentRecord } from '../types'
 import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
 
 import { i18n } from '@prosopo/common'
+import { BlockHash } from '@polkadot/types/interfaces/chain/index'
+import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -193,7 +194,7 @@ export class Tasks {
         }
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
-        if (pendingRequest && commitment.status === CaptchaStatus.Pending) {
+        if (pendingRequest && commitment.status.isPending) {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId, userAccount)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.contractApi.providerApprove(commitmentId, partialFee)
@@ -555,7 +556,7 @@ export class Tasks {
             )
         }
 
-        const block = await contract.api.rpc.chain.getBlockHash(blockNo)
+        const block = (await contract.api.rpc.chain.getBlockHash(blockNo)) as BlockHash
         const randomProviderAndBlockNo = await this.contractApi.getRandomProvider(
             userAccount,
             dappContractAccount,
@@ -585,7 +586,7 @@ export class Tasks {
         txHash: string
     ): Promise<RuntimeDispatchInfo | null> {
         // Validate block and transaction, checking that the signer matches the userAccount
-        const signedBlock = await this.contractApi.api.rpc.chain.getBlock(blockHash)
+        const signedBlock: SignedBlock = (await this.contractApi.api.rpc.chain.getBlock(blockHash)) as SignedBlock
         if (!signedBlock) {
             return null
         }
@@ -594,7 +595,10 @@ export class Tasks {
             return null
         }
         // Retrieve tx fee for extrinsic
-        const paymentInfo = await this.contractApi.api.rpc.payment.queryInfo(extrinsic.toHex(), blockHash)
+        const paymentInfo = (await this.contractApi.api.rpc.payment.queryInfo(
+            extrinsic.toHex(),
+            blockHash
+        )) as RuntimeDispatchInfo
         if (!paymentInfo) {
             return null
         }

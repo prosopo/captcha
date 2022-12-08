@@ -1,23 +1,18 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": "./src",
+    "rootDirs": ["./src", "./tests"],
     "outDir": "./dist",
     "module": "commonjs",
     "target": "esnext"
   },
   "include": [
-    "./src/**/*.ts"
+    "./src/**/*.ts",
+    "./tests/**/*.ts"
   ],
   "files": [
     "./src/prosopo.config.ts"
   ],
-  "paths": {
-    // here we replace the @polkadot/api augmentation with our own, generated from chain
-    "@polkadot/api/augment": ["@prosopo/contract/interfaces/augment-api.ts"],
-    // replace the augmented types with our own, as generated from definitions
-    "@polkadot/types/augment": ["@prosopo/contract/interfaces/augment-types.ts"]
-  },
   "references": [
     {
       "path": "../datasets"
@@ -26,7 +21,7 @@
       "path": "../contract"
     },
     {
-      "path": "../i18n"
+      "path": "../common"
     }
   ]
 }

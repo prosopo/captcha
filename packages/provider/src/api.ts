@@ -13,7 +13,7 @@
 // limitations under the License.
 import type { AnyJson } from '@polkadot/types/types'
 import { validateAddress } from '@polkadot/util-crypto'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import { CaptchaWithProof, parseCaptchaAssets } from '@prosopo/datasets'
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'
@@ -117,10 +117,9 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
 
         try {
             validateAddress(providerAccount)
-            const contract = contractApi.getContract()
-            const result = await contract.query.getProviderDetails(providerAccount, {})
+            const result = await contractApi.getProviderDetails(providerAccount)
 
-            return res.json(result.output)
+            return res.json(result)
         } catch (err) {
             return next(new ProsopoEnvError(err))
         }

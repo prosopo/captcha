@@ -20,12 +20,12 @@ import { randomAsHex } from '@polkadot/util-crypto'
 import {
     CaptchaMerkleTree,
     CaptchaSolution,
-    ProsopoEnvError,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
     hexHash,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import { TransactionResponse, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import { Account, AccountKey, IDatabaseAccounts, accountAddress, accountMnemonic } from '../dataUtils/DatabaseAccounts'
 import { DAPP, PROVIDER } from '../mocks/accounts'
@@ -382,10 +382,14 @@ describe('CONTRACT TASKS', () => {
 
         expect(result.txHash).to.not.be.empty
         //contract, owner, client origin, value
-        expect(result.events[0].args[0].toHuman()).to.equal(accountAddress(newAccount))
-        expect(result.events[0].args[1].toHuman()).to.equal(accountAddress(newAccount))
-        expect(result.events[0].args[2].toHuman()).to.equal(stringToHexPadded(clientOrigin))
-        expect(result.events[0].args[3].toPrimitive()).to.equal(0)
+        if (result.events) {
+            expect(result.events[0].args[0].toHuman()).to.equal(accountAddress(newAccount))
+            expect(result.events[0].args[1].toHuman()).to.equal(accountAddress(newAccount))
+            expect(result.events[0].args[2].toHuman()).to.equal(stringToHexPadded(clientOrigin))
+            expect(result.events[0].args[3].toPrimitive()).to.equal(0)
+        } else {
+            expect(true).to.be.false
+        }
     })
 
     it('Dapp is active', async () => {
@@ -420,7 +424,7 @@ describe('CONTRACT TASKS', () => {
         const dappStruct = await tasks.contractApi.getDappDetails(address)
         // Do not do this https://github.com/polkadot-js/api/issues/5365
         //const dapp = createType(mockEnv.api.registry, 'ProsopoDapp', dappStruct.toU8a())
-        expect(events![0].args[1].toPrimitive()).to.equal(dappStruct.toPrimitive().ok.balance)
+        expect(events![0].args[1].toPrimitive()).to.equal(dappStruct.balance)
     })
 
     it('Dapp user commit', async () => {
@@ -757,7 +761,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = await changeSigner(dappAccount)
 
         const res = await tasks.contractApi.getRandomProvider(accountAddress(dappAccount), accountAddress(dappAccount))
-        const blockNumberParsed = parseBlockNumber(res.blockNumber)
+        const blockNumberParsed = parseBlockNumber(res.blockNumber.toString())
         const valid = await tasks
             .validateProviderWasRandomlyChosen(
                 accountAddress(dappAccount),
@@ -814,7 +818,7 @@ describe('CONTRACT TASKS', () => {
             accountAddress(dappUser),
             accountAddress(dappAccount)
         )
-        const blockNumberParsed = parseBlockNumber(res.blockNumber)
+        const blockNumberParsed = parseBlockNumber(res.blockNumber.toString())
         const valid = await dappUserTasks
             .validateProviderWasRandomlyChosen(
                 accountAddress(dappUser),
@@ -883,37 +887,49 @@ describe('CONTRACT TASKS', () => {
         const providerAccount = await getUser(AccountKey.providersWithStakeAndDataset)
         const providerTasks = await changeSigner(providerAccount)
         const providerDetails = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
-        const unsolvedCaptcha = (await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId))[0]
-        const solution = [unsolvedCaptcha.items[0].hash, unsolvedCaptcha.items[2].hash, unsolvedCaptcha.items[3].hash]
-        const captchaSolution = { ...unsolvedCaptcha, solution, salt: 'blah' }
-        const commitments: string[] = []
-        for (let count = 0; count < 10; count++) {
-            const commitmentId = hexHash(`test${count}`)
-            commitments.push(commitmentId)
-            await providerTasks.db.storeDappUserSolution([captchaSolution], commitmentId, 'test')
-            const userSolutions = await providerTasks.db.getDappUserSolutionById(commitmentId)
-            expect(userSolutions).to.be.not.empty
-        }
-
-        const result = await providerTasks.calculateCaptchaSolutions()
-        expect(result).to.equal(1)
-
-        for (const commitment of commitments) {
-            const userSolution = await providerTasks.db.getDappUserSolutionById(commitment)
-            expect(userSolution?.processed).to.be.true
-        }
-
-        const providerDetailsNew = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
-
-        const captchas = await providerTasks.db.getAllCaptchasByDatasetId(providerDetailsNew.datasetId.toString())
-        expect(captchas?.every((captcha) => captcha.datasetId === providerDetailsNew.datasetId.toString())).to.be.true
-
-        expect(providerDetails.datasetId).to.not.equal(providerDetailsNew.datasetId)
-
-        expect(Promise.resolve(providerTasks.db.getCaptchaById(unsolvedCaptcha.captchaId))).to.be.rejected.then(
-            (error) => {
-                expect(error.message).to.equal('Failed to get captcha')
+        const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
+        if (randomCaptchasResult) {
+            const unsolvedCaptcha = randomCaptchasResult[0]
+            const solution = [
+                unsolvedCaptcha.items[0].hash || '',
+                unsolvedCaptcha.items[2].hash || '',
+                unsolvedCaptcha.items[3].hash || '',
+            ]
+            const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: 'blah' }
+            const commitments: string[] = []
+            for (let count = 0; count < 10; count++) {
+                const commitmentId = hexHash(`test${count}`)
+                commitments.push(commitmentId)
+                await providerTasks.db.storeDappUserSolution([captchaSolution], commitmentId, 'test')
+                const userSolutions = await providerTasks.db.getDappUserSolutionById(commitmentId)
+                expect(userSolutions).to.be.not.empty
             }
-        )
+
+            const result = await providerTasks.calculateCaptchaSolutions()
+            expect(result).to.equal(1)
+
+            for (const commitment of commitments) {
+                const userSolution = await providerTasks.db.getDappUserSolutionById(commitment)
+                expect(userSolution?.processed).to.be.true
+            }
+
+            const providerDetailsNew = await providerTasks.contractApi.getProviderDetails(
+                accountAddress(providerAccount)
+            )
+
+            const captchas = await providerTasks.db.getAllCaptchasByDatasetId(providerDetailsNew.datasetId.toString())
+            expect(captchas?.every((captcha) => captcha.datasetId === providerDetailsNew.datasetId.toString())).to.be
+                .true
+
+            expect(providerDetails.datasetId).to.not.equal(providerDetailsNew.datasetId)
+
+            expect(Promise.resolve(providerTasks.db.getCaptchaById([unsolvedCaptcha.captchaId]))).to.be.rejected.then(
+                (error) => {
+                    expect(error.message).to.equal('Failed to get captcha')
+                }
+            )
+        } else {
+            throw new ProsopoEnvError('DATABASE.CAPTCHA_GET_FAILED')
+        }
     })
 })

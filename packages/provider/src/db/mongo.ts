@@ -36,8 +36,8 @@ import {
     DatasetWithIds,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
-    ProsopoEnvError,
 } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '../types/scheduler'

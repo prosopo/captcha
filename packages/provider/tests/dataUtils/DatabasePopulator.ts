@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BigNumber, Payee, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import path from 'path'
 
 import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
@@ -157,7 +157,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
     private sendFunds(account: Account | string, payee: Payee, amount: BigNumber) {
         const address = typeof account === 'string' ? account : accountAddress(account)
 
-        return _sendFunds(this.mockEnv, address, payee, amount)
+        return _sendFunds(this.mockEnv, address, payee.toString(), amount)
     }
 
     private changeSigner(account: Account)
