@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { AbiMessage } from '@polkadot/api-contract/types'
-import { AnyJson } from '@polkadot/types/types/codec'
 import { Registry } from '@polkadot/types/types'
-import { AbiMetadata, ContractAbi, ContractApiInterface, TransactionResponse } from '../types'
-import { encodeStringArgs, handleContractCallOutcomeErrors, unwrap } from './helpers'
-//import { contractDefinitions } from './definitions'
+import { AbiMetadata, BigNumber, ContractAbi, ContractApiInterface, TransactionResponse } from '../types'
+import { encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
 import { buildCall, buildSend } from './contract'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import AsyncFactory from './AsyncFactory'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { generateDefinitions, getABIVersion } from '../util/definitionGen'
+import { getABIVersion } from '../util/definitionGen'
+import { ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
 
 export class ProsopoContractApi extends AsyncFactory implements ContractApiInterface {
     contract: ContractPromise
@@ -47,8 +46,6 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         this.contractAddress = contractAddress
         this.abi = abi
         await this.api.isReadyOrError
-        const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
-        await this.api.registry.register(contractDefinitions)
         this.contract = new ContractPromise(this.api, this.abi, this.contractAddress)
         return this
     }
@@ -64,9 +61,15 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx<T>(contractMethodName: string, args: T[], value?: number | string): Promise<TransactionResponse> {
+    async contractTx<T>(
+        contractMethodName: string,
+        args: T[],
+        value?: number | string | BigNumber
+    ): Promise<TransactionResponse> {
         // Always query first as errors are passed back from a dry run but not from a transaction
+
         await this.contractQuery(contractMethodName, args)
+
         const methodObj = this.getContractMethod(contractMethodName)
         const encodedArgs: T[] = encodeStringArgs(methodObj, args)
         const send = buildSend(this.contract, methodObj, this.pair)
@@ -83,23 +86,21 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
      * Perform a contract query (non-mutating) calling the specified method
      * @param {string} contractMethodName
      * @param args
-     * @param atBlock
+     * @param atBlock?
      * @return JSON result containing the contract event
      */
-    async contractQuery<T>(contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson> {
+    async contractQuery(
+        contractMethodName: string,
+        args: any[],
+        atBlock?: string | Uint8Array
+    ): Promise<ContractExecResultOk> {
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: T[] = encodeStringArgs(methodObj, args)
-        const call = !atBlock
-            ? buildCall(this.contract, methodObj, this.pair)
-            : buildCall(this.contract, methodObj, this.pair, false, atBlock)
-        const response = await call(...encodedArgs)
-        handleContractCallOutcomeErrors(response, contractMethodName, encodedArgs)
-        if (response.result.isOk) {
-            if (response.output) {
-                return unwrap(response.output.toHuman())
-            } else {
-                return []
-            }
+        const encodedArgs: any[] = encodeStringArgs(methodObj, args)
+        const response = await buildCall(this.contract, methodObj, this.pair, false, atBlock)(...encodedArgs)
+        const { debugMessage, gasRequired, gasConsumed, result, storageDeposit } = response
+        handleContractCallOutcomeErrors(result, contractMethodName, encodedArgs)
+        if (result.isOk) {
+            return result.asOk
         }
         throw new ProsopoContractError(response.result.asErr, 'contractQuery')
     }
@@ -108,9 +109,9 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
      * @return the contract method object
      */
     getContractMethod(contractMethodName: string): AbiMessage {
-        const methodObj = this.contract?.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
+        const methodObj = this.contract.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
         if (methodObj !== undefined) {
-            return methodObj as unknown as AbiMessage
+            return methodObj
         }
         throw new ProsopoContractError('CONTRACT.INVALID_METHOD', 'contractMethodName')
     }

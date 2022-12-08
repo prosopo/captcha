@@ -21,7 +21,7 @@
       "path": "../datasets"
     },
     {
-      "path": "../i18n"
+      "path": "../common"
     }
   ]
 }

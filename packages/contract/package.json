@@ -9,8 +9,8 @@
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
     "generate:pull-meta": "curl -H \"Content-Type: application/json\" -d '{\"id\":\"1\", \"jsonrpc\":\"2.0\", \"method\": \"state_getMetadata\", \"params\":[]}' http://127.0.0.1:9933 -o metadata.json",
-    "generate:defs": "ts-node --skip-project ../../node_modules/.bin/polkadot-types-from-defs --package @prosopo/contract/interfaces --input ./src/interfaces --endpoint ./metadata.json",
-    "generate:meta": "ts-node --skip-project ../../node_modules/.bin/polkadot-types-from-chain --package @prosopo/contract/interfaces --endpoint ./metadata.json --output ./src/interfaces"
+    "generate:defs": "ts-node --skip-project ../../node_modules/.bin/polkadot-types-from-defs --package . --input ./src/interfaces --endpoint ./metadata.json",
+    "generate:meta": "ts-node --skip-project ../../node_modules/.bin/polkadot-types-from-chain --package . --endpoint ./metadata.json --output ./src/interfaces"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -39,8 +39,8 @@
     "@polkadot/types-create": "^8.13.1",
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
+    "@prosopo/common": "^0.1.10",
     "@prosopo/datasets": "^0.1.10",
-    "@prosopo/i18n": "^0.1.10",
     "bn.js": "^5.2.1",
     "consola": "^2.15.3",
     "zod": "^3.17.9"

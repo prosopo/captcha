@@ -23,7 +23,6 @@ import { SignerOptions, SubmittableExtrinsic } from '@polkadot/api/types'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import { AbiMessage } from '@polkadot/api-contract/types'
-import type { AnyJson } from '@polkadot/types/types'
 import { Registry } from '@polkadot/types/types'
 import { ContractAbi } from './artifacts'
 import { KeypairType } from '@polkadot/util-crypto/types'
@@ -105,7 +104,7 @@ export interface ContractApiInterface {
 
     contractTx<T>(contractMethodName: string, args: T[], value?: string | BigNumber): Promise<TransactionResponse>
 
-    contractQuery<T>(contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson>
+    contractQuery<T>(contractMethodName: string, args: any[], atBlock?: string | Uint8Array): Promise<unknown>
 
     getContractMethod(contractMethodName: string): AbiMessage
 

@@ -1,6 +1,6 @@
 import { abiJson } from '../abi/index'
 import { AbiMetaDataSpec, AbiStorage, AbiType, ContractAbi, TypegenDefinitions } from '../types/index'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 
 function snakeCaseToCamelCase(str: string) {
     return str.replace(/([-_][a-z])/gi, ($1) => {
@@ -52,12 +52,7 @@ function typesToDefinition(filteredTypes: AbiType[], types: AbiType[]): Record<s
     try {
         for (const type of filteredTypes) {
             if (type.type.path) {
-                let definitionKey = type.type.path.slice(-1)[0]
-                if (definitionKey === 'Error') {
-                    const firstWord = type.type.path.slice(-2)[0]
-                    const capitalised = capitalizeFirstLetter(snakeCaseToCamelCase(firstWord))
-                    definitionKey = `${capitalised}Error`
-                }
+                const definitionKey = defNameFromPath(type.type.path)
                 if (type.type.def.composite) {
                     definitions[definitionKey] = {}
                     type.type.def.composite.fields.map((field) => {
@@ -126,7 +121,7 @@ function getStorageTypes(storage: AbiStorage, types: AbiType[]): StorageFieldTyp
                 }
             } else {
                 console.debug(`${outerKey} has no type`)
-                console.debug(JSON.stringify(field, null, 4))
+                // console.debug(JSON.stringify(field, null, 4))
             }
         }
     } catch (e) {
@@ -140,7 +135,7 @@ function getStorageTypes(storage: AbiStorage, types: AbiType[]): StorageFieldTyp
  * Convert the storage types object to definitions for typegen
  * @param {StorageFieldTypesObject} storageTypes
  */
-function storageTypesToDefinitions(storageTypes: StorageFieldTypesObject): Record<string, string> {
+function storageTypesToDefinitions(storageTypes: StorageFieldTypesObject, prefix: string): Record<string, string> {
     const definitions = {}
     for (const [outerKey, fieldTypesArr] of Object.entries(storageTypes)) {
         let definition = ''
@@ -203,7 +198,6 @@ function storageTypesToDefinitions(storageTypes: StorageFieldTypesObject): Recor
  */
 function defStr(type: AbiType, innerType?: AbiType): string {
     let definition = ''
-    console.log(type)
     if (type.type.path && type.type.path.slice(0, 2).join('::') === 'ink_env::types') {
         definition = type.type.path.slice(-1)[0]
     } else if (type.type.def.primitive) {
@@ -220,11 +214,14 @@ function defStr(type: AbiType, innerType?: AbiType): string {
             definition = 'Map'
         } else if (typeName === `Timestamp`) {
             definition = `Vec<u8`
-        } else {
-            definition = typeName
+        } else if (typeName === `BTreeSet`) {
+            definition = `BTreeSet`
+        } else if (type.type.path) {
+            definition = defNameFromPath(type.type.path)
+            //console.log('defNameFromPath', definition)
         }
-    } else if (type.type.def.variant) {
-        definition = `${type.type.path?.slice(-1)[0]}`
+    } else if (type.type.path && type.type.def.variant) {
+        definition = defNameFromPath(type.type.path)
     } else {
         console.error(type)
         throw new ProsopoEnvError('CONTRACT.INVALID_TYPE')
@@ -259,6 +256,10 @@ function expandCompositeType(type: AbiType, types: AbiType[]): AbiType[] {
     return []
 }
 
+function defNameFromPath(path: string[]): string {
+    return `${capitalizeFirstLetter(snakeCaseToCamelCase(path.slice(-2)[0]))}${path.slice(-1)[0]}`
+}
+
 export function parseParamType(paramType: string | number): number {
     if (typeof paramType === 'number') {
         return paramType
@@ -282,8 +283,8 @@ export function generateDefinitions(path: string[]): TypegenDefinitions {
     const filteredTypes = getTypes(abiTypes, path)
     const typeDefinitions = typesToDefinition(filteredTypes, abiTypes)
     const storageTypes = getStorageTypes(abiStorage, abiTypes)
-    const storageDefinitions = storageTypesToDefinitions(storageTypes)
+    const storageDefinitions = storageTypesToDefinitions(storageTypes, path.slice(-2)[0])
     return { types: { ...storageDefinitions, ...typeDefinitions } }
 }
 
-//console.log(JSON.stringify(generateDefinitions(['prosopo', 'prosopo']), null, 4))
+console.log(JSON.stringify(generateDefinitions(['prosopo', 'prosopo']), null, 4))

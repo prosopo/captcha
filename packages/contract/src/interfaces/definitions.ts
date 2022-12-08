@@ -1,60 +1,61 @@
 export const definitions = {
     types: {
-        Providers: 'Map<AccountId,Provider>',
-        ProviderAccounts: 'Map<GovernanceStatus<BTreeSet,AccountId>>',
+        Providers: 'Map<AccountId,ProsopoProvider>',
+        ProviderAccounts: 'Map<ProsopoGovernanceStatus<BTreeSet,AccountId>>',
         ServiceOrigins: 'Map<Hash,()>',
-        CaptchaData: {
-            provider: 'AccountId',
-            dataset_id: 'Hash',
-            captcha_type: 'u16',
-        },
-        CaptchaSolutionCommitments: 'Map<Hash,CaptchaSolutionCommitment>',
+        CaptchaData: 'Map<Hash,ProsopoCaptchaData>',
+        CaptchaSolutionCommitments: 'Map<Hash,ProsopoCaptchaSolutionCommitment>',
         ProviderStakeDefault: 'u128',
-        Dapps: 'Map<AccountId,Dapp>',
+        Dapps: 'Map<AccountId,ProsopoDapp>',
         DappAccounts: 'Vec<AccountId>',
-        Operators: 'Map<AccountId,Operator>',
+        Operators: 'Map<AccountId,ProsopoOperator>',
         OperatorAccounts: 'Vec<AccountId>',
         OperatorStakeDefault: 'u64',
         OperatorFeeCurrency: 'Hash',
-        DappUsers: 'Map<AccountId,User>',
+        DappUsers: 'Map<AccountId,ProsopoUser>',
         DappUserAccounts: 'Vec<AccountId>',
-        Provider: {
-            status: 'GovernanceStatus',
+        ProsopoProvider: {
+            status: 'ProsopoGovernanceStatus',
             balance: 'u128',
             fee: 'u32',
-            payee: 'Payee',
+            payee: 'ProsopoPayee',
             service_origin: 'Hash',
             dataset_id: 'Hash',
             dataset_id_content: 'Hash',
         },
-        GovernanceStatus: {
+        ProsopoGovernanceStatus: {
             _enum: ['Active', 'Suspended', 'Deactivated'],
         },
-        Payee: {
+        ProsopoPayee: {
             _enum: ['Provider', 'Dapp', 'None'],
         },
-        CaptchaSolutionCommitment: {
+        ProsopoCaptchaData: {
+            provider: 'AccountId',
+            dataset_id: 'Hash',
+            captcha_type: 'u16',
+        },
+        ProsopoCaptchaSolutionCommitment: {
             account: 'AccountId',
             dataset_id: 'Hash',
-            status: 'CaptchaStatus',
+            status: 'ProsopoCaptchaStatus',
             contract: 'AccountId',
             provider: 'AccountId',
             completed_at: 'u64',
         },
-        CaptchaStatus: {
+        ProsopoCaptchaStatus: {
             _enum: ['Pending', 'Approved', 'Disapproved'],
         },
-        Dapp: {
-            status: 'GovernanceStatus',
+        ProsopoDapp: {
+            status: 'ProsopoGovernanceStatus',
             balance: 'u128',
             owner: 'AccountId',
             min_difficulty: 'u16',
             client_origin: 'Hash',
         },
-        Operator: {
-            status: 'GovernanceStatus',
+        ProsopoOperator: {
+            status: 'ProsopoGovernanceStatus',
         },
-        User: {
+        ProsopoUser: {
             correct_captchas: 'u64',
             incorrect_captchas: 'u64',
             last_correct_captcha: 'u64',
@@ -83,14 +84,16 @@ export const definitions = {
                 'DatasetIdSolutionsSame',
             ],
         },
-        LastCorrectCaptcha: {
+        ProsopoLastCorrectCaptcha: {
             before_ms: 'u32',
             dapp_id: 'AccountId',
         },
-        RandomProvider: {
+        ProsopoRandomProvider: {
             provider_id: 'AccountId',
-            provider: 'Provider',
+            provider: 'ProsopoProvider',
             block_number: 'u32',
         },
     },
 }
+
+export type definitionKeys = keyof typeof definitions.types
