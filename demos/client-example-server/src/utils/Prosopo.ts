@@ -1,6 +1,6 @@
 import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
 import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
@@ -86,7 +86,7 @@ export class ProsopoServer {
             return result.solutionApproved
         } else {
             const contractApi = await this.getContractApi()
-            return await contractApi.dappOperatorIsHumanUser(userAccount, this.config.solutionThreshold)
+            return (await contractApi.getDappOperatorIsHumanUser(userAccount, this.config.solutionThreshold)).isTrue
         }
     }
 
