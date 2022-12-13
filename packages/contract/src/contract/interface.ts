@@ -14,8 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { AbiMessage } from '@polkadot/api-contract/types'
-import { Registry } from '@polkadot/types/types'
-import { AbiMetadata, BigNumber, ContractAbi, ContractApiInterface, TransactionResponse } from '../types'
+import { AbiMetadata, AbiStorageEntry, BigNumber, ContractApiInterface, TransactionResponse } from '../types'
 import { encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
 import { buildCall, buildSend } from './contract'
 import { ProsopoContractError } from '../handlers'
@@ -23,29 +22,35 @@ import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import AsyncFactory from './AsyncFactory'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { getABIVersion } from '../util/definitionGen'
+import { AbiVersion, getABIVersion } from '../util/definitionGen'
 import { ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
+import { createType } from '@polkadot/types'
 
 export class ProsopoContractApi extends AsyncFactory implements ContractApiInterface {
     contract: ContractPromise
     contractAddress: string
     contractName: string
-    abi: ContractAbi
+    abi: AbiMetadata
     pair: KeyringPair
     api: ApiPromise
+    abiVersion: AbiVersion
 
     public async init(
         contractAddress: string,
         pair: KeyringPair,
         contractName: string,
-        abi: ContractAbi,
+        abi: AbiMetadata,
         api: ApiPromise
     ): Promise<this> {
         this.api = api
         this.pair = pair
         this.contractAddress = contractAddress
         this.abi = abi
+        this.abiVersion = getABIVersion(abi)
         await this.api.isReadyOrError
+        // const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
+        // console.log(contractDefinitions)
+        // await this.api.registry.register(contractDefinitions)
         this.contract = new ContractPromise(this.api, this.abi, this.contractAddress)
         return this
     }
@@ -116,30 +121,20 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         throw new ProsopoContractError('CONTRACT.INVALID_METHOD', 'contractMethodName')
     }
 
-    /** Get the storage key from the ABI given a storage name
-     * @return the storage key
+    /** Get the storage entry from the ABI given a storage name
+     * @return the storage entry object
      */
-    getStorageKey(storageName: string): string {
+    getStorageEntry(storageName: string): AbiStorageEntry {
         if (!this.contract) {
             throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
         }
         const json: AbiMetadata = this.contract.abi.json as AbiMetadata
 
-        // Find the different metadata version key, V1, V2, V3, etc.
-        const storageKey = getABIVersion(json)
-
-        let data
-        if (storageKey) {
-            data = json[storageKey]
-        } else {
-            // The metadata version is not present, and it's the old AbiMetadata
-            data = json
-        }
+        const data = json[this.abiVersion]
 
         const storageEntry = data.storage.struct.fields.filter((obj: { name: string }) => obj.name === storageName)[0]
-
         if (storageEntry) {
-            return storageEntry.layout.cell.key
+            return storageEntry
         }
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', 'getStorageKey')
     }
@@ -148,14 +143,22 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
      * Get the data at specified storage key
      * @return {any} data
      */
-    async getStorage<T>(name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
+    async getStorage<T>(name: string, type: string): Promise<T> {
         await this.getContract()
-        const storageKey = this.getStorageKey(name)
-        if (!this.contract) {
-            throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
+        const storageEntry = this.getStorageEntry(name)
+        if (storageEntry.layout.cell) {
+            //const storageType: AbiType = this.abi[this.abiVersion].types[storageEntry.layout.cell.ty]
+            if (!this.contract) {
+                throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
+            }
+            const promiseResult = await this.api.rpc.contracts.getStorage(
+                this.contract.address,
+                storageEntry.layout.cell.key
+            )
+            const result = promiseResult.unwrapOrDefault()
+
+            return createType(result.registry, type, [result.toU8a(true)]) as T
         }
-        const promiseResult: any = await this.api.rpc.contracts.getStorage(this.contract.address, storageKey)
-        const data = promiseResult.unwrapOrDefault()
-        return decodingFn(this.api.registry, data)
+        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', 'getStorage')
     }
 }

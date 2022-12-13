@@ -1,6 +1,7 @@
 import { abiJson } from '../abi/index'
 import { AbiMetaDataSpec, AbiStorage, AbiType, ContractAbi, TypegenDefinitions } from '../types/index'
 import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoContractError } from '../handlers'
 
 function snakeCaseToCamelCase(str: string) {
     return str.replace(/([-_][a-z])/gi, ($1) => {
@@ -12,15 +13,18 @@ function capitalizeFirstLetter(str: string) {
     return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
+export type AbiVersion = 'V1' | 'V2' | 'V3' | 'V4' | 'V5' | 'V6' | 'V7' | 'V8' | 'V9'
+
 /**
  *     Get the contract ABI version
  */
-export function getABIVersion(json: ContractAbi): string | undefined {
+export function getABIVersion(json: ContractAbi): AbiVersion {
     try {
-        return Object.keys(json).filter((key) => key.search(/V\d/) > -1)[0]
+        return <'V1' | 'V2' | 'V3' | 'V4' | 'V5' | 'V6' | 'V7' | 'V8' | 'V9'>(
+            Object.keys(json).filter((key) => key.search(/V\d/) > -1)[0]
+        )
     } catch (e) {
-        console.debug(e)
-        return undefined
+        throw new ProsopoContractError('CONTRACT.INVALID_ABI')
     }
 }
 
@@ -56,7 +60,11 @@ function typesToDefinition(filteredTypes: AbiType[], types: AbiType[]): Record<s
                 if (type.type.def.composite) {
                     definitions[definitionKey] = {}
                     type.type.def.composite.fields.map((field) => {
-                        definitions[definitionKey][field.name] = defStr(types[field.type])
+                        if (!field.name) {
+                            throw new ProsopoEnvError('CONTRACT.NOT_HANDLED')
+                        } else {
+                            definitions[definitionKey][snakeCaseToCamelCase(field.name)] = defStr(types[field.type])
+                        }
                     })
                 } else if (type.type.def.variant) {
                     definitions[definitionKey] = {
@@ -256,7 +264,7 @@ function expandCompositeType(type: AbiType, types: AbiType[]): AbiType[] {
     return []
 }
 
-function defNameFromPath(path: string[]): string {
+export function defNameFromPath(path: string[]): string {
     return `${capitalizeFirstLetter(snakeCaseToCamelCase(path.slice(-2)[0]))}${path.slice(-1)[0]}`
 }
 
@@ -268,6 +276,10 @@ export function parseParamType(paramType: string | number): number {
     }
 }
 
+/**
+ * Generate the definitions object for a contract from the contract ABI
+ * @param path
+ */
 export function generateDefinitions(path: string[]): TypegenDefinitions {
     const abi = AbiMetaDataSpec.parse(abiJson)
     const version = getABIVersion(abi)
@@ -287,4 +299,4 @@ export function generateDefinitions(path: string[]): TypegenDefinitions {
     return { types: { ...storageDefinitions, ...typeDefinitions } }
 }
 
-console.log(JSON.stringify(generateDefinitions(['prosopo', 'prosopo']), null, 4))
+//console.log(JSON.stringify(generateDefinitions(['prosopo', 'prosopo']), null, 4))

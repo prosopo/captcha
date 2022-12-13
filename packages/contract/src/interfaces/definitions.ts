@@ -19,9 +19,9 @@ export const definitions = {
             balance: 'u128',
             fee: 'u32',
             payee: 'ProsopoPayee',
-            service_origin: 'Hash',
-            dataset_id: 'Hash',
-            dataset_id_content: 'Hash',
+            serviceOrigin: 'Hash',
+            datasetId: 'Hash',
+            datasetIdContent: 'Hash',
         },
         ProsopoGovernanceStatus: {
             _enum: ['Active', 'Suspended', 'Deactivated'],
@@ -31,16 +31,16 @@ export const definitions = {
         },
         ProsopoCaptchaData: {
             provider: 'AccountId',
-            dataset_id: 'Hash',
-            captcha_type: 'u16',
+            datasetId: 'Hash',
+            captchaType: 'u16',
         },
         ProsopoCaptchaSolutionCommitment: {
             account: 'AccountId',
-            dataset_id: 'Hash',
+            datasetId: 'Hash',
             status: 'ProsopoCaptchaStatus',
             contract: 'AccountId',
             provider: 'AccountId',
-            completed_at: 'u64',
+            completedAt: 'u64',
         },
         ProsopoCaptchaStatus: {
             _enum: ['Pending', 'Approved', 'Disapproved'],
@@ -49,17 +49,17 @@ export const definitions = {
             status: 'ProsopoGovernanceStatus',
             balance: 'u128',
             owner: 'AccountId',
-            min_difficulty: 'u16',
-            client_origin: 'Hash',
+            minDifficulty: 'u16',
+            clientOrigin: 'Hash',
         },
         ProsopoOperator: {
             status: 'ProsopoGovernanceStatus',
         },
         ProsopoUser: {
-            correct_captchas: 'u64',
-            incorrect_captchas: 'u64',
-            last_correct_captcha: 'u64',
-            last_correct_captcha_dapp_id: 'AccountId',
+            correctCaptchas: 'u64',
+            incorrectCaptchas: 'u64',
+            lastCorrectCaptcha: 'u64',
+            lastCorrectCaptchaDappId: 'AccountId',
         },
         ProsopoError: {
             _enum: [
@@ -85,15 +85,15 @@ export const definitions = {
             ],
         },
         ProsopoLastCorrectCaptcha: {
-            before_ms: 'u32',
-            dapp_id: 'AccountId',
+            beforeMs: 'u32',
+            dappId: 'AccountId',
         },
         ProsopoRandomProvider: {
-            provider_id: 'AccountId',
+            providerId: 'AccountId',
             provider: 'ProsopoProvider',
-            block_number: 'u32',
+            blockNumber: 'u32',
         },
     },
 }
 
-export type definitionKeys = keyof typeof definitions.types
+export type DefinitionKeys = keyof typeof definitions.types | 'bool'

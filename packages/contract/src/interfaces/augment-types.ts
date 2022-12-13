@@ -7,30 +7,31 @@ import '@polkadot/types/types/registry'
 
 import type {
     CaptchaData,
-    CaptchaSolutionCommitment,
     CaptchaSolutionCommitments,
-    CaptchaStatus,
-    Dapp,
     DappAccounts,
     DappUserAccounts,
     DappUsers,
     Dapps,
-    GovernanceStatus,
-    LastCorrectCaptcha,
-    Operator,
     OperatorAccounts,
     OperatorFeeCurrency,
     OperatorStakeDefault,
     Operators,
-    Payee,
+    ProsopoCaptchaData,
+    ProsopoCaptchaSolutionCommitment,
+    ProsopoCaptchaStatus,
+    ProsopoDapp,
     ProsopoError,
-    Provider,
+    ProsopoGovernanceStatus,
+    ProsopoLastCorrectCaptcha,
+    ProsopoOperator,
+    ProsopoPayee,
+    ProsopoProvider,
+    ProsopoRandomProvider,
+    ProsopoUser,
     ProviderAccounts,
     ProviderStakeDefault,
     Providers,
-    RandomProvider,
     ServiceOrigins,
-    User,
 } from './definitions/types'
 import type { Data, StorageKey } from '@polkadot/types'
 import type {
@@ -1323,9 +1324,7 @@ declare module '@polkadot/types/types/registry' {
         CandidatePendingAvailability: CandidatePendingAvailability
         CandidateReceipt: CandidateReceipt
         CaptchaData: CaptchaData
-        CaptchaSolutionCommitment: CaptchaSolutionCommitment
         CaptchaSolutionCommitments: CaptchaSolutionCommitments
-        CaptchaStatus: CaptchaStatus
         ChainId: ChainId
         ChainProperties: ChainProperties
         ChainType: ChainType
@@ -1429,7 +1428,6 @@ declare module '@polkadot/types/types/registry' {
         CoreState: CoreState
         CrateVersion: CrateVersion
         CreatedBlock: CreatedBlock
-        Dapp: Dapp
         DappAccounts: DappAccounts
         Dapps: Dapps
         DappUserAccounts: DappUserAccounts
@@ -1619,7 +1617,6 @@ declare module '@polkadot/types/types/registry' {
         GiltBid: GiltBid
         GlobalValidationData: GlobalValidationData
         GlobalValidationSchedule: GlobalValidationSchedule
-        GovernanceStatus: GovernanceStatus
         GrandpaCommit: GrandpaCommit
         GrandpaEquivocation: GrandpaEquivocation
         GrandpaEquivocationProof: GrandpaEquivocationProof
@@ -1724,7 +1721,6 @@ declare module '@polkadot/types/types/registry' {
         Kind: Kind
         LaneId: LaneId
         LastContribution: LastContribution
-        LastCorrectCaptcha: LastCorrectCaptcha
         LastRuntimeUpgradeInfo: LastRuntimeUpgradeInfo
         LeasePeriod: LeasePeriod
         LeasePeriodOf: LeasePeriodOf
@@ -1837,7 +1833,6 @@ declare module '@polkadot/types/types/registry' {
         OpenTipTip: OpenTipTip
         OpenTipTo225: OpenTipTo225
         OperatingMode: OperatingMode
-        Operator: Operator
         OperatorAccounts: OperatorAccounts
         OperatorFeeCurrency: OperatorFeeCurrency
         Operators: Operators
@@ -1888,7 +1883,6 @@ declare module '@polkadot/types/types/registry' {
         ParathreadClaimQueue: ParathreadClaimQueue
         ParathreadEntry: ParathreadEntry
         ParaValidatorIndex: ParaValidatorIndex
-        Payee: Payee
         Pays: Pays
         Peer: Peer
         PeerEndpoint: PeerEndpoint
@@ -1930,8 +1924,18 @@ declare module '@polkadot/types/types/registry' {
         PropIndex: PropIndex
         Proposal: Proposal
         ProposalIndex: ProposalIndex
+        ProsopoCaptchaData: ProsopoCaptchaData
+        ProsopoCaptchaSolutionCommitment: ProsopoCaptchaSolutionCommitment
+        ProsopoCaptchaStatus: ProsopoCaptchaStatus
+        ProsopoDapp: ProsopoDapp
         ProsopoError: ProsopoError
-        Provider: Provider
+        ProsopoGovernanceStatus: ProsopoGovernanceStatus
+        ProsopoLastCorrectCaptcha: ProsopoLastCorrectCaptcha
+        ProsopoOperator: ProsopoOperator
+        ProsopoPayee: ProsopoPayee
+        ProsopoProvider: ProsopoProvider
+        ProsopoRandomProvider: ProsopoRandomProvider
+        ProsopoUser: ProsopoUser
         ProviderAccounts: ProviderAccounts
         Providers: Providers
         ProviderStakeDefault: ProviderStakeDefault
@@ -1945,7 +1949,6 @@ declare module '@polkadot/types/types/registry' {
         QueueConfigData: QueueConfigData
         QueuedParathread: QueuedParathread
         Randomness: Randomness
-        RandomProvider: RandomProvider
         Raw: Raw
         RawAuraPreDigest: RawAuraPreDigest
         RawBabePreDigest: RawBabePreDigest
@@ -2230,7 +2233,6 @@ declare module '@polkadot/types/types/registry' {
         UpgradeGoAhead: UpgradeGoAhead
         UpgradeRestriction: UpgradeRestriction
         UpwardMessage: UpwardMessage
-        User: User
         usize: usize
         USize: USize
         ValidationCode: ValidationCode

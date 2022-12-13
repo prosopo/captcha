@@ -2,18 +2,21 @@ import { BigNumber, TransactionResponse } from '../types/index'
 import { ProsopoContractApi } from './interface'
 import {
     CaptchaData,
-    CaptchaSolutionCommitment,
-    Dapp,
-    LastCorrectCaptcha,
-    Payee,
-    Provider,
-    Providers,
-    RandomProvider,
+    DappAccounts,
+    ProsopoCaptchaSolutionCommitment,
+    ProsopoDapp,
+    ProsopoLastCorrectCaptcha,
+    ProsopoPayee,
+    ProsopoProvider,
+    ProsopoRandomProvider,
 } from '../interfaces/index'
 import { hexToU8a } from '@polkadot/util'
-import { AnyJson } from '@polkadot/types/types/codec'
-import { buildDecodeVector } from '../codec/index'
-import { Bool, u128 } from '@polkadot/types-codec'
+import { Vec, u128 } from '@polkadot/types-codec'
+import { ProsopoContractError } from '../handlers'
+import { ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
+import { DefinitionKeys } from '../interfaces/definitions'
+import { AccountId } from '@polkadot/types/interfaces'
+
 export interface ProsopoRandomProviderResponse {
     providerId: string
     blockNumber: string
@@ -36,7 +39,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
     public async providerRegister(
         serviceOrigin: string,
         fee: number,
-        payee: Payee,
+        payee: ProsopoPayee,
         address: string
     ): Promise<TransactionResponse> {
         return await this.contractTx('providerRegister', [serviceOrigin, fee, payee, address])
@@ -45,7 +48,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
     async providerUpdate(
         serviceOrigin: string,
         fee: number,
-        payee: Payee,
+        payee: ProsopoPayee,
         address: string,
         value?: BigNumber
     ): Promise<TransactionResponse> {
@@ -102,45 +105,58 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         return await this.contractTx('providerDisapprove', [captchaSolutionCommitmentId])
     }
 
-    public async getDappOperatorIsHumanUser(userAccount: string, solutionThreshold: number): Promise<Bool> {
-        const result = await this.contractQuery('dappOperatorIsHumanUser', [userAccount, solutionThreshold])
-        return result.data.registry.createType('Bool', result.data)
+    //queries
+
+    private unwrapContractResultOrThrow<T>(result: ContractExecResultOk, type: DefinitionKeys): T {
+        const decoded = this.contract.api.registry.createType(`Result<${type}, ProsopoError>`, result.data.toU8a(true))
+        if (decoded.isOk) {
+            return decoded.asOk.toPrimitive() as T
+        } else {
+            throw new ProsopoContractError(decoded.asErr.toString())
+        }
     }
 
-    //queries
+    public async getDappOperatorIsHumanUser(userAccount: string, solutionThreshold: number): Promise<boolean> {
+        const result = await this.contractQuery('dappOperatorIsHumanUser', [userAccount, solutionThreshold])
+        return this.contract.api.registry.createType('bool', result.data.toU8a(true)).isTrue
+    }
 
     public async getRandomProvider(
         userAccount: string,
         dappContractAccount: string,
         at?: string | Uint8Array
-    ): Promise<RandomProvider> {
+    ): Promise<ProsopoRandomProvider> {
         const result = await this.contractQuery('getRandomActiveProvider', [userAccount, dappContractAccount], at)
-        return result.data.registry.createType('RandomProvider', result.data)
+        return this.unwrapContractResultOrThrow<ProsopoRandomProvider>(result, 'ProsopoRandomProvider')
     }
 
-    public async getProviderDetails(accountId: string): Promise<Provider> {
+    public async getProviderDetails(accountId: string): Promise<ProsopoProvider> {
         const result = await this.contractQuery('getProviderDetails', [accountId])
-        return result.data.registry.createType('Provider', result.data)
+        return this.unwrapContractResultOrThrow<ProsopoProvider>(result, 'ProsopoProvider')
     }
 
-    public async getDappDetails(accountId: string): Promise<Dapp> {
+    public async getDappDetails(accountId: string): Promise<ProsopoDapp> {
         const result = await this.contractQuery('getDappDetails', [accountId])
-        return result.data.registry.createType('Dapp', result.data)
+        return this.unwrapContractResultOrThrow<ProsopoDapp>(result, 'ProsopoDapp')
     }
 
     public async getCaptchaData(captchaDatasetId: string): Promise<CaptchaData> {
         const result = await this.contractQuery('getCaptchaData', [captchaDatasetId])
-        return result.data.registry.createType('CaptchaData', result.data)
+        return this.unwrapContractResultOrThrow<CaptchaData>(result, 'CaptchaData')
     }
 
-    public async getCaptchaSolutionCommitment(solutionId: string): Promise<CaptchaSolutionCommitment> {
+    public async getCaptchaSolutionCommitment(solutionId: string): Promise<ProsopoCaptchaSolutionCommitment> {
         const result = await this.contractQuery('getCaptchaSolutionCommitment', [solutionId])
-        return result.data.registry.createType('CaptchaSolutionCommitment', result.data)
+
+        return this.unwrapContractResultOrThrow<ProsopoCaptchaSolutionCommitment>(
+            result,
+            'ProsopoCaptchaSolutionCommitment'
+        )
     }
 
-    public async getDappOperatorLastCorrectCaptcha(accountId: string): Promise<LastCorrectCaptcha> {
+    public async getDappOperatorLastCorrectCaptcha(accountId: string): Promise<ProsopoLastCorrectCaptcha> {
         const result = await this.contractQuery('dappOperatorLastCorrectCaptcha', [accountId])
-        return result.data.registry.createType('LastCorrectCaptcha', result.data)
+        return this.unwrapContractResultOrThrow<ProsopoLastCorrectCaptcha>(result, 'ProsopoLastCorrectCaptcha')
     }
 
     public async getProviderStakeDefault(): Promise<u128> {
@@ -148,13 +164,12 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         return result.data.registry.createType('u128', result.data)
     }
 
-    public async getProviderAccounts(): Promise<Providers> {
+    public async getProviderAccounts(): Promise<Vec<AccountId>> {
         const result = await this.contractQuery('getAllProviderIds', [])
-        return result.data.registry.createType('Providers', result.data)
+        return result.data.registry.createType('Vec<AccountId>', result.data)
     }
 
-    public async getDappAccounts(): Promise<AnyJson> {
-        const decodeFn = buildDecodeVector('DappAccounts')
-        return await this.getStorage('dapp_accounts', decodeFn)
+    public async getDappAccounts(): Promise<DappAccounts> {
+        return await this.getStorage<DappAccounts>('dapp_accounts', 'DappAccounts')
     }
 }

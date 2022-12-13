@@ -150,7 +150,7 @@ export function buildCall(
                         logger.debug(`${key}: `, print)
                     }
                 } else {
-                    if (params) {
+                    if (params && params[key]) {
                         print = params[key].toString()
                         logger.debug(`${key}: `, print)
                     }

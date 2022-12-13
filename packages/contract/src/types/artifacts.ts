@@ -126,21 +126,23 @@ export const AbiCellSpec = z.object({
     ty: z.number(),
 })
 export const AbiTypesSpec = z.array(AbiTypeSpec)
+
+export const AbiStorageEntrySpec = z.object({
+    name: z.string(),
+    layout: z.object({
+        cell: AbiCellSpec.optional(),
+        enum: AbiEnumSpec.optional(),
+    }),
+})
+
 export const AbiStorageSpec = z.object({
     struct: z.object({
-        fields: z.array(
-            z.object({
-                name: z.string(),
-                layout: z.object({
-                    cell: AbiCellSpec.optional(),
-                    enum: AbiEnumSpec.optional(),
-                }),
-            })
-        ),
+        fields: z.array(AbiStorageEntrySpec),
     }),
 })
 
 export type AbiStorage = z.infer<typeof AbiStorageSpec>
+export type AbiStorageEntry = z.infer<typeof AbiStorageEntrySpec>
 
 export const AbiSpecDef = z.object({
     constructors: z.array(z.any()),

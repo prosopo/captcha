@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Registry } from '@polkadot/types-codec/types/registry'
-import { AnyJson } from '@polkadot/types/types/codec'
 import { Vec } from '@polkadot/types-codec'
 import type { Codec } from '@polkadot/types-codec/types'
 import { createTypeUnsafe } from '@polkadot/types'
 
-export type DecodeFunction = (registry: Registry, data: Uint8Array) => AnyJson
+export type DecodeFunction = (registry: Registry, data: Uint8Array) => Vec<Codec>
 
 export const buildDecodeVector =
     (typeName: string): DecodeFunction =>
-    (registry: Registry, data: Uint8Array): AnyJson => {
-        return createTypeUnsafe<Vec<Codec>>(registry, typeName, [data]).toJSON()
+    (registry: Registry, data: Uint8Array) => {
+        return createTypeUnsafe<Vec<Codec>>(registry, typeName, [data])
     }

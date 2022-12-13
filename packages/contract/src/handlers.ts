@@ -29,6 +29,7 @@ export class ProsopoContractError extends ProsopoBaseError {
         options?: TOptions,
         ...params: any[]
     ) {
+        console.log(error)
         if (typeof error === 'string') {
             super(translateOrFallback(error, options, error, i18n))
             if (translationKeys.includes(error as TranslationKey)) {

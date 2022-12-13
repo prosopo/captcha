@@ -23,10 +23,10 @@ import { SignerOptions, SubmittableExtrinsic } from '@polkadot/api/types'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import { AbiMessage } from '@polkadot/api-contract/types'
-import { Registry } from '@polkadot/types/types'
-import { ContractAbi } from './artifacts'
+import { AbiStorageEntry, ContractAbi } from './artifacts'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { AbiVersion } from '../util/index'
 
 export interface TransactionResponse {
     from: string
@@ -91,6 +91,7 @@ export interface ContractApiInterface {
     abi: ContractAbi
     pair: KeyringPair
     api: ApiPromise
+    abiVersion: AbiVersion
 
     init(
         contractAddress: string,
@@ -108,7 +109,7 @@ export interface ContractApiInterface {
 
     getContractMethod(contractMethodName: string): AbiMessage
 
-    getStorage<T>(key: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T>
+    getStorage<T>(name: string, type: string): Promise<T>
 
-    getStorageKey(storageName: string): string
+    getStorageEntry(storageName: string): AbiStorageEntry
 }
