@@ -1,5 +1,4 @@
 import ProsopoContract from '../api/ProsopoContract'
-import { WsProvider } from '@polkadot/rpc-provider'
 import storage from './storage'
 import { GetCaptchaResponse, ProsopoRandomProviderResponse, ProviderApi } from '@prosopo/api'
 import { hexToString } from '@polkadot/util'
@@ -19,6 +18,9 @@ import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import { TCaptchaSubmitResult } from '../types/client'
 import { randomAsHex } from '@polkadot/util-crypto'
+import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
+import { WsProvider } from '@polkadot/rpc-provider'
+import { ApiPromise } from '@polkadot/api'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -137,7 +139,10 @@ export const Manager = (
             // first, ask the smart contract
             const contract = await loadContract()
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-            const contractIsHuman = await contract.dappOperatorIsHumanUser(config.solutionThreshold)
+            const contractIsHuman = await contract.getDappOperatorIsHumanUser(
+                account.account.address,
+                config.solutionThreshold
+            )
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
@@ -328,7 +333,7 @@ export const Manager = (
     }
 
     const loadCaptchaApi = async (
-        contract: ProsopoContract,
+        contract: ProsopoContractMethods,
         provider: ProsopoRandomProviderResponse,
         providerApi: ProviderApi
     ) => {
@@ -339,7 +344,8 @@ export const Manager = (
             contract,
             provider,
             providerApi,
-            config.web2
+            config.web2,
+            config.network.dappContract.address
         )
 
         updateState({ captchaApi })
@@ -397,12 +403,20 @@ export const Manager = (
      */
     const loadContract = async () => {
         const config = getConfig()
-        const contract: ProsopoContract = await ProsopoContract.create(
+        const api = await ApiPromise.create({ provider: new WsProvider(config.network.endpoint) })
+        const contract = await ProsopoContractMethods.create(
             config.network.prosopoContract.address,
-            config.network.dappContract.address,
             getAccount().account.address,
-            new WsProvider(config.network.endpoint)
+            'prosopo',
+            abiJson as ContractAbi,
+            api
         )
+        // const contract: ProsopoContract = await ProsopoContract.create(
+        //     config.network.prosopoContract.address,
+        //     config.network.dappContract.address,
+        //     getAccount().account.address,
+        //     new WsProvider(config.network.endpoint)
+        // )
 
         return contract
     }

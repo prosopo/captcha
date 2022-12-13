@@ -16,9 +16,8 @@
 // import {Hash} from '@polkadot/types/interfaces';
 import ProsopoContractBase from './ProsopoContractBase'
 import { Signer } from '@polkadot/api/types'
-import { ProsopoDappOperatorIsHumanUserResponse, TransactionResponse } from '../types'
+import { TransactionResponse } from '../types'
 import { ProsopoRandomProviderResponse } from '../types'
-import { CaptchaSolutionCommitment } from '@prosopo/contract'
 
 export class ProsopoContract extends ProsopoContractBase {
     public async getRandomProvider(): Promise<ProsopoRandomProviderResponse> {
@@ -30,7 +29,7 @@ export class ProsopoContract extends ProsopoContractBase {
     }
 
     public async getCaptchaSolutionCommitment(commitmentId: string) {
-        return (await this.query('getCaptchaSolutionCommitment', [commitmentId])) as CaptchaSolutionCommitment
+        return await this.query('getCaptchaSolutionCommitment', [commitmentId])
     }
 
     public async dappUserCommit(
@@ -45,21 +44,6 @@ export class ProsopoContract extends ProsopoContractBase {
             userMerkleTreeRoot,
             providerAddress,
         ])
-    }
-
-    public async dappOperatorIsHumanUser(solutionThreshold: number): Promise<ProsopoDappOperatorIsHumanUserResponse> {
-        let response
-        try {
-            response = await this.query('dappOperatorIsHumanUser', [this.userAccountAddress, solutionThreshold])
-            // TODO make the contract always return true or false
-            if (response !== true) {
-                throw new Error('dappOperatorIsHumanUser returned false')
-            }
-        } catch (err) {
-            console.debug(response)
-            return false
-        }
-        return response as ProsopoDappOperatorIsHumanUserResponse
     }
 }
 
