@@ -15,20 +15,12 @@ import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { TypeDefInfo } from '@polkadot/types-create'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { hexToU8a } from '@polkadot/util'
-import { encodeStringArgs, unwrap } from '@prosopo/contract'
+import { encodeStringArgs } from '@prosopo/contract'
 import chai from 'chai'
-import { Type } from '@polkadot/types-codec'
-import { TypeRegistry } from '@polkadot/types'
 
 const expect = chai.expect
 
 describe('CONTRACT HELPERS', () => {
-    it('Unwrap function properly unwraps JSON', () => {
-        const registry = new TypeRegistry()
-        const result = new Type(registry, 'data')
-        expect(unwrap(result)).to.deep.equal({ some: { other: 'data' } })
-    })
-
     it('Properly encodes `Hash` arguments when passed unhashed', () => {
         const args = ['https://localhost:8282']
         const methodObj = {

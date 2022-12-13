@@ -117,7 +117,6 @@ describe('CONTRACT TASKS', () => {
         const dappContractAccount = await getUser(AccountKey.dappsWithStake)
         const tasks = await changeSigner(providerAccount)
         const providerDetails = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
-        console.log(providerDetails)
         //await sleep(132000)
         const solvedCaptchas = await mockEnv.db!.getRandomSolvedCaptchasFromSingleDataset(
             providerDetails.datasetId.toString(),
@@ -224,7 +223,7 @@ describe('CONTRACT TASKS', () => {
         datasetPromise.catch((e) => e.message.should.match('/ProviderInactive/'))
     })
 
-    it.only('Provider approve', async () => {
+    it('Provider approve', async () => {
         const { dappUserAccount, captchaSolutions, providerAccount, dappContractAccount } =
             await createMockCaptchaSolutionsAndRequestHash()
 
@@ -495,51 +494,43 @@ describe('CONTRACT TASKS', () => {
     })
 
     it('Captcha proofs are returned if commitment found and solution is correct', async () => {
-        try {
-            // Construct a pending request hash between dappUserAccount, providerAccount and dappContractAccount
-            const { captchaSolutions, requestHash, dappUserAccount, providerAccount, dappContractAccount, userSalt } =
-                await createMockCaptchaSolutionsAndRequestHash()
+        // Construct a pending request hash between dappUserAccount, providerAccount and dappContractAccount
+        const { captchaSolutions, requestHash, dappUserAccount, providerAccount, dappContractAccount, userSalt } =
+            await createMockCaptchaSolutionsAndRequestHash()
 
-            const dappUserTasks = await changeSigner(dappUserAccount)
+        const dappUserTasks = await changeSigner(dappUserAccount)
 
-            const tree = new CaptchaMerkleTree()
-            const captchaSolutionsSalted = captchaSolutions
-            const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
+        const tree = new CaptchaMerkleTree()
+        const captchaSolutionsSalted = captchaSolutions
+        const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
 
-            tree.build(captchasHashed)
-            const commitmentId = tree.root!.hash
+        tree.build(captchasHashed)
+        const commitmentId = tree.root!.hash
 
-            const provider = await dappUserTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const provider = await dappUserTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
 
-            const dappUserCommitResponse = await dappUserTasks.contractApi.dappUserCommit(
-                accountAddress(dappContractAccount),
-                provider.datasetId.toString(),
-                commitmentId,
-                accountAddress(providerAccount)
-            )
+        const dappUserCommitResponse = await dappUserTasks.contractApi.dappUserCommit(
+            accountAddress(dappContractAccount),
+            provider.datasetId.toString(),
+            commitmentId,
+            accountAddress(providerAccount)
+        )
 
-            // next part contains internal contract calls that must be run by provider
-            const providerTasks = await changeSigner(providerAccount)
-            const result: DappUserSolutionResult = await providerTasks.dappUserSolution(
-                accountAddress(dappUserAccount),
-                accountAddress(dappContractAccount),
-                requestHash,
-                JSON.parse(JSON.stringify(captchaSolutionsSalted)) as JSON,
-                dappUserCommitResponse.blockHash as string,
-                dappUserCommitResponse.result.txHash.toString()
-            )
-
-            expect(result.captchas.length).to.be.eq(2)
-            const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId)
-            const filteredResult = result.captchas.filter(
-                (res) => res.captchaId == captchaSolutionsSalted[0].captchaId
-            )[0]
-            expect(filteredResult.proof).to.deep.eq(expectedProof)
-            expect(filteredResult.captchaId).to.eq(captchaSolutionsSalted[0].captchaId)
-        } catch (err) {
-            // TODO: should this be localized?
-            throw new ProsopoEnvError(err, 'Captcha proofs are returned if commitment found and solution is correct')
-        }
+        // next part contains internal contract calls that must be run by provider
+        const providerTasks = await changeSigner(providerAccount)
+        const result: DappUserSolutionResult = await providerTasks.dappUserSolution(
+            accountAddress(dappUserAccount),
+            accountAddress(dappContractAccount),
+            requestHash,
+            JSON.parse(JSON.stringify(captchaSolutionsSalted)),
+            dappUserCommitResponse.blockHash.toString(),
+            dappUserCommitResponse.result.txHash.toString()
+        )
+        expect(result.captchas.length).to.be.eq(2)
+        const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId)
+        const filteredResult = result.captchas.filter((res) => res.captchaId == captchaSolutionsSalted[0].captchaId)[0]
+        expect(filteredResult.proof).to.deep.eq(expectedProof)
+        expect(filteredResult.captchaId).to.eq(captchaSolutionsSalted[0].captchaId)
     })
 
     // it('Dapp User sending an invalid captchas causes error', async () => {
@@ -740,9 +731,8 @@ describe('CONTRACT TASKS', () => {
                 accountAddress(dappUserAccount),
                 accountAddress(dappAccount)
             )
-
             const { captchas, requestHash } = await dappUserTasks.getRandomCaptchasAndRequestHash(
-                provider.datasetId.toString() as string,
+                provider.datasetId.toString(),
                 hexHash(accountAddress(dappUserAccount))
             )
 

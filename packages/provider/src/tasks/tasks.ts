@@ -194,7 +194,7 @@ export class Tasks {
         }
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
-        if (pendingRequest && commitment.status.isPending) {
+        if (pendingRequest && commitment.status.toString() === 'Pending') {
             await this.db.storeDappUserSolution(receivedCaptchas, commitmentId, userAccount)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.contractApi.providerApprove(commitmentId, partialFee)

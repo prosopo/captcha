@@ -14,7 +14,7 @@
 import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
-import { BigNumber, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { BigNumber, DefinitionKeys, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import { hexHash } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
@@ -81,18 +81,19 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     await env.changeSigner(provider.mnemonic)
     const logger = env.logger
     const tasks = new Tasks(env)
+    const payeeKey: DefinitionKeys = 'ProsopoPayee'
     logger.info('   - providerRegister')
     await tasks.contractApi.providerRegister(
         stringToHexPadded(provider.serviceOrigin),
         provider.fee,
-        createType(env.api.registry, 'Payee', provider.payee),
+        createType(env.api.registry, payeeKey, provider.payee),
         provider.address
     )
     logger.info('   - providerStake')
     await tasks.contractApi.providerUpdate(
         stringToHexPadded(provider.serviceOrigin),
         provider.fee,
-        createType(env.api.registry, 'Payee', provider.payee),
+        createType(env.api.registry, payeeKey, provider.payee),
         provider.address,
         provider.stake
     )

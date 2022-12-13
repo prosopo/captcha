@@ -41,6 +41,7 @@ import { ProsopoEnvError } from '@prosopo/common'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '../types/scheduler'
+mongoose.set('strictQuery', false)
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
@@ -309,7 +310,7 @@ export class ProsopoDatabase implements Database {
     }
 
     /**
-     * @description Get a captcha that is solved or not solved
+     * @description Get a dataset by Id
      */
     async getDatasetDetails(datasetId: Hash | string): Promise<DatasetBase> {
         if (!isHex(datasetId)) {
@@ -317,6 +318,7 @@ export class ProsopoDatabase implements Database {
         }
 
         const doc = await this.tables?.dataset.findOne({ datasetId }).lean()
+        console.log(doc)
 
         if (doc) {
             return doc

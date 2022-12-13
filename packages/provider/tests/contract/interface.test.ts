@@ -44,8 +44,8 @@ describe('CONTRACT WRAPPER', () => {
     })
 
     it('Gets the storage key from the ABI', async () => {
-        const accounts = await contractApi.getStorageKey('provider_accounts')
+        const accounts = await contractApi.getStorageEntry('provider_accounts')
 
-        expect(accounts).to.equal('0x0100000000000000000000000000000000000000000000000000000000000000')
+        expect(accounts.layout.cell.key).to.equal('0x0100000000000000000000000000000000000000000000000000000000000000')
     })
 })

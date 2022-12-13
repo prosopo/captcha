@@ -23,7 +23,7 @@ import { Compact, u128 } from '@polkadot/types'
 import { Tasks } from '../tasks/tasks'
 import { ProsopoEnvironment } from '../types/env'
 import { encodeStringAddress } from '../util'
-import { Payee, PayeeSchema } from '@prosopo/contract'
+import { PayeeSchema } from '@prosopo/contract'
 import consola from 'consola'
 
 const validateAddress = (argv) => {
@@ -98,12 +98,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         desc: 'The AccountId of the Provider',
                     }),
             async (argv) => {
-                const result = await tasks.contractApi.providerRegister(
-                    argv.origin,
-                    argv.fee,
-                    argv.payee as Payee,
-                    argv.address
-                )
+                const result = await tasks.contractApi.providerRegister(argv.origin, argv.fee, argv.payee, argv.address)
 
                 logger.info(JSON.stringify(result, null, 2))
             },

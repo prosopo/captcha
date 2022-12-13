@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { AnyJson } from '@polkadot/types/types'
 import { validateAddress } from '@polkadot/util-crypto'
 import { ProsopoEnvError } from '@prosopo/common'
 import { CaptchaWithProof, parseCaptchaAssets } from '@prosopo/datasets'
@@ -26,7 +25,9 @@ import {
 import { ProsopoEnvironment } from './types/env'
 import { CaptchaSolutionBody } from './types/api'
 import { parseBlockNumber } from './util'
-import { Providers } from '@prosopo/contract'
+import { DappAccounts } from '@prosopo/contract'
+import { AccountId } from '@polkadot/types/interfaces'
+import { Vec } from '@polkadot/types-codec'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -73,7 +74,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     router.get('/v1/prosopo/providers/', async (req, res, next) => {
         try {
             await env.isReady()
-            const providers: Providers = await tasks.contractApi.getProviderAccounts()
+            const providers: Vec<AccountId> = await tasks.contractApi.getProviderAccounts()
 
             return res.json({
                 accounts: providers,
@@ -91,7 +92,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     router.get('/v1/prosopo/dapps/', async (req, res, next) => {
         try {
             await env.isReady()
-            const dapps: AnyJson = await tasks.contractApi.getDappAccounts()
+            const dapps: DappAccounts = await tasks.contractApi.getDappAccounts()
 
             return res.json({
                 accounts: dapps,

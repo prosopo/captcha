@@ -96,7 +96,6 @@ export class MockEnvironment implements ProsopoEnvironment {
         ) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
-            console.info('contract address', this.contractAddress)
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
             this.logger = consola.create({ level: LogLevel.Info })
             this.abi = MockEnvironment.getContractAbi(this.config.contract.abi, this.logger)

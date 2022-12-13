@@ -14,8 +14,9 @@
 import { z } from 'zod'
 import { CaptchaSolutionArraySchema } from '@prosopo/datasets'
 import { CaptchaWithProof } from '@prosopo/datasets'
-import { AnyJson } from '@polkadot/types/types'
-import { Providers } from '@prosopo/contract'
+import { DappAccounts } from '@prosopo/contract'
+import { AccountId } from '@polkadot/types/interfaces'
+import { Vec } from '@polkadot/types-codec'
 
 export type CaptchaResponse = CaptchaWithProof[]
 
@@ -53,9 +54,9 @@ export interface PendingCaptchaRequest {
 }
 
 export interface ProvidersAccountsResponse {
-    accounts: Providers
+    accounts: Vec<AccountId>
 }
 
 export interface DappsAccountsResponse {
-    accounts: AnyJson
+    accounts: DappAccounts
 }

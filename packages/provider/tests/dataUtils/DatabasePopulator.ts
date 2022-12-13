@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BigNumber, Payee, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { BigNumber, Payee, stringToHexPadded } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import path from 'path'
 
@@ -285,8 +285,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 createType(this.mockEnv.api.registry, 'AccountId', accountAddress(account)).toString()
             )
-            const events = getEventsFromMethodName(result, 'DappRegister')
-            events[0].args.map((arg) => console.debug(arg.toPrimitive()))
+            // const events = getEventsFromMethodName(result, 'DappRegister')
+            // events[0].args.map((arg) => console.info(arg.toPrimitive()))
             if (!noPush) {
                 this._registeredDapps.push(account)
             }
