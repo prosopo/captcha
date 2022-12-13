@@ -37,7 +37,8 @@
         "CANNOT_FIND_KEYPAIR": "Nije moguće pronaći par ključeva",
         "INVALID_TYPE": "Invalid type",
         "INVALID_ABI": "Invalid ABI",
-        "NOT_HANDLED": "Not handled"
+        "NOT_HANDLED": "Not handled",
+        "INVALID_STORAGE_TYPE": "Invalid storage type"
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Zatraženo je nepoznato okruženje",
