@@ -13,8 +13,8 @@
 // limitations under the License.
 import { Hash } from '@polkadot/types/interfaces'
 import type { RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment'
-import { hexToU8a } from '@polkadot/util'
-import { randomAsHex } from '@polkadot/util-crypto'
+import { hexToU8a, stringToHex } from '@polkadot/util'
+import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { ProsopoContractMethods, TransactionResponse } from '@prosopo/contract'
 import {
     Captcha,
@@ -229,16 +229,25 @@ export class Tasks {
      * @param {string} dappAccount
      * @param {string} requestHash
      * @param {JSON} captchas
+     * @param {string} signature
      * @return {Promise<DappUserSolutionResult>} result containing the contract event
      */
     async dappUserSolutionWeb2(
         userAccount: string,
         dappAccount: string,
         requestHash: string,
-        captchas: JSON
+        captchas: JSON,
+        signature: string // the signature to indicate ownership of account (web2 only)
     ): Promise<DappUserSolutionResult> {
         if (!(await this.dappIsActive(dappAccount))) {
             throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', this.getPaymentInfo.name, {}, { dappAccount })
+        }
+
+        // check that the signature is valid (i.e. the web2 user has signed the message with their private key, proving they own their account)
+        const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
+        if (!verification.isValid) {
+            // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
+            throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', this.dappUserSolutionWeb2.name, {}, { userAccount })
         }
 
         let response: DappUserSolutionResult = {

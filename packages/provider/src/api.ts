@@ -192,7 +192,8 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
                     parsed.userAccount,
                     parsed.dappAccount,
                     parsed.requestHash,
-                    parsed.captchas
+                    parsed.captchas,
+                    parsed.signature
                 )
                 return res.json({
                     status: req.i18n.t(result.solutionApproved ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
