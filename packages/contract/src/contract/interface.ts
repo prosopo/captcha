@@ -25,6 +25,7 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { AbiVersion, getABIVersion } from '../util/definitionGen'
 import { ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
 import { createType } from '@polkadot/types'
+import { Codec } from '@polkadot/types/types'
 
 export class ProsopoContractApi extends AsyncFactory implements ContractApiInterface {
     contract: ContractPromise
@@ -48,9 +49,6 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         this.abi = abi
         this.abiVersion = getABIVersion(abi)
         await this.api.isReadyOrError
-        // const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
-        // console.log(contractDefinitions)
-        // await this.api.registry.register(contractDefinitions)
         this.contract = new ContractPromise(this.api, this.abi, this.contractAddress)
         return this
     }
@@ -76,7 +74,7 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         await this.contractQuery(contractMethodName, args)
 
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: T[] = encodeStringArgs(methodObj, args)
+        const encodedArgs: Codec[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
         const send = buildSend(this.contract, methodObj, this.pair)
         const response = value ? await send(...encodedArgs, { value: value }) : await send(...encodedArgs)
 
@@ -100,7 +98,7 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         atBlock?: string | Uint8Array
     ): Promise<ContractExecResultOk> {
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: any[] = encodeStringArgs(methodObj, args)
+        const encodedArgs: Codec[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
         const response = await buildCall(this.contract, methodObj, this.pair, false, atBlock)(...encodedArgs)
         const { debugMessage, gasRequired, gasConsumed, result, storageDeposit } = response
         handleContractCallOutcomeErrors(result, contractMethodName, encodedArgs)

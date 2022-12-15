@@ -20,6 +20,7 @@ import { TransactionResponse } from '../types/contract'
 import { ProsopoContractError } from '../handlers'
 import { Codec } from '@polkadot/types/types'
 import { ContractExecResultResult } from '@polkadot/types/interfaces/contracts/types'
+import { Registry } from '@polkadot/types-codec/types/registry'
 
 /**
  * Get the event name from the contract method name
@@ -47,36 +48,22 @@ export function getEventsFromMethodName(
     }
 }
 
-/** Encodes arguments that should be hashes using blake2AsU8a
+/** Encodes arguments, padding and converting to hex if necessary
  * @return encoded arguments
  */
-export function encodeStringArgs<T>(methodObj: AbiMessage, args: T[]): T[] {
-    const encodedArgs: T[] = []
+export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args: any[]): Codec[] {
+    const encodedArgs: Codec[] = []
     // args must be in the same order as methodObj['args']
     const typesToHash = ['Hash']
     methodObj.args.forEach((methodArg, idx) => {
-        const argVal = args[idx]
+        let argVal = args[idx]
         // hash values that have been passed as strings
         if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
-            encodedArgs.push(stringToHexPadded(argVal as string) as unknown as T)
-        } else {
-            encodedArgs.push(argVal)
+            argVal = stringToHexPadded(argVal)
         }
+        encodedArgs.push(registry.createType(methodArg.type.type, argVal))
     })
     return encodedArgs
-}
-
-/** Unwrap a query response from a contract
- * @return {T}
- */
-export function unwrap<T>(item: Codec): T {
-    const prop = 'ok'
-    if (item && typeof item === 'object') {
-        if (prop in item) {
-            return item[prop] as T
-        }
-    }
-    return item as T
 }
 
 /** Handle errors returned from contract queries by throwing them

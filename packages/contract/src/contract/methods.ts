@@ -12,10 +12,10 @@ import {
 } from '../interfaces/index'
 import { hexToU8a } from '@polkadot/util'
 import { Vec, u128 } from '@polkadot/types-codec'
-import { ProsopoContractError } from '../handlers'
 import { ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
 import { DefinitionKeys } from '../interfaces/definitions'
 import { AccountId } from '@polkadot/types/interfaces'
+import { ProsopoContractError } from '../handlers'
 
 export interface ProsopoRandomProviderResponse {
     providerId: string
