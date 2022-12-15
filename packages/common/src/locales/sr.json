@@ -21,7 +21,8 @@
         "MNEMONIC_UNDEFINED": "Mnemonik snabdevača nedefinisan. Podesite `PROVIDER_MNEMONIC` u promenljivama okruženja",
         "ASYNC_FACTORY_CREATE": "Koristite factory metodu „kreiraj“.",
         "CANT_FIND_KEYRINGPAIR": "Keyringpair nije pronađen za {{address}}",
-        "ENVIRONMENT_NOT_READY": "Environment not ready"
+        "ENVIRONMENT_NOT_READY": "Environment not ready",
+        "INVALID_SIGNATURE": "Invalid signature"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Nevažeća metoda ugovora",
