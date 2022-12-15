@@ -385,14 +385,19 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Store a Dapp User's pending record
      */
-    async storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void> {
+    async storeDappUserPending(
+        userAccount: string,
+        requestHash: string,
+        salt: string,
+        deadline: number
+    ): Promise<void> {
         if (!isHex(requestHash)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.storeDappUserPending.name, {}, requestHash)
         }
 
         await this.tables?.pending.updateOne(
             { requestHash: requestHash },
-            { $set: { accountId: userAccount, pending: true, salt, requestHash } },
+            { $set: { accountId: userAccount, pending: true, salt, requestHash, deadline } },
             { upsert: true }
         )
     }

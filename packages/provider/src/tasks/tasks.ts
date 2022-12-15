@@ -368,6 +368,12 @@ export class Tasks {
         captchaIds: string[]
     ): Promise<boolean> {
         const pendingRecord = await this.db.getDappUserPending(requestHash)
+        const currentTime = Date.now()
+        if (pendingRecord.deadline < currentTime) {
+            // deadline for responding to the captcha has expired
+            console.log('Deadline for responding to captcha has expired')
+            return false;
+        }
         if (pendingRecord) {
             const pendingHashComputed = computePendingRequestHash(captchaIds, userAccount, pendingRecord.salt)
             return requestHash === pendingHashComputed
@@ -410,7 +416,11 @@ export class Tasks {
             salt
         )
 
-        await this.db.storeDappUserPending(userAccount, requestHash, salt)
+        const currentTime = Date.now()
+        const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMillis || 30).reduce((a, b) => a + b, 0)
+        const deadline = timeLimit + currentTime
+
+        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadline)
         return { captchas, requestHash }
     }
 

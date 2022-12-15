@@ -52,6 +52,7 @@ export interface PendingCaptchaRequest {
     pending: boolean
     salt: string
     requestHash: string
+    deadline: number // unix timestamp
 }
 
 export interface ProvidersAccountsResponse {
