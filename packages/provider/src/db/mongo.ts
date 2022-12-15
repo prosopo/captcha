@@ -27,7 +27,6 @@ import {
     UserSolutionRecord,
     UserSolutionRecordSchema,
 } from '../types'
-import { ProsopoEnvError } from '@prosopo/datasets'
 import {
     Captcha,
     CaptchaSolution,
@@ -36,6 +35,7 @@ import {
     DatasetWithIds,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
+    ProsopoEnvError,
 } from '@prosopo/datasets'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'
@@ -286,7 +286,7 @@ export class ProsopoDatabase implements Database {
     }
 
     /**
-     * @description Update a captcha solution
+     * @description Update a captcha
      * @param {Captcha}  captcha
      * @param {string}   datasetId  the id of the data set
      */
@@ -296,6 +296,13 @@ export class ProsopoDatabase implements Database {
         }
 
         await this.tables?.captcha.updateOne({ datasetId }, { $set: captcha }, { upsert: false }, callbackFn)
+    }
+
+    /**
+     * @description Remove captchas
+     */
+    async removeCaptchas(captchaIds: string[]): Promise<void> {
+        await this.tables?.captcha.deleteMany({ captchaId: { $in: captchaIds } })
     }
 
     /**
@@ -324,18 +331,37 @@ export class ProsopoDatabase implements Database {
         }
 
         if (captchas.length) {
-            await this.tables?.commitment.create({
-                userAccount,
-                commitmentId: commitmentId,
-                approved: false,
-                datetime: new Date().toISOString(),
-            })
-
-            await this.tables?.usersolution.insertMany(
-                captchas.map(
-                    (captcha: CaptchaSolution): UserSolutionRecord => ({ ...captcha, commitmentId, processed: false })
-                )
+            await this.tables?.commitment.updateOne(
+                {
+                    commitmentId,
+                },
+                {
+                    userAccount,
+                    commitmentId: commitmentId,
+                    approved: false,
+                    datetime: new Date().toISOString(),
+                },
+                { upsert: true }
             )
+
+            const ops = captchas.map((captcha: CaptchaSolution) => ({
+                updateOne: {
+                    filter: { commitmentId: commitmentId, captchaId: captcha.captchaId },
+                    update: {
+                        $set: <UserSolutionRecord>{
+                            captchaId: captcha.captchaId,
+                            captchaContentId: captcha.captchaContentId,
+                            salt: captcha.salt,
+                            solution: captcha.solution,
+                            commitmentId,
+                            processed: false,
+                        },
+                    },
+                    upsert: true,
+                },
+            }))
+
+            await this.tables?.usersolution.bulkWrite(ops, callbackFn)
         }
     }
 
@@ -407,7 +433,7 @@ export class ProsopoDatabase implements Database {
         const cursor = this.tables?.captcha
             .find({
                 datasetId,
-                solved: !!state,
+                solved: state === CaptchaStates.Solved,
             })
             .lean()
         const docs = await cursor
@@ -558,16 +584,16 @@ export class ProsopoDatabase implements Database {
     }
 
     /**
-     * @description Flag a dapp user's solutions as used
-     * @param {string[]} commitmentId
+     * @description Flag a dapp user's solutions as used by calculated solution
+     * @param {string[]} captchaIds
      */
-    async flagUsedDappUserSolution(commitmentId: string): Promise<void> {
+    async flagUsedDappUserSolutions(captchaIds: string[]): Promise<void> {
         try {
             await this.tables?.usersolution
-                ?.findOneAndUpdate({ commitmentId: commitmentId }, { $set: { processed: true } }, { upsert: false })
+                ?.updateMany({ captchaId: { $in: captchaIds } }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)
+            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, captchaIds)
         }
     }
 }

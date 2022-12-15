@@ -151,14 +151,17 @@ export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumbe
 export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], logger: typeof consola): Captcha[] {
     // Note - loading the dataset in nodejs-polars doesn't work because of nested objects, which is why this is done in
     // a map instead of a join
-    return captchas.map((captcha) => {
+    return captchas.map((captcha: Captcha) => {
         // try to find the solution in the solutions dataframe
         if (!captcha.solution) {
             try {
-                captcha.solution = solutions
-                    .filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId)))
-                    ['solution'].values()
-                    .collect()
+                const captchaSolutions = [
+                    ...solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId)))['solution'].values(),
+                ]
+                if (captchaSolutions.length > 0) {
+                    captcha.solution = captchaSolutions[0]
+                    captcha.solved = true
+                }
             } catch {
                 logger.debug('No solution found for captchaId', captcha.captchaId)
             }
