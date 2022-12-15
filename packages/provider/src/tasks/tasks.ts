@@ -372,7 +372,7 @@ export class Tasks {
         if (pendingRecord.deadline < currentTime) {
             // deadline for responding to the captcha has expired
             console.log('Deadline for responding to captcha has expired')
-            return false;
+            return false
         }
         if (pendingRecord) {
             const pendingHashComputed = computePendingRequestHash(captchaIds, userAccount, pendingRecord.salt)
@@ -417,7 +417,7 @@ export class Tasks {
         )
 
         const currentTime = Date.now()
-        const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMillis || 30).reduce((a, b) => a + b, 0)
+        const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30).reduce((a, b) => a + b, 0)
         const deadline = timeLimit + currentTime
 
         await this.db.storeDappUserPending(userAccount, requestHash, salt, deadline)
