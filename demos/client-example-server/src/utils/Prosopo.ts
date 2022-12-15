@@ -86,7 +86,7 @@ export class ProsopoServer {
             return result.solutionApproved
         } else {
             const contractApi = await this.getContractApi()
-            return (await contractApi.getDappOperatorIsHumanUser(userAccount, this.config.solutionThreshold)).isTrue
+            return await contractApi.getDappOperatorIsHumanUser(userAccount, this.config.solutionThreshold)
         }
     }
 
