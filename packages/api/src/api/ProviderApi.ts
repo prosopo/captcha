@@ -50,7 +50,8 @@ export class ProviderApi extends HttpClientBase {
         salt: string,
         blockHash?: string,
         txHash?: string,
-        web2?: boolean
+        web2?: boolean,
+        signature?: string
     ): Promise<CaptchaSolutionResponse> {
         return this.axios.post(`/v1/prosopo/provider/solution`, {
             blockHash,
@@ -61,6 +62,7 @@ export class ProviderApi extends HttpClientBase {
             dappAccount: this.network.dappContract.address,
             web2,
             salt,
+            signature,
         })
     }
 
