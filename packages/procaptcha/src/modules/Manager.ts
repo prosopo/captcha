@@ -16,7 +16,6 @@ import { sleep } from '../utils/utils'
 import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import { TCaptchaSubmitResult } from '../types/client'
-import { randomAsHex } from '@polkadot/util-crypto'
 import {
     ContractAbi,
     ProsopoContractMethods,
@@ -26,6 +25,7 @@ import {
 } from '@prosopo/contract'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { ApiPromise, Keyring } from '@polkadot/api'
+import { randomAsHex } from '@polkadot/util-crypto'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {

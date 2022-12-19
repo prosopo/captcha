@@ -39,6 +39,7 @@ export interface ProposoProvider {
     status: string
 }
 
+// TODO de-duplicate. This is a duplicate of CaptchaWithProof from @prosopo/provider
 export interface CaptchaResponseCaptcha {
     captcha: Omit<Captcha, 'solution'>
     proof: MerkleProof
