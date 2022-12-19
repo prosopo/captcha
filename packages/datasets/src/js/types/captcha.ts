@@ -40,6 +40,7 @@ type CaptchaWithoutIdBase = {
     items: Item[]
     target: string
     solved?: boolean
+    timeLimitMillis?: number
 }
 
 export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
@@ -81,6 +82,11 @@ export interface CaptchaSolution {
     captchaContentId: string
     salt: string
     solution: HashedSolution[]
+}
+
+export interface CaptchaWithProof {
+    captcha: Captcha
+    proof: string[][]
 }
 
 export type CaptchaConfig = {
