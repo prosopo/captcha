@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { z } from 'zod'
-import { CaptchaSolutionArraySchema } from '@prosopo/datasets'
-import { CaptchaWithProof } from '@prosopo/datasets'
+import { CaptchaSolutionSchema } from '@prosopo/datasets'
 import { DappAccounts } from '@prosopo/contract'
 import { AccountId } from '@polkadot/types/interfaces'
 import { Vec } from '@polkadot/types-codec'
-
-export type CaptchaResponse = CaptchaWithProof[]
 
 export interface DappUserSolutionResult {
     captchas: CaptchaIdAndProof[]
@@ -34,13 +31,15 @@ export interface CaptchaIdAndProof {
 export const CaptchaSolutionBody = z.object({
     userAccount: z.string(),
     dappAccount: z.string(),
-    captchas: CaptchaSolutionArraySchema,
+    captchas: z.array(CaptchaSolutionSchema),
     requestHash: z.string(),
     blockHash: z.string().optional(),
     txHash: z.string().optional(),
     web2: z.boolean().optional().default(false),
     signature: z.string().optional(), // the signature to prove account ownership (web2 only)
 })
+
+export type CaptchaSolutionBodyType = z.infer<typeof CaptchaSolutionBody>
 
 export const VerifySolutionBody = z.object({
     userAccount: z.string(),

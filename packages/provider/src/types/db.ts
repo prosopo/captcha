@@ -28,12 +28,17 @@ import { z } from 'zod'
 import { Connection, Model, Schema } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskStatus } from './scheduler'
 
-export interface UserCommitmentRecord {
-    userAccount: string
-    commitmentId: string
-    approved: boolean
-    datetime: Date
-}
+export const UserCommitmentSchema = z.object({
+    userAccount: z.string(),
+    dappAccount: z.string(),
+    datasetId: z.string(),
+    commitmentId: z.string(),
+    approved: z.boolean(),
+    datetime: z.date(),
+    processed: z.boolean(),
+})
+
+export type UserCommitmentRecord = z.infer<typeof UserCommitmentSchema>
 
 export interface SolutionRecord extends CaptchaSolution {
     datasetId: string
@@ -76,6 +81,7 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     userAccount: { type: String, required: true },
+    dappAccount: { type: String, required: true },
     commitmentId: { type: String, required: true },
     approved: { type: Boolean, required: true },
     datetime: { type: Date, required: true },
@@ -115,6 +121,12 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
     { _id: false }
 )
 
+export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
+    captchas: z.array(UserSolutionSchema),
+})
+
+export type UserCommitmentWithSolutions = z.infer<typeof UserCommitmentWithSolutionsSchema>
+
 export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     accountId: { type: String, required: true },
     pending: { type: Boolean, required: true },
@@ -153,7 +165,13 @@ export interface Database {
 
     getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetBase>
 
-    storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string, userAccount: string): Promise<void>
+    storeDappUserSolution(
+        captchas: CaptchaSolution[],
+        commitmentId: string,
+        userAccount: string,
+        dappAccount: string,
+        datasetId: string
+    ): Promise<void>
 
     storeDappUserPending(userAccount: string, requestHash: string, salt: string, deadline: number): Promise<void>
 
@@ -181,7 +199,11 @@ export interface Database {
 
     getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>
 
+    getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]>
+
     flagUsedDappUserSolutions(captchaIds: string[]): Promise<void>
+
+    flagUsedDappUserCommitments(commitmentIds: string[]): Promise<void>
 
     getLastBatchCommitTime(): Promise<number>
 }

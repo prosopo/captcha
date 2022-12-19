@@ -330,7 +330,13 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Store a Dapp User's captcha solution commitment
      */
-    async storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string, userAccount: string): Promise<void> {
+    async storeDappUserSolution(
+        captchas: CaptchaSolution[],
+        commitmentId: string,
+        userAccount: string,
+        dappAccount: string,
+        datasetId: string
+    ): Promise<void> {
         if (!isHex(commitmentId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.storeDappUserSolution.name, {}, commitmentId)
         }
@@ -342,9 +348,12 @@ export class ProsopoDatabase implements Database {
                 },
                 {
                     userAccount,
+                    dappAccount,
+                    datasetId,
                     commitmentId: commitmentId,
                     approved: false,
                     datetime: new Date().toISOString(),
+                    processed: false,
                 },
                 { upsert: true }
             )
@@ -374,6 +383,12 @@ export class ProsopoDatabase implements Database {
      */
     async getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]> {
         return (await this.tables?.usersolution.find({ processed: true }).lean()) || []
+    }
+
+    /** @description Get processed Dapp User captcha commitments from the commitments table
+     */
+    async getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+        return (await this.tables?.commitment.find({ processed: true }).lean()) || []
     }
 
     /** @description Remove processed Dapp User captcha solutions from the user solution table
@@ -608,7 +623,21 @@ export class ProsopoDatabase implements Database {
                 ?.updateMany({ captchaId: { $in: captchaIds } }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, captchaIds)
+            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_FLAG_FAILED', {}, captchaIds)
+        }
+    }
+
+    /**
+     * @description Flag dapp users' commitments as used by calculated solution
+     * @param {string[]} commitmentIds
+     */
+    async flagUsedDappUserCommitments(commitmentIds: string[]): Promise<void> {
+        try {
+            await this.tables?.commitment
+                ?.updateMany({ commitmentId: { $in: commitmentIds } }, { $set: { processed: true } }, { upsert: false })
+                .lean()
+        } catch (err) {
+            throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
         }
     }
 
