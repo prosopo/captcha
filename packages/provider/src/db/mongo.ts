@@ -633,8 +633,14 @@ export class ProsopoDatabase implements Database {
      */
     async flagUsedDappUserCommitments(commitmentIds: string[]): Promise<void> {
         try {
+            const distinctCommitmentIds = [...new Set(commitmentIds)]
+            console.log('Updating commitmentIds', distinctCommitmentIds)
             await this.tables?.commitment
-                ?.updateMany({ commitmentId: { $in: commitmentIds } }, { $set: { processed: true } }, { upsert: false })
+                ?.updateMany(
+                    { commitmentId: { $in: distinctCommitmentIds } },
+                    { $set: { processed: true } },
+                    { upsert: false }
+                )
                 .lean()
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)

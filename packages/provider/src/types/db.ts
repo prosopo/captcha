@@ -85,6 +85,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     commitmentId: { type: String, required: true },
     approved: { type: Boolean, required: true },
     datetime: { type: Date, required: true },
+    processed: { type: Boolean, required: true },
 })
 
 export const DatasetRecordSchema = new Schema<DatasetBase>({

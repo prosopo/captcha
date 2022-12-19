@@ -474,19 +474,22 @@ export class Tasks {
                         `There are ${solutionsToUpdate.rows().length} CAPTCHA challenges to update with solutions`
                     )
                     try {
+                        const captchaIdsToUpdate = [...solutionsToUpdate['captchaId'].values()]
+                        console.log('captchaIdsToUpdate', captchaIdsToUpdate)
                         const commitmentIds = solutions
-                            .filter((s) => solutionsToUpdate['captchaId'].values().indexOf(s.captchaId) > -1)
+                            .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
                             .map((s) => s.commitmentId)
                         const dataset = await this.db.getDataset(providerDetails.datasetId.toString())
                         dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
                         // store new solutions in database
+                        //console.log(JSON.stringify(dataset.captchas, null, 4))
                         await this.providerAddDataset(dataset)
                         // mark user solutions as used to calculate new solutions
-                        await this.db.flagUsedDappUserSolutions([...solutionsToUpdate['captchaId'].values()])
+                        await this.db.flagUsedDappUserSolutions(captchaIdsToUpdate)
                         // mark user commitments as used to calculate new solutions
                         await this.db.flagUsedDappUserCommitments(commitmentIds)
                         // remove old captcha challenges from database
-                        await this.db.removeCaptchas([...solutionsToUpdate['captchaId'].values()])
+                        await this.db.removeCaptchas(captchaIdsToUpdate)
                         return solutionsToUpdate.rows().length
                     } catch (error) {
                         consola.error(error)
