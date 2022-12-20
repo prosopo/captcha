@@ -14,14 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import HttpClientBase from './HttpClientBase'
-import {
-    CaptchaSolutionResponse,
-    GetCaptchaResponse,
-    ProsopoNetwork,
-    ProsopoRandomProviderResponse,
-    VerificationResponse,
-} from '../types'
+import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
 import { CaptchaSolution } from '@prosopo/datasets'
+import { ProsopoRandomProvider } from '@prosopo/contract'
 
 export class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
@@ -37,13 +32,14 @@ export class ProviderApi extends HttpClientBase {
 
     public getCaptchaChallenge(
         userAccount: string,
-        randomProvider: ProsopoRandomProviderResponse
+        randomProvider: ProsopoRandomProvider
     ): Promise<GetCaptchaResponse> {
         const { provider } = randomProvider
-        let { blockNumber } = randomProvider
-        blockNumber = blockNumber.replace(/,/g, '')
+        const { blockNumber } = randomProvider
         return this.axios.get(
-            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.network.dappContract.address}/${blockNumber}`
+            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
+                this.network.dappContract.address
+            }/${blockNumber.toString().replace(/,/g, '')}`
         )
     }
 
