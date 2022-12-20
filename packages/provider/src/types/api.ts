@@ -13,8 +13,10 @@
 // limitations under the License.
 import { z } from 'zod'
 import { CaptchaSolutionArraySchema } from '@prosopo/datasets'
-import { AnyJson } from '@polkadot/types/types/codec'
 import { CaptchaWithProof } from '@prosopo/datasets'
+import { DappAccounts } from '@prosopo/contract'
+import { AccountId } from '@polkadot/types/interfaces'
+import { Vec } from '@polkadot/types-codec'
 
 export type CaptchaResponse = CaptchaWithProof[]
 
@@ -50,8 +52,13 @@ export interface PendingCaptchaRequest {
     pending: boolean
     salt: string
     requestHash: string
+    deadline: number // unix timestamp
 }
 
-export interface AccountsResponse {
-    accounts: AnyJson
+export interface ProvidersAccountsResponse {
+    accounts: Vec<AccountId>
+}
+
+export interface DappsAccountsResponse {
+    accounts: DappAccounts
 }

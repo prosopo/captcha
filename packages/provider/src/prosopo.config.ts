@@ -13,9 +13,11 @@
 // limitations under the License.
 // import {ProsopoConfig} from './types';
 
-export default () => ({
+import { DatabaseTypes, EnvironmentTypes, ProsopoConfig } from './types/index'
+
+export default (): ProsopoConfig => ({
     logLevel: 'debug',
-    defaultEnvironment: 'development',
+    defaultEnvironment: EnvironmentTypes.development,
     contract: {
         abi: '../contract/src/abi/prosopo.json',
     },
@@ -23,7 +25,7 @@ export default () => ({
         development: {
             endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944',
             contract: {
-                address: process.env.CONTRACT_ADDRESS,
+                address: process.env.CONTRACT_ADDRESS || '',
                 name: 'prosopo',
             },
             accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
@@ -45,18 +47,20 @@ export default () => ({
     },
     database: {
         development: {
-            type: 'mongo',
+            type: DatabaseTypes.mongo,
             endpoint: `mongodb://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}`,
-            dbname: process.env.DATABASE_NAME,
+            dbname: process.env.DATABASE_NAME || '',
             authSource: 'admin',
         },
     },
-
+    batchCommit: {
+        interval: 300,
+    },
     assets: {
         absolutePath: '',
         basePath: '',
     },
     server: {
-        baseURL: process.env.API_BASE_URL,
+        baseURL: process.env.API_BASE_URL || '',
     },
 })

@@ -14,10 +14,13 @@
 import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
-import { BigNumber, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
-import { hexHash, ProsopoEnvError } from '@prosopo/datasets'
+import { BigNumber, DefinitionKeys, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { hexHash } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
 import { Tasks } from './tasks'
+import { createType } from '@polkadot/types'
+import { ProsopoEnvironment } from '../types/index'
 
 export async function generateMnemonic(keyring?: Keyring): Promise<[string, string]> {
     if (!keyring) {
@@ -45,16 +48,24 @@ function getNextMnemonic() {
     return mnemonic[current]
 }
 
-export async function sendFunds(env, address, who, amount: BigNumber): Promise<void> {
+export async function sendFunds(
+    env: ProsopoEnvironment,
+    address: string,
+    who: string,
+    amount: BigNumber
+): Promise<void> {
     await env.contractInterface.api.isReady
     const mnemonic = getNextMnemonic()
     const pair = env.keyring.addFromMnemonic(mnemonic)
-    const balance = await env.contractInterface.api.query.system.account(pair.address)
-
-    if (balance < amount) {
+    // @ts-ignore
+    const {
+        // @ts-ignore
+        data: { free: previousFree },
+    } = await env.contractInterface.api.query.system.account(pair.address)
+    if (previousFree < amount) {
         throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', undefined, {
             mnemonic,
-            balance,
+            previousFree,
         })
     }
 
@@ -62,8 +73,7 @@ export async function sendFunds(env, address, who, amount: BigNumber): Promise<v
     await buildTx(
         api.registry,
         api.tx.balances.transfer(address, amount),
-        pair, // from
-        { signer: env.signer }
+        pair // from
     )
 }
 
@@ -71,25 +81,25 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     await env.changeSigner(provider.mnemonic)
     const logger = env.logger
     const tasks = new Tasks(env)
+    const payeeKey: DefinitionKeys = 'ProsopoPayee'
     logger.info('   - providerRegister')
-    await tasks.providerRegister(
+    await tasks.contractApi.providerRegister(
         stringToHexPadded(provider.serviceOrigin),
         provider.fee,
-        provider.payee,
+        createType(env.api.registry, payeeKey, provider.payee),
         provider.address
     )
     logger.info('   - providerStake')
-    await tasks.providerUpdate(
+    await tasks.contractApi.providerUpdate(
         stringToHexPadded(provider.serviceOrigin),
         provider.fee,
-        provider.payee,
+        createType(env.api.registry, payeeKey, provider.payee),
         provider.address,
         provider.stake
     )
     logger.info('   - providerAddDataset')
     const datasetResult = await tasks.providerAddDatasetFromFile(provider.datasetFile)
     const events = getEventsFromMethodName(datasetResult, 'providerAddDataset')
-    // @ts-ignore
     return events[0].args[1] as Hash
 }
 
@@ -98,13 +108,13 @@ export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
     const logger = env.logger
     await env.changeSigner(dapp.mnemonic)
     logger.info('   - dappRegister')
-    await tasks.dappRegister(
+    await tasks.contractApi.dappRegister(
         hexHash(dapp.serviceOrigin),
         dapp.contractAccount,
         blake2AsHex(decodeAddress(dapp.optionalOwner))
     )
     logger.info('   - dappFund')
-    await tasks.dappFund(dapp.contractAccount, dapp.fundAmount)
+    await tasks.contractApi.dappFund(dapp.contractAccount, dapp.fundAmount)
 }
 
 // export async function setupDappUser(
@@ -123,10 +133,10 @@ export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
 //     const tasks = new Tasks(env)
 //     const logger = env.logger
 //     logger.info('   - getCaptchaWithProof')
-//     const providerOnChain = await tasks.getProviderDetails(provider.address)
+//     const providerOnChain = await tasks.contractApi.getProviderDetails(provider.address)
 //     if (providerOnChain) {
-//         const solved = await tasks.getCaptchaWithProof(providerOnChain.dataset_id.toString(), true, 1)
-//         const unsolved = await tasks.getCaptchaWithProof(providerOnChain.dataset_id.toString(), false, 1)
+//         const solved = await tasks.contractApi.getCaptchaWithProof(providerOnChain.dataset_id.toString(), true, 1)
+//         const unsolved = await tasks.contractApi.getCaptchaWithProof(providerOnChain.dataset_id.toString(), false, 1)
 //         solved[0].captcha.solution = matchItemsToSolutions([2, 3, 4], solved[0].captcha.items)
 //         unsolved[0].captcha.solution = matchItemsToSolutions([1], unsolved[0].captcha.items)
 //         solved[0].captcha.salt = '0xuser1'
@@ -141,7 +151,7 @@ export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
 //         })
 //         tree.build(captchaSolHashes)
 //         await env.changeSigner(dappUser.mnemonic)
-//         const captchaData = await tasks.getCaptchaData(providerOnChain.dataset_id.toString())
+//         const captchaData = await tasks.contractApi.getCaptchaData(providerOnChain.dataset_id.toString())
 //         if (captchaData.merkle_tree_root.toString() !== providerOnChain.dataset_id.toString()) {
 //             throw new ProsopoEnvError(
 //                 'DEVELOPER.CAPTCHA_ID_MISSING',
@@ -158,8 +168,8 @@ export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
 //             logger.info('   -   Solution Root Hash: ', commitmentId)
 //             logger.info('   -   Provider Address: ', provider.address)
 //             logger.info('   -   Captchas: ', captchas)
-//             await tasks.dappUserCommit(dapp.contractAccount, providerOnChain.dataset_id, commitmentId, provider.address)
-//             const commitment = await tasks.getCaptchaSolutionCommitment(commitmentId)
+//             await tasks.contractApi.dappUserCommit(dapp.contractAccount, providerOnChain.dataset_id, commitmentId, provider.address)
+//             const commitment = await tasks.contractApi.getCaptchaSolutionCommitment(commitmentId)
 //         } else {
 //             throw new ProsopoEnvError('DEVELOPER.COMMITMENT_ID_MISSING')
 //         }
@@ -183,9 +193,9 @@ export async function approveOrDisapproveCommitment(
     await env.changeSigner(provider.mnemonic)
     if (approve) {
         logger.info('   -   Approving commitment')
-        await tasks.providerApprove(solutionHash, 100)
+        await tasks.contractApi.providerApprove(solutionHash, 100)
     } else {
         logger.info('   -   Disapproving commitment')
-        await tasks.providerDisapprove(solutionHash)
+        await tasks.contractApi.providerDisapprove(solutionHash)
     }
 }

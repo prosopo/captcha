@@ -14,7 +14,7 @@
 
 import { z } from 'zod'
 
-enum DatabaseTypes {
+export enum DatabaseTypes {
     mongo = 'mongo',
 }
 
@@ -30,6 +30,12 @@ export const DatabaseConfigSchema = z.object({
         authSource: z.string(),
     }),
 })
+
+export const BatchCommitConfigSchema = z.object({
+    interval: z.number().positive(),
+})
+
+export type BatchCommitConfig = z.infer<typeof BatchCommitConfigSchema>
 
 export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 
@@ -61,6 +67,7 @@ export const ProsopoConfigSchema = z.object({
         captchaFilePath: z.string(),
         captchaBlockRecency: z.number().positive().min(2),
     }),
+    batchCommit: BatchCommitConfigSchema,
     database: DatabaseConfigSchema,
     assets: z.object({
         absolutePath: z.string(),

@@ -32,9 +32,9 @@
     "@polkadot/types-create": "^8.13.1",
     "@polkadot/util": "^10.0.2",
     "@polkadot/util-crypto": "^10.0.2",
+    "@prosopo/common": "^0.1.10",
     "@prosopo/contract": "^0.1.10",
     "@prosopo/datasets": "^0.1.10",
-    "@prosopo/i18n": "^0.1.10",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "consola": "^2.15.3",
@@ -52,6 +52,7 @@
     "zod": "^3.17.9"
   },
   "devDependencies": {
+    "@types/chai-as-promised": "^7.1.5",
     "@types/fs-extra": "^9.0.13",
     "@types/mocha": "^9.1.1",
     "@types/node": "^18.0.6",

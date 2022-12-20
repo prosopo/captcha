@@ -26,6 +26,7 @@ import { PendingCaptchaRequest } from './api'
 import consola from 'consola'
 import { z } from 'zod'
 import { Connection, Model, Schema } from 'mongoose'
+import { ScheduledTaskNames, ScheduledTaskStatus } from './scheduler'
 
 export interface UserCommitmentRecord {
     userAccount: string
@@ -46,6 +47,7 @@ export interface Tables {
     usersolution: typeof Model
     commitment: typeof Model
     pending: typeof Model
+    scheduler: typeof Model
 }
 
 export const CaptchaRecordSchema = new Schema<Captcha>({
@@ -118,6 +120,14 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     pending: { type: Boolean, required: true },
     salt: { type: String, required: true },
     requestHash: { type: String, required: true },
+    deadline: { type: Number, required: true }, // unix timestamp
+})
+
+export const SchedulerRecordSchema = new Schema({
+    processName: { type: String, enum: ScheduledTaskNames, required: true },
+    datetime: { type: Date, required: true },
+    status: { type: String, enum: ScheduledTaskStatus, require: true },
+    result: { type: String, required: false },
 })
 
 export interface Database {
@@ -145,7 +155,7 @@ export interface Database {
 
     storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string, userAccount: string): Promise<void>
 
-    storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void>
+    storeDappUserPending(userAccount: string, requestHash: string, salt: string, deadline: number): Promise<void>
 
     getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>
 
@@ -167,7 +177,11 @@ export interface Database {
 
     approveDappUserCommitment(commitmentId: string): Promise<void>
 
-    removeDappUserSolutions(captchaIds: string[]): Promise<void>
+    removeProcessedDappUserSolutions(): Promise<void>
+
+    getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>
 
     flagUsedDappUserSolutions(captchaIds: string[]): Promise<void>
+
+    getLastBatchCommitTime(): Promise<number>
 }

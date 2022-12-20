@@ -11,16 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { AnyJson } from '@polkadot/types/types'
 import { validateAddress } from '@polkadot/util-crypto'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import { CaptchaWithProof, parseCaptchaAssets } from '@prosopo/datasets'
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'
-import { DappUserSolutionResult, VerifySolutionBody } from './types/api'
+import {
+    DappUserSolutionResult,
+    DappsAccountsResponse,
+    ProvidersAccountsResponse,
+    VerifySolutionBody,
+} from './types/api'
 import { ProsopoEnvironment } from './types/env'
-import { AccountsResponse, CaptchaSolutionBody } from './types/api'
+import { CaptchaSolutionBody } from './types/api'
 import { parseBlockNumber } from './util'
+import { DappAccounts } from '@prosopo/contract'
+import { AccountId } from '@polkadot/types/interfaces'
+import { Vec } from '@polkadot/types-codec'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -51,7 +58,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         const { userAccount, dappContractAccount } = req.params
 
         try {
-            const provider = await tasks.getRandomProvider(userAccount, dappContractAccount)
+            const provider = await tasks.contractApi.getRandomProvider(userAccount, dappContractAccount)
 
             return res.json(provider)
         } catch (err) {
@@ -67,11 +74,11 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     router.get('/v1/prosopo/providers/', async (req, res, next) => {
         try {
             await env.isReady()
-            const providers: AnyJson = await tasks.getProviderAccounts()
+            const providers: Vec<AccountId> = await tasks.contractApi.getProviderAccounts()
 
             return res.json({
                 accounts: providers,
-            } as AccountsResponse)
+            } as ProvidersAccountsResponse)
         } catch (err) {
             return next(new ProsopoEnvError(err))
         }
@@ -85,11 +92,11 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     router.get('/v1/prosopo/dapps/', async (req, res, next) => {
         try {
             await env.isReady()
-            const dapps: AnyJson = await tasks.getDappAccounts()
+            const dapps: DappAccounts = await tasks.contractApi.getDappAccounts()
 
             return res.json({
                 accounts: dapps,
-            } as AccountsResponse)
+            } as DappsAccountsResponse)
         } catch (err) {
             return next(new ProsopoEnvError(err))
         }
@@ -111,10 +118,9 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
 
         try {
             validateAddress(providerAccount)
-            const contract = contractApi.getContract()
-            const result = await contract.query.getProviderDetails(providerAccount, {})
+            const result = await contractApi.getProviderDetails(providerAccount)
 
-            return res.json(result.output)
+            return res.json(result)
         } catch (err) {
             return next(new ProsopoEnvError(err))
         }

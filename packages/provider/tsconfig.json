@@ -10,7 +10,7 @@
     "./src/**/*.ts"
   ],
   "files": [
-    "./src/prosopo.config.js"
+    "./src/prosopo.config.ts"
   ],
   "references": [
     {
@@ -20,7 +20,7 @@
       "path": "../contract"
     },
     {
-      "path": "../i18n"
+      "path": "../common"
     }
   ]
 }

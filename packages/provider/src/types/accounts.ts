@@ -1,4 +1,4 @@
-import { BigNumber, Payee } from '@prosopo/contract'
+import { BigNumber } from '@prosopo/contract'
 
 export interface IUserAccount {
     mnemonic: string
@@ -10,7 +10,7 @@ export interface IProviderAccount extends IUserAccount {
     fee: number
     datasetFile: string
     stake: BigNumber
-    payee: Payee
+    payee: string
     captchaDatasetId: string
 }
 

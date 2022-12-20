@@ -15,7 +15,7 @@
 import parser from 'cron-parser'
 import pm2 from 'pm2'
 import { cwd } from 'process'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 const yargs = require('yargs')
 
 import { Compact, u128 } from '@polkadot/types'
@@ -23,7 +23,7 @@ import { Compact, u128 } from '@polkadot/types'
 import { Tasks } from '../tasks/tasks'
 import { ProsopoEnvironment } from '../types/env'
 import { encodeStringAddress } from '../util'
-import { Payee, PayeeSchema } from '@prosopo/contract'
+import { PayeeSchema } from '@prosopo/contract'
 import consola from 'consola'
 
 const validateAddress = (argv) => {
@@ -98,7 +98,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         desc: 'The AccountId of the Provider',
                     }),
             async (argv) => {
-                const result = await tasks.providerRegister(argv.origin, argv.fee, argv.payee as Payee, argv.address)
+                const result = await tasks.contractApi.providerRegister(argv.origin, argv.fee, argv.payee, argv.address)
 
                 logger.info(JSON.stringify(result, null, 2))
             },
@@ -135,10 +135,10 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         desc: 'The value to stake in the contract',
                     }),
             async (argv) => {
-                const provider = await tasks.getProviderDetails(argv.address)
+                const provider = await tasks.contractApi.getProviderDetails(argv.address)
                 if ((provider && argv.origin) || argv.fee || argv.payee || argv.value) {
-                    const result = await tasks.providerUpdate(
-                        argv.origin || provider.service_origin,
+                    const result = await tasks.contractApi.providerUpdate(
+                        argv.origin || provider.serviceOrigin,
                         argv.fee || provider.fee,
                         argv.payee || provider.payee,
                         argv.address,
@@ -161,7 +161,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.providerDeregister(argv.address)
+                    const result = await tasks.contractApi.providerDeregister(argv.address)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -181,7 +181,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.providerUnstake(argv.value)
+                    const result = await tasks.contractApi.providerUnstake(argv.value)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -216,7 +216,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             (yargs) => yargs,
             async () => {
                 try {
-                    const result = await tasks.getProviderAccounts()
+                    const result = await tasks.contractApi.getProviderAccounts()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -231,7 +231,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             (yargs) => yargs,
             async () => {
                 try {
-                    const result = await tasks.getDappAccounts()
+                    const result = await tasks.contractApi.getDappAccounts()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -251,7 +251,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.getProviderDetails(argv.address)
+                    const result = await tasks.contractApi.getProviderDetails(argv.address)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -271,7 +271,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.getDappDetails(argv.address)
+                    const result = await tasks.contractApi.getDappDetails(argv.address)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -301,7 +301,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                             {
                                 script: `ts-node scheduler.js ${JSON.stringify(argv.schedule)}`,
                                 name: 'scheduler',
-                                cwd: cwd() + '/build/src',
+                                cwd: cwd() + '/dist/src',
                             },
                             (err, apps) => {
                                 if (err) {

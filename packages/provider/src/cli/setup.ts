@@ -15,20 +15,19 @@
 // import yargs from 'yargs/yargs';
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types'
-import { Payee } from '@prosopo/contract'
 import fse from 'fs-extra'
 import path from 'path'
 import { Environment, getEnvFile, loadEnv } from '../env'
 import { generateMnemonic, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 
 loadEnv()
 
 const defaultProvider: IProviderAccount = {
     serviceOrigin: 'http://localhost:3000', // + randomAsHex().slice(0, 8), // make it "unique"
     fee: 10,
-    payee: Payee.Provider,
+    payee: 'Provider',
     stake: Math.pow(10, 13),
     datasetFile: './data/captchas.json',
     mnemonic: process.env.PROVIDER_MNEMONIC || '',
