@@ -16,7 +16,7 @@
 import { SyntheticEvent, useEffect, useState } from 'react'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
-import { useTranslation } from '@prosopo/i18n'
+import { useTranslation } from '@prosopo/common'
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 
