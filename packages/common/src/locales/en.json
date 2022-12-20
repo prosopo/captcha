@@ -21,7 +21,8 @@
         "MNEMONIC_UNDEFINED": "Provider mnemonic Undefined. Please set `PROVIDER_MNEMONIC` in environment variables",
         "ASYNC_FACTORY_CREATE": "Use `create` factory method",
         "CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}",
-        "ENVIRONMENT_NOT_READY": "Environment not ready"
+        "ENVIRONMENT_NOT_READY": "Environment not ready",
+        "INVALID_SIGNATURE": "Invalid signature",
     },
     "CONTRACT": {
         "INVALID_METHOD": "Invalid contract method",
@@ -34,7 +35,11 @@
         "CONTRACT_UNDEFINED": "Contract undefined",
         "SIGNER_UNDEFINED": "Signer undefined",
         "SIGNER_NOT_SUPPORTED": "Signer is not supported. Use connect instead, e.g. contract.connect(signer)",
-        "CANNOT_FIND_KEYPAIR": "Cannot find keypair"
+        "CANNOT_FIND_KEYPAIR": "Cannot find keypair",
+        "INVALID_TYPE": "Invalid type",
+        "INVALID_ABI": "Invalid ABI",
+        "NOT_HANDLED": "Not handled",
+        "INVALID_STORAGE_TYPE": "Invalid storage type",
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",

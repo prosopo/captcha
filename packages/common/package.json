@@ -1,5 +1,5 @@
 {
-  "name": "@prosopo/i18n",
+  "name": "@prosopo/common",
   "version": "0.1.10",
   "description": "Prosopo localization",
   "main": "./dist/index.js",
@@ -25,12 +25,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo/i18n.git"
+    "url": "git+https://github.com/prosopo/common.git"
   },
   "bugs": {
-    "url": "https://github.com/prosopo/i18n/issues"
+    "url": "https://github.com/prosopo/common/issues"
   },
-  "homepage": "https://github.com/prosopo/i18n#readme",
+  "homepage": "https://github.com/prosopo/common#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   }
