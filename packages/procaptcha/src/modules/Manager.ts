@@ -16,7 +16,7 @@ import { sleep } from '../utils/utils'
 import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import { TCaptchaSubmitResult } from '../types/client'
-import { randomAsHex } from '@polkadot/util-crypto'
+import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import {
     ContractAbi,
     ProsopoContractMethods,
@@ -38,6 +38,7 @@ export const defaultState = (): Partial<ProcaptchaState> => {
         isHuman: false,
         captchaApi: undefined,
         account: undefined,
+        // don't handle timeout here, this should be handled by the state management
     }
 }
 
@@ -81,6 +82,9 @@ export const Manager = (
             onExtensionNotFound: () => {
                 alert('No extension found')
             },
+            onExpired: () => {
+                alert('Challenge has expired')
+            },
         },
         callbacks
     )
@@ -90,6 +94,7 @@ export const Manager = (
         AccountNotFoundError: events.onAccountNotFound,
         ExtensionNotFoundError: events.onExtensionNotFound,
         Error: events.onError,
+        ExpiredError: events.onExpired,
     }
 
     // get the state update mechanism
@@ -201,12 +206,25 @@ export const Manager = (
             if (challenge.captchas.length <= 0) {
                 throw new Error('No captchas returned from provider')
             }
+
+            // setup timeout
+            const timeMillis: number = challenge.captchas
+                .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
+                .reduce((a, b) => a + b)
+            const timeout = setTimeout(() => {
+                console.log('challenge expired after ' + timeMillis + 'ms')
+                events.onExpired()
+                // expired, disallow user's claim to be human
+                updateState({ isHuman: false, showModal: false, loading: false })
+            }, timeMillis)
+
             // update state with new challenge
             updateState({
                 index: 0,
                 solutions: challenge.captchas.map(() => []),
                 challenge,
                 showModal: true,
+                timeout,
             })
         } catch (err) {
             console.error(err)
@@ -221,6 +239,9 @@ export const Manager = (
     const submit = async () => {
         try {
             console.log('submitting solutions')
+            // disable the time limit, user has submitted their solution in time
+            clearTimeout()
+
             if (!state.challenge) {
                 throw new Error('cannot submit, no challenge found')
             }
@@ -258,11 +279,19 @@ export const Manager = (
                 salt
             )
 
+            // mark as is human if solution has been approved
+            const isHuman = submission[0].solutionApproved
+
+            if (!isHuman) {
+                // user failed the captcha for some reason according to the provider
+                // let the user know
+                alert('Captcha challenge failed. Please try again.')
+            }
+
             // update the state with the result of the submission
             updateState({
                 submission,
-                // mark as is human if solution has been approved
-                isHuman: submission[0].solutionApproved,
+                isHuman,
                 loading: false,
             })
             if (state.isHuman) {
@@ -283,6 +312,8 @@ export const Manager = (
 
     const cancel = async () => {
         console.log('cancel')
+        // disable the time limit
+        clearTimeout()
         // abandon the captcha process
         resetState()
     }
@@ -354,7 +385,16 @@ export const Manager = (
         return providerApi
     }
 
+    const clearTimeout = () => {
+        // clear the timeout
+        window.clearTimeout(state.timeout)
+        // then clear the timeout from the state
+        updateState({ timeout: undefined })
+    }
+
     const resetState = () => {
+        // clear timeout just in case a timer is still active (shouldn't be)
+        clearTimeout()
         updateState(defaultState())
     }
 
