@@ -8,12 +8,20 @@
     "./src/**/*.ts",
     "./src/abi/*.json"
   ],
+  "paths": {
+    // this is the package name we use (in the interface imports, --package for generators)
+    "sample-polkadotjs-typegen/*": ["src/*"],
+    // here we replace the @polkadot/api augmentation with our own, generated from chain
+    "@polkadot/api/augment": ["src/interfaces/augment-api.ts"],
+    // replace the augmented types with our own, as generated from definitions
+    "@polkadot/types/augment": ["src/interfaces/augment-types.ts"]
+  },
   "references": [
     {
       "path": "../datasets"
     },
     {
-      "path": "../i18n"
+      "path": "../common"
     }
   ]
 }

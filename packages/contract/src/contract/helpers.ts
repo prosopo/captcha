@@ -13,11 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { AbiMessage, ContractCallOutcome, DecodedEvent } from '@polkadot/api-contract/types'
+import { AbiMessage, DecodedEvent } from '@polkadot/api-contract/types'
 import { isHex, isU8a, stringToHex } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { TransactionResponse } from '../types/contract'
 import { ProsopoContractError } from '../handlers'
+import { Codec } from '@polkadot/types/types'
+import { ContractExecResultResult } from '@polkadot/types/interfaces/contracts/types'
+import { Registry } from '@polkadot/types-codec/types/registry'
 
 /**
  * Get the event name from the contract method name
@@ -45,54 +48,38 @@ export function getEventsFromMethodName(
     }
 }
 
-/** Encodes arguments that should be hashes using blake2AsU8a
+/** Encodes arguments, padding and converting to hex if necessary
  * @return encoded arguments
  */
-export function encodeStringArgs<T>(methodObj: AbiMessage, args: T[]): T[] {
-    const encodedArgs: T[] = []
+export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args: any[]): Codec[] {
+    const encodedArgs: Codec[] = []
     // args must be in the same order as methodObj['args']
     const typesToHash = ['Hash']
     methodObj.args.forEach((methodArg, idx) => {
-        const argVal = args[idx]
+        let argVal = args[idx]
         // hash values that have been passed as strings
         if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
-            encodedArgs.push(stringToHexPadded(argVal as unknown as string) as unknown as T)
-        } else {
-            encodedArgs.push(argVal)
+            argVal = stringToHexPadded(argVal)
         }
+        encodedArgs.push(registry.createType(methodArg.type.type, argVal))
     })
     return encodedArgs
 }
 
-/** Unwrap a query respons from a contract
- * @return {AnyJson} unwrapped
- */
-export function unwrap(item: AnyJson): AnyJson {
-    const prop = 'Ok'
-    if (item && typeof item === 'object') {
-        if (prop in item) {
-            return item[prop]
-        }
-    }
-    return item
-}
-
 /** Handle errors returned from contract queries by throwing them
- * @return {ContractCallOutcome} response
  */
 export function handleContractCallOutcomeErrors<T>(
-    response: ContractCallOutcome,
+    response: ContractExecResultResult,
     contractMethodName: string,
     encodedArgs: T[]
-): ContractCallOutcome {
+): void {
     const errorKey = 'Err'
-    if (response.output) {
-        const humanOutput = response.output?.toHuman()
+    if (response.isOk) {
+        const humanOutput = response.asOk
         if (humanOutput && typeof humanOutput === 'object' && errorKey in humanOutput) {
             throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, {}, encodedArgs)
         }
     }
-    return response
 }
 
 /** Hash a string, padding with zeroes until its 32 bytes long

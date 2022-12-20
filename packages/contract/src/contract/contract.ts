@@ -15,9 +15,8 @@
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
 import { SubmittableResult } from '@polkadot/api'
 import { Abi, ContractPromise } from '@polkadot/api-contract'
-import type { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types'
-import { createTypeUnsafe } from '@polkadot/types'
-import type { AccountId, ContractExecResult, EventRecord, Weight } from '@polkadot/types/interfaces'
+import type { AbiMessage } from '@polkadot/api-contract/types'
+import type { AccountId, EventRecord, Weight } from '@polkadot/types/interfaces'
 import { isU8a, stringCamelCase, stringUpperFirst, u8aToHex } from '@polkadot/util'
 import { addressEq } from '@polkadot/util-crypto'
 import BN from 'bn.js'
@@ -35,6 +34,7 @@ import {
 import { logger } from '../logger'
 import { ProsopoContractError } from '../handlers'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { ContractExecResult } from '@polkadot/types/interfaces/contracts/index'
 
 export async function populateTransaction(
     contract: ContractPromise,
@@ -122,8 +122,8 @@ export function buildCall(
     pair: KeyringPair,
     isEstimateGas = false,
     at?: string | Uint8Array
-): ContractFunction<ContractCallOutcome> {
-    return async function (...args: TransactionParams): Promise<ContractCallOutcome> {
+): ContractFunction<ContractExecResult> {
+    return async function (...args: TransactionParams): Promise<ContractExecResult> {
         const { extrinsic, callParams } = await populateTransaction(contract, fragment, args)
         const messageName = stringCamelCase(fragment.identifier)
 
@@ -150,7 +150,7 @@ export function buildCall(
                         logger.debug(`${key}: `, print)
                     }
                 } else {
-                    if (params) {
+                    if (params && params[key]) {
                         print = params[key].toString()
                         logger.debug(`${key}: `, print)
                     }
@@ -175,40 +175,7 @@ export function buildCall(
 
         const _contractCallFn = contract.api.rpc.contracts.call
 
-        const json: any = await (at ? _contractCallFn(rpcParams, at) : _contractCallFn(rpcParams))
-
-        const { debugMessage, gasRequired, gasConsumed, result, storageDeposit } = json
-
-        const outcome = {
-            debugMessage,
-            gasConsumed,
-            gasRequired: gasRequired && !gasRequired.isZero ? gasRequired : gasConsumed,
-            output:
-                result.isOk && fragment.returnType
-                    ? createTypeUnsafe(
-                          contract.api.registry,
-                          fragment.returnType.type,
-                          [result.asOk.data.toU8a(true)],
-                          { isPedantic: true }
-                      )
-                    : null,
-            result,
-            storageDeposit: storageDeposit,
-        }
-
-        if (result.isOk) {
-            if (!isEstimateGas) {
-                logger.debug(`Output: ${(outcome.output as any)?.toString()}`)
-            } else {
-                logger.debug(`Output: ${outcome.gasConsumed.toString()}`)
-            }
-        } else {
-            logger.error(
-                `output: ${(outcome.output as any)?.toString()}; debugMessage: ${outcome.debugMessage.toString()}`
-            )
-        }
-
-        return outcome
+        return at ? await _contractCallFn(rpcParams, at) : await _contractCallFn(rpcParams)
     }
 }
 
