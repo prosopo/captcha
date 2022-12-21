@@ -1,8 +1,6 @@
-import ProsopoContract from '../api/ProsopoContract'
-import { WsProvider } from '@polkadot/rpc-provider'
 import storage from './storage'
-import { GetCaptchaResponse, ProsopoRandomProviderResponse, ProviderApi } from '@prosopo/api'
-import { hexToString, stringToHex } from '@polkadot/util'
+import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
+import { hexToString } from '@polkadot/util'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
 import { CaptchaSolution } from '@prosopo/datasets'
 import {
@@ -19,7 +17,15 @@ import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import { TCaptchaSubmitResult } from '../types/client'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import { ExpiredError } from '../api/errors'
+import {
+    ContractAbi,
+    ProsopoContractMethods,
+    ProsopoRandomProvider,
+    abiJson,
+    generateDefinitions,
+} from '@prosopo/contract'
+import { WsProvider } from '@polkadot/rpc-provider'
+import { ApiPromise, Keyring } from '@polkadot/api'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -143,7 +149,10 @@ export const Manager = (
             // first, ask the smart contract
             const contract = await loadContract()
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-            const contractIsHuman = await contract.dappOperatorIsHumanUser(config.solutionThreshold)
+            const contractIsHuman = await contract.getDappOperatorIsHumanUser(
+                account.account.address,
+                config.solutionThreshold
+            )
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
@@ -180,9 +189,12 @@ export const Manager = (
             }
 
             // get a random provider
-            const provider = await loadRandomProvider(contract)
+            const provider = await contract.getRandomProvider(
+                account.account.address,
+                config.network.dappContract.address
+            )
             console.log('provider', provider)
-            const providerUrl = provider.provider.serviceOrigin
+            const providerUrl = trimProviderUrl(provider.provider.serviceOrigin.toString())
             // get the provider api inst
             providerApi = await loadProviderApi(providerUrl)
             console.log('providerApi', providerApi)
@@ -197,7 +209,7 @@ export const Manager = (
 
             // setup timeout
             const timeMillis: number = challenge.captchas
-                .map((captcha) => captcha.captcha.timeLimitMillis || 30 * 1000)
+                .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
                 .reduce((a, b) => a + b)
             const timeout = setTimeout(() => {
                 console.log('challenge expired after ' + timeMillis + 'ms')
@@ -222,18 +234,6 @@ export const Manager = (
             // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
         }
-    }
-
-    const loadRandomProvider = async (contract: ProsopoContract) => {
-        const provider: ProsopoRandomProviderResponse = await contract.getRandomProvider()
-        console.log('Got random provider', provider)
-        if (!provider || !provider.provider || !provider.provider.serviceOrigin) {
-            throw new Error('No provider found: ' + JSON.stringify(provider))
-        }
-        provider.provider.serviceOrigin = trimProviderUrl(provider.provider.serviceOrigin)
-        // record provider in localstorage for subsequent human checks (i.e. if the user has already solved some captchas but they have not been put on chain yet, contact the provider in the local storage to verify)
-        storage.setProviderUrl(provider.provider.serviceOrigin)
-        return provider
     }
 
     const submit = async () => {
@@ -296,7 +296,7 @@ export const Manager = (
             })
             if (state.isHuman) {
                 events.onHuman({
-                    providerUrl: captchaApi.provider.provider.serviceOrigin,
+                    providerUrl: trimProviderUrl(captchaApi.provider.provider.serviceOrigin.toString()),
                     userAccountAddress: account.account.address,
                     commitmentId: submission[1],
                 })
@@ -359,8 +359,8 @@ export const Manager = (
     }
 
     const loadCaptchaApi = async (
-        contract: ProsopoContract,
-        provider: ProsopoRandomProviderResponse,
+        contract: ProsopoContractMethods,
+        provider: ProsopoRandomProvider,
         providerApi: ProviderApi
     ) => {
         const config = getConfig()
@@ -370,7 +370,8 @@ export const Manager = (
             contract,
             provider,
             providerApi,
-            config.web2
+            config.web2,
+            config.network.dappContract.address
         )
 
         updateState({ captchaApi })
@@ -435,16 +436,21 @@ export const Manager = (
     /**
      * Load the contract instance using addresses from config.
      */
-    const loadContract = async () => {
+    const loadContract = async (): Promise<ProsopoContractMethods> => {
         const config = getConfig()
-        const contract: ProsopoContract = await ProsopoContract.create(
+        const api = await ApiPromise.create({ provider: new WsProvider(config.network.endpoint) })
+        const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
+        api.registry.register(contractDefinitions.types)
+        // TODO create a shared keyring that's stored somewhere
+        const type = 'sr25519'
+        const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
+        return await ProsopoContractMethods.create(
             config.network.prosopoContract.address,
-            config.network.dappContract.address,
-            getAccount().account.address,
-            new WsProvider(config.network.endpoint)
+            keyring.addFromAddress(getAccount().account.address),
+            'prosopo',
+            abiJson as ContractAbi,
+            api
         )
-
-        return contract
     }
 
     return {

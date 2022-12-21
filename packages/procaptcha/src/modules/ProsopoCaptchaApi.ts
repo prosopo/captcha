@@ -16,44 +16,48 @@
 import {
     CaptchaMerkleTree,
     CaptchaSolution,
-    CaptchaSolutionCommitment,
     CaptchaWithProof,
     computeCaptchaHash,
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
 import { Signer } from '@polkadot/api/types'
-
-import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoRandomProviderResponse } from '../types/api'
-import { TransactionResponse } from '../types/contract'
-
+import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
 import { ProviderApi } from '@prosopo/api'
-import ProsopoContract from '../api/ProsopoContract'
 import { TCaptchaSubmitResult } from '../types/client'
 import { ProsopoApiError } from '../api/handlers'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 import { computeCaptchaSolutionHash } from '@prosopo/datasets'
+import {
+    ProsopoCaptchaSolutionCommitment,
+    ProsopoContractMethods,
+    ProsopoRandomProvider,
+    TransactionResponse,
+} from '@prosopo/contract'
 import { stringToHex } from '@polkadot/util'
 
 export class ProsopoCaptchaApi {
     userAccount: string
-    contract: ProsopoContract
-    provider: ProsopoRandomProviderResponse
+    contract: ProsopoContractMethods
+    provider: ProsopoRandomProvider
     providerApi: ProviderApi
+    dappAccount: string
     private web2: boolean
 
     constructor(
         userAccount: string,
-        contract: ProsopoContract,
-        provider: ProsopoRandomProviderResponse,
+        contract: ProsopoContractMethods,
+        provider: ProsopoRandomProvider,
         providerApi: ProviderApi,
-        web2: boolean
+        web2: boolean,
+        dappAccount: string
     ) {
         this.userAccount = userAccount
         this.contract = contract
         this.provider = provider
         this.providerApi = providerApi
         this.web2 = web2
+        this.dappAccount = dappAccount
     }
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
@@ -65,15 +69,12 @@ export class ProsopoCaptchaApi {
         return captchaChallenge
     }
 
-    public verifyCaptchaChallengeContent(
-        provider: ProsopoRandomProviderResponse,
-        captchaChallenge: GetCaptchaResponse
-    ): void {
+    public verifyCaptchaChallengeContent(provider: ProsopoRandomProvider, captchaChallenge: GetCaptchaResponse): void {
         // TODO make sure root is equal to root on the provider
         const proofLength = captchaChallenge.captchas[0].proof.length
         console.log(provider.provider)
         console.log(provider.provider.datasetIdContent, captchaChallenge.captchas[0].proof[proofLength - 1][0])
-        if (provider.provider.datasetIdContent !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
+        if (provider.provider.datasetIdContent.toString() !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_DATASET_CONTENT_ID')
         }
 
@@ -114,10 +115,10 @@ export class ProsopoCaptchaApi {
         if (!this.web2) {
             try {
                 tx = await this.contract.dappUserCommit(
-                    signer,
+                    this.dappAccount,
                     datasetId as string,
                     commitmentId,
-                    this.provider.providerId
+                    this.provider.providerId.toString()
                 )
             } catch (err) {
                 throw new ProsopoEnvError(err)
@@ -145,10 +146,10 @@ export class ProsopoCaptchaApi {
             result = await this.providerApi.submitCaptchaSolution(
                 solutions,
                 requestHash,
-                this.contract.userAccountAddress,
+                this.contract.pair.address,
                 salt,
                 tx ? tx?.blockHash : undefined,
-                tx ? tx?.txHash.toString() : undefined,
+                tx ? (tx.txHash ? tx.txHash.toString() : undefined) : undefined,
                 this.web2,
                 signature
             )
@@ -156,7 +157,7 @@ export class ProsopoCaptchaApi {
             throw new ProsopoApiError(err)
         }
 
-        let commitment: CaptchaSolutionCommitment | undefined = undefined
+        let commitment: ProsopoCaptchaSolutionCommitment | undefined = undefined
 
         if (!this.web2) {
             try {
