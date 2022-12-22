@@ -716,6 +716,16 @@ describe('CONTRACT TASKS', () => {
 
     it('Get random captchas and request hash', async () => {
         try {
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // NOTE this test can fail if the contract contains Providers that
+            // are not present in the database
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             const dappUserAccount = await getUser(AccountKey.dappUsers)
 
             const dappAccount = await getUser(AccountKey.dappsWithStake)
@@ -751,7 +761,14 @@ describe('CONTRACT TASKS', () => {
         const tasks = await changeSigner(dappAccount)
 
         const res = await tasks.contractApi.getRandomProvider(accountAddress(dappAccount), accountAddress(dappAccount))
+        console.log(res)
         const blockNumberParsed = parseBlockNumber(res.blockNumber.toString())
+        await tasks.validateProviderWasRandomlyChosen(
+            accountAddress(dappAccount),
+            accountAddress(dappAccount),
+            res.provider.datasetId.toString() as string,
+            blockNumberParsed
+        )
         const valid = await tasks
             .validateProviderWasRandomlyChosen(
                 accountAddress(dappAccount),

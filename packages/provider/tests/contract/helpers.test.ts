@@ -17,6 +17,7 @@ import { ContractSelector } from '@polkadot/types/interfaces'
 import { hexToU8a } from '@polkadot/util'
 import { encodeStringArgs } from '@prosopo/contract'
 import { TypeRegistry } from '@polkadot/types'
+import { describe } from 'mocha'
 import chai from 'chai'
 
 const expect = chai.expect
@@ -40,8 +41,8 @@ describe('CONTRACT HELPERS', () => {
             },
         }
         console.log(encodeStringArgs(new TypeRegistry(), methodObj, args))
-        expect(encodeStringArgs(new TypeRegistry(), methodObj, args)[0].toHex()).to.equal(
-            '0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a38323832'
+        expect(encodeStringArgs(new TypeRegistry(), methodObj, args)[0].toString()).to.equal(
+            hexToU8a('0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a38323832').toString()
         )
     })
 })
