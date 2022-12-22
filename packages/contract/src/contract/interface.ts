@@ -102,8 +102,7 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         const methodObj = this.getContractMethod(contractMethodName)
         const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
         let api: ApiBase<'promise'> | ApiDecoration<'promise'> = this.api
-        const contract = this.contract
-        const { callParams } = await populateTransaction(contract, methodObj, encodedArgs)
+        const { callParams } = await populateTransaction(this.contract, methodObj, encodedArgs)
         if (atBlock) {
             api = atBlock ? await this.api.at(atBlock) : this.api
         }
@@ -111,7 +110,7 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         const responseObservable = api.rx.call.contractsApi
             .call<ContractExecResult>(
                 this.pair.address,
-                contract.address,
+                this.contract.address,
                 callParams.value,
                 callParams.gasLimit,
                 null,
