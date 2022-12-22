@@ -13,13 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { AbiMessage, DecodedEvent } from '@polkadot/api-contract/types'
+import { AbiMessage, ContractCallOutcome, DecodedEvent } from '@polkadot/api-contract/types'
 import { isHex, isU8a, stringToHex } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { TransactionResponse } from '../types/contract'
 import { ProsopoContractError } from '../handlers'
-import { Codec } from '@polkadot/types/types'
-import { ContractExecResultResult } from '@polkadot/types/interfaces/contracts/types'
 import { Registry } from '@polkadot/types-codec/types/registry'
 
 /**
@@ -51,8 +49,8 @@ export function getEventsFromMethodName(
 /** Encodes arguments, padding and converting to hex if necessary
  * @return encoded arguments
  */
-export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args: any[]): Codec[] {
-    const encodedArgs: Codec[] = []
+export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args: any[]): Uint8Array[] {
+    const encodedArgs: Uint8Array[] = []
     // args must be in the same order as methodObj['args']
     const typesToHash = ['Hash']
     methodObj.args.forEach((methodArg, idx) => {
@@ -61,7 +59,7 @@ export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args
         if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
             argVal = stringToHexPadded(argVal)
         }
-        encodedArgs.push(registry.createType(methodArg.type.type, argVal))
+        encodedArgs.push(registry.createType(methodArg.type.type, argVal).toU8a())
     })
     return encodedArgs
 }
@@ -69,13 +67,13 @@ export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args
 /** Handle errors returned from contract queries by throwing them
  */
 export function handleContractCallOutcomeErrors<T>(
-    response: ContractExecResultResult,
+    response: ContractCallOutcome,
     contractMethodName: string,
     encodedArgs: T[]
 ): void {
     const errorKey = 'Err'
-    if (response.isOk) {
-        const humanOutput = response.asOk
+    if (response.output) {
+        const humanOutput = response.output?.toHuman()
         if (humanOutput && typeof humanOutput === 'object' && errorKey in humanOutput) {
             throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, {}, encodedArgs)
         }

@@ -13,20 +13,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import type { AbiMessage } from '@polkadot/api-contract/types'
+import type { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types'
 import { AbiMetadata, AbiStorageEntry, BigNumber, ContractApiInterface, TransactionResponse } from '../types'
 import { encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
-import { buildSend } from './contract'
+import { buildSend, populateTransaction } from './contract'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import AsyncFactory from './AsyncFactory'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { AbiVersion, getABIVersion } from '../util/definitionGen'
-import { ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
+import { ContractExecResult, ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
 import { createType } from '@polkadot/types'
-import { Codec } from '@polkadot/types/types'
 import { ApiBase, ApiDecoration } from '@polkadot/api/types'
+import { firstValueFrom, map } from 'rxjs'
+import { convertWeight } from '@polkadot/api-contract/base/util'
 
 export class ProsopoContractApi extends AsyncFactory implements ContractApiInterface {
     contract: ContractPromise
@@ -75,7 +76,7 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         await this.contractQuery(contractMethodName, args)
 
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: Codec[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
+        const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
         const send = buildSend(this.contract, methodObj, this.pair)
         const response = value ? await send(...encodedArgs, { value: value }) : await send(...encodedArgs)
 
@@ -99,20 +100,47 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
         atBlock?: string | Uint8Array
     ): Promise<ContractExecResultOk> {
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: Codec[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
-        //const response = await buildCall(this.contract, methodObj, this.pair, false, atBlock)(...encodedArgs)
+        const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
         let api: ApiBase<'promise'> | ApiDecoration<'promise'> = this.api
         const contract = this.contract
-        let result: any
+        const { callParams } = await populateTransaction(contract, methodObj, encodedArgs)
         if (atBlock) {
             api = atBlock ? await this.api.at(atBlock) : this.api
-            const contractAt = new ContractPromise(<ApiPromise>api, contract.abi, contract.address)
-            result = await contractAt.query[contractMethodName](methodObj.toU8a(encodedArgs), {})
-        } else {
-            result = await this.contract.query[contractMethodName](methodObj.toU8a(encodedArgs), {})
         }
+
+        const responseObservable = api.rx.call.contractsApi
+            .call<ContractExecResult>(
+                this.pair.address,
+                contract.address,
+                callParams.value,
+                callParams.gasLimit,
+                null,
+                methodObj.toU8a(encodedArgs)
+            )
+            .pipe(
+                map(
+                    ({ debugMessage, gasConsumed, gasRequired, result, storageDeposit }): ContractCallOutcome => ({
+                        debugMessage,
+                        gasConsumed,
+                        gasRequired:
+                            gasRequired && !convertWeight(gasRequired).v1Weight.isZero() ? gasRequired : gasConsumed,
+                        output:
+                            result.isOk && methodObj.returnType
+                                ? this.contract.abi.registry.createTypeUnsafe(
+                                      methodObj.returnType.lookupName || methodObj.returnType.type,
+                                      [result.asOk.data.toU8a(true)],
+                                      { isPedantic: true }
+                                  )
+                                : null,
+                        result,
+                        storageDeposit,
+                    })
+                )
+            )
+        const response = await firstValueFrom(responseObservable)
+        const { result } = response
         // const { debugMessage, gasRequired, gasConsumed, result, storageDeposit } = response
-        handleContractCallOutcomeErrors(result, contractMethodName, encodedArgs)
+        handleContractCallOutcomeErrors(response, contractMethodName, encodedArgs)
         if (result.isOk) {
             return result.asOk
         }
