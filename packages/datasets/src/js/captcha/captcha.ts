@@ -50,7 +50,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
  * @param {JSON} captchaJSON captcha solutions received from the api
  * @return {CaptchaSolution[]} an array of parsed and sorted captcha solutions
  */
-export function parseAndSortCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
+export function parseAndSortCaptchaSolutions(captchaJSON: CaptchaSolution[]): CaptchaSolution[] {
     try {
         const parsed = CaptchaSolutionArraySchema.parse(captchaJSON)
         parsed.map((captcha) => ({ ...captcha, solution: captcha.solution.sort() }))
