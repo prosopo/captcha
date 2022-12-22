@@ -16,7 +16,7 @@
 import type { AbiMessage } from '@polkadot/api-contract/types'
 import { AbiMetadata, AbiStorageEntry, BigNumber, ContractApiInterface, TransactionResponse } from '../types'
 import { encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
-import { buildCall, buildSend } from './contract'
+import { buildSend } from './contract'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
@@ -26,6 +26,7 @@ import { AbiVersion, getABIVersion } from '../util/definitionGen'
 import { ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
 import { createType } from '@polkadot/types'
 import { Codec } from '@polkadot/types/types'
+import { ApiBase, ApiDecoration } from '@polkadot/api/types'
 
 export class ProsopoContractApi extends AsyncFactory implements ContractApiInterface {
     contract: ContractPromise
@@ -99,13 +100,23 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
     ): Promise<ContractExecResultOk> {
         const methodObj = this.getContractMethod(contractMethodName)
         const encodedArgs: Codec[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
-        const response = await buildCall(this.contract, methodObj, this.pair, false, atBlock)(...encodedArgs)
-        const { debugMessage, gasRequired, gasConsumed, result, storageDeposit } = response
+        //const response = await buildCall(this.contract, methodObj, this.pair, false, atBlock)(...encodedArgs)
+        let api: ApiBase<'promise'> | ApiDecoration<'promise'> = this.api
+        const contract = this.contract
+        let result: any
+        if (atBlock) {
+            api = atBlock ? await this.api.at(atBlock) : this.api
+            const contractAt = new ContractPromise(<ApiPromise>api, contract.abi, contract.address)
+            result = await contractAt.query[contractMethodName](methodObj.toU8a(encodedArgs), {})
+        } else {
+            result = await this.contract.query[contractMethodName](methodObj.toU8a(encodedArgs), {})
+        }
+        // const { debugMessage, gasRequired, gasConsumed, result, storageDeposit } = response
         handleContractCallOutcomeErrors(result, contractMethodName, encodedArgs)
         if (result.isOk) {
             return result.asOk
         }
-        throw new ProsopoContractError(response.result.asErr, 'contractQuery')
+        throw new ProsopoContractError(result.asErr, 'contractQuery')
     }
 
     /** Get the contract method from the ABI
@@ -149,7 +160,7 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
             if (!this.contract) {
                 throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
             }
-            const promiseResult = await this.api.rpc.contracts.getStorage(
+            const promiseResult = await this.api.call.contractsApi.getStorage(
                 this.contract.address,
                 storageEntry.layout.cell.key
             )

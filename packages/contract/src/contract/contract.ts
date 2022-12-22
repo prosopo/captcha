@@ -35,6 +35,7 @@ import { logger } from '../logger'
 import { ProsopoContractError } from '../handlers'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ContractExecResult } from '@polkadot/types/interfaces/contracts/index'
+import { firstValueFrom } from 'rxjs'
 
 export async function populateTransaction(
     contract: ContractPromise,
@@ -122,7 +123,7 @@ export function buildCall(
     pair: KeyringPair,
     isEstimateGas = false,
     at?: string | Uint8Array
-): ContractFunction<ContractExecResult> {
+): (...args: TransactionParams) => Promise<ContractExecResult> {
     return async function (...args: TransactionParams): Promise<ContractExecResult> {
         const { extrinsic, callParams } = await populateTransaction(contract, fragment, args)
         const messageName = stringCamelCase(fragment.identifier)
@@ -170,12 +171,21 @@ export function buildCall(
               }
             : {
                   ...callParams,
+                  storageDepositLimit: null,
                   origin,
               }
+        const api = at ? await contract.api.at(at) : contract.api
+        const _contractCallFn = api.rx.call.contractsApi.call
+        const result = _contractCallFn(
+            rpcParams.origin,
+            rpcParams.dest,
+            rpcParams.value,
+            rpcParams.gasLimit,
+            rpcParams.storageDepositLimit,
+            rpcParams.inputData
+        )
 
-        const _contractCallFn = contract.api.rpc.contracts.call
-
-        return at ? await _contractCallFn(rpcParams, at) : await _contractCallFn(rpcParams)
+        return await firstValueFrom(result)
     }
 }
 
