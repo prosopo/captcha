@@ -61,6 +61,7 @@ export class BatchCommitter {
         //     // this.contractApi.api.tx.balances.transfer(addrEve, 12345),
         //     // this.contractApi.api.tx.staking.unbond(12345),
         // ]
+        //console.log(this.contractApi.api)
         console.log(this.contractApi.api.tx)
         console.log(this.contractApi.api.tx.utility)
         console.log(this.contractApi.api.tx.utility.batch)
