@@ -187,14 +187,22 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
             if (!this.contract) {
                 throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
             }
-            const promiseResult = await this.api.call.contractsApi.getStorage(
+            console.log('Calling contract getStorage')
+            console.log(
+                'Contract address',
+                this.contract.address.toString(),
+                'Storage key',
+                storageEntry.layout.cell.key
+            )
+            const promiseResult = await this.api.rx.call.contractsApi.getStorage(
                 this.contract.address,
                 storageEntry.layout.cell.key
             )
-            const result = promiseResult.unwrapOrDefault()
-
+            const result = await firstValueFrom(promiseResult)
+            console.log(type)
             return createType(result.registry, type, [result.toU8a(true)]) as T
         }
+
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', 'getStorage')
     }
 }
