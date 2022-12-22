@@ -16,7 +16,7 @@ import { sleep } from '../utils/utils'
 import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import { TCaptchaSubmitResult } from '../types/client'
-import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
+import { randomAsHex } from '@polkadot/util-crypto'
 import {
     ContractAbi,
     ProsopoContractMethods,
