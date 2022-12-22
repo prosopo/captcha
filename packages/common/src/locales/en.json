@@ -65,7 +65,9 @@
         "INVALID_HASH": "Invalid hash",
         "SOLUTION_GET_FAILED": "Failed to get solution",
         "DATASET_WITH_SOLUTIONS_GET_FAILED": "No datasets found with required number of solutions",
-        "SOLUTION_APPROVE_FAILED": "Failed to approve solution"
+        "SOLUTION_APPROVE_FAILED": "Failed to approve solution",
+        "SOLUTION_FLAG_FAILED": "Failed to flag solution as processed",
+        "COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed"
     },
     "CAPTCHA": {
         "PARSE_ERROR": "Error parsing captcha",

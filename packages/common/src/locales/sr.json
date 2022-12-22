@@ -64,7 +64,9 @@
         "INVALID_HASH": "Nevažeći heš",
         "SOLUTION_GET_FAILED": "Preuzimanje rešenja nije uspelo",
         "DATASET_WITH_SOLUTIONS_GET_FAILED": "Nisu pronađeni skupovi podataka sa potrebnim brojem rešenja",
-        "SOLUTION_APPROVE_FAILED": "Failed to approve solution"
+        "SOLUTION_APPROVE_FAILED": "Failed to approve solution",
+        "SOLUTION_FLAG_FAILED": "Failed to flag solution as processed",
+        "COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed"
     },
     "CAPTCHA": {
         "PARSE_ERROR": "Greška pri parsiranju captcha",
