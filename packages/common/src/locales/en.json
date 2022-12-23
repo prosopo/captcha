@@ -1,6 +1,6 @@
 {
     "WIDGET": {
-        "SELECT_ALL": "Select all images containing a {{target}}",
+        "SELECT_ALL": "Select all images containing a",
         "NEXT": "Next",
         "SUBMIT": "Submit",
         "CANCEL": "Cancel",
