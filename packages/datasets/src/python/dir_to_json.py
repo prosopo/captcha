@@ -2,6 +2,7 @@ import json
 import os
 import sys
 from argparse import ArgumentParser
+from urllib.parse import quote
 
 # convert a directory in the following structure to a json file for generating captchas
 # dir/
@@ -41,14 +42,14 @@ if __name__ == '__main__':
         # for each labelled item
         for item in os.listdir(labelled_dir + "/" + label):
             # add item to the list
-            items.append({"path": labelled_dir + "/" + label + "/" + item, "label": label, "type": config.type})
+            items.append({"path": quote(labelled_dir + "/" + label + "/" + item), "label": label, "type": config.type})
             i = i + 1
             print("added labelled item", i)
 
     # for each unlabelled item
     for item in os.listdir(unlabelled_dir):
         # add the unlabelled item
-        items.append({"path": unlabelled_dir + "/" + item, "label": "", "type": config.type})
+        items.append({"path": quote(unlabelled_dir + "/" + item), "label": "", "type": config.type})
         i = i + 1
         print("added unlabelled item", i)
 
