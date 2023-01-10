@@ -13,50 +13,54 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import type { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types'
-import { AbiMetadata, AbiStorageEntry, BigNumber, ContractApiInterface, TransactionResponse } from '../types'
-import { encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
-import { buildSend, populateTransaction } from './contract'
+import type { AbiMessage, ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
+import { AbiMetadata, ContractAbi, TransactionResponse } from '../types'
+import { decodeEvents, encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
-import { ApiPromise } from '@polkadot/api'
+import { ApiPromise, SubmittableResult } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
-import AsyncFactory from './AsyncFactory'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { AbiVersion, getABIVersion } from '../util/definitionGen'
-import { ContractExecResult, ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
+import { ContractExecResult } from '@polkadot/types/interfaces/contracts'
 import { createType } from '@polkadot/types'
 import { ApiBase, ApiDecoration } from '@polkadot/api/types'
 import { firstValueFrom, map } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
+import { BN, BN_BILLION, BN_ZERO } from '@polkadot/util'
+import { Weight } from '@polkadot/types/interfaces/runtime'
+import { DispatchError, WeightV2 } from '@polkadot/types/interfaces'
+import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
 
-export class ProsopoContractApi extends AsyncFactory implements ContractApiInterface {
-    contract: ContractPromise
-    contractAddress: string
+// TODO should this class simply extend ContractPromise?
+export class ProsopoContractApi extends ContractPromise {
     contractName: string
-    abi: AbiMetadata
     pair: KeyringPair
-    api: ApiPromise
     abiVersion: AbiVersion
+    options: ContractOptions
 
-    public async init(
-        contractAddress: string,
-        pair: KeyringPair,
-        contractName: string,
-        abi: AbiMetadata,
-        api: ApiPromise
-    ): Promise<this> {
-        this.api = api
+    constructor(api: ApiPromise, abi: ContractAbi, address: string, pair: KeyringPair, contractName: string) {
+        super(api, abi, address)
         this.pair = pair
-        this.contractAddress = contractAddress
-        this.abi = abi
+        this.contractName = contractName
         this.abiVersion = getABIVersion(abi)
-        await this.api.isReadyOrError
-        this.contract = new ContractPromise(this.api, this.abi, this.contractAddress)
-        return this
     }
 
     public getContract(): ContractPromise {
-        return this.contract
+        return this
+    }
+
+    getOptions(value?: number | BN, gasLimit?: Weight): ContractOptions {
+        const _gasLimit: Weight | WeightV2 = gasLimit
+            ? gasLimit
+            : this.api.registry.createType('WeightV2', {
+                  refTime: BN_BILLION.muln(10),
+                  proofSize: BN_BILLION.muln(10),
+              })
+        return {
+            gasLimit: _gasLimit,
+            storageDepositLimit: null,
+            value: value || BN_ZERO,
+        }
     }
 
     /**
@@ -69,52 +73,100 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
     async contractTx<T>(
         contractMethodName: string,
         args: T[],
-        value?: number | string | BigNumber
+        value?: number | BN | undefined
     ): Promise<TransactionResponse> {
         // Always query first as errors are passed back from a dry run but not from a transaction
-
-        await this.contractQuery(contractMethodName, args)
-
+        const { gasRequired } = await this.contractQuery(contractMethodName, args, value)
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
-        const send = buildSend(this.contract, methodObj, this.pair)
-        const response = value ? await send(...encodedArgs, { value: value }) : await send(...encodedArgs)
+        const encodedArgs: Uint8Array[] = encodeStringArgs(this.api.registry, methodObj, args)
+        const options = this.getOptions(value, gasRequired)
+        const extrinsic = this.tx[contractMethodName](options, ...encodedArgs)
+        return await new Promise((resolve, reject) => {
+            extrinsic.signAndSend(this.pair, {}, (result: SubmittableResult) => {
+                const actionStatus = {
+                    from: this.pair.address.toString(),
+                    txHash: extrinsic.hash.toHex(),
+                } as Partial<TransactionResponse>
+                if (result.status.isInBlock) {
+                    actionStatus.blockHash = result.status.asInBlock.toHex()
+                }
 
-        if (response.result.status.isRetracted || response.result.status.isInvalid) {
-            throw new ProsopoContractError(response.result.status.type, contractMethodName)
-        }
+                if (result.status.isFinalized || result.status.isInBlock) {
+                    result.events
+                        .filter(({ event: { section } }: any): boolean => section === 'system')
+                        .forEach((event): void => {
+                            const {
+                                event: { method },
+                            } = event
 
-        return response
+                            if (method === 'ExtrinsicFailed') {
+                                const dispatchError = event.event.data[0] as DispatchError
+                                let message: string = dispatchError.type
+
+                                if (dispatchError.isModule) {
+                                    try {
+                                        const mod = dispatchError.asModule
+                                        const error = this.api.registry.findMetaError(
+                                            new Uint8Array([mod.index.toNumber(), new BN(mod.error).toNumber()])
+                                        )
+                                        message = `${error.section}.${error.name}${
+                                            Array.isArray(error.docs) ? `(${error.docs.join('')})` : error.docs || ''
+                                        }`
+                                    } catch (error) {
+                                        // swallow
+                                        console.debug(error)
+                                    }
+                                }
+
+                                reject(new ProsopoContractError(message, contractMethodName))
+                            } else if (method === 'ExtrinsicSuccess') {
+                                actionStatus.result = result
+                                if ('events' in result) {
+                                    actionStatus.events = decodeEvents(this.address, result, this.abi)
+                                }
+                            }
+                        })
+                    resolve(actionStatus as TransactionResponse)
+                } else if (result.isError) {
+                    reject(new ProsopoContractError(result.status.type, contractMethodName))
+                }
+            })
+        })
     }
 
     /**
      * Perform a contract query (non-mutating) calling the specified method
      * @param {string} contractMethodName
      * @param args
+     * @param value
      * @param atBlock?
      * @return JSON result containing the contract event
      */
     async contractQuery(
         contractMethodName: string,
         args: any[],
+        value?: number | BN | undefined,
         atBlock?: string | Uint8Array
-    ): Promise<ContractExecResultOk> {
-        const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.api.registry, methodObj, args)
+    ): Promise<ContractCallOutcome> {
+        const message = this.getContractMethod(contractMethodName)
+        const origin = this.pair.address
+        const options = this.getOptions(value)
+        const params: Uint8Array[] = encodeStringArgs(this.api.registry, message, args)
         let api: ApiBase<'promise'> | ApiDecoration<'promise'> = this.api
-        const { callParams } = await populateTransaction(this.contract, methodObj, encodedArgs)
         if (atBlock) {
             api = atBlock ? await this.api.at(atBlock) : this.api
         }
 
         const responseObservable = api.rx.call.contractsApi
             .call<ContractExecResult>(
-                this.pair.address,
-                this.contract.address,
-                callParams.value,
-                callParams.gasLimit,
-                null,
-                methodObj.toU8a(encodedArgs)
+                origin,
+                this.address,
+                options.value ? options.value : BN_ZERO,
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore jiggle v1 weights, metadata points to latest
+                options.gasLimit,
+                options.storageDepositLimit,
+                message.toU8a(params)
             )
             .pipe(
                 map(
@@ -124,9 +176,9 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
                         gasRequired:
                             gasRequired && !convertWeight(gasRequired).v1Weight.isZero() ? gasRequired : gasConsumed,
                         output:
-                            result.isOk && methodObj.returnType
-                                ? this.contract.abi.registry.createTypeUnsafe(
-                                      methodObj.returnType.lookupName || methodObj.returnType.type,
+                            result.isOk && message.returnType
+                                ? this.abi.registry.createTypeUnsafe(
+                                      message.returnType.lookupName || message.returnType.type,
                                       [result.asOk.data.toU8a(true)],
                                       { isPedantic: true }
                                   )
@@ -137,20 +189,18 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
                 )
             )
         const response = await firstValueFrom(responseObservable)
-        const { result } = response
-        // const { debugMessage, gasRequired, gasConsumed, result, storageDeposit } = response
-        handleContractCallOutcomeErrors(response, contractMethodName, encodedArgs)
-        if (result.isOk) {
-            return result.asOk
+        handleContractCallOutcomeErrors(response, contractMethodName)
+        if (response.result.isOk) {
+            return response
         }
-        throw new ProsopoContractError(result.asErr, 'contractQuery')
+        throw new ProsopoContractError(response.result.asErr, 'contractQuery')
     }
 
     /** Get the contract method from the ABI
      * @return the contract method object
      */
     getContractMethod(contractMethodName: string): AbiMessage {
-        const methodObj = this.contract.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
+        const methodObj = this.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
         if (methodObj !== undefined) {
             return methodObj
         }
@@ -160,17 +210,14 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
     /** Get the storage entry from the ABI given a storage name
      * @return the storage entry object
      */
-    getStorageEntry(storageName: string): AbiStorageEntry {
-        if (!this.contract) {
-            throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
-        }
-        const json: AbiMetadata = this.contract.abi.json as AbiMetadata
+    getStorageEntry(storageName: string): ContractLayoutStructField {
+        const json: AbiMetadata = this.abi.json as AbiMetadata
 
         const data = json[this.abiVersion]
 
         const storageEntry = data.storage.struct.fields.filter((obj: { name: string }) => obj.name === storageName)[0]
         if (storageEntry) {
-            return storageEntry
+            return this.api.registry.createType('ContractLayoutStructField ', storageEntry)
         }
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', 'getStorageKey')
     }
@@ -182,25 +229,19 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
     async getStorage<T>(name: string, type: string): Promise<T> {
         await this.getContract()
         const storageEntry = this.getStorageEntry(name)
-        if (storageEntry.layout.cell) {
-            //const storageType: AbiType = this.abi[this.abiVersion].types[storageEntry.layout.cell.ty]
-            if (!this.contract) {
-                throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
-            }
-            console.log('Calling contract getStorage')
-            console.log(
-                'Contract address',
-                this.contract.address.toString(),
-                'Storage key',
-                storageEntry.layout.cell.key
-            )
-            const promiseResult = await this.api.rx.call.contractsApi.getStorage(
-                this.contract.address,
-                storageEntry.layout.cell.key
-            )
+        if (storageEntry.layout.isCell) {
+            const storageCell = storageEntry.layout.asCell
+            console.log(this.address.toString(), storageCell.key.toHex())
+            const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageCell.key.toHex())
             const result = await firstValueFrom(promiseResult)
-            console.log(type)
-            return createType(result.registry, type, [result.toU8a(true)]) as T
+            // const result = await promiseResult
+            //     .pipe(map((values) => this.api.registry.createType(`Option<${type}>`, values.value)))
+            //     .toPromise()
+            //values.map(v => this.api.registry.createType('Option<StorageData>', v)).map(o => o.isSome ? this.api.registry.createType('Balance', o.unwrap())
+            if (result) {
+                console.log(result.toString())
+                return createType(result.registry, type, [result.toU8a()]) as T
+            }
         }
 
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', 'getStorage')

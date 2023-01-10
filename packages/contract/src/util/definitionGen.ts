@@ -94,7 +94,7 @@ function getStorageTypes(storage: AbiStorage, types: AbiType[]): StorageFieldTyp
     const fieldTypesObject: StorageFieldTypesObject = {}
     try {
         for (const field of storage.struct.fields) {
-            const outerKey = capitalizeFirstLetter(snakeCaseToCamelCase(field.name))
+            const outerKey = capitalizeFirstLetter(snakeCaseToCamelCase(field.name.toString()))
             fieldTypesObject[outerKey] = []
             if (field.layout.cell && field.layout.cell.ty !== undefined) {
                 const outerTypeIndex: number | undefined = field.layout.cell.ty

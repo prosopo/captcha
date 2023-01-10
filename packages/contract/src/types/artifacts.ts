@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
 import { Abi } from '@polkadot/api-contract'
+import { Text } from '@polkadot/types'
 import z from 'zod'
 
 // {
@@ -121,14 +122,17 @@ export const AbiEnumSpec = z.object({
     dispatchKey: z.string(),
     variants: z.any(),
 })
+
+export const AbiText = z.union([z.instanceof(Text), z.string()])
+
 export const AbiCellSpec = z.object({
-    key: z.string(),
+    key: AbiText,
     ty: z.number(),
 })
 export const AbiTypesSpec = z.array(AbiTypeSpec)
 
 export const AbiStorageEntrySpec = z.object({
-    name: z.string(),
+    name: AbiText,
     layout: z.object({
         cell: AbiCellSpec.optional(),
         enum: AbiEnumSpec.optional(),
