@@ -1,5 +1,5 @@
 import { BatchCommitConfig, Database, UserCommitmentRecord } from '../types/index'
-import { ProsopoContractApi, populateTransaction } from '@prosopo/contract'
+import { ProsopoContractApi } from '@prosopo/contract'
 import consola from 'consola'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 
@@ -53,7 +53,9 @@ export class BatchCommitter {
                 this.contractApi.pair.address,
             ]
             //TODO check if the commitments are already on chain using dry-run queries
-            const { extrinsic, callParams } = await populateTransaction(this.contractApi, fragment, args, false)
+            const options = this.contractApi.getOptions()
+            const encodedArgs = fragment.toU8a(args)
+            const extrinsic = this.contractApi.tx['dappUserCommit'](options, ...encodedArgs)
             txs.push(extrinsic)
         }
         // const txs = [
