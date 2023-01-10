@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { BigNumber, Payee, stringToHexPadded } from '@prosopo/contract'
+import { ProsopoPayee, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import path from 'path'
 
@@ -24,6 +24,7 @@ import { Environment } from '../../src/env'
 import { TranslationKey } from '@prosopo/common'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
+import { AnyNumber } from '@polkadot/types-codec/types'
 
 const serviceOriginBase = 'http://localhost:'
 
@@ -63,7 +64,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     private _registeredDappUsers: Account[] = []
 
-    private providerStakeDefault = 0n
+    private providerStakeDefault: number | BN = 0
+
+    private stakeAmount: number | BN = 0
+    private sendAmount: number | BN = 0
 
     private _isReady: Promise<void>
 
@@ -74,7 +78,16 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 const tasks = new Tasks(this.mockEnv)
 
                 return tasks.contractApi.getProviderStakeDefault().then((res) => {
-                    this.providerStakeDefault = BigInt(new BN(res).toNumber())
+                    this.providerStakeDefault = new BN(res)
+                    const chainDecimals = new BN(env.api.registry.chainDecimals[0])
+
+                    const minStakeMultiplier = new BN(
+                        10 ** (new BN(10).pow(chainDecimals).div(this.providerStakeDefault).toString().length - 5)
+                    )
+                    console.log('Setting stake amount to', this.providerStakeDefault.mul(minStakeMultiplier).toString())
+                    this.stakeAmount = this.providerStakeDefault.mul(minStakeMultiplier)
+                    // Should result in each account receiving 100 UNIT
+                    this.sendAmount = new BN(this.stakeAmount).muln(1000000)
                 })
             } catch (e) {
                 throw new Error(e)
@@ -151,10 +164,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return [mnemonic, address]
     }
 
-    private sendFunds(account: Account, payee: Payee, amount: BigNumber)
-    private sendFunds(address: string, payee: Payee, amount: BigNumber)
+    private sendFunds(account: Account, payee: ProsopoPayee, amount: AnyNumber)
+    private sendFunds(address: string, payee: ProsopoPayee, amount: AnyNumber)
 
-    private sendFunds(account: Account | string, payee: Payee, amount: BigNumber) {
+    private sendFunds(account: Account | string, payee: ProsopoPayee, amount: AnyNumber) {
         const address = typeof account === 'string' ? account : accountAddress(account)
 
         return _sendFunds(this.mockEnv, address, payee.toString(), amount)
@@ -178,11 +191,13 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
             const account = this.createAccount()
+            console.log('sending funds', new BN(this.stakeAmount).muln(10).toString())
             await this.sendFunds(
                 accountAddress(account),
                 createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-                10000000n * this.providerStakeDefault
+                this.sendAmount
             )
+            console.log('sent funds to account', accountAddress(account))
             await this.changeSigner(accountMnemonic(account))
             const tasks = new Tasks(this.mockEnv)
             await tasks.contractApi.providerRegister(
@@ -191,6 +206,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(account)
             )
+            const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
+            console.log('provider', provider)
             if (!noPush) {
                 this._registeredProviders.push(account)
             }
@@ -211,7 +228,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 PROVIDER_FEE,
                 createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(account),
-                this.providerStakeDefault
+                this.stakeAmount
             )
         } catch (e) {
             throw this.createError(e)
@@ -274,7 +291,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             await this.sendFunds(
                 accountAddress(account),
                 createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-                10000000n * this.providerStakeDefault
+                this.sendAmount
             )
 
             await this.changeSigner(accountMnemonic(account))
@@ -285,8 +302,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 createType(this.mockEnv.api.registry, 'AccountId', accountAddress(account)).toString()
             )
-            // const events = getEventsFromMethodName(result, 'DappRegister')
-            // events[0].args.map((arg) => console.info(arg.toPrimitive()))
+
+            const events = getEventsFromMethodName(result, 'DappRegister')
+            events[0].args.map((arg) => console.info(arg.toPrimitive()))
             if (!noPush) {
                 this._registeredDapps.push(account)
             }
@@ -302,7 +320,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const tasks = new Tasks(this.mockEnv)
 
-        await tasks.contractApi.dappFund(accountAddress(account), 1000000n * this.providerStakeDefault)
+        await tasks.contractApi.dappFund(accountAddress(account), this.stakeAmount)
     }
 
     public async registerDappWithStake(): Promise<Account> {
@@ -325,7 +343,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         await this.sendFunds(
             accountAddress(account),
             createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-            10000000n * this.providerStakeDefault
+            this.stakeAmount
         )
 
         this._registeredDappUsers.push(account)

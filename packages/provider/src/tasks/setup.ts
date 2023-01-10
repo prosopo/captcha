@@ -14,13 +14,14 @@
 import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
-import { BigNumber, DefinitionKeys, buildTx, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { DefinitionKeys, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import { hexHash } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
 import { Tasks } from './tasks'
 import { createType } from '@polkadot/types'
 import { ProsopoEnvironment } from '../types/index'
+import { AnyNumber } from '@polkadot/types-codec/types'
 
 export async function generateMnemonic(keyring?: Keyring): Promise<[string, string]> {
     if (!keyring) {
@@ -52,12 +53,11 @@ export async function sendFunds(
     env: ProsopoEnvironment,
     address: string,
     who: string,
-    amount: BigNumber
+    amount: AnyNumber
 ): Promise<void> {
-    await env.contractInterface.api.isReady
+    await env.api.isReady
     const mnemonic = getNextMnemonic()
     const pair = env.keyring.addFromMnemonic(mnemonic)
-    // @ts-ignore
     const {
         // @ts-ignore
         data: { free: previousFree },
@@ -70,11 +70,8 @@ export async function sendFunds(
     }
 
     const api = env.contractInterface.api
-    await buildTx(
-        api.registry,
-        api.tx.balances.transfer(address, amount),
-        pair // from
-    )
+
+    await api.tx.balances.transfer(address, amount).signAndSend(pair)
 }
 
 export async function setupProvider(env, provider: IProviderAccount): Promise<Hash> {
@@ -99,7 +96,7 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     )
     logger.info('   - providerAddDataset')
     const datasetResult = await tasks.providerAddDatasetFromFile(provider.datasetFile)
-    const events = getEventsFromMethodName(datasetResult, 'providerAddDataset')
+    const events = getEventsFromMethodName(datasetResult, 'ProviderAddDataset')
     return events[0].args[1] as Hash
 }
 

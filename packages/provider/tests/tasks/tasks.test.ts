@@ -51,7 +51,7 @@ async function sleep(timeout) {
 const PROVIDER_PAYEE = 'Provider'
 
 describe('CONTRACT TASKS', () => {
-    let providerStakeDefault: bigint
+    let providerStakeDefault: BN
     const mockEnv = new MockEnvironment()
 
     // Create a user of specified type using the databasePopulator
@@ -92,7 +92,7 @@ describe('CONTRACT TASKS', () => {
         }
 
         try {
-            providerStakeDefault = BigInt(new BN(await tasks.contractApi.getProviderStakeDefault()).toNumber())
+            providerStakeDefault = new BN(await tasks.contractApi.getProviderStakeDefault())
         } catch (e) {
             throw new ProsopoEnvError(e, 'getProviderStakeDefault')
         }
@@ -142,7 +142,8 @@ describe('CONTRACT TASKS', () => {
             await mockEnv.db.storeDappUserPending(
                 hexHash(accountAddress(dappUserAccount)),
                 requestHash,
-                pendingRequestSalt
+                pendingRequestSalt,
+                999999999999
             )
         }
 
@@ -164,7 +165,7 @@ describe('CONTRACT TASKS', () => {
 
     it('Provider registration', async () => {
         const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring() || ['', '']
-        await sendFunds(mockEnv, providerAddress, 'ProsopoPayee', 10000n * providerStakeDefault)
+        await sendFunds(mockEnv, providerAddress, 'ProsopoPayee', providerStakeDefault.muln(10000))
 
         const tasks = await changeSigner([providerMnemonic, providerAddress])
 
@@ -183,7 +184,7 @@ describe('CONTRACT TASKS', () => {
             const providerAccount = await getUser(AccountKey.providers)
             const tasks = await changeSigner(providerAccount)
 
-            const value = 1000n * providerStakeDefault
+            const value = providerStakeDefault.muln(1000)
 
             const result: TransactionResponse = await tasks.contractApi.providerUpdate(
                 PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
@@ -193,7 +194,7 @@ describe('CONTRACT TASKS', () => {
                 value
             )
 
-            const eventData = getEventsFromMethodName(result, 'providerUpdate')
+            const eventData = getEventsFromMethodName(result, 'ProviderUpdate')
             expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
         } catch (err) {
             throw new ProsopoEnvError(err, 'providerUpdate')
@@ -207,7 +208,7 @@ describe('CONTRACT TASKS', () => {
 
         const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json')
         const result: TransactionResponse = await tasks.providerAddDatasetFromFile(captchaFilePath)
-        const eventData = getEventsFromMethodName(result, 'providerAddDataset')
+        const eventData = getEventsFromMethodName(result, 'ProviderAddDataset')
 
         expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
     })
@@ -220,7 +221,10 @@ describe('CONTRACT TASKS', () => {
         const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json')
         const datasetPromise = tasks.providerAddDatasetFromFile(captchaFilePath)
 
-        datasetPromise.catch((e) => e.message.should.match('/ProviderInactive/'))
+        datasetPromise.catch((e) => {
+            console.log(e)
+            e.message.should.match('/ProviderInactive/')
+        })
     })
 
     it('Provider approve', async () => {
@@ -253,7 +257,7 @@ describe('CONTRACT TASKS', () => {
         const providerTasks = await changeSigner(providerAccount)
 
         const result = await providerTasks.contractApi.providerApprove(commitmentId, 0)
-        const events = getEventsFromMethodName(result, 'providerApprove')
+        const events = getEventsFromMethodName(result, 'ProviderApprove')
 
         expect(events![0].args[0].toHuman()).to.equal(commitmentId)
     })
@@ -289,7 +293,7 @@ describe('CONTRACT TASKS', () => {
         const providerTasks = await changeSigner(providerAccount)
 
         const result = await providerTasks.contractApi.providerDisapprove(commitmentId)
-        const events = getEventsFromMethodName(result, 'providerDisapprove')
+        const events = getEventsFromMethodName(result, 'ProviderDisapprove')
 
         expect(events![0].args[0].toHuman()).to.equal(commitmentId)
     })
@@ -325,7 +329,7 @@ describe('CONTRACT TASKS', () => {
         const providerTasks = await changeSigner(providerAccount)
 
         const result = await providerTasks.contractApi.providerApprove(commitmentId, 0)
-        const events = getEventsFromMethodName(result, 'providerApprove')
+        const events = getEventsFromMethodName(result, 'ProviderApprove')
 
         expect(events![0].args[0].toHuman()).to.equal(commitmentId)
 
@@ -371,7 +375,7 @@ describe('CONTRACT TASKS', () => {
 
         const tasks = await changeSigner(newAccount)
 
-        await sendFunds(mockEnv, accountAddress(newAccount), 'Dapp', 10000000n * providerStakeDefault)
+        await sendFunds(mockEnv, accountAddress(newAccount), 'Dapp', providerStakeDefault.muln(10000000))
         const clientOrigin = DAPP.serviceOrigin + randomAsHex().slice(0, 8)
         const result: TransactionResponse = await tasks.contractApi.dappRegister(
             clientOrigin,
@@ -417,7 +421,7 @@ describe('CONTRACT TASKS', () => {
         const value = createType(mockEnv.api.registry, 'u128', '10')
         const address = accountAddress(dappAccount)
         const result: TransactionResponse = await tasks.contractApi.dappFund(accountAddress(dappAccount), value)
-        const events = getEventsFromMethodName(result, 'dappFund')
+        const events = getEventsFromMethodName(result, 'DappFund')
         const decoded = events![0].args.map((arg) => arg.toHuman())
         expect(decoded[0]).to.equal(address)
         const dappStruct = await tasks.contractApi.getDappDetails(address)
@@ -462,17 +466,18 @@ describe('CONTRACT TASKS', () => {
             throw new ProsopoEnvError(new Error('Result is null'))
         }
 
-        const events = getEventsFromMethodName(result, 'dappUserCommit')
+        const events = getEventsFromMethodName(result, 'DappUserCommit')
 
         expect(events![0].args[2].toHuman()).to.equal(accountAddress(dappContractAccount))
     })
 
-    it('Dapp accounts', async () => {
-        const providerAccount = await getUser(AccountKey.providers)
+    it.only('Dapp accounts', async () => {
+        const account = await getUser(AccountKey.dapps)
 
-        const tasks = await changeSigner(providerAccount)
+        const tasks = await changeSigner(account)
 
         const result = await tasks.contractApi.getDappAccounts()
+        console.log(result)
 
         expect(result).to.be.an('array')
     })
@@ -523,7 +528,7 @@ describe('CONTRACT TASKS', () => {
             accountAddress(dappContractAccount),
             requestHash,
             JSON.parse(JSON.stringify(captchaSolutionsSalted)),
-            dappUserCommitResponse.blockHash.toString(),
+            dappUserCommitResponse.blockHash?.toString() || '',
             dappUserCommitResponse.result.txHash.toString()
         )
         expect(result.captchas.length).to.be.eq(2)
@@ -636,9 +641,7 @@ describe('CONTRACT TASKS', () => {
 
         // All of the captchaIds present in the solutions should be in the database
         expect(async function () {
-            await providerTasks.validateReceivedCaptchasAgainstStoredCaptchas(
-                JSON.parse(JSON.stringify(captchaSolutions)) as JSON
-            )
+            await providerTasks.validateReceivedCaptchasAgainstStoredCaptchas(captchaSolutions)
         }).to.not.throw()
     })
 
@@ -703,7 +706,8 @@ describe('CONTRACT TASKS', () => {
         await mockEnv.db!.storeDappUserPending(
             hexHash(accountAddress(dappUserAccount)),
             requestHash,
-            pendingRequestSalt
+            pendingRequestSalt,
+            99999999999
         )
         const valid = await tasks.validateDappUserSolutionRequestIsPending(
             requestHash,
@@ -796,7 +800,7 @@ describe('CONTRACT TASKS', () => {
             provider.fee as unknown as number,
             createType(mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
             accountAddress(providerAccount),
-            providerStakeDefault / 2n
+            providerStakeDefault.divn(2)
         )
 
         const insuficientFundsTransaction = await tasks
@@ -847,7 +851,7 @@ describe('CONTRACT TASKS', () => {
         const value = 1
 
         const result: TransactionResponse = await tasks.contractApi.providerUnstake(value)
-        const events = getEventsFromMethodName(result, 'providerUnstake')
+        const events = getEventsFromMethodName(result, 'ProviderUnstake')
 
         expect(events![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
     })
@@ -858,7 +862,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = await changeSigner(providerAccount)
 
         const result: TransactionResponse = await tasks.contractApi.providerDeregister(accountAddress(providerAccount))
-        const events = getEventsFromMethodName(result, 'providerDeregister')
+        const events = getEventsFromMethodName(result, 'ProviderDeregister')
 
         expect(events![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
     })
@@ -894,6 +898,7 @@ describe('CONTRACT TASKS', () => {
         const providerAccount = await getUser(AccountKey.providersWithStakeAndDataset)
         const providerTasks = await changeSigner(providerAccount)
         const providerDetails = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const dappAccount = await getUser(AccountKey.dapps)
         const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
         if (randomCaptchasResult) {
             const unsolvedCaptcha = randomCaptchasResult[0]
@@ -907,7 +912,13 @@ describe('CONTRACT TASKS', () => {
             for (let count = 0; count < 10; count++) {
                 const commitmentId = hexHash(`test${count}`)
                 commitments.push(commitmentId)
-                await providerTasks.db.storeDappUserSolution([captchaSolution], commitmentId, 'test')
+                await providerTasks.db.storeDappUserSolution(
+                    [captchaSolution],
+                    commitmentId,
+                    'test',
+                    accountAddress(dappAccount),
+                    providerDetails.datasetId.toString()
+                )
                 const userSolutions = await providerTasks.db.getDappUserSolutionById(commitmentId)
                 expect(userSolutions).to.be.not.empty
             }

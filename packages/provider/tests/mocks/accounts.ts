@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { IDappAccount, IProviderAccount } from '../../src/types/accounts'
+import { BN } from '@polkadot/util'
 
 export const PROVIDER: IProviderAccount = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: 'Provider',
-    stake: 1000000000000000n,
+    stake: new BN(1000000000000000),
     datasetFile: './data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
@@ -29,7 +30,7 @@ export const DAPP: IDappAccount = {
     mnemonic: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed
     optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
-    fundAmount: 1000000000000000n,
+    fundAmount: new BN(1000000000000000),
 }
 
 export const DAPP_USER = {

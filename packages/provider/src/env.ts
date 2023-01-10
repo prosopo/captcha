@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import {
     ContractAbi,
     ProsopoContractApi,
@@ -114,12 +115,12 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getContractApi(): Promise<ProsopoContractApi> {
-        this.contractInterface = await ProsopoContractMethods.create(
+        this.contractInterface = new ProsopoContractMethods(
+            this.api,
+            this.abi,
             this.contractAddress,
             this.pair,
-            this.contractName,
-            this.abi,
-            this.api
+            this.contractName
         )
         return this.contractInterface
     }

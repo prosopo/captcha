@@ -1,10 +1,10 @@
 import { BatchCommitConfig, Database, UserCommitmentRecord } from '../types/index'
-import { ContractApiInterface, populateTransaction } from '@prosopo/contract'
+import { ProsopoContractApi, populateTransaction } from '@prosopo/contract'
 import consola from 'consola'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 
 export class BatchCommitter {
-    contractApi: ContractApiInterface
+    contractApi: ProsopoContractApi
 
     db: Database
 
@@ -13,7 +13,7 @@ export class BatchCommitter {
     logger: typeof consola
     constructor(
         batchCommitConfig: BatchCommitConfig,
-        contractApi: ContractApiInterface,
+        contractApi: ProsopoContractApi,
         db: Database,
         logger: typeof consola
     ) {
@@ -53,7 +53,7 @@ export class BatchCommitter {
                 this.contractApi.pair.address,
             ]
             //TODO check if the commitments are already on chain using dry-run queries
-            const { extrinsic, callParams } = await populateTransaction(this.contractApi.contract, fragment, args)
+            const { extrinsic, callParams } = await populateTransaction(this.contractApi, fragment, args, false)
             txs.push(extrinsic)
         }
         // const txs = [
