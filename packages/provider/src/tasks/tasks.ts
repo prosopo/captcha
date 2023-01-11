@@ -383,7 +383,6 @@ export class Tasks {
     ): Promise<boolean> {
         const pendingRecord = await this.db.getDappUserPending(requestHash)
         const currentTime = Date.now()
-        console.log('pendingRecord', pendingRecord)
         if (pendingRecord.deadline < currentTime) {
             // deadline for responding to the captcha has expired
             console.log('Deadline for responding to captcha has expired')
@@ -475,7 +474,6 @@ export class Tasks {
                     )
                     try {
                         const captchaIdsToUpdate = [...solutionsToUpdate['captchaId'].values()]
-                        console.log('captchaIdsToUpdate', captchaIdsToUpdate)
                         const commitmentIds = solutions
                             .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
                             .map((s) => s.commitmentId)
@@ -548,14 +546,12 @@ export class Tasks {
             return false
         }
 
-        const _header = header.toHuman?.() || header
-
-        const headerBlockNo: number = Number.parseInt(_header.number)
+        const headerBlockNo: number = header.number.toPrimitive()
         if (headerBlockNo == blockNo) {
             return true
         }
 
-        const parent = await contract.api.rpc.chain.getBlock(_header.parentHash)
+        const parent = await contract.api.rpc.chain.getBlock(header.parentHash)
 
         return this.isRecentBlock(contract, (parent.toHuman() as any).block.header, blockNo, depth - 1)
     }

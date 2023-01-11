@@ -17,7 +17,7 @@ import path from 'path'
 
 import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
 
-import { sendFunds as _sendFunds } from '../../src/tasks/setup'
+import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from '../../src/tasks/setup'
 import { Tasks } from '../../src/tasks'
 import { Account, IDatabaseAccounts, accountAddress, accountMnemonic } from './DatabaseAccounts'
 import { Environment } from '../../src/env'
@@ -79,15 +79,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
                 return tasks.contractApi.getProviderStakeDefault().then((res) => {
                     this.providerStakeDefault = new BN(res)
-                    const chainDecimals = new BN(env.api.registry.chainDecimals[0])
-
-                    const minStakeMultiplier = new BN(
-                        10 ** (new BN(10).pow(chainDecimals).div(this.providerStakeDefault).toString().length - 5)
-                    )
-                    console.log('Setting stake amount to', this.providerStakeDefault.mul(minStakeMultiplier).toString())
-                    this.stakeAmount = this.providerStakeDefault.mul(minStakeMultiplier)
-                    // Should result in each account receiving 100 UNIT
-                    this.sendAmount = new BN(this.stakeAmount).muln(1000000)
+                    this.stakeAmount = getStakeAmount(env, this.providerStakeDefault)
+                    this.sendAmount = getSendAmount(env, this.stakeAmount)
                 })
             } catch (e) {
                 throw new Error(e)
@@ -191,13 +184,12 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
             const account = this.createAccount()
-            console.log('sending funds', new BN(this.stakeAmount).muln(10).toString())
+            //console.log('Registering provider', accountAddress(account), 'with service origin', _serviceOrigin)
             await this.sendFunds(
                 accountAddress(account),
                 createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 this.sendAmount
             )
-            console.log('sent funds to account', accountAddress(account))
             await this.changeSigner(accountMnemonic(account))
             const tasks = new Tasks(this.mockEnv)
             await tasks.contractApi.providerRegister(
@@ -207,7 +199,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account)
             )
             const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
-            console.log('provider', provider)
+            //console.log('Registered provider', provider)
             if (!noPush) {
                 this._registeredProviders.push(account)
             }
@@ -230,6 +222,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 this.stakeAmount
             )
+            const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
+            //console.log('provider', provider)
         } catch (e) {
             throw this.createError(e)
         }
@@ -343,7 +337,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         await this.sendFunds(
             accountAddress(account),
             createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-            this.stakeAmount
+            this.sendAmount
         )
 
         this._registeredDappUsers.push(account)

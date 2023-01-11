@@ -22,6 +22,7 @@ import { Tasks } from './tasks'
 import { createType } from '@polkadot/types'
 import { ProsopoEnvironment } from '../types/index'
 import { AnyNumber } from '@polkadot/types-codec/types'
+import { BN } from '@polkadot/util'
 
 export async function generateMnemonic(keyring?: Keyring): Promise<[string, string]> {
     if (!keyring) {
@@ -42,6 +43,7 @@ export async function displayBalance(env, address, who) {
 
 const mnemonic = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
 let current = -1
+const MAX_ACCOUNT_FUND = 10 // 10 UNIT
 
 function getNextMnemonic() {
     current = (current + 1) % mnemonic.length
@@ -114,85 +116,45 @@ export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
     await tasks.contractApi.dappFund(dapp.contractAccount, dapp.fundAmount)
 }
 
-// export async function setupDappUser(
-//     env,
-//     dappUser: IUserAccount,
-//     provider: IProviderAccount,
-//     dapp: IDappAccount
-// ): Promise<string | undefined> {
-//     await env.changeSigner(dappUser.mnemonic)
-//
-//     // This section is doing everything that the ProCaptcha repo will eventually be doing in the client browser
-//     //   1. Get captcha JSON
-//     //   2. Add solution
-//     //   3. Send merkle tree solution to Blockchain
-//     //   4. Send clear solution to Provider
-//     const tasks = new Tasks(env)
-//     const logger = env.logger
-//     logger.info('   - getCaptchaWithProof')
-//     const providerOnChain = await tasks.contractApi.getProviderDetails(provider.address)
-//     if (providerOnChain) {
-//         const solved = await tasks.contractApi.getCaptchaWithProof(providerOnChain.dataset_id.toString(), true, 1)
-//         const unsolved = await tasks.contractApi.getCaptchaWithProof(providerOnChain.dataset_id.toString(), false, 1)
-//         solved[0].captcha.solution = matchItemsToSolutions([2, 3, 4], solved[0].captcha.items)
-//         unsolved[0].captcha.solution = matchItemsToSolutions([1], unsolved[0].captcha.items)
-//         solved[0].captcha.salt = '0xuser1'
-//         unsolved[0].captcha.salt = '0xuser2'
-//         const tree = new CaptchaMerkleTree()
-//         const captchas = [solved[0].captcha, unsolved[0].captcha]
-//         const captchaSols = captchas.map((captcha) => convertCaptchaToCaptchaSolution(captcha))
-//         const captchaSolHashes = captchaSols.map((captcha, i) => {
-//             captchas[i].items = calculateItemHashes(captchas[i].items)
-//
-//             return computeCaptchaSolutionHash(captcha)
-//         })
-//         tree.build(captchaSolHashes)
-//         await env.changeSigner(dappUser.mnemonic)
-//         const captchaData = await tasks.contractApi.getCaptchaData(providerOnChain.dataset_id.toString())
-//         if (captchaData.merkle_tree_root.toString() !== providerOnChain.dataset_id.toString()) {
-//             throw new ProsopoEnvError(
-//                 'DEVELOPER.CAPTCHA_ID_MISSING',
-//                 setupDappUser.name,
-//                 {},
-//                 providerOnChain.dataset_id.toString()
-//             )
-//         }
-//         const commitmentId = tree.root?.hash
-//         logger.info('   - dappUserCommit')
-//         if (typeof commitmentId === 'string') {
-//             logger.info('   -   Contract Account: ', dapp.contractAccount)
-//             logger.info('   -   Captcha Dataset ID: ', providerOnChain.dataset_id)
-//             logger.info('   -   Solution Root Hash: ', commitmentId)
-//             logger.info('   -   Provider Address: ', provider.address)
-//             logger.info('   -   Captchas: ', captchas)
-//             await tasks.contractApi.dappUserCommit(dapp.contractAccount, providerOnChain.dataset_id, commitmentId, provider.address)
-//             const commitment = await tasks.contractApi.getCaptchaSolutionCommitment(commitmentId)
-//         } else {
-//             throw new ProsopoEnvError('DEVELOPER.COMMITMENT_ID_MISSING')
-//         }
-//         return commitmentId
-//     } else {
-//         throw new ProsopoEnvError('DEVELOPER.PROVIDER_NOT_FOUND')
-//     }
-// }
+/**
+ * Takes the  providerStakeDefault and works out if multiplying it by 100 or
+ * stakeMultiplier is greater than the maxStake. If it is, it returns the maxStake
+ * If chain decimals = 12, 1 UNIT = 1e12
+ * @param env
+ * @param providerStakeDefault
+ * @param stakeMultiplier
+ */
+export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN, stakeMultiplier?: number): BN {
+    const chainDecimals = new BN(env.api.registry.chainDecimals[0])
 
-export async function approveOrDisapproveCommitment(
-    env,
-    solutionHash: string,
-    approve: boolean,
-    provider: IProviderAccount
-) {
-    const tasks = new Tasks(env)
-    const logger = env.logger
-    // This stage would take place on the Provider node after checking the solution was correct
-    // We need to assume that the Provider has access to the Dapp User's merkle tree root or can construct it from the
-    // raw data that was sent to them
-    await env.changeSigner(provider.mnemonic)
-    if (approve) {
-        logger.info('   -   Approving commitment')
-        await tasks.contractApi.providerApprove(solutionHash, 100)
-    } else {
-        logger.info('   -   Disapproving commitment')
-        await tasks.contractApi.providerDisapprove(solutionHash)
+    const unit = new BN(10 ** chainDecimals.toNumber())
+
+    // We want to give each provider 100 * the required stake or 1 UNIT, whichever is greater, so that gas fees can be
+    // refunded to the Dapp User from within the contract
+    const stake100 = BN.max(providerStakeDefault.muln(stakeMultiplier || 100), unit)
+
+    // We don't want to stake any more than MAX_ACCOUNT_FUND UNIT per provider as the test account funds will be depleted too quickly
+    const maxStake = unit.muln(MAX_ACCOUNT_FUND)
+
+    if (stake100.lt(maxStake)) {
+        env.logger.debug('Setting stake amount to', stake100.div(unit).toNumber(), 'UNIT')
+        return providerStakeDefault.mul(stake100)
     }
+    env.logger.debug('Setting stake amount to', maxStake.div(unit).toNumber(), 'UNIT')
+    return maxStake
+}
+
+/**
+ * Send funds to a test account, adding one more unit than the amount to be staked
+ * @param env
+ * @param stakeAmount
+ */
+export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
+    const chainDecimals = new BN(env.api.registry.chainDecimals[0])
+
+    const unit = new BN(10 ** chainDecimals.toNumber())
+    const sendAmount = new BN(stakeAmount).add(unit.muln(MAX_ACCOUNT_FUND))
+    // Should result in each account receiving a minimum of MAX_ACCOUNT_FUND UNIT
+    env.logger.debug('Setting send amount to', sendAmount.div(unit).toString(), 'UNIT')
+    return sendAmount
 }
