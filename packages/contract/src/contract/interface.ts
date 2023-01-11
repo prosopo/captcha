@@ -26,12 +26,11 @@ import { createType } from '@polkadot/types'
 import { ApiBase, ApiDecoration } from '@polkadot/api/types'
 import { firstValueFrom, map } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
-import { BN, BN_BILLION, BN_ZERO } from '@polkadot/util'
+import { BN, BN_ZERO } from '@polkadot/util'
 import { Weight } from '@polkadot/types/interfaces/runtime'
 import { DispatchError, WeightV2 } from '@polkadot/types/interfaces'
 import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
 
-// TODO should this class simply extend ContractPromise?
 export class ProsopoContractApi extends ContractPromise {
     contractName: string
     pair: KeyringPair
@@ -50,11 +49,13 @@ export class ProsopoContractApi extends ContractPromise {
     }
 
     getOptions(value?: number | BN, gasLimit?: Weight): ContractOptions {
+        const maximumBlockWeight = this.api.consts.system.blockWeights.maxBlock as unknown as WeightV2
+        const maxGas = maximumBlockWeight.refTime.toNumber() * 2
         const _gasLimit: Weight | WeightV2 = gasLimit
             ? gasLimit
             : this.api.registry.createType('WeightV2', {
-                  refTime: BN_BILLION.muln(10),
-                  proofSize: BN_BILLION.muln(10),
+                  refTime: maxGas,
+                  proofSize: maxGas,
               })
         return {
             gasLimit: _gasLimit,
@@ -193,7 +194,11 @@ export class ProsopoContractApi extends ContractPromise {
         if (response.result.isOk) {
             return response
         }
-        throw new ProsopoContractError(response.result.asErr, 'contractQuery')
+        throw new ProsopoContractError(response.result.asErr, 'contractQuery', undefined, {
+            contractMethodName,
+            gasLimit: options.gasLimit?.toString(),
+            ...(value && { value: value.toString() }),
+        })
     }
 
     /** Get the contract method from the ABI
@@ -231,7 +236,6 @@ export class ProsopoContractApi extends ContractPromise {
         const storageEntry = this.getStorageEntry(name)
         if (storageEntry.layout.isCell) {
             const storageCell = storageEntry.layout.asCell
-            console.log(this.address.toString(), storageCell.key.toHex())
             const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageCell.key.toHex())
             const result = await firstValueFrom(promiseResult)
             // const result = await promiseResult
@@ -240,7 +244,7 @@ export class ProsopoContractApi extends ContractPromise {
             //values.map(v => this.api.registry.createType('Option<StorageData>', v)).map(o => o.isSome ? this.api.registry.createType('Balance', o.unwrap())
             if (result) {
                 console.log(result.toString())
-                return createType(result.registry, type, [result.toU8a()]) as T
+                return createType(result.registry, type, [result.toU8a(true)]) as T
             }
         }
 
