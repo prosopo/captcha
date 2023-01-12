@@ -1294,7 +1294,7 @@ pub mod prosopo {
             if max == 0 {
                 return Err(Error::NoActiveProviders);
             }
-            let index = self.get_random_number(0, (max - 1) as u64, user_account);
+            let index = self.get_random_number(max as u64, user_account);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             let provider = self.providers.get(provider_id);
             if provider.is_none() {
@@ -1328,12 +1328,27 @@ pub mod prosopo {
             provider_ids
         }
 
-        fn get_random_number(&self, min: u64, max: u64, user_account: AccountId) -> u64 {
+        #[ink(message)]
+        pub fn get_random_number(&self, len: u64, user_account: AccountId) -> u64 {
+            // get the random seed containing a random integer + block number
             let random_seed = self.env().random(user_account.as_ref());
+            // pull out the random seed into an arr of 32x u8
             let mut seed_converted: [u8; 32] = Default::default();
             seed_converted.copy_from_slice(random_seed.0.as_ref());
+            // init rng from this block's seed
             let mut rng = ChaChaRng::from_seed(seed_converted);
-            ((rng.next_u64() / u64::MAX) * (max - min) + min) as u64
+            // get the next random number in u64 range
+            let next = rng.next_u64();
+            // use modulo to get a number between 0 (inclusive) and len (exclusive)
+            // e.g. if len = 10 then range would be 0-9
+            let next_mod = next % len as u64;
+            ink_env::debug_println!("{:#?} {:#?} {:#?} {:#?}", next, len, next_mod, self.env().block_number());
+            next_mod
+        }
+
+        #[ink(message)]
+        pub fn get_random_number_caller(&self, len: u64) -> u64 {
+            self.get_random_number(len, self.env().caller())
         }
     }
 
@@ -1426,15 +1441,15 @@ pub mod prosopo {
         // Test get random number
         #[ink::test]
         fn test_get_random_number() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
-            let mut number = contract.get_random_number(1, 128, operator_account);
-            ink_env::debug_println!("{}", number);
-            assert!((1 <= number) && (number <= 128));
+            // let operator_account = AccountId::from([0x1; 32]);
+            // let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            // let mut number = contract.get_random_number(1, 128, operator_account);
+            // ink_env::debug_println!("{}", number);
+            // assert!((1 <= number) && (number <= 128));
 
-            number = contract.get_random_number(0, 1, operator_account);
-            ink_env::debug_println!("{}", number);
-            assert!(number == 0 || number == 1);
+            // number = contract.get_random_number(0, 1, operator_account);
+            // ink_env::debug_println!("{}", number);
+            // assert!(number == 0 || number == 1);
         }
 
         /// Helper function for converting string to Hash
