@@ -63,6 +63,7 @@ export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args
         let argVal = args[idx]
         // hash values that have been passed as strings
         if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
+            console.log(args, argVal)
             argVal = stringToHexPadded(argVal)
         }
         encodedArgs.push(registry.createType(methodArg.type.type, argVal).toU8a())

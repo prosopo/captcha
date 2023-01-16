@@ -30,6 +30,7 @@ import { BN, BN_ZERO } from '@polkadot/util'
 import { Weight } from '@polkadot/types/interfaces/runtime'
 import { DispatchError, WeightV2 } from '@polkadot/types/interfaces'
 import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
+import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 
 export class ProsopoContractApi extends ContractPromise {
     contractName: string
@@ -44,7 +45,7 @@ export class ProsopoContractApi extends ContractPromise {
         this.abiVersion = getABIVersion(abi)
     }
 
-    public getContract(): ContractPromise {
+    public getContract(): ProsopoContractApi {
         return this
     }
 
@@ -65,6 +66,23 @@ export class ProsopoContractApi extends ContractPromise {
     }
 
     /**
+     * Get the extrinsic for submitting in a transaction
+     * @return {SubmittableExtrinsic} extrinsic
+     */
+    async buildExtrinsic<T>(
+        contractMethodName: string,
+        args: T[],
+        value?: number | BN | undefined
+    ): Promise<SubmittableExtrinsic> {
+        // Always query first as errors are passed back from a dry run but not from a transaction
+        const { gasRequired } = await this.contractQuery(contractMethodName, args, value)
+        const methodObj = this.getContractMethod(contractMethodName)
+        const encodedArgs: Uint8Array[] = encodeStringArgs(this.api.registry, methodObj, args)
+        const options = this.getOptions(value, gasRequired)
+        return this.tx[contractMethodName](options, ...encodedArgs)
+    }
+
+    /**
      * Perform a contract tx (mutating) calling the specified method
      * @param {string} contractMethodName
      * @param args
@@ -76,12 +94,7 @@ export class ProsopoContractApi extends ContractPromise {
         args: T[],
         value?: number | BN | undefined
     ): Promise<TransactionResponse> {
-        // Always query first as errors are passed back from a dry run but not from a transaction
-        const { gasRequired } = await this.contractQuery(contractMethodName, args, value)
-        const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: Uint8Array[] = encodeStringArgs(this.api.registry, methodObj, args)
-        const options = this.getOptions(value, gasRequired)
-        const extrinsic = this.tx[contractMethodName](options, ...encodedArgs)
+        const extrinsic = await this.buildExtrinsic(contractMethodName, args, value)
         return await new Promise((resolve, reject) => {
             extrinsic.signAndSend(this.pair, {}, (result: SubmittableResult) => {
                 const actionStatus = {

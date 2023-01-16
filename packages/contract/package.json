@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/contract",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "scripts": {
@@ -39,8 +39,8 @@
     "@polkadot/types-create": "^9.10.3",
     "@polkadot/util": "^10.2.1",
     "@polkadot/util-crypto": "^10.2.1",
-    "@prosopo/common": "^0.1.10",
-    "@prosopo/datasets": "^0.1.10",
+    "@prosopo/common": "^0.1.11",
+    "@prosopo/datasets": "^0.1.11",
     "bn.js": "^5.2.1",
     "consola": "^2.15.3",
     "zod": "^3.17.9"
