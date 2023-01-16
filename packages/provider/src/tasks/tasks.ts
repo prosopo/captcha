@@ -385,7 +385,7 @@ export class Tasks {
         const currentTime = Date.now()
         if (pendingRecord.deadline < currentTime) {
             // deadline for responding to the captcha has expired
-            console.log('Deadline for responding to captcha has expired')
+            this.logger.info('Deadline for responding to captcha has expired')
             return false
         }
         if (pendingRecord) {

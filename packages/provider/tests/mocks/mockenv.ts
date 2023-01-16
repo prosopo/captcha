@@ -86,8 +86,9 @@ export class MockEnvironment implements ProsopoEnvironment {
                 interval: 1000000,
             },
         }
-        if (!mnemonic) {
-            this.mnemonic = '//Alice'
+        this.mnemonic = '//Alice'
+        if (mnemonic) {
+            this.mnemonic = mnemonic
         }
 
         if (
@@ -131,9 +132,10 @@ export class MockEnvironment implements ProsopoEnvironment {
             await this.api.registry.register(contractDefinitions.types)
         }
         await this.api.isReadyOrError
-        const { mnemonic } = this
+        const mnemonic = this.mnemonic
+        console.log
         if (!mnemonic) {
-            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED')
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, undefined, this.mnemonic)
         }
         this.pair = this.keyring.addFromMnemonic(mnemonic)
     }

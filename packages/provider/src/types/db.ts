@@ -26,7 +26,7 @@ import { PendingCaptchaRequest } from './api'
 import consola from 'consola'
 import { z } from 'zod'
 import { Connection, Model, Schema } from 'mongoose'
-import { ScheduledTaskNames, ScheduledTaskStatus } from './scheduler'
+import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from './scheduler'
 
 export const UserCommitmentSchema = z.object({
     userAccount: z.string(),
@@ -82,6 +82,7 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     userAccount: { type: String, required: true },
     dappAccount: { type: String, required: true },
+    datasetId: { type: String, required: true },
     commitmentId: { type: String, required: true },
     approved: { type: Boolean, required: true },
     datetime: { type: Date, required: true },
@@ -136,11 +137,33 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     deadline: { type: Number, required: true }, // unix timestamp
 })
 
-export const SchedulerRecordSchema = new Schema({
+export const ScheduledTaskSchema = z.object({
+    taskId: z.string(),
+    processName: z.nativeEnum(ScheduledTaskNames),
+    datetime: z.date(),
+    status: z.nativeEnum(ScheduledTaskStatus),
+    result: z.any(),
+})
+
+export type ScheduledTaskRecord = z.infer<typeof ScheduledTaskSchema>
+
+export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
+    taskId: { type: String, required: true },
     processName: { type: String, enum: ScheduledTaskNames, required: true },
     datetime: { type: Date, required: true },
     status: { type: String, enum: ScheduledTaskStatus, require: true },
-    result: { type: String, required: false },
+    result: {
+        type: [
+            new Schema<ScheduledTaskResult>(
+                {
+                    error: { type: String, required: false },
+                    data: { type: Object, required: false },
+                },
+                { _id: false }
+            ),
+        ],
+        required: false,
+    },
 })
 
 export interface Database {
@@ -198,6 +221,8 @@ export interface Database {
 
     removeProcessedDappUserSolutions(): Promise<void>
 
+    removeProcessedDappUserCommitments(): Promise<void>
+
     getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>
 
     getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]>
@@ -207,4 +232,13 @@ export interface Database {
     flagUsedDappUserCommitments(commitmentIds: string[]): Promise<void>
 
     getLastBatchCommitTime(): Promise<number>
+
+    getLastScheduledTask(task: ScheduledTaskNames): Promise<ScheduledTaskRecord | undefined>
+
+    storeScheduledTaskStatus(
+        taskId: `0x${string}`,
+        task: ScheduledTaskNames,
+        status: ScheduledTaskStatus,
+        result?: ScheduledTaskResult
+    ): Promise<void>
 }

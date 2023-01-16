@@ -37,4 +37,5 @@ export interface ProsopoEnvironment {
     api: ApiPromise
     isReady(): Promise<void>
     importDatabase(): Promise<void>
+    changeSigner(mnemonic: string): Promise<void>
 }

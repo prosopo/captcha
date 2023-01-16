@@ -25,7 +25,7 @@ import { ProsopoEnvError } from '@prosopo/common'
 loadEnv()
 
 const defaultProvider: IProviderAccount = {
-    serviceOrigin: 'http://localhost:3000', // + randomAsHex().slice(0, 8), // make it "unique"
+    serviceOrigin: process.env.API_PORT ? `http://localhost:${process.env.API_PORT}` : 'http://localhost:3000',
     fee: 10,
     payee: 'Provider',
     stake: Math.pow(10, 13),

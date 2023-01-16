@@ -13,6 +13,12 @@
 // limitations under the License.
 import { IDappAccount, IProviderAccount } from '../../src/types/accounts'
 import { BN } from '@polkadot/util'
+import { ProsopoEnvironment, Tasks } from '../../src/index'
+import { Account, AccountKey, IDatabaseAccounts, accountMnemonic } from '../dataUtils/DatabaseAccounts'
+import { populateDatabase } from '../dataUtils/populateDatabase'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ESLint } from 'eslint'
+import Environment = ESLint.Environment
 
 export const PROVIDER: IProviderAccount = {
     serviceOrigin: 'http://localhost:8282',
@@ -36,4 +42,25 @@ export const DAPP: IDappAccount = {
 export const DAPP_USER = {
     mnemonic: '//Charlie',
     address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y',
+}
+
+// Create a user of specified type using the databasePopulator
+export async function getUser(env: ProsopoEnvironment, accountType: AccountKey): Promise<Account> {
+    try {
+        const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
+        accountConfig[accountType] = 1
+        const databaseAccounts: IDatabaseAccounts = await populateDatabase(env, accountConfig, false)
+        const account = databaseAccounts[accountType].pop()
+        if (account === undefined) {
+            throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
+        }
+        return account
+    } catch (e) {
+        throw new ProsopoEnvError(e)
+    }
+}
+
+export async function changeSigner(env: ProsopoEnvironment, account: Account): Promise<Tasks> {
+    await env.changeSigner(accountMnemonic(account))
+    return new Tasks(env)
 }
