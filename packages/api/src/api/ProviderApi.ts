@@ -22,6 +22,7 @@ export class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
 
     constructor(network: ProsopoNetwork, providerUrl: string) {
+        console.log(providerUrl)
         super(providerUrl)
         this.network = network
     }
@@ -36,6 +37,7 @@ export class ProviderApi extends HttpClientBase {
     ): Promise<GetCaptchaResponse> {
         const { provider } = randomProvider
         const { blockNumber } = randomProvider
+
         return this.axios.get(
             `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
                 this.network.dappContract.address
