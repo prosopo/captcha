@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 #![cfg_attr(not(feature = "std"), no_std)]
-#![feature(derive_default_enum)]
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
 use ink;
