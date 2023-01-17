@@ -26,7 +26,6 @@ pub mod prosopo {
     use ink::prelude::vec::Vec;
     use ink::storage::{traits::StorageLayout, Lazy, Mapping};
 
-    use prosopo_storage_derive::EnumSpreadAllocate;
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaChaRng;
@@ -1271,13 +1270,25 @@ pub mod prosopo {
 
         fn get_random_number(&self, min: u64, max: u64, user_account: AccountId) -> u64 {
             let random_seed = self.env().block_timestamp();
-            let timestamp_bytes = random_seed.to_le_bytes().to_vec();
-            let timestamp_seed: Vec<u8> = timestamp_bytes.into_iter().flat_map(|n| std::iter::repeat(n).take(4)).collect();
-            ink::env::debug_println!("timestamp_seed: {:?}", timestamp_seed);
-            let timestamp_seed_ref = &timestamp_seed[..];
+            let mut timestamp_bytes: Vec<u8> = random_seed.to_le_bytes().to_vec();
+            let mut timestamp_vec = Vec::<u8>::new();
+            for i in 0..4 {
+                let mut v = &mut timestamp_bytes.clone();
+                ink::env::debug_println!("appending to timestamp_vec: {:?}", v);
+                timestamp_vec.append( v)
+            }
+            //let timestamp_seed: Vec<u8> = timestamp_bytes.into_iter().flat_map(|n| std::iter::repeat(n).take(4)).collect();
+            ink::env::debug_println!("timestamp_vec: {:?}", timestamp_vec);
+            let timestamp_seed_ref = &timestamp_vec[..];
             let mut rng = ChaChaRng::from_seed(timestamp_seed_ref.try_into().unwrap());
             ((rng.next_u64() / u64::MAX) * (max - min) + min) as u64
         }
+
+        // fn concat_vectors(&self, a: Vec<u8>, b: Vec<u8>) -> Vec<u8> {
+        //     let mut c = a;
+        //     c.append(&mut b);
+        //     c
+        // }
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
