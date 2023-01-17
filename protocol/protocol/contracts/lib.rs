@@ -17,35 +17,22 @@
 #![feature(derive_default_enum)]
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
-use ink_lang as ink;
+use ink;
 
 #[ink::contract]
 pub mod prosopo {
-    use ink_prelude::collections::btree_set::BTreeSet;
-    use ink_prelude::vec::Vec;
-    use ink_storage::{
-        traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout, traits::StorageLayout,
-        Mapping,
-    };
+    //use ink::env::types::{AccountId, Balance, BlockNumber, BlockTimestamp, Hash};
+    use ink::prelude::collections::btree_set::BTreeSet;
+    use ink::prelude::vec::Vec;
+    use ink::storage::{traits::StorageLayout, Lazy, Mapping};
+
     use prosopo_storage_derive::EnumSpreadAllocate;
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaChaRng;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
-    #[derive(
-        Default,
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        EnumSpreadAllocate,
-    )]
+    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
         Active,
@@ -55,19 +42,7 @@ pub mod prosopo {
     }
 
     /// CaptchaStatus is the status of a CaptchaSolutionCommitment, submitted by a DappUser
-    #[derive(
-        Default,
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        EnumSpreadAllocate,
-    )]
+    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum CaptchaStatus {
         Pending,
@@ -77,19 +52,7 @@ pub mod prosopo {
     }
 
     /// Payee is the recipient of any fees that are paid when a CaptchaSolutionCommitment is approved
-    #[derive(
-        Default,
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        EnumSpreadAllocate,
-    )]
+    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Payee {
         Provider,
@@ -100,18 +63,7 @@ pub mod prosopo {
 
     /// Providers are suppliers of human verification methods (captchas, etc.) to DappUsers, either
     /// paying or receiving a fee for this service.
-    #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
-        Copy,
-    )]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Provider {
         status: GovernanceStatus,
@@ -134,18 +86,7 @@ pub mod prosopo {
     }
 
     /// Operators are controllers of this contract with admin rights
-    #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
-    )]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Operator {
         status: GovernanceStatus,
@@ -153,18 +94,7 @@ pub mod prosopo {
 
     /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
     /// the captchas received by a DappUser did belong to the Provider's original dataset
-    #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
-    )]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaData {
         provider: AccountId,
@@ -175,18 +105,7 @@ pub mod prosopo {
     /// CaptchaSolutionCommitments are submitted by DAppUsers upon completion of one or more
     /// Captchas. They serve as proof of captcha completion to the outside world and can be used
     /// in dispute resolution.
-    #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        Copy,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
-    )]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaSolutionCommitment {
         // the Dapp User Account
@@ -205,18 +124,7 @@ pub mod prosopo {
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
     /// or receiving a fee for this service.
-    #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
-        Copy,
-    )]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Dapp {
         status: GovernanceStatus,
@@ -229,18 +137,7 @@ pub mod prosopo {
 
     /// Users are the users of DApps that are required to be verified as human before they are
     /// allowed to interact with the DApps' contracts.
-    #[derive(
-        PartialEq,
-        Debug,
-        Eq,
-        Clone,
-        scale::Encode,
-        scale::Decode,
-        SpreadLayout,
-        PackedLayout,
-        SpreadAllocate,
-        Copy,
-    )]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
         correct_captchas: u64,
@@ -257,30 +154,6 @@ pub mod prosopo {
     pub struct LastCorrectCaptcha {
         pub before_ms: u32,
         pub dapp_id: AccountId,
-    }
-
-    // Contract storage
-    #[ink(storage)]
-    #[derive(SpreadAllocate)]
-    pub struct Prosopo {
-        //tokenContract: AccountId,
-        providers: Mapping<AccountId, Provider>,
-        provider_accounts: Mapping<GovernanceStatus, BTreeSet<AccountId>>,
-        service_origins: Mapping<Hash, ()>,
-        captcha_data: Mapping<Hash, CaptchaData>,
-        captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>,
-        provider_stake_default: u128,
-        dapps: Mapping<AccountId, Dapp>,
-        dapp_accounts: Vec<AccountId>,
-        //dapps_owners: Mapping<AccountId, AccountId>,
-        operators: Mapping<AccountId, Operator>,
-        operator_accounts: Vec<AccountId>,
-        //disputes: Mapping<u64, Dispute>
-        status: GovernanceStatus,
-        operator_stake_default: u64,
-        operator_fee_currency: Hash,
-        dapp_users: Mapping<AccountId, User>,
-        dapp_user_accounts: Vec<AccountId>,
     }
 
     // Event emitted when a new provider registers
@@ -446,13 +319,67 @@ pub mod prosopo {
         DatasetIdSolutionsSame,
     }
 
+    trait IntoBytes: Sized {
+        fn to_le_bytes(a: Self) -> Vec<u8>;
+    }
+
+    impl IntoBytes for u64 {
+        fn to_le_bytes(a: Self) -> Vec<u8> {
+            a.to_le_bytes().to_vec()
+        }
+    }
+
+    // Contract storage
+    #[ink(storage)]
+    pub struct Prosopo {
+        //tokenContract: AccountId,
+        providers: Mapping<AccountId, Provider>,
+        provider_accounts: Mapping<GovernanceStatus, BTreeSet<AccountId>>,
+        service_origins: Mapping<Hash, ()>,
+        captcha_data: Mapping<Hash, CaptchaData>,
+        captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>,
+        provider_stake_default: u128,
+        dapps: Mapping<AccountId, Dapp>,
+        dapp_accounts: Vec<AccountId>,
+        //dapps_owners: Mapping<AccountId, AccountId>,
+        operators: Mapping<AccountId, Operator>,
+        operator_accounts: Vec<AccountId>,
+        //disputes: Mapping<u64, Dispute>
+        status: GovernanceStatus,
+        operator_stake_default: u64,
+        operator_fee_currency: Hash,
+        dapp_users: Mapping<AccountId, User>,
+        dapp_user_accounts: Vec<AccountId>,
+    }
+
     impl Prosopo {
         /// Constructor
         #[ink(constructor, payable)]
-        pub fn default(operator: AccountId, provider_stake_default: u128) -> Self {
-            ink_lang::codegen::initialize_contract(|contract| {
-                Self::new_init(contract, operator, provider_stake_default)
-            })
+        pub fn default(operator_account: AccountId, provider_stake_default: u128) -> Self {
+            let operator = Operator {
+                status: GovernanceStatus::Active,
+            };
+            let mut operators = Mapping::new();
+            operators.insert(operator_account, &operator);
+            let mut operator_accounts = Vec::new();
+            operator_accounts.push(operator_account);
+            Self {
+                providers: Default::default(),
+                provider_accounts: Default::default(),
+                service_origins: Default::default(),
+                captcha_data: Default::default(),
+                operator_accounts,
+                status: Default::default(),
+                operator_stake_default: 0,
+                operator_fee_currency: Default::default(),
+                dapp_users: Default::default(),
+                operators,
+                provider_stake_default,
+                dapps: Default::default(),
+                captcha_solution_commitments: Default::default(),
+                dapp_accounts: Default::default(),
+                dapp_user_accounts: Default::default(),
+            }
         }
 
         /// Default initializes the contract with the specified initial supply.
@@ -865,7 +792,7 @@ pub mod prosopo {
                 .get(user_merkle_tree_root)
                 .is_some()
             {
-                ink_env::debug_println!("{}", "CaptchaSolutionCommitmentExists");
+                ink::env::debug_println!("{}", "CaptchaSolutionCommitmentExists");
                 //return Err(Error::CaptchaSolutionCommitmentExists);
                 return Ok(());
             }
@@ -1106,12 +1033,12 @@ pub mod prosopo {
             provider_id: AccountId,
         ) -> Result<Provider, Error> {
             if self.providers.get(&provider_id).is_none() {
-                ink_env::debug_println!("{}", "ProviderDoesNotExist");
+                ink::env::debug_println!("{}", "ProviderDoesNotExist");
                 return Err(Error::ProviderDoesNotExist);
             }
             let provider = self.get_provider_details(provider_id)?;
             if provider.balance < self.provider_stake_default {
-                ink_env::debug_println!("{}", "ProviderInsufficientFunds");
+                ink::env::debug_println!("{}", "ProviderInsufficientFunds");
                 return Err(Error::ProviderInsufficientFunds);
             }
             Ok(provider)
@@ -1120,7 +1047,7 @@ pub mod prosopo {
         fn validate_provider_active(&self, provider_id: AccountId) -> Result<Provider, Error> {
             let provider = self.validate_provider_exists_and_has_funds(provider_id)?;
             if provider.status != GovernanceStatus::Active {
-                ink_env::debug_println!("{}", "ProviderInactive");
+                ink::env::debug_println!("{}", "ProviderInactive");
                 return Err(Error::ProviderInactive);
             }
             Ok(provider)
@@ -1129,19 +1056,19 @@ pub mod prosopo {
         fn validate_dapp(&self, contract: AccountId) -> Result<(), Error> {
             // Guard against dapps using service that are not registered
             if self.dapps.get(&contract).is_none() {
-                ink_env::debug_println!("{}", "DappDoesNotExist");
+                ink::env::debug_println!("{}", "DappDoesNotExist");
                 return Err(Error::DappDoesNotExist);
             }
             // Guard against dapps using service that are Suspended or Deactivated
             let dapp = self.get_dapp_details(contract)?;
             if dapp.status != GovernanceStatus::Active {
-                ink_env::debug_println!("{}", "DappInactive");
+                ink::env::debug_println!("{}", "DappInactive");
                 return Err(Error::DappInactive);
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
             if dapp.balance <= 0 {
-                ink_env::debug_println!("{}", "DappInsufficientFunds");
+                ink::env::debug_println!("{}", "DappInsufficientFunds");
                 return Err(Error::DappInsufficientFunds);
             }
             Ok(())
@@ -1153,7 +1080,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
             if self.captcha_data.get(&dataset_id).is_none() {
-                ink_env::debug_println!("{}", "CaptchaDatasetDoesNotExist");
+                ink::env::debug_println!("{}", "CaptchaDatasetDoesNotExist");
                 return Err(Error::CaptchaDataDoesNotExist);
             }
             let captcha_data = self.captcha_data.get(&dataset_id);
@@ -1189,7 +1116,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
             if self.dapp_users.get(&dapp_user_id).is_none() {
-                ink_env::debug_println!("{}", "DappUserDoesNotExist");
+                ink::env::debug_println!("{}", "DappUserDoesNotExist");
                 return Err(Error::DappUserDoesNotExist);
             }
             Ok(self.dapp_users.get(&dapp_user_id).unwrap())
@@ -1201,7 +1128,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
             if self.providers.get(&accountid).is_none() {
-                ink_env::debug_println!("{}", "ProviderDoesNotExist");
+                ink::env::debug_println!("{}", "ProviderDoesNotExist");
                 return Err(Error::ProviderDoesNotExist);
             }
             let provider = self.providers.get(&accountid);
@@ -1214,7 +1141,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
             if self.dapps.get(&contract).is_none() {
-                ink_env::debug_println!("{}", "DappDoesNotExist");
+                ink::env::debug_println!("{}", "DappDoesNotExist");
                 return Err(Error::DappDoesNotExist);
             }
             let dapp = self.dapps.get(&contract);
@@ -1328,13 +1255,22 @@ pub mod prosopo {
             provider_ids
         }
 
+
+
         fn get_random_number(&self, min: u64, max: u64, user_account: AccountId) -> u64 {
-            let random_seed = self.env().random(user_account.as_ref());
-            let mut seed_converted: [u8; 32] = Default::default();
-            seed_converted.copy_from_slice(random_seed.0.as_ref());
-            let mut rng = ChaChaRng::from_seed(seed_converted);
+            let random_seed = self.env().block_timestamp();
+            let timestamp_bytes = random_seed.to_le_bytes();
+            let mut timestamp_seed = concat_u8(&timestamp_bytes, &timestamp_bytes);
+            ink::env::debug_println!("timestamp_seed: {:?}", timestamp_seed);
+            let mut rng = ChaChaRng::from_seed(<[u8; 32]>::try_from(timestamp_seed).unwrap());
             ((rng.next_u64() / u64::MAX) * (max - min) + min) as u64
         }
+    }
+
+    fn concat_u8(a: &[u8], b: &[u8]) -> Vec<u8> {
+        let mut c = a.to_vec();
+        c.extend_from_slice(b);
+        c
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -1342,19 +1278,19 @@ pub mod prosopo {
     /// The below code is technically just normal Rust code.
     #[cfg(test)]
     mod tests {
-        use ink_env::debug_println;
-        /// Imports `ink_lang` so we can use `#[ink::test]`.
-        use ink_env::hash::Blake2x256;
-        use ink_env::hash::CryptoHash;
-        use ink_env::hash::HashOutput;
-        use ink_lang as ink;
+        use ink;
+        use ink::env::debug_println;
+        /// Imports `ink` so we can use `#[ink::test]`.
+        use ink::env::hash::Blake2x256;
+        use ink::env::hash::CryptoHash;
+        use ink::env::hash::HashOutput;
 
         use crate::prosopo::Error::{ProviderInactive, ProviderInsufficientFunds};
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
 
-        type Event = <Prosopo as ::ink_lang::reflect::ContractEventBase>::Type;
+        type Event = <Prosopo as ::ink::reflect::ContractEventBase>::Type;
 
         const PROVIDER_STAKE_DEFAULT: u128 = 1000000000000;
 
@@ -1429,11 +1365,11 @@ pub mod prosopo {
             let operator_account = AccountId::from([0x1; 32]);
             let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
             let mut number = contract.get_random_number(1, 128, operator_account);
-            ink_env::debug_println!("{}", number);
+            ink::env::debug_println!("{}", number);
             assert!((1 <= number) && (number <= 128));
 
             number = contract.get_random_number(0, 1, operator_account);
-            ink_env::debug_println!("{}", number);
+            ink::env::debug_println!("{}", number);
             assert!(number == 0 || number == 1);
         }
 
@@ -1461,7 +1397,7 @@ pub mod prosopo {
         fn test_add_operator() {
             let operator_account = AccountId::from([0x1; 32]);
             let mut contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
             let operator_account_new = AccountId::from([0x2; 32]);
             contract.add_prosopo_operator(operator_account_new);
             assert!(contract.operator_accounts.contains(&operator_account_new));
@@ -1485,9 +1421,9 @@ pub mod prosopo {
                 .contains(&provider_account));
             let service_origin = str_to_hash("https://localhost:4242".to_string());
             let fee: u32 = 100;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
             assert!(contract
                 .provider_accounts
@@ -1501,7 +1437,7 @@ pub mod prosopo {
             assert_eq!(provider.balance, balance);
             assert_eq!(provider.status, GovernanceStatus::Deactivated);
 
-            let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
+            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
 
             // first event is the register event, second event is the update
             assert_eq!(2, emitted_events.len());
@@ -1573,9 +1509,9 @@ pub mod prosopo {
 
             let (_, service_origin, fee) = generate_provider_data(0x3, "4242", 100);
 
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
             // try updating the second provider and make sure the error is correct and that it didn't change
             match contract.provider_update(service_origin, fee, Payee::Dapp, provider_account) {
@@ -1601,19 +1537,19 @@ pub mod prosopo {
             let mut contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
             contract
                 .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
-            ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(
+            ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
                 balance,
             );
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             contract.provider_unstake().ok();
-            let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
+            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
 
             // events are the register event (0), stake event(1), deregister(2) and the unstake event(3)
 
@@ -1644,21 +1580,21 @@ pub mod prosopo {
             let mut contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 2000000000000;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
             contract
                 .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
-            ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(
+            ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
                 balance,
             );
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             let root1 = str_to_hash("merkle tree".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2).ok();
-            let emitted_events = ink_env::test::recorded_events().collect::<Vec<_>>();
+            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
 
             // events are the register, stake, add data set
             assert_eq!(3, emitted_events.len());
@@ -1694,16 +1630,16 @@ pub mod prosopo {
             let mut contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(operator_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
             contract
                 .provider_register(service_origin, fee, Payee::Provider, provider_account)
                 .ok();
-            ink_env::test::set_account_balance::<ink_env::DefaultEnvironment>(
+            ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
                 balance,
             );
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             let result = contract.provider_add_dataset(root1, root2).unwrap_err();
@@ -1718,10 +1654,10 @@ pub mod prosopo {
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(caller);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
             // Don't transfer anything with the call
             let balance = 0;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             let client_origin = str_to_hash("https://localhost:2424".to_string());
             contract.dapp_register(client_origin, dapp_contract, None);
             assert!(contract.dapps.get(&dapp_contract).is_some());
@@ -1745,11 +1681,11 @@ pub mod prosopo {
             let client_origin = str_to_hash("https://localhost:2424".to_string());
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(caller);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
             // Transfer tokens with the call
             let balance = 2000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
             // register the dapp
             contract.dapp_register(client_origin, dapp_contract, None);
@@ -1777,11 +1713,11 @@ pub mod prosopo {
             let client_origin_1 = str_to_hash("https://localhost:2424".to_string());
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(caller);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
             // Transfer tokens with the call
             let balance_1 = 100;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance_1);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
             // register the dapp
             contract.dapp_register(client_origin_1, dapp_contract_account, None);
@@ -1800,7 +1736,7 @@ pub mod prosopo {
 
             // Transfer tokens with the call
             let balance_2 = 200;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance_2);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_2);
 
             // run the register function again for the same (caller, contract) pair, adding more
             // tokens and changing the client origin
@@ -1829,18 +1765,18 @@ pub mod prosopo {
             let client_origin_1 = str_to_hash("https://localhost:2424".to_string());
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(caller);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
             // Transfer tokens with the register call
             let balance_1 = 100;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance_1);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
             // register the dapp
             contract.dapp_register(client_origin_1, dapp_contract, None);
 
             // Transfer tokens with the fund call
             let balance_2 = 200;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance_2);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_2);
             contract.dapp_fund(dapp_contract);
 
             // check the total account balance is correct
@@ -1857,14 +1793,15 @@ pub mod prosopo {
             let contract_account = AccountId::from([0x3; 32]);
             let client_origin_1 = str_to_hash("https://localhost:2424".to_string());
             let callers_initial_balance =
-                ink_env::test::get_account_balance::<ink_env::DefaultEnvironment>(caller).unwrap();
+                ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>(caller)
+                    .unwrap();
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(caller);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
             // Transfer tokens with the register call
             let balance = 200;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
             // register the dapp
             contract.dapp_register(client_origin_1, contract_account, None);
@@ -1879,7 +1816,8 @@ pub mod prosopo {
             // Make sure the funds are returned to the caller
             assert_eq!(dapp.balance, 0);
             let callers_balance =
-                ink_env::test::get_account_balance::<ink_env::DefaultEnvironment>(caller).unwrap();
+                ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>(caller)
+                    .unwrap();
             assert_eq!(callers_initial_balance + balance, callers_balance);
         }
 
@@ -1903,10 +1841,10 @@ pub mod prosopo {
 
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
@@ -1916,10 +1854,10 @@ pub mod prosopo {
             let dapp_contract_account = AccountId::from([0x4; 32]);
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_caller_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             let client_origin = service_origin.clone();
             contract.dapp_register(client_origin, dapp_contract_account, None);
 
@@ -1952,10 +1890,10 @@ pub mod prosopo {
 
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
 
             let provider = contract.providers.get(&provider_account).unwrap();
@@ -1967,10 +1905,10 @@ pub mod prosopo {
             let dapp_contract_account = AccountId::from([0x4; 32]);
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_caller_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             let client_origin = service_origin.clone();
             contract.dapp_register(client_origin, dapp_contract_account, None);
 
@@ -1982,7 +1920,7 @@ pub mod prosopo {
                 .ok();
 
             // Call from the provider account to mark the solution as approved
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
             contract.provider_approve(solution_id, 0);
             let commitment = contract
@@ -2029,10 +1967,10 @@ pub mod prosopo {
 
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
@@ -2042,10 +1980,10 @@ pub mod prosopo {
             let dapp_contract_account = AccountId::from([0x4; 32]);
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_caller_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             let client_origin = service_origin.clone();
             contract.dapp_register(client_origin, dapp_contract_account, None);
 
@@ -2057,7 +1995,7 @@ pub mod prosopo {
                 .ok();
 
             // Call from the provider account to mark the wrong solution as approved
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = str_to_hash("id that does not exist".to_string());
             let result = contract.provider_approve(solution_id, 0);
             assert_eq!(
@@ -2082,10 +2020,10 @@ pub mod prosopo {
 
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
@@ -2095,10 +2033,10 @@ pub mod prosopo {
             let dapp_contract_account = AccountId::from([0x4; 32]);
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_caller_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             let client_origin = str_to_hash("https://localhost:2424".to_string());
             contract.dapp_register(client_origin, dapp_contract_account, None);
 
@@ -2110,7 +2048,7 @@ pub mod prosopo {
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
             contract.provider_disapprove(solution_id);
             let commitment = contract
@@ -2156,10 +2094,10 @@ pub mod prosopo {
 
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2);
@@ -2169,24 +2107,24 @@ pub mod prosopo {
             let dapp_contract_account = AccountId::from([0x4; 32]);
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_caller_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             let client_origin = service_origin.clone();
             contract.dapp_register(client_origin, dapp_contract_account, None);
 
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
             // Call from the Dapp User Account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_user_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
                 .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account)
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
             contract.provider_disapprove(solution_id);
             let commitment = contract
@@ -2230,9 +2168,9 @@ pub mod prosopo {
             let fee: u32 = 0;
             contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
             let fee2: u32 = 100;
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
@@ -2243,10 +2181,10 @@ pub mod prosopo {
             let dapp_contract_account = AccountId::from([0x4; 32]);
 
             // Call from the dapp account
-            ink_env::test::set_caller::<ink_env::DefaultEnvironment>(dapp_caller_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
-            ink_env::test::set_value_transferred::<ink_env::DefaultEnvironment>(balance);
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             let client_origin = service_origin.clone();
             contract.dapp_register(client_origin, dapp_contract_account, None);
             let selected_provider =
