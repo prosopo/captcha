@@ -784,6 +784,11 @@ pub mod prosopo {
             provider: AccountId,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
+            // Guard against dapp submitting a commit on behalf of a user
+            if (self.dapps.get(&caller).is_some()) {
+                return Err(Error::NotAuthorised);
+            }
+
             // Guard against incorrect data being submitted
             self.get_captcha_data(dataset_id)?;
             // Guard against solution commitment being submitted more than once
@@ -1254,8 +1259,6 @@ pub mod prosopo {
             }
             provider_ids
         }
-
-
 
         fn get_random_number(&self, min: u64, max: u64, user_account: AccountId) -> u64 {
             let random_seed = self.env().block_timestamp();
