@@ -446,6 +446,17 @@ pub mod prosopo {
         DatasetIdSolutionsSame,
     }
 
+
+    /// Concatenate two arrays (a and b) into a new array (c)
+    /// 
+    fn concat_u8<const A:usize, const B:usize, const C:usize>(a:&[u8;A], b:&[u8;B]) -> [u8;C] {
+        let mut c = [0;C];
+        c[..A].copy_from_slice(a);
+        c[A..A+B].copy_from_slice(b);
+        c
+    }
+
+
     impl Prosopo {
         /// Constructor
         #[ink(constructor, payable)]
