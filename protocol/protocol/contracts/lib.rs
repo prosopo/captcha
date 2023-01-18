@@ -1464,18 +1464,32 @@ pub mod prosopo {
             assert!(returned_list == vec![registered_provider_account.unwrap()]);
         }
 
+        // test get random number with zero length, i.e. no range to pick from
+        #[ink::test]
+        #[should_panic]
+        fn test_get_random_number_zero_len() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            contract.get_random_number(0, operator_account);
+        }
+
         // Test get random number
         #[ink::test]
         fn test_get_random_number() {
-            // let operator_account = AccountId::from([0x1; 32]);
-            // let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
-            // let mut number = contract.get_random_number(1, 128, operator_account);
-            // ink_env::debug_println!("{}", number);
-            // assert!((1 <= number) && (number <= 128));
-
-            // number = contract.get_random_number(0, 1, operator_account);
-            // ink_env::debug_println!("{}", number);
-            // assert!(number == 0 || number == 1);
+            let operator_account = AccountId::from([0x1; 32]);
+            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            const len: usize = 10;
+            let mut number: u64;
+            let mut arr = [0; len];
+            // get several random numbers, one per block
+            for i in 0..len {
+                number = contract.get_random_number(100, operator_account);
+                arr[i] = number;
+                println!("{:?} {:?} {:?}", number, ink_env::block_number::<ink_env::DefaultEnvironment>(), ink_env::block_timestamp::<ink_env::DefaultEnvironment>());
+                ink_env::test::advance_block::<ink_env::DefaultEnvironment>();
+            }
+            // check that the random numbers match precomputed values
+            assert_eq!(&[91,47,20,20,72,82,75,14,16,69], &arr);
         }
 
         /// Helper function for converting string to Hash
