@@ -1339,24 +1339,36 @@ pub mod prosopo {
             provider_ids
         }
 
+        /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
         pub fn get_random_number(&self, len: u64, user_account: AccountId) -> u64 {
-            // get the random seed containing a random integer + block number
-            let random_seed = self.env().random(user_account.as_ref());
-            // pull out the random seed into an arr of 32x u8
-            let mut seed_converted: [u8; 32] = Default::default();
-            seed_converted.copy_from_slice(random_seed.0.as_ref());
+            if len <= 0 {
+                panic!("Cannot generate a random number for a length of 0 or less");
+            }
+            // build a random seed from user account, block number, block timestamp and (TODO) block hash
+            let block_number: u32 = self.env().block_number();
+            let block_timestamp: u64 = self.env().block_timestamp();
+            let user_account_bytes: &[u8; 32] = user_account.as_ref();
+            // pack all the data into a single byte array
+            let block_number_arr : [u8; 4]= block_number.to_be_bytes();
+            let block_timestamp_arr: [u8; 8] = block_timestamp.to_le_bytes();
+            let tmp:[u8;36] = concat_u8(&user_account_bytes, &block_number_arr);
+            let bytes:[u8;44] = concat_u8(&tmp, &block_timestamp_arr);
+            // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
+            let mut hash_output = <ink_env::hash::Blake2x256 as ink_env::hash::HashOutput>::Type::default();
+            <ink_env::hash::Blake2x256 as ink_env::hash::CryptoHash>::hash(&bytes, &mut hash_output);
             // init rng from this block's seed
-            let mut rng = ChaChaRng::from_seed(seed_converted);
+            let mut rng = ChaChaRng::from_seed(hash_output);
             // get the next random number in u64 range
             let next = rng.next_u64();
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
             // e.g. if len = 10 then range would be 0-9
             let next_mod = next % len as u64;
-            ink_env::debug_println!("{:#?} {:#?} {:#?} {:#?}", next, len, next_mod, self.env().block_number());
+            ink_env::debug_println!("{:#?} {:#?} {:#?}", next, len, next_mod);
             next_mod
         }
 
+        /// Get a random number from 0 to `len` - 1 inclusive. Uses the caller account for additional random entropy.
         #[ink(message)]
         pub fn get_random_number_caller(&self, len: u64) -> u64 {
             self.get_random_number(len, self.env().caller())
@@ -1365,10 +1377,13 @@ pub mod prosopo {
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
     /// module and test functions are marked with a `#[test]` attribute.
+    /// ************** READ BEFORE TESTING *******************
     /// The below code is technically just normal Rust code.
+    /// Therefore you can use println!() as usual, but by default stdout is only shown for tests which fail.
+    /// Run the tests via `cargo test` (no need for `cargo contract`!)
+    /// *********************************
     #[cfg(test)]
     mod tests {
-        use ink_env::debug_println;
         /// Imports `ink_lang` so we can use `#[ink::test]`.
         use ink_env::hash::Blake2x256;
         use ink_env::hash::CryptoHash;
