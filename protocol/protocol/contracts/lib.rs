@@ -23,7 +23,7 @@ pub mod prosopo {
     //use ink::env::types::{AccountId, Balance, BlockNumber, BlockTimestamp, Hash};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
-    use ink::storage::{traits::StorageLayout, Lazy, Mapping};
+    use ink::storage::{traits::StorageLayout, Mapping};
 
     use rand_chacha::rand_core::RngCore;
     use rand_chacha::rand_core::SeedableRng;
@@ -380,17 +380,6 @@ pub mod prosopo {
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
             }
-        }
-
-        /// Default initializes the contract with the specified initial supply.
-        fn new_init(&mut self, operator_account: AccountId, provider_stake_default: u128, dapp_stake_default: u128) {
-            let operator = Operator {
-                status: GovernanceStatus::Active,
-            };
-            self.operators.insert(operator_account, &operator);
-            self.operator_accounts.push(operator_account);
-            self.provider_stake_default = provider_stake_default;
-            self.dapp_stake_default = dapp_stake_default;
         }
 
         /// Get contract provider minimum stake default.
@@ -1269,10 +1258,10 @@ pub mod prosopo {
 
         fn get_random_number(&self, min: u64, max: u64, user_account: AccountId) -> u64 {
             let random_seed = self.env().block_timestamp();
-            let mut timestamp_bytes: Vec<u8> = random_seed.to_le_bytes().to_vec();
+            let timestamp_bytes: Vec<u8> = random_seed.to_le_bytes().to_vec();
             let mut timestamp_vec = Vec::<u8>::new();
-            for i in 0..4 {
-                let mut v = &mut timestamp_bytes.clone();
+            for _i in 0..4 {
+                let v = &mut timestamp_bytes.clone();
                 ink::env::debug_println!("appending to timestamp_vec: {:?}", v);
                 timestamp_vec.append( v)
             }
@@ -1282,12 +1271,6 @@ pub mod prosopo {
             let mut rng = ChaChaRng::from_seed(timestamp_seed_ref.try_into().unwrap());
             ((rng.next_u64() / u64::MAX) * (max - min) + min) as u64
         }
-
-        // fn concat_vectors(&self, a: Vec<u8>, b: Vec<u8>) -> Vec<u8> {
-        //     let mut c = a;
-        //     c.append(&mut b);
-        //     c
-        // }
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
