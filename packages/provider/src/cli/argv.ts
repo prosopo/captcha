@@ -137,7 +137,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                     }),
             async (argv) => {
                 const provider = await tasks.contractApi.getProviderDetails(argv.address)
-                if ((provider && argv.origin) || argv.fee || argv.payee || argv.value) {
+                if (provider && (argv.origin || argv.fee || argv.payee || argv.value)) {
                     const result = await tasks.contractApi.providerUpdate(
                         argv.origin || provider.serviceOrigin,
                         argv.fee || provider.fee,

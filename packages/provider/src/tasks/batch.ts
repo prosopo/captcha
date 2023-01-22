@@ -85,6 +85,7 @@ export class BatchCommitter {
                 commitment.datasetId,
                 commitment.commitmentId,
                 this.contractApi.pair.address,
+                'Approved',
             ]
 
             const encodedArgs: Uint8Array[] = encodeStringArgs(this.contractApi.api.registry, fragment, args)
