@@ -1,4 +1,4 @@
-use ink_prelude::{string::String, vec::Vec, format};
+use ink::prelude::{string::String, vec::Vec, format};
 use serde::Serialize;
 
 #[derive(Serialize)]

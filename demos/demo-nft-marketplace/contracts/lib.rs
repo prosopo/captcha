@@ -8,7 +8,7 @@ pub mod demo_nft_contract {
     use base64;
     use serde_json_core as serde_json;
 
-    use brush::{
+    use openbrush::{
         contracts::{
             ownable::*,
             psp34::extensions::{enumerable::*, metadata::*},
@@ -16,9 +16,9 @@ pub mod demo_nft_contract {
         modifiers,
     };
 
-    use ink_prelude::format;
-    use ink_prelude::{string::String, vec::Vec};
-    use ink_storage::traits::SpreadAllocate;
+    use ink::prelude::format;
+    use ink::prelude::{string::String, vec::Vec};
+    use ink::storage::traits::SpreadAllocate;
 
     use prosopo::ProsopoRef;
 
@@ -98,7 +98,7 @@ pub mod demo_nft_contract {
     impl DemoNFT {
         #[ink(constructor)]
         pub fn new(prosopo_account: AccountId) -> Self {
-            ink_lang::codegen::initialize_contract(|instance: &mut Self| {
+            ink::codegen::initialize_contract(|instance: &mut Self| {
                 let caller = instance.env().caller();
                 instance._init_with_owner(caller);
                 instance.prosopo_account = prosopo_account;
@@ -324,7 +324,7 @@ pub mod demo_nft_contract {
     #[cfg(test)]
     mod tests {
         use core::cmp::Ordering;
-        use ink_lang as ink;
+        use ink;
 
         use super::*;
 
