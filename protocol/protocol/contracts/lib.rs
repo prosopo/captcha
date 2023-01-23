@@ -1290,7 +1290,6 @@ pub mod prosopo {
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
             // e.g. if len = 10 then range would be 0-9
             let next_mod = next % len as u64;
-            ink::env::debug_println!("{:#?} {:#?} {:#?}", next, len, next_mod);
             next_mod
         }
 
