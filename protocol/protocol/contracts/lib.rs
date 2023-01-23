@@ -1227,7 +1227,7 @@ pub mod prosopo {
             if max == 0 {
                 return Err(Error::NoActiveProviders);
             }
-            let index = self.get_random_number(max as u64, user_account);
+            let index = self.get_random_number(max as u128, user_account);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             let provider = self.providers.get(provider_id);
             if provider.is_none() {
@@ -1263,7 +1263,7 @@ pub mod prosopo {
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
-        pub fn get_random_number(&self, len: u64, user_account: AccountId) -> u64 {
+        pub fn get_random_number(&self, len: u128, user_account: AccountId) -> u128 {
             if len <= 0 {
                 panic!("Cannot generate a random number for a length of 0 or less");
             }
@@ -1272,30 +1272,24 @@ pub mod prosopo {
             let block_timestamp: u64 = self.env().block_timestamp();
             let user_account_bytes: &[u8; 32] = user_account.as_ref();
             // pack all the data into a single byte array
-            let block_number_arr: [u8; 4] = block_number.to_be_bytes();
+            let block_number_arr : [u8; 4]= block_number.to_le_bytes();
             let block_timestamp_arr: [u8; 8] = block_timestamp.to_le_bytes();
             let tmp: [u8; 36] = concat_u8(&user_account_bytes, &block_number_arr);
             let bytes: [u8; 44] = concat_u8(&tmp, &block_timestamp_arr);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
-            let mut hash_output =
-                <ink::env::hash::Blake2x256 as ink::env::hash::HashOutput>::Type::default();
-            <ink::env::hash::Blake2x256 as ink::env::hash::CryptoHash>::hash(
-                &bytes,
-                &mut hash_output,
-            );
-            // init rng from this block's seed
-            let mut rng = ChaChaRng::from_seed(hash_output);
-            // get the next random number in u64 range
-            let next = rng.next_u64();
+            let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
+            <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
+            // the random number can be derived from the hash
+            let next = u128::from_le_bytes(hash_output);
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
             // e.g. if len = 10 then range would be 0-9
-            let next_mod = next % len as u64;
+            let next_mod = next % len;
             next_mod
         }
 
         /// Get a random number from 0 to `len` - 1 inclusive. Uses the caller account for additional random entropy.
         #[ink(message)]
-        pub fn get_random_number_caller(&self, len: u64) -> u64 {
+        pub fn get_random_number_caller(&self, len: u128) -> u128 {
             self.get_random_number(len, self.env().caller())
         }
     }
@@ -1402,7 +1396,7 @@ pub mod prosopo {
         #[should_panic]
         fn test_get_random_number_zero_len() {
             let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             contract.get_random_number(0, operator_account);
         }
 
@@ -1410,13 +1404,12 @@ pub mod prosopo {
         #[ink::test]
         fn test_get_random_number() {
             let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             const len: usize = 10;
-            let mut number: u64;
             let mut arr = [0; len];
             // get several random numbers, one per block
             for i in 0..len {
-                number = contract.get_random_number(100, operator_account);
+                let number = contract.get_random_number(100, operator_account);
                 arr[i] = number;
                 println!(
                     "{:?} {:?} {:?}",
@@ -1427,7 +1420,7 @@ pub mod prosopo {
                 ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
             }
             // check that the random numbers match precomputed values
-            assert_eq!(&[91, 47, 20, 20, 72, 82, 75, 14, 16, 69], &arr);
+            assert_eq!(&[58, 1, 45, 93, 87, 19, 99, 5, 66, 39], &arr);
         }
 
         /// Helper function for converting string to Hash
@@ -2248,5 +2241,6 @@ pub mod prosopo {
                 contract.get_random_active_provider(provider_account, dapp_contract_account);
             assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
         }
+
     }
 }
