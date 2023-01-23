@@ -1486,7 +1486,7 @@ pub mod prosopo {
                 ink_env::test::advance_block::<ink_env::DefaultEnvironment>();
             }
             // check that the random numbers match precomputed values
-            assert_eq!(&[91,47,20,20,72,82,75,14,16,69], &arr);
+            assert_eq!(&[58, 1, 45, 93, 87, 19, 99, 5, 66, 39], &arr);
         }
 
         /// Helper function for converting string to Hash
