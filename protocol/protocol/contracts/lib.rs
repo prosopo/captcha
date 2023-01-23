@@ -28,9 +28,9 @@ pub mod prosopo {
         Mapping,
     };
     use prosopo_storage_derive::EnumSpreadAllocate;
-    use rand_chacha::rand_core::RngCore;
-    use rand_chacha::rand_core::SeedableRng;
-    use rand_chacha::ChaChaRng;
+    use ink_env::hash::Blake2x128;
+    use ink_env::hash::CryptoHash;
+    use ink_env::hash::HashOutput;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
@@ -1355,8 +1355,8 @@ pub mod prosopo {
             let tmp:[u8;36] = concat_u8(&user_account_bytes, &block_number_arr);
             let bytes:[u8;44] = concat_u8(&tmp, &block_timestamp_arr);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
-            let mut hash_output = <ink_env::hash::Blake2x128 as ink_env::hash::HashOutput>::Type::default();
-            <ink_env::hash::Blake2x128 as ink_env::hash::CryptoHash>::hash(&bytes, &mut hash_output);
+            let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
+            <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
             // the random number can be derived from the hash
             let next = u128::from_le_bytes(hash_output);
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
