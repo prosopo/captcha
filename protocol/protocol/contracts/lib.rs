@@ -1305,7 +1305,7 @@ pub mod prosopo {
             if max == 0 {
                 return Err(Error::NoActiveProviders);
             }
-            let index = self.get_random_number(max as u64, user_account);
+            let index = self.get_random_number(max, user_account);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             let provider = self.providers.get(provider_id);
             if provider.is_none() {
@@ -1341,7 +1341,7 @@ pub mod prosopo {
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
-        pub fn get_random_number(&self, len: u64, user_account: AccountId) -> u64 {
+        pub fn get_random_number(&self, len: u128, user_account: AccountId) -> u128 {
             if len <= 0 {
                 panic!("Cannot generate a random number for a length of 0 or less");
             }
