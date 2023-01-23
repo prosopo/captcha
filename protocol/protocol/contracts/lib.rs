@@ -19,15 +19,14 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 
 #[ink::contract]
 pub mod prosopo {
-    //use ink::env::types::{AccountId, Balance, BlockNumber, BlockTimestamp, Hash};
+    use ink::env::hash::{
+        Blake2x128, CryptoHash, HashOutput,
+    };
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
-    // do not remove StorageLayout, it is used in derives
+    #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-
-    use rand_chacha::rand_core::RngCore;
-    use rand_chacha::rand_core::SeedableRng;
-    use rand_chacha::ChaChaRng;
+    use ink::env::debug_println as debug;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -799,7 +798,7 @@ pub mod prosopo {
                 .get(user_merkle_tree_root)
                 .is_some()
             {
-                ink::env::debug_println!("{}", "CaptchaSolutionCommitmentExists");
+                debug!("{}", "CaptchaSolutionCommitmentExists");
                 //return Err(Error::CaptchaSolutionCommitmentExists);
                 return Ok(());
             }
@@ -1040,12 +1039,12 @@ pub mod prosopo {
             provider_id: AccountId,
         ) -> Result<Provider, Error> {
             if self.providers.get(&provider_id).is_none() {
-                ink::env::debug_println!("{}", "ProviderDoesNotExist");
+                debug!("{}", "ProviderDoesNotExist");
                 return Err(Error::ProviderDoesNotExist);
             }
             let provider = self.get_provider_details(provider_id)?;
             if provider.balance < self.provider_stake_default {
-                ink::env::debug_println!("{}", "ProviderInsufficientFunds");
+                debug!("{}", "ProviderInsufficientFunds");
                 return Err(Error::ProviderInsufficientFunds);
             }
             Ok(provider)
@@ -1054,7 +1053,7 @@ pub mod prosopo {
         fn validate_provider_active(&self, provider_id: AccountId) -> Result<Provider, Error> {
             let provider = self.validate_provider_exists_and_has_funds(provider_id)?;
             if provider.status != GovernanceStatus::Active {
-                ink::env::debug_println!("{}", "ProviderInactive");
+                debug!("{}", "ProviderInactive");
                 return Err(Error::ProviderInactive);
             }
             Ok(provider)
@@ -1063,19 +1062,19 @@ pub mod prosopo {
         fn validate_dapp(&self, contract: AccountId) -> Result<(), Error> {
             // Guard against dapps using service that are not registered
             if self.dapps.get(&contract).is_none() {
-                ink::env::debug_println!("{}", "DappDoesNotExist");
+                debug!("{}", "DappDoesNotExist");
                 return Err(Error::DappDoesNotExist);
             }
             // Guard against dapps using service that are Suspended or Deactivated
             let dapp = self.get_dapp_details(contract)?;
             if dapp.status != GovernanceStatus::Active {
-                ink::env::debug_println!("{}", "DappInactive");
+                debug!("{}", "DappInactive");
                 return Err(Error::DappInactive);
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
             if dapp.balance <= self.dapp_stake_default {
-                ink::env::debug_println!("{}", "DappInsufficientFunds");
+                debug!("{}", "DappInsufficientFunds");
                 return Err(Error::DappInsufficientFunds);
             }
             Ok(())
@@ -1087,7 +1086,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
             if self.captcha_data.get(&dataset_id).is_none() {
-                ink::env::debug_println!("{}", "CaptchaDatasetDoesNotExist");
+                debug!("{}", "CaptchaDatasetDoesNotExist");
                 return Err(Error::CaptchaDataDoesNotExist);
             }
             let captcha_data = self.captcha_data.get(&dataset_id);
@@ -1123,7 +1122,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
             if self.dapp_users.get(&dapp_user_id).is_none() {
-                ink::env::debug_println!("{}", "DappUserDoesNotExist");
+                debug!("{}", "DappUserDoesNotExist");
                 return Err(Error::DappUserDoesNotExist);
             }
             Ok(self.dapp_users.get(&dapp_user_id).unwrap())
@@ -1135,7 +1134,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
             if self.providers.get(&accountid).is_none() {
-                ink::env::debug_println!("{}", "ProviderDoesNotExist");
+                debug!("{}", "ProviderDoesNotExist");
                 return Err(Error::ProviderDoesNotExist);
             }
             let provider = self.providers.get(&accountid);
@@ -1148,7 +1147,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
             if self.dapps.get(&contract).is_none() {
-                ink::env::debug_println!("{}", "DappDoesNotExist");
+                debug!("{}", "DappDoesNotExist");
                 return Err(Error::DappDoesNotExist);
             }
             let dapp = self.dapps.get(&contract);
@@ -1312,8 +1311,6 @@ pub mod prosopo {
     #[cfg(test)]
     mod tests {
         use ink;
-        use ink::env::debug_println;
-        /// Imports `ink` so we can use `#[ink::test]`.
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
