@@ -19,25 +19,15 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 
 #[ink::contract]
 pub mod prosopo {
-    use ink_prelude::collections::btree_set::BTreeSet;
-    use ink_prelude::vec::Vec;
-    use ink_storage::{
-        traits::PackedLayout, traits::SpreadAllocate, traits::SpreadLayout, traits::StorageLayout,
-        Mapping,
-    };
     use prosopo_storage_derive::EnumSpreadAllocate;
-    use ink_env::hash::Blake2x128;
-    use ink_env::hash::CryptoHash;
-    use ink_env::hash::HashOutput;
+    use ink::env::hash::{
+        Blake2x128, CryptoHash, HashOutput,
+    };
     //use ink::env::types::{AccountId, Balance, BlockNumber, BlockTimestamp, Hash};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
     // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-
-    use rand_chacha::rand_core::RngCore;
-    use rand_chacha::rand_core::SeedableRng;
-    use rand_chacha::ChaChaRng;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -1274,6 +1264,7 @@ pub mod prosopo {
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
+        pub fn get_random_number(&self, len: u128, user_account: AccountId) -> u128 {
             if len <= 0 {
                 panic!("Cannot generate a random number for a length of 0 or less");
             }
@@ -1408,7 +1399,7 @@ pub mod prosopo {
         #[should_panic]
         fn test_get_random_number_zero_len() {
             let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             contract.get_random_number(0, operator_account);
         }
 
@@ -1416,12 +1407,12 @@ pub mod prosopo {
         #[ink::test]
         fn test_get_random_number() {
             let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             const len: usize = 10;
             let mut arr = [0; len];
             // get several random numbers, one per block
             for i in 0..len {
-                number = contract.get_random_number(100, operator_account);
+                let number = contract.get_random_number(100, operator_account);
                 arr[i] = number;
                 println!(
                     "{:?} {:?} {:?}",
@@ -2253,5 +2244,6 @@ pub mod prosopo {
                 contract.get_random_active_provider(provider_account, dapp_contract_account);
             assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
         }
+
     }
 }
