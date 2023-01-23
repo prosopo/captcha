@@ -1305,7 +1305,7 @@ pub mod prosopo {
             if max == 0 {
                 return Err(Error::NoActiveProviders);
             }
-            let index = self.get_random_number(max, user_account);
+            let index = self.get_random_number(max as u128, user_account);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             let provider = self.providers.get(provider_id);
             if provider.is_none() {
@@ -1367,7 +1367,7 @@ pub mod prosopo {
 
         /// Get a random number from 0 to `len` - 1 inclusive. Uses the caller account for additional random entropy.
         #[ink(message)]
-        pub fn get_random_number_caller(&self, len: u64) -> u64 {
+        pub fn get_random_number_caller(&self, len: u128) -> u128 {
             self.get_random_number(len, self.env().caller())
         }
     }
@@ -1476,7 +1476,7 @@ pub mod prosopo {
             let operator_account = AccountId::from([0x1; 32]);
             let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
             const len: usize = 10;
-            let mut number: u64;
+            let mut number: u128;
             let mut arr = [0; len];
             // get several random numbers, one per block
             for i in 0..len {
