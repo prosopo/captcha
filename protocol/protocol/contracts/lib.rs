@@ -1268,14 +1268,17 @@ pub mod prosopo {
                 panic!("Cannot generate a random number for a length of 0 or less");
             }
             // build a random seed from user account, block number, block timestamp and (TODO) block hash
+            const BLOCK_NUMBER_SIZE: usize = 4;
+            const BLOCK_TIMESTAMP_SIZE: usize = 8;
+            const USER_ACCOUNT_SIZE: usize = 32;
             let block_number: u32 = self.env().block_number();
             let block_timestamp: u64 = self.env().block_timestamp();
-            let user_account_bytes: &[u8; 32] = user_account.as_ref();
+            let user_account_bytes: &[u8; USER_ACCOUNT_SIZE] = user_account.as_ref();
             // pack all the data into a single byte array
-            let block_number_arr : [u8; 4]= block_number.to_le_bytes();
-            let block_timestamp_arr: [u8; 8] = block_timestamp.to_le_bytes();
-            let tmp: [u8; 36] = concat_u8(&user_account_bytes, &block_number_arr);
-            let bytes: [u8; 44] = concat_u8(&tmp, &block_timestamp_arr);
+            let block_number_arr : [u8; BLOCK_NUMBER_SIZE]= block_number.to_le_bytes();
+            let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
+            let tmp: [u8; USER_ACCOUNT_SIZE + BLOCK_NUMBER_SIZE] = concat_u8(&user_account_bytes, &block_number_arr);
+            let bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + USER_ACCOUNT_SIZE] = concat_u8(&tmp, &block_timestamp_arr);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
