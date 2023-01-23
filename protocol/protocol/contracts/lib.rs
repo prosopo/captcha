@@ -1350,7 +1350,7 @@ pub mod prosopo {
             let block_timestamp: u64 = self.env().block_timestamp();
             let user_account_bytes: &[u8; 32] = user_account.as_ref();
             // pack all the data into a single byte array
-            let block_number_arr : [u8; 4]= block_number.to_be_bytes();
+            let block_number_arr : [u8; 4]= block_number.to_le_bytes();
             let block_timestamp_arr: [u8; 8] = block_timestamp.to_le_bytes();
             let tmp:[u8;36] = concat_u8(&user_account_bytes, &block_number_arr);
             let bytes:[u8;44] = concat_u8(&tmp, &block_timestamp_arr);
@@ -1358,7 +1358,7 @@ pub mod prosopo {
             let mut hash_output = <ink_env::hash::Blake2x128 as ink_env::hash::HashOutput>::Type::default();
             <ink_env::hash::Blake2x128 as ink_env::hash::CryptoHash>::hash(&bytes, &mut hash_output);
             // the random number can be derived from the hash
-            let next = u128::from_be_bytes(hash_output);
+            let next = u128::from_le_bytes(hash_output);
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
             // e.g. if len = 10 then range would be 0-9
             let next_mod = next % len;
