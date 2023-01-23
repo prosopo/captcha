@@ -1302,6 +1302,15 @@ pub mod prosopo {
     /// Run the tests via `cargo test` (no need for `cargo contract`!)
     /// *********************************
     #[cfg(test)]
+    #[cfg_attr(debug_assertions, allow(
+        dead_code, 
+        unused_imports, 
+        unused_variables, 
+        unused_mut, 
+        unused_must_use, 
+        non_upper_case_globals, 
+        non_shorthand_field_patterns
+    ))]
     mod tests {
         use ink;
         use ink::env::hash::Blake2x256;
