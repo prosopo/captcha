@@ -1355,16 +1355,13 @@ pub mod prosopo {
             let tmp:[u8;36] = concat_u8(&user_account_bytes, &block_number_arr);
             let bytes:[u8;44] = concat_u8(&tmp, &block_timestamp_arr);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
-            let mut hash_output = <ink_env::hash::Blake2x256 as ink_env::hash::HashOutput>::Type::default();
-            <ink_env::hash::Blake2x256 as ink_env::hash::CryptoHash>::hash(&bytes, &mut hash_output);
-            // init rng from this block's seed
-            let mut rng = ChaChaRng::from_seed(hash_output);
-            // get the next random number in u64 range
-            let next = rng.next_u64();
+            let mut hash_output = <ink_env::hash::Blake2x128 as ink_env::hash::HashOutput>::Type::default();
+            <ink_env::hash::Blake2x128 as ink_env::hash::CryptoHash>::hash(&bytes, &mut hash_output);
+            // the random number can be derived from the hash
+            let next = u128::from_be_bytes(hash_output);
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
             // e.g. if len = 10 then range would be 0-9
-            let next_mod = next % len as u64;
-            ink_env::debug_println!("{:#?} {:#?} {:#?}", next, len, next_mod);
+            let next_mod = next % len;
             next_mod
         }
 
