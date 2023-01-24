@@ -80,8 +80,9 @@ jobs:
       - name: Install dependencies
         run: |
           cd workspaces
-          npm install
           npm run checkout ${{ matrix.branch }}
+          npm install
+
 
       - name: Build provider and dependencies
         run: |

@@ -16,7 +16,6 @@
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types'
 import fse from 'fs-extra'
-import path from 'path'
 import { Environment, getEnvFile, loadEnv } from '../env'
 import { generateMnemonic, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
@@ -44,14 +43,6 @@ const defaultDapp: IDappAccount = {
 }
 
 const hasProviderAccount = defaultProvider.mnemonic && defaultProvider.address
-
-async function copyArtifacts() {
-    // const argv = yargs(hideBin(process.argv)).argv;
-    const integrationPath = '../../'
-    const artifactsPath = path.join(integrationPath, 'protocol/artifacts')
-
-    await fse.copy(path.join(artifactsPath, 'prosopo.json'), '../contract/src/abi/prosopo.json', { overwrite: true })
-}
 
 async function copyEnvFile() {
     const tplEnvFile = getEnvFile('env')
@@ -102,11 +93,6 @@ async function setup() {
 
     console.log(`Address: ${address}`)
     console.log(`Mnemonic: ${mnemonic}`)
-
-    if (process.env.NODE_ENV === 'development') {
-        console.log('Copying contract artifacts...')
-        await copyArtifacts()
-    }
 
     console.log('Writing .env file...')
     await copyEnvFile()
