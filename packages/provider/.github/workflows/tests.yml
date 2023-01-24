@@ -20,7 +20,7 @@ jobs:
     steps:
 
       - name: Checkout provider
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: prosopo/workspaces
           path: workspaces
@@ -28,7 +28,7 @@ jobs:
           branch: upgrade_deps
 
       - name: Clone scripts repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: prosopo/scripts
           path: scripts
@@ -39,18 +39,29 @@ jobs:
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
 
-      - name: Cache NPM dependencies
+      - name: Cache node modules
+        id: cache-npm
         uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
         with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
-          key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-npm-cache-
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+        name: List the state of node modules
+        continue-on-error: true
+        run: npm list
 
       - name: Install dependencies
         run: |
           cd workspaces
-          npm i
+          npm install
 
       - name: Build provider and dependencies
         run: |
