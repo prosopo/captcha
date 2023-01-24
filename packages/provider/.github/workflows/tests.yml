@@ -97,5 +97,6 @@ jobs:
           npm run checkout ${{ matrix.branch }}
           NODE_ENV=$ENVIRONMENT npm run setup
           cd packages/provider
+          cat .env.development
           NODE_ENV=$ENVIRONMENT npm run test
 
