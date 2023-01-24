@@ -649,7 +649,7 @@ pub mod prosopo {
             // enforces a one to one relation between caller and dapp
             if self.dapps.get(&contract).is_none() {
                 // mark the account as suspended if it is new and no funds have been transferred
-                let status = if transferred > self.dapp_stake_default {
+                let status = if transferred >= self.dapp_stake_default {
                     GovernanceStatus::Active
                 } else {
                     GovernanceStatus::Suspended
@@ -1773,7 +1773,7 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
             // Transfer tokens with the call
-            let balance = 2000000000000;
+            let balance = STAKE_DEFAULT;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
             // register the dapp
@@ -1805,7 +1805,7 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
             // Transfer tokens with the call
-            let balance_1 = 100;
+            let balance_1 = STAKE_DEFAULT;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
             // register the dapp
@@ -1824,7 +1824,7 @@ pub mod prosopo {
             assert_eq!(dapp.balance, balance_1);
 
             // Transfer tokens with the call
-            let balance_2 = 200;
+            let balance_2 = STAKE_DEFAULT;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_2);
 
             // run the register function again for the same (caller, contract) pair, adding more
