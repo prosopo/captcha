@@ -39,6 +39,14 @@ jobs:
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
 
+      - name: Cache NPM dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-npm-cache-
+
       - name: Install dependencies
         run: |
           cd workspaces
@@ -47,6 +55,7 @@ jobs:
       - name: Build provider and dependencies
         run: |
           cd workspaces
+          cat package.json
           npm run build+deps provider
 
       - name: Setup the environment
