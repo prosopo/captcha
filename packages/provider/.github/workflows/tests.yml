@@ -37,8 +37,19 @@ jobs:
         run: |
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
-          cd ../workspaces
+
+      - name: Init the workspace
+        run: |
+          cd workspaces
           git submodule update --init --recursive --force --checkout
+
+      - name: Setup the environment
+        run: |
+          cd workspaces
           npm run setup
+
+      - name: Run the unit tests
+        run: |
+          cd workspaces
           npm run test
-          
+
