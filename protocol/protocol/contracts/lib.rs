@@ -649,7 +649,7 @@ pub mod prosopo {
             // enforces a one to one relation between caller and dapp
             if self.dapps.get(&contract).is_none() {
                 // mark the account as suspended if it is new and no funds have been transferred
-                let status = if transferred > 0 {
+                let status = if transferred > self.dapp_stake_default {
                     GovernanceStatus::Active
                 } else {
                     GovernanceStatus::Suspended
@@ -694,7 +694,7 @@ pub mod prosopo {
                     dapp.balance = total;
                     dapp.client_origin = client_origin;
                     dapp.owner = owner;
-                    if dapp.balance > 0 {
+                    if dapp.balance > self.dapp_stake_default {
                         dapp.status = GovernanceStatus::Active;
                     } else {
                         dapp.status = GovernanceStatus::Suspended;
@@ -814,12 +814,10 @@ pub mod prosopo {
             self.validate_provider_active(provider)?;
 
             // Create and insert the commitment
-            let mut status = CaptchaStatus::Pending;
-
             let commitment = CaptchaSolutionCommitment {
                 account: dapp_user,
                 dataset_id,
-                status,
+                status: CaptchaStatus::Pending,
                 contract,
                 provider,
                 completed_at: self.env().block_timestamp(),
@@ -846,13 +844,10 @@ pub mod prosopo {
                 }
             // Insert the commitment
             } else {
-                ink::env::debug_println!("inserting commitment");
-
                 self.create_new_dapp_user(dapp_user);
                 self.captcha_solution_commitments
                     .insert(user_merkle_tree_root, &commitment);
             }
-            ink::env::debug_println!("emitting DappUserCommit event");
             self.env().emit_event(DappUserCommit {
                 account: caller,
                 merkle_tree_root: user_merkle_tree_root,
