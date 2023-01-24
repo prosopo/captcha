@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        branch: [ upgrade_deps]
+        branch: [ upgrade_deps ]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -79,6 +79,6 @@ jobs:
 
       - name: Run the unit tests
         run: |
-          cd workspaces
+          cd workspaces/packages/provider
           npm run test
 
