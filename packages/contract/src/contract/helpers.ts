@@ -18,7 +18,6 @@ import { isHex, isU8a, stringCamelCase, stringToHex, stringUpperFirst } from '@p
 import { AnyJson } from '@polkadot/types/types/codec'
 import { DecodedEvent, TransactionResponse } from '../types/contract'
 import { ProsopoContractError } from '../handlers'
-import { Registry } from '@polkadot/types-codec/types/registry'
 import { SubmittableResult } from '@polkadot/api'
 import { Abi } from '@polkadot/api-contract'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
@@ -53,9 +52,10 @@ export function getEventsFromMethodName(
 }
 
 /** Encodes arguments, padding and converting to hex if necessary
+ * the ABI types
  * @return encoded arguments
  */
-export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args: any[]): Uint8Array[] {
+export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): Uint8Array[] {
     const encodedArgs: Uint8Array[] = []
     // args must be in the same order as methodObj['args']
     const typesToHash = ['Hash']
@@ -63,10 +63,9 @@ export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args
         let argVal = args[idx]
         // hash values that have been passed as strings
         if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
-            console.log(args, argVal)
             argVal = stringToHexPadded(argVal)
         }
-        encodedArgs.push(registry.createType(methodArg.type.type, argVal).toU8a())
+        encodedArgs.push(abi.registry.createType(methodArg.type.type, argVal).toU8a())
     })
     return encodedArgs
 }
@@ -74,11 +73,14 @@ export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args
 /** Handle errors returned from contract queries by throwing them
  */
 export function handleContractCallOutcomeErrors(response: ContractCallOutcome, contractMethodName: string): void {
-    const errorKey = 'Err'
+    const isOk = 'isOk'
+    const asOk = 'asOk'
     if (response.output) {
-        const humanOutput = response.output?.toHuman()
-        if (humanOutput && typeof humanOutput === 'object' && errorKey in humanOutput) {
-            throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, {})
+        if (response.output[isOk]) {
+            const responseOk = response.output[asOk]
+            if (responseOk.isErr) {
+                throw new ProsopoContractError(responseOk.toPrimitive().err.toString(), contractMethodName, {})
+            }
         }
     }
 }

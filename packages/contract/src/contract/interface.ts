@@ -20,7 +20,6 @@ import { ProsopoContractError } from '../handlers'
 import { ApiPromise, SubmittableResult } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { AbiVersion, getABIVersion } from '../util/definitionGen'
 import { ContractExecResult } from '@polkadot/types/interfaces/contracts'
 import { createType } from '@polkadot/types'
 import { ApiBase, ApiDecoration } from '@polkadot/api/types'
@@ -35,14 +34,12 @@ import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 export class ProsopoContractApi extends ContractPromise {
     contractName: string
     pair: KeyringPair
-    abiVersion: AbiVersion
     options: ContractOptions
 
     constructor(api: ApiPromise, abi: ContractAbi, address: string, pair: KeyringPair, contractName: string) {
         super(api, abi, address)
         this.pair = pair
         this.contractName = contractName
-        this.abiVersion = getABIVersion(abi)
     }
 
     public getContract(): ProsopoContractApi {
@@ -51,7 +48,7 @@ export class ProsopoContractApi extends ContractPromise {
 
     getOptions(value?: number | BN, gasLimit?: Weight): ContractOptions {
         const maximumBlockWeight = this.api.consts.system.blockWeights.maxBlock as unknown as WeightV2
-        const maxGas = maximumBlockWeight.refTime.toNumber() * 2
+        const maxGas = maximumBlockWeight.refTime.toNumber() * 0.9
         const _gasLimit: Weight | WeightV2 = gasLimit
             ? gasLimit
             : this.api.registry.createType('WeightV2', {
@@ -77,7 +74,7 @@ export class ProsopoContractApi extends ContractPromise {
         // Always query first as errors are passed back from a dry run but not from a transaction
         const { gasRequired } = await this.contractQuery(contractMethodName, args, value)
         const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: Uint8Array[] = encodeStringArgs(this.api.registry, methodObj, args)
+        const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, methodObj, args)
         const options = this.getOptions(value, gasRequired)
         return this.tx[contractMethodName](options, ...encodedArgs)
     }
@@ -128,7 +125,7 @@ export class ProsopoContractApi extends ContractPromise {
                                         }`
                                     } catch (error) {
                                         // swallow
-                                        console.debug(error)
+                                        console.log(error)
                                     }
                                 }
 
@@ -165,12 +162,13 @@ export class ProsopoContractApi extends ContractPromise {
         const message = this.getContractMethod(contractMethodName)
         const origin = this.pair.address
         const options = this.getOptions(value)
-        const params: Uint8Array[] = encodeStringArgs(this.api.registry, message, args)
+        const params: Uint8Array[] = encodeStringArgs(this.abi, message, args)
         let api: ApiBase<'promise'> | ApiDecoration<'promise'> = this.api
         if (atBlock) {
             api = atBlock ? await this.api.at(atBlock) : this.api
         }
 
+        // @ts-ignore
         const responseObservable = api.rx.call.contractsApi
             .call<ContractExecResult>(
                 origin,
@@ -231,11 +229,14 @@ export class ProsopoContractApi extends ContractPromise {
     getStorageEntry(storageName: string): ContractLayoutStructField {
         const json: AbiMetadata = this.abi.json as AbiMetadata
 
-        const data = json[this.abiVersion]
-
-        const storageEntry = data.storage.struct.fields.filter((obj: { name: string }) => obj.name === storageName)[0]
+        let storageEntry = json.storage.root.layout.struct.fields.filter(
+            (obj: { name: string }) => obj.name === storageName
+        )[0]
         if (storageEntry) {
-            return this.api.registry.createType('ContractLayoutStructField ', storageEntry)
+            while ('root' in storageEntry.layout) {
+                storageEntry = storageEntry.layout.root
+            }
+            return this.abi.registry.createType('ContractLayoutStructField ', storageEntry)
         }
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', 'getStorageKey')
     }
@@ -256,7 +257,6 @@ export class ProsopoContractApi extends ContractPromise {
             //     .toPromise()
             //values.map(v => this.api.registry.createType('Option<StorageData>', v)).map(o => o.isSome ? this.api.registry.createType('Balance', o.unwrap())
             if (result) {
-                console.log(result.toString())
                 return createType(result.registry, type, [result.toU8a(true)]) as T
             }
         }
