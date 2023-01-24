@@ -119,7 +119,8 @@ export class ProsopoCaptchaApi {
                     this.dappAccount,
                     datasetId as string,
                     commitmentId,
-                    this.provider.providerId.toString()
+                    this.provider.providerId.toString(),
+                    this.userAccount
                 )
             } catch (err) {
                 throw new ProsopoEnvError(err)
