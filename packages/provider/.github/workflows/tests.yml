@@ -19,20 +19,20 @@ jobs:
 
     steps:
 
-      - name: Checkout provider
+      - name: Clone workspaces
         uses: actions/checkout@v3
         with:
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
-          branch: upgrade_deps
+          ref: upgrade_deps
 
       - name: Clone scripts repository
         uses: actions/checkout@v3
         with:
           repository: prosopo/scripts
           path: scripts
-          branch: upgrade_deps
+          ref: upgrade_deps
 
       - name: Start the docker images
         run: |
