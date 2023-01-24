@@ -83,7 +83,7 @@ jobs:
           git checkout ${{ matrix.branch }}
           git submodule update --init --recursive
           git submodule foreach git checkout ${{ matrix.branch }} || git checkout develop
-          git submodule foreach git pull origin ${{ matrix.branch }} || git pull origin
+          git submodule foreach git pull origin ${{ matrix.branch }} || git pull origin develop
 
       - name: Install dependencies
         run: |
