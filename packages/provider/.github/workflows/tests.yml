@@ -72,13 +72,10 @@ jobs:
           cat package.json
           npm run build+deps provider
 
-      - name: Setup the environment
+      - name: Setup the environment and run the unit tests
         run: |
           cd workspaces
           npm run setup
-
-      - name: Run the unit tests
-        run: |
-          cd workspaces/packages/provider
-          npm run test
+          cd packages/provider
+          NODE_ENV=$ENVIRONMENT npm run test
 
