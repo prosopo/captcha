@@ -24,6 +24,7 @@ jobs:
         with:
           repository: prosopo/workspaces
           path: workspaces
+          submodules: recursive
       # This part here is cloning a second repository
       # While cloning the repository:
       #   - it clones the repo into the given `path`
@@ -37,11 +38,6 @@ jobs:
         run: |
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
-
-      - name: Init the workspace
-        run: |
-          cd workspaces
-          git submodule update --init --recursive --force --checkout
 
       - name: Setup the environment
         run: |
