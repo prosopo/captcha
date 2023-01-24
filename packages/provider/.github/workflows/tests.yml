@@ -94,7 +94,7 @@ jobs:
 
       - name: Build provider and dependencies
         run: |
-          cat package.json
+          cd workspaces
           npm run build+deps provider
 
       - name: Setup the environment and run the unit tests
