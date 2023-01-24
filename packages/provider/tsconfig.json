@@ -1,14 +1,14 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "rootDirs": ["./src","./tests"],
+    "rootDir": "./src",
     "outDir": "./dist",
     "module": "commonjs",
     "target": "esnext"
   },
   "include": [
     "./src/**/*.ts",
-    "./tests/**/*.ts"
+//    "./tests/**/*.ts"
   ],
   "files": [
     "./src/prosopo.config.ts"

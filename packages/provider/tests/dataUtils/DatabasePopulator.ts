@@ -184,20 +184,26 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
             const account = this.createAccount()
-            //console.log('Registering provider', accountAddress(account), 'with service origin', _serviceOrigin)
+            this.mockEnv.logger.info(
+                'Registering provider',
+                accountAddress(account),
+                'with service origin',
+                _serviceOrigin
+            )
             await this.sendFunds(
                 accountAddress(account),
-                createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 this.sendAmount
             )
             await this.changeSigner(accountMnemonic(account))
             const tasks = new Tasks(this.mockEnv)
-            await tasks.contractApi.providerRegister(
+            const result = await tasks.contractApi.providerRegister(
                 stringToHexPadded(_serviceOrigin),
                 PROVIDER_FEE,
-                createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(account)
             )
+            this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
             const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
             //console.log('Registered provider', provider)
             if (!noPush) {
@@ -205,7 +211,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             }
             return account
         } catch (e) {
-            throw this.createError(e)
+            throw this.createError(e, this.registerProvider.name)
         }
     }
 
@@ -218,14 +224,14 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             await tasks.contractApi.providerUpdate(
                 stringToHexPadded(serviceOrigin),
                 PROVIDER_FEE,
-                createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(account),
                 this.stakeAmount
             )
-            const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
+            //const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
             //console.log('provider', provider)
         } catch (e) {
-            throw this.createError(e)
+            throw this.createError(e, this.updateProvider.name)
         }
     }
 
@@ -241,7 +247,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             return account
         } catch (e) {
-            throw this.createError(e)
+            throw this.createError(e, this.registerProviderWithStake.name)
         }
     }
 
@@ -255,7 +261,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             await tasks.providerAddDatasetFromFile(captchaFilePath)
         } catch (e) {
-            throw this.createError(e)
+            throw this.createError(e, this.addDataset.name)
         }
     }
 
@@ -264,7 +270,6 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
 
             const account = await this.registerProvider(serviceOrigin, true)
-
             await this.updateProvider(account, serviceOrigin)
 
             await this.addDataset(account)
@@ -273,7 +278,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             return account
         } catch (e) {
-            throw this.createError(e)
+            throw this.createError(e, this.registerProviderWithStakeAndDataset.name)
         }
     }
 
@@ -284,7 +289,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const account = this.createAccount()
             await this.sendFunds(
                 accountAddress(account),
-                createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 this.sendAmount
             )
 
@@ -294,7 +299,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const result = await tasks.contractApi.dappRegister(
                 stringToHexPadded(_serviceOrigin),
                 accountAddress(account),
-                createType(this.mockEnv.api.registry, 'AccountId', accountAddress(account)).toString()
+                createType(this.mockEnv.contractInterface.abi.registry, 'AccountId', accountAddress(account)).toString()
             )
 
             const events = getEventsFromMethodName(result, 'DappRegister')
@@ -305,7 +310,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             return account
         } catch (e) {
-            throw this.createError(e)
+            throw this.createError(e, this.registerDapp.name)
         }
     }
 
@@ -336,7 +341,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         await this.sendFunds(
             accountAddress(account),
-            createType(this.mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+            createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
             this.sendAmount
         )
 
@@ -345,12 +350,12 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return account
     }
 
-    createError(e): ProsopoEnvError {
-        let errorKey: TranslationKey = 'DEVELOPER.CREATE_ACCOUNT_FAILED'
-        if (e.error.message === 'Module') {
+    createError(e, functionName: string): ProsopoEnvError {
+        let errorKey = e
+        if (e.error && e.error.message && e.error.message === 'Module') {
             errorKey = 'DEVELOPER.CREATE_ACCOUNT_FAILED_OUT_OF_FUNDS' as TranslationKey
         }
-        return new ProsopoEnvError(errorKey, this.registerDapp.name, undefined, e)
+        return new ProsopoEnvError(errorKey, functionName, undefined, e)
     }
 }
 

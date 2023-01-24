@@ -64,7 +64,7 @@ export async function sendFunds(
         // @ts-ignore
         data: { free: previousFree },
     } = await env.contractInterface.api.query.system.account(pair.address)
-    if (previousFree < amount) {
+    if (previousFree.lt(amount)) {
         throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', undefined, {
             mnemonic,
             previousFree,
@@ -85,14 +85,14 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     await tasks.contractApi.providerRegister(
         stringToHexPadded(provider.serviceOrigin),
         provider.fee,
-        createType(env.api.registry, payeeKey, provider.payee),
+        createType(env.contractInterface.abi.registry, payeeKey, provider.payee),
         provider.address
     )
     logger.info('   - providerStake')
     await tasks.contractApi.providerUpdate(
         stringToHexPadded(provider.serviceOrigin),
         provider.fee,
-        createType(env.api.registry, payeeKey, provider.payee),
+        createType(env.contractInterface.abi.registry, payeeKey, provider.payee),
         provider.address,
         provider.stake
     )
@@ -153,7 +153,7 @@ export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
     const chainDecimals = new BN(env.api.registry.chainDecimals[0])
 
     const unit = new BN(10 ** chainDecimals.toNumber())
-    const sendAmount = new BN(stakeAmount).add(unit.muln(MAX_ACCOUNT_FUND))
+    const sendAmount = new BN(stakeAmount).muln(2).add(unit.muln(MAX_ACCOUNT_FUND))
     // Should result in each account receiving a minimum of MAX_ACCOUNT_FUND UNIT
     env.logger.debug('Setting send amount to', sendAmount.div(unit).toString(), 'UNIT')
     return sendAmount

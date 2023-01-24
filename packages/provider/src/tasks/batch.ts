@@ -85,10 +85,10 @@ export class BatchCommitter {
                 commitment.datasetId,
                 commitment.commitmentId,
                 this.contractApi.pair.address,
-                'Approved',
+                commitment.userAccount,
+                commitment.approved ? 'Approved' : 'Disapproved',
             ]
-
-            const encodedArgs: Uint8Array[] = encodeStringArgs(this.contractApi.api.registry, fragment, args)
+            const encodedArgs: Uint8Array[] = encodeStringArgs(this.contractApi.abi, fragment, args)
             const extrinsic = await this.contractApi.buildExtrinsic('dappUserCommit', encodedArgs)
             txs.push(extrinsic)
         }

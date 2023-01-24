@@ -18,9 +18,10 @@ import chaiAsPromised from 'chai-as-promised'
 import { BatchCommitter } from '../../src/tasks/batch'
 import { AccountKey, accountAddress, accountMnemonic } from '../dataUtils/DatabaseAccounts'
 import { changeSigner, getUser } from '../mocks/accounts'
-import { CaptchaSolution, hexHash } from '@prosopo/datasets'
+import { CaptchaSolution } from '@prosopo/datasets'
 import { ScheduledTaskNames } from '../../src/types/scheduler'
-
+import { randomAsHex } from '@polkadot/util-crypto'
+import { sleep } from './tasks.test'
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -33,7 +34,11 @@ describe('BATCH TESTS', () => {
         const contractApi = await env.getContractApi()
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
+            const dappUser = await getUser(env, AccountKey.dappUsers)
             await env.changeSigner(accountMnemonic(providerAccount))
+            // Remove any existing commitments and solutions from the db
+            await env.db.tables?.commitment.deleteMany({})
+            await env.db.tables?.usersolution.deleteMany({})
 
             // Batcher must be created with the provider account as the pair on the contractApi, otherwise the batcher
             // will fail with `ProviderDoesNotExist` error.
@@ -50,19 +55,24 @@ describe('BATCH TESTS', () => {
                     unsolvedCaptcha.items[2].hash || '',
                     unsolvedCaptcha.items[3].hash || '',
                 ]
-                const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: 'blah' }
-                const commitments: string[] = []
+                const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: randomAsHex() }
+                const commitmentIds: string[] = []
                 // Store 10 commitments in the local db
                 for (let count = 0; count < 10; count++) {
-                    const commitmentId = hexHash(`test${count}`)
-                    commitments.push(commitmentId)
+                    // not the real commitment id, which would be calculated as the root of a merkle tree
+                    const commitmentId = randomAsHex()
+                    commitmentIds.push(commitmentId)
+                    const approved = count % 2 === 0
                     await providerTasks.db.storeDappUserSolution(
                         [captchaSolution],
                         commitmentId,
-                        'test',
+                        accountAddress(dappUser),
                         accountAddress(dappAccount),
                         providerDetails.datasetId.toString()
                     )
+                    if (approved) {
+                        await providerTasks.db.approveDappUserCommitment(commitmentId)
+                    }
                     const userSolutions = await providerTasks.db.getDappUserSolutionById(commitmentId)
                     expect(userSolutions).to.be.not.empty
                 }
@@ -74,12 +84,17 @@ describe('BATCH TESTS', () => {
                 expect(commitmentsFromDbBeforeProcessing).to.be.empty
 
                 // Mark the commitments as processed
-                await providerTasks.db.flagUsedDappUserCommitments(commitments)
-                await providerTasks.db.flagUsedDappUserSolutions(commitments)
+                await providerTasks.db.flagUsedDappUserCommitments(commitmentIds)
+                await providerTasks.db.flagUsedDappUserSolutions(commitmentIds)
 
                 // Check the commitments are returned from the db as they are now processed
                 const commitmentsFromDbBeforeBatching = await batcher.getCommitments()
                 expect(commitmentsFromDbBeforeBatching.length).to.be.equal(10)
+
+                // 5 commitments should be approved and 5 disapproved
+                expect(
+                    commitmentsFromDbBeforeBatching.map((c) => +c.approved).reduce((prev, next) => prev + next)
+                ).to.equal(5)
 
                 // Commit the commitments to the contract
                 await batcher.runBatch()
@@ -96,10 +111,18 @@ describe('BATCH TESTS', () => {
                 // Check the solutions are no longer in the db
                 expect(commitmentsFromDbAfter).to.be.empty
 
+                // We have to wait for batched commitments to become available on-chain
+                const waitTime = 3000
+                await sleep(waitTime)
+
                 // Check the commitments are in the contract
+                let count = 0
                 for (const commitment of commitmentsFromDbBeforeBatching) {
+                    const approved = count % 2 === 0 ? 'Approved' : 'Disapproved'
                     const contractCommitment = await contractApi.getCaptchaSolutionCommitment(commitment.commitmentId)
                     expect(contractCommitment).to.be.not.empty
+                    expect(contractCommitment.status).to.be.equal(approved)
+                    count++
                 }
                 // Check the last batch commitment time
                 const lastBatchCommit = await providerTasks.db.getLastScheduledTask(ScheduledTaskNames.BatchCommitment)
@@ -107,7 +130,7 @@ describe('BATCH TESTS', () => {
 
                 // Expect the last batch commitment time to be within the last 10 seconds
                 if (lastBatchCommit !== undefined) {
-                    expect(+Date.now() - +lastBatchCommit?.datetime).to.be.lessThan(10000)
+                    expect(+Date.now() - +lastBatchCommit?.datetime).to.be.lessThan(10000 + waitTime)
                 }
             }
         }

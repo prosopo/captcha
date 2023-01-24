@@ -46,18 +46,14 @@ export const DAPP_USER = {
 
 // Create a user of specified type using the databasePopulator
 export async function getUser(env: ProsopoEnvironment, accountType: AccountKey): Promise<Account> {
-    try {
-        const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
-        accountConfig[accountType] = 1
-        const databaseAccounts: IDatabaseAccounts = await populateDatabase(env, accountConfig, false)
-        const account = databaseAccounts[accountType].pop()
-        if (account === undefined) {
-            throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
-        }
-        return account
-    } catch (e) {
-        throw new ProsopoEnvError(e)
+    const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
+    accountConfig[accountType] = 1
+    const databaseAccounts: IDatabaseAccounts = await populateDatabase(env, accountConfig, false)
+    const account = databaseAccounts[accountType].pop()
+    if (account === undefined) {
+        throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
     }
+    return account
 }
 
 export async function changeSigner(env: ProsopoEnvironment, account: Account): Promise<Tasks> {

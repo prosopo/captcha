@@ -12,15 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-import {
-    DappUserSolutionResult,
-    Tasks,
-    getSendAmount,
-    getStakeAmount,
-    loadJSONFile,
-    parseBlockNumber,
-    sendFunds,
-} from '../../src'
+import { DappUserSolutionResult, Tasks, getSendAmount, getStakeAmount, parseBlockNumber, sendFunds } from '../../src'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import path from 'path'
@@ -31,7 +23,6 @@ import {
     computeCaptchaSolutionHash,
     computePendingRequestHash,
     hexHash,
-    parseCaptchaDataset,
 } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
 import { TransactionResponse, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
@@ -51,9 +42,8 @@ function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-async function sleep(timeout) {
+export async function sleep(timeout) {
     await delay(timeout)
-    console.log('Timeout reached')
 }
 const PROVIDER_PAYEE = 'Provider'
 
@@ -81,7 +71,6 @@ describe('CONTRACT TASKS', () => {
         } catch (e) {
             throw new ProsopoEnvError(e, 'changeSigner')
         }
-
         try {
             providerStakeDefault = new BN(await tasks.contractApi.getProviderStakeDefault())
         } catch (e) {
@@ -159,7 +148,7 @@ describe('CONTRACT TASKS', () => {
         const result: TransactionResponse = await tasks.contractApi.providerRegister(
             PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
             PROVIDER.fee,
-            createType(mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
             providerAddress
         )
 
@@ -171,12 +160,12 @@ describe('CONTRACT TASKS', () => {
             const providerAccount = await getUser(mockEnv, AccountKey.providers)
             const tasks = await changeSigner(mockEnv, providerAccount)
 
-            const value = providerStakeDefault.muln(1000)
+            const value = providerStakeDefault
 
             const result: TransactionResponse = await tasks.contractApi.providerUpdate(
                 PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
                 PROVIDER.fee,
-                createType(mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+                createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(providerAccount),
                 value
             )
@@ -239,7 +228,8 @@ describe('CONTRACT TASKS', () => {
                 accountAddress(dappContractAccount),
                 provider.datasetId.toString(),
                 commitmentId,
-                accountAddress(providerAccount)
+                accountAddress(providerAccount),
+                accountAddress(dappUserAccount)
             )
 
             const providerTasks = await changeSigner(mockEnv, providerAccount)
@@ -277,7 +267,8 @@ describe('CONTRACT TASKS', () => {
             accountAddress(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
-            accountAddress(providerAccount)
+            accountAddress(providerAccount),
+            accountAddress(dappUserAccount)
         )
 
         const providerTasks = await changeSigner(mockEnv, providerAccount)
@@ -313,7 +304,8 @@ describe('CONTRACT TASKS', () => {
             accountAddress(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
-            accountAddress(providerAccount)
+            accountAddress(providerAccount),
+            accountAddress(dappUserAccount)
         )
 
         const providerTasks = await changeSigner(mockEnv, providerAccount)
@@ -409,7 +401,7 @@ describe('CONTRACT TASKS', () => {
     it('Dapp fund', async () => {
         const dappAccount = await getUser(mockEnv, AccountKey.dappsWithStake)
         const tasks = await changeSigner(mockEnv, dappAccount)
-        const value = createType(mockEnv.api.registry, 'u128', '10')
+        const value = createType(mockEnv.contractInterface.abi.registry, 'u128', '10')
         const address = accountAddress(dappAccount)
         const result: TransactionResponse = await tasks.contractApi.dappFund(accountAddress(dappAccount), value)
         const events = getEventsFromMethodName(result, 'DappFund')
@@ -417,7 +409,7 @@ describe('CONTRACT TASKS', () => {
         expect(decoded[0]).to.equal(address)
         const dappStruct = await tasks.contractApi.getDappDetails(address)
         // Do not do this https://github.com/polkadot-js/api/issues/5365
-        //const dapp = createType(mockEnv.api.registry, 'ProsopoDapp', dappStruct.toU8a())
+        //const dapp = createType(mockEnv.contractInterface.abi.registry, 'ProsopoDapp', dappStruct.toU8a())
         expect(events![0].args[1].toPrimitive()).to.equal(dappStruct.balance)
     })
 
@@ -450,7 +442,8 @@ describe('CONTRACT TASKS', () => {
             accountAddress(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
-            accountAddress(providerAccount)
+            accountAddress(providerAccount),
+            accountAddress(dappUserAccount)
         )
 
         if (!result) {
@@ -511,7 +504,8 @@ describe('CONTRACT TASKS', () => {
             accountAddress(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
-            accountAddress(providerAccount)
+            accountAddress(providerAccount),
+            accountAddress(dappUserAccount)
         )
 
         // next part contains internal contract calls that must be run by provider
@@ -659,7 +653,8 @@ describe('CONTRACT TASKS', () => {
             accountAddress(dappAccount),
             provider.datasetId.toString(),
             initialCommitmentId,
-            accountAddress(providerAccount)
+            accountAddress(providerAccount),
+            accountAddress(dappUserAccount)
         )
         const { commitmentId, tree } = await tasks.buildTreeAndGetCommitmentId(captchaSolutions)
 
@@ -783,29 +778,23 @@ describe('CONTRACT TASKS', () => {
 
         const tasks = await changeSigner(mockEnv, providerAccount)
 
-        const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        let provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
 
         const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json')
 
         await tasks.contractApi.providerUpdate(
             provider.serviceOrigin.toString(),
             provider.fee as unknown as number,
-            createType(mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
             accountAddress(providerAccount),
-            providerStakeDefault.divn(2)
+            0
         )
-
-        const insuficientFundsTransaction = await tasks
-            .providerAddDatasetFromFile(captchaFilePath)
-            .then(() => false)
-            .catch(() => true)
-
-        expect(insuficientFundsTransaction).to.be.true
-
+        provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        expect(provider.status).to.equal('Deactivated')
         await tasks.contractApi.providerUpdate(
             provider.serviceOrigin.toString() as string,
             provider.fee as unknown as number,
-            createType(mockEnv.api.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
             accountAddress(providerAccount),
             providerStakeDefault
         )
@@ -857,33 +846,6 @@ describe('CONTRACT TASKS', () => {
         const events = getEventsFromMethodName(result, 'ProviderDeregister')
 
         expect(events![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
-    })
-
-    it('Calculate captcha solution on the basis of Dapp users provided solutions - old', async () => {
-        try {
-            const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
-            const providerTasks = await changeSigner(mockEnv, providerAccount)
-            //const provider = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
-
-            const captchaFilePath = mockEnv.config.captchaSolutions.captchaFilePath
-            const datasetBeforeCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
-
-            const solvedCaptchasCountBeforeCalculation = datasetBeforeCalculation.captchas.filter(
-                (captcha) => 'solution' in captcha
-            ).length
-
-            const result = await providerTasks.calculateCaptchaSolutions()
-
-            const datasetAfterCalculation = parseCaptchaDataset(loadJSONFile(captchaFilePath) as JSON)
-
-            const solvedCaptchasCountAfterCalculation = datasetAfterCalculation.captchas.filter(
-                (captcha) => 'solution' in captcha
-            ).length
-
-            expect(solvedCaptchasCountAfterCalculation - solvedCaptchasCountBeforeCalculation).to.equal(result)
-        } catch (err) {
-            throw new ProsopoEnvError(err, 'Calculate captcha solution on the basis of Dapp users provided solutions')
-        }
     })
 
     it('Calculate captcha solution on the basis of Dapp users provided solutions', async () => {

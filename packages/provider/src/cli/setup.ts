@@ -123,12 +123,12 @@ async function setup() {
 
     defaultProvider.mnemonic = mnemonic
 
-    console.log('Registering provider...')
+    env.logger.info('Registering provider...')
     await registerProvider(env, defaultProvider)
 
     defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS
 
-    console.log('Registering dapp...')
+    env.logger.info('Registering dapp...')
     await registerDapp(env, defaultDapp)
 
     if (!hasProviderAccount) {

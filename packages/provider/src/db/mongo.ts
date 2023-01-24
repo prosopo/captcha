@@ -323,7 +323,6 @@ export class ProsopoDatabase implements Database {
         }
 
         const doc = await this.tables?.dataset.findOne({ datasetId }).lean()
-        console.log(doc)
 
         if (doc) {
             return doc

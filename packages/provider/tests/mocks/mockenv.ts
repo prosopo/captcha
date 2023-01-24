@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ContractAbi, ProsopoContractMethods, abiJson, generateDefinitions } from '@prosopo/contract'
+import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { AssetsResolver } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
 import consola, { LogLevel } from 'consola'
@@ -128,12 +128,9 @@ export class MockEnvironment implements ProsopoEnvironment {
     async getSigner(): Promise<void> {
         if (!this.api) {
             this.api = await ApiPromise.create({ provider: this.wsProvider })
-            const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
-            await this.api.registry.register(contractDefinitions.types)
         }
         await this.api.isReadyOrError
         const mnemonic = this.mnemonic
-        console.log
         if (!mnemonic) {
             throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, undefined, this.mnemonic)
         }
@@ -155,6 +152,13 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.pair,
             this.contractName
         )
+        // console.log(
+        //     this.contractInterface.abi.registry.lookup.types.map(({ id }) => {
+        //         const typeDef = this.contractInterface.abi.registry.lookup.getTypeDef(id)
+        //         return typeDef
+        //     })
+        // )
+
         return this.contractInterface
     }
 
@@ -162,8 +166,6 @@ export class MockEnvironment implements ProsopoEnvironment {
         try {
             if (!this.api) {
                 this.api = await ApiPromise.create({ provider: this.wsProvider })
-                const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
-                await this.api.registry.register(contractDefinitions.types)
             }
             await this.getSigner()
             await this.getContractApi()

@@ -16,14 +16,17 @@ import { TypeDefInfo } from '@polkadot/types-create'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { hexToU8a } from '@polkadot/util'
 import { encodeStringArgs } from '@prosopo/contract'
-import { TypeRegistry } from '@polkadot/types'
 import { describe } from 'mocha'
 import chai from 'chai'
+import { MockEnvironment } from '../mocks/mockenv'
 
 const expect = chai.expect
 
 describe('CONTRACT HELPERS', () => {
-    it('Properly encodes `Hash` arguments when passed unhashed', () => {
+    it('Properly encodes `Hash` arguments when passed unhashed', async () => {
+        const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
+        const env = new MockEnvironment(mnemonic)
+        await env.isReady()
         const args = ['https://localhost:8282']
         const methodObj = {
             args: [{ type: { type: 'Hash', info: TypeDefInfo.UInt }, name: '' }],
@@ -40,8 +43,8 @@ describe('CONTRACT HELPERS', () => {
                 return {} as AbiMessage
             },
         }
-        console.log(encodeStringArgs(new TypeRegistry(), methodObj, args))
-        expect(encodeStringArgs(new TypeRegistry(), methodObj, args)[0].toString()).to.equal(
+        console.log(encodeStringArgs(env.contractInterface.abi, methodObj, args))
+        expect(encodeStringArgs(env.contractInterface.abi, methodObj, args)[0].toString()).to.equal(
             hexToU8a('0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a38323832').toString()
         )
     })
