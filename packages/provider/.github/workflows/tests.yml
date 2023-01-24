@@ -42,7 +42,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/image-cache
-          key: image-cache-${{ runner.os }}
+          key: image-cache-docker-${{ runner.os }}
+          restore-keys: |
+            image-cache-docker-${{ runner.os }}
 
       - if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
