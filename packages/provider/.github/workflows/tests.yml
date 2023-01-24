@@ -34,7 +34,7 @@ jobs:
         with:
           repository: prosopo/scripts
           path: scripts
-          ref: ${{ matrix.branch }}
+          ref: upgrade_deps
 
       - run: mkdir -p ~/image-cache
 
