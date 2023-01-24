@@ -27,7 +27,7 @@ jobs:
       # This part here is cloning a second repository
       # While cloning the repository:
       #   - it clones the repo into the given `path`
-      - name: Clone supercharge docs repository
+      - name: Clone scripts repository
         uses: actions/checkout@v2
         with:
           repository: prosopo/scripts
@@ -38,6 +38,8 @@ jobs:
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
           cd ../workspaces
+          git submodule update --init --recursive --force --checkout
+          npm run checkout develop
           npm run setup
           npm run test
           
