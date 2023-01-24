@@ -104,6 +104,7 @@ jobs:
           NODE_ENV=$ENVIRONMENT npm run setup
           cd packages/provider
           git status | head -n 1
+          docker container ls
           cat .env.development
           NODE_ENV=$ENVIRONMENT npm run test
 
