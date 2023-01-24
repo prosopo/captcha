@@ -34,7 +34,7 @@ jobs:
           path: scripts
           branch: upgrade_deps
 
-      - name: Run the unit tests
+      - name: Start the docker images
         run: |
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
@@ -47,7 +47,7 @@ jobs:
       - name: Build provider and dependencies
         run: |
           cd workspaces
-          npm run bd provider
+          npm run build+deps provider
 
       - name: Setup the environment
         run: |
