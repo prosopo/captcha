@@ -96,7 +96,7 @@ jobs:
       - name: Setup the environment and run the unit tests
         run: |
           cd workspaces
-          npm run setup
+          NODE_ENV=$ENVIRONMENT npm run setup
           cd packages/provider
           NODE_ENV=$ENVIRONMENT npm run test
 
