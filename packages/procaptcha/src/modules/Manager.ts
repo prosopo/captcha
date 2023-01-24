@@ -17,13 +17,7 @@ import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import { TCaptchaSubmitResult } from '../types/client'
 import { randomAsHex } from '@polkadot/util-crypto'
-import {
-    ContractAbi,
-    ProsopoContractMethods,
-    ProsopoRandomProvider,
-    abiJson,
-    generateDefinitions,
-} from '@prosopo/contract'
+import { ContractAbi, ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { ApiPromise, Keyring } from '@polkadot/api'
 
@@ -436,8 +430,6 @@ export const Manager = (
     const loadContract = async (): Promise<ProsopoContractMethods> => {
         const config = getConfig()
         const api = await ApiPromise.create({ provider: new WsProvider(config.network.endpoint) })
-        const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
-        api.registry.register(contractDefinitions.types)
         // TODO create a shared keyring that's stored somewhere
         const type = 'sr25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
