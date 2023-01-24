@@ -1,0 +1,43 @@
+name: Tests
+
+on:
+  push:
+    branches: [ tests-workflow ]
+  pull_request:
+    branches: [ develop ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Checkout provider
+        uses: actions/checkout@v2
+        with:
+          repository: prosopo/workspaces
+          path: workspaces
+      # This part here is cloning a second repository
+      # While cloning the repository:
+      #   - it clones the repo into the given `path`
+      - name: Clone supercharge docs repository
+        uses: actions/checkout@v2
+        with:
+          repository: prosopo/scripts
+          path: scripts
+
+      - name: Run the unit tests
+        run: |
+          cd scripts
+          docker compose --file ./docker/docker-compose.development.yml up -d
+          cd ../workspaces
+          npm run setup
+          npm run test
+          
