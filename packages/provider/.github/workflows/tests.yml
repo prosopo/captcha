@@ -15,6 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
+        branch: [ upgrade_deps]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -25,14 +26,14 @@ jobs:
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
-          ref: upgrade_deps
+          ref: ${{ matrix.branch }}
 
       - name: Clone scripts repository
         uses: actions/checkout@v3
         with:
           repository: prosopo/scripts
           path: scripts
-          ref: upgrade_deps
+          ref: ${{ matrix.branch }}
 
       - name: Start the docker images
         run: |
@@ -62,6 +63,7 @@ jobs:
         run: |
           cd workspaces
           npm install
+          npm run checkout ${{ matrix.branch }}
 
       - name: Build provider and dependencies
         run: |
