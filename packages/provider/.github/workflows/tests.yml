@@ -39,7 +39,6 @@ jobs:
           docker compose --file ./docker/docker-compose.development.yml up -d
           cd ../workspaces
           git submodule update --init --recursive --force --checkout
-          npm run checkout develop
           npm run setup
           npm run test
           
