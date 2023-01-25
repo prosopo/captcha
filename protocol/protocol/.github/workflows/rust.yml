@@ -15,14 +15,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Setup environment
+      - name: Setup rust environment
         run: |
           cd contracts
           rustup update stable
           rustup update nightly
           rustup target add wasm32-unknown-unknown --toolchain nightly
           cargo install cargo-tarpaulin
-      - name: Run the unit tests
+      - name: Build
+        run: |
+          cd contracts
+          cargo +nightly contract build --verbose --release
+      - name: Test
         run: |
           cd contracts
           SUMMARY="$(cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tail -7 | head -1)"
