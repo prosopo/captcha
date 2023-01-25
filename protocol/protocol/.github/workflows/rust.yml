@@ -28,6 +28,8 @@ jobs:
           rustup update nightly
           rustup target add wasm32-unknown-unknown --toolchain nightly
           cargo install cargo-tarpaulin
+          cargo install cargo-dylint dylint-link
+          cargo install cargo-contract --force --locked
       - name: Build
         run: |
           cd contracts
