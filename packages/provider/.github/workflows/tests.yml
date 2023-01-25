@@ -62,20 +62,6 @@ jobs:
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: current
-          cache: npm
-          path: workspaces
-          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-
-
-      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-        name: List the state of node modules
-        continue-on-error: true
-        run: npm list
-
       - name: Checkout correct branches
         run: |
           cd workspaces
@@ -85,11 +71,28 @@ jobs:
           git submodule foreach git checkout ${{ matrix.branch }} || git checkout develop
           git submodule foreach git pull origin ${{ matrix.branch }} || git pull origin develop
 
+      - id: node-cache
+        uses: actions/cache@v3
+        with:
+          cache: npm
+          path: workspaces/node_modules
+          key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-cache-${{ runner.os }}-
+
+      - if: ${{ steps.node-cache.outputs.cache-hit == 'true' }}
+        name: List the state of node modules
+        continue-on-error: true
+        run: |
+          echo "node cache hit"
+          cd workspaces
+          npm list
+
       - name: Install dependencies
+        if: steps.node-cache.outputs.cache-hit != 'true'
         run: |
           cd workspaces
           npm install
-
 
       - name: Build provider and dependencies
         run: |
