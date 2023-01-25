@@ -74,7 +74,7 @@ jobs:
       - id: node-cache
         uses: actions/cache@v3
         with:
-          path: ~/workspaces/node_modules
+          path: /home/runner/work/provider/provider/workspaces/node_modules
           key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-cache-${{ runner.os }}-
@@ -83,11 +83,9 @@ jobs:
       - name: List the state of node modules
         continue-on-error: true
         run: |
-          pwd
-          ls
-          cd ~
-          pwd
-          ls
+          cd /home/runner/work/provider/provider/workspaces/
+          ls -la node_modules
+          npm list
 
       - name: Install dependencies
         if: steps.node-cache.outputs.cache-hit != 'true'
