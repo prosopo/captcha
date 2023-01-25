@@ -29,5 +29,5 @@ jobs:
       - name: Test
         run: |
           cd contracts
-          SUMMARY="$(cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tail -7 | head -1)"
+          SUMMARY="$(RUST_BACKTRACE=1 cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tail -7 | head -1)"
           if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
