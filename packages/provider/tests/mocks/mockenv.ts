@@ -152,12 +152,6 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.pair,
             this.contractName
         )
-        // console.log(
-        //     this.contractInterface.abi.registry.lookup.types.map(({ id }) => {
-        //         const typeDef = this.contractInterface.abi.registry.lookup.getTypeDef(id)
-        //         return typeDef
-        //     })
-        // )
 
         return this.contractInterface
     }
