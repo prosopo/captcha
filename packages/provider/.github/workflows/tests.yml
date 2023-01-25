@@ -74,7 +74,6 @@ jobs:
       - id: node-cache
         uses: actions/cache@v3
         with:
-          cache: npm
           path: workspaces/node_modules
           key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
@@ -84,8 +83,9 @@ jobs:
         name: List the state of node modules
         continue-on-error: true
         run: |
-          echo "node cache hit"
           cd workspaces
+          ls node_modules
+          echo "node cache hit"
           npm list
 
       - name: Install dependencies
