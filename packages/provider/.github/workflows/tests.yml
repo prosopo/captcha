@@ -62,14 +62,14 @@ jobs:
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
 
-#      - uses: actions/setup-node@v3
-#        with:
-#          node-version: current
-#          cache: npm
-#          path: ~/.npm
-#          key: ${{ runner.os }}-${{ hashFiles('~/workspaces/package-lock.json') }}
-#          restore-keys: |
-#            ${{ runner.os }}-
+      - uses: actions/setup-node@v3
+        with:
+          node-version: current
+          cache: npm
+          path: workspaces
+          key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-
 
       - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
         name: List the state of node modules
