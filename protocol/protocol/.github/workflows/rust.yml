@@ -1,25 +1,21 @@
 name: Rust
 
 on:
-  push:
-    branches: [ main, workflow ]
   pull_request:
-    branches: [ main ]
+    branches:
+      - 'develop'
+      - 'main'
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup Environment
+      - uses: actions/checkout@v3
+      - name: Setup environment
         run: |
           cd contracts
           rustup update stable
