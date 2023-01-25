@@ -110,3 +110,8 @@ jobs:
           cat .env.development
           NODE_ENV=$ENVIRONMENT npm run test
 
+      - name: Remove the docker containers
+        run: |
+          cd scripts
+          docker compose --file ./docker/docker-compose.development.yml down
+
