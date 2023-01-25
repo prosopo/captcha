@@ -53,6 +53,7 @@ jobs:
 
       - if: steps.image-cache.outputs.cache-hit == 'true'
         run: |
+          ls ~/image-cache
           docker load -i ~/image-cache/prosopo.tar
           docker load -i ~/image-cache/mongo.tar
 
