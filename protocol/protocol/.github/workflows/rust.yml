@@ -14,13 +14,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Cache cargo
-        id: cache-cargo
-        uses: actions/cache@v3
+
+      - name: Restore cached cargo
+        id: cache-cargo-restore
+        uses: actions/cache/restore@v3
         with:
           path: ~/.cargo
           key: ${{ runner.os }}-cargo
-      - uses: actions/checkout@v3
+      
       - name: Setup rust environment
         run: |
           cd contracts
@@ -30,10 +31,21 @@ jobs:
           cargo install cargo-tarpaulin
           cargo install cargo-dylint dylint-link
           cargo install cargo-contract --force --locked
+
+      - name: Save cargo cache
+        id: cache-cargo-save
+        uses: actions/cache/save@v3
+        with:
+          path: ~/.cargo
+          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
+
+      - uses: actions/checkout@v3
+
       - name: Build
         run: |
           cd contracts
           cargo +nightly contract build --verbose --release
+      
       - name: Test
         run: |
           cd contracts
