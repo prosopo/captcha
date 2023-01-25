@@ -15,13 +15,16 @@ jobs:
 
     steps:
 
-      - name: Restore cached cargo
-        id: cache-cargo-restore
-        uses: actions/cache/restore@v3
+      - uses: actions/cache@v3
         with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-cargo
-      
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Setup rust environment
         run: |
           cd contracts
@@ -31,13 +34,6 @@ jobs:
           cargo install cargo-tarpaulin
           cargo install cargo-dylint dylint-link
           cargo install cargo-contract --force --locked
-
-      - name: Save cargo cache
-        id: cache-cargo-save
-        uses: actions/cache/save@v3
-        with:
-          path: ~/.cargo
-          key: ${{ steps.cache-cargo-restore.outputs.cache-primary-key }}
 
       - uses: actions/checkout@v3
 
