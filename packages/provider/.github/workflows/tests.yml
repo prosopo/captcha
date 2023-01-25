@@ -80,12 +80,11 @@ jobs:
             node-cache-${{ runner.os }}-
 
       #- if: ${{ steps.node-cache.outputs.cache-hit == 'true' }}
-      - name: List the state of node modules
+      - name: List the contents of workspaces repo
         continue-on-error: true
         run: |
           cd /home/runner/work/provider/provider/workspaces/
-          ls -la node_modules
-          npm list
+          ls
 
       - name: Install dependencies
         if: steps.node-cache.outputs.cache-hit != 'true'
