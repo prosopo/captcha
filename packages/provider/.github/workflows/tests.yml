@@ -84,13 +84,10 @@ jobs:
         continue-on-error: true
         run: |
           pwd
+          ls
           cd ~
           pwd
           ls
-          cd workspaces
-          ls
-          echo "node cache hit"
-          npm list
 
       - name: Install dependencies
         if: steps.node-cache.outputs.cache-hit != 'true'
