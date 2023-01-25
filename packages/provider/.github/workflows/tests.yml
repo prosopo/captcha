@@ -73,6 +73,9 @@ jobs:
 
       - id: node-cache
         uses: actions/cache@v3
+        run: |
+          pwd
+          ls ~/workspaces/node_modules
         with:
           path: ~/workspaces/node_modules
           key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
