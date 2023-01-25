@@ -84,9 +84,11 @@ jobs:
         continue-on-error: true
         run: |
           pwd
+          cd ~
+          pwd
           ls
           cd workspaces
-          ls node_modules
+          ls
           echo "node cache hit"
           npm list
 
