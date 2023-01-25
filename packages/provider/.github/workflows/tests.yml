@@ -73,19 +73,18 @@ jobs:
 
       - id: node-cache
         uses: actions/cache@v3
-        run: |
-          pwd
-          ls ~/workspaces/node_modules
         with:
           path: ~/workspaces/node_modules
           key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-cache-${{ runner.os }}-
 
-      - if: ${{ steps.node-cache.outputs.cache-hit == 'true' }}
-        name: List the state of node modules
+      #- if: ${{ steps.node-cache.outputs.cache-hit == 'true' }}
+      - name: List the state of node modules
         continue-on-error: true
         run: |
+          pwd
+          ls
           cd workspaces
           ls node_modules
           echo "node cache hit"
