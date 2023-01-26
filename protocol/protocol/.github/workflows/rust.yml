@@ -21,7 +21,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v1
 
       - name: Setup rust environment
         if: steps.restore-cargo-cache.outputs.cache-hit != 'true'
