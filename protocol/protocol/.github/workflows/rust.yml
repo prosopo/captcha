@@ -16,14 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/cache@v3
+      - name: Restore cargo cache
+        id: restore-cargo-cache
+        uses: actions/cache/restore@v3
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
+          path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Setup rust environment
@@ -41,3 +38,10 @@ jobs:
           echo install cargo-contract
           cargo install cargo-contract --locked
 
+
+      - name: Save cargo cache
+        id: save-cargo-cache
+        uses: actions/cache/save@v3
+        with:
+          path: ~/.cargo
+          key: ${{ steps.restore-cargo-cache.outputs.cache-primary-key }}
