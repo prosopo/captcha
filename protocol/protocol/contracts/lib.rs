@@ -19,10 +19,8 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 
 #[ink::contract]
 pub mod prosopo {
+    use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use prosopo_storage_derive::EnumSpreadAllocate;
-    use ink::env::hash::{
-        Blake2x128, CryptoHash, HashOutput,
-    };
     //use ink::env::types::{AccountId, Balance, BlockNumber, BlockTimestamp, Hash};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
@@ -1273,7 +1271,7 @@ pub mod prosopo {
             let block_timestamp: u64 = self.env().block_timestamp();
             let user_account_bytes: &[u8; 32] = user_account.as_ref();
             // pack all the data into a single byte array
-            let block_number_arr : [u8; 4]= block_number.to_le_bytes();
+            let block_number_arr: [u8; 4] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; 8] = block_timestamp.to_le_bytes();
             let tmp: [u8; 36] = concat_u8(&user_account_bytes, &block_number_arr);
             let bytes: [u8; 44] = concat_u8(&tmp, &block_timestamp_arr);
@@ -2244,6 +2242,5 @@ pub mod prosopo {
                 contract.get_random_active_provider(provider_account, dapp_contract_account);
             assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
         }
-
     }
 }
