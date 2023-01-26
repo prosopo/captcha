@@ -27,7 +27,6 @@ jobs:
 
       - name: Setup rust environment
         run: |
-          cd contracts
           echo install stable
           rustup update stable
           echo install nightly
