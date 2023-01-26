@@ -27,7 +27,7 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 
 describe('BATCH TESTS', () => {
-    it.only('Batches commitments on-chain', async () => {
+    it('Batches commitments on-chain', async () => {
         const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
         const env = new MockEnvironment(mnemonic)
         await env.isReady()
