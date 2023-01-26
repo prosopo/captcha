@@ -37,7 +37,7 @@ jobs:
           echo install dylint
           cargo install cargo-dylint dylint-link
           echo install cargo-contract
-          cargo install cargo-contract --locked
+          cargo install cargo-contract --version 2.0.0-rc --locked
 
       - name: Build
         run: |
