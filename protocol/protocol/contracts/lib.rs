@@ -1406,7 +1406,7 @@ pub mod prosopo {
         #[should_panic]
         fn test_get_random_number_zero_len() {
             let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             contract.get_random_number(0, operator_account);
         }
 
@@ -1414,7 +1414,7 @@ pub mod prosopo {
         #[ink::test]
         fn test_get_random_number() {
             let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, PROVIDER_STAKE_DEFAULT);
+            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             const len: usize = 10;
             let mut number: u64;
             let mut arr = [0; len];
