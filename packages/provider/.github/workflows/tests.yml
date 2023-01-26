@@ -74,7 +74,7 @@ jobs:
       - id: node-cache
         uses: actions/cache@v3
         with:
-          path: /home/runner/work/provider/provider/workspaces/node_modules
+          path: ~/.npm
           key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             node-cache-${{ runner.os }}-
@@ -83,7 +83,7 @@ jobs:
       - name: List the contents of workspaces repo
         continue-on-error: true
         run: |
-          cd /home/runner/work/provider/provider/workspaces/
+          cd ~/.npm
           ls
 
       - name: Install dependencies
