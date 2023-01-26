@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Remove stopped containers
-        run: docker rm $(docker ps -a -q)
+        run: docker rm $(docker ps -a -q) || true
 
       - name: Clone workspaces
         uses: actions/checkout@v3
