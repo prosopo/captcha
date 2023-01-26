@@ -19,14 +19,12 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 
 #[ink::contract]
 pub mod prosopo {
-    use ink::env::hash::{
-        Blake2x128, CryptoHash, HashOutput,
-    };
+    use ink::env::debug_println as debug;
+    use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-    use ink::env::debug_println as debug;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -1275,10 +1273,12 @@ pub mod prosopo {
             let block_timestamp: u64 = self.env().block_timestamp();
             let user_account_bytes: &[u8; USER_ACCOUNT_SIZE] = user_account.as_ref();
             // pack all the data into a single byte array
-            let block_number_arr : [u8; BLOCK_NUMBER_SIZE]= block_number.to_le_bytes();
+            let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
-            let tmp: [u8; USER_ACCOUNT_SIZE + BLOCK_NUMBER_SIZE] = concat_u8(&user_account_bytes, &block_number_arr);
-            let bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + USER_ACCOUNT_SIZE] = concat_u8(&tmp, &block_timestamp_arr);
+            let tmp: [u8; USER_ACCOUNT_SIZE + BLOCK_NUMBER_SIZE] =
+                concat_u8(&user_account_bytes, &block_number_arr);
+            let bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + USER_ACCOUNT_SIZE] =
+                concat_u8(&tmp, &block_timestamp_arr);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
@@ -1305,15 +1305,18 @@ pub mod prosopo {
     /// Run the tests via `cargo test` (no need for `cargo contract`!)
     /// *********************************
     #[cfg(test)]
-    #[cfg_attr(debug_assertions, allow(
-        dead_code, 
-        unused_imports, 
-        unused_variables, 
-        unused_mut, 
-        unused_must_use, 
-        non_upper_case_globals, 
-        non_shorthand_field_patterns
-    ))]
+    #[cfg_attr(
+        debug_assertions,
+        allow(
+            dead_code,
+            unused_imports,
+            unused_variables,
+            unused_mut,
+            unused_must_use,
+            non_upper_case_globals,
+            non_shorthand_field_patterns
+        )
+    )]
     mod tests {
         use ink;
         use ink::env::hash::Blake2x256;
@@ -2253,6 +2256,5 @@ pub mod prosopo {
                 contract.get_random_active_provider(provider_account, dapp_contract_account);
             assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
         }
-
     }
 }
