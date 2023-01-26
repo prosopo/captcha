@@ -41,3 +41,17 @@ jobs:
           echo install cargo-contract
           cargo install cargo-contract --locked
 
+      - name: Build
+        run: |
+          cd contracts
+          cargo +nightly contract build --verbose --release
+      
+      - name: Test
+        run: |
+          cd contracts
+          exec 5>&1
+          SUMMARY="$(RUST_BACKTRACE=1 cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tee >(cat - >&5))"
+          SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
+          if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
+          SUMMARY="$(RUST_BACKTRACE=1 cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tail -7 | head -1)"
+          if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
