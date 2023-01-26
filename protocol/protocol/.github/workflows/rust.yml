@@ -28,12 +28,18 @@ jobs:
       - name: Setup rust environment
         run: |
           cd contracts
+          echo install stable
           rustup update stable
+          echo install nightly
           rustup update nightly
+          echo set browser wasm target
           rustup target add wasm32-unknown-unknown --toolchain nightly
+          echo install tarpaulin
           cargo install cargo-tarpaulin
+          echo install dylint
           cargo install cargo-dylint dylint-link
-          cargo install cargo-contract --force --locked
+          echo install cargo-contract
+          cargo install cargo-contract --locked
 
       - uses: actions/checkout@v3
 
@@ -45,5 +51,9 @@ jobs:
       - name: Test
         run: |
           cd contracts
+          exec 5>&1
+          SUMMARY="$(RUST_BACKTRACE=1 cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tee >(cat - >&5))"
+          SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
+          if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
           SUMMARY="$(RUST_BACKTRACE=1 cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tail -7 | head -1)"
           if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
