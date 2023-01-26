@@ -24,6 +24,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Setup rust environment
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           echo install stable
           rustup update stable
