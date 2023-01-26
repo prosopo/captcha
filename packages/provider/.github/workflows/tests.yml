@@ -79,15 +79,12 @@ jobs:
           restore-keys: |
             node-cache-${{ runner.os }}-
 
-      #- if: ${{ steps.node-cache.outputs.cache-hit == 'true' }}
-      - name: List the contents of workspaces repo
-        continue-on-error: true
+      - if: ${{ steps.node-cache.outputs.cache-hit == 'true' }}
         run: |
           cd ~/.npm
           ls
 
       - name: Install dependencies
-        if: steps.node-cache.outputs.cache-hit != 'true'
         run: |
           cd workspaces
           npm install
