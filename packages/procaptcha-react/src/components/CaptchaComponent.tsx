@@ -92,9 +92,19 @@ export const CaptchaComponent = (props: CaptchaComponentProps) => {
                                     fontWeight: 700,
                                 }}
                             >
-                                {t('WIDGET.SELECT_ALL', {
-                                    target: props.challenge.captchas[props.index].captcha.target,
-                                })}
+                                {t('WIDGET.SELECT_ALL')}
+                                {': '}
+                            </Typography>
+                            <Typography
+                                px={1}
+                                sx={{
+                                    color: '#ffffff',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    fontSize: theme.typography.h6.fontSize,
+                                }}
+                            >
+                                {`${props.challenge.captchas[props.index].captcha.target}`}
                             </Typography>
                         </Box>
 
