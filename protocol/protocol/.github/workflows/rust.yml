@@ -42,6 +42,13 @@ jobs:
           echo install cargo-contract
           cargo +nightly install cargo-contract --version 2.0.0-rc
 
+      - name: Save cargo cache after rust environment setup
+        id: save-cargo-cache
+        uses: actions/cache/save@v3
+        with:
+          path: ~/.cargo
+          key: ${{ steps.restore-cargo-cache.outputs.cache-primary-key }}
+
       - name: Build
         run: |
           cd contracts
@@ -57,7 +64,7 @@ jobs:
           SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
           if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
 
-      - name: Save cargo cache
+      - name: Save cargo cache after build and test
         id: save-cargo-cache
         uses: actions/cache/save@v3
         with:
