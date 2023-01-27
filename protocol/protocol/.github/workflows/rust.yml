@@ -19,10 +19,10 @@ jobs:
         id: restore-cargo-cache
         uses: actions/cache/restore@v3
         with:
-          path: 
-            - ~/.cargo
-            - ~/.rustup
-            - ~/.dylint_drivers
+          path: |
+            ~/.cargo
+            ~/.rustup
+            ~/.dylint_drivers
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v2
 
       - name: Setup rust environment
