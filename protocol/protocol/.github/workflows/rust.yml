@@ -43,7 +43,7 @@ jobs:
           cargo +nightly install cargo-contract --version 2.0.0-rc
 
       - name: Save cargo cache after rust environment setup
-        id: save-cargo-cache
+        id: save-cargo-cache-1
         uses: actions/cache/save@v3
         with:
           path: ~/.cargo
@@ -65,7 +65,7 @@ jobs:
           if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
 
       - name: Save cargo cache after build and test
-        id: save-cargo-cache
+        id: save-cargo-cache-2
         uses: actions/cache/save@v3
         with:
           path: ~/.cargo
