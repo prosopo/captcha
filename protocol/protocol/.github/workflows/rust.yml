@@ -45,6 +45,8 @@ jobs:
       - name: Build
         run: |
           cd contracts
+          echo set browser wasm target
+          rustup target add wasm32-unknown-unknown --toolchain nightly
           cargo +nightly contract build --verbose --release
       
       - name: Test
