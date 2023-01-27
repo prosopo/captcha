@@ -32,6 +32,7 @@ jobs:
           rm -rf ~/.cargo ~/.rustup ~/.dylint_drivers
           echo install rustup
           curl https://sh.rustup.rs -sSf | sh -s -- -y
+          source ~/.cargo/env
           echo install nightly
           rustup update nightly
           echo set browser wasm target
