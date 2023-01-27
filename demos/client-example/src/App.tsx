@@ -115,6 +115,10 @@ function App() {
         alert(`Account ${address} not found`)
     }
 
+    const onExpired = () => {
+        alert('Challenge has expired')
+    }
+
     const config = {
         userAccountAddress: account,
         web2: process.env.REACT_APP_WEB2 === 'true',
@@ -179,7 +183,7 @@ function App() {
                                 />
                             </FormControl>
 
-                            <Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman }} />
+                            <Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman, onExpired }} />
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
