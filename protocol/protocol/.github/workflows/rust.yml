@@ -59,14 +59,6 @@ jobs:
           cd contracts
           cargo +nightly contract build --verbose --release
       
-      - name: Test
-        run: |
-          cd contracts
-          exec 5>&1
-          SUMMARY="$(RUST_BACKTRACE=1 cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tee >(cat - >&5))"
-          SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
-          if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
-
       - name: Save cargo build to cache
         id: save-cache-cargo-build
         uses: actions/cache/save@v3
@@ -74,3 +66,11 @@ jobs:
           path: |
             ~/contracts/target
           key: ${{ steps.restore-cache-cargo-build.outputs.cache-primary-key }}
+
+      - name: Test
+        run: |
+          cd contracts
+          exec 5>&1
+          SUMMARY="$(RUST_BACKTRACE=1 cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tee >(cat - >&5))"
+          SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
+          if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
