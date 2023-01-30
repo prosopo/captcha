@@ -35,6 +35,7 @@ jobs:
           path: |
             ~/.cargo
             ~/.dylint_drivers
+            ~/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Setup rust environment
