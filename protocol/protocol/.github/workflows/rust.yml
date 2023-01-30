@@ -57,7 +57,7 @@ jobs:
         id: update-rust
         if: steps.restore-cache-cargo-env.outputs.cache-hit == 'true'
         run: |
-          if [[ $(rustup update | wc -l) -gt 2 ]]; then
+          if [[ $(rustup update | grep info | wc -l) -gt 2 ]]; then
             echo "updated=true" >> $GITHUB_OUTPUT
           else
             echo "updated=false" >> $GITHUB_OUTPUT
@@ -67,11 +67,17 @@ jobs:
         id: update-cargo
         if: steps.restore-cache-cargo-env.outputs.cache-hit == 'true'
         run: |
-          if [[ $(rustup update | wc -l) -gt 4 ]]; then
+          if [[ $(rustup update | grep info | wc -l) -gt 4 ]]; then
             echo "updated=true" >> $GITHUB_OUTPUT
           else
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Check
+        run |
+          echo cache ${{steps.restore-cache-cargo-env.outputs.cache-hit}}
+          echo cargo ${{steps.update-cargo.outputs.upgraded}}
+          echo rust ${{steps.update-rust.outputs.upgraded}}
           
       - name: Clear cargo env cache
         continue-on-error: true
