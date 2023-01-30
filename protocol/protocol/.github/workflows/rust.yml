@@ -22,7 +22,7 @@ jobs:
           path: |
             ~/.cargo
             ~/.dylint_drivers
-          key: ${{ runner.os }}-cargo-env
+          key: ${{ runner.os }}-cargo-env-v1
 
       - name: Setup rust environment
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
@@ -30,7 +30,6 @@ jobs:
           echo install nightly
           rustup toolchain install nightly-x86_64-unknown-linux-gnu
           rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
-          rustup update nightly
           echo set browser wasm target
           rustup target add wasm32-unknown-unknown --toolchain nightly
           echo install tarpaulin and dylint
@@ -53,7 +52,7 @@ jobs:
         with:
           path: |
             ~/contracts/target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('~/contracts/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('~/contracts/Cargo.lock') }}-v1
 
       - name: Build
         run: |
