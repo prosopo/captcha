@@ -36,6 +36,10 @@ jobs:
           echo install cargo-contract
           cargo +nightly install cargo-contract --version 2.0.0-rc
 
+      - name: Tmp
+        run: |
+          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+
       - name: Save cargo-env to cache
         id: save-cache-cargo-env
         uses: actions/cache/save@v3
