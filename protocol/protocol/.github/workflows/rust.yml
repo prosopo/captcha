@@ -38,12 +38,15 @@ jobs:
           echo install nightly
           rustup toolchain install nightly-x86_64-unknown-linux-gnu
           rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+          # to compile the std lib we nee the src
+          rustup default nightly-x86_64-unknown-linux-gnu
+          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
           echo set browser wasm target
           rustup target add wasm32-unknown-unknown --toolchain nightly
           # echo install tarpaulin and dylint
           # cargo +nightly install cargo-tarpaulin cargo-dylint dylint-link
           echo install cargo-contract
-          cargo +nightly install cargo-contract --version 2.0.0-rc
+          cargo install cargo-contract --version 2.0.0-rc
           
       - name: Save cargo-env to cache
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
@@ -72,14 +75,14 @@ jobs:
       - name: Build
         run: |
           cd contracts
-          CARGO_INCREMENTAL=0 cargo contract build
+          cargo contract build
       
       - name: Test
         run: |
           cd contracts
           # print to stdout *and* collect the output in bash variable
           exec 5>&1
-          SUMMARY="$(CARGO_INCREMENTAL=0 RUST_BACKTRACE=1 cargo test --no-default-features --features std -- --nocapture | tee >(cat - >&5))"
+          SUMMARY="$(RUST_BACKTRACE=1 cargo test --no-default-features --features std -- --nocapture | tee >(cat - >&5))"
           # clip the output to the summary line (e.g. X tests passed ok.)
           SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
           if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
