@@ -57,7 +57,9 @@ jobs:
         id: update-rust
         if: steps.restore-cache-cargo-env.outputs.cache-hit == 'true'
         run: |
-          if [[ $(rustup update | grep info | wc -l) -gt 2 ]]; then
+          output=$(rustup update | grep info | wc -l)
+          echo $output
+          if [[ $output -gt 2 ]]; then
             echo "updated=true" >> $GITHUB_OUTPUT
           else
             echo "updated=false" >> $GITHUB_OUTPUT
