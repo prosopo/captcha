@@ -28,7 +28,8 @@ jobs:
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
         run: |
           echo install nightly
-          rustup toolchain install nightly
+          rustup toolchain install nightly-x86_64-unknown-linux-gnu
+          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
           rustup update nightly
           echo set browser wasm target
           rustup target add wasm32-unknown-unknown --toolchain nightly
@@ -46,11 +47,17 @@ jobs:
             ~/.dylint_drivers
           key: ${{ steps.restore-cache-cargo-env.outputs.cache-primary-key }}
 
+      - name: Restore cached cargo build
+        id: restore-cache-cargo-build
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            ~/contracts/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('~/contracts/Cargo.lock') }}
+
       - name: Build
         run: |
           cd contracts
-          rustup toolchain install nightly-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
           cargo +nightly contract build --verbose --release
       
       - name: Test
@@ -61,3 +68,10 @@ jobs:
           SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
           if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
 
+      - name: Save cargo-build to cache
+        id: save-cache-cargo-build
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            ~/contracts/target
+          key: ${{ steps.restore-cache-cargo-build.outputs.cache-primary-key }}
