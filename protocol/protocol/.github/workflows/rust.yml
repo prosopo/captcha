@@ -15,6 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: ls
+        run: |
+          ls -la
+
       - name: Restore cached cargo-env
         id: restore-cache-cargo-env
         uses: actions/cache/restore@v3
@@ -22,7 +26,7 @@ jobs:
           path: |
             ~/.cargo
             ~/.dylint_drivers
-          key: ${{ runner.os }}-cargo-env-v1
+          key: ${{ runner.os }}-cargo-env-v2
 
       - name: Setup rust environment
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
@@ -30,10 +34,12 @@ jobs:
           echo install nightly
           rustup toolchain install nightly-x86_64-unknown-linux-gnu
           rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+          # make the nightly toolchain default
+          rustup default nightly-x86_64-unknown-linux-gnu
           echo set browser wasm target
           rustup target add wasm32-unknown-unknown --toolchain nightly
-          echo install tarpaulin and dylint
-          cargo +nightly install cargo-tarpaulin cargo-dylint dylint-link
+          # echo install tarpaulin and dylint
+          # cargo +nightly install cargo-tarpaulin cargo-dylint dylint-link
           echo install cargo-contract
           cargo +nightly install cargo-contract --version 2.0.0-rc
 
@@ -52,14 +58,12 @@ jobs:
         with:
           path: |
             ~/contracts/target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('~/contracts/Cargo.lock') }}-v1
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-v1
 
       - name: Build
         run: |
           cd contracts
-          rustup toolchain install nightly-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
-          cargo +nightly contract build --verbose
+          cargo contract build
       
       - name: Save cargo build to cache
         id: save-cache-cargo-build
@@ -73,6 +77,6 @@ jobs:
         run: |
           cd contracts
           exec 5>&1
-          SUMMARY="$(RUST_BACKTRACE=1 cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tee >(cat - >&5))"
+          SUMMARY="$(RUST_BACKTRACE=1 cargo test --no-default-features --features std -- --nocapture | tee >(cat - >&5))"
           SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
           if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
