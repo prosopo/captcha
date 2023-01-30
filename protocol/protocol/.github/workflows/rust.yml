@@ -25,7 +25,7 @@ jobs:
           key: ${{ runner.os }}-cargo-env
 
       - name: Setup rust environment
-        if: steps.restore-cargo-env-cache.outputs.cache-hit != 'true'
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
         run: |
           echo install nightly
           rustup update nightly
