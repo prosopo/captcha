@@ -1,24 +1,15 @@
 [package]
 name = "demo_nft_contract"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Sinisa Canak sinisa.canak997@gmail.com"]
 edition = "2021"
 
 [dependencies]
-ink_primitives = { version = "3.2.0", default-features = false }
-ink_metadata = { version = "3.2.0", default-features = false, features = ["derive"], optional = true }
-ink_env = { version = "3.2.0", default-features = false }
-ink_storage = { version = "3.2.0", default-features = false }
-ink_lang = { version = "3.2.0", default-features = false }
-ink_prelude = { version = "3.2.0", default-features = false }
-
+ink = { git = "https://github.com/paritytech/ink", rev="4655a8b4413cb50cbc38d1b7c173ad426ab06cde", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
-scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
-
-brush = { tag = "v1.7.1", git = "https://github.com/Supercolony-net/openbrush-contracts", default-features = false, features = ["psp34", "ownable"] }
-
-prosopo = { git = "https://github.com/prosopo/protocol", branch = "ink-3.2.0", default-features = false, features = ["ink-as-dependency"] }
-
+scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
+openbrush = { rev="14ff655a0d83440f40c57c82d9a33e4c5b981da7", git = "https://github.com/727-Ventures/openbrush-contracts", default-features = false, features = ["psp34", "ownable"] }
+prosopo = { git = "https://github.com/prosopo/protocol", branch = "inkv4", default-features = false, features = ["ink-as-dependency"] }
 base64 = { version = "0.13.0", default-features = false, features = ["alloc"] }
 serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
 serde-json-core = { version = "0.4.0", default-features = false, features = ["heapless"] }
@@ -34,16 +25,10 @@ crate-type = [
 [features]
 default = ["std"]
 std = [
-    "ink_primitives/std",
-    "ink_metadata",
-    "ink_metadata/std",
-    "ink_env/std",
-    "ink_storage/std",
-    "ink_lang/std",
+    "ink/std",
     "scale/std",
-    "scale-info",
     "scale-info/std",
-    "brush/std",
+    "openbrush/std",
     "prosopo/std",
     "serde-json-core/std"
 ]
