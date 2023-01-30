@@ -64,7 +64,6 @@ jobs:
 
       - name: Clear cargo env cache
         continue-on-error: true
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true'
         run: |
           gh api \
             --method DELETE \
@@ -72,7 +71,6 @@ jobs:
             /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Save cargo env to cache
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
         uses: actions/cache/save@v3
         with:
           path: |
