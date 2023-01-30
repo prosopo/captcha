@@ -88,12 +88,6 @@ jobs:
             ./contracts/target
           key: ${{ runner.os }}-${{ env.cargo_build_version }}
 
-      - name: Configure rust environment
-        run: |
-          # to compile the std lib we nee the src
-          rustup default nightly-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
-
       - name: Build
         run: |
           cd contracts
