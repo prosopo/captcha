@@ -1,4 +1,4 @@
-import { BigNumber } from '@prosopo/contract'
+import { BN } from '@polkadot/util'
 
 export interface IUserAccount {
     mnemonic: string
@@ -9,7 +9,7 @@ export interface IProviderAccount extends IUserAccount {
     serviceOrigin: string
     fee: number
     datasetFile: string
-    stake: BigNumber
+    stake: number | BN
     payee: string
     captchaDatasetId: string
 }
@@ -19,5 +19,5 @@ export interface IDappAccount {
     mnemonic: string
     contractAccount: string
     optionalOwner: string
-    fundAmount: BigNumber
+    fundAmount: number | BN
 }

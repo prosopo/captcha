@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // export * from './api'
-// export * from './env'
+export { Environment } from './env'
 // export * from './errors'
 // export * from './scheduler'
 // export * from './cli'

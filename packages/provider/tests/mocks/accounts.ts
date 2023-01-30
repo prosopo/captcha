@@ -12,12 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { IDappAccount, IProviderAccount } from '../../src/types/accounts'
+import { BN } from '@polkadot/util'
+import { ProsopoEnvironment, Tasks } from '../../src/index'
+import { Account, AccountKey, IDatabaseAccounts, accountMnemonic } from '../dataUtils/DatabaseAccounts'
+import { populateDatabase } from '../dataUtils/populateDatabase'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ESLint } from 'eslint'
+import Environment = ESLint.Environment
 
 export const PROVIDER: IProviderAccount = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
     payee: 'Provider',
-    stake: 1000000000000000n,
+    stake: new BN(1000000000000000),
     datasetFile: './data/captchas.json',
     captchaDatasetId: '',
     mnemonic: '',
@@ -29,10 +36,27 @@ export const DAPP: IDappAccount = {
     mnemonic: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed
     optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
-    fundAmount: 1000000000000000n,
+    fundAmount: new BN(1000000000000000),
 }
 
 export const DAPP_USER = {
     mnemonic: '//Charlie',
     address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y',
+}
+
+// Create a user of specified type using the databasePopulator
+export async function getUser(env: ProsopoEnvironment, accountType: AccountKey): Promise<Account> {
+    const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
+    accountConfig[accountType] = 1
+    const databaseAccounts: IDatabaseAccounts = await populateDatabase(env, accountConfig, false)
+    const account = databaseAccounts[accountType].pop()
+    if (account === undefined) {
+        throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
+    }
+    return account
+}
+
+export async function changeSigner(env: ProsopoEnvironment, account: Account): Promise<Tasks> {
+    await env.changeSigner(accountMnemonic(account))
+    return new Tasks(env)
 }

@@ -149,7 +149,7 @@ export class Tasks {
         userAccount: string,
         dappAccount: string,
         requestHash: string,
-        captchas: JSON,
+        captchas: CaptchaSolution[],
         blockHash: string,
         txHash: string
     ): Promise<DappUserSolutionResult> {
@@ -183,6 +183,7 @@ export class Tasks {
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
         const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
+        const providerDetails = await this.contractApi.getProviderDetails(this.contractApi.pair.address)
         const commitment = await this.contractApi.getCaptchaSolutionCommitment(commitmentId)
         if (!commitment) {
             throw new ProsopoEnvError(
@@ -195,7 +196,13 @@ export class Tasks {
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
         if (pendingRequest && commitment.status.toString() === 'Pending') {
-            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId, userAccount)
+            await this.db.storeDappUserSolution(
+                receivedCaptchas,
+                commitmentId,
+                userAccount,
+                dappAccount,
+                providerDetails.datasetId.toString()
+            )
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 await this.contractApi.providerApprove(commitmentId, partialFee)
                 response = {
@@ -236,7 +243,7 @@ export class Tasks {
         userAccount: string,
         dappAccount: string,
         requestHash: string,
-        captchas: JSON,
+        captchas: CaptchaSolution[],
         signature: string // the signature to indicate ownership of account (web2 only)
     ): Promise<DappUserSolutionResult> {
         if (!(await this.dappIsActive(dappAccount))) {
@@ -257,10 +264,17 @@ export class Tasks {
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
         const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
+        const providerDetails = await this.contractApi.getProviderDetails(this.contractApi.pair.address)
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the request is in the local DB
         if (pendingRequest) {
-            await this.db.storeDappUserSolution(receivedCaptchas, commitmentId, userAccount)
+            await this.db.storeDappUserSolution(
+                receivedCaptchas,
+                commitmentId,
+                userAccount,
+                dappAccount,
+                providerDetails.datasetId.toString()
+            )
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 response = {
                     captchas: captchaIds.map((id) => ({
@@ -289,7 +303,7 @@ export class Tasks {
      */
     async dappIsActive(dappAccount: string): Promise<boolean> {
         const dapp = await this.contractApi.getDappDetails(dappAccount)
-        //dapp.status.isActive doesn't work
+        //dapp.status.isActive doesn't work: https://substrate.stackexchange.com/questions/6333/how-do-we-work-with-polkadot-js-enums-in-typescript
         return dapp.status.toString() === 'Active'
     }
 
@@ -305,7 +319,7 @@ export class Tasks {
      * Validate length of received captchas array matches length of captchas found in database
      * Validate that the datasetId is the same for all captchas and is equal to the datasetId on the stored captchas
      */
-    async validateReceivedCaptchasAgainstStoredCaptchas(captchas: JSON): Promise<{
+    async validateReceivedCaptchasAgainstStoredCaptchas(captchas: CaptchaSolution[]): Promise<{
         storedCaptchas: Captcha[]
         receivedCaptchas: CaptchaSolution[]
         captchaIds: string[]
@@ -371,7 +385,7 @@ export class Tasks {
         const currentTime = Date.now()
         if (pendingRecord.deadline < currentTime) {
             // deadline for responding to the captcha has expired
-            console.log('Deadline for responding to captcha has expired')
+            this.logger.info('Deadline for responding to captcha has expired')
             return false
         }
         if (pendingRecord) {
@@ -417,9 +431,8 @@ export class Tasks {
         )
 
         const currentTime = Date.now()
-        const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30).reduce((a, b) => a + b, 0)
+        const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30000).reduce((a, b) => a + b, 0)
         const deadline = timeLimit + currentTime
-
         await this.db.storeDappUserPending(userAccount, requestHash, salt, deadline)
         return { captchas, requestHash }
     }
@@ -460,14 +473,21 @@ export class Tasks {
                         `There are ${solutionsToUpdate.rows().length} CAPTCHA challenges to update with solutions`
                     )
                     try {
+                        const captchaIdsToUpdate = [...solutionsToUpdate['captchaId'].values()]
+                        const commitmentIds = solutions
+                            .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
+                            .map((s) => s.commitmentId)
                         const dataset = await this.db.getDataset(providerDetails.datasetId.toString())
                         dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
                         // store new solutions in database
+                        //console.log(JSON.stringify(dataset.captchas, null, 4))
                         await this.providerAddDataset(dataset)
                         // mark user solutions as used to calculate new solutions
-                        await this.db.flagUsedDappUserSolutions([...solutionsToUpdate['captchaId'].values()])
+                        await this.db.flagUsedDappUserSolutions(captchaIdsToUpdate)
+                        // mark user commitments as used to calculate new solutions
+                        await this.db.flagUsedDappUserCommitments(commitmentIds)
                         // remove old captcha challenges from database
-                        await this.db.removeCaptchas([...solutionsToUpdate['captchaId'].values()])
+                        await this.db.removeCaptchas(captchaIdsToUpdate)
                         return solutionsToUpdate.rows().length
                     } catch (error) {
                         consola.error(error)
@@ -526,14 +546,12 @@ export class Tasks {
             return false
         }
 
-        const _header = header.toHuman?.() || header
-
-        const headerBlockNo: number = Number.parseInt(_header.number)
+        const headerBlockNo: number = header.number.toPrimitive()
         if (headerBlockNo == blockNo) {
             return true
         }
 
-        const parent = await contract.api.rpc.chain.getBlock(_header.parentHash)
+        const parent = await contract.api.rpc.chain.getBlock(header.parentHash)
 
         return this.isRecentBlock(contract, (parent.toHuman() as any).block.header, blockNo, depth - 1)
     }

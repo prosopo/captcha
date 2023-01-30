@@ -25,6 +25,7 @@ import { ProsopoEnvironment } from '../types/env'
 import { encodeStringAddress } from '../util'
 import { PayeeSchema } from '@prosopo/contract'
 import consola from 'consola'
+import { BatchCommitter } from '../tasks/batch'
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)
@@ -136,7 +137,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                     }),
             async (argv) => {
                 const provider = await tasks.contractApi.getProviderDetails(argv.address)
-                if ((provider && argv.origin) || argv.fee || argv.payee || argv.value) {
+                if (provider && (argv.origin || argv.fee || argv.payee || argv.value)) {
                     const result = await tasks.contractApi.providerUpdate(
                         argv.origin || provider.serviceOrigin,
                         argv.fee || provider.fee,
@@ -318,6 +319,58 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 } else {
                     const result = await tasks.calculateCaptchaSolutions()
                     consola.info(`Updated ${result} captcha solutions`)
+                }
+            },
+            [validateScheduleExpression]
+        )
+        .command(
+            'batch_commit',
+            'Batch commit user solutions to contract',
+            (yargs) =>
+                yargs.option('schedule', {
+                    type: 'string',
+                    demand: false,
+                    desc: 'A Recurring schedule expression',
+                }),
+            async (argv) => {
+                if (argv.schedule) {
+                    pm2.connect((err) => {
+                        if (err) {
+                            console.error(err)
+                            process.exit(2)
+                        }
+
+                        pm2.start(
+                            {
+                                script: `ts-node scheduler.js ${JSON.stringify(argv.schedule)}`,
+                                name: 'scheduler',
+                                cwd: cwd() + '/dist/src',
+                            },
+                            (err, apps) => {
+                                if (err) {
+                                    console.error(err)
+
+                                    return pm2.disconnect()
+                                }
+
+                                logger.info(apps)
+                                process.exit()
+                            }
+                        )
+                    })
+                } else {
+                    if (env.db) {
+                        const batchCommitter = new BatchCommitter(
+                            env.config.batchCommit,
+                            env.contractInterface,
+                            env.db,
+                            env.logger
+                        )
+                        const result = await batchCommitter.runBatch()
+                        logger.info(`Batch commit complete: ${result}`)
+                    } else {
+                        logger.error('No database configured')
+                    }
                 }
             },
             [validateScheduleExpression]

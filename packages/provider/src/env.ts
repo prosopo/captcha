@@ -11,13 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    ContractAbi,
-    ProsopoContractApi,
-    ProsopoContractMethods,
-    abiJson,
-    generateDefinitions,
-} from '@prosopo/contract'
+
+import { ContractAbi, ProsopoContractApi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { AssetsResolver } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
 import consola, { LogLevel } from 'consola'
@@ -114,12 +109,12 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getContractApi(): Promise<ProsopoContractApi> {
-        this.contractInterface = await ProsopoContractMethods.create(
+        this.contractInterface = new ProsopoContractMethods(
+            this.api,
+            this.abi,
             this.contractAddress,
             this.pair,
-            this.contractName,
-            this.abi,
-            this.api
+            this.contractName
         )
         return this.contractInterface
     }
@@ -127,8 +122,6 @@ export class Environment implements ProsopoEnvironment {
     async isReady() {
         try {
             this.api = await ApiPromise.create({ provider: this.wsProvider })
-            const contractDefinitions = generateDefinitions(['prosopo', 'prosopo'])
-            await this.api.registry.register(contractDefinitions.types)
             await this.getSigner()
             await this.getContractApi()
             await this.db?.connect()

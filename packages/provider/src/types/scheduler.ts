@@ -9,3 +9,8 @@ export enum ScheduledTaskStatus {
     Completed = 'Completed',
     Failed = 'Failed',
 }
+
+export interface ScheduledTaskResult {
+    error?: string
+    data?: Record<string, any>
+}

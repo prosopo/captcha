@@ -11,15 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Environment } from '../src/env'
-import { sendFunds } from '../src/tasks/setup'
+import { Environment, sendFunds } from '../src'
+import { BN } from '@polkadot/util'
 
 require('dotenv').config()
 
 async function main(account: string) {
     const env = new Environment('//Alice')
     await env.isReady()
-    await sendFunds(env, account, 'Provider', 100000000000000000n)
+    await sendFunds(env, account, 'Provider', new BN(100000000000000000))
     process.exit()
 }
 

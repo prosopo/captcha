@@ -15,9 +15,8 @@ import { blake2AsHex, decodeAddress, encodeAddress, isAddress } from '@polkadot/
 import { hexToString, isHex, u8aToHex } from '@polkadot/util'
 
 const ss58Format = 42
-const bitLength = 128
 const arg = process.argv.slice(2)[0].trim()
-const argIsHex = isHex(arg, bitLength)
+const argIsHex = isHex(arg)
 const argIsAddress = isAddress(arg, false, ss58Format)
 // console.log(`arg is: ${arg}`)
 // console.log(`argIsAddress of bitLength ${bitLength} : ${argIsAddress}`)
@@ -31,8 +30,10 @@ if (argIsAddress) {
         console.log(`Hex address ${hexAddress}`)
     } else {
         console.log(`Encoded address ${encodedAddress}`)
+        console.log(`Address as hex ${u8aToHex(decodeAddress(encodedAddress))}`)
     }
-} else if (argIsHex) {
+}
+if (argIsHex) {
     console.log(`Decoding hex ${arg} to string`)
     console.log(hexToString(arg))
 } else {
