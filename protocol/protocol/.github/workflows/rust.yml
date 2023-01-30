@@ -75,7 +75,7 @@ jobs:
       - name: Build
         run: |
           cd contracts
-          cargo contract build
+          cargo contract build --optimization-passes 0
       
       - name: Test
         run: |
