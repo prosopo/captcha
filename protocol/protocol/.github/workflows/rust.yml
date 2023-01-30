@@ -38,8 +38,6 @@ jobs:
           echo install nightly
           rustup toolchain install nightly-x86_64-unknown-linux-gnu
           rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
-          # make the nightly toolchain default
-          rustup default nightly-x86_64-unknown-linux-gnu
           echo set browser wasm target
           rustup target add wasm32-unknown-unknown --toolchain nightly
           # echo install tarpaulin and dylint
@@ -47,9 +45,14 @@ jobs:
           echo install cargo-contract
           cargo +nightly install cargo-contract --version 2.0.0-rc
 
-      - name: Update rust environment
+      - name: Configure rust environment
         run: |
-          rustup update
+          # make the nightly toolchain default
+          rustup default nightly-x86_64-unknown-linux-gnu
+
+      # - name: Update rust environment
+      #   run: |
+      #     rustup update
 
       - name: Save cargo-env to cache
         id: save-cache-cargo-env
