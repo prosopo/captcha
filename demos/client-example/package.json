@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/client-example",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.9.3",
