@@ -59,6 +59,7 @@ jobs:
 
       - name: Update cargo
         run: |
+          cd contracts
           cargo update
 
       - name: Clear cargo env cache
