@@ -8,6 +8,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  cargo_env_version: ${{ runner.os }}-cargo-env
+  cargo_build_version: ${{ runner.os }}-cargo-build
+  cargo_test_version: ${{ runner.os }}-cargo-test
 
 jobs:
   build:
@@ -23,6 +26,8 @@ jobs:
           echo ls -la ~
           ls -la ~
 
+      ################ SETUP RUST
+
       - name: Restore cached cargo-env
         id: restore-cache-cargo-env
         uses: actions/cache/restore@v3
@@ -30,7 +35,7 @@ jobs:
           path: |
             ~/.cargo
             ~/.dylint_drivers
-          key: ${{ runner.os }}-cargo-env-v2-
+          key: ${{ env.cargo-env-version }}
 
       - name: Setup rust environment
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
@@ -50,6 +55,7 @@ jobs:
 
       - name: Update rust
         id: update-rust
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
         run: |
           if [[ $(rustup update | wc -l) -gt 2 ]]; then
             echo "updated=true" >> $GITHUB_OUTPUT
@@ -59,6 +65,7 @@ jobs:
 
       - name: Update cargo
         id: update-cargo
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
         run: |
           if [[ $(rustup update | wc -l) -gt 4 ]]; then
             echo "updated=true" >> $GITHUB_OUTPUT
@@ -66,15 +73,24 @@ jobs:
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
           
-      - name: Save cargo-env to cache
+      - name: Clear cargo env cache
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
-        id: save-cache-cargo-env
+        run: |
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            /repos/OWNER/REPO/actions/caches?key=${{ env.cargo-env-version }}
+
+      - name: Save cargo env to cache
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
         uses: actions/cache/save@v3
         with:
           path: |
             ~/.cargo
             ~/.dylint_drivers
-          key: ${{ runner.os }}-cargo-env-$(date +%s)
+          key: ${{ env.cargo-env-version }}
+
+      ################ BUILD
 
       - name: Restore cached cargo build
         id: restore-cache-cargo-build
@@ -82,7 +98,7 @@ jobs:
         with:
           path: |
             ./contracts/target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-v2
+          key: ${{ env.cargo-build-version }}
 
       - name: Configure rust environment
         run: |
@@ -94,14 +110,22 @@ jobs:
         run: |
           cd contracts
           cargo contract build --optimization-passes 0
-      
+
+      - name: Clear cargo build cache
+        run: |
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            /repos/OWNER/REPO/actions/caches?key=${{ env.cargo-build-version }}
+
       - name: Save cargo build to cache
-        id: save-cache-cargo-build-1
         uses: actions/cache/save@v3
         with:
           path: |
             ./contracts/target
-          key: ${{ steps.restore-cache-cargo-build.outputs.cache-primary-key }}
+          key: ${{ env.cargo-build-version }}
+
+      ################ TEST
 
       - name: Test
         run: |
@@ -109,10 +133,16 @@ jobs:
           RUST_BACKTRACE=1 cargo test --no-default-features --features std -- --nocapture
           exit $?
 
+      - name: Clear cargo build cache
+        run: |
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            /repos/OWNER/REPO/actions/caches?key=${{ env.cargo-build-version }}
+
       - name: Save cargo build to cache
-        id: save-cache-cargo-build-2
         uses: actions/cache/save@v3
         with:
           path: |
             ./contracts/target
-          key: ${{ steps.restore-cache-cargo-build.outputs.cache-primary-key }}
+          key: ${{ env.cargo-build-version }}
