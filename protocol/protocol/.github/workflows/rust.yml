@@ -10,6 +10,7 @@ env:
   CARGO_TERM_COLOR: always
   cargo_env_version: cargo-env
   cargo_build_version: cargo-build
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   build:
