@@ -115,116 +115,119 @@ export const Manager = (
      * Called on start of user verification. This is when the user ticks the box to claim they are human.
      */
     const start = async () => {
-        // try {
-        if (state.loading) {
-            console.log('Procaptcha already loading')
-            return
-        }
-        if (state.isHuman) {
-            console.log('already human')
-            return
-        }
-
-        resetState()
-        // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
-        updateState({ loading: true })
-
-        // snapshot the config into the state
-        const config = getConfig()
-        console.log('Starting procaptcha using config:', config)
-
-        // allow UI to catch up with the loading state
-        await sleep(100)
-
-        // check accounts / setup accounts
-        const account = await loadAccount()
-
-        // account has been found, check if account is already marked as human
-        // first, ask the smart contract
-        const contract = await loadContract()
-        // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-        const contractIsHuman = await contract.getDappOperatorIsHumanUser(
-            account.account.address,
-            config.solutionThreshold
-        )
-
-        if (contractIsHuman) {
-            updateState({ isHuman: true, loading: false })
-            events.onHuman({
-                userAccountAddress: account.account.address,
-            })
-            return
-        }
-
-        // Check if there is a provider in local storage or get a random one from the contract
-        const providerUrlFromStorage = storage.getProviderUrl()
-        let providerApi: ProviderApi
-        if (providerUrlFromStorage) {
-            providerApi = await loadProviderApi(providerUrlFromStorage)
-
-            // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
-            // so contact the provider to check if this is the case
-            try {
-                const verifyDappUserResponse = await providerApi.verifyDappUser(account.account.address)
-                if (verifyDappUserResponse.solutionApproved) {
-                    updateState({ isHuman: true, loading: false })
-                    events.onHuman({
-                        providerUrl: providerUrlFromStorage,
-                        userAccountAddress: account.account.address,
-                        commitmentId: verifyDappUserResponse.commitmentId,
-                    })
-                    return
-                }
-            } catch (err) {
-                // if the provider is down, we should continue with the process of selecting a random provider
-                console.error('Error contacting provider from storage', providerUrlFromStorage)
-                // continue as if the provider was not in storage
+        try {
+            if (state.loading) {
+                console.log('Procaptcha already loading')
+                return
             }
-        }
+            if (state.isHuman) {
+                console.log('already human')
+                return
+            }
 
-        // get a random provider
-        const provider = await contract.getRandomProvider(account.account.address, config.network.dappContract.address)
-        console.log('provider', provider)
-        const providerUrl = trimProviderUrl(provider.provider.serviceOrigin.toString())
-        // get the provider api inst
-        providerApi = await loadProviderApi(providerUrl)
-        console.log('providerApi', providerApi)
-        // get the captcha challenge and begin the challenge
-        const captchaApi = await loadCaptchaApi(contract, provider, providerApi)
-        console.log('captchaApi', captchaApi)
-        const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
-        console.log('challenge', challenge)
-        if (challenge.captchas.length <= 0) {
-            throw new Error('No captchas returned from provider')
-        }
+            resetState()
+            // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
+            updateState({ loading: true })
 
-        // setup timeout
-        const timeMillis: number = challenge.captchas
-            .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
-            .reduce((a, b) => a + b)
-        const timeout = setTimeout(() => {
-            console.log('challenge expired after ' + timeMillis + 'ms')
-            events.onExpired()
-            // expired, disallow user's claim to be human
+            // snapshot the config into the state
+            const config = getConfig()
+            console.log('Starting procaptcha using config:', config)
+
+            // allow UI to catch up with the loading state
+            await sleep(100)
+
+            // check accounts / setup accounts
+            const account = await loadAccount()
+
+            // account has been found, check if account is already marked as human
+            // first, ask the smart contract
+            const contract = await loadContract()
+            // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
+            const contractIsHuman = await contract.getDappOperatorIsHumanUser(
+                account.account.address,
+                config.solutionThreshold
+            )
+
+            if (contractIsHuman) {
+                updateState({ isHuman: true, loading: false })
+                events.onHuman({
+                    userAccountAddress: account.account.address,
+                })
+                return
+            }
+
+            // Check if there is a provider in local storage or get a random one from the contract
+            const providerUrlFromStorage = storage.getProviderUrl()
+            let providerApi: ProviderApi
+            if (providerUrlFromStorage) {
+                providerApi = await loadProviderApi(providerUrlFromStorage)
+
+                // if the provider was already in storage, the user may have already solved some captchas but they have not been put on chain yet
+                // so contact the provider to check if this is the case
+                try {
+                    const verifyDappUserResponse = await providerApi.verifyDappUser(account.account.address)
+                    if (verifyDappUserResponse.solutionApproved) {
+                        updateState({ isHuman: true, loading: false })
+                        events.onHuman({
+                            providerUrl: providerUrlFromStorage,
+                            userAccountAddress: account.account.address,
+                            commitmentId: verifyDappUserResponse.commitmentId,
+                        })
+                        return
+                    }
+                } catch (err) {
+                    // if the provider is down, we should continue with the process of selecting a random provider
+                    console.error('Error contacting provider from storage', providerUrlFromStorage)
+                    // continue as if the provider was not in storage
+                }
+            }
+
+            // get a random provider
+            const provider = await contract.getRandomProvider(
+                account.account.address,
+                config.network.dappContract.address
+            )
+            console.log('provider', provider)
+            const providerUrl = trimProviderUrl(provider.provider.serviceOrigin.toString())
+            // get the provider api inst
+            providerApi = await loadProviderApi(providerUrl)
+            console.log('providerApi', providerApi)
+            // get the captcha challenge and begin the challenge
+            const captchaApi = await loadCaptchaApi(contract, provider, providerApi)
+            console.log('captchaApi', captchaApi)
+            const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
+            console.log('challenge', challenge)
+            if (challenge.captchas.length <= 0) {
+                throw new Error('No captchas returned from provider')
+            }
+
+            // setup timeout
+            const timeMillis: number = challenge.captchas
+                .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
+                .reduce((a, b) => a + b)
+            const timeout = setTimeout(() => {
+                console.log('challenge expired after ' + timeMillis + 'ms')
+                events.onExpired()
+                // expired, disallow user's claim to be human
+                updateState({ isHuman: false, showModal: false, loading: false })
+            }, timeMillis)
+
+            // update state with new challenge
+            updateState({
+                index: 0,
+                solutions: challenge.captchas.map(() => []),
+                challenge,
+                showModal: true,
+                timeout,
+            })
+        } catch (err) {
+            console.error(err)
+            // dispatch relevant error event
+            const event = errorToEventMap[err.constructor] || events.onError
+            event(err)
+            // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
-        }, timeMillis)
-
-        // update state with new challenge
-        updateState({
-            index: 0,
-            solutions: challenge.captchas.map(() => []),
-            challenge,
-            showModal: true,
-            timeout,
-        })
-        // } catch (err) {
-        //     console.error(err)
-        //     // dispatch relevant error event
-        //     const event = errorToEventMap[err.constructor] || events.onError
-        //     event(err)
-        //     // hit an error, disallow user's claim to be human
-        //     updateState({ isHuman: false, showModal: false, loading: false })
-        // }
+        }
     }
 
     const submit = async () => {
