@@ -23,16 +23,11 @@ jobs:
             ~/.cargo
             ~/.rustup
             ~/.dylint_drivers
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v2
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v3
 
       - name: Setup rust environment
         if: steps.restore-cargo-cache.outputs.cache-hit != 'true'
         run: |
-          echo clean existing
-          rm -rf ~/.cargo ~/.rustup ~/.dylint_drivers
-          echo install rustup
-          curl https://sh.rustup.rs -sSf | sh -s -- -y
-          source ~/.cargo/env
           echo install nightly
           rustup update nightly
           echo set browser wasm target
@@ -52,8 +47,6 @@ jobs:
       - name: Build
         run: |
           cd contracts
-          echo set browser wasm target
-          rustup target add wasm32-unknown-unknown --toolchain nightly
           cargo +nightly contract build --verbose --release
       
       - name: Test
