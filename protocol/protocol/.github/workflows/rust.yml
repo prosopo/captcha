@@ -74,7 +74,7 @@ jobs:
           fi
 
       - name: Check
-        run |
+        run: |
           echo cache ${{steps.restore-cache-cargo-env.outputs.cache-hit}}
           echo cargo ${{steps.update-cargo.outputs.upgraded}}
           echo rust ${{steps.update-rust.outputs.upgraded}}
