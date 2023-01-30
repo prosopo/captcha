@@ -30,7 +30,7 @@ jobs:
           path: |
             ~/.cargo
             ~/.dylint_drivers
-          key: ${{ runner.os }}-cargo-env-v2
+          key: ${{ runner.os }}-cargo-env-v2-
 
       - name: Setup rust environment
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
@@ -47,16 +47,34 @@ jobs:
           # cargo +nightly install cargo-tarpaulin cargo-dylint dylint-link
           echo install cargo-contract
           cargo install cargo-contract --version 2.0.0-rc
+
+      - name: Update rust
+        id: update-rust
+        run: |
+          if [[ $(rustup update | wc -l) -gt 2 ]]; then
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update cargo
+        id: update-cargo
+        run: |
+          if [[ $(rustup update | wc -l) -gt 4 ]]; then
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
           
       - name: Save cargo-env to cache
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
         id: save-cache-cargo-env
         uses: actions/cache/save@v3
         with:
           path: |
             ~/.cargo
             ~/.dylint_drivers
-          key: ${{ steps.restore-cache-cargo-env.outputs.cache-primary-key }}
+          key: ${{ runner.os }}-cargo-env-$(date +%s)
 
       - name: Restore cached cargo build
         id: restore-cache-cargo-build
