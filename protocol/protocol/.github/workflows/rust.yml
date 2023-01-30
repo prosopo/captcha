@@ -15,18 +15,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Restore cargo cache
-        id: restore-cargo-cache
+      - name: Restore cached cargo-env
+        id: restore-cache-cargo-env
         uses: actions/cache/restore@v3
         with:
           path: |
             ~/.cargo
-            ~/.rustup
             ~/.dylint_drivers
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-v3
+          key: ${{ runner.os }}-cargo-env
 
       - name: Setup rust environment
-        if: steps.restore-cargo-cache.outputs.cache-hit != 'true'
+        if: steps.restore-cargo-env-cache.outputs.cache-hit != 'true'
         run: |
           echo install nightly
           rustup update nightly
@@ -37,12 +36,14 @@ jobs:
           echo install cargo-contract
           cargo +nightly install cargo-contract --version 2.0.0-rc
 
-      - name: Save cargo cache after rust environment setup
-        id: save-cargo-cache-1
+      - name: Save cargo-env to cache
+        id: save-cache-cargo-env
         uses: actions/cache/save@v3
         with:
-          path: ~/.cargo
-          key: ${{ steps.restore-cargo-cache.outputs.cache-primary-key }}
+          path: |
+            ~/.cargo
+            ~/.dylint_drivers
+          key: ${{ steps.restore-cache-cargo-env.outputs.cache-primary-key }}
 
       - name: Build
         run: |
@@ -57,9 +58,3 @@ jobs:
           SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
           if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
 
-      - name: Save cargo cache after build and test
-        id: save-cargo-cache-2
-        uses: actions/cache/save@v3
-        with:
-          path: ~/.cargo
-          key: ${{ steps.restore-cargo-cache.outputs.cache-primary-key }}
