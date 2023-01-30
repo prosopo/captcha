@@ -91,12 +91,12 @@ export class ProsopoServer {
     }
 
     public async getContractApi(): Promise<ProsopoContractMethods> {
-        this.contractInterface = await ProsopoContractMethods.create(
+        this.contractInterface = new ProsopoContractMethods(
+            this.api,
+            this.abi,
             this.contractAddress,
             this.pair,
-            this.contractName,
-            this.abi,
-            this.api
+            this.contractName
         )
         return this.contractInterface
     }
