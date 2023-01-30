@@ -74,6 +74,7 @@ jobs:
           fi
           
       - name: Clear cargo env cache
+        continue-on-error: true
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
         run: |
           gh api \
@@ -112,6 +113,7 @@ jobs:
           cargo contract build --optimization-passes 0
 
       - name: Clear cargo build cache
+        continue-on-error: true
         run: |
           gh api \
             --method DELETE \
@@ -134,6 +136,7 @@ jobs:
           exit $?
 
       - name: Clear cargo build cache
+        continue-on-error: true
         run: |
           gh api \
             --method DELETE \
