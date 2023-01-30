@@ -17,8 +17,10 @@ jobs:
 
       - name: ls
         run: |
-          ls -la
           pwd
+          echo ls -la
+          ls -la
+          echo ls -la ~
           ls -la ~
 
       - name: Restore cached cargo-env
@@ -59,7 +61,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            ~/contracts/target
+            ./contracts/target
           key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-v1
 
       - name: Build
@@ -72,7 +74,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            ~/contracts/target
+            ./contracts/target
           key: ${{ steps.restore-cache-cargo-build.outputs.cache-primary-key }}
 
       - name: Test
