@@ -18,6 +18,8 @@ jobs:
       - name: ls
         run: |
           ls -la
+          pwd
+          ls -la ~
 
       - name: Restore cached cargo-env
         id: restore-cache-cargo-env
