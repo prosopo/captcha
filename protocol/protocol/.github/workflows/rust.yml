@@ -76,12 +76,12 @@ jobs:
       - name: Check
         run: |
           echo cache ${{steps.restore-cache-cargo-env.outputs.cache-hit}}
-          echo cargo ${{steps.update-cargo.outputs.upgraded}}
-          echo rust ${{steps.update-rust.outputs.upgraded}}
+          echo cargo ${{steps.update-cargo.outputs.updated}}
+          echo rust ${{steps.update-rust.outputs.updated}}
           
       - name: Clear cargo env cache
         continue-on-error: true
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true'
         run: |
           gh api \
             --method DELETE \
