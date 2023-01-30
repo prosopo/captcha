@@ -77,18 +77,22 @@ jobs:
           cd contracts
           cargo contract build --optimization-passes 0
       
+      - name: Save cargo build to cache
+        id: save-cache-cargo-build-1
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            ./contracts/target
+          key: ${{ steps.restore-cache-cargo-build.outputs.cache-primary-key }}
+
       - name: Test
         run: |
           cd contracts
-          # print to stdout *and* collect the output in bash variable
-          exec 5>&1
-          SUMMARY="$(RUST_BACKTRACE=1 cargo test --no-default-features --features std -- --nocapture | tee >(cat - >&5))"
-          # clip the output to the summary line (e.g. X tests passed ok.)
-          SUMMARY=$(echo $SUMMARY | tail -7 | head -1)
-          if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
+          RUST_BACKTRACE=1 cargo test --no-default-features --features std -- --nocapture
+          exit $?
 
       - name: Save cargo build to cache
-        id: save-cache-cargo-build
+        id: save-cache-cargo-build-2
         uses: actions/cache/save@v3
         with:
           path: |
