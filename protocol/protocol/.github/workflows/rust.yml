@@ -55,7 +55,7 @@ jobs:
 
       - name: Update rust
         id: update-rust
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
+        if: steps.restore-cache-cargo-env.outputs.cache-hit == 'true'
         run: |
           if [[ $(rustup update | wc -l) -gt 2 ]]; then
             echo "updated=true" >> $GITHUB_OUTPUT
@@ -65,7 +65,7 @@ jobs:
 
       - name: Update cargo
         id: update-cargo
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
+        if: steps.restore-cache-cargo-env.outputs.cache-hit == 'true'
         run: |
           if [[ $(rustup update | wc -l) -gt 4 ]]; then
             echo "updated=true" >> $GITHUB_OUTPUT
