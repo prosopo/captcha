@@ -74,6 +74,7 @@ jobs:
       - name: Build
         run: |
           cd contracts
+          rustup default nightly-x86_64-unknown-linux-gnu
           cargo contract build
       
       - name: Test
