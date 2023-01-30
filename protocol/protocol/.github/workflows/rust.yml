@@ -54,33 +54,13 @@ jobs:
           cargo install cargo-contract --version 2.0.0-rc
 
       - name: Update rust
-        id: update-rust
-        if: steps.restore-cache-cargo-env.outputs.cache-hit == 'true'
         run: |
-          output=$(rustup update | grep info | wc -l)
-          echo $output
-          if [[ $output -gt 2 ]]; then
-            echo "updated=true" >> $GITHUB_OUTPUT
-          else
-            echo "updated=false" >> $GITHUB_OUTPUT
-          fi
+          rustup update
 
       - name: Update cargo
-        id: update-cargo
-        if: steps.restore-cache-cargo-env.outputs.cache-hit == 'true'
         run: |
-          if [[ $(rustup update | grep info | wc -l) -gt 4 ]]; then
-            echo "updated=true" >> $GITHUB_OUTPUT
-          else
-            echo "updated=false" >> $GITHUB_OUTPUT
-          fi
+          cargo update
 
-      - name: Check
-        run: |
-          echo cache ${{steps.restore-cache-cargo-env.outputs.cache-hit}}
-          echo cargo ${{steps.update-cargo.outputs.updated}}
-          echo rust ${{steps.update-rust.outputs.updated}}
-          
       - name: Clear cargo env cache
         continue-on-error: true
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true'
