@@ -35,7 +35,7 @@ jobs:
           path: |
             ~/.cargo
             ~/.dylint_drivers
-          key: ${{ runner.os }}-${{ env.cargo-env-version }}
+          key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Setup rust environment
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
@@ -79,7 +79,7 @@ jobs:
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github+json" \
-            /repos/OWNER/REPO/actions/caches?key=${{ runner.os }}-${{ env.cargo-env-version }}
+            /repos/OWNER/REPO/actions/caches?key=${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Save cargo env to cache
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
@@ -88,7 +88,7 @@ jobs:
           path: |
             ~/.cargo
             ~/.dylint_drivers
-          key: ${{ runner.os }}-${{ env.cargo-env-version }}
+          key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       ################ BUILD
 
@@ -98,7 +98,7 @@ jobs:
         with:
           path: |
             ./contracts/target
-          key: ${{ runner.os }}-${{ env.cargo-build-version }}
+          key: ${{ runner.os }}-${{ env.cargo_build_version }}
 
       - name: Configure rust environment
         run: |
@@ -116,14 +116,14 @@ jobs:
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github+json" \
-            /repos/OWNER/REPO/actions/caches?key=${{ runner.os }}-${{ env.cargo-build-version }}
+            /repos/OWNER/REPO/actions/caches?key=${{ runner.os }}-${{ env.cargo_build_version }}
 
       - name: Save cargo build to cache
         uses: actions/cache/save@v3
         with:
           path: |
             ./contracts/target
-          key: ${{ runner.os }}-${{ env.cargo-build-version }}
+          key: ${{ runner.os }}-${{ env.cargo_build_version }}
 
       ################ TEST
 
@@ -138,11 +138,11 @@ jobs:
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github+json" \
-            /repos/OWNER/REPO/actions/caches?key=${{ runner.os }}-${{ env.cargo-build-version }}
+            /repos/OWNER/REPO/actions/caches?key=${{ runner.os }}-${{ env.cargo_build_version }}
 
       - name: Save cargo build to cache
         uses: actions/cache/save@v3
         with:
           path: |
             ./contracts/target
-          key: ${{ runner.os }}-${{ env.cargo-build-version }}
+          key: ${{ runner.os }}-${{ env.cargo_build_version }}
