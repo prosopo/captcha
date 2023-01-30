@@ -45,10 +45,6 @@ jobs:
           echo install cargo-contract
           cargo +nightly install cargo-contract --version 2.0.0-rc
           
-      - name: Update rust environment
-        run: |
-          rustup update
-
       - name: Save cargo-env to cache
         id: save-cache-cargo-env
         uses: actions/cache/save@v3
