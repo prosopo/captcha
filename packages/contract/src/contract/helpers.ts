@@ -13,14 +13,17 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { AbiMessage, DecodedEvent } from '@polkadot/api-contract/types'
-import { isHex, isU8a, stringToHex } from '@polkadot/util'
+import { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types'
+import { isHex, isU8a, stringCamelCase, stringToHex, stringUpperFirst } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
-import { TransactionResponse } from '../types/contract'
+import { DecodedEvent, TransactionResponse } from '../types/contract'
 import { ProsopoContractError } from '../handlers'
-import { Codec } from '@polkadot/types/types'
-import { ContractExecResultResult } from '@polkadot/types/interfaces/contracts/types'
-import { Registry } from '@polkadot/types-codec/types/registry'
+import { SubmittableResult } from '@polkadot/api'
+import { Abi } from '@polkadot/api-contract'
+import { AccountId, EventRecord } from '@polkadot/types/interfaces'
+import { addressEq } from '@polkadot/util-crypto'
+import { Bytes } from '@polkadot/types-codec'
+import { AnyString } from '@polkadot/util/types'
 
 /**
  * Get the event name from the contract method name
@@ -49,10 +52,11 @@ export function getEventsFromMethodName(
 }
 
 /** Encodes arguments, padding and converting to hex if necessary
+ * the ABI types
  * @return encoded arguments
  */
-export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args: any[]): Codec[] {
-    const encodedArgs: Codec[] = []
+export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): Uint8Array[] {
+    const encodedArgs: Uint8Array[] = []
     // args must be in the same order as methodObj['args']
     const typesToHash = ['Hash']
     methodObj.args.forEach((methodArg, idx) => {
@@ -61,23 +65,22 @@ export function encodeStringArgs(registry: Registry, methodObj: AbiMessage, args
         if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
             argVal = stringToHexPadded(argVal)
         }
-        encodedArgs.push(registry.createType(methodArg.type.type, argVal))
+        encodedArgs.push(abi.registry.createType(methodArg.type.type, argVal).toU8a())
     })
     return encodedArgs
 }
 
 /** Handle errors returned from contract queries by throwing them
  */
-export function handleContractCallOutcomeErrors<T>(
-    response: ContractExecResultResult,
-    contractMethodName: string,
-    encodedArgs: T[]
-): void {
-    const errorKey = 'Err'
-    if (response.isOk) {
-        const humanOutput = response.asOk
-        if (humanOutput && typeof humanOutput === 'object' && errorKey in humanOutput) {
-            throw new ProsopoContractError(humanOutput[errorKey] as string, contractMethodName, {}, encodedArgs)
+export function handleContractCallOutcomeErrors(response: ContractCallOutcome, contractMethodName: string): void {
+    const isOk = 'isOk'
+    const asOk = 'asOk'
+    if (response.output) {
+        if (response.output[isOk]) {
+            const responseOk = response.output[asOk]
+            if (responseOk.isErr) {
+                throw new ProsopoContractError(responseOk.toPrimitive().err.toString(), contractMethodName, {})
+            }
         }
     }
 }
@@ -93,4 +96,29 @@ export function stringToHexPadded(data: string): string {
 
     const hexString = stringToHex(data).replace('0x', '')
     return `0x${Array(maxLength - hexString.length + 1).join('0')}${hexString}`
+}
+
+export function decodeEvents(
+    contractAddress: AccountId,
+    records: SubmittableResult,
+    abi: Abi
+): DecodedEvent[] | undefined {
+    let events: EventRecord[]
+
+    events = records.filterRecords('contracts', ['ContractEmitted', 'ContractExecution'])
+
+    events = events.filter((event) => {
+        const accountId = event.event.data[0] as AccountId
+        return addressEq(accountId, contractAddress)
+    })
+
+    if (!events.length) {
+        return undefined
+    }
+
+    return events.map((event) => {
+        const decoded = abi.decodeEvent(event.event.data[1] as Bytes) as Partial<DecodedEvent>
+        decoded.name = stringUpperFirst(stringCamelCase(<AnyString>decoded.event?.identifier))
+        return decoded as DecodedEvent
+    })
 }

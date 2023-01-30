@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
 import { Abi } from '@polkadot/api-contract'
+import { Text } from '@polkadot/types'
 import z from 'zod'
 
 // {
@@ -121,23 +122,33 @@ export const AbiEnumSpec = z.object({
     dispatchKey: z.string(),
     variants: z.any(),
 })
+
+export const AbiText = z.union([z.instanceof(Text), z.string()])
+
 export const AbiCellSpec = z.object({
-    key: z.string(),
+    key: AbiText,
     ty: z.number(),
 })
 export const AbiTypesSpec = z.array(AbiTypeSpec)
 
-export const AbiStorageEntrySpec = z.object({
-    name: z.string(),
-    layout: z.object({
-        cell: AbiCellSpec.optional(),
-        enum: AbiEnumSpec.optional(),
-    }),
-})
+export const AbiStorageEntrySpec = z.lazy(() =>
+    z.object({
+        name: AbiText.optional(),
+        layout: z.object({
+            leaf: AbiCellSpec.optional(),
+            enum: AbiEnumSpec.optional(),
+            root: AbiStorageEntrySpec.optional(),
+        }),
+    })
+)
 
 export const AbiStorageSpec = z.object({
-    struct: z.object({
-        fields: z.array(AbiStorageEntrySpec),
+    root: z.object({
+        layout: z.object({
+            struct: z.object({
+                fields: z.array(AbiStorageEntrySpec),
+            }),
+        }),
     }),
 })
 
@@ -184,6 +195,9 @@ export const AbiMetaDataSpec = z.object({
     [metadataVersion.V1]: AbiDetailsSpec.optional(),
     [metadataVersion.V2]: AbiDetailsSpec.optional(),
     [metadataVersion.V3]: AbiDetailsSpec.optional(),
+    spec: AbiSpecDef,
+    types: AbiTypesSpec,
+    storage: AbiStorageSpec,
 })
 
 export type AbiMetadata = z.infer<typeof AbiMetaDataSpec>

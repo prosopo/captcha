@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
 export * from './buildTx'
-export * from './contract'
 export * from './helpers'
 export * from './interface'
 export * from './methods'

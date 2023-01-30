@@ -13,20 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
-import BN from 'bn.js'
 
 import { SubmittableResult } from '@polkadot/api'
 import { Codec, ISubmittableResult } from '@polkadot/types/types'
 import { AbiEvent } from '@polkadot/api-contract/types'
 import { SignerOptions, SubmittableExtrinsic } from '@polkadot/api/types'
 
-import { ApiPromise } from '@polkadot/api'
-import { ContractPromise } from '@polkadot/api-contract'
-import { AbiMessage } from '@polkadot/api-contract/types'
-import { AbiStorageEntry, ContractAbi } from './artifacts'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { AbiVersion } from '../util/index'
+import { Compact, u64 } from '@polkadot/types-codec'
+import { AnyNumber } from '@polkadot/types-codec/types'
 
 export interface TransactionResponse {
     from: string
@@ -58,17 +53,17 @@ export interface InjectedAccountWithMeta {
 
 export interface CallParams {
     dest: any
-    value: BigNumber
-    gasLimit: BigNumber
+    value: AnyNumber
+    gasLimit: AnyNumber | Compact<u64>
     inputData: Uint8Array
 }
 
 export interface CallOverrides extends SignerOptions {
     dest?: any
     salt?: any
-    value?: BigNumber
-    gasLimit?: BigNumber
-    storageDepositLimit?: BigNumber
+    value?: AnyNumber
+    gasLimit?: AnyNumber | Compact<u64>
+    storageDepositLimit?: AnyNumber
     signer: never
 }
 
@@ -80,36 +75,3 @@ export interface PopulatedTransaction extends Partial<SignerOptions> {
 }
 
 export type ContractFunction<T = any> = (...args: TransactionParams) => Promise<T>
-
-export type BigNumber = BN | bigint | number | string
-
-// Interfaces and types taken from @redspot/patract
-export interface ContractApiInterface {
-    contract: ContractPromise
-    contractAddress: string
-    contractName: string
-    abi: ContractAbi
-    pair: KeyringPair
-    api: ApiPromise
-    abiVersion: AbiVersion
-
-    init(
-        contractAddress: string,
-        pair: KeyringPair,
-        contractName: string,
-        abi: ContractAbi,
-        api: ApiPromise
-    ): Promise<this>
-
-    getContract(): ContractPromise
-
-    contractTx<T>(contractMethodName: string, args: T[], value?: string | BigNumber): Promise<TransactionResponse>
-
-    contractQuery<T>(contractMethodName: string, args: any[], atBlock?: string | Uint8Array): Promise<unknown>
-
-    getContractMethod(contractMethodName: string): AbiMessage
-
-    getStorage<T>(name: string, type: string): Promise<T>
-
-    getStorageEntry(storageName: string): AbiStorageEntry
-}

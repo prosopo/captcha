@@ -1,37 +1,19 @@
-import { BigNumber, TransactionResponse } from '../types/index'
+import { TransactionResponse } from '../types/index'
 import { ProsopoContractApi } from './interface'
 import {
     CaptchaData,
     DappAccounts,
     ProsopoCaptchaSolutionCommitment,
+    ProsopoCaptchaStatus,
     ProsopoDapp,
     ProsopoLastCorrectCaptcha,
     ProsopoPayee,
     ProsopoProvider,
     ProsopoRandomProvider,
 } from '../interfaces/index'
-import { hexToU8a } from '@polkadot/util'
 import { Vec, u128 } from '@polkadot/types-codec'
-import { ContractExecResultOk } from '@polkadot/types/interfaces/contracts'
-import { DefinitionKeys } from '../interfaces/definitions'
 import { AccountId } from '@polkadot/types/interfaces'
-import { ProsopoContractError } from '../handlers'
-
-export interface ProsopoRandomProviderResponse {
-    providerId: string
-    blockNumber: string
-    provider: ProposoProvider
-}
-
-export interface ProposoProvider {
-    balance: string
-    datasetId: string
-    datasetIdContent: string
-    fee: string
-    payee: string
-    serviceOrigin: string
-    status: string
-}
+import { BN, hexToU8a } from '@polkadot/util'
 
 export class ProsopoContractMethods extends ProsopoContractApi {
     // transactions
@@ -50,7 +32,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         fee: number,
         payee: ProsopoPayee,
         address: string,
-        value?: BigNumber
+        value?: number | BN | undefined
     ): Promise<TransactionResponse> {
         return await this.contractTx('providerUpdate', [serviceOrigin, fee, payee, address], value)
     }
@@ -59,7 +41,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         return await this.contractTx('providerDeregister', [address])
     }
 
-    public async providerUnstake(value: number): Promise<TransactionResponse> {
+    public async providerUnstake(value: number | BN | undefined): Promise<TransactionResponse> {
         return await this.contractTx('providerUnstake', [], value)
     }
 
@@ -75,7 +57,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         return await this.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
     }
 
-    public async dappFund(contractAccount: string, value: BigNumber): Promise<TransactionResponse> {
+    public async dappFund(contractAccount: string, value?: number | BN | undefined): Promise<TransactionResponse> {
         return await this.contractTx('dappFund', [contractAccount], value)
     }
 
@@ -87,13 +69,17 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         contractAccount: string,
         captchaDatasetId: string,
         userMerkleTreeRoot: string,
-        providerAddress: string
+        providerAddress: string,
+        dappUserAddress: string,
+        status?: ProsopoCaptchaStatus
     ): Promise<TransactionResponse> {
         return await this.contractTx('dappUserCommit', [
             contractAccount,
             captchaDatasetId,
             userMerkleTreeRoot,
             providerAddress,
+            dappUserAddress,
+            status,
         ])
     }
 
@@ -107,18 +93,9 @@ export class ProsopoContractMethods extends ProsopoContractApi {
 
     //queries
 
-    private unwrapContractResultOrThrow<T>(result: ContractExecResultOk, type: DefinitionKeys): T {
-        const decoded = this.contract.api.registry.createType(`Result<${type}, ProsopoError>`, result.data.toU8a(true))
-        if (decoded.isOk) {
-            return decoded.asOk.toPrimitive() as T
-        } else {
-            throw new ProsopoContractError(decoded.asErr.toString())
-        }
-    }
-
     public async getDappOperatorIsHumanUser(userAccount: string, solutionThreshold: number): Promise<boolean> {
-        const result = await this.contractQuery('dappOperatorIsHumanUser', [userAccount, solutionThreshold])
-        return this.contract.api.registry.createType('bool', result.data.toU8a(true)).isTrue
+        const { result } = await this.contractQuery('dappOperatorIsHumanUser', [userAccount, solutionThreshold])
+        return this.abi.registry.createType('bool', result.asOk.data.toU8a(true)).isTrue
     }
 
     public async getRandomProvider(
@@ -126,47 +103,64 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         dappContractAccount: string,
         at?: string | Uint8Array
     ): Promise<ProsopoRandomProvider> {
-        const result = await this.contractQuery('getRandomActiveProvider', [userAccount, dappContractAccount], at)
-        return this.unwrapContractResultOrThrow<ProsopoRandomProvider>(result, 'ProsopoRandomProvider')
+        const response = await this.contractQuery(
+            'getRandomActiveProvider',
+            [userAccount, dappContractAccount],
+            undefined,
+            at
+        )
+        // @ts-ignore
+        return response.output?.asOk.asOk.toPrimitive() as unknown as ProsopoRandomProvider
     }
 
     public async getProviderDetails(accountId: string): Promise<ProsopoProvider> {
-        const result = await this.contractQuery('getProviderDetails', [accountId])
-        return this.unwrapContractResultOrThrow<ProsopoProvider>(result, 'ProsopoProvider')
+        const response = await this.contractQuery('getProviderDetails', [accountId])
+        // Type is Result<Result<ProsopoProvider, ProsopoError>, InkPrimitivesLangError>
+        // const fragment = this.getContractMethod('getProviderDetails')
+        // console.log(fragment.typeDef.type)
+        // ts-ignore could be removed by explicitly creating the type using the registry
+        // @ts-ignore
+        return response.output?.asOk.asOk.toPrimitive() as ProsopoProvider
     }
 
     public async getDappDetails(accountId: string): Promise<ProsopoDapp> {
-        const result = await this.contractQuery('getDappDetails', [accountId])
-        return this.unwrapContractResultOrThrow<ProsopoDapp>(result, 'ProsopoDapp')
+        const response = await this.contractQuery('getDappDetails', [accountId])
+        // @ts-ignore
+        return response.output?.asOk.asOk.toPrimitive() as unknown as ProsopoDapp
     }
 
     public async getCaptchaData(captchaDatasetId: string): Promise<CaptchaData> {
-        const result = await this.contractQuery('getCaptchaData', [captchaDatasetId])
-        return this.unwrapContractResultOrThrow<CaptchaData>(result, 'CaptchaData')
+        const response = await this.contractQuery('getCaptchaData', [captchaDatasetId])
+        // @ts-ignore
+        return response.output?.asOk.asOk.toPrimitive() as unknown as CaptchaData
     }
 
     public async getCaptchaSolutionCommitment(solutionId: string): Promise<ProsopoCaptchaSolutionCommitment> {
-        const result = await this.contractQuery('getCaptchaSolutionCommitment', [solutionId])
-
-        return this.unwrapContractResultOrThrow<ProsopoCaptchaSolutionCommitment>(
-            result,
-            'ProsopoCaptchaSolutionCommitment'
-        )
+        const { result } = await this.contractQuery('getCaptchaSolutionCommitment', [solutionId])
+        const fragment = this.getContractMethod('getCaptchaSolutionCommitment')
+        // @ts-ignore
+        return this.abi.registry.createType(fragment.returnType?.type, result.asOk.data).asOk.asOk.toPrimitive()
     }
 
     public async getDappOperatorLastCorrectCaptcha(accountId: string): Promise<ProsopoLastCorrectCaptcha> {
-        const result = await this.contractQuery('dappOperatorLastCorrectCaptcha', [accountId])
-        return this.unwrapContractResultOrThrow<ProsopoLastCorrectCaptcha>(result, 'ProsopoLastCorrectCaptcha')
+        const { result } = await this.contractQuery('dappOperatorLastCorrectCaptcha', [accountId])
+        const fragment = this.getContractMethod('dappOperatorLastCorrectCaptcha')
+        // @ts-ignore
+        return this.abi.registry.createType(fragment.returnType?.type, result.asOk.data).asOk.asOk.toPrimitive()
     }
 
     public async getProviderStakeDefault(): Promise<u128> {
-        const result = await this.contractQuery('getProviderStakeDefault', [])
-        return result.data.registry.createType('u128', result.data)
+        const { result } = await this.contractQuery('getProviderStakeDefault', [])
+        const fragment = this.getContractMethod('getProviderStakeDefault')
+        // @ts-ignore
+        return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk
     }
 
     public async getProviderAccounts(): Promise<Vec<AccountId>> {
-        const result = await this.contractQuery('getAllProviderIds', [])
-        return result.data.registry.createType('Vec<AccountId>', result.data)
+        const { result } = await this.contractQuery('getAllProviderIds', [])
+        const fragment = this.getContractMethod('getAllProviderIds')
+        // @ts-ignore
+        return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk
     }
 
     public async getDappAccounts(): Promise<DappAccounts> {

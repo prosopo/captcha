@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/contract",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "scripts": {
@@ -30,17 +30,17 @@
     }
   },
   "dependencies": {
-    "@polkadot/api": "^8.13.1",
-    "@polkadot/api-contract": "^8.13.1",
-    "@polkadot/keyring": "^10.0.2",
-    "@polkadot/rpc-provider": "^8.13.1",
-    "@polkadot/typegen": "^8.14.1",
-    "@polkadot/types": "^8.13.1",
-    "@polkadot/types-create": "^8.13.1",
-    "@polkadot/util": "^10.0.2",
-    "@polkadot/util-crypto": "^10.0.2",
-    "@prosopo/common": "^0.1.10",
-    "@prosopo/datasets": "^0.1.10",
+    "@polkadot/api": "^9.11.3",
+    "@polkadot/api-contract": "^9.11.3",
+    "@polkadot/keyring": "^10.2.6",
+    "@polkadot/rpc-provider": "^9.11.3",
+    "@polkadot/typegen": "^9.11.3",
+    "@polkadot/types": "^9.11.3",
+    "@polkadot/types-create": "^9.11.3",
+    "@polkadot/util": "^10.2.6",
+    "@polkadot/util-crypto": "^10.2.6",
+    "@prosopo/common": "^0.1.11",
+    "@prosopo/datasets": "^0.1.11",
     "bn.js": "^5.2.1",
     "consola": "^2.15.3",
     "zod": "^3.17.9"

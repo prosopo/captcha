@@ -6,6 +6,7 @@ export const definitions = {
         CaptchaData: 'Map<Hash,ProsopoCaptchaData>',
         CaptchaSolutionCommitments: 'Map<Hash,ProsopoCaptchaSolutionCommitment>',
         ProviderStakeDefault: 'u128',
+        DappStakeDefault: 'u128',
         Dapps: 'Map<AccountId,ProsopoDapp>',
         DappAccounts: 'Vec<AccountId>',
         Operators: 'Map<AccountId,ProsopoOperator>',
