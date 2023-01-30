@@ -80,7 +80,7 @@ jobs:
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github+json" \
-            /repos/OWNER/REPO/actions/caches?key=${{ runner.os }}-${{ env.cargo_env_version }}
+            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Save cargo env to cache
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
@@ -118,7 +118,7 @@ jobs:
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github+json" \
-            /repos/OWNER/REPO/actions/caches?key=${{ runner.os }}-${{ env.cargo_build_version }}
+            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ env.cargo_build_version }}
 
       - name: Save cargo build to cache
         uses: actions/cache/save@v3
@@ -141,7 +141,7 @@ jobs:
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github+json" \
-            /repos/OWNER/REPO/actions/caches?key=${{ runner.os }}-${{ env.cargo_build_version }}
+            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ env.cargo_build_version }}
 
       - name: Save cargo build to cache
         uses: actions/cache/save@v3
