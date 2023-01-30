@@ -29,7 +29,7 @@ export class HttpClientBase {
         return response.data
     }
 
-    protected errorHandler = (error: any) => Promise.reject(error.response)
+    protected errorHandler = (error: any) => Promise.reject(error)
 }
 
 export default HttpClientBase
