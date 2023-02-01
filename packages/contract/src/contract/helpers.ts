@@ -14,16 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types'
-import { isHex, isU8a, stringCamelCase, stringToHex, stringUpperFirst } from '@polkadot/util'
+import { bnFromHex, isHex, isU8a, stringCamelCase, stringToHex, stringUpperFirst } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { DecodedEvent, TransactionResponse } from '../types/contract'
 import { ProsopoContractError } from '../handlers'
 import { SubmittableResult } from '@polkadot/api'
 import { Abi } from '@polkadot/api-contract'
-import { AccountId, EventRecord } from '@polkadot/types/interfaces'
+import { AccountId, DispatchError, EventRecord } from '@polkadot/types/interfaces'
 import { addressEq } from '@polkadot/util-crypto'
 import { Bytes } from '@polkadot/types-codec'
 import { AnyString } from '@polkadot/util/types'
+import { Registry } from '@polkadot/types-codec/types/registry'
 
 /**
  * Get the event name from the contract method name
@@ -121,4 +122,24 @@ export function decodeEvents(
         decoded.name = stringUpperFirst(stringCamelCase(<AnyString>decoded.event?.identifier))
         return decoded as DecodedEvent
     })
+}
+
+export function dispatchErrorHandler(registry: Registry, event: EventRecord): ProsopoContractError {
+    const dispatchError = event.event.data[0] as DispatchError
+    let message: string = dispatchError.type
+
+    if (dispatchError.isModule) {
+        try {
+            const mod = dispatchError.asModule
+            const error = registry.findMetaError(
+                new Uint8Array([mod.index.toNumber(), bnFromHex(mod.error.toHex().slice(0, 4)).toNumber()])
+            )
+            message = `${error.section}.${error.name}${
+                Array.isArray(error.docs) ? `(${error.docs.join('')})` : error.docs || ''
+            }`
+        } catch (error) {
+            // swallow
+        }
+    }
+    return new ProsopoContractError(message)
 }

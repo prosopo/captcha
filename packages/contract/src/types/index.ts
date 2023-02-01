@@ -16,3 +16,4 @@
 export * from './artifacts'
 export * from './contract'
 export * from './prosopo'
+export * from './useWeight'

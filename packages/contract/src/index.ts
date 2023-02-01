@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
+import '@polkadot/api-augment'
+export * from './interfaces'
 export * from './abi'
 export * from './contract'
 export * from './types'
 export * from './handlers'
-export * from './interfaces'
 export * from './codec'
-export * from './interfaces/definitions'
