@@ -24,6 +24,7 @@ import { ProsopoEnvironment } from '../types/index'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN } from '@polkadot/util'
 import { ISubmittableResult } from '@polkadot/types/types'
+import { getOneUnit } from '../util'
 
 export async function generateMnemonic(keyring?: Keyring): Promise<[string, string]> {
     if (!keyring) {
@@ -74,15 +75,17 @@ export async function sendFunds(
     }
 
     const api = env.contractInterface.api
+    const unit = getOneUnit(env.api)
     env.logger.info(
         'Sending funds from',
         pair.address,
         'to',
         address,
-        '. Amount:',
-        amount.toString(),
-        '. Free balance:',
-        previousFree.toString()
+        'Amount:',
+        new BN(amount.toString()).div(unit).toString(),
+        'UNIT. Free balance:',
+        previousFree.div(unit).toString(),
+        'UNIT'
     )
     // eslint-disable-next-line no-async-promise-executor
     const result: Promise<ISubmittableResult> = new Promise(async (resolve, reject) => {
@@ -168,9 +171,7 @@ export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
  * @param stakeMultiplier
  */
 export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN, stakeMultiplier?: number): BN {
-    const chainDecimals = new BN(env.api.registry.chainDecimals[0])
-
-    const unit = new BN(10 ** chainDecimals.toNumber())
+    const unit = getOneUnit(env.api)
 
     // We want to give each provider 100 * the required stake or 1 UNIT, whichever is greater, so that gas fees can be
     // refunded to the Dapp User from within the contract
@@ -181,7 +182,7 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
 
     if (stake100.lt(maxStake)) {
         env.logger.debug('Setting stake amount to', stake100.div(unit).toNumber(), 'UNIT')
-        return providerStakeDefault.mul(stake100)
+        return stake100
     }
     env.logger.debug('Setting stake amount to', maxStake.div(unit).toNumber(), 'UNIT')
     return maxStake
@@ -193,9 +194,8 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
  * @param stakeAmount
  */
 export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
-    const chainDecimals = new BN(env.api.registry.chainDecimals[0])
-    const unit = new BN(10 ** chainDecimals.toNumber())
-    env.logger.info('Stake amount', stakeAmount.toString())
+    const unit = getOneUnit(env.api)
+    env.logger.info('Stake amount', stakeAmount.div(unit).toString(), 'UNIT')
     const sendAmount = BN.max(
         new BN(stakeAmount).muln(2).add(unit.muln(MAX_ACCOUNT_FUND)),
         env.api.consts.balances.existentialDeposit.muln(100)
