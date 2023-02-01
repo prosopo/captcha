@@ -19,15 +19,12 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 
 #[ink::contract]
 pub mod prosopo {
-    //use ink::env::types::{AccountId, Balance, BlockNumber, BlockTimestamp, Hash};
+    use ink::env::debug_println as debug;
+    use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
-    // do not remove StorageLayout, it is used in derives
+    #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-
-    use rand_chacha::rand_core::RngCore;
-    use rand_chacha::rand_core::SeedableRng;
-    use rand_chacha::ChaChaRng;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -694,7 +691,7 @@ pub mod prosopo {
                     dapp.balance = total;
                     dapp.client_origin = client_origin;
                     dapp.owner = owner;
-                    if dapp.balance > self.dapp_stake_default {
+                    if dapp.balance >= self.dapp_stake_default {
                         dapp.status = GovernanceStatus::Active;
                     } else {
                         dapp.status = GovernanceStatus::Suspended;
@@ -804,7 +801,7 @@ pub mod prosopo {
                 .get(user_merkle_tree_root)
                 .is_some()
             {
-                ink::env::debug_println!("{}", "CaptchaSolutionCommitmentExists");
+                debug!("{}", "CaptchaSolutionCommitmentExists");
                 //return Err(Error::CaptchaSolutionCommitmentExists);
                 return Ok(());
             }
@@ -1068,12 +1065,12 @@ pub mod prosopo {
             provider_id: AccountId,
         ) -> Result<Provider, Error> {
             if self.providers.get(&provider_id).is_none() {
-                ink::env::debug_println!("{}", "ProviderDoesNotExist");
+                debug!("{}", "ProviderDoesNotExist");
                 return Err(Error::ProviderDoesNotExist);
             }
             let provider = self.get_provider_details(provider_id)?;
             if provider.balance < self.provider_stake_default {
-                ink::env::debug_println!("{}", "ProviderInsufficientFunds");
+                debug!("{}", "ProviderInsufficientFunds");
                 return Err(Error::ProviderInsufficientFunds);
             }
             Ok(provider)
@@ -1082,7 +1079,7 @@ pub mod prosopo {
         fn validate_provider_active(&self, provider_id: AccountId) -> Result<Provider, Error> {
             let provider = self.validate_provider_exists_and_has_funds(provider_id)?;
             if provider.status != GovernanceStatus::Active {
-                ink::env::debug_println!("{}", "ProviderInactive");
+                debug!("{}", "ProviderInactive");
                 return Err(Error::ProviderInactive);
             }
             Ok(provider)
@@ -1091,19 +1088,19 @@ pub mod prosopo {
         fn validate_dapp(&self, contract: AccountId) -> Result<(), Error> {
             // Guard against dapps using service that are not registered
             if self.dapps.get(&contract).is_none() {
-                ink::env::debug_println!("{}", "DappDoesNotExist");
+                debug!("{}", "DappDoesNotExist");
                 return Err(Error::DappDoesNotExist);
             }
             // Guard against dapps using service that are Suspended or Deactivated
             let dapp = self.get_dapp_details(contract)?;
             if dapp.status != GovernanceStatus::Active {
-                ink::env::debug_println!("{}", "DappInactive");
+                debug!("{}", "DappInactive");
                 return Err(Error::DappInactive);
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
-            if dapp.balance < self.dapp_stake_default {
-                ink::env::debug_println!("{}", "DappInsufficientFunds");
+            if dapp.balance <= self.dapp_stake_default {
+                debug!("{}", "DappInsufficientFunds");
                 return Err(Error::DappInsufficientFunds);
             }
             Ok(())
@@ -1115,7 +1112,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
             if self.captcha_data.get(&dataset_id).is_none() {
-                ink::env::debug_println!("{}", "CaptchaDatasetDoesNotExist");
+                debug!("{}", "CaptchaDatasetDoesNotExist");
                 return Err(Error::CaptchaDataDoesNotExist);
             }
             let captcha_data = self.captcha_data.get(&dataset_id);
@@ -1151,7 +1148,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
             if self.dapp_users.get(&dapp_user_id).is_none() {
-                ink::env::debug_println!("{}", "DappUserDoesNotExist");
+                debug!("{}", "DappUserDoesNotExist");
                 return Err(Error::DappUserDoesNotExist);
             }
             Ok(self.dapp_users.get(&dapp_user_id).unwrap())
@@ -1163,7 +1160,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
             if self.providers.get(&accountid).is_none() {
-                ink::env::debug_println!("{}", "ProviderDoesNotExist");
+                debug!("{}", "ProviderDoesNotExist");
                 return Err(Error::ProviderDoesNotExist);
             }
             let provider = self.providers.get(&accountid);
@@ -1176,7 +1173,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
             if self.dapps.get(&contract).is_none() {
-                ink::env::debug_println!("{}", "DappDoesNotExist");
+                debug!("{}", "DappDoesNotExist");
                 return Err(Error::DappDoesNotExist);
             }
             let dapp = self.dapps.get(&contract);
@@ -1256,7 +1253,7 @@ pub mod prosopo {
             if max == 0 {
                 return Err(Error::NoActiveProviders);
             }
-            let index = self.get_random_number(max as u64, user_account);
+            let index = self.get_random_number(max as u128, user_account);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             let provider = self.providers.get(provider_id);
             if provider.is_none() {
@@ -1292,40 +1289,38 @@ pub mod prosopo {
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
-        pub fn get_random_number(&self, len: u64, user_account: AccountId) -> u64 {
+        pub fn get_random_number(&self, len: u128, user_account: AccountId) -> u128 {
             if len <= 0 {
                 panic!("Cannot generate a random number for a length of 0 or less");
             }
             // build a random seed from user account, block number, block timestamp and (TODO) block hash
+            const BLOCK_NUMBER_SIZE: usize = 4;
+            const BLOCK_TIMESTAMP_SIZE: usize = 8;
+            const USER_ACCOUNT_SIZE: usize = 32;
             let block_number: u32 = self.env().block_number();
             let block_timestamp: u64 = self.env().block_timestamp();
-            let user_account_bytes: &[u8; 32] = user_account.as_ref();
+            let user_account_bytes: &[u8; USER_ACCOUNT_SIZE] = user_account.as_ref();
             // pack all the data into a single byte array
-            let block_number_arr: [u8; 4] = block_number.to_be_bytes();
-            let block_timestamp_arr: [u8; 8] = block_timestamp.to_le_bytes();
-            let tmp: [u8; 36] = concat_u8(&user_account_bytes, &block_number_arr);
-            let bytes: [u8; 44] = concat_u8(&tmp, &block_timestamp_arr);
+            let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
+            let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
+            let tmp: [u8; USER_ACCOUNT_SIZE + BLOCK_NUMBER_SIZE] =
+                concat_u8(&user_account_bytes, &block_number_arr);
+            let bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + USER_ACCOUNT_SIZE] =
+                concat_u8(&tmp, &block_timestamp_arr);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
-            let mut hash_output =
-                <ink::env::hash::Blake2x256 as ink::env::hash::HashOutput>::Type::default();
-            <ink::env::hash::Blake2x256 as ink::env::hash::CryptoHash>::hash(
-                &bytes,
-                &mut hash_output,
-            );
-            // init rng from this block's seed
-            let mut rng = ChaChaRng::from_seed(hash_output);
-            // get the next random number in u64 range
-            let next = rng.next_u64();
+            let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
+            <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
+            // the random number can be derived from the hash
+            let next = u128::from_le_bytes(hash_output);
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
             // e.g. if len = 10 then range would be 0-9
-            let next_mod = next % len as u64;
-            ink::env::debug_println!("{:#?} {:#?} {:#?}", next, len, next_mod);
+            let next_mod = next % len;
             next_mod
         }
 
         /// Get a random number from 0 to `len` - 1 inclusive. Uses the caller account for additional random entropy.
         #[ink(message)]
-        pub fn get_random_number_caller(&self, len: u64) -> u64 {
+        pub fn get_random_number_caller(&self, len: u128) -> u128 {
             self.get_random_number(len, self.env().caller())
         }
     }
@@ -1338,10 +1333,20 @@ pub mod prosopo {
     /// Run the tests via `cargo test` (no need for `cargo contract`!)
     /// *********************************
     #[cfg(test)]
+    #[cfg_attr(
+        debug_assertions,
+        allow(
+            dead_code,
+            unused_imports,
+            unused_variables,
+            unused_mut,
+            unused_must_use,
+            non_upper_case_globals,
+            non_shorthand_field_patterns
+        )
+    )]
     mod tests {
         use ink;
-        use ink::env::debug_println;
-        /// Imports `ink` so we can use `#[ink::test]`.
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
@@ -1442,13 +1447,12 @@ pub mod prosopo {
         #[ink::test]
         fn test_get_random_number() {
             let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, STAKE_DEFAULT,STAKE_DEFAULT);
+            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             const len: usize = 10;
-            let mut number: u64;
             let mut arr = [0; len];
             // get several random numbers, one per block
             for i in 0..len {
-                number = contract.get_random_number(100, operator_account);
+                let number = contract.get_random_number(100, operator_account);
                 arr[i] = number;
                 println!(
                     "{:?} {:?} {:?}",
@@ -1459,7 +1463,7 @@ pub mod prosopo {
                 ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
             }
             // check that the random numbers match precomputed values
-            assert_eq!(&[91, 47, 20, 20, 72, 82, 75, 14, 16, 69], &arr);
+            assert_eq!(&[58, 1, 45, 93, 87, 19, 99, 5, 66, 39], &arr);
         }
 
         /// Helper function for converting string to Hash
