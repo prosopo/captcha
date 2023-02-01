@@ -836,7 +836,9 @@ pub mod prosopo {
                 // call provider_approve or provider_disapprove depending on whether the status is Approved or Disapproved
                 match status_option.unwrap_or(CaptchaStatus::Pending) {
                     CaptchaStatus::Approved => self.provider_approve(user_merkle_tree_root, 0)?,
-                    CaptchaStatus::Disapproved => self.provider_disapprove(user_merkle_tree_root)?,
+                    CaptchaStatus::Disapproved => {
+                        self.provider_disapprove(user_merkle_tree_root)?
+                    }
                     _ => {}
                 }
             // Insert the commitment
@@ -1959,7 +1961,14 @@ pub mod prosopo {
             //Dapp User commit
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account, dapp_user_account, None)
+                .dapp_user_commit(
+                    dapp_contract_account,
+                    root1,
+                    user_root,
+                    provider_account,
+                    dapp_user_account,
+                    None,
+                )
                 .ok();
 
             // check that the data is in the captcha_solution_commitments hashmap
@@ -2011,7 +2020,14 @@ pub mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account, dapp_user_account, None)
+                .dapp_user_commit(
+                    dapp_contract_account,
+                    root1,
+                    user_root,
+                    provider_account,
+                    dapp_user_account,
+                    None,
+                )
                 .ok();
 
             // Call from the provider account to mark the solution as approved
@@ -2086,7 +2102,14 @@ pub mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account, dapp_user_account, None)
+                .dapp_user_commit(
+                    dapp_contract_account,
+                    root1,
+                    user_root,
+                    provider_account,
+                    dapp_user_account,
+                    None,
+                )
                 .ok();
 
             // Call from the provider account to mark the wrong solution as approved
@@ -2139,7 +2162,14 @@ pub mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account, dapp_user_account, None)
+                .dapp_user_commit(
+                    dapp_contract_account,
+                    root1,
+                    user_root,
+                    provider_account,
+                    dapp_user_account,
+                    None,
+                )
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
@@ -2215,7 +2245,14 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
             let user_root = str_to_hash("user merkle tree root".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account, dapp_user_account, None)
+                .dapp_user_commit(
+                    dapp_contract_account,
+                    root1,
+                    user_root,
+                    provider_account,
+                    dapp_user_account,
+                    None,
+                )
                 .ok();
 
             // Call from the provider account to mark the solution as disapproved
@@ -2330,23 +2367,40 @@ pub mod prosopo {
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root1 = str_to_hash("user merkle tree root to approve".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root1, user_root1, provider_account, dapp_user_account, Some(CaptchaStatus::Approved))
+                .dapp_user_commit(
+                    dapp_contract_account,
+                    root1,
+                    user_root1,
+                    provider_account,
+                    dapp_user_account,
+                    Some(CaptchaStatus::Approved),
+                )
                 .ok();
 
             // Get the commitment and make sure it is approved
-            let commitment = contract.get_captcha_solution_commitment(user_root1).unwrap();
+            let commitment = contract
+                .get_captcha_solution_commitment(user_root1)
+                .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
-
 
             //Dapp User commit and disapprove
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root2 = str_to_hash("user merkle tree root to disapprove".to_string());
             contract
-                .dapp_user_commit(dapp_contract_account, root1, user_root2, provider_account, dapp_user_account, Some(CaptchaStatus::Disapproved))
+                .dapp_user_commit(
+                    dapp_contract_account,
+                    root1,
+                    user_root2,
+                    provider_account,
+                    dapp_user_account,
+                    Some(CaptchaStatus::Disapproved),
+                )
                 .ok();
 
             // Get the commitment and make sure it is disapproved
-            let commitment = contract.get_captcha_solution_commitment(user_root2).unwrap();
+            let commitment = contract
+                .get_captcha_solution_commitment(user_root2)
+                .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
         }
 
@@ -2386,7 +2440,6 @@ pub mod prosopo {
             let client_origin = service_origin.clone();
             contract.dapp_register(client_origin, dapp_contract_account, None);
 
-
             // Register a second provider
             let (provider_account2, service_origin, fee) = generate_provider_data(0x5, "2424", 0);
             contract
@@ -2403,15 +2456,21 @@ pub mod prosopo {
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
-
             // Call from dapp_user_commit from provider_account2 to supply a commit for provider_account
             // Should not be authorised
             let dapp_user_account = AccountId::from([0x6; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
             let dapp_user_commit_result = contract
-                .dapp_user_commit(dapp_contract_account, root1, user_root, provider_account, dapp_user_account, Some(CaptchaStatus::Approved)).err();
+                .dapp_user_commit(
+                    dapp_contract_account,
+                    root1,
+                    user_root,
+                    provider_account,
+                    dapp_user_account,
+                    Some(CaptchaStatus::Approved),
+                )
+                .err();
             assert_eq!(Error::NotAuthorised, dapp_user_commit_result.unwrap());
-
         }
     }
 }
