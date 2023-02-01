@@ -126,90 +126,89 @@ export class BatchCommitter {
             txs.push(extrinsic)
         }
 
-        const result = await this.contractApi.api.tx.utility.batchAll(txs).dryRun(this.contractApi.pair)
+        // const result = await this.contractApi.api.tx.utility.batchAll(txs).dryRun(this.contractApi.pair)
+        // 2023-02-01 21:23:51        RPC-CORE: dryRun(extrinsic: Bytes, at?: BlockHash): ApplyExtrinsicResult:: -32601: RPC call is unsafe to be called externally
+        //
+        // ERROR  -32601: RPC call is unsafe to be called externally                                                            21:23:51
 
-        if (result.isOk) {
-            // eslint-disable-next-line no-async-promise-executor
-            return new Promise(async (resolve, reject) => {
-                const unsub = await this.contractApi.api.tx.utility
-                    .batchAll(txs)
-                    .signAndSend(this.contractApi.pair, (result: SubmittableResult) => {
-                        const actionStatus = {
-                            from: this.contractApi.pair.address.toString(),
-                        } as Partial<TransactionResponse>
-                        if (result.status.isInBlock) {
-                            actionStatus.blockHash = result.status.asInBlock.toHex()
-                        }
+        //if (result.isOk) {
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            const unsub = await this.contractApi.api.tx.utility
+                .batchAll(txs)
+                .signAndSend(this.contractApi.pair, (result: SubmittableResult) => {
+                    const actionStatus = {
+                        from: this.contractApi.pair.address.toString(),
+                    } as Partial<TransactionResponse>
+                    if (result.status.isInBlock) {
+                        actionStatus.blockHash = result.status.asInBlock.toHex()
+                    }
 
-                        if (result.status.isFinalized || result.status.isInBlock) {
-                            console.log('batch finalized')
-                            result.events
-                                .filter(({ event: { section } }: any): boolean => section === 'system')
-                                .forEach((event): void => {
-                                    const {
-                                        event: { method },
-                                    } = event
+                    if (result.status.isFinalized || result.status.isInBlock) {
+                        result.events
+                            .filter(({ event: { section } }: any): boolean => section === 'system')
+                            .forEach((event): void => {
+                                const {
+                                    event: { method },
+                                } = event
 
-                                    if (method === 'ExtrinsicFailed') {
-                                        const dispatchError = event.event.data[0] as DispatchError
-                                        let message: string = dispatchError.type
+                                if (method === 'ExtrinsicFailed') {
+                                    const dispatchError = event.event.data[0] as DispatchError
+                                    let message: string = dispatchError.type
 
-                                        if (dispatchError.isModule) {
-                                            try {
-                                                const mod = dispatchError.asModule
-                                                console.log(mod.toHuman())
-                                                const error = this.contractApi.api.registry.findMetaError(
-                                                    new Uint8Array([
-                                                        mod.index.toNumber(),
-                                                        new BN(mod.error.slice(0, 4)).toNumber(),
-                                                    ])
-                                                )
-                                                console.log(JSON.stringify(error))
-                                                message = `${error.section}.${error.name}${
-                                                    Array.isArray(error.docs)
-                                                        ? `(${error.docs.join('')})`
-                                                        : error.docs || ''
-                                                }`
-                                            } catch (error) {
-                                                // swallow
-                                            }
-                                        }
-
-                                        reject(new ProsopoContractError(message))
-                                    } else if (method === 'ExtrinsicSuccess') {
-                                        actionStatus.result = result
-                                        if ('events' in result) {
-                                            actionStatus.events = decodeEvents(
-                                                this.contractApi.api.createType(
-                                                    'AccountId',
-                                                    this.contractApi.pair.address
-                                                ),
-                                                result,
-                                                this.contractApi.abi
+                                    if (dispatchError.isModule) {
+                                        try {
+                                            const mod = dispatchError.asModule
+                                            console.log(mod.toHuman())
+                                            const error = this.contractApi.api.registry.findMetaError(
+                                                new Uint8Array([
+                                                    mod.index.toNumber(),
+                                                    new BN(mod.error.slice(0, 4)).toNumber(),
+                                                ])
                                             )
+                                            console.log(JSON.stringify(error))
+                                            message = `${error.section}.${error.name}${
+                                                Array.isArray(error.docs)
+                                                    ? `(${error.docs.join('')})`
+                                                    : error.docs || ''
+                                            }`
+                                        } catch (error) {
+                                            // swallow
                                         }
                                     }
-                                })
-                            unsub()
-                            resolve(actionStatus as TransactionResponse)
-                        } else if (result.isError) {
-                            console.log('error sending batch')
-                            unsub()
-                            reject(new ProsopoContractError(result.status.type))
-                        }
-                    })
-            })
-        } else {
-            throw new ProsopoContractError(result.asErr.toString())
-            process.exit()
-        }
+
+                                    reject(new ProsopoContractError(message))
+                                } else if (method === 'ExtrinsicSuccess') {
+                                    actionStatus.result = result
+                                    if ('events' in result) {
+                                        actionStatus.events = decodeEvents(
+                                            this.contractApi.api.createType('AccountId', this.contractApi.pair.address),
+                                            result,
+                                            this.contractApi.abi
+                                        )
+                                    }
+                                }
+                            })
+                        unsub()
+                        resolve(actionStatus as TransactionResponse)
+                    } else if (result.isError) {
+                        console.log('error sending batch')
+                        unsub()
+                        reject(new ProsopoContractError(result.status.type))
+                    }
+                })
+        })
+        // } else {
+        //     throw new ProsopoContractError(result.asErr.toString())
+        //     process.exit()
+        // }
     }
 
     async removeCommitmentsAndSolutions(): Promise<void> {
         const deleteSolutionsResult = await this.db.removeProcessedDappUserSolutions()
         const deleteCommitmentsResult = await this.db.removeProcessedDappUserCommitments()
-        console.log('delete result')
-        console.log(deleteSolutionsResult, deleteCommitmentsResult)
+        this.logger.info('Deleted user solutions', deleteSolutionsResult)
+        this.logger.info('Deleted user commitments', deleteCommitmentsResult)
     }
 
     async nextNonce(): Promise<bigint> {

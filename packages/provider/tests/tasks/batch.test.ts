@@ -125,7 +125,6 @@ describe('BATCH TESTS', () => {
 
                 // Commit the commitments to the contract
                 const result = await batcher.runBatch()
-                console.log(result)
 
                 // Try to get the solutions from the db
                 const solutionsFromDbAfter = (await env.db.getProcessedDappUserSolutions()).filter(
@@ -139,10 +138,8 @@ describe('BATCH TESTS', () => {
                 const commitmentsFromDbAfter = (await env.db.getProcessedDappUserCommitments()).filter(
                     (commitment) => commitmentIds.indexOf(commitment.commitmentId) > -1
                 )
-                console.log(commitmentsFromDbAfter)
 
                 // Check the solutions are no longer in the db
-                console.log(commitmentsFromDbAfter.length, 'commitments matching the ids', commitmentIds)
                 expect(commitmentsFromDbAfter).to.be.empty
 
                 // We have to wait for batched commitments to become available on-chain

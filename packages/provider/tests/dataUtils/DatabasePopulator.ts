@@ -217,13 +217,15 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const tasks = new Tasks(this.mockEnv)
 
-            await tasks.contractApi.providerUpdate(
+            const result = await tasks.contractApi.providerUpdate(
                 stringToHexPadded(serviceOrigin),
                 PROVIDER_FEE,
                 createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(account),
                 this.stakeAmount
             )
+            this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
+
             //const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
             //console.log('provider', provider)
         } catch (e) {
@@ -255,7 +257,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const captchaFilePath = path.resolve(__dirname, '../../tests/mocks/data/captchas.json')
 
-            await tasks.providerAddDatasetFromFile(captchaFilePath)
+            const result = await tasks.providerAddDatasetFromFile(captchaFilePath)
+            this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
         } catch (e) {
             throw this.createError(e, this.addDataset.name)
         }
@@ -293,9 +296,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 createType(this.mockEnv.contractInterface.abi.registry, 'AccountId', accountAddress(account)).toString()
             )
+            this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
 
-            //const events = getEventsFromMethodName(result, 'DappRegister')
-            //events[0].args.map((arg) => console.info(arg.toPrimitive()))
             if (!noPush) {
                 this._registeredDapps.push(account)
             }
@@ -311,7 +313,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const tasks = new Tasks(this.mockEnv)
 
-        await tasks.contractApi.dappFund(accountAddress(account), this.stakeAmount)
+        const result = await tasks.contractApi.dappFund(accountAddress(account), this.stakeAmount)
+
+        this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
     }
 
     public async registerDappWithStake(): Promise<Account> {
