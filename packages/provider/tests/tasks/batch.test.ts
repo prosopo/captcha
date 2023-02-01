@@ -38,7 +38,7 @@ describe('BATCH TESTS', () => {
         await env.db?.connection?.close()
     })
 
-    it.only('Batches commitments on-chain', async () => {
+    it('Batches commitments on-chain', async () => {
         const contractApi = await env.getContractApi()
         if (env.db) {
             console.log('getting Provider Account')
