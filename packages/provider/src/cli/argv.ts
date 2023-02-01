@@ -364,6 +364,8 @@ export function processArgs(args, env: ProsopoEnvironment) {
                             env.config.batchCommit,
                             env.contractInterface,
                             env.db,
+                            2,
+                            0n,
                             env.logger
                         )
                         const result = await batchCommitter.runBatch()

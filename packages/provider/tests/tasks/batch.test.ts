@@ -17,7 +17,7 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { BatchCommitter } from '../../src/tasks/batch'
 import { AccountKey, accountAddress, accountMnemonic } from '../dataUtils/DatabaseAccounts'
-import { changeSigner, getUser } from '../mocks/accounts'
+import { getSignedTasks, getUser } from '../mocks/accounts'
 import { CaptchaSolution } from '@prosopo/datasets'
 import { ScheduledTaskNames } from '../../src/types/scheduler'
 import { randomAsHex } from '@polkadot/util-crypto'
@@ -27,27 +27,49 @@ chai.use(chaiAsPromised)
 const expect = chai.expect
 
 describe('BATCH TESTS', () => {
-    it('Batches commitments on-chain', async () => {
-        const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
-        const env = new MockEnvironment(mnemonic)
+    const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
+    const env = new MockEnvironment(mnemonic)
+
+    before(async () => {
         await env.isReady()
+    })
+
+    after(async () => {
+        await env.db?.connection?.close()
+    })
+
+    it.only('Batches commitments on-chain', async () => {
         const contractApi = await env.getContractApi()
         if (env.db) {
+            console.log('getting Provider Account')
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
-            const dappUser = await getUser(env, AccountKey.dappUsers)
+            console.log('got Provider Account')
             await env.changeSigner(accountMnemonic(providerAccount))
             // Remove any existing commitments and solutions from the db
-            await env.db.tables?.commitment.deleteMany({})
-            await env.db.tables?.usersolution.deleteMany({})
+            // Note - don't do this as it messes with other tests
+            // await env.db.tables?.commitment.deleteMany({})
+            // await env.db.tables?.usersolution.deleteMany({})
+
+            // Get account nonce
+            const startNonce = await contractApi.api.call.accountNonceApi.accountNonce(accountAddress(providerAccount))
 
             // Batcher must be created with the provider account as the pair on the contractApi, otherwise the batcher
             // will fail with `ProviderDoesNotExist` error.
-            const batcher = new BatchCommitter(env.config.batchCommit, await env.getContractApi(), env.db, env.logger)
+            const batcher = new BatchCommitter(
+                env.config.batchCommit,
+                await env.getContractApi(),
+                env.db,
+                2,
+                startNonce.toNumber(),
+                env.logger
+            )
 
-            const providerTasks = await changeSigner(env, providerAccount)
+            const providerTasks = await getSignedTasks(env, providerAccount)
             const providerDetails = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+
             const dappAccount = await getUser(env, AccountKey.dappsWithStake)
             const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
+
             if (randomCaptchasResult) {
                 const unsolvedCaptcha = randomCaptchasResult[0]
                 const solution = [
@@ -57,6 +79,7 @@ describe('BATCH TESTS', () => {
                 ]
                 const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: randomAsHex() }
                 const commitmentIds: string[] = []
+                const dappUser = await getUser(env, AccountKey.dappUsers)
                 // Store 10 commitments in the local db
                 for (let count = 0; count < 10; count++) {
                     // not the real commitment id, which would be calculated as the root of a merkle tree
@@ -78,7 +101,9 @@ describe('BATCH TESTS', () => {
                 }
 
                 // Try to get commitments that are ready to be batched
-                const commitmentsFromDbBeforeProcessing = await batcher.getCommitments()
+                const commitmentsFromDbBeforeProcessing = (await batcher.getCommitments()).filter(
+                    (solution) => commitmentIds.indexOf(solution.commitmentId) > -1
+                )
 
                 // Check the commitments are not returned from the db as they are not yet processed
                 expect(commitmentsFromDbBeforeProcessing).to.be.empty
@@ -88,7 +113,9 @@ describe('BATCH TESTS', () => {
                 await providerTasks.db.flagUsedDappUserSolutions(commitmentIds)
 
                 // Check the commitments are returned from the db as they are now processed
-                const commitmentsFromDbBeforeBatching = await batcher.getCommitments()
+                const commitmentsFromDbBeforeBatching = (await batcher.getCommitments()).filter(
+                    (solution) => commitmentIds.indexOf(solution.commitmentId) > -1
+                )
                 expect(commitmentsFromDbBeforeBatching.length).to.be.equal(10)
 
                 // 5 commitments should be approved and 5 disapproved
@@ -97,18 +124,25 @@ describe('BATCH TESTS', () => {
                 ).to.equal(5)
 
                 // Commit the commitments to the contract
-                await batcher.runBatch()
+                const result = await batcher.runBatch()
+                console.log(result)
 
                 // Try to get the solutions from the db
-                const solutionsFromDbAfter = await env.db.getProcessedDappUserSolutions()
+                const solutionsFromDbAfter = (await env.db.getProcessedDappUserSolutions()).filter(
+                    (solution) => commitmentIds.indexOf(solution.commitmentId) > -1
+                )
 
                 // Check the solutions are no longer in the db
                 expect(solutionsFromDbAfter).to.be.empty
 
                 // Try to get the commitments from the db
-                const commitmentsFromDbAfter = await env.db.getProcessedDappUserCommitments()
+                const commitmentsFromDbAfter = (await env.db.getProcessedDappUserCommitments()).filter(
+                    (commitment) => commitmentIds.indexOf(commitment.commitmentId) > -1
+                )
+                console.log(commitmentsFromDbAfter)
 
                 // Check the solutions are no longer in the db
+                console.log(commitmentsFromDbAfter.length, 'commitments matching the ids', commitmentIds)
                 expect(commitmentsFromDbAfter).to.be.empty
 
                 // We have to wait for batched commitments to become available on-chain

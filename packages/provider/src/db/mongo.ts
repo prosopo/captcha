@@ -45,6 +45,7 @@ import { ProsopoEnvError } from '@prosopo/common'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '../types/scheduler'
+import { DeleteResult } from 'mongodb'
 
 mongoose.set('strictQuery', false)
 
@@ -53,7 +54,7 @@ const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
 
 const callbackFn = function (err, result) {
     if (err) throw err
-    consola.debug(result)
+    consola.debug('consola debug', result)
 }
 
 /**
@@ -401,14 +402,14 @@ export class ProsopoDatabase implements Database {
 
     /** @description Remove processed Dapp User captcha solutions from the user solution table
      */
-    async removeProcessedDappUserSolutions(): Promise<void> {
-        await this.tables?.usersolution.deleteMany({ processed: true })
+    async removeProcessedDappUserSolutions(): Promise<DeleteResult | undefined> {
+        return await this.tables?.usersolution.deleteMany({ processed: true })
     }
 
     /** @description Remove processed Dapp User captcha commitments from the user commitments table
      */
-    async removeProcessedDappUserCommitments(): Promise<void> {
-        await this.tables?.commitment.deleteMany({ processed: true })
+    async removeProcessedDappUserCommitments(): Promise<DeleteResult | undefined> {
+        return await this.tables?.commitment.deleteMany({ processed: true })
     }
 
     /**

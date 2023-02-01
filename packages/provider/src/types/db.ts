@@ -27,6 +27,7 @@ import consola from 'consola'
 import { z } from 'zod'
 import { Connection, Model, Schema } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from './scheduler'
+import { DeleteResult } from 'mongodb'
 
 export const UserCommitmentSchema = z.object({
     userAccount: z.string(),
@@ -219,9 +220,9 @@ export interface Database {
 
     approveDappUserCommitment(commitmentId: string): Promise<void>
 
-    removeProcessedDappUserSolutions(): Promise<void>
+    removeProcessedDappUserSolutions(): Promise<DeleteResult | undefined>
 
-    removeProcessedDappUserCommitments(): Promise<void>
+    removeProcessedDappUserCommitments(): Promise<DeleteResult | undefined>
 
     getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>
 

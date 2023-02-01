@@ -76,10 +76,9 @@ export async function populateDatabase(
     userCounts: UserCount,
     exportData: boolean
 ): Promise<IDatabaseAccounts> {
-    env.logger.debug('Starting database populator...')
+    env.logger.info('Starting database populator...')
     const databasePopulator = new DatabasePopulator(env)
     await databasePopulator.isReady()
-
     const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
         if (userCount > 0) {
             await populateStep(
@@ -93,7 +92,6 @@ export async function populateDatabase(
     })
     try {
         const promiseResult = await Promise.all(userPromises)
-        env.logger.debug('promiseResult', promiseResult)
     } catch (e) {
         throw new Error(e)
     }

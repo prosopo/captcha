@@ -17,7 +17,7 @@
 import { KeyringPair } from '@polkadot/keyring/types'
 import fse from 'fs-extra'
 import { Environment, getEnvFile, loadEnv } from '../env'
-import { generateMnemonic, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
+import { generateMnemonic, getSendAmount, getStakeAmount, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
 import { ProsopoEnvError } from '@prosopo/common'
 
@@ -75,7 +75,13 @@ async function registerProvider(env: Environment, account: IProviderAccount) {
 
     account.address = providerKeyringPair.address
 
-    await sendFunds(env, account.address, 'Provider', 100000000000000000n)
+    const stakeAmount = await env.contractInterface.getProviderStakeDefault()
+
+    // use the minimum stake amount from the contract to create a reasonable stake amount
+    account.stake = getStakeAmount(env, stakeAmount)
+
+    // send enough funds to cover the stake amount and more
+    await sendFunds(env, account.address, 'Provider', getSendAmount(env, stakeAmount))
 
     await setupProvider(env, account)
 }
@@ -109,7 +115,7 @@ async function setup() {
 
     defaultProvider.mnemonic = mnemonic
 
-    env.logger.info('Registering provider...')
+    env.logger.info(`Registering provider... ${defaultProvider.address}`)
     await registerProvider(env, defaultProvider)
 
     defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS

@@ -56,7 +56,7 @@ export async function getUser(env: ProsopoEnvironment, accountType: AccountKey):
     return account
 }
 
-export async function changeSigner(env: ProsopoEnvironment, account: Account): Promise<Tasks> {
+export async function getSignedTasks(env: ProsopoEnvironment, account: Account): Promise<Tasks> {
     await env.changeSigner(accountMnemonic(account))
     return new Tasks(env)
 }

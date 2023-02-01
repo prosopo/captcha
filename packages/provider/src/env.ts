@@ -109,12 +109,15 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getContractApi(): Promise<ProsopoContractApi> {
+        //console.log('getting nonce')
+        //const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
         this.contractInterface = new ProsopoContractMethods(
             this.api,
             this.abi,
             this.contractAddress,
             this.pair,
-            this.contractName
+            this.contractName,
+            -1
         )
         return this.contractInterface
     }

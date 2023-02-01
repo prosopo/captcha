@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoPayee, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { stringToHexPadded } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import path from 'path'
 
@@ -157,10 +157,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return [mnemonic, address]
     }
 
-    private sendFunds(account: Account, payee: ProsopoPayee, amount: AnyNumber)
-    private sendFunds(address: string, payee: ProsopoPayee, amount: AnyNumber)
+    private sendFunds(account: Account, payee: string, amount: AnyNumber)
+    private sendFunds(address: string, payee: string, amount: AnyNumber)
 
-    private sendFunds(account: Account | string, payee: ProsopoPayee, amount: AnyNumber) {
+    private sendFunds(account: Account | string, payee: string, amount: AnyNumber) {
         const address = typeof account === 'string' ? account : accountAddress(account)
 
         return _sendFunds(this.mockEnv, address, payee.toString(), amount)
@@ -190,11 +190,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 'with service origin',
                 _serviceOrigin
             )
-            await this.sendFunds(
-                accountAddress(account),
-                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-                this.sendAmount
-            )
+            await this.sendFunds(accountAddress(account), 'Provider', this.sendAmount)
             await this.changeSigner(accountMnemonic(account))
             const tasks = new Tasks(this.mockEnv)
             const result = await tasks.contractApi.providerRegister(
@@ -287,11 +283,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
             const account = this.createAccount()
-            await this.sendFunds(
-                accountAddress(account),
-                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-                this.sendAmount
-            )
+            await this.sendFunds(accountAddress(account), 'Dapp', this.sendAmount)
 
             await this.changeSigner(accountMnemonic(account))
 
@@ -302,8 +294,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 createType(this.mockEnv.contractInterface.abi.registry, 'AccountId', accountAddress(account)).toString()
             )
 
-            const events = getEventsFromMethodName(result, 'DappRegister')
-            events[0].args.map((arg) => console.info(arg.toPrimitive()))
+            //const events = getEventsFromMethodName(result, 'DappRegister')
+            //events[0].args.map((arg) => console.info(arg.toPrimitive()))
             if (!noPush) {
                 this._registeredDapps.push(account)
             }
@@ -326,6 +318,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         try {
             const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
             const account = await this.registerDapp(serviceOrigin, true)
+
             await this.dappFund(account)
 
             this._registeredDappsWithStake.push(account)
@@ -339,11 +332,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
     public async registerDappUser(): Promise<Account> {
         const account = this.createAccount()
 
-        await this.sendFunds(
-            accountAddress(account),
-            createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-            this.sendAmount
-        )
+        await this.sendFunds(accountAddress(account), 'DappUser', this.sendAmount)
 
         this._registeredDappUsers.push(account)
 
