@@ -1,14 +1,14 @@
 {
   "source": {
-    "hash": "0xad56754944fca5da205a2dbcb86b0d674e58df770bf75b862601e2812d301f7a",
+    "hash": "0xb398c34eeaa6631344073ab704806495f35c84bc73f79e69784e4dbf5ad96b02",
     "language": "ink! 4.0.0-beta",
-    "compiler": "rustc 1.68.0-nightly",
+    "compiler": "rustc 1.67.0",
     "build_info": {
       "build_mode": "Debug",
       "cargo_contract_version": "2.0.0-rc",
-      "rust_toolchain": "nightly-x86_64-unknown-linux-gnu",
+      "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
       "wasm_opt_settings": {
-        "keep_debug_symbols": false,
+        "keep_debug_symbols": true,
         "optimization_passes": "Z"
       }
     }
@@ -1333,9 +1333,9 @@
             "label": "len",
             "type": {
               "displayName": [
-                "u64"
+                "u128"
               ],
-              "type": 10
+              "type": 0
             }
           },
           {
@@ -1359,7 +1359,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 49
+          "type": 13
         },
         "selector": "0x2306aecd"
       },
@@ -1369,9 +1369,9 @@
             "label": "len",
             "type": {
               "displayName": [
-                "u64"
+                "u128"
               ],
-              "type": 10
+              "type": 0
             }
           }
         ],
@@ -1386,7 +1386,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 49
+          "type": 13
         },
         "selector": "0x6402e771"
       }
@@ -3467,48 +3467,6 @@
           {
             "name": "T",
             "type": 7
-          },
-          {
-            "name": "E",
-            "type": 12
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 49,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 10
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 12
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 10
           },
           {
             "name": "E",
