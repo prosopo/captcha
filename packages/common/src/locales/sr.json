@@ -1,6 +1,6 @@
 {
     "WIDGET": {
-        "SELECT_ALL": "Izaberite sve slike koje sadrže {{target}}",
+        "SELECT_ALL": "Izaberite sve slike koje sadrže",
         "NEXT": "Sledeće",
         "SUBMIT": "Prihvati",
         "CANCEL": "Otkaži",
