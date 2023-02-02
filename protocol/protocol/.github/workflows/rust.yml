@@ -40,6 +40,9 @@ jobs:
       - name: Setup rust environment
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
         run: |
+          echo remove previous rustup / cargo
+          rm -rf .rustup .cargo
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           echo install nightly
           rustup toolchain install nightly
           rustup default nightly-x86_64-unknown-linux-gnu
