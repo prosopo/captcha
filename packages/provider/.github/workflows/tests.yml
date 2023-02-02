@@ -21,6 +21,7 @@ jobs:
         run: |
           echo ${{ github.ref }}
           echo ${{ github.ref_name }}
+          echo ${{ github.head_ref }}
           echo ${{ github.base_ref }}
 
       - name: Remove stopped containers
@@ -32,7 +33,7 @@ jobs:
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.head_ref }}
 
       - name: Clone scripts repository
         uses: actions/checkout@v3
