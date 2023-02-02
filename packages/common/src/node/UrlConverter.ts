@@ -199,7 +199,7 @@ class UrlConverter {
     }
 
     public decode(bytes: Uint8Array): string {
-        const arr = []
+        const arr: string[] = []
         // loop through every 6 bits
         // any remainder bits are ignored (e.g. 4 bytes == 32 bits, only first 30 bits are used to represent 5 6-bit symbols)
         const nBits = bytes.length * this.byteNBits
