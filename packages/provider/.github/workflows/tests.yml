@@ -73,7 +73,8 @@ jobs:
           cd workspaces
           git checkout ${{ github.head_ref }}
           git submodule update --init --recursive
-          git submodule foreach 'git checkout origin/${{ github.head_ref }} || git checkout origin/${{ github.base_ref }}'
+          git submodule foreach git fetch
+          git submodule foreach 'git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }}'
           git submodule foreach 'git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }}'
 
       - id: node-cache
