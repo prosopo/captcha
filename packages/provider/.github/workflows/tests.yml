@@ -75,7 +75,7 @@ jobs:
           git submodule update --init --recursive
           git remote update
           git submodule foreach git fetch
-          git submodule foreach 'git checkout --track origin/${{ github.head_ref }} || git checkout --track origin/${{ github.base_ref }}'
+          git submodule foreach 'git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }}'
           git submodule foreach 'git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }}'
 
       - id: node-cache
