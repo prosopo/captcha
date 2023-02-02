@@ -74,7 +74,7 @@ jobs:
           git checkout ${{ github.head_ref }}
           git submodule update --init --recursive
           git submodule foreach git remote update
-          git submodule foreach git fetch
+          git submodule foreach git fetch remotes/origin
           git submodule foreach 'git checkout remotes/origin/${{ github.head_ref }} || git checkout remotes/origin/${{ github.base_ref }}'
           git submodule foreach 'git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }}'
 
