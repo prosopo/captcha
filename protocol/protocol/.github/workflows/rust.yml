@@ -34,7 +34,6 @@ jobs:
         with:
           path: |
             ~/.cargo
-            ~/.dylint_drivers
             ~/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
@@ -42,17 +41,15 @@ jobs:
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
         run: |
           echo install nightly
-          rustup toolchain install nightly-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
-          # to compile the std lib we nee the src
+          rustup toolchain install nightly
           rustup default nightly-x86_64-unknown-linux-gnu
-          rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
-          echo set browser wasm target
-          rustup target add wasm32-unknown-unknown --toolchain nightly
-          # echo install tarpaulin and dylint
-          # cargo +nightly install cargo-tarpaulin cargo-dylint dylint-link
+          rustup toolchain remove stable
+          rustup show
+          # to compile the std lib we nee the src
+          rustup component add rust-src --toolchain nightly
           echo install cargo-contract
           cargo install cargo-contract --version 2.0.0-rc
+          rustup target add wasm32-unknown-unknown --toolchain nightly
 
       - name: Update rust
         run: |
@@ -76,7 +73,6 @@ jobs:
         with:
           path: |
             ~/.cargo
-            ~/.dylint_drivers
             ~/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
