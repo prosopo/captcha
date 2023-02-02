@@ -1,10 +1,8 @@
 name: Tests
 
 on:
-  push:
-    branches: [ tests-workflow ]
   pull_request:
-    branches: [ develop ]
+    branches: [ develop, main ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -16,10 +14,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        branch: [ tests-workflow ]
     runs-on: ${{ matrix.os }}
 
     steps:
+
       - name: Remove stopped containers
         run: docker rm $(docker ps -a -q) || true
 
@@ -29,7 +27,7 @@ jobs:
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
-          ref: ${{ matrix.branch }}
+          ref: ${{ github.ref }}
 
       - name: Clone scripts repository
         uses: actions/checkout@v3
@@ -67,11 +65,10 @@ jobs:
       - name: Checkout correct branches
         run: |
           cd workspaces
-          git checkout ${{ matrix.branch }}
-          npm run checkout ${{ matrix.branch }}
+          git checkout ${{ github.ref }}
           git submodule update --init --recursive
-          git submodule foreach git checkout ${{ matrix.branch }} || git checkout develop
-          git submodule foreach git pull origin ${{ matrix.branch }} || git pull origin develop --no-ff
+          git submodule foreach git checkout ${{ github.ref }} || git checkout ${{ github.base_ref }}
+          git submodule foreach git pull origin ${{ github.ref }} || git pull origin ${{ github.base_ref }} --no-ff
 
       - id: node-cache
         uses: actions/cache@v3
