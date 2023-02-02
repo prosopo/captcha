@@ -74,7 +74,7 @@ jobs:
           git checkout ${{ github.head_ref }}
           git submodule update --init --recursive
           git submodule foreach git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }}
-          git submodule foreach git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }} --no-ff
+          git submodule foreach git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }}
 
       - id: node-cache
         uses: actions/cache@v3
