@@ -71,7 +71,7 @@ jobs:
           npm run checkout ${{ matrix.branch }}
           git submodule update --init --recursive
           git submodule foreach git checkout ${{ matrix.branch }} || git checkout develop
-          git submodule foreach git pull origin ${{ matrix.branch }} || git pull origin develop
+          git submodule foreach git pull origin ${{ matrix.branch }} || git pull origin develop --ff-only
 
       - id: node-cache
         uses: actions/cache@v3
