@@ -71,10 +71,10 @@ jobs:
       - name: Checkout correct branches
         run: |
           cd workspaces
-          git checkout ${{ github.ref }}
+          git checkout ${{ github.head_ref }}
           git submodule update --init --recursive
-          git submodule foreach git checkout ${{ github.ref }} || git checkout ${{ github.base_ref }}
-          git submodule foreach git pull origin ${{ github.ref }} || git pull origin ${{ github.base_ref }} --no-ff
+          git submodule foreach git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }}
+          git submodule foreach git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }} --no-ff
 
       - id: node-cache
         uses: actions/cache@v3
