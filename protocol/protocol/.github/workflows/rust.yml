@@ -17,75 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-
-      - name: ls
-        run: |
-          pwd
-          echo ls -la
-          ls -la
-          echo ls -la ~
-          ls -la ~
-
-      - name: tmp restore cache
-        id: tmp-restore-cache
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            /home/runner/tmp
-          key: tmp
-
-      
-      - name: ls
-        run: |
-          pwd
-          echo ls -la
-          ls -la
-          echo ls -la ~
-          ls -la ~
-      
-      - name: tmp
-        if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p /home/runner/tmp
-          echo a > /home/runner/tmp/a.txt
-          echo b > /home/runner/tmp/b.txt
-          echo c > /home/runner/tmp/c.txt
-          
-      
-      - name: ls
-        run: |
-          pwd
-          echo ls -la
-          ls -la
-          echo ls -la ~
-          ls -la ~
-        
-      - name: Clear tmp cache
-        if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
-        continue-on-error: true
-        run: |
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/caches?key=tmp
-
-      - name: Save cargo env to cache
-        if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v3
-        with:
-          path: |
-            /home/runner/tmp
-          key: tmp
-
-      - name: exit
-        run: |
-          exit 1
-
-
       - uses: actions/checkout@v3
 
       ################ SETUP RUST
@@ -103,9 +34,9 @@ jobs:
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
         run: |
           echo remove previous rustup / cargo
-          ls -la ~
-          rm -rf .rustup .cargo
-          ls -la ~
+          ls -la /home/runner
+          rm -rf /home/runner/.rustup /home/runner/.cargo
+          ls -la /home/runner
 
           echo install rustup
           curl -sSf https://sh.rustup.rs | sh -s -- -y
