@@ -50,19 +50,18 @@ jobs:
           BRANCH=${{ github.ref }}
 
           echo "Fetching list of cache key"
+          # get all but the most recent cache
           cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO -B $BRANCH | cut -f 1 )
+          # delete the stale caches
 
-          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO -B $BRANCH
-
-
-          # ## Setting this to not fail the workflow while deleting cache keys. 
-          # set +e
-          # echo "Deleting caches..."
-          # for cacheKey in $cacheKeysForPR
-          # do
-          #     gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
-          # done
-          # echo "Done"
+          ## Setting this to not fail the workflow while deleting cache keys. 
+          set +e
+          for cacheKey in $cacheKeysForPR
+          do
+              echo "deleting cache $cacheKey"
+              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+          done
+          echo "done"
 
       - name: exit
         run: exit 1
