@@ -33,8 +33,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            ~/.cargo
-            ~/.rustup
+            $HOME/.cargo
+            $HOME/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Setup rust environment
@@ -105,8 +105,8 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            ~/.cargo
-            ~/.rustup
+            $HOME/.cargo
+            $HOME/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       ################ BUILD
@@ -116,7 +116,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            ./contracts/target
+            contracts/target
           key: ${{ runner.os }}-${{ env.cargo_build_version }}
 
       - name: Build
@@ -148,5 +148,5 @@ jobs:
         if: always()
         with:
           path: |
-            ./contracts/target
+            contracts/target
           key: ${{ runner.os }}-${{ env.cargo_build_version }}
