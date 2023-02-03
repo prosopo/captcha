@@ -72,8 +72,6 @@ jobs:
             echo rust already up to date
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
-          rustup component add rustfmt
-          echo "updated=true" >> $GITHUB_OUTPUT
 
       # Check if rust is formatted correctly
       - name: Rust formatting check
