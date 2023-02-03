@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  cargo_env_version: cargo-env
   cargo_build_version: cargo-build
   GH_TOKEN: ${{ github.token }}
 
@@ -28,7 +27,13 @@ jobs:
           path: |
             /home/runner/.cargo
             /home/runner/.rustup
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
+          # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
+          # "abcdef123" could be anything, it is a random string to differentiate cache usages
+          # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
+          # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
+          # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-cargo-env-
 
       # If cached version of rust env not found, build it from scratch
       - name: Setup rust environment
@@ -92,7 +97,13 @@ jobs:
           path: |
             contracts/target
           # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+          # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
+          # "abcdef123" could be anything, it is a random string to differentiate cache usages
+          # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
+          # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
+          # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
 
       # Do the build
       - name: Build
@@ -109,6 +120,16 @@ jobs:
           exit $?
 
       # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
+      - name: Save cargo build to cache
+        uses: actions/cache/save@v3
+        if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
+        with:
+          path: |
+            contracts/target
+          # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ job.container.id }}
+
+      # Clear out the old cache, as we've replaced it with a newer build
       - name: Clear cargo build cache
         # always hit this job, irrelevant of errors above
         if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
@@ -117,28 +138,9 @@ jobs:
           gh api \
             --method DELETE \
             -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+            /repos/${{ github.repository }}/actions/caches?key=${{ steps.restore-cache-cargo-build.outputs.cache-primary-key }}
 
-      - name: Save cargo build to cache
-        uses: actions/cache/save@v3
-        if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
-        with:
-          path: |
-            contracts/target
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
-
-    
-      # If updated OR built from scratch, clear the cache and save a new cache copy
-      - name: Clear cargo env cache
-        if: always() && (steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
-        continue-on-error: true
-        run: |
-          # cache can only be removed via an api call
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
-
+      # If updated or built from scratch, save the env in a new cache
       - name: Save cargo env to cache
         if: always() && (steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
         uses: actions/cache/save@v3
@@ -147,4 +149,16 @@ jobs:
             /home/runner/.cargo
             /home/runner/.rustup
           # the key is the OS name + architecture + tag, isolating each rust env to a specific OS. This cached copy can be used in any workflow using the same OS, though
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
+          # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same data without mutating them, as other workflows may be using them
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}-${{ job.container.id }}
+
+      # If updated OR built from scratch, clear the (now old) original cache
+      - name: Clear cargo env cache
+        if: always() && (steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
+        continue-on-error: true
+        run: |
+          # cache can only be removed via an api call
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/caches?key=${{ steps.restore-cache-cargo-env.outputs.cache-primary-key }}
