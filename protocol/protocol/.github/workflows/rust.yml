@@ -39,6 +39,7 @@ jobs:
       - name: Restore cache status
         run: |
           echo restored: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
+          echo conc: ${{ steps.build.conclusion }}
 
       # If cached version of rust env not found, build it from scratch
       - name: Setup rust environment
