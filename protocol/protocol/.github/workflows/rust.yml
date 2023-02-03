@@ -144,7 +144,7 @@ jobs:
 
       # If updated or built from scratch, save the env in a new cache
       - name: Save cargo env to cache
-        if: always() && (steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
+        if: always()
         uses: actions/cache/save@v3
         with:
           path: |
@@ -156,7 +156,7 @@ jobs:
 
       # If updated OR built from scratch, clear the (now old) original cache
       - name: Clear cargo env cache
-        if: always() && (steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
+        if: always()
         continue-on-error: true
         run: |
           # cache can only be removed via an api call
