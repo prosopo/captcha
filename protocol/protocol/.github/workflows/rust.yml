@@ -81,34 +81,6 @@ jobs:
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
 
-      # Sanity check cache hit and updates via printing to console
-      - name: Print env setup status
-        run: |
-          echo cache hit: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
-          echo cargo updated: ${{ steps.update-cargo.outputs.updated }}
-          echo rust updated: ${{ steps.update-rust.outputs.updated }}
-
-      # If updated OR built from scratch, clear the cache and save a new cache copy
-      - name: Clear cargo env cache
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true'
-        continue-on-error: true
-        run: |
-          # cache can only be removed via an api call
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
-
-      - name: Save cargo env to cache
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true'
-        uses: actions/cache/save@v3
-        with:
-          path: |
-            /home/runner/.cargo
-            /home/runner/.rustup
-          # the key is the OS name + architecture + tag, isolating each rust env to a specific OS. This cached copy can be used in any workflow using the same OS, though
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
-
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
         id: restore-cache-cargo-build
@@ -150,3 +122,25 @@ jobs:
           path: |
             contracts/target
           key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+
+    
+      # If updated OR built from scratch, clear the cache and save a new cache copy
+      - name: Clear cargo env cache
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true'
+        continue-on-error: true
+        run: |
+          # cache can only be removed via an api call
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
+
+      - name: Save cargo env to cache
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            /home/runner/.cargo
+            /home/runner/.rustup
+          # the key is the OS name + architecture + tag, isolating each rust env to a specific OS. This cached copy can be used in any workflow using the same OS, though
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
