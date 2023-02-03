@@ -66,8 +66,10 @@ jobs:
         id: update-rust
         run: |
           if rustup update | grep updated; then
+            echo rust updated
             echo "updated=true" >> $GITHUB_OUTPUT
           else
+            echo rust already up to date
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
 
@@ -76,8 +78,10 @@ jobs:
         run: |
           cd contracts
           if cargo update | grep updating; then
+            echo cargo updated
             echo "updated=true" >> $GITHUB_OUTPUT
           else
+            echo cargo already up to date
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
 
