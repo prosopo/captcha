@@ -50,13 +50,10 @@ jobs:
       - name: tmp
         if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
         run: |
-          cd /home/runner/work/
-          mkdir -p tmp
-          cd tmp
-          echo a > a.txt
-          echo b > b.txt
-          echo c > c.txt
-          cd ..
+          mkdir -p /home/runner/work/tmp
+          echo a > /home/runner/work/tmp/a.txt
+          echo b > /home/runner/work/tmp/b.txt
+          echo c > /home/runner/work/tmp/c.txt
           
       
       - name: ls
