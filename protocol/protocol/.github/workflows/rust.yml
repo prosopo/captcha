@@ -48,7 +48,7 @@ jobs:
         with:
           path: |
             contracts/target
-          key: ${{ runner.os }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ env.cargo_build_version }}-build
 
       - name: ls
         continue-on-error: true
