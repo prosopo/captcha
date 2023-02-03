@@ -41,6 +41,7 @@ jobs:
           echo a > a.txt
           echo b > b.txt
           echo c > c.txt
+          ls -la
         
       - name: Clear tmp cache
         if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
