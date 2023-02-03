@@ -36,36 +36,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-cargo-env-
 
-      - name: Restore cache status
-        run: |
-          echo restored: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
-          echo conc: ${{ steps.restore-cache-cargo-env.conclusion }}
-          echo id: ${{ steps.restore-cache-cargo-env.outputs.cache-primary-key }}
-
-      - name: Cleanup
-        run: |
-          gh extension install actions/gh-actions-cache
-          
-          REPO=${{ github.repository }}
-          BRANCH=${{ github.ref }}
-
-          echo "Fetching list of cache key"
-          # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO -B $BRANCH | cut -f 1 )
-          # delete the stale caches
-
-          ## Setting this to not fail the workflow while deleting cache keys. 
-          set +e
-          for cacheKey in $cacheKeysForPR
-          do
-              echo "deleting cache $cacheKey"
-              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
-          done
-          echo "done"
-
-      - name: exit
-        run: exit 1
-
       # If cached version of rust env not found, build it from scratch
       - name: Setup rust environment
         if: steps.restore-cache-cargo-env.conclusion != 'true'
@@ -161,16 +131,23 @@ jobs:
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      # Clear out the old cache, as we've replaced it with a newer build
-      - name: Clear cargo build cache
-        # always hit this job, irrelevant of errors above
+      - name: Cleanup stale cargo build caches
         if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
-        continue-on-error: true
         run: |
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/caches?key=${{ steps.restore-cache-cargo-build.outputs.cache-primary-key }}
+          gh extension install actions/gh-actions-cache
+          
+          REPO=${{ github.repository }}
+
+          echo "Fetching list of cache key"
+          # get all but the most recent cache
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 )
+          # delete the stale caches
+          ## Setting this to not fail the workflow while deleting cache keys. 
+          set +e
+          for cacheKey in $cacheKeysForPR
+          do
+              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+          done
 
       # If updated or built from scratch, save the env in a new cache
       - name: Save cargo env to cache
@@ -183,10 +160,21 @@ jobs:
           # the key is the OS name + architecture + tag, isolating each rust env to a specific OS. This cached copy can be used in any workflow using the same OS, though
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same data without mutating them, as other workflows may be using them
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-env-${{ github.run_id }}-${{ github.run_attempt }}
-
-      # If updated OR built from scratch, clear the (now old) original cache
-      - name: Clear cargo env cache
+      
+      - name: Cleanup stale cargo env caches
         if: always() && (steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
-        continue-on-error: true
         run: |
+          gh extension install actions/gh-actions-cache
           
+          REPO=${{ github.repository }}
+
+          echo "Fetching list of cache key"
+          # get all but the most recent cache
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env- | cut -f 1 )
+          # delete the stale caches
+          ## Setting this to not fail the workflow while deleting cache keys. 
+          set +e
+          for cacheKey in $cacheKeysForPR
+          do
+              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+          done
