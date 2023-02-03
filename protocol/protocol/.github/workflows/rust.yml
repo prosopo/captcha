@@ -42,9 +42,9 @@ jobs:
         run: |
           echo remove previous rustup / cargo
           rm -rf .rustup .cargo
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          curl -sSf https://sh.rustup.rs | sh -s -- -y
           echo install nightly
-          rustup toolchain install nightly
+          rustup toolchain install --profile=minimal nightly
           rustup default nightly-x86_64-unknown-linux-gnu
           rustup toolchain remove stable
           rustup show
