@@ -18,9 +18,9 @@ jobs:
     steps:
       # - uses: actions/checkout@v3
 
-      - name: Print job config
+      - name: Print github context
         run: |
-          echo github: ${{ github }}
+          echo github context: ${{ toJson(github) }}
 
       - name: ls
         run: |
