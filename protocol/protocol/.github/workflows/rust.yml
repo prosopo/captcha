@@ -120,21 +120,6 @@ jobs:
           cd contracts
           cargo contract build --release
 
-      - name: Clear cargo build cache
-        continue-on-error: true
-        run: |
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ env.cargo_build_version }}
-
-      - name: Save cargo build to cache
-        uses: actions/cache/save@v3
-        with:
-          path: |
-            ./contracts/target
-          key: ${{ runner.os }}-${{ env.cargo_build_version }}
-
       ################ TEST
 
       - name: Test
@@ -143,7 +128,10 @@ jobs:
           RUST_BACKTRACE=1 cargo test --no-default-features --features std --release -- --nocapture
           exit $?
 
+      ################ Save build + test files to cache, use for incremental builds in other runs
+
       - name: Clear cargo build cache
+        if: always()
         continue-on-error: true
         run: |
           gh api \
@@ -153,6 +141,7 @@ jobs:
 
       - name: Save cargo build to cache
         uses: actions/cache/save@v3
+        if: always()
         with:
           path: |
             ./contracts/target
