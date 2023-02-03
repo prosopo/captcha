@@ -12,10 +12,6 @@ env:
   cargo_build_version: cargo-build
   GH_TOKEN: ${{ github.token }}
 
-defaults:
-  run:
-    working-directory: theworkingdir
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,7 +32,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            work
+            tmp
           key: tmp
 
       
@@ -48,11 +44,11 @@ jobs:
           echo ls -la ~
           ls -la ~
       
-      - name: work
+      - name: tmp
         if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p work
-          cd work
+          mkdir -p tmp
+          cd tmp
           echo a > a.txt
           echo b > b.txt
           echo c > c.txt
@@ -81,7 +77,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            work
+            tmp
           key: tmp
 
       - name: exit
