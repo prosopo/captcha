@@ -43,6 +43,32 @@ jobs:
           echo id: ${{ steps.restore-cache-cargo-env.outputs.cache-primary-key }}
           echo outputs: ${{ toJson(steps.restore-cache-cargo-env.outputs) }}
 
+
+      - name: Cleanup
+        run: |
+          gh extension install actions/gh-actions-cache
+          
+          REPO=${{ github.repository }}
+          BRANCH=${{ github.ref }}
+
+          echo "Fetching list of cache key"
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO -B $BRANCH | cut -f 1 )
+
+          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO -B $BRANCH
+
+
+          # ## Setting this to not fail the workflow while deleting cache keys. 
+          # set +e
+          # echo "Deleting caches..."
+          # for cacheKey in $cacheKeysForPR
+          # do
+          #     gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+          # done
+          # echo "Done"
+
+      - name: exit
+        run: exit 1
+
       # If cached version of rust env not found, build it from scratch
       - name: Setup rust environment
         if: steps.restore-cache-cargo-env.conclusion != 'true'
@@ -166,8 +192,4 @@ jobs:
         if: always() && (steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
         continue-on-error: true
         run: |
-          # cache can only be removed via an api call
-          gh api \
-            --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/actions/caches?key=${{ steps.restore-cache-cargo-env.outputs.cache-primary-key }}
+          
