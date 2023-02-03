@@ -18,9 +18,10 @@ jobs:
     steps:
       # - uses: actions/checkout@v3
 
-      - name: Print github context
-        run: |
-          echo github context: ${{ toJson(github) }}
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
 
       - name: ls
         run: |
