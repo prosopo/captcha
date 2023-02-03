@@ -16,7 +16,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # - uses: actions/checkout@v3
 
       - name: Dump GitHub context
         env:
@@ -36,7 +35,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            tmp
+            ../../tmp
           key: tmp
 
       
@@ -51,6 +50,7 @@ jobs:
       - name: tmp
         if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
         run: |
+          cd ../../
           mkdir -p tmp
           cd tmp
           echo a > a.txt
@@ -81,12 +81,15 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            tmp
+            ../../tmp
           key: tmp
 
       - name: exit
         run: |
           exit 1
+
+
+      - uses: actions/checkout@v3
 
       ################ SETUP RUST
 
@@ -95,8 +98,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            $HOME/.cargo
-            $HOME/.rustup
+            ../../.cargo
+            ../../.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Setup rust environment
@@ -167,8 +170,8 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            $HOME/.cargo
-            $HOME/.rustup
+            ../../.cargo
+            ../../.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       ################ BUILD
