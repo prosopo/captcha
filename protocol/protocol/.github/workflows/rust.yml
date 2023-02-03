@@ -38,9 +38,11 @@ jobs:
       - name: work
         run: |
           mkdir -p work
+          cd work
           echo a > a.txt
           echo b > b.txt
           echo c > c.txt
+          cd ..
           ls -la
         
       - name: Clear tmp cache
