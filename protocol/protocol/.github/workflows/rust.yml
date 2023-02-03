@@ -12,6 +12,10 @@ env:
   cargo_build_version: cargo-build
   GH_TOKEN: ${{ github.token }}
 
+defaults:
+  run:
+    working-directory: theworkingdir
+
 jobs:
   build:
     runs-on: ubuntu-latest
