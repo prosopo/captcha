@@ -81,6 +81,16 @@ jobs:
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
 
+      # Check if rust is formatted correctly
+      - name: Rust formatting check
+        run: |
+          cd contracts
+          if cargo fmt --check; then
+            echo "code formatted correctly"
+          else
+            echo "code formatted incorrectly"
+          fi
+
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
         id: restore-cache-cargo-build
