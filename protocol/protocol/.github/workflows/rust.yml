@@ -16,7 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      # - uses: actions/checkout@v3
 
       - name: ls
         run: |
@@ -34,6 +34,15 @@ jobs:
           path: |
             ~/work
           key: tmp
+
+      
+      - name: ls
+        run: |
+          pwd
+          echo ls -la
+          ls -la
+          echo ls -la ~
+          ls -la ~
       
       - name: work
         run: |
