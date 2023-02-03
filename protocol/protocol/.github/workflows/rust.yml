@@ -18,6 +18,10 @@ jobs:
     steps:
       # - uses: actions/checkout@v3
 
+      - name: Print job config
+        run: |
+          echo github: ${{ github }}
+
       - name: ls
         run: |
           pwd
@@ -25,7 +29,6 @@ jobs:
           ls -la
           echo ls -la ~
           ls -la ~
-
 
       - name: tmp restore cache
         id: tmp-restore-cache
