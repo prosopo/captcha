@@ -17,20 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: setup
-        run: |
-          rm -rf /home/runner/.cargo /home/runner/.rustup
+      # Checkout the repo
+      - uses: actions/checkout@v3
 
-      - name: ls
-        continue-on-error: true
-        run: |
-          pwd
-          ls -la
-          echo /home/runner
-          ls -la /home/runner
-          ls -la contracts
-          ls -la contracts/target
-
+      # Restore rust env (i.e. ~/.rustup and ~/.cargo) from cache
       - name: Restore cached cargo-env
         id: restore-cache-cargo-env
         uses: actions/cache/restore@v3
@@ -38,155 +28,125 @@ jobs:
           path: |
             /home/runner/.cargo
             /home/runner/.rustup
-          key: ${{ runner.os }}-${{ env.cargo_env_version }}
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
 
-      - uses: actions/checkout@v3
+      # If cached version of rust env not found, build it from scratch
+      - name: Setup rust environment
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
+        run: |
+          echo remove previous rustup / cargo
+          ls -la /home/runner
+          rm -rf /home/runner/.rustup /home/runner/.cargo
+          ls -la /home/runner
 
+          echo install rustup
+          curl -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+          ls -la ~
+          
+          echo install nightly
+          rustup toolchain install --profile=minimal nightly
+          rustup default nightly-x86_64-unknown-linux-gnu
+          rustup toolchain remove stable
+          rustup show
+          # to compile the std lib we nee the src
+          rustup component add rust-src --toolchain nightly
+          
+          echo install cargo-contract
+          cargo install cargo-contract --version 2.0.0-rc
+          rustup target add wasm32-unknown-unknown --toolchain nightly
+
+      # Update rust and record output
+      - name: Update rust
+        id: update-rust
+        run: |
+          if rustup update | grep updated; then
+            echo rust updated
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo rust already up to date
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Update rust and record output
+      - name: Update cargo
+        id: update-cargo
+        run: |
+          cd contracts
+          if cargo update | grep updating; then
+            echo cargo updated
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo cargo already up to date
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Sanity check cache hit and updates via printing to console
+      - name: Print env setup status
+        run: |
+          echo cache hit: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
+          echo cargo updated: ${{ steps.update-cargo.outputs.upgraded }}
+          echo rust updated: ${{ steps.update-rust.outputs.upgraded }}
+
+      # If updated OR built from scratch, clear the cache and save a new cache copy
+      - name: Clear cargo env cache
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
+        continue-on-error: true
+        run: |
+          # cache can only be removed via an api call
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
+
+      - name: Save cargo env to cache
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            /home/runner/.cargo
+            /home/runner/.rustup
+          # the key is the OS name + architecture + tag, isolating each rust env to a specific OS. This cached copy can be used in any workflow using the same OS, though
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
+
+      # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
         id: restore-cache-cargo-build
         uses: actions/cache/restore@v3
         with:
           path: |
             contracts/target
-          key: ${{ runner.os }}-${{ env.cargo_build_version }}
+          # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
 
-      - name: ls
+      # Do the build
+      - name: Build
+        run: |
+          cd contracts
+          cargo contract build --release
+
+      # Do unit testing
+      - name: Test
+        run: |
+          cd contracts
+          RUST_BACKTRACE=1 cargo test --no-default-features --features std --release -- --nocapture
+          exit $?
+
+      # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
+      - name: Clear cargo build cache
+        # always hit this job, irrelevant of errors above
+        if: always()
         continue-on-error: true
         run: |
-          pwd
-          ls -la
-          echo /home/runner
-          ls -la /home/runner
-          ls -la contracts
-          ls -la contracts/target
+          gh api \
+            --method DELETE \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
 
-      - name: exit
-        run: |
-          exit 1
-
-      #- uses: actions/checkout@v3
-
-      # ################ SETUP RUST
-
-      # - name: Restore cached cargo-env
-      #   id: restore-cache-cargo-env
-      #   uses: actions/cache/restore@v3
-      #   with:
-      #     path: |
-      #       /home/runner/.cargo
-      #       /home/runner/.rustup
-      #     key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
-
-      # - name: Setup rust environment
-      #   if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
-      #   run: |
-      #     echo remove previous rustup / cargo
-      #     ls -la /home/runner
-      #     rm -rf /home/runner/.rustup /home/runner/.cargo
-      #     ls -la /home/runner
-
-      #     echo install rustup
-      #     curl -sSf https://sh.rustup.rs | sh -s -- -y
-      #     source "$HOME/.cargo/env"
-      #     ls -la ~
-          
-      #     echo install nightly
-      #     rustup toolchain install --profile=minimal nightly
-      #     rustup default nightly-x86_64-unknown-linux-gnu
-      #     rustup toolchain remove stable
-      #     rustup show
-      #     # to compile the std lib we nee the src
-      #     rustup component add rust-src --toolchain nightly
-          
-      #     echo install cargo-contract
-      #     cargo install cargo-contract --version 2.0.0-rc
-      #     rustup target add wasm32-unknown-unknown --toolchain nightly
-
-      # - name: Update rust
-      #   id: update-rust
-      #   run: |
-      #     if rustup update | grep updated; then
-      #       echo rust updated
-      #       echo "updated=true" >> $GITHUB_OUTPUT
-      #     else
-      #       echo rust already up to date
-      #       echo "updated=false" >> $GITHUB_OUTPUT
-      #     fi
-
-      # - name: Update cargo
-      #   id: update-cargo
-      #   run: |
-      #     cd contracts
-      #     if cargo update | grep updating; then
-      #       echo cargo updated
-      #       echo "updated=true" >> $GITHUB_OUTPUT
-      #     else
-      #       echo cargo already up to date
-      #       echo "updated=false" >> $GITHUB_OUTPUT
-      #     fi
-
-      # - name: Print env setup status
-      #   run: |
-      #     echo cache hit: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
-      #     echo cargo updated: ${{ steps.update-cargo.outputs.upgraded }}
-      #     echo rust updated: ${{ steps.update-rust.outputs.upgraded }}
-
-      # - name: Clear cargo env cache
-      #   if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
-      #   continue-on-error: true
-      #   run: |
-      #     gh api \
-      #       --method DELETE \
-      #       -H "Accept: application/vnd.github+json" \
-      #       /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
-
-      # - name: Save cargo env to cache
-      #   if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
-      #   uses: actions/cache/save@v3
-      #   with:
-      #     path: |
-      #       /home/runner/.cargo
-      #       /home/runner/.rustup
-      #     key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
-
-      # ################ BUILD
-
-      # - name: Restore cached cargo build
-      #   id: restore-cache-cargo-build
-      #   uses: actions/cache/restore@v3
-      #   with:
-      #     path: |
-      #       contracts/target
-      #     key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
-
-      # - name: Build
-      #   run: |
-      #     cd contracts
-      #     cargo contract build --release
-
-      # ################ TEST
-
-      # - name: Test
-      #   run: |
-      #     cd contracts
-      #     RUST_BACKTRACE=1 cargo test --no-default-features --features std --release -- --nocapture
-      #     exit $?
-
-      # ################ Save build + test files to cache, use for incremental builds in other runs
-
-      # - name: Clear cargo build cache
-      #   if: always()
-      #   continue-on-error: true
-      #   run: |
-      #     gh api \
-      #       --method DELETE \
-      #       -H "Accept: application/vnd.github+json" \
-      #       /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
-
-      # - name: Save cargo build to cache
-      #   uses: actions/cache/save@v3
-      #   if: always()
-      #   with:
-      #     path: |
-      #       contracts/target
-      #     key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+      - name: Save cargo build to cache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: |
+            contracts/target
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
