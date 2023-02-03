@@ -110,7 +110,7 @@ jobs:
       - name: Build
         run: |
           cd contracts
-          cargo contract build --optimization-passes 0
+          cargo contract build --release
 
       - name: Clear cargo build cache
         continue-on-error: true
@@ -132,7 +132,7 @@ jobs:
       - name: Test
         run: |
           cd contracts
-          RUST_BACKTRACE=1 cargo test --no-default-features --features std -- --nocapture
+          RUST_BACKTRACE=1 cargo test --no-default-features --features std --release -- --nocapture
           exit $?
 
       - name: Clear cargo build cache
