@@ -35,7 +35,7 @@ jobs:
           path: |
             /home/runner/.cargo
             /home/runner/.rustup
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
+          key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: ls
         run: |
