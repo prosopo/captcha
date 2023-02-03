@@ -54,6 +54,11 @@ jobs:
           
           echo install cargo-contract
           cargo install cargo-contract --version 2.0.0-rc
+
+          echo install cargo-fmt
+          rustup component add rustfmt
+
+          echo set target platform
           rustup target add wasm32-unknown-unknown --toolchain nightly
 
       # Update rust and record output
@@ -89,6 +94,7 @@ jobs:
             echo "code formatted correctly"
           else
             echo "code formatted incorrectly"
+            exit 1
           fi
 
       # Restore the cargo build from cache, if available
