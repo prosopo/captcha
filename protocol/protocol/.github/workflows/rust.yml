@@ -75,19 +75,6 @@ jobs:
           rustup component add rustfmt
           echo "updated=true" >> $GITHUB_OUTPUT
 
-      # Update rust and record output
-      - name: Update cargo
-        id: update-cargo
-        run: |
-          cd contracts
-          if cargo update 2>&1 | tail -n +3 | grep Updating; then
-            echo cargo updated
-            echo "updated=true" >> $GITHUB_OUTPUT
-          else
-            echo cargo already up to date
-            echo "updated=false" >> $GITHUB_OUTPUT
-          fi
-
       # Check if rust is formatted correctly
       - name: Rust formatting check
         run: |
