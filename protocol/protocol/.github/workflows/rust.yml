@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            ../../tmp
+            ${{ github.workspace }}/tmp
           key: tmp
 
       
@@ -50,7 +50,7 @@ jobs:
       - name: tmp
         if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
         run: |
-          cd ../../
+          cd ${{ github.workspace }}/
           mkdir -p tmp
           cd tmp
           echo a > a.txt
@@ -81,7 +81,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            ../../tmp
+            ${{ github.workspace }}/tmp
           key: tmp
 
       - name: exit
@@ -98,8 +98,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            ../../.cargo
-            ../../.rustup
+            ${{ github.workspace }}/.cargo
+            ${{ github.workspace }}/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Setup rust environment
@@ -170,8 +170,8 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            ../../.cargo
-            ../../.rustup
+            ${{ github.workspace }}/.cargo
+            ${{ github.workspace }}/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       ################ BUILD
