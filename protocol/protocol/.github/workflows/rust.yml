@@ -73,7 +73,7 @@ jobs:
         id: update-cargo
         run: |
           cd contracts
-          if cargo update | grep updating; then
+          if cargo update 2>&1 | tail -n +3 | grep Updating; then
             echo cargo updated
             echo "updated=true" >> $GITHUB_OUTPUT
           else
@@ -85,12 +85,12 @@ jobs:
       - name: Print env setup status
         run: |
           echo cache hit: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
-          echo cargo updated: ${{ steps.update-cargo.outputs.upgraded }}
-          echo rust updated: ${{ steps.update-rust.outputs.upgraded }}
+          echo cargo updated: ${{ steps.update-cargo.outputs.updated }}
+          echo rust updated: ${{ steps.update-rust.outputs.updated }}
 
       # If updated OR built from scratch, clear the cache and save a new cache copy
       - name: Clear cargo env cache
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true'
         continue-on-error: true
         run: |
           # cache can only be removed via an api call
@@ -100,7 +100,7 @@ jobs:
             /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ runner.arch }}-${{ env.cargo_env_version }}
 
       - name: Save cargo env to cache
-        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true'
         uses: actions/cache/save@v3
         with:
           path: |
