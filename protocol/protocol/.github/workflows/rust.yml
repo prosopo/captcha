@@ -36,6 +36,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-cargo-env-
 
+      - name: Restore cache status
+        run: |
+          echo restored: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
+
       # If cached version of rust env not found, build it from scratch
       - name: Setup rust environment
         if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true'
