@@ -25,6 +25,8 @@ jobs:
         run: |
           pwd
           ls -la
+          ls -la contracts
+          ls -la contracts/target
           echo /home/runner
           ls -la /home/runner
 
@@ -37,10 +39,21 @@ jobs:
             /home/runner/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
+
+      - name: Restore cached cargo build
+        id: restore-cache-cargo-build
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            contracts/target
+          key: ${{ runner.os }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+
       - name: ls
         run: |
           pwd
           ls -la
+          ls -la contracts
+          ls -la contracts/target
           echo /home/runner
           ls -la /home/runner
 
