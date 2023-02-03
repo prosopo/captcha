@@ -41,6 +41,7 @@ jobs:
           echo restored: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
           echo conc: ${{ steps.restore-cache-cargo-env.conclusion }}
           echo id: ${{ steps.restore-cache-cargo-env.outputs.cache-primary-key }}
+          echo outputs: ${{ toJson(steps.restore-cache-cargo-env.outputs) }}
 
       # If cached version of rust env not found, build it from scratch
       - name: Setup rust environment
