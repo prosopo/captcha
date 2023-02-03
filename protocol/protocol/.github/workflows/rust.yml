@@ -55,15 +55,32 @@ jobs:
           rustup target add wasm32-unknown-unknown --toolchain nightly
 
       - name: Update rust
+        id: update-rust
         run: |
-          rustup update
+          if rustup update | grep updated; then
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Update cargo
+        id: update-cargo
         run: |
           cd contracts
-          cargo update
+          if cargo update | grep updating; then
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Print env setup status
+        run: |
+          echo cache hit: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
+          echo cargo updated: ${{ steps.update-cargo.outputs.upgraded }}
+          echo rust updated: ${{ steps.update-rust.outputs.upgraded }}
 
       - name: Clear cargo env cache
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
         continue-on-error: true
         run: |
           gh api \
@@ -72,6 +89,7 @@ jobs:
             /repos/${{ github.repository }}/actions/caches?key=${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Save cargo env to cache
+        if: steps.restore-cache-cargo-env.outputs.cache-hit != 'true' || steps.update-cargo.outputs.upgraded == 'true' || steps.update-rust.outputs.upgraded == 'true'
         uses: actions/cache/save@v3
         with:
           path: |
