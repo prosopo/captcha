@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            /home/runner/work/tmp
+            /home/runner/tmp
           key: tmp
 
       
@@ -50,10 +50,10 @@ jobs:
       - name: tmp
         if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p /home/runner/work/tmp
-          echo a > /home/runner/work/tmp/a.txt
-          echo b > /home/runner/work/tmp/b.txt
-          echo c > /home/runner/work/tmp/c.txt
+          mkdir -p /home/runner/tmp
+          echo a > /home/runner/tmp/a.txt
+          echo b > /home/runner/tmp/b.txt
+          echo c > /home/runner/tmp/c.txt
           
       
       - name: ls
@@ -78,7 +78,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            /home/runner/work/tmp
+            /home/runner/tmp
           key: tmp
 
       - name: exit
@@ -95,8 +95,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            /home/runner/work/.cargo
-            /home/runner/work/.rustup
+            /home/runner/.cargo
+            /home/runner/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       - name: Setup rust environment
@@ -167,8 +167,8 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            /home/runner/work/.cargo
-            /home/runner/work/.rustup
+            /home/runner/.cargo
+            /home/runner/.rustup
           key: ${{ runner.os }}-${{ env.cargo_env_version }}
 
       ################ BUILD
