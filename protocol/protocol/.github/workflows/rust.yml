@@ -53,7 +53,15 @@ jobs:
           echo b > b.txt
           echo c > c.txt
           cd ..
+          
+      
+      - name: ls
+        run: |
+          pwd
+          echo ls -la
           ls -la
+          echo ls -la ~
+          ls -la ~
         
       - name: Clear tmp cache
         if: steps.tmp-restore-cache.outputs.cache-hit != 'true'
