@@ -72,6 +72,8 @@ jobs:
             echo rust already up to date
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
+          rustup component add rustfmt
+          echo "updated=true" >> $GITHUB_OUTPUT
 
       # Update rust and record output
       - name: Update cargo
