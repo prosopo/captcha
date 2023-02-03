@@ -129,7 +129,7 @@ jobs:
           path: |
             contracts/target
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ job.container.id }}
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       # Clear out the old cache, as we've replaced it with a newer build
       - name: Clear cargo build cache
@@ -152,7 +152,7 @@ jobs:
             /home/runner/.rustup
           # the key is the OS name + architecture + tag, isolating each rust env to a specific OS. This cached copy can be used in any workflow using the same OS, though
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same data without mutating them, as other workflows may be using them
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-env-${{ job.container.id }}
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-env-${{ github.run_id }}-${{ github.run_attempt }}
 
       # If updated OR built from scratch, clear the (now old) original cache
       - name: Clear cargo env cache
