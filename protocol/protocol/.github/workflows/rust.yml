@@ -22,13 +22,14 @@ jobs:
           rm -rf /home/runner/.cargo /home/runner/.rustup
 
       - name: ls
+        continue-on-error: true
         run: |
           pwd
           ls -la
-          ls -la contracts
-          ls -la contracts/target
           echo /home/runner
           ls -la /home/runner
+          ls -la contracts
+          ls -la contracts/target
 
       - name: Restore cached cargo-env
         id: restore-cache-cargo-env
@@ -49,13 +50,14 @@ jobs:
           key: ${{ runner.os }}-${{ env.cargo_build_version }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
 
       - name: ls
+        continue-on-error: true
         run: |
           pwd
           ls -la
-          ls -la contracts
-          ls -la contracts/target
           echo /home/runner
           ls -la /home/runner
+          ls -la contracts
+          ls -la contracts/target
 
       - name: exit
         run: |
