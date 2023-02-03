@@ -41,8 +41,6 @@ jobs:
           echo restored: ${{ steps.restore-cache-cargo-env.outputs.cache-hit }}
           echo conc: ${{ steps.restore-cache-cargo-env.conclusion }}
           echo id: ${{ steps.restore-cache-cargo-env.outputs.cache-primary-key }}
-          echo outputs: ${{ toJson(steps.restore-cache-cargo-env.outputs) }}
-
 
       - name: Cleanup
         run: |
