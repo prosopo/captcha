@@ -61,7 +61,7 @@ jobs:
 
       # If cached version of rust env not found, build it from scratch
       - name: Setup rust environment
-        if: steps.detect-cache-cargo-env.cache_hit != 'true'
+        if: steps.detect-cache-cargo-env.outputs.cache_hit != 'true'
         run: |
           echo remove previous rustup / cargo
           ls -la /home/runner
