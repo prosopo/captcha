@@ -16,6 +16,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      - name: ls
+        run: |
+          ls -la
+          ls -la ~
+        
+      
+      # Restore rust env (i.e. ~/.rustup and ~/.cargo) from cache
+      - name: Restore cached cargo env
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            /home/runner/.cargo
+            /home/runner/.rustup
+            /home/runner/.cargo_env_cache_marker
+          # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
+          # "abcdef123" could be anything, it is a random string to differentiate cache usages
+          # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
+          # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
+          # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-env
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-cargo-env-
+
+      - name: ls
+        run: |
+          ls -la
+          ls -la ~
+
+      - name: exit
+        run: exit 1
+
       # Checkout the repo
       - uses: actions/checkout@v3
 
