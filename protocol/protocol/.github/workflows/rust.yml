@@ -149,6 +149,7 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Install cache cleanup extension
+        if: always()
         run: |
           gh extension install actions/gh-actions-cache
 
