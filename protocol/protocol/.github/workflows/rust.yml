@@ -16,30 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-
-      - name: tmp
-        run: |
-          set +e; gh extension install actions/gh-actions-cache; set -e
-
-          REPO=${{ github.repository }}
-
-          echo "Fetching list of cache key"
-          # get all but the most recent cache
-          echo envs
-          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env-
-          echo builds
-          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build-
-          echo envs
-          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env- | cut -f 1 
-          echo builds
-          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build- | cut -f 1 
-          echo envs
-          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env- | cut -f 1 | tail -n +2
-          echo builds
-          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build- | cut -f 1 | tail -n +2
-
-      - run: exit 1
-
       # Checkout the repo
       - uses: actions/checkout@v3
 
@@ -209,7 +185,7 @@ jobs:
 
           echo "Fetching list of cache key"
           # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 )
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +2 )
 
           echo caches to be removed:
           echo ${cacheKeysForPR}
@@ -219,7 +195,7 @@ jobs:
           set +e
           for cacheKey in $cacheKeysForPR
           do
-              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+              gh actions-cache delete $cacheKey -R $REPO --confirm
           done
 
       # If updated or built from scratch, save the env in a new cache
@@ -244,7 +220,7 @@ jobs:
 
           echo "Fetching list of cache key"
           # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env- | cut -f 1 )
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env- | cut -f 1 | tail -n +2 )
 
           echo caches to be removed:
           echo ${cacheKeysForPR}
@@ -254,5 +230,5 @@ jobs:
           set +e
           for cacheKey in $cacheKeysForPR
           do
-              gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
+              gh actions-cache delete $cacheKey -R $REPO --confirm
           done
