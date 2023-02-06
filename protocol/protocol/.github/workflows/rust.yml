@@ -19,6 +19,11 @@ jobs:
       # Checkout the repo
       - uses: actions/checkout@v3
 
+      - name: ls
+        run: |
+          ls -la
+          ls -la ~
+
       # Restore rust env (i.e. ~/.rustup and ~/.cargo) from cache
       - name: Restore cached cargo env
         id: restore-cache-cargo-env
@@ -36,6 +41,11 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-env
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-cargo-env-
+
+      - name: ls
+        run: |
+          ls -la
+          ls -la ~
 
       # when restoring from non-exact-match keys, the output for the cache action is incorrect, hence we have to detect a file in the cache instead
       - name: Detect cargo env cache status
@@ -83,6 +93,11 @@ jobs:
           # create the cache marker file to detect cache hits in the future
           touch /home/runner/.cargo_env_cache_marker
 
+      - name: ls
+        run: |
+          ls -la
+          ls -la ~
+
       # Update rust and record output
       - name: Update rust
         id: update-rust
@@ -122,6 +137,11 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
             key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
+
+      - name: ls
+        run: |
+          ls -la
+          ls -la ~
 
       # Do the build
       - name: Build
