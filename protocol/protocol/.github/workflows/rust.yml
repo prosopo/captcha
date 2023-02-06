@@ -20,13 +20,14 @@ jobs:
       - uses: actions/checkout@v3
 
       # Restore rust env (i.e. ~/.rustup and ~/.cargo) from cache
-      - name: Restore cached cargo-env
+      - name: Restore cached cargo env
         id: restore-cache-cargo-env
         uses: actions/cache/restore@v3
         with:
           path: |
             /home/runner/.cargo
             /home/runner/.rustup
+            /home/runner/.cargo_env_cache_marker
           # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
           # "abcdef123" could be anything, it is a random string to differentiate cache usages
           # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
@@ -36,9 +37,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-cargo-env-
 
+      # when restoring from non-exact-match keys, the output for the cache action is incorrect, hence we have to detect a file in the cache instead
+      - name: Detect cargo env cache status
+        id: detect-cache-cargo-env
+        run: |
+          if [[ -f /home/runner/.cargo/cache_marker ]]; then
+            echo "cache hit"
+            echo "cache_hit=true" >> $GITHUB_OUTPUT
+          else
+            echo "cache miss"
+            echo "cache_hit=false" >> $GITHUB_OUTPUT
+          fi
+
       # If cached version of rust env not found, build it from scratch
       - name: Setup rust environment
-        if: steps.restore-cache-cargo-env.conclusion != 'success'
+        if: steps.detect-cache-cargo-env.cache_hit != 'true'
         run: |
           echo remove previous rustup / cargo
           ls -la /home/runner
@@ -66,6 +79,9 @@ jobs:
 
           echo set target platform
           rustup target add wasm32-unknown-unknown --toolchain nightly
+
+          # create the cache marker file to detect cache hits in the future
+          touch /home/runner/.cargo_env_cache_marker
 
       # Update rust and record output
       - name: Update rust
@@ -124,6 +140,7 @@ jobs:
       # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
       - name: Save cargo build to cache
         uses: actions/cache/save@v3
+        # save cache if build work has been done, independent of whether it failed/succeeded
         if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
         with:
           path: |
@@ -151,18 +168,19 @@ jobs:
 
       # If updated or built from scratch, save the env in a new cache
       - name: Save cargo env to cache
-        if: always() && (${{ steps.restore-cache-cargo-env.conclusion != 'success' }} || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
+        if: always() && (steps.detect-cache-cargo-env.cache_hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
         uses: actions/cache/save@v3
         with:
           path: |
             /home/runner/.cargo
             /home/runner/.rustup
+            /home/runner/.cargo_env_cache_marker
           # the key is the OS name + architecture + tag, isolating each rust env to a specific OS. This cached copy can be used in any workflow using the same OS, though
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same data without mutating them, as other workflows may be using them
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-env-${{ github.run_id }}-${{ github.run_attempt }}
       
       - name: Cleanup stale cargo env caches
-        if: always() && (${{ steps.restore-cache-cargo-env.conclusion != 'success' }} || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
+        if: always() && (steps.detect-cache-cargo-env.cache_hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
         run: |
           gh extension install actions/gh-actions-cache
           
