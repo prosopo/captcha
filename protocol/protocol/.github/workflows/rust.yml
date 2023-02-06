@@ -29,6 +29,14 @@ jobs:
           gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env-
           echo builds
           gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build-
+          echo envs
+          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env- | cut -f 1 
+          echo builds
+          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build- | cut -f 1 
+          echo envs
+          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env- | cut -f 1 | tail -n +2
+          echo builds
+          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build- | cut -f 1 | tail -n +2
 
       - run: exit 1
 
