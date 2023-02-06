@@ -148,11 +148,13 @@ jobs:
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
+      - name: Install cache cleanup extension
+        run: |
+          gh extension install actions/gh-actions-cache
+
       - name: Cleanup stale cargo build caches
         if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
         run: |
-          gh extension install actions/gh-actions-cache
-          
           REPO=${{ github.repository }}
 
           echo "Fetching list of cache key"
@@ -182,8 +184,6 @@ jobs:
       - name: Cleanup stale cargo env caches
         if: always() && (steps.detect-cache-cargo-env.cache_hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
         run: |
-          gh extension install actions/gh-actions-cache
-          
           REPO=${{ github.repository }}
 
           echo "Fetching list of cache key"
