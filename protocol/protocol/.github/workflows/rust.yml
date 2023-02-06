@@ -16,6 +16,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+
+      - name: tmp
+        run: |
+          set +e; gh extension install actions/gh-actions-cache; set -e
+
+          REPO=${{ github.repository }}
+
+          echo "Fetching list of cache key"
+          # get all but the most recent cache
+          echo envs
+          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env-
+          echo builds
+          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build-
+
+      - run: exit 1
+
       # Checkout the repo
       - uses: actions/checkout@v3
 
