@@ -160,7 +160,7 @@ jobs:
       - name: Print conditions
         if: always()
         run: |
-          echo detected cached cargo env: ${{ steps.detect-cache-cargo-env.cache_hit }}
+          echo detected cached cargo env: ${{ steps.detect-cache-cargo-env.outputs.cache_hit }}
           echo updated rust: ${{ steps.update-rust.outputs.updated }}
           echo build: ${{ steps.build.conclusion }}
           echo test: ${{ steps.test.conclusion }}
@@ -186,6 +186,10 @@ jobs:
           echo "Fetching list of cache key"
           # get all but the most recent cache
           cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 )
+
+          echo caches to be removed:
+          echo ${cacheKeysForPR}
+
           # delete the stale caches
           ## Setting this to not fail the workflow while deleting cache keys. 
           set +e
@@ -208,7 +212,7 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-env-${{ github.run_id }}-${{ github.run_attempt }}
       
       - name: Cleanup stale cargo env caches
-        if: always() && (steps.detect-cache-cargo-env.cache_hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
+        if: always() && (steps.detect-cache-cargo-env.outputs.cache_hit == 'false' || steps.update-rust.outputs.updated == 'true')
         run: |
           set +e; gh extension install actions/gh-actions-cache; set -e
 
@@ -217,6 +221,10 @@ jobs:
           echo "Fetching list of cache key"
           # get all but the most recent cache
           cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env- | cut -f 1 )
+
+          echo caches to be removed:
+          echo ${cacheKeysForPR}
+
           # delete the stale caches
           ## Setting this to not fail the workflow while deleting cache keys. 
           set +e
