@@ -189,6 +189,13 @@ jobs:
               gh actions-cache delete $cacheKey -R $REPO -B $BRANCH --confirm
           done
 
+      - name: check
+        if: always()
+        run: |
+          echo detect: ${{ steps.detect-cache-cargo-env.cache_hit }}
+          echo cargo: ${{ steps.update-cargo.outputs.updated }}
+          echo rust: ${{ steps.update-rust.outputs.updated }}
+
       # If updated or built from scratch, save the env in a new cache
       - name: Save cargo env to cache
         if: always() && (steps.detect-cache-cargo-env.cache_hit != 'true' || steps.update-cargo.outputs.updated == 'true' || steps.update-rust.outputs.updated == 'true')
