@@ -41,7 +41,7 @@ jobs:
       - name: Detect cargo env cache status
         id: detect-cache-cargo-env
         run: |
-          if [[ -f /home/runner/.cargo/cache_marker ]]; then
+          if [[ -f /home/runner/.cargo_env_cache_marker ]]; then
             echo "cache hit"
             echo "cache_hit=true" >> $GITHUB_OUTPUT
           else
