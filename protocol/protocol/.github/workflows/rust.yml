@@ -157,6 +157,14 @@ jobs:
           RUST_BACKTRACE=1 cargo test --no-default-features --features std --release -- --nocapture
           exit $?
 
+      - name: Print conditions
+        if: always()
+        run: |
+          echo detected cached cargo env: ${{ steps.detect-cache-cargo-env.cache_hit }}
+          echo updated rust: ${{ steps.update-rust.outputs.updated }}
+          echo build: ${{ steps.build.conclusion }}
+          echo test: ${{ steps.test.conclusion }}
+
       # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
       - name: Save cargo build to cache
         uses: actions/cache/save@v3
