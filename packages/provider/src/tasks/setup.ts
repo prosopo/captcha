@@ -14,7 +14,7 @@
 import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
-import { DefinitionKeys, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { dispatchErrorHandler, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import { hexHash } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
@@ -23,6 +23,8 @@ import { createType } from '@polkadot/types'
 import { ProsopoEnvironment } from '../types/index'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN } from '@polkadot/util'
+import { ISubmittableResult } from '@polkadot/types/types'
+import { getOneUnit } from '../util'
 
 export async function generateMnemonic(keyring?: Keyring): Promise<[string, string]> {
     if (!keyring) {
@@ -43,7 +45,7 @@ export async function displayBalance(env, address, who) {
 
 const mnemonic = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
 let current = -1
-const MAX_ACCOUNT_FUND = 10 // 10 UNIT
+const MAX_ACCOUNT_FUND = 1000 // 1000 UNIT
 
 function getNextMnemonic() {
     current = (current + 1) % mnemonic.length
@@ -60,27 +62,71 @@ export async function sendFunds(
     await env.api.isReady
     const mnemonic = getNextMnemonic()
     const pair = env.keyring.addFromMnemonic(mnemonic)
+    const nonce = await env.api.rpc.system.accountNextIndex(pair.address)
     const {
-        // @ts-ignore
         data: { free: previousFree },
     } = await env.contractInterface.api.query.system.account(pair.address)
-    if (previousFree.lt(amount)) {
-        throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', undefined, {
+    if (previousFree.lt(new BN(amount.toString()))) {
+        throw new ProsopoEnvError('DEVELOPER.BALANCE_TOO_LOW', undefined, undefined, {
             mnemonic,
-            previousFree,
+            previousFree: previousFree.toString(),
+            amount: amount.toString(),
         })
     }
 
     const api = env.contractInterface.api
+    const unit = getOneUnit(env.api)
+    env.logger.info(
+        'Sending funds from',
+        pair.address,
+        'to',
+        address,
+        'Amount:',
+        new BN(amount.toString()).div(unit).toString(),
+        'UNIT. Free balance:',
+        previousFree.div(unit).toString(),
+        'UNIT'
+    )
+    // eslint-disable-next-line no-async-promise-executor
+    const result: Promise<ISubmittableResult> = new Promise(async (resolve, reject) => {
+        const unsub = await api.tx.balances
+            .transfer(address, amount)
+            .signAndSend(pair, { nonce }, (result: ISubmittableResult) => {
+                if (result.status.isInBlock || result.status.isFinalized) {
+                    result.events
+                        .filter(({ event: { section } }: any): boolean => section === 'system')
+                        .forEach((event): void => {
+                            const {
+                                event: { method },
+                            } = event
 
-    await api.tx.balances.transfer(address, amount).signAndSend(pair)
+                            if (method === 'ExtrinsicFailed') {
+                                unsub()
+                                reject(dispatchErrorHandler(api.registry, event))
+                            }
+                        })
+                    unsub()
+                    resolve(result)
+                } else if (result.isError) {
+                    unsub()
+                    reject(result)
+                }
+            })
+    })
+    await result
+        .then((result: ISubmittableResult) => {
+            env.logger.info(who, 'sent amount', amount.toString(), 'at tx hash ', result.status.asInBlock.toHex())
+        })
+        .catch((e) => {
+            throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', undefined, undefined, { e })
+        })
 }
 
 export async function setupProvider(env, provider: IProviderAccount): Promise<Hash> {
     await env.changeSigner(provider.mnemonic)
     const logger = env.logger
     const tasks = new Tasks(env)
-    const payeeKey: DefinitionKeys = 'ProsopoPayee'
+    const payeeKey = 'ProsopoPayee'
     logger.info('   - providerRegister')
     await tasks.contractApi.providerRegister(
         stringToHexPadded(provider.serviceOrigin),
@@ -125,9 +171,7 @@ export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
  * @param stakeMultiplier
  */
 export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN, stakeMultiplier?: number): BN {
-    const chainDecimals = new BN(env.api.registry.chainDecimals[0])
-
-    const unit = new BN(10 ** chainDecimals.toNumber())
+    const unit = getOneUnit(env.api)
 
     // We want to give each provider 100 * the required stake or 1 UNIT, whichever is greater, so that gas fees can be
     // refunded to the Dapp User from within the contract
@@ -138,7 +182,7 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
 
     if (stake100.lt(maxStake)) {
         env.logger.debug('Setting stake amount to', stake100.div(unit).toNumber(), 'UNIT')
-        return providerStakeDefault.mul(stake100)
+        return stake100
     }
     env.logger.debug('Setting stake amount to', maxStake.div(unit).toNumber(), 'UNIT')
     return maxStake
@@ -150,11 +194,14 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
  * @param stakeAmount
  */
 export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
-    const chainDecimals = new BN(env.api.registry.chainDecimals[0])
+    const unit = getOneUnit(env.api)
+    env.logger.info('Stake amount', stakeAmount.div(unit).toString(), 'UNIT')
+    const sendAmount = BN.max(
+        new BN(stakeAmount).muln(2).add(unit.muln(MAX_ACCOUNT_FUND)),
+        env.api.consts.balances.existentialDeposit.muln(100)
+    )
 
-    const unit = new BN(10 ** chainDecimals.toNumber())
-    const sendAmount = new BN(stakeAmount).muln(2).add(unit.muln(MAX_ACCOUNT_FUND))
     // Should result in each account receiving a minimum of MAX_ACCOUNT_FUND UNIT
-    env.logger.debug('Setting send amount to', sendAmount.div(unit).toString(), 'UNIT')
+    env.logger.info('Setting send amount to', sendAmount.div(unit).toString(), 'UNIT')
     return sendAmount
 }

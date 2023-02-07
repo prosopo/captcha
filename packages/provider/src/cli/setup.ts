@@ -16,9 +16,8 @@
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types'
 import fse from 'fs-extra'
-import path from 'path'
 import { Environment, getEnvFile, loadEnv } from '../env'
-import { generateMnemonic, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
+import { generateMnemonic, getSendAmount, getStakeAmount, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
 import { ProsopoEnvError } from '@prosopo/common'
 
@@ -44,14 +43,6 @@ const defaultDapp: IDappAccount = {
 }
 
 const hasProviderAccount = defaultProvider.mnemonic && defaultProvider.address
-
-async function copyArtifacts() {
-    // const argv = yargs(hideBin(process.argv)).argv;
-    const integrationPath = '../../'
-    const artifactsPath = path.join(integrationPath, 'protocol/artifacts')
-
-    await fse.copy(path.join(artifactsPath, 'prosopo.json'), '../contract/src/abi/prosopo.json', { overwrite: true })
-}
 
 async function copyEnvFile() {
     const tplEnvFile = getEnvFile('env')
@@ -84,7 +75,13 @@ async function registerProvider(env: Environment, account: IProviderAccount) {
 
     account.address = providerKeyringPair.address
 
-    await sendFunds(env, account.address, 'Provider', 100000000000000000n)
+    const stakeAmount = await env.contractInterface.getProviderStakeDefault()
+
+    // use the minimum stake amount from the contract to create a reasonable stake amount
+    account.stake = getStakeAmount(env, stakeAmount)
+
+    // send enough funds to cover the stake amount and more
+    await sendFunds(env, account.address, 'Provider', getSendAmount(env, stakeAmount))
 
     await setupProvider(env, account)
 }
@@ -103,11 +100,6 @@ async function setup() {
     console.log(`Address: ${address}`)
     console.log(`Mnemonic: ${mnemonic}`)
 
-    if (process.env.NODE_ENV === 'development') {
-        console.log('Copying contract artifacts...')
-        await copyArtifacts()
-    }
-
     console.log('Writing .env file...')
     await copyEnvFile()
 
@@ -123,7 +115,7 @@ async function setup() {
 
     defaultProvider.mnemonic = mnemonic
 
-    env.logger.info('Registering provider...')
+    env.logger.info(`Registering provider... ${defaultProvider.address}`)
     await registerProvider(env, defaultProvider)
 
     defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS

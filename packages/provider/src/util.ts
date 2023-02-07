@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
-import { hexToU8a, isHex } from '@polkadot/util'
+import { BN, hexToU8a, isHex } from '@polkadot/util'
 import fs, { WriteStream, createWriteStream } from 'fs'
 import { Captcha } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
 import { CaptchaSolution, arrayJoin } from '@prosopo/datasets'
 import pl from 'nodejs-polars'
 import consola from 'consola'
+import { ApiPromise } from '@polkadot/api'
 
 export function encodeStringAddress(address: string) {
     try {
@@ -169,4 +170,10 @@ export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], lo
         }
         return captcha
     })
+}
+
+export function getOneUnit(api: ApiPromise): BN {
+    const chainDecimals = new BN(api.registry.chainDecimals[0])
+
+    return new BN(10 ** chainDecimals.toNumber())
 }

@@ -1,0 +1,116 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [ develop, main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  ENVIRONMENT: development
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check github refname
+        run: |
+          echo ${{ github.ref }}
+          echo ${{ github.ref_name }}
+          echo ${{ github.head_ref }}
+          echo ${{ github.base_ref }}
+
+      - name: Remove stopped containers
+        run: docker rm $(docker ps -a -q) || true
+
+      - name: Clone workspaces
+        uses: actions/checkout@v3
+        with:
+          repository: prosopo/workspaces
+          path: workspaces
+          submodules: recursive
+          ref: ${{ github.head_ref }}
+
+      - name: Clone scripts repository
+        uses: actions/checkout@v3
+        with:
+          repository: prosopo/scripts
+          path: scripts
+          ref: upgrade_deps
+
+      - run: mkdir -p ~/image-cache
+
+      - id: image-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/image-cache
+          key: image-cache-docker-${{ runner.os }}
+
+      - if: steps.image-cache.outputs.cache-hit != 'true'
+        run: |
+          docker pull prosopo/substrate:demo-v1.0.4
+          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:demo-v1.0.4
+          docker pull mongo:5.0.4
+          docker save -o ~/image-cache/mongo.tar mongo:5.0.4
+
+      - if: steps.image-cache.outputs.cache-hit == 'true'
+        run: |
+          ls ~/image-cache
+          docker load -i ~/image-cache/prosopo.tar
+          docker load -i ~/image-cache/mongo.tar
+
+      - name: Start the docker images
+        run: |
+          cd scripts
+          docker compose --file ./docker/docker-compose.development.yml up -d
+
+      - name: Checkout correct branches
+        run: |
+          cd workspaces
+          git checkout ${{ github.head_ref }}
+          git submodule update --init --recursive
+          git submodule foreach 'echo "pulling..." && git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }}'
+
+      - id: node-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-cache-${{ runner.os }}-
+
+      - if: ${{ steps.node-cache.outputs.cache-hit == 'true' }}
+        run: |
+          cd ~/.npm
+          ls
+
+      - name: Install dependencies
+        run: |
+          cd workspaces
+          npm install
+
+      - name: Build provider and dependencies
+        run: |
+          cd workspaces
+          npm run build+deps provider
+
+      - name: Setup the environment and run the unit tests
+        run: |
+          cd workspaces
+          git status | head -n 1
+          NODE_ENV=$ENVIRONMENT npm run setup
+          cd packages/provider
+          git status | head -n 1
+          docker container ls
+          cat .env.development
+          NODE_ENV=$ENVIRONMENT npm run test
+
+      - name: Remove the docker containers
+        run: |
+          cd scripts
+          docker compose --file ./docker/docker-compose.development.yml down
+
