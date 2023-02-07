@@ -17,8 +17,26 @@
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
+pub mod print {
+    /// Macro to print debug info
+    /// embeds the function name in the output
+    macro_rules! error {
+        ($err:expr) => {
+            // debug!("'{}' error in function `{}` at block {} with caller {}", err, func_name, self.env().block_number(), self.env().caller());
+            ink::env::debug_println!("{} err {}", $err, function_name!());
+            // Err(err)
+        };
+    }
+
+    pub(crate) use error;
+}
+
+#[allow(unused_macros)]
+#[debug_macro::named_functions]
 #[ink::contract]
 pub mod prosopo {
+
+    use crate::print::error;
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
@@ -1295,6 +1313,13 @@ pub mod prosopo {
         pub fn get_random_number_caller(&self, len: u128) -> u128 {
             self.get_random_number(len, self.env().caller())
         }
+
+        #[ink(message)]
+        pub fn abc(&self) -> u128 {
+            error!(3);
+            1
+        }
+
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -1331,6 +1356,14 @@ pub mod prosopo {
         type Event = <Prosopo as ::ink::reflect::ContractEventBase>::Type;
 
         const STAKE_DEFAULT: u128 = 1000000000000;
+
+        #[ink::test]
+        fn test_tmp() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            error!(3);
+            assert!(false);
+        }
 
         /// We test if the default constructor does its job.
         #[ink::test]
