@@ -40,7 +40,7 @@ jobs:
         with:
           repository: prosopo/scripts
           path: scripts
-          ref: upgrade_deps
+          ref: ${{ github.base_ref }}
 
       - run: mkdir -p ~/image-cache
 
@@ -52,8 +52,8 @@ jobs:
 
       - if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
-          docker pull prosopo/substrate:demo-v1.0.4
-          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:demo-v1.0.4
+          docker pull prosopo/substrate:demo-v1.0.5
+          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:demo-v1.0.5
           docker pull mongo:5.0.4
           docker save -o ~/image-cache/mongo.tar mongo:5.0.4
 
