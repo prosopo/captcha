@@ -17,7 +17,7 @@ import { AxiosError } from 'axios'
 
 export class ProsopoApiError extends Error {
     constructor(error: AxiosError, context?: string, ...params: any[]) {
-        super(error.message)
+        super(error ? error.message : 'Unknown Error')
 
         this.name = (context && `${ProsopoApiError.name}@${context}`) || ProsopoApiError.name
 

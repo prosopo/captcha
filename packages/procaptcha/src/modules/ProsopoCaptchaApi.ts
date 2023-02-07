@@ -61,12 +61,13 @@ export class ProsopoCaptchaApi {
     }
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
-        const captchaChallenge: GetCaptchaResponse = await this.providerApi.getCaptchaChallenge(
-            this.userAccount,
-            this.provider
-        )
-        this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
-        return captchaChallenge
+        try {
+            const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
+            this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
+            return captchaChallenge
+        } catch (e) {
+            throw new ProsopoEnvError(e)
+        }
     }
 
     public verifyCaptchaChallengeContent(provider: ProsopoRandomProvider, captchaChallenge: GetCaptchaResponse): void {
@@ -118,7 +119,8 @@ export class ProsopoCaptchaApi {
                     this.dappAccount,
                     datasetId as string,
                     commitmentId,
-                    this.provider.providerId.toString()
+                    this.provider.providerId.toString(),
+                    this.userAccount
                 )
             } catch (err) {
                 throw new ProsopoEnvError(err)
