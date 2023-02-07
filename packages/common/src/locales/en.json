@@ -108,6 +108,7 @@
         "CREATE_ACCOUNT_FAILED": "Could not create an account!",
         "CREATE_ACCOUNT_FAILED_OUT_OF_FUNDS": "Could not create an account as there are no funds. Restart the substrate node.",
         "NO_MOCK_ENV": "MockEnvironment not set up",
-        "ACCOUNT_TYPE_MISSING": "{{accountType}} not created by databasePopulator"
+        "ACCOUNT_TYPE_MISSING": "{{accountType}} not created by databasePopulator",
+        "FUNDING_FAILED": "Funding failed"
     }
 }
