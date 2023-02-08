@@ -48,7 +48,7 @@ jobs:
         with:
           repository: prosopo/scripts
           path: scripts
-          ssh-key: ${{ secrets.SSH_KEY }}
+          key: ${{ secrets.SSH_KEY }}
 
       - name: Checkout correct scripts branch
         run: |
