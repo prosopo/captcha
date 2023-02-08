@@ -28,9 +28,6 @@ jobs:
       - name: Remove stopped containers
         run: docker rm $(docker ps -a -q) || true
 
-      - name: Make sure ssh key is set
-        run : cat ${{ secrets.SSH_KEY }}
-
       - name: Clone workspaces
         uses: actions/checkout@v3
         with:
@@ -38,6 +35,7 @@ jobs:
           path: workspaces
           submodules: recursive
           ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-strict: false
 
       - name: Checkout correct workspaces branch
         run: |
@@ -52,6 +50,7 @@ jobs:
           repository: prosopo/scripts
           path: scripts
           ssh-key: ${{ secrets.SSH_KEY }}
+          ssh-strict: false
 
       - name: Checkout correct scripts branch
         run: |
