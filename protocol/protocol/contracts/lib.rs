@@ -17,13 +17,38 @@
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
+// macro_rules! outer {
+//     ($self:ident, $f:ident) => {
+//         let v = $self.env().$f();
+//         ink::env::debug_println!("outer {}", v);
+//     };
+// }
+
 pub mod print {
+
+
     /// Macro to print debug info
     /// embeds the function name in the output
     macro_rules! error {
         ($err:expr) => {
-            // debug!("'{}' error in function `{}` at block {} with caller {}", err, func_name, self.env().block_number(), self.env().caller());
-            ink::env::debug_println!("{} err {}", $err, function_name!());
+
+            use_self!(_self);
+            ink::env::debug_println!("bn {} {}", _self.env().block_number(), function_name!());
+            // let block_number = _self.unwrap_or_default(0).env().block_number();
+            // println!("hello {}", res);
+            // println!("hello {} {} {}", $err, function_name!(), get_self!().unwrap().env().block_number());
+
+            // with_self!(outer, block_number);
+
+            // let _self = get_self!().unwrap();
+            // let block_number = _self.env().block_number();
+            // ink::env::debug_println!("'{}' error in function `{}` at block {}", $err, function_name!(), block_number);
+
+            // ink::env::debug_println!("'{}' error in function `{}` at block {} with caller {}", $err, function_name!(), self.env().block_number(), self.env().caller());
+            
+            // let caller = _self.env().caller();
+            // let func_name = function_name!();
+            // ink::env::debug_println!("msg {} {} {}", $err, func_name, block_number);
             // Err(err)
         };
     }
@@ -32,7 +57,8 @@ pub mod print {
 }
 
 #[allow(unused_macros)]
-#[debug_macro::named_functions]
+#[named_functions_macro::named_functions]
+#[inject_self_macro::inject_self]
 #[ink::contract]
 pub mod prosopo {
 
@@ -369,6 +395,7 @@ pub mod prosopo {
     }
 
     impl Prosopo {
+
         /// Constructor
         #[ink(constructor, payable)]
         pub fn default(
@@ -1317,6 +1344,9 @@ pub mod prosopo {
         #[ink(message)]
         pub fn abc(&self) -> u128 {
             error!(3);
+            // let a: [u8;3] = [0;3];
+            // let b: [u8;3] = [0;3];
+            // let c: [u8;6] = concat_u8(&a, &b);
             1
         }
 
@@ -1357,13 +1387,13 @@ pub mod prosopo {
 
         const STAKE_DEFAULT: u128 = 1000000000000;
 
-        #[ink::test]
-        fn test_tmp() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
-            error!(3);
-            assert!(false);
-        }
+        // #[ink::test]
+        // fn test_tmp() {
+        //     let operator_account = AccountId::from([0x1; 32]);
+        //     let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+        //     crate::print::error!(3);
+        //     assert!(false);
+        // }
 
         /// We test if the default constructor does its job.
         #[ink::test]
@@ -2290,4 +2320,5 @@ pub mod prosopo {
             assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
         }
     }
+
 }

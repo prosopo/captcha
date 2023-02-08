@@ -13,9 +13,13 @@ rand_chacha = { version = "0.3.1", default-features = false }
 # custom prosopo storage
 prosopo_storage_derive = { version = "3.3.0", path = "crates/storage/derive", default-features = false }
 
-[dependencies.debug_macro]
+[dependencies.inject_self_macro]
 version = "0.3.0"
-path = "debug_macro"
+path = "inject_self_macro"
+
+[dependencies.named_functions_macro]
+version = "0.3.0"
+path = "named_functions_macro"
 
 [lib]
 name = "prosopo"
