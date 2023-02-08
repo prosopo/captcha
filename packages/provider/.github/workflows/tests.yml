@@ -28,6 +28,9 @@ jobs:
       - name: Remove stopped containers
         run: docker rm $(docker ps -a -q) || true
 
+      - name: Make sure ssh key is set
+        run : echo ${{ secrets.SSH_KEY }}
+
       - name: Clone workspaces
         uses: actions/checkout@v3
         with:
