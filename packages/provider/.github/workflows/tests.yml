@@ -34,6 +34,7 @@ jobs:
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
+          ssh-key: ${{ github.token }}
 
       - name: Checkout correct workspaces branch
         run: |
@@ -47,6 +48,7 @@ jobs:
         with:
           repository: prosopo/scripts
           path: scripts
+          ssh-key: ${{ github.token }}
 
       - name: Checkout correct scripts branch
         run: |
@@ -83,8 +85,6 @@ jobs:
 
 
       - name: Checkout correct submodule branches
-        with:
-          key: ${{ github.token }}
         run: |
           cd workspaces
           git config --global url."https://github.com/".insteadOf ssh://git@github.com/
