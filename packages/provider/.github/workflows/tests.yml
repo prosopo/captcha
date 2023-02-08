@@ -37,6 +37,7 @@ jobs:
       - name: Checkout correct workspaces branch
         run: |
           cd workspaces
+          git fetch
           git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
           git pull
 
@@ -49,6 +50,7 @@ jobs:
       - name: Checkout correct scripts branch
         run: |
           cd scripts
+          git fetch
           git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
           git pull
 
