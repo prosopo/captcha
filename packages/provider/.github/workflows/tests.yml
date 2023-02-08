@@ -80,10 +80,9 @@ jobs:
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
 
-      - name: Checkout correct branches
+      - name: Checkout correct submodule branches
         run: |
           cd workspaces
-          git checkout ${{ github.head_ref }}
           git submodule update --init --recursive
           git submodule foreach 'echo "pulling..." && git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }}'
 
