@@ -24,37 +24,28 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 //     };
 // }
 
-pub mod print {
+pub mod helper {
 
-
-    /// Macro to print debug info
-    /// embeds the function name in the output
+    /// Macro to print an error in the debug buffer
+    /// embeds the function name in the output along with the block number and caller
     macro_rules! error {
         ($err:expr) => {
-
+            // get the self variable
             use_self!(_self);
-            ink::env::debug_println!("bn {} {}", _self.env().block_number(), function_name!());
-            // let block_number = _self.unwrap_or_default(0).env().block_number();
-            // println!("hello {}", res);
-            // println!("hello {} {} {}", $err, function_name!(), get_self!().unwrap().env().block_number());
-
-            // with_self!(outer, block_number);
-
-            // let _self = get_self!().unwrap();
-            // let block_number = _self.env().block_number();
-            // ink::env::debug_println!("'{}' error in function `{}` at block {}", $err, function_name!(), block_number);
-
-            // ink::env::debug_println!("'{}' error in function `{}` at block {} with caller {}", $err, function_name!(), self.env().block_number(), self.env().caller());
-            
-            // let caller = _self.env().caller();
-            // let func_name = function_name!();
-            // ink::env::debug_println!("msg {} {} {}", $err, func_name, block_number);
-            // Err(err)
+            // print the error + corresponding info
+            ink::env::debug_println!("ERROR: '{}' in function `{}` at block {} with caller {:?}", $err, function_name!(), _self.env().block_number(), _self.env().caller());
+            4
         };
     }
 
     pub(crate) use error;
 }
+
+// /// Wrap an error in a Result whilst printing debug info.
+// fn error<T,E>(err: E) -> Result<T, E> {
+//     // print_error!(err);
+//     Err(err)
+// }
 
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions]
@@ -62,7 +53,7 @@ pub mod print {
 #[ink::contract]
 pub mod prosopo {
 
-    use crate::print::error;
+    use crate::helper::error;
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
@@ -1343,11 +1334,11 @@ pub mod prosopo {
 
         #[ink(message)]
         pub fn abc(&self) -> u128 {
-            error!(3);
+            error!(5)
             // let a: [u8;3] = [0;3];
             // let b: [u8;3] = [0;3];
             // let c: [u8;6] = concat_u8(&a, &b);
-            1
+            // 1
         }
 
     }
