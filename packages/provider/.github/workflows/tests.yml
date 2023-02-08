@@ -83,6 +83,8 @@ jobs:
 
 
       - name: Checkout correct submodule branches
+        with:
+          key: ${{ github.token }}
         run: |
           cd workspaces
           git config --global url."https://github.com/".insteadOf ssh://git@github.com/
