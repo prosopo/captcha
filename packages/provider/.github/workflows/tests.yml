@@ -34,7 +34,7 @@ jobs:
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
-          key: ${{ secrets.SSH_KEY }}
+          ssh-key: ${{ secrets.SSH_KEY }}
 
       - name: Checkout correct workspaces branch
         run: |
@@ -48,7 +48,7 @@ jobs:
         with:
           repository: prosopo/scripts
           path: scripts
-          key: ${{ secrets.SSH_KEY }}
+          ssh-key: ${{ secrets.SSH_KEY }}
 
       - name: Checkout correct scripts branch
         run: |
