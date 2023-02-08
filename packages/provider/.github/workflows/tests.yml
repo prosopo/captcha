@@ -33,14 +33,24 @@ jobs:
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
-          ref: ${{ github.head_ref }}
+
+      - name: Checkout correct workspaces branch
+        run: |
+          cd workspaces
+          git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
+          git pull
 
       - name: Clone scripts repository
         uses: actions/checkout@v3
         with:
           repository: prosopo/scripts
           path: scripts
-          ref: ${{ github.base_ref }}
+
+      - name: Checkout correct scripts branch
+        run: |
+          cd scripts
+          git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
+          git pull
 
       - run: mkdir -p ~/image-cache
 
