@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { AbiMessage, ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
 import { AbiMetadata, ContractAbi, TransactionResponse } from '../types'
-import { decodeEvents, encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
+import { decodeEvents, dispatchErrorHandler, encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise, SubmittableResult } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
@@ -25,36 +25,48 @@ import { createType } from '@polkadot/types'
 import { ApiBase, ApiDecoration } from '@polkadot/api/types'
 import { firstValueFrom, map } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
-import { BN, BN_ZERO } from '@polkadot/util'
+import { BN, BN_ONE, BN_ZERO } from '@polkadot/util'
 import { Weight } from '@polkadot/types/interfaces/runtime'
-import { DispatchError, WeightV2 } from '@polkadot/types/interfaces'
+import { WeightV2 } from '@polkadot/types/interfaces'
 import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
+import { useWeightImpl } from './useWeight'
+// 4_999_999_999_999
+const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE)
 
 export class ProsopoContractApi extends ContractPromise {
     contractName: string
     pair: KeyringPair
     options: ContractOptions
+    nonce: number
 
-    constructor(api: ApiPromise, abi: ContractAbi, address: string, pair: KeyringPair, contractName: string) {
+    constructor(
+        api: ApiPromise,
+        abi: ContractAbi,
+        address: string,
+        pair: KeyringPair,
+        contractName: string,
+        currentNonce: number
+    ) {
         super(api, abi, address)
         this.pair = pair
         this.contractName = contractName
+        this.nonce = currentNonce
     }
 
     public getContract(): ProsopoContractApi {
         return this
     }
 
-    getOptions(value?: number | BN, gasLimit?: Weight): ContractOptions {
-        const maximumBlockWeight = this.api.consts.system.blockWeights.maxBlock as unknown as WeightV2
-        const maxGas = maximumBlockWeight.refTime.toNumber() * 0.9
-        const _gasLimit: Weight | WeightV2 = gasLimit
+    getOptions(message: AbiMessage, value?: number | BN, gasLimit?: Weight | WeightV2): ContractOptions {
+        const _gasLimit: Weight | WeightV2 | undefined = gasLimit
             ? gasLimit
-            : this.api.registry.createType('WeightV2', {
-                  refTime: maxGas,
-                  proofSize: maxGas,
-              })
+            : message.isMutating
+            ? (this.api.registry.createType('WeightV2', {
+                  proofTime: new BN(1_000_000),
+                  refTime: MAX_CALL_WEIGHT,
+              }) as WeightV2)
+            : undefined
         return {
             gasLimit: _gasLimit,
             storageDepositLimit: null,
@@ -72,11 +84,27 @@ export class ProsopoContractApi extends ContractPromise {
         value?: number | BN | undefined
     ): Promise<SubmittableExtrinsic> {
         // Always query first as errors are passed back from a dry run but not from a transaction
-        const { gasRequired } = await this.contractQuery(contractMethodName, args, value)
-        const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, methodObj, args)
-        const options = this.getOptions(value, gasRequired)
-        return this.tx[contractMethodName](options, ...encodedArgs)
+        const message = this.getContractMethod(contractMethodName)
+        const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
+        const weight = await useWeightImpl(this.api as ApiPromise, new BN(this.api.consts.babe?.expectedBlockTime))
+        const extrinsic = this.query[message.method](
+            this.pair.address,
+            {
+                value,
+                gasLimit: weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight,
+                storageDepositLimit: null,
+            },
+            ...encodedArgs
+        )
+        const { gasRequired, result } = await extrinsic
+
+        if (result.isOk) {
+            const options = this.getOptions(message, value, gasRequired)
+
+            return this.tx[contractMethodName](options, ...encodedArgs)
+        } else {
+            throw new ProsopoContractError(result.asErr, this.buildExtrinsic.name)
+        }
     }
 
     /**
@@ -86,22 +114,21 @@ export class ProsopoContractApi extends ContractPromise {
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx<T>(
-        contractMethodName: string,
-        args: T[],
-        value?: number | BN | undefined
-    ): Promise<TransactionResponse> {
+    async contractTx<T>(contractMethodName: string, args: T[], value?: number | BN | undefined): Promise<any> {
         const extrinsic = await this.buildExtrinsic(contractMethodName, args, value)
-        return await new Promise((resolve, reject) => {
-            extrinsic.signAndSend(this.pair, {}, (result: SubmittableResult) => {
+        const nextNonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+        this.nonce = nextNonce ? nextNonce.toNumber() : this.nonce
+
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            const unsub = await extrinsic.signAndSend(this.pair, { nonce: this.nonce }, (result: SubmittableResult) => {
                 const actionStatus = {
                     from: this.pair.address.toString(),
-                    txHash: extrinsic.hash.toHex(),
+                    txHash: result.txHash.hash.toHex(),
                 } as Partial<TransactionResponse>
                 if (result.status.isInBlock) {
                     actionStatus.blockHash = result.status.asInBlock.toHex()
                 }
-
                 if (result.status.isFinalized || result.status.isInBlock) {
                     result.events
                         .filter(({ event: { section } }: any): boolean => section === 'system')
@@ -111,25 +138,7 @@ export class ProsopoContractApi extends ContractPromise {
                             } = event
 
                             if (method === 'ExtrinsicFailed') {
-                                const dispatchError = event.event.data[0] as DispatchError
-                                let message: string = dispatchError.type
-
-                                if (dispatchError.isModule) {
-                                    try {
-                                        const mod = dispatchError.asModule
-                                        const error = this.api.registry.findMetaError(
-                                            new Uint8Array([mod.index.toNumber(), new BN(mod.error).toNumber()])
-                                        )
-                                        message = `${error.section}.${error.name}${
-                                            Array.isArray(error.docs) ? `(${error.docs.join('')})` : error.docs || ''
-                                        }`
-                                    } catch (error) {
-                                        // swallow
-                                        console.log(error)
-                                    }
-                                }
-
-                                reject(new ProsopoContractError(message, contractMethodName))
+                                dispatchErrorHandler(this.api.registry, event)
                             } else if (method === 'ExtrinsicSuccess') {
                                 actionStatus.result = result
                                 if ('events' in result) {
@@ -137,9 +146,11 @@ export class ProsopoContractApi extends ContractPromise {
                                 }
                             }
                         })
+                    unsub()
                     resolve(actionStatus as TransactionResponse)
                 } else if (result.isError) {
-                    reject(new ProsopoContractError(result.status.type, contractMethodName))
+                    unsub()
+                    reject(new ProsopoContractError(result.status.type))
                 }
             })
         })
@@ -161,13 +172,20 @@ export class ProsopoContractApi extends ContractPromise {
     ): Promise<ContractCallOutcome> {
         const message = this.getContractMethod(contractMethodName)
         const origin = this.pair.address
-        const options = this.getOptions(value)
+
         const params: Uint8Array[] = encodeStringArgs(this.abi, message, args)
         let api: ApiBase<'promise'> | ApiDecoration<'promise'> = this.api
         if (atBlock) {
             api = atBlock ? await this.api.at(atBlock) : this.api
         }
-
+        const { gasRequired, result } = await this.query[message.method](
+            this.address,
+            { gasLimit: -1, storageDepositLimit: null, value: message.isPayable ? value : 0 },
+            ...params
+        )
+        const weight = result.isOk ? (api.registry.createType('WeightV2', gasRequired) as WeightV2) : undefined
+        const options = this.getOptions(message, value, weight)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const responseObservable = api.rx.call.contractsApi
             .call<ContractExecResult>(
@@ -176,7 +194,9 @@ export class ProsopoContractApi extends ContractPromise {
                 options.value ? options.value : BN_ZERO,
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore jiggle v1 weights, metadata points to latest
-                options.gasLimit,
+                weight ? weight.weightV2 : options.gasLimit,
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 options.storageDepositLimit,
                 message.toU8a(params)
             )
