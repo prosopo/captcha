@@ -7,6 +7,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   ENVIRONMENT: development
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   build:
@@ -79,6 +80,11 @@ jobs:
         run: |
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
+
+      - name: Reconfigure git to use HTTP authentication
+        run: >
+          git config --global url."https://github.com/".insteadOf
+          ssh://git@github.com/
 
       - name: Checkout correct submodule branches
         run: |
