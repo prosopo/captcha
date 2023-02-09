@@ -1,0 +1,19 @@
+{
+  "name": "@prosopo/server",
+  "version": "0.1.11",
+  "description": "NodeJS package for server side communication with the prosopo captcha client",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prosopo/server.git"
+  },
+  "author": "PROSOPO LIMITED",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/prosopo/server/issues"
+  },
+  "homepage": "https://github.com/prosopo/server#readme"
+}
