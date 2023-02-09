@@ -1,9 +1,11 @@
 {
   "name": "@prosopo/server",
-  "version": "0.1.11",
+  "version": "0.1.99",
   "description": "NodeJS package for server side communication with the prosopo captcha client",
   "main": "index.js",
   "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
