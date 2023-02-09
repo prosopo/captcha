@@ -6,7 +6,7 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ApiPromise } from '@polkadot/api'
 import consola, { LogLevel } from 'consola'
-import { trimProviderUrl } from '@prosopo/procaptcha'
+import { trimProviderUrl } from '@prosopo/common'
 
 export class ProsopoServer {
     config: ProsopoServerConfig
