@@ -29,13 +29,15 @@ jobs:
         run: docker rm $(docker ps -a -q) || true
 
       - name: Clone workspaces
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.7.0
         with:
+
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
-          ssh-key: ${{ secrets.SSH_KEY }}
-          ssh-strict: false
+          #ssh-key: ${{ secrets.SSH_KEY }}
+          #ssh-strict: false
 
       - name: Checkout correct workspaces branch
         run: |
@@ -49,8 +51,8 @@ jobs:
         with:
           repository: prosopo/scripts
           path: scripts
-          ssh-key: ${{ secrets.SSH_KEY }}
-          ssh-strict: false
+          #ssh-key: ${{ secrets.SSH_KEY }}
+          #ssh-strict: false
 
       - name: Checkout correct scripts branch
         run: |
@@ -88,7 +90,7 @@ jobs:
       - name: Checkout correct submodule branches
         run: |
           cd workspaces
-          git submodule update --init --recursive
+          git submodule foreach 'echo $(git remote -v)'
           git submodule foreach 'echo "pulling..." && git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }}'
 
       - id: node-cache
