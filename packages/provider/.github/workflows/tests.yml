@@ -89,7 +89,7 @@ jobs:
         run: |
           cd workspaces
           git submodule foreach 'echo $(git remote -v)'
-          git submodule foreach 'echo "pulling..." && git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }}'
+          git submodule foreach 'echo "pulling..." && git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }} || git pull --rebase origin ${{ github.base_ref }}'
 
       - id: node-cache
         uses: actions/cache@v3
