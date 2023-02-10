@@ -115,10 +115,7 @@ jobs:
       - name: Build provider and dependencies
         run: |
           cd workspaces
-          npm -w @prosopo/common run build
-          npm -w @prosopo/datasets run build
-          npm -w @prosopo/contract run build
-          npm -w @prosopo/provider run build
+          git submodule foreach 'npm run build'
 
       - name: Setup the environment and run the unit tests
         run: |
