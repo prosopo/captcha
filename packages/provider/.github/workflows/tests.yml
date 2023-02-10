@@ -91,7 +91,7 @@ jobs:
           git submodule foreach 'echo $(git remote -v)'
           git submodule foreach 'git remote set-branches --add origin ${{ github.head_ref }} || git remote set-branches --add origin ${{ github.base_ref }}'
           git submodule foreach 'git fetch origin ${{ github.head_ref }}:${{ github.head_ref }} || git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}'
-          git submodule foreach 'echo "checking out..." && git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop'
+          git submodule foreach 'git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop'
           git submodule foreach 'echo "pulling..." && git pull'
 
       - id: node-cache
