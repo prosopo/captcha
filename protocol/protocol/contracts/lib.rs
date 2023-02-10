@@ -21,7 +21,7 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 macro_rules! error {
     ($err:expr) => {
         {
-            let _self = use_self!();
+            let _self = get_self!();
             ink::env::debug_println!("ERROR in {}() at block {} with caller {:?}\n'{:?}'", function_name!(), _self.env().block_number(), _self.env().caller(), $err);
             Err($err)
         }
@@ -29,8 +29,8 @@ macro_rules! error {
 }
 
 #[allow(unused_macros)]
-#[named_functions_macro::named_functions]
-#[inject_self_macro::inject_self]
+#[named_functions_macro::named_functions] // allows the use of the function_name!() macro
+#[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod prosopo {
 

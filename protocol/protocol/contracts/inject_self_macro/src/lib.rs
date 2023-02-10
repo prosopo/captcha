@@ -57,7 +57,7 @@ fn handle(input: TokenStream) -> TokenStream {
                 if found_fn {
                     if g.delimiter() == Delimiter::Brace {
                         let inject = quote!(
-                            macro_rules! use_self {
+                            macro_rules! get_self {
                                 () => {
                                     self
                                 }
