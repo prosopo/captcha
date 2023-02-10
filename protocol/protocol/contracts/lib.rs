@@ -17,35 +17,16 @@
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
-// macro_rules! outer {
-//     ($self:ident, $f:ident) => {
-//         let v = $self.env().$f();
-//         ink::env::debug_println!("outer {}", v);
-//     };
-// }
-
-pub mod helper {
-
-    /// Macro to print an error in the debug buffer
-    /// embeds the function name in the output along with the block number and caller
-    macro_rules! error {
-        ($err:expr) => {
-            // get the self variable
-            use_self!(_self);
-            // print the error + corresponding info
-            ink::env::debug_println!("ERROR: '{}' in function `{}` at block {} with caller {:?}", $err, function_name!(), _self.env().block_number(), _self.env().caller());
-            4
-        };
-    }
-
-    pub(crate) use error;
+/// Print and return an error in ink
+macro_rules! error {
+    ($err:expr) => {
+        {
+            let _self = use_self!();
+            ink::env::debug_println!("ERROR in {}() at block {} with caller {:?}\n'{:?}'", function_name!(), _self.env().block_number(), _self.env().caller(), $err);
+            Err($err)
+        }
+    };
 }
-
-// /// Wrap an error in a Result whilst printing debug info.
-// fn error<T,E>(err: E) -> Result<T, E> {
-//     // print_error!(err);
-//     Err(err)
-// }
 
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions]
@@ -53,7 +34,6 @@ pub mod helper {
 #[ink::contract]
 pub mod prosopo {
 
-    use crate::helper::error;
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
@@ -385,7 +365,13 @@ pub mod prosopo {
         c
     }
 
+
     impl Prosopo {
+
+        #[ink(message)]
+        pub fn abc(&self) -> Result<(), Error> {
+            err!(Error::NotAuthorised)
+        }
 
         /// Constructor
         #[ink(constructor, payable)]
@@ -1332,16 +1318,19 @@ pub mod prosopo {
             self.get_random_number(len, self.env().caller())
         }
 
-        #[ink(message)]
-        pub fn abc(&self) -> u128 {
-            error!(5)
-            // let a: [u8;3] = [0;3];
-            // let b: [u8;3] = [0;3];
-            // let c: [u8;6] = concat_u8(&a, &b);
-            // 1
-        }
+        // #[ink(message)]
+        // pub fn abc(&self) -> Result<u128, Error> {
+        //     // error!(5)
+        //     // let a: [u8;3] = [0;3];
+        //     // let b: [u8;3] = [0;3];
+        //     // let c: [u8;6] = concat_u8(&a, &b);
+        //     Ok(1)
+        // }
 
     }
+
+
+
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
     /// module and test functions are marked with a `#[test]` attribute.
@@ -1377,14 +1366,6 @@ pub mod prosopo {
         type Event = <Prosopo as ::ink::reflect::ContractEventBase>::Type;
 
         const STAKE_DEFAULT: u128 = 1000000000000;
-
-        // #[ink::test]
-        // fn test_tmp() {
-        //     let operator_account = AccountId::from([0x1; 32]);
-        //     let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
-        //     crate::print::error!(3);
-        //     assert!(false);
-        // }
 
         /// We test if the default constructor does its job.
         #[ink::test]

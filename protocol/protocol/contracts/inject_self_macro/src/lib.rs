@@ -58,8 +58,8 @@ fn handle(input: TokenStream) -> TokenStream {
                     if g.delimiter() == Delimiter::Brace {
                         let inject = quote!(
                             macro_rules! use_self {
-                                ($name:ident) => {
-                                    let $name = self;
+                                () => {
+                                    self
                                 }
                             }
                         );
