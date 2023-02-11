@@ -1,6 +1,6 @@
 import storage from './storage'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
-import { hexToString } from '@polkadot/util'
+import { trimProviderUrl } from '@prosopo/common'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
 import { CaptchaSolution } from '@prosopo/datasets'
 import {
@@ -20,6 +20,7 @@ import { randomAsHex } from '@polkadot/util-crypto'
 import { ContractAbi, ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { ApiPromise, Keyring } from '@polkadot/api'
+import { u32 } from '@polkadot/types'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -183,17 +184,18 @@ export const Manager = (
             }
 
             // get a random provider
-            const provider = await contract.getRandomProvider(
+            const getRandomProviderResponse = await contract.getRandomProvider(
                 account.account.address,
                 config.network.dappContract.address
             )
-            console.log('provider', provider)
-            const providerUrl = trimProviderUrl(provider.provider.serviceOrigin.toString())
+            const blockNumber = getRandomProviderResponse.blockNumber
+            console.log('provider', getRandomProviderResponse)
+            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
             // get the provider api inst
             providerApi = await loadProviderApi(providerUrl)
             console.log('providerApi', providerApi)
             // get the captcha challenge and begin the challenge
-            const captchaApi = await loadCaptchaApi(contract, provider, providerApi)
+            const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
             console.log('captchaApi', captchaApi)
             const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
             console.log('challenge', challenge)
@@ -219,6 +221,7 @@ export const Manager = (
                 challenge,
                 showModal: true,
                 timeout,
+                blockNumber,
             })
         } catch (err) {
             console.error(err)
@@ -258,6 +261,7 @@ export const Manager = (
             })
 
             const account = getAccount()
+            const blockNumber = getBlockNumber()
             const signer = account.extension.signer
             if (!challenge.captchas[0].captcha.datasetId) {
                 throw new Error('No datasetId set for challenge')
@@ -293,6 +297,7 @@ export const Manager = (
                     providerUrl: trimProviderUrl(captchaApi.provider.provider.serviceOrigin.toString()),
                     userAccountAddress: account.account.address,
                     commitmentId: submission[1],
+                    blockNumber,
                 })
             }
         } catch (err) {
@@ -427,6 +432,14 @@ export const Manager = (
         return account
     }
 
+    const getBlockNumber = () => {
+        if (!state.blockNumber) {
+            throw new Error('Account not loaded')
+        }
+        const blockNumber: u32 = state.blockNumber
+        return blockNumber
+    }
+
     /**
      * Load the contract instance using addresses from config.
      */
@@ -441,7 +454,8 @@ export const Manager = (
             abiJson as ContractAbi,
             config.network.prosopoContract.address,
             keyring.addFromAddress(getAccount().account.address),
-            'prosopo'
+            'prosopo',
+            0
         )
     }
 
@@ -452,8 +466,4 @@ export const Manager = (
         select,
         nextRound,
     }
-}
-
-const trimProviderUrl = (url: string) => {
-    return hexToString(url).replace(/\0/g, '')
 }
