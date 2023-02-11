@@ -2,7 +2,8 @@ import express from 'express'
 import routesFactory from './routes/routes'
 import memoryServerSetup from './utils/database'
 import connectionFactory from './utils/connection'
-import { ProsopoServer } from './utils/Prosopo'
+import { ProsopoServer } from '@prosopo/server'
+import prosopoConfig from './prosopo.config'
 import dotenv from 'dotenv'
 import path from 'path'
 
@@ -40,11 +41,11 @@ async function main() {
     if (!process.env.REACT_APP_SERVER_MNEMONIC) {
         throw new Error('No mnemonic found')
     }
-    const prosopoServer = new ProsopoServer(process.env.REACT_APP_SERVER_MNEMONIC)
+    const prosopoServer = new ProsopoServer(process.env.REACT_APP_SERVER_MNEMONIC, prosopoConfig())
 
     app.use(routesFactory(mongoose, prosopoServer))
 
-    app.listen(5000)
+    app.listen(process.env.REACT_APP_SERVER_PORT)
 }
 
 main()

@@ -32,7 +32,7 @@ export default () =>
                 },
                 dappContract: {
                     address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
-                    name: 'prosopo',
+                    name: 'dapp',
                 },
                 accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
             },
