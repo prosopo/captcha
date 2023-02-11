@@ -7,6 +7,7 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { ApiPromise } from '@polkadot/api'
 import consola, { LogLevel } from 'consola'
 import { trimProviderUrl } from '@prosopo/common'
+import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 
 export class ProsopoServer {
     config: ProsopoServerConfig
@@ -80,16 +81,17 @@ export class ProsopoServer {
 
     public async isVerified(
         userAccount: string,
-        providerUrl?: string,
-        commitmentId?: string,
-        blockNumber?: string
+        providerUrl: string,
+        commitmentId: string,
+        blockNumber: string
     ): Promise<boolean> {
         // first check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
+        const block = (await this.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash
         const getRandomProviderResponse = await contractApi.getRandomProvider(
             userAccount,
             this.dappContractAddress,
-            blockNumber
+            block
         )
         const serviceOrigin = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
         if (serviceOrigin !== providerUrl) {
