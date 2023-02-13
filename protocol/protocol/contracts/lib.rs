@@ -1184,24 +1184,16 @@ pub mod prosopo {
 
         /// Returns the account balance for the specified `dapp`.
         ///
-        /// Returns `0` if the account does not exist.
         #[ink(message)]
-        pub fn get_dapp_balance(&self, dapp: AccountId) -> Balance {
-            return match self.get_dapp_details(dapp) {
-                Ok(v) => v.balance,
-                Err(_e) => Balance::from(0_u32),
-            };
+        pub fn get_dapp_balance(&self, dapp: AccountId) -> Result<Balance, Error> {
+            return Ok(self.get_dapp_details(dapp)?.balance);
         }
 
         /// Returns the account balance for the specified `provider`.
         ///
-        /// Returns `0` if the account does not exist.
         #[ink(message)]
-        pub fn get_provider_balance(&self, provider: AccountId) -> Balance {
-            return match self.get_provider_details(provider) {
-                Ok(v) => v.balance,
-                Err(_e) => Balance::from(0_u32),
-            };
+        pub fn get_provider_balance(&self, provider: AccountId) -> Result<Balance, Error> {
+            return Ok(self.get_provider_details(provider)?.balance);
         }
 
         /// List providers given an array of account id
