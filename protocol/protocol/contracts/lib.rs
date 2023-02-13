@@ -2031,8 +2031,8 @@ pub mod prosopo {
                 .get(&solution_id)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
-            let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account);
-            let new_provider_balance = contract.get_provider_balance(provider_account);
+            let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account).unwrap();
+            let new_provider_balance = contract.get_provider_balance(provider_account).unwrap();
             assert_eq!(balance - Balance::from(fee), new_dapp_balance);
             assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
@@ -2046,11 +2046,11 @@ pub mod prosopo {
             assert_eq!(commitment.status, CaptchaStatus::Approved);
             assert_eq!(
                 balance - Balance::from(fee),
-                contract.get_dapp_balance(dapp_contract_account)
+                contract.get_dapp_balance(dapp_contract_account).unwrap()
             );
             assert_eq!(
                 balance + Balance::from(fee),
-                contract.get_provider_balance(provider_account)
+                contract.get_provider_balance(provider_account).unwrap()
             );
         }
 
@@ -2173,8 +2173,8 @@ pub mod prosopo {
                 .get(&solution_id)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
-            let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account);
-            let new_provider_balance = contract.get_provider_balance(provider_account);
+            let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account).unwrap();
+            let new_provider_balance = contract.get_provider_balance(provider_account).unwrap();
             assert_eq!(balance - Balance::from(fee), new_dapp_balance);
             assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
@@ -2187,11 +2187,11 @@ pub mod prosopo {
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
             assert_eq!(
                 balance - Balance::from(fee),
-                contract.get_dapp_balance(dapp_contract_account)
+                contract.get_dapp_balance(dapp_contract_account).unwrap()
             );
             assert_eq!(
                 balance + Balance::from(fee),
-                contract.get_provider_balance(provider_account)
+                contract.get_provider_balance(provider_account).unwrap()
             );
         }
 
@@ -2269,7 +2269,7 @@ pub mod prosopo {
             let dapp_account = AccountId::from([0x2; 32]);
             // initialise the contract
             let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
-            assert_eq!(0, contract.get_dapp_balance(dapp_account));
+            contract.get_dapp_balance(dapp_account).unwrap_err();
         }
 
         /// Test non-existent provider account has zero balance
@@ -2279,7 +2279,7 @@ pub mod prosopo {
             let provider_account = AccountId::from([0x2; 32]);
             // initialise the contract
             let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
-            assert_eq!(0, contract.get_provider_balance(provider_account));
+            contract.get_provider_balance(provider_account).unwrap_err();
         }
 
         // // Test get random provider
