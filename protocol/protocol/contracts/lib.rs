@@ -652,40 +652,42 @@ pub mod prosopo {
             client_origin: Hash,
             contract: AccountId,
             optional_owner: Option<AccountId>,
-        ) {
+        ) -> Result<(), Error> {
             let caller = self.env().caller();
             // the caller can pass an owner or pass none and be made the owner
             let owner = optional_owner.unwrap_or(caller);
             let transferred = self.env().transferred_value();
             // enforces a one to one relation between caller and dapp
-            if self.dapps.get(&contract).is_none() {
-                // mark the account as suspended if it is new and no funds have been transferred
-                let status = if transferred > 0 {
-                    GovernanceStatus::Active
-                } else {
-                    GovernanceStatus::Suspended
-                };
-                let dapp = Dapp {
-                    status,
-                    balance: transferred,
-                    owner,
-                    min_difficulty: 1,
-                    client_origin,
-                };
-                // keying on contract allows owners to own many contracts
-                self.dapps.insert(contract, &dapp);
-                self.dapp_accounts.push(contract);
-                // emit event
-                self.env().emit_event(DappRegister {
-                    contract,
-                    owner,
-                    client_origin,
-                    value: transferred,
-                });
-            } else {
+            if self.dapps.get(&contract).is_some() {
                 // dapp exists so update it instead
-                self.dapp_update(owner, transferred, client_origin, contract, caller);
+                return self.dapp_update(owner, transferred, client_origin, contract, caller);
             }
+
+            // mark the account as suspended if it is new and no funds have been transferred
+            let status = if transferred > 0 {
+                GovernanceStatus::Active
+            } else {
+                GovernanceStatus::Suspended
+            };
+            let dapp = Dapp {
+                status,
+                balance: transferred,
+                owner,
+                min_difficulty: 1,
+                client_origin,
+            };
+            // keying on contract allows owners to own many contracts
+            self.dapps.insert(contract, &dapp);
+            self.dapp_accounts.push(contract);
+            // emit event
+            self.env().emit_event(DappRegister {
+                contract,
+                owner,
+                client_origin,
+                value: transferred,
+            });
+
+            Ok(());
         }
 
         /// Update a dapp with new funds, setting status as appropriate
