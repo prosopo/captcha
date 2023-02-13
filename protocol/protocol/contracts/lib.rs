@@ -811,9 +811,7 @@ pub mod prosopo {
                 .get(user_merkle_tree_root)
                 .is_some()
             {
-                debug!("{}", "CaptchaSolutionCommitmentExists");
-                //return error!(Error::CaptchaSolutionCommitmentExists);
-                return Ok(());
+                return error!(Error::CaptchaSolutionCommitmentExists);
             }
 
             self.validate_dapp(contract)?;
