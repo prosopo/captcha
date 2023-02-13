@@ -1178,27 +1178,27 @@ pub mod prosopo {
         ///
         /// Returns empty if none were matched
         #[ink(message)]
-        pub fn list_providers_by_ids(&self, provider_ids: Vec<AccountId>) -> Vec<Provider> {
+        pub fn list_providers_by_ids(&self, provider_ids: Vec<AccountId>) -> Result<Vec<Provider>, Error> {
             let mut providers = Vec::new();
             for provider_id in provider_ids {
                 let provider = self.providers.get(provider_id).ok_or(Error::ProviderDoesNotExist)?;
                 providers.push(provider);
             }
-            providers
+            Ok(providers)
         }
 
         /// List providers given an array of status
         ///
         /// Returns empty if none were matched
         #[ink(message)]
-        pub fn list_providers_by_status(&self, statuses: Vec<GovernanceStatus>) -> Vec<Provider> {
+        pub fn list_providers_by_status(&self, statuses: Vec<GovernanceStatus>) -> Result<Vec<Provider>, Error> {
             let mut providers = Vec::<Provider>::new();
             for status in statuses {
                 let providers_set = self.provider_accounts.get(status).ok_or(Error::StatusDoesNotExist)?;
                 let provider_ids = providers_set.into_iter().collect();
-                providers.append(&mut self.list_providers_by_ids(provider_ids));
+                providers.append(&mut self.list_providers_by_ids(provider_ids)?);
             }
-            providers
+            Ok(providers)
         }
 
         /// Get a random active provider
