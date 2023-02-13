@@ -1026,9 +1026,10 @@ pub mod prosopo {
         ) -> Result<LastCorrectCaptcha, Error> {
             let user = self.get_dapp_user(user)?;
 
+            let before_ms = (self.env().block_timestamp() - user.last_correct_captcha) as u32;
+
             Ok(LastCorrectCaptcha {
-                before_ms: u32::try_from(self.env().block_timestamp() - user.last_correct_captcha)
-                    .unwrap(),
+                before_ms,
                 dapp_id: user.last_correct_captcha_dapp_id,
             })
         }
