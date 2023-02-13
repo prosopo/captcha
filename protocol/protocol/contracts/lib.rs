@@ -1147,11 +1147,7 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
-            if self.dapps.get(&contract).is_none() {
-                return error!(Error::DappDoesNotExist);
-            }
-            let dapp = self.dapps.get(&contract);
-            Ok(dapp.unwrap())
+            self.dapps.get(&contract).ok_or(Error::DappDoesNotExist)
         }
 
         /// Returns the account balance for the specified `dapp`.
