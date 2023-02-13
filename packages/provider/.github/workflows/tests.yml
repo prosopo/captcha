@@ -115,9 +115,10 @@ jobs:
       - name: Build provider and dependencies
         run: |
           cd workspaces
-          echo $(ls)
-          cd ./packages/common && echo $(pwd) && npm run build
-
+          cd ./packages/common && echo $(pwd) && npm run build && cd ../..
+          cd ./packages/contract && echo $(pwd) && npm run build && cd ../..
+          cd ./packages/datasets && echo $(pwd) && npm run build && cd ../..
+          cd ./packages/provider && echo $(pwd) && npm run build && cd ../..
 
       - name: Setup the environment and run the unit tests
         run: |
