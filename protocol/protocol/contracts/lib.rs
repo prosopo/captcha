@@ -698,33 +698,32 @@ pub mod prosopo {
             client_origin: Hash,
             contract: AccountId,
             caller: AccountId,
-        ) {
-            if self.dapps.get(&contract).is_some() {
-                let mut dapp = self.dapps.get(&contract).unwrap();
-                // only allow the owner to make changes to the dapp (including funding?!)
-                if dapp.owner == caller {
-                    let total = dapp.balance + transferred;
-                    dapp.balance = total;
-                    dapp.client_origin = client_origin;
-                    dapp.owner = owner;
-                    if dapp.balance > 0 {
-                        dapp.status = GovernanceStatus::Active;
-                    } else {
-                        dapp.status = GovernanceStatus::Suspended;
-                    }
-                    self.dapps.insert(contract, &dapp);
-                    // emit event
-                    self.env().emit_event(DappUpdate {
-                        contract,
-                        owner,
-                        client_origin,
-                        value: total,
-                    });
-                } else {
-                    //return the transferred balance to the caller as they do not own the contract
-                    self.env().transfer(caller, transferred).ok();
-                }
+        ) -> Result<(), Error> {
+            let mut dapp = self.dapps.get(&contract).ok_or(Error::DappDoesNotExist)?;
+            // only allow the owner to make changes to the dapp (including funding?!)
+            if dapp.owner != caller {
+                return error!(Error::NotAuthorised);
             }
+
+            let total = dapp.balance + transferred;
+            dapp.balance = total;
+            dapp.client_origin = client_origin;
+            dapp.owner = owner;
+            if dapp.balance > 0 {
+                dapp.status = GovernanceStatus::Active;
+            } else {
+                dapp.status = GovernanceStatus::Suspended;
+            }
+            self.dapps.insert(contract, &dapp);
+            // emit event
+            self.env().emit_event(DappUpdate {
+                contract,
+                owner,
+                client_origin,
+                value: total,
+            });
+
+            Ok(())
         }
 
         /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
