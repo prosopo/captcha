@@ -169,7 +169,7 @@ pub mod prosopo {
         operator_accounts: Vec<AccountId>,
         //disputes: Mapping<u64, Dispute>
         status: GovernanceStatus,
-        operator_stake_default: u64,
+        operator_stake_default: u128,
         operator_fee_currency: Hash,
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Vec<AccountId>,
