@@ -115,7 +115,10 @@ jobs:
       - name: Build provider and dependencies
         run: |
           cd workspaces
-          git submodule foreach 'npm run build'
+          cd packages/common && npm run build && cd ..
+          cd packages/contract && npm run build && cd ..
+          cd packages/datasets && npm run build && cd ..
+          cd packages/provider && npm run build && cd ..
 
       - name: Setup the environment and run the unit tests
         run: |

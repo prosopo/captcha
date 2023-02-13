@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Hash } from '@polkadot/types/interfaces'
-import type { RuntimeDispatchInfo } from '@polkadot/types/interfaces/payment'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { ProsopoContractMethods, TransactionResponse } from '@prosopo/contract'
@@ -44,6 +43,7 @@ import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, wri
 import { i18n } from '@prosopo/common'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
+import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -621,7 +621,7 @@ export class Tasks {
         userAccount: string,
         blockHash: string,
         txHash: string
-    ): Promise<RuntimeDispatchInfo | null> {
+    ): Promise<RuntimeDispatchInfoV1 | null> {
         // Validate block and transaction, checking that the signer matches the userAccount
         const signedBlock: SignedBlock = (await this.contractApi.api.rpc.chain.getBlock(blockHash)) as SignedBlock
         if (!signedBlock) {
@@ -635,7 +635,7 @@ export class Tasks {
         const paymentInfo = (await this.contractApi.api.rpc.payment.queryInfo(
             extrinsic.toHex(),
             blockHash
-        )) as RuntimeDispatchInfo
+        )) as RuntimeDispatchInfoV1
         if (!paymentInfo) {
             return null
         }
