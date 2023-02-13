@@ -423,7 +423,7 @@ pub mod prosopo {
         ) -> Result<(), Error> {
             let balance: u128 = 0;
             // this function is for registration only
-            if self.providers.get(&provider_account).is_some() {
+            if self.providers.get(&provider_account).is_none() {
                 return error!(Error::ProviderDoesNotExist);
             }
             // prevent duplicate service origins
@@ -472,7 +472,7 @@ pub mod prosopo {
             }
 
             // this function is for updating only, not registering
-            if self.providers.get(&provider_account).is_none() {
+            if self.providers.get(&provider_account).is_some() {
                 return error!(Error::ProviderDoesNotExist);
             }
 
@@ -576,7 +576,7 @@ pub mod prosopo {
         #[ink(payable)]
         pub fn provider_unstake(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
-            if self.providers.get(&caller).is_some() {
+            if self.providers.get(&caller).is_none() {
                 return error!(Error::ProviderDoesNotExist);
             }
 
@@ -619,7 +619,7 @@ pub mod prosopo {
             }
 
             // set the captcha data id on the provider
-            let mut provider = self.providers.get(&provider_id).unwrap();
+            let mut provider = self.providers.get(&provider_id).ok_or(Error::ProviderDoesNotExist)?;
             provider.dataset_id = dataset_id;
             provider.dataset_id_content = dataset_id_content;
             let old_status = provider.status;
