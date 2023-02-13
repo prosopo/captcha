@@ -366,8 +366,8 @@ pub mod prosopo {
             operators.insert(operator_account, &operator);
             let mut operator_accounts = Vec::new();
             operator_accounts.push(operator_account);
-            let operator_accounts_lazy = Lazy::new();
-            operator_accounts_lazy.set(operator_accounts);
+            let mut operator_accounts_lazy = Lazy::new();
+            operator_accounts_lazy.set(&operator_accounts);
             Self {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
