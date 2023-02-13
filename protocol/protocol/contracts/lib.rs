@@ -23,6 +23,7 @@ pub mod prosopo {
     use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
+    use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
 
@@ -163,16 +164,16 @@ pub mod prosopo {
         provider_stake_default: u128,
         dapp_stake_default: u128,
         dapps: Mapping<AccountId, Dapp>,
-        dapp_accounts: Vec<AccountId>,
+        dapp_accounts: Lazy<Vec<AccountId>>,
         //dapps_owners: Mapping<AccountId, AccountId>,
         operators: Mapping<AccountId, Operator>,
-        operator_accounts: Vec<AccountId>,
+        operator_accounts: Lazy<Vec<AccountId>>,
         //disputes: Mapping<u64, Dispute>
         status: GovernanceStatus,
         operator_stake_default: u64,
         operator_fee_currency: Hash,
         dapp_users: Mapping<AccountId, User>,
-        dapp_user_accounts: Vec<AccountId>,
+        dapp_user_accounts: Lazy<Vec<AccountId>>,
     }
 
     // Event emitted when a new provider registers
