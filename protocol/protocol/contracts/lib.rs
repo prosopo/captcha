@@ -28,6 +28,17 @@ macro_rules! error {
     };
 }
 
+/// Concatenate two arrays (a and b) into a new array (c)
+fn concat_u8<const A: usize, const B: usize, const C: usize>(
+    a: &[u8; A],
+    b: &[u8; B],
+) -> [u8; C] {
+    let mut c = [0; C];
+    c[..A].copy_from_slice(a);
+    c[A..A + B].copy_from_slice(b);
+    c
+}
+
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
@@ -353,25 +364,7 @@ pub mod prosopo {
         DatasetIdSolutionsSame,
     }
 
-    /// Concatenate two arrays (a and b) into a new array (c)
-    ///
-    fn concat_u8<const A: usize, const B: usize, const C: usize>(
-        a: &[u8; A],
-        b: &[u8; B],
-    ) -> [u8; C] {
-        let mut c = [0; C];
-        c[..A].copy_from_slice(a);
-        c[A..A + B].copy_from_slice(b);
-        c
-    }
-
-
     impl Prosopo {
-
-        #[ink(message)]
-        pub fn abc(&self) -> Result<(), Error> {
-            err!(Error::NotAuthorised)
-        }
 
         /// Constructor
         #[ink(constructor, payable)]
@@ -1318,19 +1311,7 @@ pub mod prosopo {
             self.get_random_number(len, self.env().caller())
         }
 
-        // #[ink(message)]
-        // pub fn abc(&self) -> Result<u128, Error> {
-        //     // error!(5)
-        //     // let a: [u8;3] = [0;3];
-        //     // let b: [u8;3] = [0;3];
-        //     // let c: [u8;6] = concat_u8(&a, &b);
-        //     Ok(1)
-        // }
-
     }
-
-
-
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
     /// module and test functions are marked with a `#[test]` attribute.
