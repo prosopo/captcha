@@ -362,6 +362,10 @@ pub mod prosopo {
         NoActiveProviders,
         /// Returned if the dataset ID and dataset ID with solutions are identical
         DatasetIdSolutionsSame,
+        /// Returned if the captcha solution commitment has already been approved
+        CaptchaSolutionCommitmentAlreadyApproved,
+        /// Returned if the captcha solution commitment has already been approved
+        CaptchaSolutionCommitmentAlreadyDisapproved,
     }
 
     impl Prosopo {
@@ -875,8 +879,8 @@ pub mod prosopo {
             let mut commitment_mut = self
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
-                .unwrap();
-            let mut user = self.dapp_users.get(&commitment.account).unwrap();
+                .ok_or(Error::CaptchaSolutionCommitmentDoesNotExist)?;
+            let mut user = self.dapp_users.get(&commitment.account).ok_or(Error::DappDoesNotExist)?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
@@ -892,6 +896,8 @@ pub mod prosopo {
                 self.env().emit_event(ProviderApprove {
                     captcha_solution_commitment_id,
                 });
+            } else {
+                return error!(Error::CaptchaSolutionCommitmentAlreadyApproved);
             }
 
             Ok(())
@@ -919,8 +925,8 @@ pub mod prosopo {
             let mut commitment_mut = self
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
-                .unwrap();
-            let mut user = self.dapp_users.get(&commitment.account).unwrap();
+                .ok_or(Error::CaptchaSolutionCommitmentDoesNotExist)?;
+            let mut user = self.dapp_users.get(&commitment.account).ok_or(Error::CaptchaSolutionCommitmentDoesNotExist)?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
@@ -933,6 +939,8 @@ pub mod prosopo {
                 self.env().emit_event(ProviderDisapprove {
                     captcha_solution_commitment_id,
                 });
+            } else {
+                return error!(Error::CaptchaSolutionCommitmentAlreadyDisapproved);
             }
 
             Ok(())
