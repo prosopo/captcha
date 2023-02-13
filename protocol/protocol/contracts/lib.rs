@@ -687,7 +687,7 @@ pub mod prosopo {
                 value: transferred,
             });
 
-            Ok(());
+            Ok(())
         }
 
         /// Update a dapp with new funds, setting status as appropriate
