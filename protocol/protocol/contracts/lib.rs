@@ -983,8 +983,8 @@ pub mod prosopo {
                 return error!(Error::ContractInsufficientFunds);
             }
 
-            let mut provider = self.providers.get(&commitment.provider).unwrap();
-            let mut dapp = self.dapps.get(&commitment.contract).unwrap();
+            let mut provider = self.providers.get(&commitment.provider).ok_or(Error::ProviderDoesNotExist)?;
+            let mut dapp = self.dapps.get(&commitment.contract).ok_or(Error::DappDoesNotExist)?;
             if provider.payee == Payee::Provider {
                 if dapp.balance < amount {
                     return error!(Error::DappInsufficientFunds);
