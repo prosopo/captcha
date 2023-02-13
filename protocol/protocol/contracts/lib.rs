@@ -952,9 +952,9 @@ pub mod prosopo {
             provider_account: &AccountId,
             dapp_account: &AccountId,
         ) -> Result<(), Error> {
-            let mut provider = self.providers.get(provider_account).unwrap();
+            let mut provider = self.providers.get(provider_account).ok_or(Error::ProviderDoesNotExist)?;
             if provider.fee != 0 {
-                let mut dapp = self.dapps.get(dapp_account).unwrap();
+                let mut dapp = self.dapps.get(dapp_account).ok_or(Error::DappDoesNotExist)?;
 
                 let fee = Balance::from(provider.fee);
                 if provider.payee == Payee::Provider {
