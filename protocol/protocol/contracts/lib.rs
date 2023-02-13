@@ -1139,11 +1139,7 @@ pub mod prosopo {
         /// Returns an error if the user does not exist
         #[ink(message)]
         pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
-            if self.providers.get(&accountid).is_none() {
-                return error!(Error::ProviderDoesNotExist);
-            }
-            let provider = self.providers.get(&accountid);
-            Ok(provider.unwrap())
+            self.providers.get(&accountid).ok_or(Error::ProviderDoesNotExist)
         }
 
         /// Get a single dapps details
