@@ -1121,7 +1121,7 @@ pub mod prosopo {
             let commitment = self
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
-                .unwrap();
+                .ok_or(Error::CaptchaSolutionCommitmentDoesNotExist)?;
 
             Ok(commitment)
         }
