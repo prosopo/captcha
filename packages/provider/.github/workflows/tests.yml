@@ -116,7 +116,7 @@ jobs:
         run: |
           cd workspaces
           cd packages/common && npm run build && echo $(pwd)
-          echo $(pwd) && echo$(ls $(pwd)) && echo $(stat $(pwd)/tsconfig.json)
+          echo $(pwd) && echo$(ls $(pwd))
           cd ../datasets && echo $(pwd) && npm run build
           cd ../contract && echo $(pwd) && npm run build
           cd ../datasets && echo $(pwd) && npm run build
