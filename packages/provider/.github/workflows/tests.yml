@@ -31,6 +31,7 @@ jobs:
       - name: Clone workspaces
         uses: actions/checkout@v3
         with:
+          ref: ${{ github.base_ref }}
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
@@ -47,6 +48,7 @@ jobs:
       - name: Clone scripts repository
         uses: actions/checkout@v3
         with:
+          ref: ${{ github.base_ref }}
           repository: prosopo/scripts
           path: scripts
           #ssh-key: ${{ secrets.SSH_KEY }}
