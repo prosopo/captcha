@@ -116,10 +116,10 @@ jobs:
         run: |
           cd workspaces
           cd packages/common && npm run build && echo $(pwd)
-          echo $(pwd)
-          cd ../datasets && echo $(pwd) &&  npm run build
-          cd ../contract && echo $(pwd) &&  npm run build
-          cd ../datasets && echo $(pwd) &&  npm run build
+          echo $(pwd) && echo $(stat $(pwd)/tsconfig.json)
+          cd ../datasets && echo $(pwd) && npm run build
+          cd ../contract && echo $(pwd) && npm run build
+          cd ../datasets && echo $(pwd) && npm run build
 
       - name: Setup the environment and run the unit tests
         run: |
