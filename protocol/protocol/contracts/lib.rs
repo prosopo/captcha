@@ -548,28 +548,26 @@ pub mod prosopo {
         #[ink(message)]
         pub fn provider_deregister(&mut self, provider_account: AccountId) -> Result<(), Error> {
             let caller = self.env().caller();
-            if caller == provider_account {
-                // if self.operators.get(&caller) {
-
-                // Get provider
-                let mut provider = self.providers.get(&provider_account)?;
-
-                // Update provider status
-                self.provider_change_status(
-                    provider_account,
-                    provider.status,
-                    GovernanceStatus::Deactivated,
-                );
-                provider.status = GovernanceStatus::Deactivated;
-                self.providers.insert(provider_account, &provider);
-
-                self.env().emit_event(ProviderDeregister {
-                    account: provider_account,
-                });
-                //}
-            } else {
+            if caller != provider_account {                
                 return error!(Error::NotAuthorised);
             }
+
+            // Get provider
+            let mut provider = self.providers.get(&provider_account).ok_or(Error::ProviderDoesNotExist)?;
+
+            // Update provider status
+            self.provider_change_status(
+                provider_account,
+                provider.status,
+                GovernanceStatus::Deactivated,
+            );
+            provider.status = GovernanceStatus::Deactivated;
+            self.providers.insert(provider_account, &provider);
+
+            self.env().emit_event(ProviderDeregister {
+                account: provider_account,
+            });
+
             Ok(())
         }
 
