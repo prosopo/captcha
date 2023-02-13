@@ -115,14 +115,11 @@ jobs:
       - name: Build provider and dependencies
         run: |
           cd workspaces
-          cd packages/common
-          npm run build
-          cd ../datasets
-          npm run build
-          cd ../contract
-          npm run build
-          cd ../datasets
-          npm run build
+          cd packages/common && npm run build && echo $(pwd)
+          echo $(pwd)
+          cd ../datasets && echo $(pwd) &&  npm run build
+          cd ../contract && echo $(pwd) &&  npm run build
+          cd ../datasets && echo $(pwd) &&  npm run build
 
       - name: Setup the environment and run the unit tests
         run: |
