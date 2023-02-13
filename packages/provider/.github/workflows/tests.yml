@@ -117,6 +117,8 @@ jobs:
           cd workspaces
           cd packages/common
           npm run build
+          cd ../datasets
+          npm run build
           cd ../contract
           npm run build
           cd ../datasets
