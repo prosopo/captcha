@@ -117,6 +117,7 @@ jobs:
       - name: Build provider and dependencies
         run: |
           cd workspaces
+          echo $(npx tsc --version)
           echo $(ls)
           echo $(ls packages/common)
           echo $(ls packages/datasets)
