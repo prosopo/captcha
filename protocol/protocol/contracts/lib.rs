@@ -552,7 +552,7 @@ pub mod prosopo {
                 // if self.operators.get(&caller) {
 
                 // Get provider
-                let mut provider = self.providers.get(&provider_account).unwrap();
+                let mut provider = self.providers.get(&provider_account)?;
 
                 // Update provider status
                 self.provider_change_status(
