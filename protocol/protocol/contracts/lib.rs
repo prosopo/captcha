@@ -665,7 +665,7 @@ pub mod prosopo {
                 self.dapps.insert(contract, &dapp);
                 let mut dapp_accounts = self.dapp_accounts.get_or_default();
                 dapp_accounts.push(contract);
-                self.dapp_accounts.set(dapp_accounts);
+                self.dapp_accounts.set(&dapp_accounts);
                 // emit event
                 self.env().emit_event(DappRegister {
                     contract,
@@ -874,7 +874,7 @@ pub mod prosopo {
                 self.dapp_users.insert(account, &user);
                 let mut dapp_user_accounts = self.dapp_user_accounts.get_or_default();
                 dapp_user_accounts.push(account);
-                self.dapp_user_accounts.set(dapp_user_accounts);
+                self.dapp_user_accounts.set(&dapp_user_accounts);
             }
         }
 
@@ -1065,7 +1065,7 @@ pub mod prosopo {
                 self.operators.insert(operator_account, &operator);
                 let mut operator_accounts = self.operator_accounts.get_or_default();
                 operator_accounts.push(operator_account);
-                self.operator_accounts.set(operator_accounts);
+                self.operator_accounts.set(&operator_accounts);
             }
         }
 
