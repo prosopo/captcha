@@ -1092,11 +1092,7 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
-            if self.captcha_data.get(&dataset_id).is_none() {
-                return error!(Error::CaptchaDataDoesNotExist);
-            }
-            let captcha_data = self.captcha_data.get(&dataset_id);
-            Ok(captcha_data.unwrap())
+            self.captcha_data.get(&dataset_id).ok_or(Error::CaptchaDataDoesNotExist)
         }
 
         /// Get a solution commitment
