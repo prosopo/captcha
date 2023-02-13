@@ -661,7 +661,9 @@ pub mod prosopo {
                 };
                 // keying on contract allows owners to own many contracts
                 self.dapps.insert(contract, &dapp);
-                self.dapp_accounts.push(contract);
+                let mut dapp_accounts = self.dapp_accounts.get_or_default();
+                dapp_accounts.push(contract);
+                self.dapp_accounts.set(dapp_accounts);
                 // emit event
                 self.env().emit_event(DappRegister {
                     contract,
@@ -1764,7 +1766,7 @@ pub mod prosopo {
             // account is marked as suspended as zero tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Suspended);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.contains(&dapp_contract));
+            assert!(contract.dapp_accounts.get_or_default().contains(&dapp_contract));
         }
 
         /// Test dapp register with positive balance transfer
@@ -1796,7 +1798,7 @@ pub mod prosopo {
             // account is marked as active as balance is now positive
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.contains(&dapp_contract));
+            assert!(contract.dapp_accounts.get_or_default().contains(&dapp_contract));
         }
 
         /// Test dapp register and then update
@@ -1848,7 +1850,7 @@ pub mod prosopo {
             // account is marked as active as tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance_1 + balance_2);
-            assert!(contract.dapp_accounts.contains(&dapp_contract_account));
+            assert!(contract.dapp_accounts.get_or_default().contains(&dapp_contract_account));
         }
 
         /// Test dapp fund account
