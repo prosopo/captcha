@@ -424,8 +424,7 @@ pub mod prosopo {
             let balance: u128 = 0;
             // this function is for registration only
             if self.providers.get(&provider_account).is_some() {
-                debug!("Provider already exists: {:?}", provider_account);
-                return Ok(());
+                return error!(Error::ProviderDoesNotExist);
             }
             // prevent duplicate service origins
             if self.service_origins.get(&service_origin).is_some() {
