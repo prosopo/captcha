@@ -115,7 +115,12 @@ jobs:
       - name: Build provider and dependencies
         run: |
           cd workspaces
-          npm run bd provider
+          cd packages/common
+          npm run build
+          cd ../contract
+          npm run build
+          cd ../datasets
+          npm run build
 
       - name: Setup the environment and run the unit tests
         run: |
