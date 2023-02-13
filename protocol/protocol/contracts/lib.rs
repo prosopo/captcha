@@ -1221,14 +1221,11 @@ pub mod prosopo {
             }
             let index = self.get_random_number(max as u128, user_account);
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
-            let provider = self.providers.get(provider_id);
-            if provider.is_none() {
-                return error!(Error::NoActiveProviders);
-            }
+            let provider = self.providers.get(provider_id).ok_or(Error::NoActiveProviders)?;
 
             Ok(RandomProvider {
                 provider_id,
-                provider: provider.unwrap(),
+                provider,
                 block_number: self.env().block_number(),
             })
         }
