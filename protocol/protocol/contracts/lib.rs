@@ -1377,7 +1377,7 @@ pub mod prosopo {
             let operator_account = AccountId::from([0x1; 32]);
             let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             assert!(contract.operators.get(&operator_account).is_some());
-            assert!(contract.operator_accounts.get_or_default().contains(&operator_account));
+            assert!(contract.operator_accounts.get()?.contains(&operator_account));
         }
 
         /// Assert contract provider minimum stake default set from constructor.
@@ -1504,7 +1504,7 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
             let operator_account_new = AccountId::from([0x2; 32]);
             contract.add_prosopo_operator(operator_account_new);
-            assert!(contract.operator_accounts.get_or_default().contains(&operator_account_new));
+            assert!(contract.operator_accounts.get()?.contains(&operator_account_new));
             assert!(contract.operators.get(&operator_account_new).is_some());
         }
 
@@ -1772,7 +1772,7 @@ pub mod prosopo {
             // account is marked as suspended as zero tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Suspended);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.get_or_default().contains(&dapp_contract));
+            assert!(contract.dapp_accounts.get()?.contains(&dapp_contract));
         }
 
         /// Test dapp register with positive balance transfer
@@ -1804,7 +1804,7 @@ pub mod prosopo {
             // account is marked as active as balance is now positive
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.get_or_default().contains(&dapp_contract));
+            assert!(contract.dapp_accounts.get()?.contains(&dapp_contract));
         }
 
         /// Test dapp register and then update
@@ -1856,7 +1856,7 @@ pub mod prosopo {
             // account is marked as active as tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance_1 + balance_2);
-            assert!(contract.dapp_accounts.get_or_default().contains(&dapp_contract_account));
+            assert!(contract.dapp_accounts.get()?.contains(&dapp_contract_account));
         }
 
         /// Test dapp fund account
