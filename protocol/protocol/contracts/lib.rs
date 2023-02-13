@@ -772,21 +772,17 @@ pub mod prosopo {
             if dapp.balance > 0 {
                 self.env().transfer(caller, dapp.balance).ok();
             }
-            self.dapp_deregister(contract);
+            
+            dapp.status = GovernanceStatus::Deactivated;
+            dapp.balance = 0;
+            self.dapps.insert(contract, &dapp);
+
             self.env().emit_event(DappCancel {
                 contract,
                 value: balance,
             });
 
             Ok(())
-        }
-
-        /// De-Register a dapp by setting their status to Deactivated and their balance to 0
-        fn dapp_deregister(&mut self, dapp_account: AccountId) {
-            let mut dapp = self.dapps.get(&dapp_account).unwrap();
-            dapp.status = GovernanceStatus::Deactivated;
-            dapp.balance = 0;
-            self.dapps.insert(dapp_account, &dapp);
         }
 
         /// Submit a captcha solution commit
