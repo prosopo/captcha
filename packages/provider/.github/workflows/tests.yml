@@ -117,6 +117,10 @@ jobs:
           cd workspaces && echo $(ls)
           cd packages/common && echo $(ls) npm run build && echo $(pwd)
           echo $(pwd) && echo $(ls $(pwd))
+          echo $(ls packages/common)
+          echo $(ls packages/datasets)
+          echo $(ls packages/contract)
+          echo $(ls packages/provider)
           cd ../datasets && echo $(pwd) && echo $(ls) && npm run build
           cd ../contract && echo $(pwd) && echo $(ls) && npm run build
           cd ../datasets && echo $(pwd) && echo $(ls) && npm run build
