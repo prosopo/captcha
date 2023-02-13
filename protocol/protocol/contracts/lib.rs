@@ -729,28 +729,29 @@ pub mod prosopo {
         /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
         #[ink(message)]
         #[ink(payable)]
-        pub fn dapp_fund(&mut self, contract: AccountId) {
+        pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
             let caller = self.env().caller();
             let transferred = self.env().transferred_value();
-            if self.dapps.get(&contract).is_some() {
-                let mut dapp = self.dapps.get(&contract).unwrap();
-                let total = dapp.balance + transferred;
-                dapp.balance = total;
-                if dapp.balance > 0 {
-                    dapp.status = GovernanceStatus::Active;
-                    self.env().emit_event(DappFund {
-                        contract,
-                        value: total,
-                    });
-                } else {
-                    // Suspended as dapp has no funds
-                    dapp.status = GovernanceStatus::Suspended;
-                }
-                self.dapps.insert(contract, &dapp);
-            } else {
-                //return the transferred balance to the caller
-                self.env().transfer(caller, transferred).ok();
+            if self.dapps.get(&contract).is_none() {
+                return error!(Error::DappDoesNotExist);
             }
+
+            let mut dapp = self.dapps.get(&contract).unwrap();
+            let total = dapp.balance + transferred;
+            dapp.balance = total;
+            if dapp.balance > 0 {
+                dapp.status = GovernanceStatus::Active;
+                self.env().emit_event(DappFund {
+                    contract,
+                    value: total,
+                });
+            } else {
+                // Suspended as dapp has no funds
+                dapp.status = GovernanceStatus::Suspended;
+            }
+            self.dapps.insert(contract, &dapp);
+
+            Ok(())
         }
 
         /// Cancel services as a dapp, returning remaining tokens
