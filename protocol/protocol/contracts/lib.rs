@@ -1180,7 +1180,7 @@ pub mod prosopo {
             let mut providers = Vec::new();
             for provider_id in provider_ids {
                 let provider = self.providers.get(provider_id).ok_or(Error::ProviderDoesNotExist)?;
-                providers.push(provider)
+                providers.push(provider);
             }
             providers
         }
