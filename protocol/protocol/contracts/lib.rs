@@ -1179,11 +1179,8 @@ pub mod prosopo {
         pub fn list_providers_by_ids(&self, provider_ids: Vec<AccountId>) -> Vec<Provider> {
             let mut providers = Vec::new();
             for provider_id in provider_ids {
-                let provider = self.providers.get(provider_id);
-                if provider.is_none() {
-                    continue;
-                }
-                providers.push(provider.unwrap())
+                let provider = self.providers.get(provider_id).ok_or(Error::ProviderDoesNotExist)?;
+                providers.push(provider)
             }
             providers
         }
