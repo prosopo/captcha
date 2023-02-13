@@ -762,7 +762,7 @@ pub mod prosopo {
             if self.dapps.get(&contract).is_none() {
                 return error!(Error::DappDoesNotExist);
             }
-            let dapp = self.get_dapp_details(contract)?;
+            let mut dapp = self.get_dapp_details(contract)?;
 
             if dapp.owner != caller {
                 return error!(Error::NotAuthorised);
