@@ -577,19 +577,20 @@ pub mod prosopo {
         pub fn provider_unstake(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
             if self.providers.get(&caller).is_some() {
-                let provider = self.get_provider_details(caller)?;
-                let balance = provider.balance;
-                if balance > 0 {
-                    self.env().transfer(caller, balance).ok();
-                    self.provider_deregister(caller)?;
-                    self.env().emit_event(ProviderUnstake {
-                        account: caller,
-                        value: balance,
-                    });
-                }
-            } else {
                 return error!(Error::ProviderDoesNotExist);
             }
+
+            let provider = self.get_provider_details(caller)?;
+            let balance = provider.balance;
+            if balance > 0 {
+                self.env().transfer(caller, balance).ok();
+                self.provider_deregister(caller)?;
+                self.env().emit_event(ProviderUnstake {
+                    account: caller,
+                    value: balance,
+                });
+            }
+
             Ok(())
         }
 
