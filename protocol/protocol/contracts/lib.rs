@@ -366,12 +366,14 @@ pub mod prosopo {
             operators.insert(operator_account, &operator);
             let mut operator_accounts = Vec::new();
             operator_accounts.push(operator_account);
+            let operator_accounts_lazy = Lazy::new();
+            operator_accounts_lazy.set(operator_accounts);
             Self {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 service_origins: Default::default(),
                 captcha_data: Default::default(),
-                operator_accounts,
+                operator_accounts: operator_accounts_lazy,
                 status: Default::default(),
                 operator_stake_default: 0,
                 operator_fee_currency: Default::default(),
@@ -1059,7 +1061,9 @@ pub mod prosopo {
                     status: GovernanceStatus::Active,
                 };
                 self.operators.insert(operator_account, &operator);
-                self.operator_accounts.push(operator_account);
+                let mut operator_accounts = self.operator_accounts.get_or_default();
+                operator_accounts.push(operator_account);
+                self.operator_accounts.set(operator_accounts);
             }
         }
 
@@ -1371,7 +1375,7 @@ pub mod prosopo {
             let operator_account = AccountId::from([0x1; 32]);
             let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             assert!(contract.operators.get(&operator_account).is_some());
-            assert!(contract.operator_accounts.contains(&operator_account));
+            assert!(contract.operator_accounts.get_or_default().contains(&operator_account));
         }
 
         /// Assert contract provider minimum stake default set from constructor.
@@ -1498,7 +1502,7 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
             let operator_account_new = AccountId::from([0x2; 32]);
             contract.add_prosopo_operator(operator_account_new);
-            assert!(contract.operator_accounts.contains(&operator_account_new));
+            assert!(contract.operator_accounts.get_or_default().contains(&operator_account_new));
             assert!(contract.operators.get(&operator_account_new).is_some());
         }
 
