@@ -114,13 +114,15 @@ jobs:
 
       - name: Build provider and dependencies
         run: |
-          cd workspaces && echo $(ls)
-          cd packages/common && echo $(ls) npm run build && echo $(pwd)
-          echo $(pwd) && echo $(ls $(pwd))
+          cd workspaces
+          echo $(ls)
           echo $(ls packages/common)
           echo $(ls packages/datasets)
           echo $(ls packages/contract)
           echo $(ls packages/provider)
+          cd packages/common && echo $(ls) npm run build && echo $(pwd)
+          echo $(pwd)
+          echo $(ls $(pwd))
           cd ../datasets && echo $(pwd) && echo $(ls) && npm run build
           cd ../contract && echo $(pwd) && echo $(ls) && npm run build
           cd ../datasets && echo $(pwd) && echo $(ls) && npm run build
