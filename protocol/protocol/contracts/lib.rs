@@ -476,7 +476,7 @@ pub mod prosopo {
                 return error!(Error::ProviderDoesNotExist);
             }
 
-            let existing = self.get_provider_details(provider_account).unwrap();
+            let existing = self.get_provider_details(provider_account)?;
 
             // prevent duplicate service origins
             if existing.service_origin != service_origin {
