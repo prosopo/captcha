@@ -1038,15 +1038,19 @@ pub mod prosopo {
 
         /// Add an operator
         #[ink(message)]
-        pub fn add_prosopo_operator(&mut self, operator_account: AccountId) {
+        pub fn add_prosopo_operator(&mut self, operator_account: AccountId) -> Result<(), Error> {
             let caller = self.env().caller();
-            if self.operators.get(&caller).is_some() {
-                let operator = Operator {
-                    status: GovernanceStatus::Active,
-                };
-                self.operators.insert(operator_account, &operator);
-                self.operator_accounts.push(operator_account);
+            if self.operators.get(&caller).is_none() {
+                return error!(Error::NotAuthorised);
             }
+
+            let operator = Operator {
+                status: GovernanceStatus::Active,
+            };
+            self.operators.insert(operator_account, &operator);
+            self.operator_accounts.push(operator_account);
+
+            Ok(())
         }
 
         // Informational / Validation functions
