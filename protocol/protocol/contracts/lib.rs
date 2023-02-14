@@ -366,8 +366,6 @@ pub mod prosopo {
         CaptchaSolutionCommitmentAlreadyApproved,
         /// Returned if the captcha solution commitment has already been approved
         CaptchaSolutionCommitmentAlreadyDisapproved,
-        /// Returned if the governance status does not exist
-        StatusDoesNotExist,
     }
 
     impl Prosopo {
@@ -1194,9 +1192,12 @@ pub mod prosopo {
         pub fn list_providers_by_status(&self, statuses: Vec<GovernanceStatus>) -> Result<Vec<Provider>, Error> {
             let mut providers = Vec::<Provider>::new();
             for status in statuses {
-                let providers_set = self.provider_accounts.get(status).ok_or(Error::StatusDoesNotExist)?;
-                let provider_ids = providers_set.into_iter().collect();
-                providers.append(&mut self.list_providers_by_ids(provider_ids)?);
+                let providers_set = self.provider_accounts.get(status);
+                if providers_set.is_none() {
+                    continue;
+                }
+                let provider_ids = providers_set.unwrap().into_iter().collect();
+                providers.append(&mut self.list_providers_by_ids(provider_ids));
             }
             Ok(providers)
         }
