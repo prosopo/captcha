@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { Box, Button, Typography, FormControl, FormGroup, Stack, TextField, Alert } from '@mui/material'
 
-import { ProcaptchaOutput, TCaptchaSubmitResult } from '@prosopo/procaptcha'
+import { ProcaptchaOutput } from '@prosopo/procaptcha'
 
 import { Procaptcha, ExtensionAccountSelect } from '@prosopo/procaptcha-react'
 
 import './App.css'
-import { VerificationResponse } from '@prosopo/api'
 
 function App() {
     const [email, setEmail] = useState<string>('')
@@ -183,7 +182,10 @@ function App() {
                                 />
                             </FormControl>
 
-                            <Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman, onExpired }} />
+                            <Procaptcha
+                                config={config}
+                                callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
+                            />
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>
