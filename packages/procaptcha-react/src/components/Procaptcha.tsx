@@ -10,6 +10,7 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
+import { u32 } from '@polkadot/types'
 import { Manager, ProcaptchaConfigOptional, ProcaptchaState, ProcaptchaStateUpdateFn } from '@prosopo/procaptcha'
 import { Alert, Backdrop, CircularProgress } from '@mui/material'
 import CaptchaComponent from './CaptchaComponent'
@@ -53,6 +54,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [account, setAccount] = useState<Account | undefined>(undefined)
     const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
     const [timeout, setTimeout] = useRefAsState<NodeJS.Timeout | undefined>(undefined)
+    const [blockNumber, setBlockNumber] = useRefAsState<u32 | undefined>(undefined)
 
     const map = {
         isHuman: setIsHuman,
@@ -65,6 +67,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
         account: setAccount,
         submission: setSubmission,
         timeout: setTimeout,
+        blockNumber: setBlockNumber,
         // don't provide method for updating config, should remain constant
     }
 
@@ -81,6 +84,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             account,
             submission,
             timeout,
+            blockNumber,
         },
         // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
