@@ -11,21 +11,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Keyring } from '@polkadot/keyring'
-import { Hash } from '@polkadot/types/interfaces'
-import { blake2AsHex, cryptoWaitReady, decodeAddress, mnemonicGenerate } from '@polkadot/util-crypto'
-import { dispatchErrorHandler, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
-import { hexHash } from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
-import { IDappAccount, IProviderAccount } from '../types/accounts'
-import { Tasks } from './tasks'
-import { createType } from '@polkadot/types'
-import { ProsopoEnvironment } from '../types/index'
-import { AnyNumber } from '@polkadot/types-codec/types'
+import { IDappAccount, IProviderAccount, ProsopoEnvironment } from '../types/index'
 import { BN } from '@polkadot/util'
-import { ISubmittableResult } from '@polkadot/types/types'
 import { getOneUnit } from '../util'
+import { Keyring, decodeAddress } from '@polkadot/keyring'
+import { Hash } from '@polkadot/types/interfaces'
+import { blake2AsHex, cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto'
+import { AnyNumber } from '@polkadot/types-codec/types'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ISubmittableResult } from '@polkadot/types/types'
+import { dispatchErrorHandler, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { createType } from '@polkadot/types'
+import { hexHash } from '@prosopo/datasets'
+import { Tasks } from './tasks'
 
+/** Generate a mnemonic, returning the mnemonic and associated address
+ * @param keyring
+ */
 export async function generateMnemonic(keyring?: Keyring): Promise<[string, string]> {
     if (!keyring) {
         keyring = new Keyring({ type: 'sr25519' })
@@ -36,21 +38,16 @@ export async function generateMnemonic(keyring?: Keyring): Promise<[string, stri
     return [mnemonic, account.address]
 }
 
-export async function displayBalance(env, address, who) {
-    const logger = env.logger
-    const balance = await env.contractInterface.api.query.system.account(address)
-    logger.info(who, ' Balance: ', balance.data.free.toHuman())
-    return balance
-}
-
-const mnemonic = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
+const devMnemonics = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
 let current = -1
 const MAX_ACCOUNT_FUND = 1000 // 1000 UNIT
 
+/** Cycle through the dev mnemonics so as not to deplete the funds too quickly
+ */
 function getNextMnemonic() {
-    current = (current + 1) % mnemonic.length
+    current = (current + 1) % devMnemonics.length
 
-    return mnemonic[current]
+    return devMnemonics[current]
 }
 
 export async function sendFunds(

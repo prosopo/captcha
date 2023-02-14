@@ -7,6 +7,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   ENVIRONMENT: development
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   build:
@@ -30,17 +31,35 @@ jobs:
       - name: Clone workspaces
         uses: actions/checkout@v3
         with:
+          ref: ${{ github.base_ref }}
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
-          ref: ${{ github.head_ref }}
+          #ssh-key: ${{ secrets.SSH_KEY }}
+          #ssh-strict: false
+
+      - name: Checkout correct workspaces branch
+        run: |
+          cd workspaces
+          git fetch
+          git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
+          git pull
 
       - name: Clone scripts repository
         uses: actions/checkout@v3
         with:
+          ref: ${{ github.base_ref }}
           repository: prosopo/scripts
           path: scripts
-          ref: upgrade_deps
+          #ssh-key: ${{ secrets.SSH_KEY }}
+          #ssh-strict: false
+
+      - name: Checkout correct scripts branch
+        run: |
+          cd scripts
+          git fetch
+          git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
+          git pull
 
       - run: mkdir -p ~/image-cache
 
@@ -52,8 +71,8 @@ jobs:
 
       - if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
-          docker pull prosopo/substrate:demo-v1.0.4
-          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:demo-v1.0.4
+          docker pull prosopo/substrate:demo-v1.0.5
+          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:demo-v1.0.5
           docker pull mongo:5.0.4
           docker save -o ~/image-cache/mongo.tar mongo:5.0.4
 
@@ -68,12 +87,14 @@ jobs:
           cd scripts
           docker compose --file ./docker/docker-compose.development.yml up -d
 
-      - name: Checkout correct branches
+      - name: Checkout correct submodule branches
         run: |
           cd workspaces
-          git checkout ${{ github.head_ref }}
-          git submodule update --init --recursive
-          git submodule foreach 'echo "pulling..." && git pull origin ${{ github.head_ref }} || git pull origin ${{ github.base_ref }}'
+          git submodule foreach 'echo $(git remote -v)'
+          git submodule foreach 'git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"'
+          git submodule foreach 'git fetch origin'
+          git submodule foreach 'git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop'
+          git submodule foreach 'echo "pulling..." && git pull'
 
       - id: node-cache
         uses: actions/cache@v3
@@ -96,7 +117,16 @@ jobs:
       - name: Build provider and dependencies
         run: |
           cd workspaces
-          npm run build+deps provider
+          echo $(npx tsc --version)
+          echo $(ls)
+          echo $(ls packages/common)
+          echo $(ls packages/datasets)
+          echo $(ls packages/contract)
+          echo $(ls packages/provider)
+          cd packages/common && echo $(pwd) && echo $(ls) && echo $(pwd) && npm run build
+          cd ../datasets && echo $(pwd) && echo $(ls) && echo $(git show) && npm run build
+          cd ../contract && echo $(pwd) && echo $(ls) && echo $(git show) && npm run build
+          cd ../provider && echo $(pwd) && echo $(ls) && echo $(git show) && npm run build
 
       - name: Setup the environment and run the unit tests
         run: |
