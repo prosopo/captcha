@@ -740,7 +740,7 @@ pub mod prosopo {
                 return error!(Error::DappDoesNotExist);
             }
 
-            let mut dapp = self.dapps.get(&contract).unwrap();
+            let mut dapp = self.dapps.get(&contract).ok_or(Error::DappDoesNotExist)?;
             let total = dapp.balance + transferred;
             dapp.balance = total;
             if dapp.balance > 0 {
@@ -1218,13 +1218,13 @@ pub mod prosopo {
             let active_providers = self
                 .provider_accounts
                 .get(GovernanceStatus::Active)
-                .unwrap();
+                .ok_or(Error::ProviderDoesNotExist)?;
             let max = active_providers.len();
             if max == 0 {
                 return error!(Error::NoActiveProviders);
             }
             let index = self.get_random_number(max as u128, user_account);
-            let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
+            let provider_id = active_providers.into_iter().nth(index as usize).ok_or(Error::NoActiveProviders);
             let provider = self.providers.get(provider_id).ok_or(Error::NoActiveProviders)?;
 
             Ok(RandomProvider {
