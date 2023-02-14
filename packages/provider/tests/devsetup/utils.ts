@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { IDappAccount, IProviderAccount, ProsopoEnvironment } from '../types/index'
+import { IDappAccount, IProviderAccount, ProsopoEnvironment } from '../../src/types/index'
 import { BN } from '@polkadot/util'
-import { getOneUnit } from '../util'
+import { getOneUnit } from '../../src/util'
 import { Keyring, decodeAddress } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto'
@@ -23,7 +23,7 @@ import { ISubmittableResult } from '@polkadot/types/types'
 import { dispatchErrorHandler, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import { createType } from '@polkadot/types'
 import { hexHash } from '@prosopo/datasets'
-import { Tasks } from './tasks'
+import { Tasks } from '../../src/tasks/tasks'
 
 /** Generate a mnemonic, returning the mnemonic and associated address
  * @param keyring

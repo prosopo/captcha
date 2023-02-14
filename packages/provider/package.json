@@ -8,6 +8,7 @@
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
+    "build:test": "tsc --build --verbose tsconfig.test.json",
     "build:config": "tsc --project",
     "cli": "node ./dist/cli/cli.js",
     "setup": "node ./dist/cli/setup.js",
