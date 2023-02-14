@@ -60,7 +60,7 @@ describe('BATCH TESTS', () => {
                 await env.getContractApi(),
                 env.db,
                 2,
-                startNonce.toNumber(),
+                BigInt(startNonce.toNumber()),
                 env.logger
             )
 

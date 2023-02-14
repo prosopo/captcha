@@ -12,7 +12,9 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-import { DappUserSolutionResult, Tasks, getSendAmount, getStakeAmount, parseBlockNumber, sendFunds } from '../../src'
+import { getSendAmount, getStakeAmount, sendFunds } from '../../src/tasks/setup'
+import { Tasks } from '../../src/tasks'
+
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import path from 'path'
@@ -33,6 +35,7 @@ import { i18n } from '@prosopo/common'
 import { before } from 'mocha'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
+import { DappUserSolutionResult, parseBlockNumber } from '../../src/index'
 
 chai.should()
 chai.use(chaiAsPromised)

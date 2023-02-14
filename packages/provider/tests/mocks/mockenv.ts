@@ -150,7 +150,8 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.abi,
             this.contractAddress,
             this.pair,
-            this.contractName
+            this.contractName,
+            0
         )
 
         return this.contractInterface
