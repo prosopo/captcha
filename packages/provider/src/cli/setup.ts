@@ -16,9 +16,9 @@
 // import { hideBin } from 'yargs/helpers';
 import { KeyringPair } from '@polkadot/keyring/types'
 import fse from 'fs-extra'
-import { Environment, getEnvFile, loadEnv } from '../../src/env'
-import { generateMnemonic, getSendAmount, getStakeAmount, sendFunds, setupDapp, setupProvider } from './utils'
-import { IDappAccount, IProviderAccount } from '../../src/types/accounts'
+import { Environment, getEnvFile, loadEnv } from '../env'
+import { generateMnemonic, getSendAmount, getStakeAmount, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
+import { IDappAccount, IProviderAccount } from '../types/accounts'
 import { ProsopoEnvError } from '@prosopo/common'
 
 loadEnv()

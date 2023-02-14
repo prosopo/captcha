@@ -17,7 +17,7 @@ import path from 'path'
 
 import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
 
-import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from '../devsetup/'
+import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from '../../src/tasks/setup'
 import { Tasks } from '../../src/tasks'
 import { Account, IDatabaseAccounts, accountAddress, accountMnemonic } from './DatabaseAccounts'
 import { Environment } from '../../src/env'
