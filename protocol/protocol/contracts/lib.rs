@@ -1183,7 +1183,7 @@ pub mod prosopo {
                 if provider.is_none() {
                     continue;
                 }
-                providers.push(provider.unwrap())
+                providers.push(provider.ok_or(Error::ProviderDoesNotExist)?);
             }
             Ok(providers)
         }
@@ -1199,8 +1199,8 @@ pub mod prosopo {
                 if providers_set.is_none() {
                     continue;
                 }
-                let provider_ids = providers_set.unwrap().into_iter().collect();
-                providers.append(&mut self.list_providers_by_ids(provider_ids));
+                let provider_ids = providers_set.ok_or(Error::ProviderDoesNotExist)?.into_iter().collect();
+                providers.append(&mut self.list_providers_by_ids(provider_ids)?);
             }
             Ok(providers)
         }
@@ -1238,7 +1238,7 @@ pub mod prosopo {
         ///
         /// Returns {Vec<AccountId>}
         #[ink(message)]
-        pub fn get_all_provider_ids(&self) -> Vec<AccountId> {
+        pub fn get_all_provider_ids(&self) -> Result<Vec<AccountId>, Error> {
             let mut provider_ids = Vec::<AccountId>::new();
             for status in [
                 GovernanceStatus::Active,
@@ -1249,9 +1249,9 @@ pub mod prosopo {
                 if providers_set.is_none() {
                     continue;
                 }
-                provider_ids.append(&mut providers_set.unwrap().into_iter().collect());
+                provider_ids.append(&mut providers_set.ok_or(Error::ProviderDoesNotExist)?.into_iter().collect());
             }
-            provider_ids
+            Ok(provider_ids)
         }
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
