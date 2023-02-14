@@ -61,3 +61,17 @@ export class ProsopoEnvError extends ProsopoBaseError {
         console.error(this.cause, this.stack, ...params)
     }
 }
+
+export class ProsopoApiError extends ProsopoEnvError {
+    code?: number
+    constructor(error: Error | TranslationKey, context?: string, code?: number, ...params: any[]) {
+        const isError = error instanceof Error
+        super(isError ? (error.message as TranslationKey) : error)
+        console.log('code is ', code)
+        this.code = code ? code : 500
+        this.name = (context && `${ProsopoApiError.name}@${context}`) || ProsopoApiError.name
+
+        console.error('\n********************* ERROR *********************\n')
+        console.error(this.cause, this.stack, this.code, ...params)
+    }
+}
