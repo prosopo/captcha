@@ -13,27 +13,14 @@
 // limitations under the License.
 import express from 'express'
 import cors from 'cors'
-
-// import { mnemonicValidate } from '@polkadot/util-crypto';
-
 import { prosopoRouter } from '../api'
 import { LocalAssetsResolver } from '../assets'
 import { Environment, loadEnv } from '../env'
-// import { MockEnvironment } from "../tests/mocks/mockenv";
 import { handleErrors } from '../errors'
-// import { processArgs } from './argv';
-
-// import yargs from 'yargs';
-// import { hideBin } from 'yargs/helpers';
-
-// import dotenv from 'dotenv';
 import { ProsopoEnvironment } from '../types/env'
-
 import { Server } from 'http'
 import { ProsopoEnvError } from '@prosopo/common'
 import { i18nMiddleware } from '@prosopo/common'
-
-// loadEnv();
 
 let apiAppSrv: Server
 
@@ -72,8 +59,6 @@ function startFileSrv(port: number | string, locations: string[]) {
     }
 }
 
-// const argv = yargs(hideBin(process.argv)).argv;
-
 async function start(nodeEnv: string) {
     loadEnv()
 
@@ -92,7 +77,7 @@ async function start(nodeEnv: string) {
     await env.isReady()
     startApi(env)
 
-    // setup the file server
+    // set up the file server
     const port = process.env.FILE_SRV_PORT || 4000
     // accept multiple paths for locations of files
     const paths = JSON.parse(process.env.FILE_SRV_PATHS || '[]')
