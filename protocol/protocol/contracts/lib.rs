@@ -296,8 +296,6 @@ pub mod prosopo {
         dataset_id: Hash,
     }
 
-
-
     /// The Prosopo error types
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -1359,7 +1357,7 @@ pub mod prosopo {
                     if *code_hash != current_code_hash {
                         return Err(Error::ConflictingCodeHashes);
                     }
-                    let set_code_hash_result = ink::env::set_code_hash(&code_hash);//.unwrap_or_else(|err| {
+                    let set_code_hash_result = ink::env::set_code_hash(&code_hash); //.unwrap_or_else(|err| {
 
                     if set_code_hash_result.is_err() {
                         return Err(Error::SetCodeHashFailed);
@@ -1368,9 +1366,6 @@ pub mod prosopo {
                 }
             }
             return Ok(());
-
-
-
         }
     }
 
