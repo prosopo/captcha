@@ -343,7 +343,7 @@ pub mod prosopo {
         /// Returned if the operators have submitted differing code hashes
         ConflictingCodeHashes,
         /// Returned if the set_code_hash function fails
-        FailedToSetCodeHash,
+        SetCodeHashFailed,
     }
 
     /// Concatenate two arrays (a and b) into a new array (c)
@@ -849,7 +849,7 @@ pub mod prosopo {
                     }
                     _ => {}
                 }
-            // Insert the commitment
+                // Insert the commitment
             } else {
                 self.create_new_dapp_user(dapp_user);
                 self.captcha_solution_commitments
@@ -1351,20 +1351,28 @@ pub mod prosopo {
 
             self.set_code_hash_votes.insert(caller, &code_hash);
 
-            if self.set_code_hash_votes.len() >= self.operators.len() {
-                let current_code_hash = code_hash;
-                for (_operator, code_hash) in self.set_code_hash_votes.iter() {
-                    if *code_hash != current_code_hash {
-                        return Err(Error::ConflictingCodeHashes);
-                    }
-                    let set_code_hash_result = ink::env::set_code_hash(&code_hash); //.unwrap_or_else(|err| {
+            // Make sure each operator has voted for the same code hash. If an operator has not voted
+            // an Ok result is returned. If an operator has voted for a conflicting code hash, an error
+            // is returned.
+            for (operator) in self.operators.iter() {
+                if self.set_code_hash_votes.get(operator).is_none() {
+                    return Ok(());
+                }
+                let vote = self.set_code_hash_votes.get(operator).unwrap();
 
-                    if set_code_hash_result.is_err() {
-                        return Err(Error::SetCodeHashFailed);
-                    }
-                    ink::env::debug_println!("Switched code hash to {:?}.", code_hash);
+                if vote != &code_hash {
+                    return Err(Error::ConflictingCodeHashes);
                 }
             }
+
+            // Set the new code hash after all operators have voted for the same code hash.
+            let set_code_hash_result = ink::env::set_code_hash(&code_hash);
+
+            if set_code_hash_result.is_err() {
+                return Err(Error::SetCodeHashFailed);
+            }
+            ink::env::debug_println!("Switched code hash to {:?}.", code_hash);
+
             return Ok(());
         }
     }
