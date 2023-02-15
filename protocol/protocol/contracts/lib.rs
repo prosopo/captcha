@@ -20,7 +20,7 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 #[ink::contract]
 pub mod prosopo {
     use ink::env::debug_println as debug;
-    use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
+    use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
@@ -58,7 +58,7 @@ pub mod prosopo {
 
     /// Providers are suppliers of human verification methods (captchas, etc.) to DappUsers, either
     /// paying or receiving a fee for this service.
-    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Provider {
         status: GovernanceStatus,
@@ -66,7 +66,7 @@ pub mod prosopo {
         // an amount in the base unit of the default parachain token (e.g. Planck on chains using DOT)
         fee: u32,
         payee: Payee,
-        service_origin: Hash,
+        service_origin: Vec<u8>,
         dataset_id: Hash,
         dataset_id_content: Hash,
     }
@@ -397,11 +397,20 @@ pub mod prosopo {
             self.dapp_stake_default
         }
 
+        /// Convert a vec of u8 into a Hash
+        fn hash_vec_u8(&self, data: &Vec<u8>) -> Hash {
+            let slice = data.as_slice();
+            let mut hash_output = <Blake2x256 as HashOutput>::Type::default();
+            <Blake2x256 as CryptoHash>::hash(&slice, &mut hash_output);
+            let hash = Hash::from(hash_output);
+            hash
+        }
+
         /// Register a provider, their service origin and fee
         #[ink(message)]
         pub fn provider_register(
             &mut self,
-            service_origin: Hash,
+            service_origin: Vec<u8>,
             fee: u32,
             payee: Payee,
             provider_account: AccountId,
@@ -411,8 +420,11 @@ pub mod prosopo {
             if self.providers.get(&provider_account).is_some() {
                 return Ok(());
             }
+
+            let service_origin_hash = self.hash_vec_u8(&service_origin);
+
             // prevent duplicate service origins
-            if self.service_origins.get(&service_origin).is_some() {
+            if self.service_origins.get(&service_origin_hash).is_some() {
                 return Err(Error::ProviderServiceOriginUsed);
             }
             // add a new provider
@@ -426,7 +438,7 @@ pub mod prosopo {
                 payee,
             };
             self.providers.insert(provider_account, &provider);
-            self.service_origins.insert(service_origin, &());
+            self.service_origins.insert(service_origin_hash, &());
             let mut provider_accounts_map = self
                 .provider_accounts
                 .get(GovernanceStatus::Deactivated)
@@ -445,7 +457,7 @@ pub mod prosopo {
         #[ink(payable)]
         pub fn provider_update(
             &mut self,
-            service_origin: Hash,
+            service_origin: Vec<u8>,
             fee: u32,
             payee: Payee,
             provider_account: AccountId,
@@ -463,13 +475,16 @@ pub mod prosopo {
 
             let existing = self.get_provider_details(provider_account).unwrap();
 
-            // prevent duplicate service origins
             if existing.service_origin != service_origin {
-                if self.service_origins.get(service_origin).is_some() {
+
+                let service_origin_hash = self.hash_vec_u8(&service_origin);
+                // prevent duplicate service origins
+                if self.service_origins.get(service_origin_hash).is_some() {
                     return Err(Error::ProviderServiceOriginUsed);
                 } else {
-                    self.service_origins.remove(existing.service_origin);
-                    self.service_origins.insert(service_origin, &());
+                    let existing_service_origin_hash = self.hash_vec_u8(&existing.service_origin);
+                    self.service_origins.remove(existing_service_origin_hash);
+                    self.service_origins.insert(service_origin_hash, &());
                 }
             }
 
