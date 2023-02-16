@@ -169,7 +169,6 @@ pub mod prosopo {
         operators: Mapping<AccountId, Operator>,
         operator_accounts: Lazy<Vec<AccountId>>,
         //disputes: Mapping<u64, Dispute>
-        status: GovernanceStatus,
         operator_stake_default: u64,
         operator_fee_currency: Hash,
         dapp_users: Mapping<AccountId, User>,
@@ -374,7 +373,6 @@ pub mod prosopo {
                 service_origins: Default::default(),
                 captcha_data: Default::default(),
                 operator_accounts: operator_accounts_lazy,
-                status: Default::default(),
                 operator_stake_default: 0,
                 operator_fee_currency: Default::default(),
                 dapp_users: Default::default(),
