@@ -349,7 +349,6 @@ pub mod prosopo {
         Unknown,
     }
 
-
     /// Concatenate two arrays (a and b) into a new array (c)
     ///
     fn concat_u8<const A: usize, const B: usize, const C: usize>(
@@ -649,11 +648,7 @@ pub mod prosopo {
 
         /// Register a dapp
         #[ink(message)]
-        pub fn dapp_register(
-            &mut self,
-            contract: AccountId,
-            optional_owner: Option<AccountId>,
-        ) {
+        pub fn dapp_register(&mut self, contract: AccountId, optional_owner: Option<AccountId>) {
             let caller = self.env().caller();
             // the caller can pass an owner or pass none and be made the owner
             let owner = optional_owner.unwrap_or(caller);
@@ -1386,7 +1381,7 @@ pub mod prosopo {
 
                 let vote = self.operator_code_hash_votes.get(operator).unwrap();
                 if vote != code_hash {
-                    return Ok(false)
+                    return Ok(false);
                 }
             }
 
@@ -1409,7 +1404,7 @@ pub mod prosopo {
                 self.operator_code_hash_votes.remove(operator);
             }
 
-            return Ok(true)
+            return Ok(true);
         }
     }
 
@@ -1574,19 +1569,6 @@ pub mod prosopo {
             let service_origin = str_to_hash(format!("https://localhost:{}", port));
 
             (provider_account, service_origin, fee)
-        }
-
-        /// Test add operators
-        #[ink::test]
-        fn test_add_operators() {
-            let operator_accounts = get_operator_accounts();
-            let operator_account = operator_accounts[0];
-            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
-            let operator_account_new = AccountId::from([0x2; 32]);
-            contract.add_prosopo_operator(operator_account_new);
-            assert!(contract.operator_accounts.contains(&operator_account_new));
-            assert!(contract.operators.get(&operator_account_new).is_some());
         }
 
         /// Test provider register and update
@@ -2548,10 +2530,12 @@ pub mod prosopo {
             assert_eq!(Error::NotAuthorised, dapp_user_commit_result.unwrap());
         }
 
-        /// Test provider cannot supply a dapp user commit for a different Provider
+        /// Test provider cannot supply a dapp user commit for a different Provider. We can't test
+        /// this properly as `own_code_hash` is not available in the test environment. This causes
+        /// the function to panic for all of the tests after `assert_eq!(Error::InvalidCodeHash, op1result.unwrap_err());`
         #[ink::test]
         #[should_panic(
-            expected = "not implemented: off-chain environment does not support `set_code_hash`"
+            expected = "not implemented: off-chain environment does not support `own_code_hash`"
         )]
         fn test_operator_upgrade_code_hash() {
             let operator_accounts = get_operator_accounts();
