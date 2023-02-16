@@ -1230,6 +1230,22 @@ pub mod prosopo {
             };
         }
 
+        /// Returns the operator votes for code hashes
+        #[ink(message)]
+        pub fn get_operator_code_hash_votes(&self) -> Vec<OperatorCodeHashVote> {
+            let mut code_hash_votes: Vec<OperatorCodeHashVote> = Vec::new();
+            for account_id in self.operator_accounts.iter() {
+                code_hash_votes.push(OperatorCodeHashVote {
+                    account_id: *account_id,
+                    code_hash: self
+                        .operator_code_hash_votes
+                        .get(&account_id)
+                        .unwrap_or([0; 32]),
+                });
+            }
+            code_hash_votes
+        }
+
         /// List providers given an array of account id
         ///
         /// Returns empty if none were matched
@@ -1353,45 +1369,59 @@ pub mod prosopo {
         }
 
         /// Modifies the code which is used to execute calls to this contract address (`AccountId`).
-        ///
-        /// We use this to upgrade the contract logic. We don't do any authorization here, any caller
-        /// can execute this method. In a production contract you would do some authorization here.
+        /// We use this to upgrade the contract logic. The caller must be an operator.
+        /// `true` is returned on successful upgrade, `false` otherwise
+        /// Errors are returned if the caller is not an operator, if the code hash is the callers
+        /// account_id, if the code is not found, and for any other unknown ink errors
         #[ink(message)]
-        pub fn set_code(&mut self, code_hash: [u8; 32]) -> Result<None, Error> {
+        pub fn operator_set_code(&mut self, code_hash: [u8; 32]) -> Result<bool, Error> {
+            let code_hash_account = AccountId::from(code_hash);
             let caller = self.env().caller();
             if self.operators.get(caller).is_none() {
                 return Err(Error::NotAuthorised);
             }
 
-            if caller == code_hash {
+            if caller == code_hash_account {
                 return Err(Error::InvalidCodeHash);
             }
 
-            self.set_code_hash_votes.insert(caller, &code_hash);
+            // Insert the operators latest vote into the votes map
+            self.operator_code_hash_votes.insert(caller, &code_hash);
 
             // Make sure each operator has voted for the same code hash. If an operator has not voted
             // an Ok result is returned. If an operator has voted for a conflicting code hash, an error
             // is returned.
-            for (operator) in self.operators.iter() {
-                if self.set_code_hash_votes.get(operator).is_none() {
-                    return Ok(());
+            for operator in self.operator_accounts.iter() {
+                if self.operator_code_hash_votes.get(operator).is_none() {
+                    return Ok(false);
                 }
-                let vote = self.set_code_hash_votes.get(operator).unwrap();
 
-                if vote != &code_hash {
-                    return Err(Error::ConflictingCodeHashes);
+                let vote = self.operator_code_hash_votes.get(operator).unwrap();
+                if vote != code_hash {
+                    return Ok(false)
                 }
             }
 
             // Set the new code hash after all operators have voted for the same code hash.
-            let set_code_hash_result = ink::env::set_code_hash(&code_hash);
+            let set_code_hash_result = ink::env::set_code_hash(&code_hash.into());
 
             if set_code_hash_result.is_err() {
-                return Err(Error::SetCodeHashFailed);
+                match set_code_hash_result.unwrap_err() {
+                    ink::env::Error::CodeNotFound => {
+                        return Err(Error::CodeNotFound);
+                    }
+                    _ => {
+                        return Err(Error::Unknown);
+                    }
+                }
             }
-            ink::env::debug_println!("Switched code hash to {:?}.", code_hash);
 
-            return Ok(());
+            // remove the votes
+            for operator in self.operator_accounts.iter() {
+                self.operator_code_hash_votes.remove(operator);
+            }
+
+            return Ok(true)
         }
     }
 
