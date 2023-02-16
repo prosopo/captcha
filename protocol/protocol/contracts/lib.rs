@@ -23,7 +23,6 @@ pub mod prosopo {
     use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
-    use ink::primitives::AccountId;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
 
@@ -168,7 +167,6 @@ pub mod prosopo {
         //dapps_owners: Mapping<AccountId, AccountId>,
         operators: Mapping<AccountId, Operator>,
         operator_accounts: Vec<AccountId>,
-        set_code_hash_votes: Mapping<AccountId, AccountId>,
         //disputes: Mapping<u64, Dispute>
         status: GovernanceStatus,
         operator_stake_default: u64,
@@ -296,8 +294,6 @@ pub mod prosopo {
         dataset_id: Hash,
     }
 
-
-
     /// The Prosopo error types
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -340,12 +336,6 @@ pub mod prosopo {
         NoActiveProviders,
         /// Returned if the dataset ID and dataset ID with solutions are identical
         DatasetIdSolutionsSame,
-        /// Returned if the caller has set their own AccountId as the code hash
-        InvalidCodeHash,
-        /// Returned if the operators have submitted differing code hashes
-        ConflictingCodeHashes,
-        /// Returned if the set_code_hash function fails
-        FailedToSetCodeHash,
     }
 
     /// Concatenate two arrays (a and b) into a new array (c)
@@ -1334,43 +1324,6 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_random_number_caller(&self, len: u128) -> u128 {
             self.get_random_number(len, self.env().caller())
-        }
-
-        /// Modifies the code which is used to execute calls to this contract address (`AccountId`).
-        ///
-        /// We use this to upgrade the contract logic. We don't do any authorization here, any caller
-        /// can execute this method. In a production contract you would do some authorization here.
-        #[ink(message)]
-        pub fn set_code(&mut self, code_hash: [u8; 32]) -> Result<None, Error> {
-            let caller = self.env().caller();
-            if self.operators.get(caller).is_none() {
-                return Err(Error::NotAuthorised);
-            }
-
-            if caller == code_hash {
-                return Err(Error::InvalidCodeHash);
-            }
-
-            self.set_code_hash_votes.insert(caller, &code_hash);
-
-            if self.set_code_hash_votes.len() >= self.operators.len() {
-                let current_code_hash = code_hash;
-                for (_operator, code_hash) in self.set_code_hash_votes.iter() {
-                    if *code_hash != current_code_hash {
-                        return Err(Error::ConflictingCodeHashes);
-                    }
-                    let set_code_hash_result = ink::env::set_code_hash(&code_hash);//.unwrap_or_else(|err| {
-
-                    if set_code_hash_result.is_err() {
-                        return Err(Error::SetCodeHashFailed);
-                    }
-                    ink::env::debug_println!("Switched code hash to {:?}.", code_hash);
-                }
-            }
-            return Ok(());
-
-
-
         }
     }
 
