@@ -1381,6 +1381,10 @@ pub mod prosopo {
                 return Err(Error::InvalidCodeHash);
             }
 
+            if self.env().own_code_hash().unwrap() == code_hash.into() {
+                return Err(Error::InvalidCodeHash);
+            }
+
             // Insert the operators latest vote into the votes map
             self.operator_code_hash_votes.insert(caller, &code_hash);
 
