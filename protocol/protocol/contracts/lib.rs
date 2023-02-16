@@ -348,10 +348,6 @@ pub mod prosopo {
         DatasetIdSolutionsSame,
         /// Returned if the caller has set their own AccountId as the code hash
         InvalidCodeHash,
-        /// Returned if the operators have submitted differing code hashes
-        ConflictingCodeHashes,
-        /// Returned if the set_code_hash function fails
-        SetCodeHashFailed,
         /// CodeNotFound ink env error
         CodeNotFound,
         /// An unknown ink env error has occurred
@@ -2593,10 +2589,10 @@ pub mod prosopo {
             let op1result = contract.operator_set_code([0x01; 32]); // this is the operators AccountId, not a valid contract
             assert_eq!(Error::InvalidCodeHash, op1result.unwrap_err());
             let op1result = contract.operator_set_code([0x20; 32]);
-            op1result.unwrap();
+            assert_eq!(false, op1result.unwrap());
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator2);
             let op2result = contract.operator_set_code([0x30; 32]);
-            assert_eq!(Error::ConflictingCodeHashes, op2result.unwrap_err());
+            assert_eq!(false, op2result.unwrap());
             let op2result = contract.operator_set_code([0x20; 32]);
             // following panics due to set code hash not being available to off-chain environment
             op2result.unwrap();
