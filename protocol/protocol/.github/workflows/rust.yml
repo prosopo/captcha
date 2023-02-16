@@ -82,7 +82,7 @@ jobs:
           rustup component add rust-src --toolchain nightly
           
           echo install cargo-contract
-          cargo install cargo-contract --version 2.0.0-rc
+          cargo install cargo-contract --version 2.0.0
 
           echo install cargo-fmt
           rustup component add rustfmt
@@ -210,7 +210,7 @@ jobs:
           # the key is the OS name + architecture + tag, isolating each rust env to a specific OS. This cached copy can be used in any workflow using the same OS, though
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same data without mutating them, as other workflows may be using them
           key: ${{ runner.os }}-${{ runner.arch }}-cargo-env-${{ github.run_id }}-${{ github.run_attempt }}
-      
+
       - name: Cleanup stale cargo env caches
         if: always() && (steps.detect-cache-cargo-env.outputs.cache_hit == 'false' || steps.update-rust.outputs.updated == 'true')
         run: |
