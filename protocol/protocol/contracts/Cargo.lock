@@ -576,7 +576,7 @@ dependencies = [
 
 [[package]]
 name = "prosopo"
-version = "4.0.0-beta"
+version = "4.0.0"
 dependencies = [
  "ink",
  "parity-scale-codec",
