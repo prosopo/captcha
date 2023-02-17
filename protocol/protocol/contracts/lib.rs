@@ -637,7 +637,7 @@ pub mod prosopo {
             }
 
             // set the captcha data id on the provider
-            let mut provider = self.providers.get(&provider_id).ok_or(Error::ProviderDoesNotExist)?;
+            let mut provider = self.providers.get(&provider_id).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
             provider.dataset_id = dataset_id;
             provider.dataset_id_content = dataset_id_content;
             let old_status = provider.status;
@@ -717,7 +717,7 @@ pub mod prosopo {
             contract: AccountId,
             caller: AccountId,
         ) -> Result<(), Error> {
-            let mut dapp = self.dapps.get(&contract).ok_or(Error::DappDoesNotExist)?;
+            let mut dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
             // only allow the owner to make changes to the dapp (including funding?!)
             if dapp.owner != caller {
                 return err!(Error::NotAuthorised);
@@ -754,7 +754,7 @@ pub mod prosopo {
                 return err!(Error::DappDoesNotExist);
             }
 
-            let mut dapp = self.dapps.get(&contract).ok_or(Error::DappDoesNotExist)?;
+            let mut dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
             let total = dapp.balance + transferred;
             dapp.balance = total;
             if dapp.balance > 0 {
@@ -893,8 +893,8 @@ pub mod prosopo {
             let mut commitment_mut = self
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
-                .ok_or(Error::CaptchaSolutionCommitmentDoesNotExist)?;
-            let mut user = self.dapp_users.get(&commitment.account).ok_or(Error::DappDoesNotExist)?;
+                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+            let mut user = self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
@@ -939,8 +939,8 @@ pub mod prosopo {
             let mut commitment_mut = self
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
-                .ok_or(Error::CaptchaSolutionCommitmentDoesNotExist)?;
-            let mut user = self.dapp_users.get(&commitment.account).ok_or(Error::CaptchaSolutionCommitmentDoesNotExist)?;
+                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+            let mut user = self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
@@ -966,9 +966,9 @@ pub mod prosopo {
             provider_account: &AccountId,
             dapp_account: &AccountId,
         ) -> Result<(), Error> {
-            let mut provider = self.providers.get(provider_account).ok_or(Error::ProviderDoesNotExist)?;
+            let mut provider = self.providers.get(provider_account).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
             if provider.fee != 0 {
-                let mut dapp = self.dapps.get(dapp_account).ok_or(Error::DappDoesNotExist)?;
+                let mut dapp = self.dapps.get(dapp_account).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
 
                 let fee = Balance::from(provider.fee);
                 if provider.payee == Payee::Provider {
@@ -997,8 +997,8 @@ pub mod prosopo {
                 return err!(Error::ContractInsufficientFunds);
             }
 
-            let mut provider = self.providers.get(&commitment.provider).ok_or(Error::ProviderDoesNotExist)?;
-            let mut dapp = self.dapps.get(&commitment.contract).ok_or(Error::DappDoesNotExist)?;
+            let mut provider = self.providers.get(&commitment.provider).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+            let mut dapp = self.dapps.get(&commitment.contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
             if provider.payee == Payee::Provider {
                 if dapp.balance < amount {
                     return err!(Error::DappInsufficientFunds);
@@ -1114,7 +1114,7 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
-            self.captcha_data.get(&dataset_id).ok_or(Error::CaptchaDataDoesNotExist)
+            self.captcha_data.get(&dataset_id).ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))
         }
 
         /// Get a solution commitment
@@ -1135,7 +1135,7 @@ pub mod prosopo {
             let commitment = self
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
-                .ok_or(Error::CaptchaSolutionCommitmentDoesNotExist)?;
+                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
 
             Ok(commitment)
         }
@@ -1145,7 +1145,7 @@ pub mod prosopo {
         /// Returns an error if the user does not exist
         #[ink(message)]
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
-            self.dapp_users.get(&dapp_user_id).ok_or(Error::DappUserDoesNotExist)
+            self.dapp_users.get(&dapp_user_id).ok_or_else(err_fn!(Error::DappUserDoesNotExist))
         }
 
         /// Get a single provider's details
@@ -1153,7 +1153,7 @@ pub mod prosopo {
         /// Returns an error if the user does not exist
         #[ink(message)]
         pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
-            self.providers.get(&accountid).ok_or(Error::ProviderDoesNotExist)
+            self.providers.get(&accountid).ok_or_else(err_fn!(Error::ProviderDoesNotExist))
         }
 
         /// Get a single dapps details
@@ -1161,7 +1161,7 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
-            self.dapps.get(&contract).ok_or(Error::DappDoesNotExist)
+            self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))
         }
 
         /// Returns the account balance for the specified `dapp`.
@@ -1197,7 +1197,7 @@ pub mod prosopo {
                 if provider.is_none() {
                     continue;
                 }
-                providers.push(provider.ok_or(Error::ProviderDoesNotExist)?);
+                providers.push(provider.ok_or_else(err_fn!(Error::ProviderDoesNotExist))?);
             }
             Ok(providers)
         }
@@ -1213,7 +1213,7 @@ pub mod prosopo {
                 if providers_set.is_none() {
                     continue;
                 }
-                let provider_ids = providers_set.ok_or(Error::ProviderDoesNotExist)?.into_iter().collect();
+                let provider_ids = providers_set.ok_or_else(err_fn!(Error::ProviderDoesNotExist))?.into_iter().collect();
                 providers.append(&mut self.list_providers_by_ids(provider_ids)?);
             }
             Ok(providers)
@@ -1232,14 +1232,14 @@ pub mod prosopo {
             let active_providers = self
                 .provider_accounts
                 .get(GovernanceStatus::Active)
-                .ok_or(Error::ProviderDoesNotExist)?;
+                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
             let max = active_providers.len();
             if max == 0 {
                 return err!(Error::NoActiveProviders);
             }
             let index = self.get_random_number(max as u128, user_account);
-            let provider_id = active_providers.into_iter().nth(index as usize).ok_or(Error::NoActiveProviders)?;
-            let provider = self.providers.get(provider_id).ok_or(Error::NoActiveProviders)?;
+            let provider_id = active_providers.into_iter().nth(index as usize).ok_or_else(err_fn!(Error::NoActiveProviders))?;
+            let provider = self.providers.get(provider_id).ok_or_else(err_fn!(Error::NoActiveProviders))?;
 
             Ok(RandomProvider {
                 provider_id,
@@ -1263,7 +1263,7 @@ pub mod prosopo {
                 if providers_set.is_none() {
                     continue;
                 }
-                provider_ids.append(&mut providers_set.ok_or(Error::ProviderDoesNotExist)?.into_iter().collect());
+                provider_ids.append(&mut providers_set.ok_or_else(err_fn!(Error::ProviderDoesNotExist))?.into_iter().collect());
             }
             Ok(provider_ids)
         }
