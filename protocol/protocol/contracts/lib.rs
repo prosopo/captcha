@@ -441,7 +441,7 @@ pub mod prosopo {
         ) -> Result<(), Error> {
             let balance: u128 = 0;
             // this function is for registration only
-            if self.providers.get(&provider_account).is_none() {
+            if self.providers.get(&provider_account).is_some() {
                 return err!(Error::ProviderDoesNotExist);
             }
             // prevent duplicate service origins
@@ -490,7 +490,7 @@ pub mod prosopo {
             }
 
             // this function is for updating only, not registering
-            if self.providers.get(&provider_account).is_some() {
+            if self.providers.get(&provider_account).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
 
