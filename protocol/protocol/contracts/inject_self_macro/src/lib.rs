@@ -59,7 +59,7 @@ fn handle(input: TokenStream) -> TokenStream {
                         let inject = quote!(
                             macro_rules! get_self {
                                 () => {
-                                    self
+                                    &self
                                 }
                             }
                         );
