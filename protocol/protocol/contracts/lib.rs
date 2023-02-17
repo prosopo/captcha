@@ -1025,8 +1025,12 @@ pub mod prosopo {
                 Ok(user) =>
                 // determine if correct captchas is greater than or equal to threshold
                 {
-                    user.correct_captchas * 100 / (user.correct_captchas + user.incorrect_captchas)
-                        >= threshold.into()
+                    let score = if user.correct_captchas + user.incorrect_captchas == 0 {
+                        0
+                    } else {
+                        (user.correct_captchas * 100) / (user.correct_captchas + user.incorrect_captchas)
+                    };
+                    score >= threshold.into()
                 }
             }
         }
