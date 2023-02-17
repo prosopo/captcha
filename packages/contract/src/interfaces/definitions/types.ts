@@ -102,7 +102,7 @@ export interface ProsopoGovernanceStatus extends Enum {
 
 /** @name ProsopoLastCorrectCaptcha */
 export interface ProsopoLastCorrectCaptcha extends Struct {
-  readonly beforeMs: u32;
+  readonly beforeMs: u64;
   readonly dappId: AccountId;
 }
 
