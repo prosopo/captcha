@@ -147,7 +147,7 @@ pub mod prosopo {
     #[derive(scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct LastCorrectCaptcha {
-        pub before_ms: u32,
+        pub before_ms: Timestamp,
         pub dapp_id: AccountId,
     }
 
@@ -1039,8 +1039,7 @@ pub mod prosopo {
             let user = self.get_dapp_user(user)?;
 
             Ok(LastCorrectCaptcha {
-                before_ms: u32::try_from(self.env().block_timestamp() - user.last_correct_captcha)
-                    .unwrap(),
+                before_ms: self.env().block_timestamp() - user.last_correct_captcha,
                 dapp_id: user.last_correct_captcha_dapp_id,
             })
         }
