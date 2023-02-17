@@ -147,7 +147,7 @@ pub mod prosopo {
     #[derive(scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct LastCorrectCaptcha {
-        pub before_ms: Timestamp,
+        pub before_ms: u64,
         pub dapp_id: AccountId,
     }
 
