@@ -17,6 +17,25 @@
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
+/// Print and return an error in ink
+macro_rules! err {
+    ($err:expr) => {
+        {
+            Err(get_self!().print_err($err, function_name!()))
+        }
+    };
+}
+
+// ($err:expr) => (
+    // |$err| crate::print_error($err, function_name!(), get_self!().env().block_number(), get_self!().env().caller())
+// );
+
+macro_rules! err_fn {
+    ($err:expr) => (
+        || get_self!().print_err($err, function_name!())
+    );
+}
+
 /// Concatenate two arrays (a and b) into a new array (c)
 fn concat_u8<const A: usize, const B: usize, const C: usize>(
     a: &[u8; A],
@@ -29,6 +48,8 @@ fn concat_u8<const A: usize, const B: usize, const C: usize>(
 }
 
 #[allow(unused_macros)]
+#[named_functions_macro::named_functions] // allows the use of the function_name!() macro
+#[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod prosopo {
 
@@ -389,6 +410,12 @@ pub mod prosopo {
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
             }
+        }
+
+        /// Print and return an error
+        fn print_err(&self, err: Error, fn_name: &str) -> Error {
+            debug!("ERROR in {}() at block {} with caller {:?}\n'{:?}'", fn_name, self.env().block_number(), self.env().caller(), err);
+            err
         }
 
         /// Get contract provider minimum stake default.
