@@ -398,9 +398,8 @@ pub mod prosopo {
             service_origin: Hash,
             fee: u32,
             payee: Payee,
-            provider_account: AccountId,
         ) -> Result<(), Error> {
-            let balance: u128 = 0;
+            let provider_account = self.env().caller();
             // this function is for registration only
             if self.providers.get(&provider_account).is_some() {
                 return Ok(());
@@ -409,6 +408,7 @@ pub mod prosopo {
             if self.service_origins.get(&service_origin).is_some() {
                 return Err(Error::ProviderServiceOriginUsed);
             }
+            let balance: u128 = 0;
             // add a new provider
             let provider = Provider {
                 status: GovernanceStatus::Deactivated,
@@ -627,11 +627,7 @@ pub mod prosopo {
 
         /// Register a dapp
         #[ink(message)]
-        pub fn dapp_register(
-            &mut self,
-            contract: AccountId,
-            optional_owner: Option<AccountId>,
-        ) {
+        pub fn dapp_register(&mut self, contract: AccountId, optional_owner: Option<AccountId>) {
             let caller = self.env().caller();
             // the caller can pass an owner or pass none and be made the owner
             let owner = optional_owner.unwrap_or(caller);
