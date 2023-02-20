@@ -851,7 +851,7 @@ pub mod prosopo {
                     correct_captchas: 0,
                     incorrect_captchas: 0,
                     last_correct_captcha: 0,
-                    last_correct_captcha_dapp_id: AccountId::default(),
+                    last_correct_captcha_dapp_id: [0; 32].into(),
                 };
                 self.dapp_users.insert(account, &user);
                 self.dapp_user_accounts.push(account);
