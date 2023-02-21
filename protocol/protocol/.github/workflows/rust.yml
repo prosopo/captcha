@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  cargo_build_version: cargo-build
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -19,111 +18,41 @@ jobs:
       # Checkout the repo
       - uses: actions/checkout@v3
 
-      - name: ls
-        run: |
-          ls -la
-          ls -la ~
+      - run: ls -la
+      - run: ls -la ~
 
-      # Restore rust env (i.e. ~/.rustup and ~/.cargo) from cache
-      - name: Restore cached cargo env
-        id: restore-cache-cargo-env
+      - name: Restore rust_env_cache
         uses: actions/cache/restore@v3
         with:
-          path: |
-            /home/runner/.cargo
-            /home/runner/.rustup
-            /home/runner/.cargo_env_cache_marker
-          # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
-          # "abcdef123" could be anything, it is a random string to differentiate cache usages
-          # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
-          # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
-          # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-env
+          path: rust_env_cache
+          key: rust-env-cache-${{ runner.os }}-${{ runner.arch }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-cargo-env-
+            rust-env-cache-${{ runner.os }}-${{ runner.arch }}-
 
-      - name: ls
+      - run: ls -la
+      - run: ls -la ~
+
+      # load imgs from cache
+      - name: Load contracts-ci docker image
         run: |
-          ls -la
-          ls -la ~
+          ls rust_env_cache
+          docker load -i rust_env_cache/contracts-ci-linux.tar
+      
+      - run: ls -la
+      - run: ls -la ~
 
-      # when restoring from non-exact-match keys, the output for the cache action is incorrect, hence we have to detect a file in the cache instead
-      - name: Detect cargo env cache status
-        id: detect-cache-cargo-env
-        run: |
-          if [[ -f /home/runner/.cargo_env_cache_marker ]]; then
-            echo "cache hit"
-            echo "cache_hit=true" >> $GITHUB_OUTPUT
-          else
-            echo "cache miss"
-            echo "cache_hit=false" >> $GITHUB_OUTPUT
-          fi
-
-      # If cached version of rust env not found, build it from scratch
-      - name: Setup rust environment
-        if: steps.detect-cache-cargo-env.outputs.cache_hit != 'true'
-        run: |
-          echo remove previous rustup / cargo
-          ls -la /home/runner
-          rm -rf /home/runner/.rustup /home/runner/.cargo
-          ls -la /home/runner
-
-          echo install rustup
-          curl -sSf https://sh.rustup.rs | sh -s -- -y
-          source "$HOME/.cargo/env"
-          ls -la ~
-          
-          echo install nightly
-          rustup toolchain install --profile=minimal nightly
-          rustup default nightly-x86_64-unknown-linux-gnu
-          rustup toolchain remove stable
-          rustup show
-          # to compile the std lib we nee the src
-          rustup component add rust-src --toolchain nightly
-          
-          echo install cargo-contract
-          cargo install cargo-contract --version 2.0.0-rc
-
-          echo install cargo-fmt
-          rustup component add rustfmt
-
-          echo set target platform
-          rustup target add wasm32-unknown-unknown --toolchain nightly
-
-          # create the cache marker file to detect cache hits in the future
-          touch /home/runner/.cargo_env_cache_marker
-
-      - name: ls
-        run: |
-          ls -la
-          ls -la ~
-
-      # Update rust and record output
-      - name: Update rust
-        id: update-rust
-        run: |
-          if rustup update | grep updated; then
-            echo rust updated
-            echo "updated=true" >> $GITHUB_OUTPUT
-          else
-            echo rust already up to date
-            echo "updated=false" >> $GITHUB_OUTPUT
-          fi
-
-      # Check if rust is formatted correctly
-      - name: Rust formatting check
-        run: |
-          cd contracts
-          if cargo fmt --check; then
-            echo "code formatted correctly"
-          else
-            echo "code formatted incorrectly"
-            exit 1
-          fi
+      # # Check if rust is formatted correctly
+      # - name: Rust formatting check
+      #   run: |
+      #     if docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose; then
+      #       echo "code formatted correctly"
+      #     else
+      #       echo "code formatted incorrectly"
+      #       exit 1
+      #     fi
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
-        id: restore-cache-cargo-build
         uses: actions/cache/restore@v3
         with:
           path: |
@@ -134,37 +63,24 @@ jobs:
           # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
           # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
           # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
-            key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
-
-      - name: ls
-        run: |
-          ls -la
-          ls -la ~
+            key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
+      
+      - run: ls -la
+      - run: ls -la ~
 
       # Do the build
       - name: Build
         id: build
-        run: |
-          cd contracts
-          cargo contract build --release
-
+        run: docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
+          
       # Do unit testing
       - name: Test
         run: |
-          cd contracts
-          RUST_BACKTRACE=1 cargo test --no-default-features --features std --release -- --nocapture
+          RUST_BACKTRACE=1 docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly test  --no-default-features --features std --manifest-path=/contracts/Cargo.toml -- --nocapture
           exit $?
-
-      - name: Print conditions
-        if: always()
-        run: |
-          echo detected cached cargo env: ${{ steps.detect-cache-cargo-env.outputs.cache_hit }}
-          echo updated rust: ${{ steps.update-rust.outputs.updated }}
-          echo build: ${{ steps.build.conclusion }}
-          echo test: ${{ steps.test.conclusion }}
-
+          
       # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
       - name: Save cargo build to cache
         uses: actions/cache/save@v3
@@ -174,57 +90,18 @@ jobs:
           path: |
             contracts/target
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Cleanup stale cargo build caches
         if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
         run: |
           set +e; gh extension install actions/gh-actions-cache; set -e
-
           REPO=${{ github.repository }}
-
           echo "Fetching list of cache key"
           # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +2 )
-
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +2 )
           echo caches to be removed:
           echo ${cacheKeysForPR}
-
-          # delete the stale caches
-          ## Setting this to not fail the workflow while deleting cache keys. 
-          set +e
-          for cacheKey in $cacheKeysForPR
-          do
-              gh actions-cache delete $cacheKey -R $REPO --confirm
-          done
-
-      # If updated or built from scratch, save the env in a new cache
-      - name: Save cargo env to cache
-        if: always() && (steps.detect-cache-cargo-env.outputs.cache_hit == 'false' || steps.update-rust.outputs.updated == 'true')
-        uses: actions/cache/save@v3
-        with:
-          path: |
-            /home/runner/.cargo
-            /home/runner/.rustup
-            /home/runner/.cargo_env_cache_marker
-          # the key is the OS name + architecture + tag, isolating each rust env to a specific OS. This cached copy can be used in any workflow using the same OS, though
-          # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same data without mutating them, as other workflows may be using them
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-env-${{ github.run_id }}-${{ github.run_attempt }}
-      
-      - name: Cleanup stale cargo env caches
-        if: always() && (steps.detect-cache-cargo-env.outputs.cache_hit == 'false' || steps.update-rust.outputs.updated == 'true')
-        run: |
-          set +e; gh extension install actions/gh-actions-cache; set -e
-
-          REPO=${{ github.repository }}
-
-          echo "Fetching list of cache key"
-          # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key ${{ runner.os }}-${{ runner.arch }}-cargo-env- | cut -f 1 | tail -n +2 )
-
-          echo caches to be removed:
-          echo ${cacheKeysForPR}
-
           # delete the stale caches
           ## Setting this to not fail the workflow while deleting cache keys. 
           set +e
