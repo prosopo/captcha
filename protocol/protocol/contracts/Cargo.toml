@@ -5,7 +5,7 @@ authors = ["Chris Taylor chris@prosopo.io, George Oastler george@prosopo.io, Vin
 edition = "2021"
 
 [dependencies]
-ink = { git = "https://github.com/paritytech/ink", rev="4655a8b4413cb50cbc38d1b7c173ad426ab06cde", default-features = false }
+ink = { git = "https://github.com/paritytech/ink", rev="59bbd36c1161370697882532c21ee1833e729f13", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 rand_chacha = { version = "0.3.1", default-features = false }
