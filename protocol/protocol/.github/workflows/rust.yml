@@ -45,7 +45,7 @@ jobs:
       # Check if rust is formatted correctly
       - name: Rust formatting check
         run: |
-          if docker run --rm -it -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly fmt --check --manifest-path=/contracts/Cargo.toml; then
+          if docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly fmt --check --manifest-path=/contracts/Cargo.toml; then
             echo "code formatted correctly"
           else
             echo "code formatted incorrectly"
@@ -74,12 +74,12 @@ jobs:
       # Do the build
       - name: Build
         id: build
-        run: docker run --rm -it -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
+        run: docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
           
       # Do unit testing
       - name: Test
         run: |
-          RUST_BACKTRACE=1 docker run --rm -it -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly test  --no-default-features --features std --manifest-path=/contracts/Cargo.toml -- --nocapture
+          RUST_BACKTRACE=1 docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly test  --no-default-features --features std --manifest-path=/contracts/Cargo.toml -- --nocapture
           exit $?
           
       # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
