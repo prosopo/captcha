@@ -26,9 +26,9 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: rust_env_cache
-          key: rust_env_cache_${{ runner.os }}_${{ runner.arch }}
+          key: rust-env-cache-${{ runner.os }}-${{ runner.arch }}
           restore-keys: |
-            rust_env_cache_${{ runner.os }}_${{ runner.arch }}-
+            rust-env-cache-${{ runner.os }}-${{ runner.arch }}-
 
       - run: ls -la
       - run: ls -la ~
