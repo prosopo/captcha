@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  cargo_build_version: cargo-build
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -64,9 +63,9 @@ jobs:
           # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
           # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
           # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-          key: ${{ runner.os }}-${{ runner.arch }}-cargo-build-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
           restore-keys: |
-            key: cargo_build_${{ runner.os }}_${{ runner.arch }}_${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
+            key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
       
       - run: ls -la
       - run: ls -la ~
@@ -91,7 +90,7 @@ jobs:
           path: |
             contracts/target
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
-          key: cargo_build_${{ runner.os }}_${{ runner.arch }}_${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Cleanup stale cargo build caches
         if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
@@ -100,7 +99,7 @@ jobs:
           REPO=${{ github.repository }}
           echo "Fetching list of cache key"
           # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo_build_${{ runner.os }}_${{ runner.arch }}_${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +2 )
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +2 )
           echo caches to be removed:
           echo ${cacheKeysForPR}
           # delete the stale caches
