@@ -44,7 +44,7 @@ jobs:
       # Check if rust is formatted correctly
       - name: Rust formatting check
         run: |
-          if docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly fmt --check --manifest-path=/contracts/Cargo.toml --verbose; then
+          if docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose; then
             echo "code formatted correctly"
           else
             echo "code formatted incorrectly"
