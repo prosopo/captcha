@@ -16,9 +16,9 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: rust_env_cache
-          key: rust_env_cache_${{ runner.os }}_${{ runner.arch }}
+          key: rust-env-cache-${{ runner.os }}-${{ runner.arch }}
           restore-keys: |
-            rust_env_cache_${{ runner.os }}_${{ runner.arch }}-
+            rust-env-cache-${{ runner.os }}-${{ runner.arch }}-
 
       # load imgs from cache
       - name: Load images
@@ -51,7 +51,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: rust_env_cache
-          key: rust_env_cache_${{ runner.os }}_${{ runner.arch }}_${{ github.run_id }}_${{ github.run_attempt }}
+          key: rust-env-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Cleanup caches
         if: steps.docker_pull.outputs.change == 'true'
@@ -60,7 +60,7 @@ jobs:
           REPO=${{ github.repository }}
           echo "Fetching list of cache key"
           # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust_env_cache_${{ runner.os }}_${{ runner.arch }} | cut -f 1 | tail -n +2 )
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust-env-cache-${{ runner.os }}-${{ runner.arch }} | cut -f 1 | tail -n +2 )
           echo caches to be removed:
           echo ${cacheKeysForPR}
           # delete the stale caches
