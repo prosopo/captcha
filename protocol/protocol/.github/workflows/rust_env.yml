@@ -51,7 +51,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: rust_env_cache
-          key: rust-env-cache-${{ runner.os }}-${{ runner.arch }}_${{ github.run_id }}_${{ github.run_attempt }}
+          key: rust-env-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Cleanup caches
         if: steps.docker_pull.outputs.change == 'true'
