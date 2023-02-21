@@ -6,7 +6,7 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
-  env:
+  setup:
     runs-on: ubuntu-latest
 
     steps:
