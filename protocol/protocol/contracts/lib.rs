@@ -627,11 +627,7 @@ pub mod prosopo {
 
         /// Register a dapp
         #[ink(message)]
-        pub fn dapp_register(
-            &mut self,
-            contract: AccountId,
-            optional_owner: Option<AccountId>,
-        ) {
+        pub fn dapp_register(&mut self, contract: AccountId, optional_owner: Option<AccountId>) {
             let caller = self.env().caller();
             // the caller can pass an owner or pass none and be made the owner
             let owner = optional_owner.unwrap_or(caller);
@@ -852,7 +848,7 @@ pub mod prosopo {
                     correct_captchas: 0,
                     incorrect_captchas: 0,
                     last_correct_captcha: 0,
-                    last_correct_captcha_dapp_id: AccountId::default(),
+                    last_correct_captcha_dapp_id: [0; 32].into(),
                 };
                 self.dapp_users.insert(account, &user);
                 self.dapp_user_accounts.push(account);
