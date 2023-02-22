@@ -1578,7 +1578,11 @@ pub mod prosopo {
             let operator_account = operator_accounts[0];
             let contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             assert!(contract.operators.get(operator_account).is_some());
-            assert!(contract.operator_accounts.get().unwrap().contains(&operator_account));
+            assert!(contract
+                .operator_accounts
+                .get()
+                .unwrap()
+                .contains(&operator_account));
         }
 
         /// Assert contract provider minimum stake default set from constructor.
