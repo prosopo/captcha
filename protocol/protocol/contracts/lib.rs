@@ -1234,7 +1234,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_operator_code_hash_votes(&self) -> Vec<OperatorCodeHashVote> {
             let mut code_hash_votes: Vec<OperatorCodeHashVote> = Vec::new();
-            for account_id in self.operator_accounts.iter() {
+            for account_id in self.operator_accounts.get().unwrap().iter() {
                 code_hash_votes.push(OperatorCodeHashVote {
                     account_id: *account_id,
                     code_hash: self
@@ -1395,7 +1395,7 @@ pub mod prosopo {
             // Make sure each operator has voted for the same code hash. If an operator has not voted
             // an Ok result is returned. If an operator has voted for a conflicting code hash, an error
             // is returned.
-            for operator in self.operator_accounts.iter() {
+            for operator in self.operator_accounts.get().unwrap().iter() {
                 if self.operator_code_hash_votes.get(operator).is_none() {
                     return Ok(false);
                 }
@@ -1421,7 +1421,7 @@ pub mod prosopo {
             }
 
             // remove the votes
-            for operator in self.operator_accounts.iter() {
+            for operator in self.operator_accounts.get().unwrap().iter() {
                 self.operator_code_hash_votes.remove(operator);
             }
 
@@ -1487,7 +1487,7 @@ pub mod prosopo {
         #[ink::test]
         pub fn test_dapp_stake_default() {
             let operator_accounts = get_operator_accounts();
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account[0]);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_accounts[0]);
             let contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let dapp_stake_default: u128 = contract.get_dapp_stake_default();
             assert!(STAKE_DEFAULT.eq(&dapp_stake_default));
