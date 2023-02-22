@@ -1,11 +1,11 @@
 [package]
 name = "prosopo"
-version = "4.0.0-beta"
+version = "4.0.0"
 authors = ["Chris Taylor chris@prosopo.io, George Oastler george@prosopo.io, Vincenzo Ferrara, Siniša Čanak"]
 edition = "2021"
 
 [dependencies]
-ink = { git = "https://github.com/paritytech/ink", rev="59bbd36c1161370697882532c21ee1833e729f13", default-features = false }
+ink = { git = "https://github.com/paritytech/ink", rev="ad4f5e579e39926704e182736af4fa945982ac2b", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 rand_chacha = { version = "0.3.1", default-features = false }
@@ -19,8 +19,6 @@ path = "lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.
     "cdylib",
-    # Used for ABI generation.
-    "rlib",
 ]
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.
 [profile.release]

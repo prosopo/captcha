@@ -245,8 +245,8 @@ dependencies = [
 
 [[package]]
 name = "ink"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "derive_more",
  "ink_env",
@@ -260,16 +260,16 @@ dependencies = [
 
 [[package]]
 name = "ink_allocator"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "cfg-if",
 ]
 
 [[package]]
 name = "ink_codegen"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "blake2",
  "derive_more",
@@ -291,8 +291,8 @@ dependencies = [
 
 [[package]]
 name = "ink_engine"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "blake2",
  "derive_more",
@@ -305,8 +305,8 @@ dependencies = [
 
 [[package]]
 name = "ink_env"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "arrayref",
  "blake2",
@@ -331,8 +331,8 @@ dependencies = [
 
 [[package]]
 name = "ink_ir"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "blake2",
  "either",
@@ -344,8 +344,8 @@ dependencies = [
 
 [[package]]
 name = "ink_macro"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "ink_codegen",
  "ink_ir",
@@ -359,8 +359,8 @@ dependencies = [
 
 [[package]]
 name = "ink_metadata"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "derive_more",
  "impl-serde",
@@ -372,16 +372,16 @@ dependencies = [
 
 [[package]]
 name = "ink_prelude"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "cfg-if",
 ]
 
 [[package]]
 name = "ink_primitives"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "derive_more",
  "ink_prelude",
@@ -392,8 +392,8 @@ dependencies = [
 
 [[package]]
 name = "ink_storage"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "array-init",
  "cfg-if",
@@ -409,8 +409,8 @@ dependencies = [
 
 [[package]]
 name = "ink_storage_traits"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=59bbd36c1161370697882532c21ee1833e729f13#59bbd36c1161370697882532c21ee1833e729f13"
+version = "4.0.0"
+source = "git+https://github.com/paritytech/ink?rev=ad4f5e579e39926704e182736af4fa945982ac2b#ad4f5e579e39926704e182736af4fa945982ac2b"
 dependencies = [
  "ink_metadata",
  "ink_prelude",
@@ -576,7 +576,7 @@ dependencies = [
 
 [[package]]
 name = "prosopo"
-version = "4.0.0-beta"
+version = "4.0.0"
 dependencies = [
  "ink",
  "parity-scale-codec",
