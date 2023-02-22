@@ -69,7 +69,7 @@ pub mod prosopo {
     impl TryFrom<DappPayee> for Payee {
         type Error = ();
 
-        fn try_from(dapp_payee: DappPayee) -> Result<Self,  Self::Error> {
+        fn try_from(dapp_payee: DappPayee) -> Result<Self, Self::Error> {
             match dapp_payee {
                 DappPayee::Provider => Ok(Payee::Provider),
                 DappPayee::Dapp => Ok(Payee::Dapp),
@@ -1079,7 +1079,8 @@ pub mod prosopo {
                     let score = if user.correct_captchas + user.incorrect_captchas == 0 {
                         0
                     } else {
-                        (user.correct_captchas * 100) / (user.correct_captchas + user.incorrect_captchas)
+                        (user.correct_captchas * 100)
+                            / (user.correct_captchas + user.incorrect_captchas)
                     };
                     Ok(score >= threshold.into())
                 }
@@ -1688,8 +1689,7 @@ pub mod prosopo {
             // try creating the second provider and make sure the error is correct and that it doesn't exist
             let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            match contract.provider_register(service_origin, fee, Payee::Dapp)
-            {
+            match contract.provider_register(service_origin, fee, Payee::Dapp) {
                 Result::Err(Error::ProviderServiceOriginUsed) => {
                     assert!(true);
                 }
@@ -2092,7 +2092,6 @@ pub mod prosopo {
             let dapp_contract_account = AccountId::from([0x4; 32]);
             // Mark the the dapp account as being a contract on-chain
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
-
 
             // Call from the dapp contract account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_contract_account);
@@ -2525,7 +2524,8 @@ pub mod prosopo {
             // Call from the dapp_user_account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
 
-            // Call as dapp user and get a random provider. Ensure that the provider is still selected
+            // Call as dapp user and get a random provider. Ensure that the provider is still
+            // selected despite the payee change
             let selected_provider =
                 contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
             assert_eq!(selected_provider.unwrap().provider_id, provider_account);
