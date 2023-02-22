@@ -355,6 +355,8 @@ pub mod prosopo {
         NoActiveProviders,
         /// Returned if the dataset ID and dataset ID with solutions are identical
         DatasetIdSolutionsSame,
+        /// Invalid contract
+        InvalidContract,
         /// Invalid payee. Returned when the payee value does not exist in the enum
         InvalidPayee,
     }
@@ -669,12 +671,15 @@ pub mod prosopo {
         pub fn dapp_register(
             &mut self,
             contract: AccountId,
-            optional_owner: Option<AccountId>,
             payee: DappPayee,
-        ) {
+        ) -> Result<(), Error> {
+            if !self.env().is_contract(&contract) {
+                debug!("Contract is not a contract");
+                return Err(Error::InvalidContract);
+            }
             let caller = self.env().caller();
-            // the caller can pass an owner or pass none and be made the owner
-            let owner = optional_owner.unwrap_or(caller);
+            // the caller is made the owner of the contract
+            let owner = caller;
             let transferred = self.env().transferred_value();
             // enforces a one to one relation between caller and dapp
             if self.dapps.get(&contract).is_none() {
@@ -708,6 +713,7 @@ pub mod prosopo {
                 // dapp exists so update it instead
                 self.dapp_update(owner, transferred, contract, caller, payee);
             }
+            Ok(())
         }
 
         /// Update a dapp with new funds, setting status as appropriate
@@ -1070,9 +1076,12 @@ pub mod prosopo {
                 Ok(user) =>
                 // determine if correct captchas is greater than or equal to threshold
                 {
-                    Ok(user.correct_captchas * 100
-                        / (user.correct_captchas + user.incorrect_captchas)
-                        >= threshold.into())
+                    let score = if user.correct_captchas + user.incorrect_captchas == 0 {
+                        0
+                    } else {
+                        (user.correct_captchas * 100) / (user.correct_captchas + user.incorrect_captchas)
+                    };
+                    Ok(score >= threshold.into())
                 }
             }
         }
@@ -1865,7 +1874,11 @@ pub mod prosopo {
             // Don't transfer anything with the call
             let balance = 0;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract, None, DappPayee::Dapp);
+
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
+
+            contract.dapp_register(dapp_contract, DappPayee::Dapp);
             assert!(contract.dapps.get(&dapp_contract).is_some());
             let dapp = contract.dapps.get(&dapp_contract).unwrap();
             assert_eq!(dapp.owner, caller);
@@ -1895,8 +1908,11 @@ pub mod prosopo {
             let balance = STAKE_DEFAULT;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
+
             // register the dapp
-            contract.dapp_register(dapp_contract, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract, DappPayee::Dapp);
             // check the dapp exists in the hashmap
             assert!(contract.dapps.get(&dapp_contract).is_some());
 
@@ -1929,8 +1945,11 @@ pub mod prosopo {
             let balance_1 = STAKE_DEFAULT;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+
             // register the dapp
-            contract.dapp_register(dapp_contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             // check the dapp exists in the hashmap
             assert!(contract.dapps.get(&dapp_contract_account).is_some());
@@ -1948,13 +1967,11 @@ pub mod prosopo {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_2);
 
             // run the register function again for the same (caller, contract) pair, adding more
-            // tokens and changing the client origin
-            let new_owner = AccountId::from([0x5; 32]);
-            contract.dapp_register(dapp_contract_account, Some(new_owner), DappPayee::Any);
+            // tokens
+            contract.dapp_register(dapp_contract_account, DappPayee::Any);
 
             // check the various attributes are correct
             let dapp = contract.dapps.get(&dapp_contract_account).unwrap();
-            assert_eq!(dapp.owner, new_owner);
 
             // account is marked as active as tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Active);
@@ -1981,8 +1998,11 @@ pub mod prosopo {
             let balance_1 = 100;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
+
             // register the dapp
-            contract.dapp_register(dapp_contract, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract, DappPayee::Dapp);
 
             // Transfer tokens with the fund call
             let balance_2 = 200;
@@ -2005,6 +2025,14 @@ pub mod prosopo {
                 ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>(caller)
                     .unwrap();
 
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(contract_account);
+
+            // Make sure the dapp account is a contract
+            let result =
+                ink::env::test::is_contract::<ink::env::DefaultEnvironment>(contract_account);
+            assert_eq!(result, true);
+
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
@@ -2013,7 +2041,7 @@ pub mod prosopo {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
             // register the dapp
-            contract.dapp_register(contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(contract_account, DappPayee::Dapp);
 
             // Transfer tokens with the fund call
             contract.dapp_cancel(contract_account).ok();
@@ -2062,13 +2090,16 @@ pub mod prosopo {
             // Register the dapp
             let dapp_user_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+
 
             // Call from the dapp contract account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_contract_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             // Call from the dapp user account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
@@ -2122,13 +2153,15 @@ pub mod prosopo {
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2204,13 +2237,15 @@ pub mod prosopo {
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2264,13 +2299,15 @@ pub mod prosopo {
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2345,13 +2382,15 @@ pub mod prosopo {
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2425,13 +2464,15 @@ pub mod prosopo {
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
             let selected_provider =
                 contract.get_random_active_provider(provider_account, dapp_contract_account);
             assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
@@ -2465,13 +2506,15 @@ pub mod prosopo {
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             // Call from the provider account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2545,13 +2588,15 @@ pub mod prosopo {
             // Register the dapp
             let dapp_user_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp_contract_account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_contract_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract_account, None, DappPayee::Dapp);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             // Register a second provider
             let (provider_account2, service_origin, fee) = generate_provider_data(0x5, "2424", 0);
