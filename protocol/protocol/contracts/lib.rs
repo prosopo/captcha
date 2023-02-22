@@ -1384,14 +1384,18 @@ pub mod prosopo {
         pub fn operator_set_code(&mut self, code_hash: [u8; 32]) -> Result<bool, Error> {
             let code_hash_account = AccountId::from(code_hash);
             let caller = self.env().caller();
+
+            // check if the caller is an operator
             if self.operators.get(caller).is_none() {
                 return Err(Error::NotAuthorised);
             }
 
-            if caller == code_hash_account {
+            // Check that the caller has not submitted the AccountId of a contract instead of the code hash
+            if self.env().is_contract(code_hash_account) {
                 return Err(Error::InvalidCodeHash);
             }
 
+            // Check that caller has not submitted the code hash of the contract itself
             if self.env().own_code_hash().unwrap() == code_hash.into() {
                 return Err(Error::InvalidCodeHash);
             }
