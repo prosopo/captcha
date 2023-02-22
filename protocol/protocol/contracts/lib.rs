@@ -1391,7 +1391,7 @@ pub mod prosopo {
             }
 
             // Check that the caller has not submitted the AccountId of a contract instead of the code hash
-            if self.env().is_contract(code_hash_account) {
+            if self.env().is_contract(&code_hash_account) {
                 return Err(Error::InvalidCodeHash);
             }
 
