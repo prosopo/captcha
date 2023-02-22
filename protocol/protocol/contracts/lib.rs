@@ -625,6 +625,7 @@ pub mod prosopo {
                 captcha_type: 0,
             };
 
+            let mut provider = self.providers.get(&provider_id).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
             let dataset_id_old = provider.dataset_id;
 
             // create a new id and insert details of the new captcha data set if it doesn't exist
@@ -635,7 +636,6 @@ pub mod prosopo {
             }
 
             // set the captcha data id on the provider
-            let mut provider = self.providers.get(&provider_id).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
             provider.dataset_id = dataset_id;
             provider.dataset_id_content = dataset_id_content;
             let old_status = provider.status;
@@ -712,14 +712,26 @@ pub mod prosopo {
             transferred: u128,
             contract: AccountId,
             caller: AccountId,
+        ) -> Result<(), Error> {
+            let mut dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+            // only allow the owner to make changes to the dapp (including funding?!)
+            if dapp.owner != caller {
+                return err!(Error::NotAuthorised);
+            }
 
+            let total = dapp.balance + transferred;
+            dapp.balance = total;
+            dapp.owner = owner;
+            if dapp.balance >= self.dapp_stake_default {
+                dapp.status = GovernanceStatus::Active;
+            } else {
+                dapp.status = GovernanceStatus::Suspended;
             }
             self.dapps.insert(contract, &dapp);
             // emit event
             self.env().emit_event(DappUpdate {
                 contract,
                 owner,
-                client_origin,
                 value: total,
             });
 
