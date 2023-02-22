@@ -1010,14 +1010,19 @@ pub mod prosopo {
         /// Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
         /// Threshold is decided by the calling user
         #[ink(message)]
-        pub fn dapp_operator_is_human_user(&self, user: AccountId, threshold: u8) -> bool {
+        pub fn dapp_operator_is_human_user(
+            &self,
+            user: AccountId,
+            threshold: u8,
+        ) -> Result<bool, Error> {
             match self.get_dapp_user(user) {
-                Err(_e) => return false,
+                Err(_e) => return Err(Error::DappUserDoesNotExist),
                 Ok(user) =>
                 // determine if correct captchas is greater than or equal to threshold
                 {
-                    user.correct_captchas * 100 / (user.correct_captchas + user.incorrect_captchas)
-                        >= threshold.into()
+                    Ok(user.correct_captchas * 100
+                        / (user.correct_captchas + user.incorrect_captchas)
+                        >= threshold.into())
                 }
             }
         }
@@ -2245,7 +2250,7 @@ pub mod prosopo {
 
             // Now make sure that the dapp user does not pass the human test
             let result = contract.dapp_operator_is_human_user(dapp_user_account, 80);
-            assert_eq!(result, false);
+            assert_eq!(result.unwrap(), false);
         }
 
         /// Test non-existent dapp account has zero balance
