@@ -95,6 +95,7 @@ pub mod prosopo {
     pub struct CaptchaData {
         provider: AccountId,
         dataset_id: Hash,
+        dataset_id_content: Hash,
         captcha_type: u16,
     }
 
@@ -588,16 +589,22 @@ pub mod prosopo {
             let dataset = CaptchaData {
                 provider: provider_id,
                 dataset_id,
+                dataset_id_content,
                 captcha_type: 0,
             };
+
+            // get the provider
+            let mut provider = self.providers.get(&provider_id).unwrap();
+            let dataset_id_old = provider.dataset_id;
 
             // create a new id and insert details of the new captcha data set if it doesn't exist
             if self.captcha_data.get(dataset_id).is_none() {
                 self.captcha_data.insert(dataset_id, &dataset);
+                // remove the old dataset_id from the Mapping
+                self.captcha_data.remove(dataset_id_old);
             }
 
             // set the captcha data id on the provider
-            let mut provider = self.providers.get(&provider_id).unwrap();
             provider.dataset_id = dataset_id;
             provider.dataset_id_content = dataset_id_content;
             let old_status = provider.status;
