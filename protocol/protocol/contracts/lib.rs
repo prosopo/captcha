@@ -186,7 +186,7 @@ pub mod prosopo {
         dapp_accounts: Lazy<Vec<AccountId>>,
         operators: Mapping<AccountId, Operator>,
         operator_accounts: Lazy<Vec<AccountId>>,
-        operator_stake_default: u64,
+        operator_stake_default: u128,
         operator_fee_currency: Hash,
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
