@@ -23,6 +23,7 @@ pub mod prosopo {
     use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
+    use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
 
@@ -161,15 +162,15 @@ pub mod prosopo {
         provider_stake_default: u128,
         dapp_stake_default: u128,
         dapps: Mapping<AccountId, Dapp>,
-        dapp_accounts: Vec<AccountId>,
+        dapp_accounts: Lazy<Vec<AccountId>>,
         //dapps_owners: Mapping<AccountId, AccountId>,
         operators: Mapping<AccountId, Operator>,
-        operator_accounts: Vec<AccountId>,
+        operator_accounts: Lazy<Vec<AccountId>>,
         //disputes: Mapping<u64, Dispute>
         operator_stake_default: u64,
         operator_fee_currency: Hash,
         dapp_users: Mapping<AccountId, User>,
-        dapp_user_accounts: Vec<AccountId>,
+        dapp_user_accounts: Lazy<Vec<AccountId>>,
     }
 
     // Event emitted when a new provider registers
@@ -360,12 +361,14 @@ pub mod prosopo {
             operators.insert(operator_account, &operator);
             let mut operator_accounts = Vec::new();
             operator_accounts.push(operator_account);
+            let mut operator_accounts_lazy = Lazy::new();
+            operator_accounts_lazy.set(&operator_accounts);
             Self {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 service_origins: Default::default(),
                 captcha_data: Default::default(),
-                operator_accounts,
+                operator_accounts: operator_accounts_lazy,
                 operator_stake_default: 0,
                 operator_fee_currency: Default::default(),
                 dapp_users: Default::default(),
@@ -648,7 +651,9 @@ pub mod prosopo {
                 };
                 // keying on contract allows owners to own many contracts
                 self.dapps.insert(contract, &dapp);
-                self.dapp_accounts.push(contract);
+                let mut dapp_accounts = self.dapp_accounts.get_or_default();
+                dapp_accounts.push(contract);
+                self.dapp_accounts.set(&dapp_accounts);
                 // emit event
                 self.env().emit_event(DappRegister {
                     contract,
@@ -851,7 +856,9 @@ pub mod prosopo {
                     last_correct_captcha_dapp_id: [0; 32].into(),
                 };
                 self.dapp_users.insert(account, &user);
-                self.dapp_user_accounts.push(account);
+                let mut dapp_user_accounts = self.dapp_user_accounts.get_or_default();
+                dapp_user_accounts.push(account);
+                self.dapp_user_accounts.set(&dapp_user_accounts);
             }
         }
 
@@ -1040,7 +1047,9 @@ pub mod prosopo {
                     status: GovernanceStatus::Active,
                 };
                 self.operators.insert(operator_account, &operator);
-                self.operator_accounts.push(operator_account);
+                let mut operator_accounts = self.operator_accounts.get_or_default();
+                operator_accounts.push(operator_account);
+                self.operator_accounts.set(&operator_accounts);
             }
         }
 
@@ -1352,7 +1361,7 @@ pub mod prosopo {
             let operator_account = AccountId::from([0x1; 32]);
             let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             assert!(contract.operators.get(&operator_account).is_some());
-            assert!(contract.operator_accounts.contains(&operator_account));
+            assert!(contract.operator_accounts.get().unwrap().contains(&operator_account));
         }
 
         /// Assert contract provider minimum stake default set from constructor.
@@ -1479,7 +1488,7 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
             let operator_account_new = AccountId::from([0x2; 32]);
             contract.add_prosopo_operator(operator_account_new);
-            assert!(contract.operator_accounts.contains(&operator_account_new));
+            assert!(contract.operator_accounts.get().unwrap().contains(&operator_account_new));
             assert!(contract.operators.get(&operator_account_new).is_some());
         }
 
@@ -1745,7 +1754,7 @@ pub mod prosopo {
             // account is marked as suspended as zero tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Suspended);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.contains(&dapp_contract));
+            assert!(contract.dapp_accounts.get().unwrap().contains(&dapp_contract));
         }
 
         /// Test dapp register with positive balance transfer
@@ -1775,7 +1784,7 @@ pub mod prosopo {
             // account is marked as active as balance is now positive
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.contains(&dapp_contract));
+            assert!(contract.dapp_accounts.get().unwrap().contains(&dapp_contract));
         }
 
         /// Test dapp register and then update
@@ -1823,7 +1832,7 @@ pub mod prosopo {
             // account is marked as active as tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance_1 + balance_2);
-            assert!(contract.dapp_accounts.contains(&dapp_contract_account));
+            assert!(contract.dapp_accounts.get().unwrap().contains(&dapp_contract_account));
         }
 
         /// Test dapp fund account
