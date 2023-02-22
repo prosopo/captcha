@@ -23,6 +23,7 @@ pub mod prosopo {
     use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
+    use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
 
@@ -63,6 +64,18 @@ pub mod prosopo {
         Dapp,
         #[default]
         Any,
+    }
+
+    impl TryFrom<DappPayee> for Payee {
+        type Error = ();
+
+        fn try_from(dapp_payee: DappPayee) -> Result<Self,  Self::Error> {
+            match dapp_payee {
+                DappPayee::Provider => Ok(Payee::Provider),
+                DappPayee::Dapp => Ok(Payee::Dapp),
+                DappPayee::Any => Err(()),
+            }
+        }
     }
 
     /// Providers are suppliers of human verification methods (captchas, etc.) to DappUsers, either
@@ -169,13 +182,13 @@ pub mod prosopo {
         provider_stake_default: u128,
         dapp_stake_default: u128,
         dapps: Mapping<AccountId, Dapp>,
-        dapp_accounts: Vec<AccountId>,
+        dapp_accounts: Lazy<Vec<AccountId>>,
         operators: Mapping<AccountId, Operator>,
-        operator_accounts: Vec<AccountId>,
+        operator_accounts: Lazy<Vec<AccountId>>,
         operator_stake_default: u64,
         operator_fee_currency: Hash,
         dapp_users: Mapping<AccountId, User>,
-        dapp_user_accounts: Vec<AccountId>,
+        dapp_user_accounts: Lazy<Vec<AccountId>>,
     }
 
     // Event emitted when a new provider registers
@@ -341,6 +354,8 @@ pub mod prosopo {
         NoActiveProviders,
         /// Returned if the dataset ID and dataset ID with solutions are identical
         DatasetIdSolutionsSame,
+        /// Invalid payee. Returned when the payee value does not exist in the enum
+        InvalidPayee,
     }
 
     /// Concatenate two arrays (a and b) into a new array (c)
@@ -370,12 +385,14 @@ pub mod prosopo {
             operators.insert(operator_account, &operator);
             let mut operator_accounts = Vec::new();
             operator_accounts.push(operator_account);
+            let mut operator_accounts_lazy = Lazy::new();
+            operator_accounts_lazy.set(&operator_accounts);
             Self {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 service_origins: Default::default(),
                 captcha_data: Default::default(),
-                operator_accounts,
+                operator_accounts: operator_accounts_lazy,
                 operator_stake_default: 0,
                 operator_fee_currency: Default::default(),
                 dapp_users: Default::default(),
@@ -674,7 +691,9 @@ pub mod prosopo {
                 };
                 // keying on contract allows owners to own many contracts
                 self.dapps.insert(contract, &dapp);
-                self.dapp_accounts.push(contract);
+                let mut dapp_accounts = self.dapp_accounts.get_or_default();
+                dapp_accounts.push(contract);
+                self.dapp_accounts.set(&dapp_accounts);
                 // emit event
                 self.env().emit_event(DappRegister {
                     contract,
@@ -880,12 +899,14 @@ pub mod prosopo {
                     correct_captchas: 0,
                     incorrect_captchas: 0,
                     last_correct_captcha: 0,
-                    last_correct_captcha_dapp_id: AccountId::default(),
+                    last_correct_captcha_dapp_id: [0; 32].into(),
                     created: self.env().block_timestamp(),
                     updated: self.env().block_timestamp(),
                 };
                 self.dapp_users.insert(account, &user);
-                self.dapp_user_accounts.push(account);
+                let mut dapp_user_accounts = self.dapp_user_accounts.get_or_default();
+                dapp_user_accounts.push(account);
+                self.dapp_user_accounts.set(&dapp_user_accounts);
             }
         }
 
@@ -1037,14 +1058,19 @@ pub mod prosopo {
         /// Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
         /// Threshold is decided by the calling user
         #[ink(message)]
-        pub fn dapp_operator_is_human_user(&self, user: AccountId, threshold: u8) -> bool {
+        pub fn dapp_operator_is_human_user(
+            &self,
+            user: AccountId,
+            threshold: u8,
+        ) -> Result<bool, Error> {
             match self.get_dapp_user(user) {
-                Err(_e) => return false,
+                Err(_e) => return Err(Error::DappUserDoesNotExist),
                 Ok(user) =>
                 // determine if correct captchas is greater than or equal to threshold
                 {
-                    user.correct_captchas * 100 / (user.correct_captchas + user.incorrect_captchas)
-                        >= threshold.into()
+                    Ok(user.correct_captchas * 100
+                        / (user.correct_captchas + user.incorrect_captchas)
+                        >= threshold.into())
                 }
             }
         }
@@ -1074,7 +1100,9 @@ pub mod prosopo {
                     status: GovernanceStatus::Active,
                 };
                 self.operators.insert(operator_account, &operator);
-                self.operator_accounts.push(operator_account);
+                let mut operator_accounts = self.operator_accounts.get_or_default();
+                operator_accounts.push(operator_account);
+                self.operator_accounts.set(&operator_accounts);
             }
         }
 
@@ -1245,7 +1273,7 @@ pub mod prosopo {
         pub fn list_providers_by_status(&self, statuses: Vec<GovernanceStatus>) -> Vec<Provider> {
             let mut providers = Vec::<Provider>::new();
             for status in statuses {
-                for payee in [ Payee::Dapp, Payee::Provider] {
+                for payee in [Payee::Dapp, Payee::Provider] {
                     let providers_set = self.provider_accounts.get((status, payee));
                     if providers_set.is_none() {
                         continue;
@@ -1303,10 +1331,9 @@ pub mod prosopo {
                     active_providers = active_providers_secondary;
                 }
             } else {
-                let payee = match dapp.payee {
-                    DappPayee::Dapp => Payee::Dapp,
-                    DappPayee::Provider => Payee::Provider,
-                    _ => Payee::Dapp,
+                let payee = match Payee::try_from(dapp.payee) {
+                    Ok(value) => value,
+                    Err(_e) => return Err(Error::InvalidPayee),
                 };
 
                 // Get the active providers based on the dapps payee field
@@ -1323,7 +1350,6 @@ pub mod prosopo {
                 // Get a random number between 0 and the length of the active providers
                 index = self.get_random_number(active_providers.len() as u128, user_account);
             }
-
 
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             let provider = self.providers.get(provider_id);
@@ -1356,7 +1382,6 @@ pub mod prosopo {
                     }
                     provider_ids.append(&mut providers_set.unwrap().into_iter().collect());
                 }
-
             }
             provider_ids
         }
@@ -1440,7 +1465,11 @@ pub mod prosopo {
             let operator_account = AccountId::from([0x1; 32]);
             let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             assert!(contract.operators.get(&operator_account).is_some());
-            assert!(contract.operator_accounts.contains(&operator_account));
+            assert!(contract
+                .operator_accounts
+                .get()
+                .unwrap()
+                .contains(&operator_account));
         }
 
         /// Assert contract provider minimum stake default set from constructor.
@@ -1567,7 +1596,11 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
             let operator_account_new = AccountId::from([0x2; 32]);
             contract.add_prosopo_operator(operator_account_new);
-            assert!(contract.operator_accounts.contains(&operator_account_new));
+            assert!(contract
+                .operator_accounts
+                .get()
+                .unwrap()
+                .contains(&operator_account_new));
             assert!(contract.operators.get(&operator_account_new).is_some());
         }
 
@@ -1833,7 +1866,11 @@ pub mod prosopo {
             // account is marked as suspended as zero tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Suspended);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.contains(&dapp_contract));
+            assert!(contract
+                .dapp_accounts
+                .get()
+                .unwrap()
+                .contains(&dapp_contract));
         }
 
         /// Test dapp register with positive balance transfer
@@ -1863,7 +1900,11 @@ pub mod prosopo {
             // account is marked as active as balance is now positive
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.contains(&dapp_contract));
+            assert!(contract
+                .dapp_accounts
+                .get()
+                .unwrap()
+                .contains(&dapp_contract));
         }
 
         /// Test dapp register and then update
@@ -1911,7 +1952,11 @@ pub mod prosopo {
             // account is marked as active as tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance_1 + balance_2);
-            assert!(contract.dapp_accounts.contains(&dapp_contract_account));
+            assert!(contract
+                .dapp_accounts
+                .get()
+                .unwrap()
+                .contains(&dapp_contract_account));
         }
 
         /// Test dapp fund account
@@ -2324,7 +2369,7 @@ pub mod prosopo {
 
             // Now make sure that the dapp user does not pass the human test
             let result = contract.dapp_operator_is_human_user(dapp_user_account, 80);
-            assert_eq!(result, false);
+            assert_eq!(result.unwrap(), false);
         }
 
         /// Test non-existent dapp account has zero balance
