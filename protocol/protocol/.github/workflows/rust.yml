@@ -73,13 +73,18 @@ jobs:
       # Do the build
       - name: Build
         id: build
-        run: docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
+        run: | 
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
+          # parity's docker image runs using root, so need to chown the output
+          sudo chown -cR $(whoami) contracts
           
       # Do unit testing
       - name: Test
         run: |
           RUST_BACKTRACE=1 docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly test  --no-default-features --features std --manifest-path=/contracts/Cargo.toml -- --nocapture
-          exit $?
+          result=$?
+          sudo chown -cR $(whoami) contracts
+          exit $result
           
       # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
       - name: Save cargo build to cache
