@@ -2478,6 +2478,59 @@ pub mod prosopo {
             assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
         }
 
+        // // Test get random provider
+        #[ink::test]
+        fn test_get_random_active_provider_dapp_any() {
+            let operator_account = AccountId::from([0x1; 32]);
+            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let provider_account = AccountId::from([0x2; 32]);
+            let dapp_user_account = AccountId::from([0x30; 32]);
+            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let fee: u32 = 100;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract.provider_register(service_origin, fee, Payee::Provider);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let balance = 20000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Provider);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            contract.provider_add_dataset(root1, root2);
+
+            // Register the dapp
+            let dapp_caller_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+
+            // Call from the dapp account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
+            // Give the dapp a balance
+            let balance = 2000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.dapp_register(dapp_contract_account, DappPayee::Any);
+
+            // Call from the dapp_user_account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
+
+            // Call as dapp user and get a random provider
+            let selected_provider =
+                contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
+            assert_eq!(selected_provider.unwrap().provider_id, provider_account);
+
+            // Switch the provider payee to Dapp
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract.provider_update(service_origin, fee, Payee::Dapp);
+
+            // Call from the dapp_user_account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
+
+            // Call as dapp user and get a random provider. Ensure that the provider is still selected
+            let selected_provider =
+                contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
+            assert_eq!(selected_provider.unwrap().provider_id, provider_account);
+        }
+
         /// Test provider can supply a dapp user commit for themselves and approve or disapprove it
         #[ink::test]
         fn test_provider_commit_and_approve_and_disapprove() {
