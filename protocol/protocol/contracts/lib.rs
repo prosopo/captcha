@@ -874,7 +874,7 @@ pub mod prosopo {
                 if caller != provider {
                     // Provider cannot submit dapp user commits on behalf of another provider
                     ink::env::debug_println!("{}", "NotAuthorised");
-                    return Err(Error::NotAuthorised);
+                    return err!(Error::NotAuthorised);
                 }
                 self.create_new_dapp_user(dapp_user);
                 self.captcha_solution_commitments
@@ -1079,19 +1079,13 @@ pub mod prosopo {
             user: AccountId,
             threshold: u8,
         ) -> Result<bool, Error> {
-            match self.get_dapp_user(user) {
-                Err(_e) => return Err(Error::DappUserDoesNotExist),
-                Ok(user) =>
-                // determine if correct captchas is greater than or equal to threshold
-                {
-                    let score = if user.correct_captchas + user.incorrect_captchas == 0 {
-                        0
-                    } else {
-                        (user.correct_captchas * 100) / (user.correct_captchas + user.incorrect_captchas)
-                    };
-                    Ok(score >= threshold.into())
-                }
-            }
+            let user = self.get_dapp_user(user).ok_or_else(err_fn!(Error::DappUserDoesNotExist))?;
+            let score = if user.correct_captchas + user.incorrect_captchas == 0 {
+                0
+            } else {
+                (user.correct_captchas * 100) / (user.correct_captchas + user.incorrect_captchas)
+            };
+            Ok(score >= threshold.into())
         }
 
         #[ink(message)]
@@ -1395,17 +1389,17 @@ pub mod prosopo {
 
             // check if the caller is an operator
             if self.operators.get(caller).is_none() {
-                return Err(Error::NotAuthorised);
+                return err!(Error::NotAuthorised);
             }
 
             // Check that the caller has not submitted the AccountId of a contract instead of the code hash
             if self.env().is_contract(&code_hash_account) {
-                return Err(Error::InvalidCodeHash);
+                return err!(Error::InvalidCodeHash);
             }
 
             // Check that caller has not submitted the code hash of the contract itself
             if self.env().own_code_hash().unwrap() == code_hash.into() {
-                return Err(Error::InvalidCodeHash);
+                return err!(Error::InvalidCodeHash);
             }
 
             // Insert the operators latest vote into the votes map
@@ -1431,10 +1425,10 @@ pub mod prosopo {
             if set_code_hash_result.is_err() {
                 match set_code_hash_result.unwrap_err() {
                     ink::env::Error::CodeNotFound => {
-                        return Err(Error::CodeNotFound);
+                        return err!(Error::CodeNotFound);
                     }
                     _ => {
-                        return Err(Error::Unknown);
+                        return err!(Error::Unknown);
                     }
                 }
             }
