@@ -1383,6 +1383,70 @@ pub mod prosopo {
             self.get_random_number(len, self.env().caller())
         }
 
+        /// Modifies the code which is used to execute calls to this contract address (`AccountId`).
+        /// We use this to upgrade the contract logic. The caller must be an operator.
+        /// `true` is returned on successful upgrade, `false` otherwise
+        /// Errors are returned if the caller is not an operator, if the code hash is the callers
+        /// account_id, if the code is not found, and for any other unknown ink errors
+        #[ink(message)]
+        pub fn operator_set_code(&mut self, code_hash: [u8; 32]) -> Result<bool, Error> {
+            let code_hash_account = AccountId::from(code_hash);
+            let caller = self.env().caller();
+
+            // check if the caller is an operator
+            if self.operators.get(caller).is_none() {
+                return Err(Error::NotAuthorised);
+            }
+
+            // Check that the caller has not submitted the AccountId of a contract instead of the code hash
+            if self.env().is_contract(&code_hash_account) {
+                return Err(Error::InvalidCodeHash);
+            }
+
+            // Check that caller has not submitted the code hash of the contract itself
+            if self.env().own_code_hash().unwrap() == code_hash.into() {
+                return Err(Error::InvalidCodeHash);
+            }
+
+            // Insert the operators latest vote into the votes map
+            self.operator_code_hash_votes.insert(caller, &code_hash);
+
+            // Make sure each operator has voted for the same code hash. If an operator has not voted
+            // an Ok result is returned. If an operator has voted for a conflicting code hash, an error
+            // is returned.
+            for operator in self.operator_accounts.get().unwrap().iter() {
+                if self.operator_code_hash_votes.get(operator).is_none() {
+                    return Ok(false);
+                }
+
+                let vote = self.operator_code_hash_votes.get(operator).unwrap();
+                if vote != code_hash {
+                    return Ok(false);
+                }
+            }
+
+            // Set the new code hash after all operators have voted for the same code hash.
+            let set_code_hash_result = ink::env::set_code_hash(&code_hash.into());
+
+            if set_code_hash_result.is_err() {
+                match set_code_hash_result.unwrap_err() {
+                    ink::env::Error::CodeNotFound => {
+                        return Err(Error::CodeNotFound);
+                    }
+                    _ => {
+                        return Err(Error::Unknown);
+                    }
+                }
+            }
+
+            // remove the votes
+            for operator in self.operator_accounts.get().unwrap().iter() {
+                self.operator_code_hash_votes.remove(operator);
+            }
+
+            return Ok(true);
+        }
+    
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
