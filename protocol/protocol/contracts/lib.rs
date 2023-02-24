@@ -48,6 +48,8 @@ fn concat_u8<const A: usize, const B: usize, const C: usize>(
 }
 
 #[allow(unused_macros)]
+#[named_functions_macro::named_functions] // allows the use of the function_name!() macro
+#[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod prosopo {
 
@@ -389,9 +391,6 @@ pub mod prosopo {
         InvalidContract,
     }
 
-
-    #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
-    #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
     impl Prosopo {
 
         /// Constructor
