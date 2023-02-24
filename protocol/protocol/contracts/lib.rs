@@ -1434,7 +1434,7 @@ pub mod prosopo {
             contract.provider_register(service_origin, fee, Payee::Provider);
             let registered_provider_account = contract.providers.get(&provider_account);
             assert!(registered_provider_account.is_some());
-            let returned_list = contract.list_providers_by_ids(vec![provider_account]);
+            let returned_list = contract.list_providers_by_ids(vec![provider_account]).unwrap();
             assert!(returned_list == vec![registered_provider_account.unwrap()]);
         }
 
