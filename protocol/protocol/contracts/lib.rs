@@ -684,6 +684,30 @@ pub mod prosopo {
                 return self.dapp_update(owner, transferred, contract, caller);
             }
 
+            // mark the account as suspended if it is new and no funds have been transferred
+            let status = if transferred >= self.dapp_stake_default {
+                GovernanceStatus::Active
+            } else {
+                GovernanceStatus::Suspended
+            };
+            let dapp = Dapp {
+                status,
+                balance: transferred,
+                owner,
+                min_difficulty: 1,
+            };
+            // keying on contract allows owners to own many contracts
+            self.dapps.insert(contract, &dapp);
+            let mut dapp_accounts = self.dapp_accounts.get_or_default();
+            dapp_accounts.push(contract);
+            self.dapp_accounts.set(&dapp_accounts);
+            // emit event
+            self.env().emit_event(DappRegister {
+                contract,
+                owner,
+                value: transferred,
+            });
+
             Ok(())
         }
 
