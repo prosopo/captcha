@@ -1079,7 +1079,7 @@ pub mod prosopo {
             user: AccountId,
             threshold: u8,
         ) -> Result<bool, Error> {
-            let user = self.get_dapp_user(user).ok_or_else(err_fn!(Error::DappUserDoesNotExist))?;
+            let user = self.get_dapp_user(user)?;
             let score = if user.correct_captchas + user.incorrect_captchas == 0 {
                 0
             } else {
