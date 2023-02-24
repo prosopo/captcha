@@ -23,6 +23,7 @@ pub mod prosopo {
     use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
+    use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
 
@@ -94,6 +95,7 @@ pub mod prosopo {
     pub struct CaptchaData {
         provider: AccountId,
         dataset_id: Hash,
+        dataset_id_content: Hash,
         captcha_type: u16,
     }
 
@@ -126,8 +128,6 @@ pub mod prosopo {
         balance: Balance,
         owner: AccountId,
         min_difficulty: u16,
-        // client's Dapp URL
-        client_origin: Hash,
     }
 
     /// Users are the users of DApps that are required to be verified as human before they are
@@ -147,8 +147,15 @@ pub mod prosopo {
     #[derive(scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub struct LastCorrectCaptcha {
-        pub before_ms: u32,
+        pub before_ms: u64,
         pub dapp_id: AccountId,
+    }
+
+    #[derive(scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub struct OperatorCodeHashVote {
+        pub account_id: AccountId,
+        pub code_hash: [u8; 32],
     }
 
     // Contract storage
@@ -163,15 +170,16 @@ pub mod prosopo {
         provider_stake_default: u128,
         dapp_stake_default: u128,
         dapps: Mapping<AccountId, Dapp>,
-        dapp_accounts: Vec<AccountId>,
+        dapp_accounts: Lazy<Vec<AccountId>>,
         //dapps_owners: Mapping<AccountId, AccountId>,
         operators: Mapping<AccountId, Operator>,
-        operator_accounts: Vec<AccountId>,
+        operator_accounts: Lazy<Vec<AccountId>>,
         //disputes: Mapping<u64, Dispute>
-        operator_stake_default: u64,
+        operator_stake_default: u128,
         operator_fee_currency: Hash,
         dapp_users: Mapping<AccountId, User>,
-        dapp_user_accounts: Vec<AccountId>,
+        dapp_user_accounts: Lazy<Vec<AccountId>>,
+        operator_code_hash_votes: Mapping<AccountId, [u8; 32]>,
     }
 
     // Event emitted when a new provider registers
@@ -249,7 +257,6 @@ pub mod prosopo {
         #[ink(topic)]
         contract: AccountId,
         owner: AccountId,
-        client_origin: Hash,
         value: Balance,
     }
 
@@ -260,7 +267,6 @@ pub mod prosopo {
         #[ink(topic)]
         contract: AccountId,
         owner: AccountId,
-        client_origin: Hash,
         value: Balance,
     }
 
@@ -297,6 +303,8 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum Error {
+        /// Returned if minimum number of operators is not supplied
+        MinimumTwoOperatorsRequired,
         /// Returned if calling account is not authorised to perform action
         NotAuthorised,
         /// Returned if not enough contract balance to fulfill a request is available.
@@ -335,6 +343,14 @@ pub mod prosopo {
         NoActiveProviders,
         /// Returned if the dataset ID and dataset ID with solutions are identical
         DatasetIdSolutionsSame,
+        /// Returned if the caller has set their own AccountId as the code hash
+        InvalidCodeHash,
+        /// CodeNotFound ink env error
+        CodeNotFound,
+        /// An unknown ink env error has occurred
+        Unknown,
+        /// Invalid contract
+        InvalidContract,
     }
 
     /// Concatenate two arrays (a and b) into a new array (c)
@@ -353,23 +369,29 @@ pub mod prosopo {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn default(
-            operator_account: AccountId,
+            operator_accounts: Vec<AccountId>,
             provider_stake_default: u128,
             dapp_stake_default: u128,
         ) -> Self {
-            let operator = Operator {
-                status: GovernanceStatus::Active,
-            };
+            if operator_accounts.len() < 2 {
+                panic!("{:?}", Error::MinimumTwoOperatorsRequired)
+            }
             let mut operators = Mapping::new();
-            operators.insert(operator_account, &operator);
-            let mut operator_accounts = Vec::new();
-            operator_accounts.push(operator_account);
+            let mut operator_accounts_lazy = Lazy::new();
+            for operator_account in operator_accounts.iter() {
+                let operator = Operator {
+                    status: GovernanceStatus::Active,
+                };
+                operators.insert(operator_account, &operator);
+                operator_accounts_lazy.set(&operator_accounts);
+            }
+
             Self {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 service_origins: Default::default(),
                 captcha_data: Default::default(),
-                operator_accounts,
+                operator_accounts: operator_accounts_lazy,
                 operator_stake_default: 0,
                 operator_fee_currency: Default::default(),
                 dapp_users: Default::default(),
@@ -380,6 +402,7 @@ pub mod prosopo {
                 captcha_solution_commitments: Default::default(),
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
+                operator_code_hash_votes: Default::default(),
             }
         }
 
@@ -402,9 +425,8 @@ pub mod prosopo {
             service_origin: Hash,
             fee: u32,
             payee: Payee,
-            provider_account: AccountId,
         ) -> Result<(), Error> {
-            let balance: u128 = 0;
+            let provider_account = self.env().caller();
             // this function is for registration only
             if self.providers.get(&provider_account).is_some() {
                 return Ok(());
@@ -413,6 +435,7 @@ pub mod prosopo {
             if self.service_origins.get(&service_origin).is_some() {
                 return Err(Error::ProviderServiceOriginUsed);
             }
+            let balance: u128 = 0;
             // add a new provider
             let provider = Provider {
                 status: GovernanceStatus::Deactivated,
@@ -446,13 +469,8 @@ pub mod prosopo {
             service_origin: Hash,
             fee: u32,
             payee: Payee,
-            provider_account: AccountId,
         ) -> Result<(), Error> {
-            let caller = self.env().caller();
-
-            if caller != provider_account {
-                return Err(Error::NotAuthorised);
-            }
+            let provider_account = self.env().caller();
 
             // this function is for updating only, not registering
             if self.providers.get(&provider_account).is_none() {
@@ -594,16 +612,22 @@ pub mod prosopo {
             let dataset = CaptchaData {
                 provider: provider_id,
                 dataset_id,
+                dataset_id_content,
                 captcha_type: 0,
             };
+
+            // get the provider
+            let mut provider = self.providers.get(&provider_id).unwrap();
+            let dataset_id_old = provider.dataset_id;
 
             // create a new id and insert details of the new captcha data set if it doesn't exist
             if self.captcha_data.get(dataset_id).is_none() {
                 self.captcha_data.insert(dataset_id, &dataset);
+                // remove the old dataset_id from the Mapping
+                self.captcha_data.remove(dataset_id_old);
             }
 
             // set the captcha data id on the provider
-            let mut provider = self.providers.get(&provider_id).unwrap();
             provider.dataset_id = dataset_id;
             provider.dataset_id_content = dataset_id_content;
             let old_status = provider.status;
@@ -633,13 +657,15 @@ pub mod prosopo {
         #[ink(message)]
         pub fn dapp_register(
             &mut self,
-            client_origin: Hash,
             contract: AccountId,
-            optional_owner: Option<AccountId>,
-        ) {
+        ) -> Result<(), Error> {
+            if !self.env().is_contract(&contract) {
+                debug!("Contract is not a contract");
+                return Err(Error::InvalidContract);
+            }
             let caller = self.env().caller();
-            // the caller can pass an owner or pass none and be made the owner
-            let owner = optional_owner.unwrap_or(caller);
+            // the caller is made the owner of the contract
+            let owner = caller;
             let transferred = self.env().transferred_value();
             // enforces a one to one relation between caller and dapp
             if self.dapps.get(&contract).is_none() {
@@ -654,22 +680,23 @@ pub mod prosopo {
                     balance: transferred,
                     owner,
                     min_difficulty: 1,
-                    client_origin,
                 };
                 // keying on contract allows owners to own many contracts
                 self.dapps.insert(contract, &dapp);
-                self.dapp_accounts.push(contract);
+                let mut dapp_accounts = self.dapp_accounts.get_or_default();
+                dapp_accounts.push(contract);
+                self.dapp_accounts.set(&dapp_accounts);
                 // emit event
                 self.env().emit_event(DappRegister {
                     contract,
                     owner,
-                    client_origin,
                     value: transferred,
                 });
             } else {
                 // dapp exists so update it instead
-                self.dapp_update(owner, transferred, client_origin, contract, caller);
+                self.dapp_update(owner, transferred, contract, caller);
             }
+            Ok(())
         }
 
         /// Update a dapp with new funds, setting status as appropriate
@@ -677,7 +704,6 @@ pub mod prosopo {
             &mut self,
             owner: AccountId,
             transferred: u128,
-            client_origin: Hash,
             contract: AccountId,
             caller: AccountId,
         ) {
@@ -687,7 +713,6 @@ pub mod prosopo {
                 if dapp.owner == caller {
                     let total = dapp.balance + transferred;
                     dapp.balance = total;
-                    dapp.client_origin = client_origin;
                     dapp.owner = owner;
                     if dapp.balance >= self.dapp_stake_default {
                         dapp.status = GovernanceStatus::Active;
@@ -699,7 +724,6 @@ pub mod prosopo {
                     self.env().emit_event(DappUpdate {
                         contract,
                         owner,
-                        client_origin,
                         value: total,
                     });
                 } else {
@@ -862,10 +886,12 @@ pub mod prosopo {
                     correct_captchas: 0,
                     incorrect_captchas: 0,
                     last_correct_captcha: 0,
-                    last_correct_captcha_dapp_id: AccountId::default(),
+                    last_correct_captcha_dapp_id: [0; 32].into(),
                 };
                 self.dapp_users.insert(account, &user);
-                self.dapp_user_accounts.push(account);
+                let mut dapp_user_accounts = self.dapp_user_accounts.get_or_default();
+                dapp_user_accounts.push(account);
+                self.dapp_user_accounts.set(&dapp_user_accounts);
             }
         }
 
@@ -1017,14 +1043,22 @@ pub mod prosopo {
         /// Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
         /// Threshold is decided by the calling user
         #[ink(message)]
-        pub fn dapp_operator_is_human_user(&self, user: AccountId, threshold: u8) -> bool {
+        pub fn dapp_operator_is_human_user(
+            &self,
+            user: AccountId,
+            threshold: u8,
+        ) -> Result<bool, Error> {
             match self.get_dapp_user(user) {
-                Err(_e) => return false,
+                Err(_e) => return Err(Error::DappUserDoesNotExist),
                 Ok(user) =>
                 // determine if correct captchas is greater than or equal to threshold
                 {
-                    user.correct_captchas * 100 / (user.correct_captchas + user.incorrect_captchas)
-                        >= threshold.into()
+                    let score = if user.correct_captchas + user.incorrect_captchas == 0 {
+                        0
+                    } else {
+                        (user.correct_captchas * 100) / (user.correct_captchas + user.incorrect_captchas)
+                    };
+                    Ok(score >= threshold.into())
                 }
             }
         }
@@ -1037,8 +1071,7 @@ pub mod prosopo {
             let user = self.get_dapp_user(user)?;
 
             Ok(LastCorrectCaptcha {
-                before_ms: u32::try_from(self.env().block_timestamp() - user.last_correct_captcha)
-                    .unwrap(),
+                before_ms: self.env().block_timestamp() - user.last_correct_captcha,
                 dapp_id: user.last_correct_captcha_dapp_id,
             })
         }
@@ -1054,7 +1087,9 @@ pub mod prosopo {
                     status: GovernanceStatus::Active,
                 };
                 self.operators.insert(operator_account, &operator);
-                self.operator_accounts.push(operator_account);
+                let mut operator_accounts = self.operator_accounts.get_or_default();
+                operator_accounts.push(operator_account);
+                self.operator_accounts.set(&operator_accounts);
             }
         }
 
@@ -1194,6 +1229,22 @@ pub mod prosopo {
             return Ok(self.get_provider_details(provider)?.balance);
         }
 
+        /// Returns the operator votes for code hashes
+        #[ink(message)]
+        pub fn get_operator_code_hash_votes(&self) -> Vec<OperatorCodeHashVote> {
+            let mut code_hash_votes: Vec<OperatorCodeHashVote> = Vec::new();
+            for account_id in self.operator_accounts.get().unwrap().iter() {
+                code_hash_votes.push(OperatorCodeHashVote {
+                    account_id: *account_id,
+                    code_hash: self
+                        .operator_code_hash_votes
+                        .get(&account_id)
+                        .unwrap_or([0; 32]),
+                });
+            }
+            code_hash_votes
+        }
+
         /// List providers given an array of account id
         ///
         /// Returns empty if none were matched
@@ -1315,6 +1366,70 @@ pub mod prosopo {
         pub fn get_random_number_caller(&self, len: u128) -> u128 {
             self.get_random_number(len, self.env().caller())
         }
+
+        /// Modifies the code which is used to execute calls to this contract address (`AccountId`).
+        /// We use this to upgrade the contract logic. The caller must be an operator.
+        /// `true` is returned on successful upgrade, `false` otherwise
+        /// Errors are returned if the caller is not an operator, if the code hash is the callers
+        /// account_id, if the code is not found, and for any other unknown ink errors
+        #[ink(message)]
+        pub fn operator_set_code(&mut self, code_hash: [u8; 32]) -> Result<bool, Error> {
+            let code_hash_account = AccountId::from(code_hash);
+            let caller = self.env().caller();
+
+            // check if the caller is an operator
+            if self.operators.get(caller).is_none() {
+                return Err(Error::NotAuthorised);
+            }
+
+            // Check that the caller has not submitted the AccountId of a contract instead of the code hash
+            if self.env().is_contract(&code_hash_account) {
+                return Err(Error::InvalidCodeHash);
+            }
+
+            // Check that caller has not submitted the code hash of the contract itself
+            if self.env().own_code_hash().unwrap() == code_hash.into() {
+                return Err(Error::InvalidCodeHash);
+            }
+
+            // Insert the operators latest vote into the votes map
+            self.operator_code_hash_votes.insert(caller, &code_hash);
+
+            // Make sure each operator has voted for the same code hash. If an operator has not voted
+            // an Ok result is returned. If an operator has voted for a conflicting code hash, an error
+            // is returned.
+            for operator in self.operator_accounts.get().unwrap().iter() {
+                if self.operator_code_hash_votes.get(operator).is_none() {
+                    return Ok(false);
+                }
+
+                let vote = self.operator_code_hash_votes.get(operator).unwrap();
+                if vote != code_hash {
+                    return Ok(false);
+                }
+            }
+
+            // Set the new code hash after all operators have voted for the same code hash.
+            let set_code_hash_result = ink::env::set_code_hash(&code_hash.into());
+
+            if set_code_hash_result.is_err() {
+                match set_code_hash_result.unwrap_err() {
+                    ink::env::Error::CodeNotFound => {
+                        return Err(Error::CodeNotFound);
+                    }
+                    _ => {
+                        return Err(Error::Unknown);
+                    }
+                }
+            }
+
+            // remove the votes
+            for operator in self.operator_accounts.get().unwrap().iter() {
+                self.operator_code_hash_votes.remove(operator);
+            }
+
+            return Ok(true);
+        }
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -1355,17 +1470,18 @@ pub mod prosopo {
         /// We test if the default constructor does its job.
         #[ink::test]
         fn test_default_works() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
-            assert!(contract.operators.get(&operator_account).is_some());
-            assert!(contract.operator_accounts.contains(&operator_account));
+            let operator_accounts = get_operator_accounts();
+            let operator_account = operator_accounts[0];
+            let contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
+            assert!(contract.operators.get(operator_account).is_some());
+            assert!(contract.operator_accounts.get().unwrap().contains(&operator_account));
         }
 
         /// Assert contract provider minimum stake default set from constructor.
         #[ink::test]
         pub fn test_provider_stake_default() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let provider_stake_default: u128 = contract.get_provider_stake_default();
             assert!(STAKE_DEFAULT.eq(&provider_stake_default));
         }
@@ -1373,8 +1489,9 @@ pub mod prosopo {
         /// Assert contract dapp minimum stake default set from constructor.
         #[ink::test]
         pub fn test_dapp_stake_default() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_accounts[0]);
+            let contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let dapp_stake_default: u128 = contract.get_dapp_stake_default();
             assert!(STAKE_DEFAULT.eq(&dapp_stake_default));
         }
@@ -1382,12 +1499,13 @@ pub mod prosopo {
         /// Test provider register
         #[ink::test]
         fn test_provider_register() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let provider_account = AccountId::from([0x2; 32]);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
-            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_register(service_origin, fee, Payee::Provider);
             assert!(contract.providers.get(&provider_account).is_some());
             assert!(contract
                 .provider_accounts
@@ -1399,12 +1517,13 @@ pub mod prosopo {
         /// Test provider deregister
         #[ink::test]
         fn test_provider_deregister() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let provider_account = AccountId::from([0x2; 32]);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
-            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_register(service_origin, fee, Payee::Provider);
             assert!(contract.providers.get(&provider_account).is_some());
             contract.provider_deregister(provider_account);
             let provider_record = contract.providers.get(&provider_account).unwrap();
@@ -1414,12 +1533,13 @@ pub mod prosopo {
         /// Test list providers
         #[ink::test]
         fn test_list_providers_by_ids() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
-            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract.provider_register(service_origin, fee, Payee::Provider);
             let registered_provider_account = contract.providers.get(&provider_account);
             assert!(registered_provider_account.is_some());
             let returned_list = contract.list_providers_by_ids(vec![provider_account]);
@@ -1430,16 +1550,18 @@ pub mod prosopo {
         #[ink::test]
         #[should_panic]
         fn test_get_random_number_zero_len() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let operator_account = operator_accounts[0];
+            let contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             contract.get_random_number(0, operator_account);
         }
 
         // Test get random number
         #[ink::test]
         fn test_get_random_number() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let operator_account = operator_accounts[0];
+            let contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             const len: usize = 10;
             let mut arr = [0; len];
             // get several random numbers, one per block
@@ -1477,26 +1599,15 @@ pub mod prosopo {
             (provider_account, service_origin, fee)
         }
 
-        /// Test add operator
-        #[ink::test]
-        fn test_add_operator() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
-            let operator_account_new = AccountId::from([0x2; 32]);
-            contract.add_prosopo_operator(operator_account_new);
-            assert!(contract.operator_accounts.contains(&operator_account_new));
-            assert!(contract.operators.get(&operator_account_new).is_some());
-        }
-
         /// Test provider register and update
         #[ink::test]
         fn test_provider_register_and_update() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "2424", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
             assert!(contract.providers.get(&provider_account).is_some());
             assert!(contract
@@ -1509,7 +1620,7 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Dapp);
             assert!(contract
                 .provider_accounts
                 .get(GovernanceStatus::Deactivated)
@@ -1546,18 +1657,19 @@ pub mod prosopo {
         /// Test provider register with service_origin error
         #[ink::test]
         fn test_provider_register_with_service_origin_error() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
 
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
-
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             // try creating the second provider and make sure the error is correct and that it doesn't exist
             let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
-            match contract.provider_register(service_origin, fee, Payee::Provider, provider_account)
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            match contract.provider_register(service_origin, fee, Payee::Provider)
             {
                 Result::Err(Error::ProviderServiceOriginUsed) => {
                     assert!(true);
@@ -1577,19 +1689,19 @@ pub mod prosopo {
         /// Test provider update with service_origin error
         #[ink::test]
         fn test_provider_update_with_service_origin_error() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
 
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
-
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             let (provider_account, service_origin, fee) = generate_provider_data(0x3, "2424", 0);
-
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             let (_, service_origin, fee) = generate_provider_data(0x3, "4242", 100);
@@ -1599,7 +1711,7 @@ pub mod prosopo {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
             // try updating the second provider and make sure the error is correct and that it didn't change
-            match contract.provider_update(service_origin, fee, Payee::Dapp, provider_account) {
+            match contract.provider_update(service_origin, fee, Payee::Dapp) {
                 Result::Err(Error::ProviderServiceOriginUsed) => {
                     assert!(true);
                 }
@@ -1618,13 +1730,14 @@ pub mod prosopo {
         /// Test provider unstake
         #[ink::test]
         fn test_provider_unstake() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let operator_account = operator_accounts[0];
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .ok();
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
@@ -1632,7 +1745,7 @@ pub mod prosopo {
             );
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             contract.provider_unstake().ok();
             let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
 
@@ -1661,13 +1774,14 @@ pub mod prosopo {
         /// Test provider add data set
         #[ink::test]
         fn test_provider_add_dataset() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let operator_account = operator_accounts[0];
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 2000000000000;
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .ok();
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
@@ -1675,7 +1789,7 @@ pub mod prosopo {
             );
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             let root1 = str_to_hash("merkle tree".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2).ok();
@@ -1711,13 +1825,14 @@ pub mod prosopo {
         /// Test provider cannot add data set if inactive
         #[ink::test]
         fn test_provider_cannot_add_dataset_if_inactive() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let operator_account = operator_accounts[0];
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .ok();
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
@@ -1734,8 +1849,8 @@ pub mod prosopo {
         /// Test dapp register with zero balance transfer
         #[ink::test]
         fn test_dapp_register_zero_balance_transfer() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
             // Call from the dapp account
@@ -1743,27 +1858,28 @@ pub mod prosopo {
             // Don't transfer anything with the call
             let balance = 0;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            let client_origin = str_to_hash("https://localhost:2424".to_string());
-            contract.dapp_register(client_origin, dapp_contract, None);
+
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
+
+            contract.dapp_register(dapp_contract);
             assert!(contract.dapps.get(&dapp_contract).is_some());
             let dapp = contract.dapps.get(&dapp_contract).unwrap();
             assert_eq!(dapp.owner, caller);
-            assert_eq!(dapp.client_origin, client_origin);
 
             // account is marked as suspended as zero tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Suspended);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.contains(&dapp_contract));
+            assert!(contract.dapp_accounts.get().unwrap().contains(&dapp_contract));
         }
 
         /// Test dapp register with positive balance transfer
         #[ink::test]
         fn test_dapp_register_positive_balance_transfer() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
-            let client_origin = str_to_hash("https://localhost:2424".to_string());
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
@@ -1772,30 +1888,31 @@ pub mod prosopo {
             let balance = STAKE_DEFAULT;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
+
             // register the dapp
-            contract.dapp_register(client_origin, dapp_contract, None);
+            contract.dapp_register(dapp_contract);
             // check the dapp exists in the hashmap
             assert!(contract.dapps.get(&dapp_contract).is_some());
 
             // check the various attributes are correct
             let dapp = contract.dapps.get(&dapp_contract).unwrap();
             assert_eq!(dapp.owner, caller);
-            assert_eq!(dapp.client_origin, client_origin);
 
             // account is marked as active as balance is now positive
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance);
-            assert!(contract.dapp_accounts.contains(&dapp_contract));
+            assert!(contract.dapp_accounts.get().unwrap().contains(&dapp_contract));
         }
 
         /// Test dapp register and then update
         #[ink::test]
         fn test_dapp_register_and_update() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract_account = AccountId::from([0x3; 32]);
-            let client_origin_1 = str_to_hash("https://localhost:2424".to_string());
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
@@ -1804,8 +1921,11 @@ pub mod prosopo {
             let balance_1 = STAKE_DEFAULT;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+
             // register the dapp
-            contract.dapp_register(client_origin_1, dapp_contract_account, None);
+            contract.dapp_register(dapp_contract_account);
 
             // check the dapp exists in the hashmap
             assert!(contract.dapps.get(&dapp_contract_account).is_some());
@@ -1813,7 +1933,6 @@ pub mod prosopo {
             // check the various attributes are correct
             let dapp = contract.dapps.get(&dapp_contract_account).unwrap();
             assert_eq!(dapp.owner, caller);
-            assert_eq!(dapp.client_origin, client_origin_1);
 
             // account is marked as active as tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Active);
@@ -1825,29 +1944,24 @@ pub mod prosopo {
 
             // run the register function again for the same (caller, contract) pair, adding more
             // tokens and changing the client origin
-            let client_origin_2 = str_to_hash("https://localhost:2424".to_string()); // Implements `scale::Encode`
-            let new_owner = AccountId::from([0x5; 32]);
-            contract.dapp_register(client_origin_2, dapp_contract_account, Some(new_owner));
+            contract.dapp_register(dapp_contract_account);
 
             // check the various attributes are correct
             let dapp = contract.dapps.get(&dapp_contract_account).unwrap();
-            assert_eq!(dapp.owner, new_owner);
-            assert_eq!(dapp.client_origin, client_origin_2);
 
             // account is marked as active as tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance_1 + balance_2);
-            assert!(contract.dapp_accounts.contains(&dapp_contract_account));
+            assert!(contract.dapp_accounts.get().unwrap().contains(&dapp_contract_account));
         }
 
         /// Test dapp fund account
         #[ink::test]
         fn test_dapp_fund() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
-            let client_origin_1 = str_to_hash("https://localhost:2424".to_string());
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
@@ -1856,8 +1970,11 @@ pub mod prosopo {
             let balance_1 = 100;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
+
             // register the dapp
-            contract.dapp_register(client_origin_1, dapp_contract, None);
+            contract.dapp_register(dapp_contract);
 
             // Transfer tokens with the fund call
             let balance_2 = 200;
@@ -1872,14 +1989,21 @@ pub mod prosopo {
         /// Test dapp cancel
         #[ink::test]
         fn test_dapp_cancel() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let caller = AccountId::from([0x2; 32]);
             let contract_account = AccountId::from([0x3; 32]);
-            let client_origin_1 = str_to_hash("https://localhost:2424".to_string());
             let callers_initial_balance =
                 ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>(caller)
                     .unwrap();
+
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(contract_account);
+
+            // Make sure the dapp account is a contract
+            let result =
+                ink::env::test::is_contract::<ink::env::DefaultEnvironment>(contract_account);
+            assert_eq!(result, true);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
@@ -1889,7 +2013,7 @@ pub mod prosopo {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
             // register the dapp
-            contract.dapp_register(client_origin_1, contract_account, None);
+            contract.dapp_register(contract_account);
 
             // Transfer tokens with the fund call
             contract.dapp_cancel(contract_account).ok();
@@ -1911,17 +2035,18 @@ pub mod prosopo {
         /// provider and one dapp available.
         #[ink::test]
         fn test_dapp_user_commit() {
-            let operator_account = AccountId::from([0x1; 32]);
+            let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
 
             // Register the provider
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .ok();
 
             // Call from the provider account to add data and stake tokens
@@ -1930,21 +2055,23 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
             // Register the dapp
             let dapp_user_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+
 
             // Call from the dapp contract account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_contract_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            let client_origin = service_origin.clone();
-            contract.dapp_register(client_origin, dapp_contract_account, None);
+            contract.dapp_register(dapp_contract_account);
 
             // Call from the dapp user account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
@@ -1971,15 +2098,16 @@ pub mod prosopo {
         /// Test provider approve
         #[ink::test]
         fn test_provider_approve() {
-            let operator_account = AccountId::from([0x1; 32]);
+            let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -1988,7 +2116,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Provider);
 
             let provider = contract.providers.get(&provider_account).unwrap();
             // can only add data set after staking
@@ -1997,14 +2125,15 @@ pub mod prosopo {
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            let client_origin = service_origin.clone();
-            contract.dapp_register(client_origin, dapp_contract_account, None);
+            contract.dapp_register(dapp_contract_account);
 
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2055,15 +2184,16 @@ pub mod prosopo {
         /// Test provider cannot approve invalid solution id
         #[ink::test]
         fn test_provider_approve_invalid_id() {
-            let operator_account = AccountId::from([0x1; 32]);
+            let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2072,21 +2202,22 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            let client_origin = service_origin.clone();
-            contract.dapp_register(client_origin, dapp_contract_account, None);
+            contract.dapp_register(dapp_contract_account);
 
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2115,15 +2246,16 @@ pub mod prosopo {
         /// Test provider disapprove
         #[ink::test]
         fn test_provider_disapprove() {
-            let operator_account = AccountId::from([0x1; 32]);
+            let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2132,21 +2264,22 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            let client_origin = str_to_hash("https://localhost:2424".to_string());
-            contract.dapp_register(client_origin, dapp_contract_account, None);
+            contract.dapp_register(dapp_contract_account);
 
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2196,15 +2329,16 @@ pub mod prosopo {
         /// Test dapp user is human
         #[ink::test]
         fn test_dapp_operator_is_human_user() {
-            let operator_account = AccountId::from([0x1; 32]);
+            let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2213,21 +2347,22 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2);
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            let client_origin = service_origin.clone();
-            contract.dapp_register(client_origin, dapp_contract_account, None);
+            contract.dapp_register(dapp_contract_account);
 
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2257,13 +2392,13 @@ pub mod prosopo {
 
             // Now make sure that the dapp user does not pass the human test
             let result = contract.dapp_operator_is_human_user(dapp_user_account, 80);
-            assert_eq!(result, false);
+            assert_eq!(result.unwrap(), false);
         }
 
         /// Test non-existent dapp account has zero balance
         #[ink::test]
         fn test_non_existent_dapp_account_has_zero_balance() {
-            let operator_account = AccountId::from([0x1; 32]);
+            let operator_accounts = get_operator_accounts();
             let dapp_account = AccountId::from([0x2; 32]);
             // initialise the contract
             let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
@@ -2273,27 +2408,30 @@ pub mod prosopo {
         /// Test non-existent provider account has zero balance
         #[ink::test]
         fn test_non_existent_provider_account_has_zero_balance() {
-            let operator_account = AccountId::from([0x1; 32]);
+            let operator_accounts = get_operator_accounts();
             let provider_account = AccountId::from([0x2; 32]);
             // initialise the contract
             let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
             contract.get_provider_balance(provider_account).unwrap_err();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
+            assert_eq!(0, contract.get_provider_balance(provider_account));
         }
 
         // // Test get random provider
         #[ink::test]
         fn test_get_random_active_provider() {
-            let operator_account = AccountId::from([0x1; 32]);
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let operator_accounts = get_operator_accounts();
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 0;
-            contract.provider_register(service_origin, fee, Payee::Provider, provider_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract.provider_register(service_origin, fee, Payee::Provider);
             let fee2: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Dapp, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Dapp);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2);
@@ -2301,14 +2439,15 @@ pub mod prosopo {
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            let client_origin = service_origin.clone();
-            contract.dapp_register(client_origin, dapp_contract_account, None);
+            contract.dapp_register(dapp_contract_account);
             let selected_provider =
                 contract.get_random_active_provider(provider_account, dapp_contract_account);
             assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
@@ -2317,15 +2456,16 @@ pub mod prosopo {
         /// Test provider can supply a dapp user commit for themselves and approve or disapprove it
         #[ink::test]
         fn test_provider_commit_and_approve_and_disapprove() {
-            let operator_account = AccountId::from([0x1; 32]);
+            let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2334,21 +2474,22 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            let client_origin = service_origin.clone();
-            contract.dapp_register(client_origin, dapp_contract_account, None);
+            contract.dapp_register(dapp_contract_account);
 
             // Call from the provider account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2397,15 +2538,16 @@ pub mod prosopo {
         /// Test provider cannot supply a dapp user commit for a different Provider
         #[ink::test]
         fn test_provider_cannot_supply_commit_for_a_different_provider() {
-            let operator_account = AccountId::from([0x1; 32]);
+            let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2414,35 +2556,36 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
             // Register the dapp
             let dapp_user_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
             // Call from the dapp_contract_account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_contract_account);
             // Give the dap a balance
             let balance = 2000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            let client_origin = service_origin.clone();
-            contract.dapp_register(client_origin, dapp_contract_account, None);
+            contract.dapp_register(dapp_contract_account);
 
             // Register a second provider
             let (provider_account2, service_origin, fee) = generate_provider_data(0x5, "2424", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account2);
             contract
-                .provider_register(service_origin, fee, Payee::Provider, provider_account2)
+                .provider_register(service_origin, fee, Payee::Provider)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
             let balance = 2000000000000;
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account2);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider, provider_account2);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
@@ -2461,6 +2604,42 @@ pub mod prosopo {
                 )
                 .err();
             assert_eq!(Error::NotAuthorised, dapp_user_commit_result.unwrap());
+        }
+
+        /// Test provider cannot supply a dapp user commit for a different Provider. We can't test
+        /// this properly as `own_code_hash` is not available in the test environment. This causes
+        /// the function to panic for all of the tests after `assert_eq!(Error::InvalidCodeHash, op1result.unwrap_err());`
+        #[ink::test]
+        #[should_panic(
+            expected = "not implemented: off-chain environment does not support `own_code_hash`"
+        )]
+        fn test_operator_upgrade_code_hash() {
+            let operator_accounts = get_operator_accounts();
+            let operator1 = operator_accounts[0];
+            let operator2 = operator_accounts[1];
+            // initialise the contract
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator1);
+            let op1result = contract.operator_set_code([0x01; 32]); // this is the operators AccountId, not a valid contract
+            assert_eq!(Error::InvalidCodeHash, op1result.unwrap_err());
+            let op1result = contract.operator_set_code([0x20; 32]);
+            assert_eq!(false, op1result.unwrap());
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator2);
+            let op2result = contract.operator_set_code([0x30; 32]);
+            assert_eq!(false, op2result.unwrap());
+            let op2result = contract.operator_set_code([0x20; 32]);
+            // following panics due to set code hash not being available to off-chain environment
+            op2result.unwrap();
+        }
+
+        /// Get some operator accounts as a vector
+        fn get_operator_accounts() -> Vec<AccountId> {
+            let operator_account1 = AccountId::from([0x1; 32]);
+            let operator_account2 = AccountId::from([0x10; 32]);
+            let mut operator_accounts = Vec::new();
+            operator_accounts.push(operator_account1);
+            operator_accounts.push(operator_account2);
+            operator_accounts
         }
     }
 }
