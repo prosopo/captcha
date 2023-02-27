@@ -130,23 +130,12 @@ pub mod prosopo {
         min_difficulty: u16,
     }
 
-    /// The result of a captcha event completed by a user. These are stored in a user's commitment history as a record of past captcha events
-    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct CaptchaResult {
-        completed_at: Timestamp,
-        status: CaptchaStatus,
-    }
-
     /// Users are the users of DApps that are required to be verified as human before they are
     /// allowed to interact with the DApps' contracts.
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
-        // commented until block timestamp is available in ink unit tests
-        // created: Timestamp,
-        // updated: Timestamp,
-        history: Vec<CaptchaResult>,
+        history: Vec<CaptchaSolutionCommitment>,
     }
 
     /// The summary of a user's captcha history using the n most recent captcha results limited by age and number of captcha results
@@ -369,6 +358,8 @@ pub mod prosopo {
         InvalidContract,
         /// Returned if not all captcha statuses have been handled
         InvalidCaptchaStatus,
+        /// No correct captchas in history (either history is empty or all captchas are incorrect)
+        NoCorrectCaptcha,
     }
 
     /// Concatenate two arrays (a and b) into a new array (c)
@@ -901,7 +892,7 @@ pub mod prosopo {
 
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_captcha_result(&mut self, account: AccountId, result: CaptchaResult) -> User {
+        fn record_captcha_result(&mut self, account: AccountId, result: CaptchaSolutionCommitment) -> User {
             let mut user = self.create_new_dapp_user(account);
             let age_threshold = self.env().block_timestamp() - self.max_user_history_age;
             // trim the history down to max length
@@ -918,7 +909,7 @@ pub mod prosopo {
         }
 
         fn get_user_history_summary(&self, account: AccountId) -> Result<UserHistorySummary, Error> {
-            let mut user = self.create_new_dapp_user(account);
+            let mut user = self.get_dapp_user(account)?;
             // note that the age is based on the block timestamp, so calling this method as blocks roll over will result in different outcomes as the age threshold will change but the history will not (assuming no new results are added)
             let age_threshold = self.env().block_timestamp() - self.max_user_history_age;
             // trim the history down to max length
@@ -930,7 +921,7 @@ pub mod prosopo {
                 user.history.pop();
             }
 
-            let summary = UserHistorySummary {
+            let mut summary = UserHistorySummary {
                 correct: 0,
                 incorrect: 0,
                 score: 0,
@@ -1000,10 +991,7 @@ pub mod prosopo {
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
                 commitment_mut.status = CaptchaStatus::Approved;
-                self.record_captcha_result(commitment.account, CaptchaResult {
-                    completed_at: commitment_mut.completed_at,
-                    status: commitment_mut.status,
-                });
+                self.record_captcha_result(commitment.account, commitment_mut);
 
                 self.captcha_solution_commitments
                     .insert(captcha_solution_commitment_id, &commitment_mut);
@@ -1040,15 +1028,15 @@ pub mod prosopo {
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
                 .unwrap();
-            let mut user = self.dapp_users.get(&commitment.account).unwrap();
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
                 commitment_mut.status = CaptchaStatus::Disapproved;
-                user.incorrect_captchas += 1;
+                self.record_captcha_result(commitment.account, commitment_mut);
+
                 self.captcha_solution_commitments
                     .insert(captcha_solution_commitment_id, &commitment_mut);
-                self.dapp_users.insert(&commitment.account, &user);
+                
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.env().emit_event(ProviderDisapprove {
                     captcha_solution_commitment_id,
