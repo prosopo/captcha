@@ -497,7 +497,7 @@ pub mod prosopo {
             let provider_account = self.env().caller();
             // this function is for registration only
             if self.providers.get(&provider_account).is_some() {
-                return err!(Error::ProviderDoesNotExist);
+                return err!(Error::ProviderExists);
             }
             // prevent duplicate service origins
             if self.service_origins.get(&service_origin).is_some() {
