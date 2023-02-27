@@ -2649,7 +2649,7 @@ pub mod prosopo {
         #[ink::test]
         fn test_get_random_active_provider_dapp_any() {
             let operator_accounts = get_operator_accounts();
-            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
             let dapp_user_account = AccountId::from([0x30; 32]);
             let service_origin = str_to_hash("https://localhost:2424".to_string());
