@@ -735,7 +735,7 @@ pub mod prosopo {
             // enforces a one to one relation between caller and dapp
             if self.dapps.get(&contract).is_some() {
                 // dapp exists so update it instead
-                return self.dapp_update(owner, transferred, contract, caller);
+                return self.dapp_update(owner, transferred, contract, caller, payee);
             }
 
             // mark the account as suspended if it is new and no funds have been transferred
@@ -761,6 +761,8 @@ pub mod prosopo {
                 contract,
                 owner,
                 value: transferred,
+                payee,
+                status,
             });
 
             Ok(())
@@ -774,7 +776,7 @@ pub mod prosopo {
             contract: AccountId,
             caller: AccountId,
             payee: DappPayee,
-        ) {
+        ) -> Result<(), Error> {
             let mut dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
             // only allow the owner to make changes to the dapp (including funding?!)
             if dapp.owner != caller {
