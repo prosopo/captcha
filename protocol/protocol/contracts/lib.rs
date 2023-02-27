@@ -1155,28 +1155,6 @@ pub mod prosopo {
             })
         }
 
-        // Disputes and governance messages
-
-        /// Add an operator
-        #[ink(message)]
-        pub fn add_prosopo_operator(&mut self, operator_account: AccountId) -> Result<(), Error> {
-            let caller = self.env().caller();
-            if self.operators.get(&caller).is_none() {
-                return err!(Error::NotAuthorised);
-            }
-
-            let operator = Operator {
-                status: GovernanceStatus::Active,
-            };
-            
-            self.operators.insert(operator_account, &operator);
-            let mut operator_accounts = self.operator_accounts.get_or_default();
-            operator_accounts.push(operator_account);
-            self.operator_accounts.set(&operator_accounts);
-
-            Ok(())
-        }
-
         // Informational / Validation functions
 
         fn validate_provider_exists_and_has_funds(
