@@ -244,6 +244,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "inject_self_macro"
+version = "0.3.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
 name = "ink"
 version = "4.0.0"
 source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
@@ -494,6 +502,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
+name = "named_functions_macro"
+version = "0.3.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
 name = "nom8"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -567,9 +583,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.50"
+version = "1.0.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ef7d57beacfaf2d8aee5937dab7b7f28de3cb8b1828479bb5de2a7106f2bae2"
+checksum = "5d727cae5b39d21da60fa540906919ad737832fe0b1c165da3a34d6548c849d6"
 dependencies = [
  "unicode-ident",
 ]
@@ -578,7 +594,9 @@ dependencies = [
 name = "prosopo"
 version = "4.0.0"
 dependencies = [
+ "inject_self_macro",
  "ink",
+ "named_functions_macro",
  "parity-scale-codec",
  "prosopo_storage_derive",
  "rand_chacha",
