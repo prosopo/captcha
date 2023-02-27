@@ -436,18 +436,6 @@ pub mod prosopo {
         NoCorrectCaptcha,
     }
 
-    /// Concatenate two arrays (a and b) into a new array (c)
-    ///
-    fn concat_u8<const A: usize, const B: usize, const C: usize>(
-        a: &[u8; A],
-        b: &[u8; B],
-    ) -> [u8; C] {
-        let mut c = [0; C];
-        c[..A].copy_from_slice(a);
-        c[A..A + B].copy_from_slice(b);
-        c
-    }
-
     impl Prosopo {
 
         /// Constructor
@@ -846,7 +834,6 @@ pub mod prosopo {
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            let caller = self.env().caller();
             let transferred = self.env().transferred_value();
             if self.dapps.get(&contract).is_none() {
                 return err!(Error::DappDoesNotExist);
@@ -946,7 +933,7 @@ pub mod prosopo {
             };
 
 
-            let user = self.create_new_dapp_user(dapp_user);
+            self.create_new_dapp_user(dapp_user);
             self.captcha_solution_commitments
                 .insert(user_merkle_tree_root, &commitment);
 
@@ -1089,7 +1076,7 @@ pub mod prosopo {
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
                 .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            let mut user = self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+            self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::DappUserDoesNotExist))?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
@@ -1133,7 +1120,7 @@ pub mod prosopo {
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
                 .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            let mut user = self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+            self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::DappUserDoesNotExist))?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
