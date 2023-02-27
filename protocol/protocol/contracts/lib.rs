@@ -1386,7 +1386,7 @@ pub mod prosopo {
                     active_providers = active_providers_secondary;
                 }
             } else {
-                let payee = DappPayee::try_from(dapp.payee).map_err(|_| Error::InvalidPayee)?;
+                let payee = Payee::try_from(dapp.payee).map_err(|_| Error::InvalidPayee)?;
 
                 // Get the active providers based on the dapps payee field
                 active_providers = self
