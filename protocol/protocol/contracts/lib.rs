@@ -857,6 +857,12 @@ pub mod prosopo {
                 completed_at: self.env().block_timestamp(),
             };
 
+
+            let user = self.create_new_dapp_user(dapp_user);
+            self.captcha_solution_commitments
+                .insert(user_merkle_tree_root, &commitment);
+
+
             // Insert the commitment and mark as approved or disapproved if a Provider is the caller
             let provider_details = self.get_provider_details(caller);
             if provider_details.clone().ok().is_some() {
@@ -866,9 +872,6 @@ pub mod prosopo {
                     ink::env::debug_println!("{}", "NotAuthorised");
                     return Err(Error::NotAuthorised);
                 }
-                self.create_new_dapp_user(dapp_user);
-                self.captcha_solution_commitments
-                    .insert(user_merkle_tree_root, &commitment);
 
                 // call provider_approve or provider_disapprove depending on whether the status is Approved or Disapproved
                 match status_option.unwrap_or(CaptchaStatus::Pending) {
@@ -878,12 +881,8 @@ pub mod prosopo {
                     }
                     _ => {}
                 }
-            // Insert the commitment
-            } else {
-                self.create_new_dapp_user(dapp_user);
-                self.captcha_solution_commitments
-                    .insert(user_merkle_tree_root, &commitment);
             }
+
             self.env().emit_event(DappUserCommit {
                 account: caller,
                 merkle_tree_root: user_merkle_tree_root,
@@ -893,21 +892,42 @@ pub mod prosopo {
             Ok(())
         }
 
-        /// Create a new dapp user if they do not already exist
-        fn create_new_dapp_user(&mut self, account: AccountId) {
-            // create the user and add to our list of dapp users
-            if self.dapp_users.get(account).is_none() {
-                let user = User {
-                    correct_captchas: 0,
-                    incorrect_captchas: 0,
-                    last_correct_captcha: 0,
-                    last_correct_captcha_dapp_id: [0; 32].into(),
-                };
-                self.dapp_users.insert(account, &user);
-                let mut dapp_user_accounts = self.dapp_user_accounts.get_or_default();
-                dapp_user_accounts.push(account);
-                self.dapp_user_accounts.set(&dapp_user_accounts);
+        /// Record a captcha result against a user, clearing out old captcha results as necessary.
+        /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
+        fn record_captcha_result(&mut self, account: AccountId, result: CaptchaResult) -> User {
+            let mut user = self.create_new_dapp_user(account);
+            let age_threshold = self.env().block_timestamp() - self.max_user_history_age;
+            while user.history.len() > self.max_user_history_len.into() && user.history.len() > 1 {
+                user.history.pop();
             }
+            while user.history.get(user.history.len() - 1).unwrap().completed_at < age_threshold && user.history.len() > 1 {
+                user.history.pop();
+            }
+            user.history.insert(0, result);
+            self.dapp_users.insert(account, &user);
+            user
+        }
+
+        /// Create a new dapp user if they do not already exist
+        fn create_new_dapp_user(&mut self, account: AccountId) -> User {
+            // create the user and add to our list of dapp users
+            let lookup = self.dapp_users.get(account);
+            if lookup.is_some() {
+                return lookup.unwrap();
+            }
+
+            let user = User {
+                correct_captchas: 0,
+                incorrect_captchas: 0,
+                last_correct_captcha: 0,
+                last_correct_captcha_dapp_id: [0; 32].into(),
+                history: Default::default(),
+            };
+            self.dapp_users.insert(account, &user);
+            let mut dapp_user_accounts = self.dapp_user_accounts.get_or_default();
+            dapp_user_accounts.push(account);
+            self.dapp_user_accounts.set(&dapp_user_accounts);
+            return user;
         }
 
         /// Approve a solution commitment, increment correct captchas, and refund the users tx fee
