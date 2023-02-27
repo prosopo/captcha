@@ -189,6 +189,8 @@ pub mod prosopo {
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
         operator_code_hash_votes: Mapping<AccountId, [u8; 32]>,
+        max_user_history_len: u16, // the max number of captcha results to store in history for a user
+        max_user_history_age: u64, // the max age of captcha results to store in history for a user
     }
 
     // Event emitted when a new provider registers
@@ -381,6 +383,8 @@ pub mod prosopo {
             operator_accounts: Vec<AccountId>,
             provider_stake_default: u128,
             dapp_stake_default: u128,
+            max_user_history_len: u16,
+            max_user_history_age: u64,
         ) -> Self {
             if operator_accounts.len() < 2 {
                 panic!("{:?}", Error::MinimumTwoOperatorsRequired)
@@ -412,6 +416,8 @@ pub mod prosopo {
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
                 operator_code_hash_votes: Default::default(),
+                max_user_history_len,
+                max_user_history_age,
             }
         }
 
