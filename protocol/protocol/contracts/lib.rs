@@ -963,10 +963,6 @@ pub mod prosopo {
             }
 
             let user = User {
-                correct_captchas: 0,
-                incorrect_captchas: 0,
-                last_correct_captcha: 0,
-                last_correct_captcha_dapp_id: [0; 32].into(),
                 history: Default::default(),
             };
             self.dapp_users.insert(account, &user);
@@ -1000,17 +996,17 @@ pub mod prosopo {
                 .captcha_solution_commitments
                 .get(&captcha_solution_commitment_id)
                 .unwrap();
-            let mut user = self.dapp_users.get(&commitment.account).unwrap();
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
                 commitment_mut.status = CaptchaStatus::Approved;
-                user.correct_captchas += 1;
-                user.last_correct_captcha = commitment.completed_at;
-                user.last_correct_captcha_dapp_id = commitment.contract;
+                self.record_captcha_result(commitment.account, CaptchaResult {
+                    completed_at: commitment_mut.completed_at,
+                    status: commitment_mut.status,
+                });
+
                 self.captcha_solution_commitments
                     .insert(captcha_solution_commitment_id, &commitment_mut);
-                self.dapp_users.insert(&commitment.account, &user);
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.refund_transaction_fee(commitment, transaction_fee)?;
                 self.env().emit_event(ProviderApprove {
@@ -1129,19 +1125,7 @@ pub mod prosopo {
             user: AccountId,
             threshold: u8,
         ) -> Result<bool, Error> {
-            match self.get_dapp_user(user) {
-                Err(_e) => return Err(Error::DappUserDoesNotExist),
-                Ok(user) =>
-                // determine if correct captchas is greater than or equal to threshold
-                {
-                    let score = if user.correct_captchas + user.incorrect_captchas == 0 {
-                        0
-                    } else {
-                        (user.correct_captchas * 100) / (user.correct_captchas + user.incorrect_captchas)
-                    };
-                    Ok(score >= threshold.into())
-                }
-            }
+            Ok(self.get_user_history_summary(user)?.score > threshold)
         }
 
         #[ink(message)]
@@ -1150,10 +1134,21 @@ pub mod prosopo {
             user: AccountId,
         ) -> Result<LastCorrectCaptcha, Error> {
             let user = self.get_dapp_user(user)?;
+            let mut last_correct_captcha = None;
+            for entry in user.history {
+                if entry.status == CaptchaStatus::Approved {
+                    last_correct_captcha = Some(entry);
+                    break;
+                }
+            }
+
+            if last_correct_captcha.is_none() {
+                return Err(Error::NoCorrectCaptcha);
+            }
 
             Ok(LastCorrectCaptcha {
-                before_ms: self.env().block_timestamp() - user.last_correct_captcha,
-                dapp_id: user.last_correct_captcha_dapp_id,
+                before_ms: self.env().block_timestamp() - last_correct_captcha.unwrap().completed_at,
+                dapp_id: last_correct_captcha.unwrap().contract,
             })
         }
 
