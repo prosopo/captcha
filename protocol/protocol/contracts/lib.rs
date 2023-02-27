@@ -2401,7 +2401,7 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
             let dapp_account = AccountId::from([0x2; 32]);
             // initialise the contract
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             contract.get_dapp_balance(dapp_account).unwrap_err();
         }
 
@@ -2411,10 +2411,10 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
             let provider_account = AccountId::from([0x2; 32]);
             // initialise the contract
-            let mut contract = Prosopo::default(operator_account, STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract = Prosopo::default(operator_accounts.clone(), STAKE_DEFAULT, STAKE_DEFAULT);
             contract.get_provider_balance(provider_account).unwrap_err();
             let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
-            assert_eq!(0, contract.get_provider_balance(provider_account));
+            contract.get_provider_balance(provider_account).unwrap_err();
         }
 
         // // Test get random provider
