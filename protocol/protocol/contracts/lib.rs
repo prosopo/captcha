@@ -2402,7 +2402,7 @@ pub mod prosopo {
             let dapp_account = AccountId::from([0x2; 32]);
             // initialise the contract
             let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
-            assert_eq!(0, contract.get_dapp_balance(dapp_account));
+            assert_eq!(Error::DappDoesNotExist, contract.get_dapp_balance(dapp_account).unwrap_err());
         }
 
         /// Test non-existent provider account has zero balance
@@ -2412,7 +2412,7 @@ pub mod prosopo {
             let provider_account = AccountId::from([0x2; 32]);
             // initialise the contract
             let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
-            assert_eq!(0, contract.get_provider_balance(provider_account));
+            assert_eq!(Error::ProviderDoesNotExist, contract.get_provider_balance(provider_account).unwrap_err());
         }
 
         // // Test get random provider
