@@ -130,9 +130,17 @@ pub mod prosopo {
         min_difficulty: u16,
     }
 
+    /// The result of a captcha event completed by a user. These are stored in a user's commitment history as a record of past captcha events
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct CaptchaResult {
+        completed_at: Timestamp,
+        status: CaptchaStatus,
+    }
+
     /// Users are the users of DApps that are required to be verified as human before they are
     /// allowed to interact with the DApps' contracts.
-    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
         correct_captchas: u64,
@@ -142,6 +150,7 @@ pub mod prosopo {
         // updated: Timestamp,
         last_correct_captcha: Timestamp,
         last_correct_captcha_dapp_id: AccountId,
+        history: Vec<CaptchaResult>,
     }
 
     #[derive(scale::Encode, scale::Decode)]
