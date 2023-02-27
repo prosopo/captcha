@@ -112,6 +112,17 @@ pub mod prosopo {
         }
     }
 
+    impl TryFrom<Payee> for DappPayee {
+        type Error = ();
+
+        fn try_from(payee: Payee) -> Result<Self, Self::Error> {
+            match payee {
+                Payee::Provider => Ok(DappPayee::Provider),
+                Payee::Dapp => Ok(DappPayee::Dapp),
+            }
+        }
+    }
+
     /// Providers are suppliers of human verification methods (captchas, etc.) to DappUsers, either
     /// paying or receiving a fee for this service.
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
