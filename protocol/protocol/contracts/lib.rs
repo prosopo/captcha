@@ -1372,7 +1372,7 @@ pub mod prosopo {
 
                 // If the max is 0, then there are no active providers
                 if max == 0 {
-                    return Err(Error::NoActiveProviders);
+                    return err!(Error::NoActiveProviders);
                 }
 
                 // Get a random number between 0 and max
@@ -1386,10 +1386,7 @@ pub mod prosopo {
                     active_providers = active_providers_secondary;
                 }
             } else {
-                let payee = match Payee::try_from(dapp.payee) {
-                    Ok(value) => value,
-                    Err(_e) => return Err(Error::InvalidPayee),
-                };
+                let payee = DappPayee::try_from(dapp.payee).map_err(|_| Error::InvalidPayee)?;
 
                 // Get the active providers based on the dapps payee field
                 active_providers = self
@@ -1399,7 +1396,7 @@ pub mod prosopo {
 
                 // If the length is 0, then there are no active providers
                 if active_providers.len() == 0 {
-                    return Err(Error::NoActiveProviders);
+                    return err!(Error::NoActiveProviders);
                 }
 
                 // Get a random number between 0 and the length of the active providers
@@ -1407,14 +1404,11 @@ pub mod prosopo {
             }
 
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
-            let provider = self.providers.get(provider_id);
-            if provider.is_none() {
-                return Err(Error::NoActiveProviders);
-            }
+            let provider = self.providers.get(provider_id).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
 
             Ok(RandomProvider {
                 provider_id,
-                provider: provider.unwrap(),
+                provider,
                 block_number: self.env().block_number(),
             })
         }
