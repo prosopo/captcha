@@ -143,14 +143,19 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
-        correct_captchas: u64,
-        incorrect_captchas: u64,
         // commented until block timestamp is available in ink unit tests
         // created: Timestamp,
         // updated: Timestamp,
-        last_correct_captcha: Timestamp,
-        last_correct_captcha_dapp_id: AccountId,
         history: Vec<CaptchaResult>,
+    }
+
+    /// The summary of a user's captcha history using the n most recent captcha results limited by age and number of captcha results
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct UserHistorySummary {
+        pub correct: u16,
+        pub incorrect: u16,
+        pub score: u8,
     }
 
     #[derive(scale::Encode, scale::Decode)]
@@ -362,6 +367,8 @@ pub mod prosopo {
         Unknown,
         /// Invalid contract
         InvalidContract,
+        /// Returned if not all captcha statuses have been handled
+        InvalidCaptchaStatus,
     }
 
     /// Concatenate two arrays (a and b) into a new array (c)
@@ -897,15 +904,54 @@ pub mod prosopo {
         fn record_captcha_result(&mut self, account: AccountId, result: CaptchaResult) -> User {
             let mut user = self.create_new_dapp_user(account);
             let age_threshold = self.env().block_timestamp() - self.max_user_history_age;
-            while user.history.len() > self.max_user_history_len.into() && user.history.len() > 1 {
+            // trim the history down to max length
+            while user.history.len() > self.max_user_history_len.into() {
                 user.history.pop();
             }
-            while user.history.get(user.history.len() - 1).unwrap().completed_at < age_threshold && user.history.len() > 1 {
+            // trim the history down to max age (as several entrys may now be older than max age due to blocks rolling over)
+            while user.history.get(user.history.len() - 1).unwrap().completed_at < age_threshold {
                 user.history.pop();
             }
             user.history.insert(0, result);
             self.dapp_users.insert(account, &user);
             user
+        }
+
+        fn get_user_history_summary(&self, account: AccountId) -> Result<UserHistorySummary, Error> {
+            let mut user = self.create_new_dapp_user(account);
+            // note that the age is based on the block timestamp, so calling this method as blocks roll over will result in different outcomes as the age threshold will change but the history will not (assuming no new results are added)
+            let age_threshold = self.env().block_timestamp() - self.max_user_history_age;
+            // trim the history down to max length
+            while user.history.len() > self.max_user_history_len.into() {
+                user.history.pop();
+            }
+            // trim the history down to max age
+            while user.history.get(user.history.len() - 1).unwrap().completed_at < age_threshold {
+                user.history.pop();
+            }
+
+            let summary = UserHistorySummary {
+                correct: 0,
+                incorrect: 0,
+                score: 0,
+            };
+            for result in user.history.iter() {
+                if result.status == CaptchaStatus::Approved {
+                    summary.correct += 1;
+                } else if result.status == CaptchaStatus::Disapproved {
+                    summary.incorrect += 1;
+                } else {
+                    return Err(Error::InvalidCaptchaStatus);
+                }
+            }
+
+            if summary.correct + summary.incorrect == 0 {
+                summary.score = 0;
+            } else {
+                summary.score = ((summary.correct * 100) / (summary.correct + summary.incorrect)) as u8;
+            }
+
+            Ok(summary)
         }
 
         /// Create a new dapp user if they do not already exist
