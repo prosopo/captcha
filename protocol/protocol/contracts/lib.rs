@@ -678,7 +678,7 @@ pub mod prosopo {
             let provider = self.get_provider_details(caller)?;
             let balance = provider.balance;
             if balance > 0 {
-                self.env().transfer(caller, balance).ok();
+                self.env().transfer(caller, balance).map_err(|_| Error::ContractTransferFailed)?;
                 self.provider_deregister(caller)?;
                 self.env().emit_event(ProviderUnstake {
                     account: caller,
@@ -882,7 +882,7 @@ pub mod prosopo {
 
             let balance = dapp.balance;
             if dapp.balance > 0 {
-                self.env().transfer(caller, dapp.balance).ok();
+                self.env().transfer(caller, dapp.balance).map_err(|_| Error::ContractTransferFailed)?;
             }
             
             dapp.status = GovernanceStatus::Deactivated;
@@ -1139,9 +1139,7 @@ pub mod prosopo {
                     provider.balance -= amount;
                     self.providers.insert(commitment.provider, &provider);
                 }
-                if self.env().transfer(commitment.account, amount).is_err() {
-                    return err!(Error::ContractTransferFailed);
-                }
+                self.env().transfer(commitment.account, amount).map_err(|_| Error::ContractTransferFailed)?;
             }
 
             Ok(())
