@@ -1759,10 +1759,9 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             match contract.provider_register(service_origin, fee, Payee::Dapp) {
                 Result::Err(Error::ProviderServiceOriginUsed) => {
-                    assert!(true);
                 }
                 _ => {
-                    assert!(false);
+                    unreachable!();
                 }
             }
             assert!(contract.providers.get(provider_account).is_none());
@@ -1800,10 +1799,10 @@ pub mod prosopo {
             // try updating the second provider and make sure the error is correct and that it didn't change
             match contract.provider_update(service_origin, fee, Payee::Dapp) {
                 Result::Err(Error::ProviderServiceOriginUsed) => {
-                    assert!(true);
+                    
                 }
                 _ => {
-                    assert!(false);
+                    unreachable!();
                 }
             }
 
@@ -2102,7 +2101,7 @@ pub mod prosopo {
             // Make sure the dapp account is a contract
             let result =
                 ink::env::test::is_contract::<ink::env::DefaultEnvironment>(contract_account);
-            assert_eq!(result, true);
+            assert!(result);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
@@ -2787,9 +2786,7 @@ pub mod prosopo {
         fn get_operator_accounts() -> Vec<AccountId> {
             let operator_account1 = AccountId::from([0x1; 32]);
             let operator_account2 = AccountId::from([0x10; 32]);
-            let mut operator_accounts = Vec::new();
-            operator_accounts.push(operator_account1);
-            operator_accounts.push(operator_account2);
+            let mut operator_accounts = vec![operator_account1, operator_account2];
             operator_accounts
         }
     }
