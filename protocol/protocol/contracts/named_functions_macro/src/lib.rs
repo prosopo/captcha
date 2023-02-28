@@ -30,8 +30,8 @@ fn named_impl (
     input: TokenStream,
 ) -> Result<TokenStream, &'static str>
 {
-    if let Some(_) = params.into_iter().next() {
-        return Err("unexpected attribute arguments".into());
+    if params.into_iter().next().is_some() {
+        return Err("unexpected attribute arguments");
     }
 
     let output = handle(input);
@@ -49,24 +49,22 @@ fn handle(input: TokenStream) -> TokenStream {
             TokenTree::Group(mut g) => {
                 let span = g.span();
                 let mut sub_ts = handle(g.stream());
-                if found_fn {
-                    if g.delimiter() == Delimiter::Brace {
-                        let mut inject = quote!(
-                            macro_rules! function_name {() => (
-                                #fname
-                            )}
-                        );
-                        inject.extend(sub_ts);
-                        sub_ts = inject;
-                        found_fn = false;
-                    }
+                if found_fn && g.delimiter() == Delimiter::Brace {
+                    let mut inject = quote!(
+                        macro_rules! function_name {() => (
+                            #fname
+                        )}
+                    );
+                    inject.extend(sub_ts);
+                    sub_ts = inject;
+                    found_fn = false;
                 }
                 g = Group::new(g.delimiter(), sub_ts);
                 g.set_span(span);
                 output.push(g.into());
             }
             TokenTree::Ident(i) => {
-                if i.to_string() == "fn" {
+                if i == "fn" {
                     found_fn = true;
                     let s = input.peek().unwrap().to_string();
                     fname = TokenTree::from(Literal::string(&s));
