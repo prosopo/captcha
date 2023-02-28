@@ -19,28 +19,23 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 
 /// Print and return an error in ink
 macro_rules! err {
-    ($err:expr) => {
-        {
-            Err(get_self!().print_err($err, function_name!()))
-        }
-    };
+    ($err:expr) => {{
+        Err(get_self!().print_err($err, function_name!()))
+    }};
 }
 
 // ($err:expr) => (
-    // |$err| crate::print_error($err, function_name!(), get_self!().env().block_number(), get_self!().env().caller())
+// |$err| crate::print_error($err, function_name!(), get_self!().env().block_number(), get_self!().env().caller())
 // );
 
 macro_rules! err_fn {
-    ($err:expr) => (
+    ($err:expr) => {
         || get_self!().print_err($err, function_name!())
-    );
+    };
 }
 
 /// Concatenate two arrays (a and b) into a new array (c)
-fn concat_u8<const A: usize, const B: usize, const C: usize>(
-    a: &[u8; A],
-    b: &[u8; B],
-) -> [u8; C] {
+fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u8; B]) -> [u8; C] {
     let mut c = [0; C];
     c[..A].copy_from_slice(a);
     c[A..A + B].copy_from_slice(b);
@@ -387,7 +382,7 @@ pub mod prosopo {
     }
 
     /// The Prosopo error types
-    /// 
+    ///
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Error {
@@ -449,7 +444,6 @@ pub mod prosopo {
     }
 
     impl Prosopo {
-
         /// Constructor
         #[ink(constructor, payable)]
         pub fn default(
@@ -492,7 +486,13 @@ pub mod prosopo {
 
         /// Print and return an error
         fn print_err(&self, err: Error, fn_name: &str) -> Error {
-            debug!("ERROR in {}() at block {} with caller {:?}\n'{:?}'", fn_name, self.env().block_number(), self.env().caller(), err);
+            debug!(
+                "ERROR in {}() at block {} with caller {:?}\n'{:?}'",
+                fn_name,
+                self.env().block_number(),
+                self.env().caller(),
+                err
+            );
             err
         }
 
@@ -540,11 +540,17 @@ pub mod prosopo {
             self.service_origins.insert(service_origin, &());
             let mut provider_accounts_map = self
                 .provider_accounts
-                .get(ProviderState {status: GovernanceStatus::Deactivated, payee})
+                .get(ProviderState {
+                    status: GovernanceStatus::Deactivated,
+                    payee,
+                })
                 .unwrap_or_default();
             provider_accounts_map.insert(provider_account);
             self.provider_accounts.insert(
-                ProviderState {status: GovernanceStatus::Deactivated, payee},
+                ProviderState {
+                    status: GovernanceStatus::Deactivated,
+                    payee,
+                },
                 &provider_accounts_map,
             );
             self.env().emit_event(ProviderRegister {
@@ -618,8 +624,14 @@ pub mod prosopo {
             payee: Payee,
         ) {
             if current_provider_status != new_status {
-                let current_key = ProviderState {status: current_provider_status, payee};
-                let new_key = ProviderState {status: new_status, payee};
+                let current_key = ProviderState {
+                    status: current_provider_status,
+                    payee,
+                };
+                let new_key = ProviderState {
+                    status: new_status,
+                    payee,
+                };
                 // Retrieve indexes from storage mapping
                 let mut current_status_provider_accounts =
                     self.provider_accounts.get(current_key).unwrap_or_default();
@@ -643,12 +655,15 @@ pub mod prosopo {
         #[ink(message)]
         pub fn provider_deregister(&mut self, provider_account: AccountId) -> Result<(), Error> {
             let caller = self.env().caller();
-            if caller != provider_account {                
+            if caller != provider_account {
                 return err!(Error::NotAuthorised);
             }
 
             // Get provider
-            let mut provider = self.providers.get(provider_account).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+            let mut provider = self
+                .providers
+                .get(provider_account)
+                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
 
             // Update provider status
             self.provider_change_status(
@@ -678,7 +693,9 @@ pub mod prosopo {
             let provider = self.get_provider_details(caller)?;
             let balance = provider.balance;
             if balance > 0 {
-                self.env().transfer(caller, balance).map_err(|_| Error::ContractTransferFailed)?;
+                self.env()
+                    .transfer(caller, balance)
+                    .map_err(|_| Error::ContractTransferFailed)?;
                 self.provider_deregister(caller)?;
                 self.env().emit_event(ProviderUnstake {
                     account: caller,
@@ -709,7 +726,10 @@ pub mod prosopo {
                 captcha_type: 0,
             };
 
-            let mut provider = self.providers.get(provider_id).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+            let mut provider = self
+                .providers
+                .get(provider_id)
+                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
             let dataset_id_old = provider.dataset_id;
 
             // create a new id and insert details of the new captcha data set if it doesn't exist
@@ -810,12 +830,15 @@ pub mod prosopo {
             caller: AccountId,
             payee: DappPayee,
         ) -> Result<(), Error> {
-            let mut dapp = self.dapps.get(contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+            let mut dapp = self
+                .dapps
+                .get(contract)
+                .ok_or_else(err_fn!(Error::DappDoesNotExist))?;
             // only allow the owner to make changes to the dapp (including funding?!)
             if dapp.owner != caller {
                 return err!(Error::NotAuthorised);
             }
-            
+
             let total = dapp.balance + transferred;
             dapp.balance = total;
             dapp.owner = owner;
@@ -848,7 +871,10 @@ pub mod prosopo {
                 return err!(Error::DappDoesNotExist);
             }
 
-            let mut dapp = self.dapps.get(contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+            let mut dapp = self
+                .dapps
+                .get(contract)
+                .ok_or_else(err_fn!(Error::DappDoesNotExist))?;
             let total = dapp.balance + transferred;
             dapp.balance = total;
             if dapp.balance > 0 {
@@ -882,9 +908,11 @@ pub mod prosopo {
 
             let balance = dapp.balance;
             if dapp.balance > 0 {
-                self.env().transfer(caller, dapp.balance).map_err(|_| Error::ContractTransferFailed)?;
+                self.env()
+                    .transfer(caller, dapp.balance)
+                    .map_err(|_| Error::ContractTransferFailed)?;
             }
-            
+
             dapp.status = GovernanceStatus::Deactivated;
             dapp.balance = 0;
             self.dapps.insert(contract, &dapp);
@@ -1020,7 +1048,10 @@ pub mod prosopo {
                 .captcha_solution_commitments
                 .get(captcha_solution_commitment_id)
                 .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            let mut user = self.dapp_users.get(commitment.account).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+            let mut user = self
+                .dapp_users
+                .get(commitment.account)
+                .ok_or_else(err_fn!(Error::DappDoesNotExist))?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
@@ -1066,7 +1097,10 @@ pub mod prosopo {
                 .captcha_solution_commitments
                 .get(captcha_solution_commitment_id)
                 .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            let mut user = self.dapp_users.get(commitment.account).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+            let mut user = self
+                .dapp_users
+                .get(commitment.account)
+                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
@@ -1092,9 +1126,15 @@ pub mod prosopo {
             provider_account: &AccountId,
             dapp_account: &AccountId,
         ) -> Result<(), Error> {
-            let mut provider = self.providers.get(provider_account).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+            let mut provider = self
+                .providers
+                .get(provider_account)
+                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
             if provider.fee != 0 {
-                let mut dapp = self.dapps.get(dapp_account).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+                let mut dapp = self
+                    .dapps
+                    .get(dapp_account)
+                    .ok_or_else(err_fn!(Error::DappDoesNotExist))?;
 
                 let fee = Balance::from(provider.fee);
                 if provider.payee == Payee::Provider {
@@ -1124,8 +1164,14 @@ pub mod prosopo {
             }
 
             if amount > 0 {
-                let mut provider = self.providers.get(commitment.provider).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
-                let mut dapp = self.dapps.get(commitment.contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+                let mut provider = self
+                    .providers
+                    .get(commitment.provider)
+                    .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+                let mut dapp = self
+                    .dapps
+                    .get(commitment.contract)
+                    .ok_or_else(err_fn!(Error::DappDoesNotExist))?;
                 if provider.payee == Payee::Provider {
                     if dapp.balance < amount {
                         return err!(Error::DappInsufficientFunds);
@@ -1139,7 +1185,9 @@ pub mod prosopo {
                     provider.balance -= amount;
                     self.providers.insert(commitment.provider, &provider);
                 }
-                self.env().transfer(commitment.account, amount).map_err(|_| Error::ContractTransferFailed)?;
+                self.env()
+                    .transfer(commitment.account, amount)
+                    .map_err(|_| Error::ContractTransferFailed)?;
             }
 
             Ok(())
@@ -1222,7 +1270,9 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
-            self.captcha_data.get(dataset_id).ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))
+            self.captcha_data
+                .get(dataset_id)
+                .ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))
         }
 
         /// Get a solution commitment
@@ -1253,7 +1303,9 @@ pub mod prosopo {
         /// Returns an error if the user does not exist
         #[ink(message)]
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
-            self.dapp_users.get(dapp_user_id).ok_or_else(err_fn!(Error::DappUserDoesNotExist))
+            self.dapp_users
+                .get(dapp_user_id)
+                .ok_or_else(err_fn!(Error::DappUserDoesNotExist))
         }
 
         /// Get a single provider's details
@@ -1261,7 +1313,9 @@ pub mod prosopo {
         /// Returns an error if the user does not exist
         #[ink(message)]
         pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
-            self.providers.get(accountid).ok_or_else(err_fn!(Error::ProviderDoesNotExist))
+            self.providers
+                .get(accountid)
+                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))
         }
 
         /// Get a single dapps details
@@ -1269,7 +1323,9 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
-            self.dapps.get(contract).ok_or_else(err_fn!(Error::DappDoesNotExist))
+            self.dapps
+                .get(contract)
+                .ok_or_else(err_fn!(Error::DappDoesNotExist))
         }
 
         /// Returns the account balance for the specified `dapp`.
@@ -1306,7 +1362,10 @@ pub mod prosopo {
         ///
         /// Returns empty if none were matched
         #[ink(message)]
-        pub fn list_providers_by_ids(&self, provider_ids: Vec<AccountId>) -> Result<Vec<Provider>, Error> {
+        pub fn list_providers_by_ids(
+            &self,
+            provider_ids: Vec<AccountId>,
+        ) -> Result<Vec<Provider>, Error> {
             let mut providers = Vec::new();
             for provider_id in provider_ids {
                 let provider = self.providers.get(provider_id);
@@ -1322,18 +1381,23 @@ pub mod prosopo {
         ///
         /// Returns empty if none were matched
         #[ink(message)]
-        pub fn list_providers_by_status(&self, statuses: Vec<GovernanceStatus>) -> Result<Vec<Provider>, Error> {
+        pub fn list_providers_by_status(
+            &self,
+            statuses: Vec<GovernanceStatus>,
+        ) -> Result<Vec<Provider>, Error> {
             let mut providers = Vec::<Provider>::new();
             for status in statuses {
                 for payee in [Payee::Dapp, Payee::Provider] {
-                    let providers_set = self.provider_accounts.get(ProviderState {status, payee});
+                    let providers_set = self.provider_accounts.get(ProviderState { status, payee });
                     if providers_set.is_none() {
                         continue;
                     }
-                    let provider_ids = providers_set.ok_or_else(err_fn!(Error::ProviderDoesNotExist))?.into_iter().collect();
+                    let provider_ids = providers_set
+                        .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?
+                        .into_iter()
+                        .collect();
                     providers.append(&mut self.list_providers_by_ids(provider_ids)?);
                 }
-
             }
             Ok(providers)
         }
@@ -1355,14 +1419,20 @@ pub mod prosopo {
                 // Get the active providers for which the payee is dapp
                 let active_providers_initial = self
                     .provider_accounts
-                    .get(ProviderState {status, payee: Payee::Dapp})
+                    .get(ProviderState {
+                        status,
+                        payee: Payee::Dapp,
+                    })
                     .unwrap_or_default();
                 let mut max = active_providers_initial.len();
 
                 // Get the active providers for which the payee is provider
                 let active_providers_secondary = self
                     .provider_accounts
-                    .get(ProviderState {status, payee: Payee::Provider})
+                    .get(ProviderState {
+                        status,
+                        payee: Payee::Provider,
+                    })
                     .unwrap_or_default();
 
                 // The max length of the active providers is the sum of the two
@@ -1389,7 +1459,7 @@ pub mod prosopo {
                 // Get the active providers based on the dapps payee field
                 active_providers = self
                     .provider_accounts
-                    .get(ProviderState {status, payee})
+                    .get(ProviderState { status, payee })
                     .unwrap_or_default();
 
                 // If the length is 0, then there are no active providers
@@ -1402,7 +1472,10 @@ pub mod prosopo {
             }
 
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
-            let provider = self.providers.get(provider_id).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+            let provider = self
+                .providers
+                .get(provider_id)
+                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
 
             Ok(RandomProvider {
                 provider_id,
@@ -1423,7 +1496,7 @@ pub mod prosopo {
                 GovernanceStatus::Deactivated,
             ] {
                 for payee in [Payee::Provider, Payee::Dapp] {
-                    let providers_set = self.provider_accounts.get(ProviderState {status, payee});
+                    let providers_set = self.provider_accounts.get(ProviderState { status, payee });
                     if providers_set.is_none() {
                         continue;
                     }
@@ -1460,7 +1533,7 @@ pub mod prosopo {
             let next = u128::from_le_bytes(hash_output);
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
             // e.g. if len = 10 then range would be 0-9
-            
+
             next % len
         }
 
@@ -1533,7 +1606,6 @@ pub mod prosopo {
 
             Ok(true)
         }
-    
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -1617,7 +1689,10 @@ pub mod prosopo {
             assert!(contract.providers.get(provider_account).is_some());
             assert!(contract
                 .provider_accounts
-                .get(ProviderState { status: GovernanceStatus::Deactivated, payee: Payee::Dapp})
+                .get(ProviderState {
+                    status: GovernanceStatus::Deactivated,
+                    payee: Payee::Dapp
+                })
                 .unwrap_or_default()
                 .contains(&provider_account));
         }
@@ -1650,7 +1725,9 @@ pub mod prosopo {
             contract.provider_register(service_origin, fee, Payee::Dapp);
             let registered_provider_account = contract.providers.get(provider_account);
             assert!(registered_provider_account.is_some());
-            let returned_list = contract.list_providers_by_ids(vec![provider_account]).unwrap();
+            let returned_list = contract
+                .list_providers_by_ids(vec![provider_account])
+                .unwrap();
             assert!(returned_list == vec![registered_provider_account.unwrap()]);
         }
 
@@ -1720,7 +1797,10 @@ pub mod prosopo {
             assert!(contract.providers.get(provider_account).is_some());
             assert!(contract
                 .provider_accounts
-                .get(ProviderState { status: GovernanceStatus::Deactivated, payee: Payee::Dapp})
+                .get(ProviderState {
+                    status: GovernanceStatus::Deactivated,
+                    payee: Payee::Dapp
+                })
                 .unwrap()
                 .contains(&provider_account));
             let service_origin = str_to_hash("https://localhost:4242".to_string());
@@ -1731,7 +1811,10 @@ pub mod prosopo {
             contract.provider_update(service_origin, fee, Payee::Dapp);
             assert!(contract
                 .provider_accounts
-                .get(ProviderState { status: GovernanceStatus::Deactivated, payee: Payee::Dapp})
+                .get(ProviderState {
+                    status: GovernanceStatus::Deactivated,
+                    payee: Payee::Dapp
+                })
                 .unwrap()
                 .contains(&provider_account));
             let provider = contract.providers.get(provider_account).unwrap();
@@ -1778,8 +1861,7 @@ pub mod prosopo {
             let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             match contract.provider_register(service_origin, fee, Payee::Dapp) {
-                Result::Err(Error::ProviderServiceOriginUsed) => {
-                }
+                Result::Err(Error::ProviderServiceOriginUsed) => {}
                 _ => {
                     unreachable!();
                 }
@@ -1787,7 +1869,10 @@ pub mod prosopo {
             assert!(contract.providers.get(provider_account).is_none());
             assert!(!contract
                 .provider_accounts
-                .get(ProviderState { status: GovernanceStatus::Deactivated, payee: Payee::Dapp})
+                .get(ProviderState {
+                    status: GovernanceStatus::Deactivated,
+                    payee: Payee::Dapp
+                })
                 .unwrap()
                 .contains(&provider_account));
         }
@@ -1818,9 +1903,7 @@ pub mod prosopo {
 
             // try updating the second provider and make sure the error is correct and that it didn't change
             match contract.provider_update(service_origin, fee, Payee::Dapp) {
-                Result::Err(Error::ProviderServiceOriginUsed) => {
-                    
-                }
+                Result::Err(Error::ProviderServiceOriginUsed) => {}
                 _ => {
                     unreachable!();
                 }
@@ -2528,7 +2611,8 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
             let provider_account = AccountId::from([0x2; 32]);
             // initialise the contract
-            let mut contract = Prosopo::default(operator_accounts.clone(), STAKE_DEFAULT, STAKE_DEFAULT);
+            let mut contract =
+                Prosopo::default(operator_accounts.clone(), STAKE_DEFAULT, STAKE_DEFAULT);
             contract.get_provider_balance(provider_account).unwrap_err();
             let mut contract = Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT);
             contract.get_provider_balance(provider_account).unwrap_err();
@@ -2810,5 +2894,4 @@ pub mod prosopo {
             operator_accounts
         }
     }
-
 }
