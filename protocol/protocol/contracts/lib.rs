@@ -226,7 +226,7 @@ pub mod prosopo {
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderKey {
+    pub struct ProviderState {
         pub status: GovernanceStatus,
         pub payee: Payee,
     }
@@ -235,7 +235,7 @@ pub mod prosopo {
     #[ink(storage)]
     pub struct Prosopo {
         providers: Mapping<AccountId, Provider>,
-        provider_accounts: Mapping<(GovernanceStatus, Payee), BTreeSet<AccountId>>,
+        provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
         service_origins: Mapping<Hash, ()>,
         captcha_data: Mapping<Hash, CaptchaData>,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>,
@@ -540,11 +540,11 @@ pub mod prosopo {
             self.service_origins.insert(service_origin, &());
             let mut provider_accounts_map = self
                 .provider_accounts
-                .get((GovernanceStatus::Deactivated, payee))
+                .get(ProviderState {status: GovernanceStatus::Deactivated, payee})
                 .unwrap_or_default();
             provider_accounts_map.insert(provider_account);
             self.provider_accounts.insert(
-                (GovernanceStatus::Deactivated, payee),
+                ProviderState {status: GovernanceStatus::Deactivated, payee},
                 &provider_accounts_map,
             );
             self.env().emit_event(ProviderRegister {
@@ -618,8 +618,8 @@ pub mod prosopo {
             payee: Payee,
         ) {
             if current_provider_status != new_status {
-                let current_key = (&current_provider_status, &payee);
-                let new_key = (&new_status, &payee);
+                let current_key = ProviderState {status: current_provider_status, payee: payee};
+                let new_key = ProviderState {status: new_status, payee};
                 // Retrieve indexes from storage mapping
                 let mut current_status_provider_accounts =
                     self.provider_accounts.get(current_key).unwrap_or_default();
@@ -1328,7 +1328,7 @@ pub mod prosopo {
             let mut providers = Vec::<Provider>::new();
             for status in statuses {
                 for payee in [Payee::Dapp, Payee::Provider] {
-                    let providers_set = self.provider_accounts.get((status, payee));
+                    let providers_set = self.provider_accounts.get(ProviderState {status, payee});
                     if providers_set.is_none() {
                         continue;
                     }
@@ -1357,14 +1357,14 @@ pub mod prosopo {
                 // Get the active providers for which the payee is dapp
                 let active_providers_initial = self
                     .provider_accounts
-                    .get((status, Payee::Dapp))
+                    .get(ProviderState {status, payee: Payee::Dapp})
                     .unwrap_or_default();
                 let mut max = active_providers_initial.len();
 
                 // Get the active providers for which the payee is provider
                 let active_providers_secondary = self
                     .provider_accounts
-                    .get((status, Payee::Provider))
+                    .get(ProviderState {status, payee: Payee::Provider})
                     .unwrap_or_default();
 
                 // The max length of the active providers is the sum of the two
@@ -1391,7 +1391,7 @@ pub mod prosopo {
                 // Get the active providers based on the dapps payee field
                 active_providers = self
                     .provider_accounts
-                    .get((status, payee))
+                    .get(ProviderState {status, payee})
                     .unwrap_or_default();
 
                 // If the length is 0, then there are no active providers
@@ -1425,7 +1425,7 @@ pub mod prosopo {
                 GovernanceStatus::Deactivated,
             ] {
                 for payee in [Payee::Provider, Payee::Dapp] {
-                    let providers_set = self.provider_accounts.get((status, payee));
+                    let providers_set = self.provider_accounts.get(ProviderState {status, payee});
                     if providers_set.is_none() {
                         continue;
                     }
