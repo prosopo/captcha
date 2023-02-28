@@ -125,7 +125,7 @@ pub mod prosopo {
 
     /// Providers are suppliers of human verification methods (captchas, etc.) to DappUsers, either
     /// paying or receiving a fee for this service.
-    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Provider {
         status: GovernanceStatus,
@@ -139,8 +139,8 @@ pub mod prosopo {
     }
 
     /// RandomProvider is selected randomly by the contract for the client side application
-    #[derive(PartialEq, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct RandomProvider {
         provider_id: AccountId,
         provider: Provider,
@@ -187,7 +187,7 @@ pub mod prosopo {
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
     /// or receiving a fee for this service.
-    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Dapp {
         status: GovernanceStatus,
@@ -199,7 +199,7 @@ pub mod prosopo {
 
     /// Users are the users of DApps that are required to be verified as human before they are
     /// allowed to interact with the DApps' contracts.
-    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
         correct_captchas: u64,
@@ -210,18 +210,25 @@ pub mod prosopo {
         last_correct_captcha_dapp_id: AccountId,
     }
 
-    #[derive(scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct LastCorrectCaptcha {
         pub before_ms: u64,
         pub dapp_id: AccountId,
     }
 
-    #[derive(scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct OperatorCodeHashVote {
         pub account_id: AccountId,
         pub code_hash: [u8; 32],
+    }
+
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct ProviderKey {
+        pub status: GovernanceStatus,
+        pub payee: Payee,
     }
 
     // Contract storage
@@ -247,7 +254,8 @@ pub mod prosopo {
 
     // Event emitted when a new provider registers
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderRegister {
         #[ink(topic)]
         account: AccountId,
@@ -255,7 +263,8 @@ pub mod prosopo {
 
     // Event emitted when a new provider deregisters
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderDeregister {
         #[ink(topic)]
         account: AccountId,
@@ -263,7 +272,8 @@ pub mod prosopo {
 
     // Event emitted when a new provider is updated
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderUpdate {
         #[ink(topic)]
         account: AccountId,
@@ -271,7 +281,8 @@ pub mod prosopo {
 
     // Event emitted when a provider stakes
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderStake {
         #[ink(topic)]
         account: AccountId,
@@ -280,7 +291,8 @@ pub mod prosopo {
 
     // Event emitted when a provider adds a data set
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderAddDataset {
         #[ink(topic)]
         account: AccountId,
@@ -290,7 +302,8 @@ pub mod prosopo {
 
     // Event emitted when a provider unstakes
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderUnstake {
         #[ink(topic)]
         account: AccountId,
@@ -299,7 +312,8 @@ pub mod prosopo {
 
     // Event emitted when a provider approves a solution
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderApprove {
         #[ink(topic)]
         captcha_solution_commitment_id: Hash,
@@ -307,7 +321,8 @@ pub mod prosopo {
 
     // Event emitted when a provider disapproves a solution
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderDisapprove {
         #[ink(topic)]
         captcha_solution_commitment_id: Hash,
@@ -315,7 +330,8 @@ pub mod prosopo {
 
     // Event emitted when a dapp registers
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct DappRegister {
         #[ink(topic)]
         contract: AccountId,
@@ -327,7 +343,8 @@ pub mod prosopo {
 
     // Event emitted when a dapp updates
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct DappUpdate {
         #[ink(topic)]
         contract: AccountId,
@@ -339,7 +356,8 @@ pub mod prosopo {
 
     // Event emitted when a dapp funds
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct DappFund {
         #[ink(topic)]
         contract: AccountId,
@@ -348,7 +366,8 @@ pub mod prosopo {
 
     // Event emitted when a dapp cancels
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct DappCancel {
         #[ink(topic)]
         contract: AccountId,
@@ -357,7 +376,8 @@ pub mod prosopo {
 
     // Event emitted when a dapp user commits a solution hash
     #[ink(event)]
-    #[derive(Debug)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct DappUserCommit {
         #[ink(topic)]
         account: AccountId,
@@ -367,8 +387,9 @@ pub mod prosopo {
     }
 
     /// The Prosopo error types
-    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    /// 
+    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Error {
         /// Returned if minimum number of operators is not supplied
         MinimumTwoOperatorsRequired,
@@ -419,6 +440,7 @@ pub mod prosopo {
         /// CodeNotFound ink env error
         CodeNotFound,
         /// An unknown ink env error has occurred
+        #[default]
         Unknown,
         /// Invalid contract
         InvalidContract,
