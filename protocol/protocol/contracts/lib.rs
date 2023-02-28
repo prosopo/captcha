@@ -2489,7 +2489,7 @@ pub mod prosopo {
 
             // Now make sure that the dapp user does not pass the human test
             let result = contract.dapp_operator_is_human_user(dapp_user_account, 80);
-            assert_eq!(result.unwrap(), false);
+            assert!(result.unwrap() == false);
         }
 
         /// Test non-existent dapp account has zero balance
@@ -2773,10 +2773,10 @@ pub mod prosopo {
             let op1result = contract.operator_set_code([0x01; 32]); // this is the operators AccountId, not a valid contract
             assert_eq!(Error::InvalidCodeHash, op1result.unwrap_err());
             let op1result = contract.operator_set_code([0x20; 32]);
-            assert_eq!(false, op1result.unwrap());
+            assert!(false == op1result.unwrap());
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator2);
             let op2result = contract.operator_set_code([0x30; 32]);
-            assert_eq!(false, op2result.unwrap());
+            assert!(false == op2result.unwrap());
             let op2result = contract.operator_set_code([0x20; 32]);
             // following panics due to set code hash not being available to off-chain environment
             op2result.unwrap();
