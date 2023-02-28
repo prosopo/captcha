@@ -496,11 +496,11 @@ pub mod prosopo {
         ) -> Result<(), Error> {
             let provider_account = self.env().caller();
             // this function is for registration only
-            if self.providers.get(&provider_account).is_some() {
+            if self.providers.get(provider_account).is_some() {
                 return err!(Error::ProviderExists);
             }
             // prevent duplicate service origins
-            if self.service_origins.get(&service_origin).is_some() {
+            if self.service_origins.get(service_origin).is_some() {
                 return err!(Error::ProviderServiceOriginUsed);
             }
             let balance: u128 = 0;
@@ -543,7 +543,7 @@ pub mod prosopo {
             let provider_account = self.env().caller();
 
             // this function is for updating only, not registering
-            if self.providers.get(&provider_account).is_none() {
+            if self.providers.get(provider_account).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
 
@@ -626,7 +626,7 @@ pub mod prosopo {
             }
 
             // Get provider
-            let mut provider = self.providers.get(&provider_account).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+            let mut provider = self.providers.get(provider_account).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
 
             // Update provider status
             self.provider_change_status(
@@ -649,7 +649,7 @@ pub mod prosopo {
         #[ink(payable)]
         pub fn provider_unstake(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
-            if self.providers.get(&caller).is_none() {
+            if self.providers.get(caller).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
 
@@ -687,7 +687,7 @@ pub mod prosopo {
                 captcha_type: 0,
             };
 
-            let mut provider = self.providers.get(&provider_id).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+            let mut provider = self.providers.get(provider_id).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
             let dataset_id_old = provider.dataset_id;
 
             // create a new id and insert details of the new captcha data set if it doesn't exist
@@ -744,7 +744,7 @@ pub mod prosopo {
             let owner = caller;
             let transferred = self.env().transferred_value();
             // enforces a one to one relation between caller and dapp
-            if self.dapps.get(&contract).is_some() {
+            if self.dapps.get(contract).is_some() {
                 // dapp exists so update it instead
                 return self.dapp_update(owner, transferred, contract, caller, payee);
             }
@@ -788,7 +788,7 @@ pub mod prosopo {
             caller: AccountId,
             payee: DappPayee,
         ) -> Result<(), Error> {
-            let mut dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+            let mut dapp = self.dapps.get(contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
             // only allow the owner to make changes to the dapp (including funding?!)
             if dapp.owner != caller {
                 return err!(Error::NotAuthorised);
@@ -820,13 +820,13 @@ pub mod prosopo {
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            let caller = self.env().caller();
+            let _caller = self.env().caller();
             let transferred = self.env().transferred_value();
-            if self.dapps.get(&contract).is_none() {
+            if self.dapps.get(contract).is_none() {
                 return err!(Error::DappDoesNotExist);
             }
 
-            let mut dapp = self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+            let mut dapp = self.dapps.get(contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
             let total = dapp.balance + transferred;
             dapp.balance = total;
             if dapp.balance > 0 {
@@ -849,7 +849,7 @@ pub mod prosopo {
         pub fn dapp_cancel(&mut self, contract: AccountId) -> Result<(), Error> {
             let caller = self.env().caller();
 
-            if self.dapps.get(&contract).is_none() {
+            if self.dapps.get(contract).is_none() {
                 return err!(Error::DappDoesNotExist);
             }
             let mut dapp = self.get_dapp_details(contract)?;
@@ -889,7 +889,7 @@ pub mod prosopo {
             let caller = self.env().caller();
 
             // Guard against dapp submitting a commit on behalf of a user
-            if self.dapps.get(&caller).is_some() {
+            if self.dapps.get(caller).is_some() {
                 return err!(Error::NotAuthorised);
             }
 
@@ -921,7 +921,7 @@ pub mod prosopo {
 
             // Insert the commitment and mark as approved or disapproved if a Provider is the caller
             let provider_details = self.get_provider_details(caller);
-            if provider_details.clone().ok().is_some() {
+            if provider_details.ok().is_some() {
                 // Provider is not the caller
                 if caller != provider {
                     // Provider cannot submit dapp user commits on behalf of another provider
@@ -950,7 +950,7 @@ pub mod prosopo {
                 account: caller,
                 merkle_tree_root: user_merkle_tree_root,
                 contract,
-                dataset_id: dataset_id,
+                dataset_id,
             });
             Ok(())
         }
@@ -996,9 +996,9 @@ pub mod prosopo {
             // get the mutables
             let mut commitment_mut = self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
+                .get(captcha_solution_commitment_id)
                 .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            let mut user = self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+            let mut user = self.dapp_users.get(commitment.account).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
@@ -1008,7 +1008,7 @@ pub mod prosopo {
                 user.last_correct_captcha_dapp_id = commitment.contract;
                 self.captcha_solution_commitments
                     .insert(captcha_solution_commitment_id, &commitment_mut);
-                self.dapp_users.insert(&commitment.account, &user);
+                self.dapp_users.insert(commitment.account, &user);
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.refund_transaction_fee(commitment, transaction_fee)?;
                 self.env().emit_event(ProviderApprove {
@@ -1042,9 +1042,9 @@ pub mod prosopo {
             // get the mutables
             let mut commitment_mut = self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
+                .get(captcha_solution_commitment_id)
                 .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            let mut user = self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+            let mut user = self.dapp_users.get(commitment.account).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment_mut.status == CaptchaStatus::Pending {
@@ -1052,7 +1052,7 @@ pub mod prosopo {
                 user.incorrect_captchas += 1;
                 self.captcha_solution_commitments
                     .insert(captcha_solution_commitment_id, &commitment_mut);
-                self.dapp_users.insert(&commitment.account, &user);
+                self.dapp_users.insert(commitment.account, &user);
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.env().emit_event(ProviderDisapprove {
                     captcha_solution_commitment_id,
@@ -1102,8 +1102,8 @@ pub mod prosopo {
             }
 
             if amount > 0 {
-                let mut provider = self.providers.get(&commitment.provider).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
-                let mut dapp = self.dapps.get(&commitment.contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+                let mut provider = self.providers.get(commitment.provider).ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+                let mut dapp = self.dapps.get(commitment.contract).ok_or_else(err_fn!(Error::DappDoesNotExist))?;
                 if provider.payee == Payee::Provider {
                     if dapp.balance < amount {
                         return err!(Error::DappInsufficientFunds);
@@ -1161,7 +1161,7 @@ pub mod prosopo {
             &self,
             provider_id: AccountId,
         ) -> Result<Provider, Error> {
-            if self.providers.get(&provider_id).is_none() {
+            if self.providers.get(provider_id).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
             let provider = self.get_provider_details(provider_id)?;
@@ -1181,7 +1181,7 @@ pub mod prosopo {
 
         fn validate_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
             // Guard against dapps using service that are not registered
-            if self.dapps.get(&contract).is_none() {
+            if self.dapps.get(contract).is_none() {
                 return err!(Error::DappDoesNotExist);
             }
             // Guard against dapps using service that are Suspended or Deactivated
@@ -1202,7 +1202,7 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
-            self.captcha_data.get(&dataset_id).ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))
+            self.captcha_data.get(dataset_id).ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))
         }
 
         /// Get a solution commitment
@@ -1215,14 +1215,14 @@ pub mod prosopo {
         ) -> Result<CaptchaSolutionCommitment, Error> {
             if self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
+                .get(captcha_solution_commitment_id)
                 .is_none()
             {
                 return err!(Error::CaptchaSolutionCommitmentDoesNotExist);
             }
             let commitment = self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
+                .get(captcha_solution_commitment_id)
                 .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
 
             Ok(commitment)
@@ -1233,7 +1233,7 @@ pub mod prosopo {
         /// Returns an error if the user does not exist
         #[ink(message)]
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
-            self.dapp_users.get(&dapp_user_id).ok_or_else(err_fn!(Error::DappUserDoesNotExist))
+            self.dapp_users.get(dapp_user_id).ok_or_else(err_fn!(Error::DappUserDoesNotExist))
         }
 
         /// Get a single provider's details
@@ -1241,7 +1241,7 @@ pub mod prosopo {
         /// Returns an error if the user does not exist
         #[ink(message)]
         pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
-            self.providers.get(&accountid).ok_or_else(err_fn!(Error::ProviderDoesNotExist))
+            self.providers.get(accountid).ok_or_else(err_fn!(Error::ProviderDoesNotExist))
         }
 
         /// Get a single dapps details
@@ -1249,21 +1249,21 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
-            self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))
+            self.dapps.get(contract).ok_or_else(err_fn!(Error::DappDoesNotExist))
         }
 
         /// Returns the account balance for the specified `dapp`.
         ///
         #[ink(message)]
         pub fn get_dapp_balance(&self, dapp: AccountId) -> Result<Balance, Error> {
-            return Ok(self.get_dapp_details(dapp)?.balance);
+            Ok(self.get_dapp_details(dapp)?.balance)
         }
 
         /// Returns the account balance for the specified `provider`.
         ///
         #[ink(message)]
         pub fn get_provider_balance(&self, provider: AccountId) -> Result<Balance, Error> {
-            return Ok(self.get_provider_details(provider)?.balance);
+            Ok(self.get_provider_details(provider)?.balance)
         }
 
         /// Returns the operator votes for code hashes
@@ -1275,7 +1275,7 @@ pub mod prosopo {
                     account_id: *account_id,
                     code_hash: self
                         .operator_code_hash_votes
-                        .get(&account_id)
+                        .get(account_id)
                         .unwrap_or([0; 32]),
                 });
             }
@@ -1360,7 +1360,7 @@ pub mod prosopo {
                 if index < active_providers_initial.len() as u128 {
                     active_providers = active_providers_initial;
                 } else {
-                    index = index - active_providers_initial.len() as u128;
+                    index -= active_providers_initial.len() as u128;
                     active_providers = active_providers_secondary;
                 }
             } else {
@@ -1373,7 +1373,7 @@ pub mod prosopo {
                     .unwrap_or_default();
 
                 // If the length is 0, then there are no active providers
-                if active_providers.len() == 0 {
+                if active_providers.is_empty() {
                     return err!(Error::NoActiveProviders);
                 }
 
@@ -1416,7 +1416,7 @@ pub mod prosopo {
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
         pub fn get_random_number(&self, len: u128, user_account: AccountId) -> u128 {
-            if len <= 0 {
+            if len == 0 {
                 panic!("Cannot generate a random number for a length of 0 or less");
             }
             // build a random seed from user account, block number, block timestamp and (TODO) block hash
@@ -1430,7 +1430,7 @@ pub mod prosopo {
             let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
             let tmp: [u8; USER_ACCOUNT_SIZE + BLOCK_NUMBER_SIZE] =
-                crate::concat_u8(&user_account_bytes, &block_number_arr);
+                crate::concat_u8(user_account_bytes, &block_number_arr);
             let bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + USER_ACCOUNT_SIZE] =
                 crate::concat_u8(&tmp, &block_timestamp_arr);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
@@ -1440,8 +1440,8 @@ pub mod prosopo {
             let next = u128::from_le_bytes(hash_output);
             // use modulo to get a number between 0 (inclusive) and len (exclusive)
             // e.g. if len = 10 then range would be 0-9
-            let next_mod = next % len;
-            next_mod
+            
+            next % len
         }
 
         /// Get a random number from 0 to `len` - 1 inclusive. Uses the caller account for additional random entropy.
@@ -1493,10 +1493,10 @@ pub mod prosopo {
             }
 
             // Set the new code hash after all operators have voted for the same code hash.
-            let set_code_hash_result = ink::env::set_code_hash(&code_hash.into());
+            let set_code_hash_result = ink::env::set_code_hash(&code_hash);
 
-            if set_code_hash_result.is_err() {
-                match set_code_hash_result.unwrap_err() {
+            if let Err(e) = set_code_hash_result {
+                match e {
                     ink::env::Error::CodeNotFound => {
                         return err!(Error::CodeNotFound);
                     }
@@ -1511,7 +1511,7 @@ pub mod prosopo {
                 self.operator_code_hash_votes.remove(operator);
             }
 
-            return Ok(true);
+            Ok(true)
         }
     
     }
@@ -1594,7 +1594,7 @@ pub mod prosopo {
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 100;
             contract.provider_register(service_origin, fee, Payee::Dapp);
-            assert!(contract.providers.get(&provider_account).is_some());
+            assert!(contract.providers.get(provider_account).is_some());
             assert!(contract
                 .provider_accounts
                 .get((GovernanceStatus::Deactivated, Payee::Dapp))
@@ -1612,9 +1612,9 @@ pub mod prosopo {
             let service_origin = str_to_hash("https://localhost:2424".to_string());
             let fee: u32 = 100;
             contract.provider_register(service_origin, fee, Payee::Dapp);
-            assert!(contract.providers.get(&provider_account).is_some());
+            assert!(contract.providers.get(provider_account).is_some());
             contract.provider_deregister(provider_account);
-            let provider_record = contract.providers.get(&provider_account).unwrap();
+            let provider_record = contract.providers.get(provider_account).unwrap();
             assert!(provider_record.status == GovernanceStatus::Deactivated);
         }
 
@@ -1628,7 +1628,7 @@ pub mod prosopo {
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract.provider_register(service_origin, fee, Payee::Dapp);
-            let registered_provider_account = contract.providers.get(&provider_account);
+            let registered_provider_account = contract.providers.get(provider_account);
             assert!(registered_provider_account.is_some());
             let returned_list = contract.list_providers_by_ids(vec![provider_account]).unwrap();
             assert!(returned_list == vec![registered_provider_account.unwrap()]);
@@ -1653,9 +1653,9 @@ pub mod prosopo {
             const len: usize = 10;
             let mut arr = [0; len];
             // get several random numbers, one per block
-            for i in 0..len {
+            for item in arr.iter_mut().take(len) {
                 let number = contract.get_random_number(100, operator_account);
-                arr[i] = number;
+                *item = number;
                 println!(
                     "{:?} {:?} {:?}",
                     number,
@@ -1673,7 +1673,7 @@ pub mod prosopo {
             let mut result = Hash::default();
             let len_result = result.as_ref().len();
             let mut hash_output = <<Blake2x256 as HashOutput>::Type as Default>::default();
-            <Blake2x256 as CryptoHash>::hash((&str).as_ref(), &mut hash_output);
+            <Blake2x256 as CryptoHash>::hash(str.as_ref(), &mut hash_output);
             let copy_len = core::cmp::min(hash_output.len(), len_result);
             result.as_mut()[0..copy_len].copy_from_slice(&hash_output[0..copy_len]);
             result
@@ -1697,7 +1697,7 @@ pub mod prosopo {
             contract
                 .provider_register(service_origin, fee, Payee::Dapp)
                 .unwrap();
-            assert!(contract.providers.get(&provider_account).is_some());
+            assert!(contract.providers.get(provider_account).is_some());
             assert!(contract
                 .provider_accounts
                 .get((GovernanceStatus::Deactivated, Payee::Dapp))
@@ -1714,7 +1714,7 @@ pub mod prosopo {
                 .get((GovernanceStatus::Deactivated, Payee::Dapp))
                 .unwrap()
                 .contains(&provider_account));
-            let provider = contract.providers.get(&provider_account).unwrap();
+            let provider = contract.providers.get(provider_account).unwrap();
             assert_eq!(provider.service_origin, service_origin);
             assert_eq!(provider.fee, fee);
             assert_eq!(provider.payee, Payee::Dapp);
@@ -1765,7 +1765,7 @@ pub mod prosopo {
                     assert!(false);
                 }
             }
-            assert!(contract.providers.get(&provider_account).is_none());
+            assert!(contract.providers.get(provider_account).is_none());
             assert!(!contract
                 .provider_accounts
                 .get((GovernanceStatus::Deactivated, Payee::Dapp))
@@ -1807,7 +1807,7 @@ pub mod prosopo {
                 }
             }
 
-            let provider = contract.providers.get(&provider_account).unwrap();
+            let provider = contract.providers.get(provider_account).unwrap();
             assert_ne!(provider.service_origin, service_origin);
             assert_ne!(provider.fee, fee);
             assert_ne!(provider.balance, balance);
@@ -1950,8 +1950,8 @@ pub mod prosopo {
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
 
             contract.dapp_register(dapp_contract, DappPayee::Dapp);
-            assert!(contract.dapps.get(&dapp_contract).is_some());
-            let dapp = contract.dapps.get(&dapp_contract).unwrap();
+            assert!(contract.dapps.get(dapp_contract).is_some());
+            let dapp = contract.dapps.get(dapp_contract).unwrap();
             assert_eq!(dapp.owner, caller);
 
             // account is marked as suspended as zero tokens have been paid
@@ -1985,10 +1985,10 @@ pub mod prosopo {
             // register the dapp
             contract.dapp_register(dapp_contract, DappPayee::Dapp);
             // check the dapp exists in the hashmap
-            assert!(contract.dapps.get(&dapp_contract).is_some());
+            assert!(contract.dapps.get(dapp_contract).is_some());
 
             // check the various attributes are correct
-            let dapp = contract.dapps.get(&dapp_contract).unwrap();
+            let dapp = contract.dapps.get(dapp_contract).unwrap();
             assert_eq!(dapp.owner, caller);
 
             // account is marked as active as balance is now positive
@@ -2023,10 +2023,10 @@ pub mod prosopo {
             contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             // check the dapp exists in the hashmap
-            assert!(contract.dapps.get(&dapp_contract_account).is_some());
+            assert!(contract.dapps.get(dapp_contract_account).is_some());
 
             // check the various attributes are correct
-            let dapp = contract.dapps.get(&dapp_contract_account).unwrap();
+            let dapp = contract.dapps.get(dapp_contract_account).unwrap();
             assert_eq!(dapp.owner, caller);
 
             // account is marked as active as tokens have been paid
@@ -2042,7 +2042,7 @@ pub mod prosopo {
             contract.dapp_register(dapp_contract_account, DappPayee::Any);
 
             // check the various attributes are correct
-            let dapp = contract.dapps.get(&dapp_contract_account).unwrap();
+            let dapp = contract.dapps.get(dapp_contract_account).unwrap();
 
             // account is marked as active as tokens have been paid
             assert_eq!(dapp.status, GovernanceStatus::Active);
@@ -2081,7 +2081,7 @@ pub mod prosopo {
             contract.dapp_fund(dapp_contract);
 
             // check the total account balance is correct
-            let dapp = contract.dapps.get(&dapp_contract).unwrap();
+            let dapp = contract.dapps.get(dapp_contract).unwrap();
             assert_eq!(dapp.balance, balance_1 + balance_2);
         }
 
@@ -2118,7 +2118,7 @@ pub mod prosopo {
             contract.dapp_cancel(contract_account).ok();
 
             // check the funds are returned and the dapp's status is Deactivated
-            let dapp = contract.dapps.get(&contract_account).unwrap();
+            let dapp = contract.dapps.get(contract_account).unwrap();
             assert_eq!(dapp.status, GovernanceStatus::Deactivated);
 
             // Make sure the funds are returned to the caller
@@ -2189,7 +2189,7 @@ pub mod prosopo {
             // check that the data is in the captcha_solution_commitments hashmap
             assert!(contract
                 .captcha_solution_commitments
-                .get(&user_root)
+                .get(user_root)
                 .is_some());
         }
 
@@ -2216,7 +2216,7 @@ pub mod prosopo {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider);
 
-            let provider = contract.providers.get(&provider_account).unwrap();
+            let provider = contract.providers.get(provider_account).unwrap();
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
@@ -2253,7 +2253,7 @@ pub mod prosopo {
             contract.provider_approve(solution_id, 0);
             let commitment = contract
                 .captcha_solution_commitments
-                .get(&solution_id)
+                .get(solution_id)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
             let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account).unwrap();
@@ -2266,7 +2266,7 @@ pub mod prosopo {
             contract.provider_disapprove(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
-                .get(&solution_id)
+                .get(solution_id)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
             assert_eq!(
@@ -2399,7 +2399,7 @@ pub mod prosopo {
             contract.provider_disapprove(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
-                .get(&solution_id)
+                .get(solution_id)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
             let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account).unwrap();
@@ -2411,7 +2411,7 @@ pub mod prosopo {
             contract.provider_approve(solution_id, 0);
             let commitment = contract
                 .captcha_solution_commitments
-                .get(&solution_id)
+                .get(solution_id)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
             assert_eq!(
@@ -2484,7 +2484,7 @@ pub mod prosopo {
             contract.provider_disapprove(solution_id);
             let commitment = contract
                 .captcha_solution_commitments
-                .get(&solution_id)
+                .get(solution_id)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
 
@@ -2532,7 +2532,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2);
-            let registered_provider_account = contract.providers.get(&provider_account);
+            let registered_provider_account = contract.providers.get(provider_account);
             // Register the dapp
             let dapp_caller_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
