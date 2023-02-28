@@ -1,35 +1,23 @@
 extern crate proc_macro2;
 
-use proc_macro2::{
-    Delimiter,
-    Group,
-    Literal,
-    TokenStream,
-    TokenTree,
-};
+use proc_macro2::{Delimiter, Group, Literal, TokenStream, TokenTree};
 
 use quote::quote;
 
-#[proc_macro_attribute] 
-pub fn named_functions (
+#[proc_macro_attribute]
+pub fn named_functions(
     params: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     named_impl(params.into(), input.into())
         .unwrap_or_else(|err| {
             let err = TokenTree::from(Literal::string(err));
-            quote!(
-                ::core::compile_error! { #err }
-            )
+            quote!(::core::compile_error! { #err })
         })
         .into()
 }
 
-fn named_impl (
-    params: TokenStream,
-    input: TokenStream,
-) -> Result<TokenStream, &'static str>
-{
+fn named_impl(params: TokenStream, input: TokenStream) -> Result<TokenStream, &'static str> {
     if params.into_iter().next().is_some() {
         return Err("unexpected attribute arguments");
     }
