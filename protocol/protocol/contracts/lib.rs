@@ -618,7 +618,7 @@ pub mod prosopo {
             payee: Payee,
         ) {
             if current_provider_status != new_status {
-                let current_key = ProviderState {status: current_provider_status, payee: payee};
+                let current_key = ProviderState {status: current_provider_status, payee};
                 let new_key = ProviderState {status: new_status, payee};
                 // Retrieve indexes from storage mapping
                 let mut current_status_provider_accounts =
@@ -1619,7 +1619,7 @@ pub mod prosopo {
             assert!(contract.providers.get(provider_account).is_some());
             assert!(contract
                 .provider_accounts
-                .get((GovernanceStatus::Deactivated, Payee::Dapp))
+                .get(ProviderState { status: GovernanceStatus::Deactivated, payee: Payee::Dapp})
                 .unwrap_or_default()
                 .contains(&provider_account));
         }
@@ -1722,7 +1722,7 @@ pub mod prosopo {
             assert!(contract.providers.get(provider_account).is_some());
             assert!(contract
                 .provider_accounts
-                .get((GovernanceStatus::Deactivated, Payee::Dapp))
+                .get(ProviderState { status: GovernanceStatus::Deactivated, payee: Payee::Dapp})
                 .unwrap()
                 .contains(&provider_account));
             let service_origin = str_to_hash("https://localhost:4242".to_string());
@@ -1733,7 +1733,7 @@ pub mod prosopo {
             contract.provider_update(service_origin, fee, Payee::Dapp);
             assert!(contract
                 .provider_accounts
-                .get((GovernanceStatus::Deactivated, Payee::Dapp))
+                .get(ProviderState { status: GovernanceStatus::Deactivated, payee: Payee::Dapp})
                 .unwrap()
                 .contains(&provider_account));
             let provider = contract.providers.get(provider_account).unwrap();
@@ -1789,7 +1789,7 @@ pub mod prosopo {
             assert!(contract.providers.get(provider_account).is_none());
             assert!(!contract
                 .provider_accounts
-                .get((GovernanceStatus::Deactivated, Payee::Dapp))
+                .get(ProviderState { status: GovernanceStatus::Deactivated, payee: Payee::Dapp})
                 .unwrap()
                 .contains(&provider_account));
         }
