@@ -1,37 +1,25 @@
 extern crate proc_macro2;
 
-use proc_macro2::{
-    Delimiter,
-    Group,
-    Literal,
-    TokenStream,
-    TokenTree,
-};
+use proc_macro2::{Delimiter, Group, Literal, TokenStream, TokenTree};
 
 use quote::quote;
 
-#[proc_macro_attribute] 
-pub fn named_functions (
+#[proc_macro_attribute]
+pub fn named_functions(
     params: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     named_impl(params.into(), input.into())
         .unwrap_or_else(|err| {
             let err = TokenTree::from(Literal::string(err));
-            quote!(
-                ::core::compile_error! { #err }
-            )
+            quote!(::core::compile_error! { #err })
         })
         .into()
 }
 
-fn named_impl (
-    params: TokenStream,
-    input: TokenStream,
-) -> Result<TokenStream, &'static str>
-{
-    if let Some(_) = params.into_iter().next() {
-        return Err("unexpected attribute arguments".into());
+fn named_impl(params: TokenStream, input: TokenStream) -> Result<TokenStream, &'static str> {
+    if params.into_iter().next().is_some() {
+        return Err("unexpected attribute arguments");
     }
 
     let output = handle(input);
@@ -49,24 +37,22 @@ fn handle(input: TokenStream) -> TokenStream {
             TokenTree::Group(mut g) => {
                 let span = g.span();
                 let mut sub_ts = handle(g.stream());
-                if found_fn {
-                    if g.delimiter() == Delimiter::Brace {
-                        let mut inject = quote!(
-                            macro_rules! function_name {() => (
-                                #fname
-                            )}
-                        );
-                        inject.extend(sub_ts);
-                        sub_ts = inject;
-                        found_fn = false;
-                    }
+                if found_fn && g.delimiter() == Delimiter::Brace {
+                    let mut inject = quote!(
+                        macro_rules! function_name {() => (
+                            #fname
+                        )}
+                    );
+                    inject.extend(sub_ts);
+                    sub_ts = inject;
+                    found_fn = false;
                 }
                 g = Group::new(g.delimiter(), sub_ts);
                 g.set_span(span);
                 output.push(g.into());
             }
             TokenTree::Ident(i) => {
-                if i.to_string() == "fn" {
+                if i == "fn" {
                     found_fn = true;
                     let s = input.peek().unwrap().to_string();
                     fname = TokenTree::from(Literal::string(&s));
