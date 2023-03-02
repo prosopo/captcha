@@ -402,14 +402,14 @@ export class ProsopoDatabase implements Database {
 
     /** @description Remove processed Dapp User captcha solutions from the user solution table
      */
-    async removeProcessedDappUserSolutions(): Promise<DeleteResult | undefined> {
-        return await this.tables?.usersolution.deleteMany({ processed: true })
+    async removeProcessedDappUserSolutions(commitmentIds: string[]): Promise<DeleteResult | undefined> {
+        return await this.tables?.usersolution.deleteMany({ processed: true, commitmentId: { $in: commitmentIds } })
     }
 
     /** @description Remove processed Dapp User captcha commitments from the user commitments table
      */
-    async removeProcessedDappUserCommitments(): Promise<DeleteResult | undefined> {
-        return await this.tables?.commitment.deleteMany({ processed: true })
+    async removeProcessedDappUserCommitments(commitmentIds: string[]): Promise<DeleteResult | undefined> {
+        return await this.tables?.commitment.deleteMany({ processed: true, commitmentId: { $in: commitmentIds } })
     }
 
     /**
@@ -682,7 +682,7 @@ export class ProsopoDatabase implements Database {
      * @description Get the last batch commit time or return 0 if none
      */
     async getLastScheduledTask(task: ScheduledTaskNames): Promise<ScheduledTaskRecord | undefined> {
-        const cursor = this.tables?.scheduler?.findOne({ processName: task }).sort({ timestamp: -1 }).lean()
+        const cursor = this.tables?.scheduler?.findOne({ processName: task }).sort({ datetime: -1 }).lean()
         return await cursor
     }
 

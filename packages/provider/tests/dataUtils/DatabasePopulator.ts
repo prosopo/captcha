@@ -19,12 +19,14 @@ import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
 
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from '../../src/tasks/setup'
 import { Tasks } from '../../src/tasks'
-import { Account, IDatabaseAccounts, accountAddress, accountMnemonic } from './DatabaseAccounts'
+import { IDatabaseAccounts } from './DatabaseAccounts'
 import { Environment } from '../../src/env'
 import { TranslationKey } from '@prosopo/common'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
 import { AnyNumber } from '@polkadot/types-codec/types'
+import { accountAddress, accountMnemonic } from '../mocks/accounts'
+import { Account } from '../mocks/accounts'
 
 const serviceOriginBase = 'http://localhost:'
 
@@ -199,7 +201,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(account)
             )
-            this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
+            this.mockEnv.logger.info(
+                'Event: ',
+                result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
+            )
             const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
             //console.log('Registered provider', provider)
             if (!noPush) {
@@ -224,7 +229,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 this.stakeAmount
             )
-            this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
+            this.mockEnv.logger.info(
+                'Event: ',
+                result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
+            )
 
             //const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
             //console.log('provider', provider)
@@ -258,7 +266,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const captchaFilePath = path.resolve(__dirname, '../../tests/mocks/data/captchas.json')
 
             const result = await tasks.providerAddDatasetFromFile(captchaFilePath)
-            this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
+            this.mockEnv.logger.info(
+                'Event: ',
+                result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
+            )
         } catch (e) {
             throw this.createError(e, this.addDataset.name)
         }
@@ -296,7 +307,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 createType(this.mockEnv.contractInterface.abi.registry, 'AccountId', accountAddress(account)).toString()
             )
-            this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
+            this.mockEnv.logger.info(
+                'Event: ',
+                result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
+            )
 
             if (!noPush) {
                 this._registeredDapps.push(account)
@@ -315,7 +329,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const result = await tasks.contractApi.dappFund(accountAddress(account), this.stakeAmount)
 
-        this.mockEnv.logger.info('Event: ', result.events ? result.events[0].name : 'No events')
+        this.mockEnv.logger.info(
+            'Event: ',
+            result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
+        )
     }
 
     public async registerDappWithStake(): Promise<Account> {

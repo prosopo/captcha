@@ -14,7 +14,7 @@
 import { Hash } from '@polkadot/types/interfaces'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import { ProsopoContractMethods, TransactionResponse } from '@prosopo/contract'
+import { ProsopoContractMethods } from '@prosopo/contract'
 import {
     Captcha,
     CaptchaConfig,
@@ -44,6 +44,7 @@ import { i18n } from '@prosopo/common'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -76,12 +77,12 @@ export class Tasks {
         this.logger = env.logger
     }
 
-    async providerAddDatasetFromFile(file: string): Promise<TransactionResponse> {
+    async providerAddDatasetFromFile(file: string): Promise<ContractSubmittableResult> {
         const datasetRaw = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON)
         return await this.providerAddDataset(datasetRaw, file)
     }
 
-    async providerAddDataset(datasetRaw: DatasetRaw, file?: string): Promise<TransactionResponse> {
+    async providerAddDataset(datasetRaw: DatasetRaw, file?: string): Promise<ContractSubmittableResult> {
         const dataset = await buildDataset(datasetRaw)
         if (!dataset.datasetId) {
             throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerAddDataset.name)

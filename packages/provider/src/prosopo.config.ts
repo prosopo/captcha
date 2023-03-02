@@ -55,6 +55,7 @@ export default (): ProsopoConfig => ({
     },
     batchCommit: {
         interval: 300,
+        maxBatchExtrinsicPercentage: 50,
     },
     assets: {
         absolutePath: '',

@@ -24,7 +24,7 @@ import prosopoConfig from './prosopo.config'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
+import { IKeyringPair } from '@polkadot/types/types'
 
 export function loadEnv() {
     const args = { path: getEnvFile() }
@@ -49,7 +49,7 @@ export class Environment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
-    pair: KeyringPair
+    pair: IKeyringPair
     api: ApiPromise
 
     constructor(mnemonic: string) {
@@ -70,6 +70,7 @@ export class Environment implements ProsopoEnvironment {
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
             })
+
             this.abi = abiJson as ContractAbi
             this.importDatabase().catch((err) => {
                 this.logger.error(err)

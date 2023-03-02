@@ -141,8 +141,9 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     )
     logger.info('   - providerAddDataset')
     const datasetResult = await tasks.providerAddDatasetFromFile(provider.datasetFile)
+    datasetResult.contractEvents!.map((event) => logger.info(JSON.stringify(event, null, 4)))
     const events = getEventsFromMethodName(datasetResult, 'ProviderAddDataset')
-    return events[0].args[1] as Hash
+    return events[0].event.args[1] as Hash
 }
 
 export async function setupDapp(env, dapp: IDappAccount): Promise<void> {

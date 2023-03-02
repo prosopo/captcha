@@ -33,6 +33,7 @@ export const DatabaseConfigSchema = z.object({
 
 export const BatchCommitConfigSchema = z.object({
     interval: z.number().positive(),
+    maxBatchExtrinsicPercentage: z.number().positive(),
 })
 
 export type BatchCommitConfig = z.infer<typeof BatchCommitConfigSchema>

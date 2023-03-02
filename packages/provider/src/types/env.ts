@@ -18,8 +18,8 @@ import { Database } from './db'
 import { ProsopoConfig } from './config'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
 import { ApiPromise } from '@polkadot/api'
+import { IKeyringPair } from '@polkadot/types/types'
 export interface ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
@@ -33,7 +33,7 @@ export interface ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
-    pair: KeyringPair
+    pair: IKeyringPair
     api: ApiPromise
     isReady(): Promise<void>
     importDatabase(): Promise<void>

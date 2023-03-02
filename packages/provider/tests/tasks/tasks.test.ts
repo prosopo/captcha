@@ -27,15 +27,18 @@ import {
     hexHash,
 } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
-import { TransactionResponse, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
-import { AccountKey, accountAddress, accountMnemonic } from '../dataUtils/DatabaseAccounts'
-import { DAPP, PROVIDER, getSignedTasks, getUser } from '../mocks/accounts'
+import { getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { AccountKey } from '../dataUtils/DatabaseAccounts'
+import { DAPP, PROVIDER, getSignedTasks } from '../mocks/accounts'
+import { getUser } from '../mocks/getUser'
 import { MockEnvironment } from '../mocks/mockenv'
 import { i18n } from '@prosopo/common'
 import { before } from 'mocha'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
 import { DappUserSolutionResult, parseBlockNumber } from '../../src/index'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { accountAddress, accountMnemonic } from '../mocks/accounts'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -152,7 +155,7 @@ describe('CONTRACT TASKS', () => {
 
         const tasks = await getSignedTasks(mockEnv, [providerMnemonic, providerAddress])
 
-        const result: TransactionResponse = await tasks.contractApi.providerRegister(
+        const result: ContractSubmittableResult = await tasks.contractApi.providerRegister(
             PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
             PROVIDER.fee,
             createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
@@ -169,7 +172,7 @@ describe('CONTRACT TASKS', () => {
 
             const value = providerStakeDefault
 
-            const result: TransactionResponse = await tasks.contractApi.providerUpdate(
+            const result: ContractSubmittableResult = await tasks.contractApi.providerUpdate(
                 PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
                 PROVIDER.fee,
                 createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
@@ -190,7 +193,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
         const captchaFilePath = path.resolve(__dirname, '../mocks/data/captchas.json')
-        const result: TransactionResponse = await tasks.providerAddDatasetFromFile(captchaFilePath)
+        const result: ContractSubmittableResult = await tasks.providerAddDatasetFromFile(captchaFilePath)
         const eventData = getEventsFromMethodName(result, 'ProviderAddDataset')
 
         expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
@@ -367,7 +370,7 @@ describe('CONTRACT TASKS', () => {
         const sendAmount = getSendAmount(mockEnv, stakeAmount)
         await sendFunds(mockEnv, accountAddress(newAccount), 'Dapp', sendAmount)
         const clientOrigin = DAPP.serviceOrigin + randomAsHex().slice(0, 8)
-        const result: TransactionResponse = await tasks.contractApi.dappRegister(
+        const result: ContractSubmittableResult = await tasks.contractApi.dappRegister(
             clientOrigin,
             accountAddress(newAccount),
             accountAddress(newAccount)
@@ -375,11 +378,11 @@ describe('CONTRACT TASKS', () => {
 
         expect(result.txHash).to.not.be.empty
         //contract, owner, client origin, value
-        if (result.events) {
-            expect(result.events[0].args[0].toHuman()).to.equal(accountAddress(newAccount))
-            expect(result.events[0].args[1].toHuman()).to.equal(accountAddress(newAccount))
-            expect(result.events[0].args[2].toHuman()).to.equal(stringToHexPadded(clientOrigin))
-            expect(result.events[0].args[3].toPrimitive()).to.equal(0)
+        if (result.contractEvents) {
+            expect(result.contractEvents[0].args[0].toHuman()).to.equal(accountAddress(newAccount))
+            expect(result.contractEvents[0].args[1].toHuman()).to.equal(accountAddress(newAccount))
+            expect(result.contractEvents[0].args[2].toHuman()).to.equal(stringToHexPadded(clientOrigin))
+            expect(result.contractEvents[0].args[3].toPrimitive()).to.equal(0)
         } else {
             expect(true).to.be.false
         }
@@ -410,7 +413,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = await getSignedTasks(mockEnv, dappAccount)
         const value = createType(mockEnv.contractInterface.abi.registry, 'u128', '10')
         const address = accountAddress(dappAccount)
-        const result: TransactionResponse = await tasks.contractApi.dappFund(accountAddress(dappAccount), value)
+        const result: ContractSubmittableResult = await tasks.contractApi.dappFund(accountAddress(dappAccount), value)
         const events = getEventsFromMethodName(result, 'DappFund')
         const decoded = events![0].args.map((arg) => arg.toHuman())
         expect(decoded[0]).to.equal(address)
@@ -445,7 +448,7 @@ describe('CONTRACT TASKS', () => {
 
         const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
 
-        const result: TransactionResponse = await tasks.contractApi.dappUserCommit(
+        const result: ContractSubmittableResult = await tasks.contractApi.dappUserCommit(
             accountAddress(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
@@ -517,13 +520,14 @@ describe('CONTRACT TASKS', () => {
 
         // next part contains internal contract calls that must be run by provider
         const providerTasks = await getSignedTasks(mockEnv, providerAccount)
+        const blockHash = await mockEnv.api.rpc.chain.getBlockHash(dappUserCommitResponse.blockNumber)
         const result: DappUserSolutionResult = await providerTasks.dappUserSolution(
             accountAddress(dappUserAccount),
             accountAddress(dappContractAccount),
             requestHash,
             JSON.parse(JSON.stringify(captchaSolutionsSalted)),
-            dappUserCommitResponse.blockHash?.toString() || '',
-            dappUserCommitResponse.result.txHash.toString()
+            blockHash.toString(),
+            dappUserCommitResponse.txHash.toString()
         )
         expect(result.captchas.length).to.be.eq(2)
         const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId)
@@ -838,7 +842,7 @@ describe('CONTRACT TASKS', () => {
 
         const value = 1
 
-        const result: TransactionResponse = await tasks.contractApi.providerUnstake(value)
+        const result: ContractSubmittableResult = await tasks.contractApi.providerUnstake(value)
         const events = getEventsFromMethodName(result, 'ProviderUnstake')
 
         expect(events![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
@@ -849,7 +853,9 @@ describe('CONTRACT TASKS', () => {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const result: TransactionResponse = await tasks.contractApi.providerDeregister(accountAddress(providerAccount))
+        const result: ContractSubmittableResult = await tasks.contractApi.providerDeregister(
+            accountAddress(providerAccount)
+        )
         const events = getEventsFromMethodName(result, 'ProviderDeregister')
 
         expect(events![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
