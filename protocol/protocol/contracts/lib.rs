@@ -194,7 +194,7 @@ pub mod prosopo {
 
     /// Users are the users of DApps that are required to be verified as human before they are
     /// allowed to interact with the DApps' contracts.
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
         // the last n commitment hashes in chronological order (most recent first)
