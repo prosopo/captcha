@@ -1287,6 +1287,29 @@ pub mod prosopo {
             self.dapps.get(&contract).ok_or_else(err_fn!(Error::DappDoesNotExist))
         }
 
+        /// Get a solution commitment
+        ///
+        /// Returns an error if the commitment does not exist
+        #[ink(message)]
+        pub fn get_captcha_solution_commitment(
+            &self,
+            captcha_solution_commitment_id: Hash,
+        ) -> Result<CaptchaSolutionCommitment, Error> {
+            if self
+                .captcha_solution_commitments
+                .get(&captcha_solution_commitment_id)
+                .is_none()
+            {
+                return err!(Error::CaptchaSolutionCommitmentDoesNotExist);
+            }
+            let commitment = self
+                .captcha_solution_commitments
+                .get(&captcha_solution_commitment_id)
+                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+
+            Ok(commitment)
+        }
+
         /// Returns the account balance for the specified `dapp`.
         ///
         #[ink(message)]
