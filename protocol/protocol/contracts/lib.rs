@@ -943,9 +943,9 @@ pub mod prosopo {
 
                 // call provider_approve or provider_disapprove depending on whether the status is Approved or Disapproved
                 match status_option.unwrap_or(CaptchaStatus::Pending) {
-                    CaptchaStatus::Approved => self.provider_approve(dapp_user, user_merkle_tree_root, 0)?,
+                    CaptchaStatus::Approved => self.provider_approve(user_merkle_tree_root, 0)?,
                     CaptchaStatus::Disapproved => {
-                        self.provider_disapprove(dapp_user, user_merkle_tree_root)?
+                        self.provider_disapprove(user_merkle_tree_root)?
                     }
                     _ => {}
                 }
@@ -1053,15 +1053,13 @@ pub mod prosopo {
         #[ink(message)]
         pub fn provider_approve(
             &mut self,
-            user_id: AccountId,
             captcha_solution_commitment_id: Hash,
             transaction_fee: Balance,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
 
-            let user = self.get_dapp_user(user_id)?;
-            let mut commitment = user.commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+            let mut commitment = self.commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
             // Guard against incorrect solution id
             if commitment.provider != caller {
                 return err!(Error::NotAuthorised);
@@ -1090,14 +1088,12 @@ pub mod prosopo {
         #[ink(message)]
         pub fn provider_disapprove(
             &mut self,
-            user_id: AccountId,
             captcha_solution_commitment_id: Hash,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
             
-            let user = self.get_dapp_user(user_id)?;
-            let mut commitment = user.commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+            let mut commitment = self.commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
             // Guard against incorrect solution id
             if commitment.provider != caller {
                 return err!(Error::NotAuthorised);
