@@ -976,10 +976,10 @@ pub mod prosopo {
                 user.history.pop();
             }
             // trim the history down to max age (as several entrys may now be older than max age due to blocks rolling over)
-            while user.history.len() > 0 && user.commitments.get(user.history.get(user.history.len() - 1).unwrap()).unwrap().completed_at < age_threshold {
+            while user.history.len() > 0 && self.commitments.get(user.history.get(user.history.len() - 1).unwrap()).unwrap().completed_at < age_threshold {
                 user.history.pop();
             }
-            user.commitments.insert(hash, &result);
+            self.commitments.insert(hash, &result);
             user.history.insert(0, hash);
             self.dapp_users.insert(account, &user);
         }
