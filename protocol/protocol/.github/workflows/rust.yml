@@ -41,15 +41,10 @@ jobs:
       - run: ls -la
       - run: ls -la ~
 
-      # # Check if rust is formatted correctly
-      # - name: Rust formatting check
-      #   run: |
-      #     if docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose; then
-      #       echo "code formatted correctly"
-      #     else
-      #       echo "code formatted incorrectly"
-      #       exit 1
-      #     fi
+      # Check if rust is formatted correctly
+      - name: Rust formatting check
+        run: |
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
@@ -69,6 +64,11 @@ jobs:
       
       - run: ls -la
       - run: ls -la ~
+
+      # Check for clippy advice
+      - name: Clippy advice
+        run: |
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly clippy --manifest-path=/contracts/Cargo.toml -- -D warnings
 
       # Do the build
       - name: Build
