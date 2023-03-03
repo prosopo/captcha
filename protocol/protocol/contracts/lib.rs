@@ -833,9 +833,9 @@ pub mod prosopo {
         fn dapp_configure(&mut self, contract: AccountId, payee: DappPayee, owner: AccountId) -> Result<Dapp, Error> {
             self.check_is_contract(contract)?;
             
-            let dapp_lookup = self.get_dapp(contract);
-            let new = dapp_lookup.is_err();
-            let mut dapp = dapp_lookup.unwrap_or_else(|_| Dapp {
+            let dapp_lookup = self.dapps.get(contract);
+            let new = dapp_lookup.is_none();
+            let mut dapp = dapp_lookup.unwrap_or_else(|| Dapp {
                 owner,
                 balance: 0,
                 status: GovernanceStatus::Suspended,
@@ -2181,7 +2181,7 @@ pub mod prosopo {
 
             // run the register function again for the same (caller, contract) pair, adding more
             // tokens
-            contract.dapp_register(dapp_contract_account, DappPayee::Any);
+            contract.dapp_update(dapp_contract_account, DappPayee::Any, caller);
 
             // check the various attributes are correct
             let dapp = contract.dapps.get(dapp_contract_account).unwrap();
