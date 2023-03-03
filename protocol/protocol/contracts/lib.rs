@@ -931,7 +931,7 @@ pub mod prosopo {
                 completed_at: self.env().block_timestamp(),
             };
 
-            self.record_captcha_result(caller, commitment);
+            self.record_captcha_result(dapp_user, user_merkle_tree_root, commitment);
 
             // Insert the commitment and mark as approved or disapproved if a Provider is the caller
             let provider_details = self.get_provider_details(caller);
@@ -964,8 +964,8 @@ pub mod prosopo {
 
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_captcha_result(&mut self, account: AccountId, result: CaptchaSolutionCommitment) -> User {
-            let mut user = self.create_new_dapp_user(account);
+        fn record_captcha_result(&mut self, account: AccountId, hash: Hash, result: CaptchaSolutionCommitment) {
+            let mut user = self.dapp_users.get(account).unwrap_or_else(|| self.create_new_dapp_user(account));
             let block_timestamp = self.env().block_timestamp();
             let max_age = if block_timestamp < self.max_user_history_age {
                 block_timestamp
@@ -978,12 +978,12 @@ pub mod prosopo {
                 user.history.pop();
             }
             // trim the history down to max age (as several entrys may now be older than max age due to blocks rolling over)
-            while user.history.len() > 0 && user.history.get(user.history.len() - 1).unwrap().completed_at < age_threshold {
+            while user.history.len() > 0 && user.commitments.get(user.history.get(user.history.len() - 1).unwrap()).unwrap().completed_at < age_threshold {
                 user.history.pop();
             }
-            user.history.insert(0, result);
+            user.commitments.insert(hash, &result);
+            user.history.insert(0, hash);
             self.dapp_users.insert(account, &user);
-            user
         }
 
         fn get_user_history_summary(&self, account: AccountId) -> Result<UserHistorySummary, Error> {
@@ -1001,7 +1001,9 @@ pub mod prosopo {
                 user.history.pop();
             }
             // trim the history down to max age
-            while user.history.len() > 0 && user.history.get(user.history.len() - 1).unwrap().completed_at < age_threshold {
+            while user.history.len() > 0 && user.commitments.get(
+                user.history.get(user.history.len() - 1).unwrap()
+            ).unwrap().completed_at < age_threshold {
                 user.history.pop();
             }
 
@@ -1069,10 +1071,9 @@ pub mod prosopo {
             // only make changes if commitment is Pending approval or disapproval
             if commitment.status == CaptchaStatus::Pending {
                 commitment.status = CaptchaStatus::Approved;
-                self.record_captcha_result(commitment.account, commitment);
 
-                user.commitments
-                    .insert(captcha_solution_commitment_id, &commitment);
+                self.record_captcha_result(commitment.account, captcha_solution_commitment_id, commitment);
+
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.refund_transaction_fee(commitment, transaction_fee)?;
                 self.env().emit_event(ProviderApprove {
@@ -1106,10 +1107,8 @@ pub mod prosopo {
             // only make changes if commitment is Pending approval or disapproval
             if commitment.status == CaptchaStatus::Pending {
                 commitment.status = CaptchaStatus::Disapproved;
-                self.record_captcha_result(commitment.account, commitment);
 
-                user.commitments
-                    .insert(captcha_solution_commitment_id, &commitment);
+                self.record_captcha_result(commitment.account, captcha_solution_commitment_id, commitment);
                 
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.env().emit_event(ProviderDisapprove {
