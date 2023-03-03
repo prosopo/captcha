@@ -931,11 +931,7 @@ pub mod prosopo {
                 completed_at: self.env().block_timestamp(),
             };
 
-
-            self.create_new_dapp_user(dapp_user);
-            self.captcha_solution_commitments
-                .insert(user_merkle_tree_root, &commitment);
-
+            self.record_captcha_result(caller, commitment);
 
             // Insert the commitment and mark as approved or disapproved if a Provider is the caller
             let provider_details = self.get_provider_details(caller);
