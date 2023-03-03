@@ -960,32 +960,7 @@ pub mod prosopo {
             Ok(())
         }
 
-        /// Record a captcha result against a user, clearing out old captcha results as necessary.
-        /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_captcha_result(&mut self, account: AccountId, hash: Hash, result: CaptchaSolutionCommitment) {
-            let mut user = self.dapp_users.get(account).unwrap_or_else(|| self.create_new_dapp_user(account));
-            let block_timestamp = self.env().block_timestamp();
-            let max_age = if block_timestamp < self.max_user_history_age {
-                block_timestamp
-            } else {
-                self.max_user_history_age
-            };
-            let age_threshold = block_timestamp - max_age;
-            // trim the history down to max length
-            while user.history.len() > self.max_user_history_len.into() {
-                user.history.pop();
-            }
-            // trim the history down to max age (as several entrys may now be older than max age due to blocks rolling over)
-            while user.history.len() > 0 && self.captcha_solution_commitments.get(user.history.get(user.history.len() - 1).unwrap()).unwrap().completed_at < age_threshold {
-                user.history.pop();
-            }
-            self.captcha_solution_commitments.insert(hash, &result);
-            user.history.insert(0, hash);
-            self.dapp_users.insert(account, &user);
-        }
-
-        fn get_user_history_summary(&self, account: AccountId) -> Result<UserHistorySummary, Error> {
-            let mut user = self.get_dapp_user(account)?;
+        fn trim_user_history(&self, mut history: Vec<Hash>) -> Vec<Hash> {
             // note that the age is based on the block timestamp, so calling this method as blocks roll over will result in different outcomes as the age threshold will change but the history will not (assuming no new results are added)
             let block_timestamp = self.env().block_timestamp();
             let max_age = if block_timestamp < self.max_user_history_age {
@@ -995,22 +970,41 @@ pub mod prosopo {
             };
             let age_threshold = block_timestamp - max_age;
             // trim the history down to max length
-            while user.history.len() > self.max_user_history_len.into() {
-                user.history.pop();
+            while history.len() > self.max_user_history_len.into() {
+                history.pop();
             }
             // trim the history down to max age
-            while user.history.len() > 0 && self.captcha_solution_commitments.get(
-                user.history.get(user.history.len() - 1).unwrap()
+            while history.len() > 0 && self.captcha_solution_commitments.get(
+                history.get(history.len() - 1).unwrap()
             ).unwrap().completed_at < age_threshold {
-                user.history.pop();
+                history.pop();
             }
+            history
+        }
+
+        /// Record a captcha result against a user, clearing out old captcha results as necessary.
+        /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
+        fn record_captcha_result(&mut self, account: AccountId, hash: Hash, result: CaptchaSolutionCommitment) {
+            let mut user = self.dapp_users.get(account).unwrap_or_else(|| self.create_new_dapp_user(account));
+            // add the new commitment
+            self.captcha_solution_commitments.insert(hash, &result);
+            user.history.insert(0, hash);
+
+            user.history = self.trim_user_history(user.history);
+            
+            self.dapp_users.insert(account, &user);
+        }
+
+        fn get_user_history_summary(&self, account: AccountId) -> Result<UserHistorySummary, Error> {
+            let user = self.get_dapp_user(account)?;
+            let history = self.trim_user_history(user.history);
 
             let mut summary = UserHistorySummary {
                 correct: 0,
                 incorrect: 0,
                 score: 0,
             };
-            for hash in user.history.iter() {
+            for hash in history.iter() {
                 let result = self.captcha_solution_commitments.get(hash).unwrap();
                 if result.status == CaptchaStatus::Approved {
                     summary.correct += 1;
