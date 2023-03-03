@@ -202,10 +202,8 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
-        // the last n commitments a user has made
-        commitments: Mapping<Hash, CaptchaSolutionCommitment>,
         // the last n commitment hashes in chronological order (most recent first)
-        history: Vec<Hash>,
+        history: Vec<Hash>, // lookup the commitment in Prosopo.commitments
     }
 
     /// The summary of a user's captcha history using the n most recent captcha results limited by age and number of captcha results
@@ -246,6 +244,7 @@ pub mod prosopo {
         operator_accounts: Lazy<Vec<AccountId>>,
         operator_stake_default: u128,
         operator_fee_currency: Hash,
+        commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
         operator_code_hash_votes: Mapping<AccountId, [u8; 32]>,
@@ -480,6 +479,7 @@ pub mod prosopo {
                 operator_code_hash_votes: Default::default(),
                 max_user_history_len,
                 max_user_history_age,
+                commitments: Default::default(),
             }
         }
 
