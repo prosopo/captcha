@@ -202,7 +202,10 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
-        history: Vec<CaptchaSolutionCommitment>,
+        // the last n commitments a user has made
+        commitments: Mapping<Hash, CaptchaSolutionCommitment>,
+        // the last n commitment hashes in chronological order (most recent first)
+        history: Vec<Hash>,
     }
 
     /// The summary of a user's captcha history using the n most recent captcha results limited by age and number of captcha results
