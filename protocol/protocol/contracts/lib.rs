@@ -912,7 +912,7 @@ pub mod prosopo {
 
             // Guard against solution commitment being submitted more than once
             let user_lookup = self.dapp_users.get(caller);
-            let mut user = user_lookup.unwrap_or_else(|| self.create_new_dapp_user(caller));
+            let mut user = user_lookup.unwrap_or_else(|| self.create_new_dapp_user(dapp_user));
             if user_lookup.is_some() && user.commitments.get(user_merkle_tree_root).is_some() {
                 return err!(Error::CaptchaSolutionCommitmentExists);
             }
@@ -945,9 +945,9 @@ pub mod prosopo {
 
                 // call provider_approve or provider_disapprove depending on whether the status is Approved or Disapproved
                 match status_option.unwrap_or(CaptchaStatus::Pending) {
-                    CaptchaStatus::Approved => self.provider_approve(user_merkle_tree_root, 0)?,
+                    CaptchaStatus::Approved => self.provider_approve(dapp_user, user_merkle_tree_root, 0)?,
                     CaptchaStatus::Disapproved => {
-                        self.provider_disapprove(user_merkle_tree_root)?
+                        self.provider_disapprove(dapp_user, user_merkle_tree_root)?
                     }
                     _ => {}
                 }
@@ -1051,35 +1051,28 @@ pub mod prosopo {
         #[ink(message)]
         pub fn provider_approve(
             &mut self,
+            user_id: AccountId,
             captcha_solution_commitment_id: Hash,
             transaction_fee: Balance,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
+
+            let user = self.get_dapp_user(user_id)?;
+            let mut commitment = user.commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
             // Guard against incorrect solution id
-            let commitment =
-                self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
             if commitment.provider != caller {
                 return err!(Error::NotAuthorised);
             }
             self.validate_dapp(commitment.contract)?;
 
-            self.get_dapp_user(commitment.account)?;
-
-            // get the mutables
-            let mut commitment_mut = self
-                .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
-                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::DappUserDoesNotExist))?;
-
             // only make changes if commitment is Pending approval or disapproval
-            if commitment_mut.status == CaptchaStatus::Pending {
-                commitment_mut.status = CaptchaStatus::Approved;
-                self.record_captcha_result(commitment.account, commitment_mut);
+            if commitment.status == CaptchaStatus::Pending {
+                commitment.status = CaptchaStatus::Approved;
+                self.record_captcha_result(commitment.account, commitment);
 
-                self.captcha_solution_commitments
-                    .insert(captcha_solution_commitment_id, &commitment_mut);
+                user.commitments
+                    .insert(captcha_solution_commitment_id, &commitment);
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.refund_transaction_fee(commitment, transaction_fee)?;
                 self.env().emit_event(ProviderApprove {
@@ -1096,34 +1089,27 @@ pub mod prosopo {
         #[ink(message)]
         pub fn provider_disapprove(
             &mut self,
+            user_id: AccountId,
             captcha_solution_commitment_id: Hash,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
+            
+            let user = self.get_dapp_user(user_id)?;
+            let mut commitment = user.commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
             // Guard against incorrect solution id
-            let commitment =
-                self.get_captcha_solution_commitment(captcha_solution_commitment_id)?;
             if commitment.provider != caller {
                 return err!(Error::NotAuthorised);
             }
             self.validate_dapp(commitment.contract)?;
-            // Check the user exists
-            self.get_dapp_user(commitment.account)?;
-
-            // get the mutables
-            let mut commitment_mut = self
-                .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
-                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            self.dapp_users.get(&commitment.account).ok_or_else(err_fn!(Error::DappUserDoesNotExist))?;
 
             // only make changes if commitment is Pending approval or disapproval
-            if commitment_mut.status == CaptchaStatus::Pending {
-                commitment_mut.status = CaptchaStatus::Disapproved;
-                self.record_captcha_result(commitment.account, commitment_mut);
+            if commitment.status == CaptchaStatus::Pending {
+                commitment.status = CaptchaStatus::Disapproved;
+                self.record_captcha_result(commitment.account, commitment);
 
-                self.captcha_solution_commitments
-                    .insert(captcha_solution_commitment_id, &commitment_mut);
+                user.commitments
+                    .insert(captcha_solution_commitment_id, &commitment);
                 
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.env().emit_event(ProviderDisapprove {
