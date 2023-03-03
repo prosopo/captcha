@@ -244,7 +244,7 @@ pub mod prosopo {
         operator_accounts: Lazy<Vec<AccountId>>,
         operator_stake_default: u128,
         operator_fee_currency: Hash,
-        commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
+        captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
         operator_code_hash_votes: Mapping<AccountId, [u8; 32]>,
@@ -479,7 +479,7 @@ pub mod prosopo {
                 operator_code_hash_votes: Default::default(),
                 max_user_history_len,
                 max_user_history_age,
-                commitments: Default::default(),
+                captcha_solution_commitments: Default::default(),
             }
         }
 
@@ -911,7 +911,7 @@ pub mod prosopo {
             self.get_captcha_data(dataset_id)?;
 
             // Guard against solution commitment being submitted more than once
-            if self.commitments.get(user_merkle_tree_root).is_some() {
+            if self.captcha_solution_commitments.get(user_merkle_tree_root).is_some() {
                 return err!(Error::CaptchaSolutionCommitmentExists);
             }
 
@@ -976,10 +976,10 @@ pub mod prosopo {
                 user.history.pop();
             }
             // trim the history down to max age (as several entrys may now be older than max age due to blocks rolling over)
-            while user.history.len() > 0 && self.commitments.get(user.history.get(user.history.len() - 1).unwrap()).unwrap().completed_at < age_threshold {
+            while user.history.len() > 0 && self.captcha_solution_commitments.get(user.history.get(user.history.len() - 1).unwrap()).unwrap().completed_at < age_threshold {
                 user.history.pop();
             }
-            self.commitments.insert(hash, &result);
+            self.captcha_solution_commitments.insert(hash, &result);
             user.history.insert(0, hash);
             self.dapp_users.insert(account, &user);
         }
@@ -999,7 +999,7 @@ pub mod prosopo {
                 user.history.pop();
             }
             // trim the history down to max age
-            while user.history.len() > 0 && self.commitments.get(
+            while user.history.len() > 0 && self.captcha_solution_commitments.get(
                 user.history.get(user.history.len() - 1).unwrap()
             ).unwrap().completed_at < age_threshold {
                 user.history.pop();
@@ -1011,7 +1011,7 @@ pub mod prosopo {
                 score: 0,
             };
             for hash in user.history.iter() {
-                let result = self.commitments.get(hash).unwrap();
+                let result = self.captcha_solution_commitments.get(hash).unwrap();
                 if result.status == CaptchaStatus::Approved {
                     summary.correct += 1;
                 } else if result.status == CaptchaStatus::Disapproved {
@@ -1058,7 +1058,7 @@ pub mod prosopo {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
 
-            let mut commitment = self.commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+            let mut commitment = self.captcha_solution_commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
             // Guard against incorrect solution id
             if commitment.provider != caller {
                 return err!(Error::NotAuthorised);
@@ -1092,7 +1092,7 @@ pub mod prosopo {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
             
-            let mut commitment = self.commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+            let mut commitment = self.captcha_solution_commitments.get(captcha_solution_commitment_id).ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
             // Guard against incorrect solution id
             if commitment.provider != caller {
                 return err!(Error::NotAuthorised);
@@ -1196,7 +1196,7 @@ pub mod prosopo {
             let user = self.get_dapp_user(user)?;
             let mut last_correct_captcha = None;
             for hash in user.history {
-                let entry = self.commitments.get(hash).unwrap();
+                let entry = self.captcha_solution_commitments.get(hash).unwrap();
                 if entry.status == CaptchaStatus::Approved {
                     last_correct_captcha = Some(entry);
                     break;
