@@ -1078,8 +1078,8 @@ pub mod prosopo {
         fn create_new_dapp_user(&mut self, account: AccountId) -> User {
             // create the user and add to our list of dapp users
             let lookup = self.dapp_users.get(account);
-            if lookup.is_some() {
-                return lookup.unwrap();
+            if let Some(user) = lookup {
+                return user;
             }
 
             let user = User {
