@@ -1197,7 +1197,7 @@ pub mod prosopo {
             let user = self.get_dapp_user(user)?;
             let mut last_correct_captcha = None;
             for hash in user.history {
-                let entry = user.commitments.get(hash).unwrap();
+                let entry = self.commitments.get(hash).unwrap();
                 if entry.status == CaptchaStatus::Approved {
                     last_correct_captcha = Some(entry);
                     break;
