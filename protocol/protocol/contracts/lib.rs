@@ -235,7 +235,6 @@ pub mod prosopo {
         provider_accounts: Mapping<(GovernanceStatus, Payee), BTreeSet<AccountId>>,
         service_origins: Mapping<Hash, ()>,
         captcha_data: Mapping<Hash, CaptchaData>,
-        captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>,
         provider_stake_default: u128,
         dapp_stake_default: u128,
         dapps: Mapping<AccountId, Dapp>,
@@ -473,7 +472,6 @@ pub mod prosopo {
                 provider_stake_default,
                 dapp_stake_default,
                 dapps: Default::default(),
-                captcha_solution_commitments: Default::default(),
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
                 operator_code_hash_votes: Default::default(),
@@ -1285,29 +1283,6 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
             self.captcha_data.get(&dataset_id).ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))
-        }
-
-        /// Get a solution commitment
-        ///
-        /// Returns an error if the commitment does not exist
-        #[ink(message)]
-        pub fn get_captcha_solution_commitment(
-            &self,
-            captcha_solution_commitment_id: Hash,
-        ) -> Result<CaptchaSolutionCommitment, Error> {
-            if self
-                .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
-                .is_none()
-            {
-                return err!(Error::CaptchaSolutionCommitmentDoesNotExist);
-            }
-            let commitment = self
-                .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
-                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-
-            Ok(commitment)
         }
 
         /// Get a dapp user
