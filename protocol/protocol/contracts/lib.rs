@@ -1041,6 +1041,7 @@ pub mod prosopo {
             }
 
             let user = User {
+                commitments: Default::default(),
                 history: Default::default(),
             };
             self.dapp_users.insert(account, &user);
