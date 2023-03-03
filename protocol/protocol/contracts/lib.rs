@@ -911,11 +911,9 @@ pub mod prosopo {
             self.get_captcha_data(dataset_id)?;
 
             // Guard against solution commitment being submitted more than once
-            if self
-                .captcha_solution_commitments
-                .get(user_merkle_tree_root)
-                .is_some()
-            {
+            let user_lookup = self.dapp_users.get(caller);
+            let mut user = user_lookup.unwrap_or_else(|| self.create_new_dapp_user(caller));
+            if user_lookup.is_some() && user.commitments.get(user_merkle_tree_root).is_some() {
                 return err!(Error::CaptchaSolutionCommitmentExists);
             }
 
