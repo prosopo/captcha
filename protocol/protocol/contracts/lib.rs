@@ -999,7 +999,7 @@ pub mod prosopo {
                 user.history.pop();
             }
             // trim the history down to max age
-            while user.history.len() > 0 && user.commitments.get(
+            while user.history.len() > 0 && self.commitments.get(
                 user.history.get(user.history.len() - 1).unwrap()
             ).unwrap().completed_at < age_threshold {
                 user.history.pop();
@@ -1011,7 +1011,7 @@ pub mod prosopo {
                 score: 0,
             };
             for hash in user.history.iter() {
-                let result = user.commitments.get(hash).unwrap();
+                let result = self.commitments.get(hash).unwrap();
                 if result.status == CaptchaStatus::Approved {
                     summary.correct += 1;
                 } else if result.status == CaptchaStatus::Disapproved {
