@@ -34,6 +34,14 @@ macro_rules! err_fn {
     };
 }
 
+macro_rules! lazy_push {
+    ($lazy:expr, $value:expr) => {
+        let mut vec = $lazy.get_or_default();
+        vec.push($value);
+        $lazy.set(&vec);
+    };
+}
+
 /// Concatenate two arrays (a and b) into a new array (c)
 fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u8; B]) -> [u8; C] {
     let mut c = [0; C];
