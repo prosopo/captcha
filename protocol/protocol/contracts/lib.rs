@@ -1024,8 +1024,8 @@ pub mod prosopo {
                 history.pop();
             }
             // trim the history down to max age
-            while history.len() > 0 && self.captcha_solution_commitments.get(
-                history.get(history.len() - 1).unwrap()
+            while !history.is_empty() && self.captcha_solution_commitments.get(
+                history.last().unwrap()
             ).unwrap().completed_at < age_threshold {
                 history.pop();
             }
@@ -1089,7 +1089,7 @@ pub mod prosopo {
             let mut dapp_user_accounts = self.dapp_user_accounts.get_or_default();
             dapp_user_accounts.push(account);
             self.dapp_user_accounts.set(&dapp_user_accounts);
-            return user;
+            user
         }
 
         /// Approve a solution commitment, increment correct captchas, and refund the users tx fee
@@ -1361,14 +1361,14 @@ pub mod prosopo {
         ) -> Result<CaptchaSolutionCommitment, Error> {
             if self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
+                .get(captcha_solution_commitment_id)
                 .is_none()
             {
                 return err!(Error::CaptchaSolutionCommitmentDoesNotExist);
             }
             let commitment = self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
+                .get(captcha_solution_commitment_id)
                 .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
 
             Ok(commitment)
