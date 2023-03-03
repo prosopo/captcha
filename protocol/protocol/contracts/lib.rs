@@ -796,7 +796,7 @@ pub mod prosopo {
 
         /// Check a dapp is missing / non-existent
         fn check_dapp_does_not_exist(&self, contract: AccountId) -> Result<(), Error> {
-            if self.get_dapp(contract).is_ok() {
+            if self.dapps.get(contract).is_some() {
                 return err!(Error::DappExists);
             }
 
@@ -2933,5 +2933,28 @@ pub mod prosopo {
             let mut operator_accounts = vec![operator_account1, operator_account2];
             operator_accounts
         }
+
+        fn setup_contract() -> (AccountId, AccountId, Vec<AccountId>, Prosopo) {
+            let op1 = AccountId::from([0x1; 32]);
+            let op2 = AccountId::from([0x2; 32]);
+            let ops = vec![op1, op2];
+            // initialise the contract
+            let contract = Prosopo::default(ops.clone(), STAKE_DEFAULT, STAKE_DEFAULT);
+            (op1, op2, ops, contract)
+        }
+
+        /// Test dapp cannot register if existing dapp in place
+        #[ink::test]
+        fn test_dapp_register_existing() {
+            let (op1, op2, ops, mut contract) = setup_contract();
+            let dapp_contract = AccountId::from([0x4; 32]);
+
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
+
+            contract.dapp_register(dapp_contract, DappPayee::Dapp).unwrap();
+            assert_eq!(Error::DappExists, contract.dapp_register(dapp_contract, DappPayee::Dapp).unwrap_err());
+        }
+
     }
 }
