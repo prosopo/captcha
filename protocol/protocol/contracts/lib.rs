@@ -1012,7 +1012,8 @@ pub mod prosopo {
                 incorrect: 0,
                 score: 0,
             };
-            for result in user.history.iter() {
+            for hash in user.history.iter() {
+                let result = user.commitments.get(hash).unwrap();
                 if result.status == CaptchaStatus::Approved {
                     summary.correct += 1;
                 } else if result.status == CaptchaStatus::Disapproved {
