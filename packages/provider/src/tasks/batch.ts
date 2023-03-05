@@ -3,14 +3,10 @@ import { ProsopoContractApi, ProsopoContractError, encodeStringArgs } from '@pro
 import consola from 'consola'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '../types/scheduler'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { EventRecord, Hash } from '@polkadot/types/interfaces'
+import { Hash } from '@polkadot/types/interfaces'
 import { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types'
 import { SubmittableResult } from '@polkadot/api'
 import { SignatureOptions } from '@polkadot/types/types'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { applyOnEvent } from '@polkadot/api-contract/util'
-import { DecodedEvent } from '@polkadot/api-contract/types'
-import { Bytes } from '@polkadot/types-codec'
 import { BN } from '@polkadot/util'
 
 const BN_TEN_THOUSAND = new BN(10_000)
@@ -178,44 +174,14 @@ export class BatchCommitter {
         return new Promise(async (resolve, reject) => {
             const unsub = await batchExtrinsic.signAndSend(this.contractApi.pair, (result: SubmittableResult) => {
                 if (result.status.isFinalized || result.status.isInBlock) {
-                    // ContractEmitted is the current generation, ContractExecution is the previous generation
-                    const contractResult = new ContractSubmittableResult(
-                        result,
-                        applyOnEvent(result, ['ContractEmitted', 'ContractExecution'], (records: EventRecord[]) =>
-                            records
-                                .map(
-                                    ({
-                                        event: {
-                                            data: [, data],
-                                        },
-                                    }): DecodedEvent | null => {
-                                        try {
-                                            return this.contractApi.abi.decodeEvent(data as Bytes)
-                                        } catch (error) {
-                                            console.error(
-                                                `Unable to decode contract event: ${(error as Error).message}`
-                                            )
-
-                                            return null
-                                        }
-                                    }
-                                )
-                                .filter((decoded): decoded is DecodedEvent => !!decoded)
-                        )
-                    )
                     unsub()
                     resolve(batchedCommitmentIds)
                 } else if (result.isError) {
-                    console.log('error sending batch')
                     unsub()
                     reject(new ProsopoContractError(result.status.type))
                 }
             })
         })
-        // } else {
-        //     throw new ProsopoContractError(result.asErr.toString())
-        //     process.exit()
-        // }
     }
 
     async removeCommitmentsAndSolutions(commitmentIds: string[]): Promise<void> {
