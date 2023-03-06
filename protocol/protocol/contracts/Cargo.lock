@@ -131,6 +131,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "disable_macro"
+version = "0.3.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
 name = "either"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -594,6 +602,7 @@ dependencies = [
 name = "prosopo"
 version = "4.0.0"
 dependencies = [
+ "disable_macro",
  "inject_self_macro",
  "ink",
  "named_functions_macro",
