@@ -831,7 +831,6 @@ pub mod prosopo {
 
         /// Configure a dapp's funds and status, handling transferred value
         fn dapp_configure_funding(&self, dapp: &mut Dapp) {
-
             // update the dapp funds
             dapp.balance += self.env().transferred_value();
 
@@ -841,13 +840,17 @@ pub mod prosopo {
             } else {
                 GovernanceStatus::Suspended
             };
-
         }
 
         /// Configure a dapp (existing or new)
-        fn dapp_configure(&mut self, contract: AccountId, payee: DappPayee, owner: AccountId) -> Result<Dapp, Error> {
+        fn dapp_configure(
+            &mut self,
+            contract: AccountId,
+            payee: DappPayee,
+            owner: AccountId,
+        ) -> Result<Dapp, Error> {
             self.check_is_contract(contract)?;
-            
+
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
             let mut dapp = dapp_lookup.unwrap_or_else(|| Dapp {
@@ -889,12 +892,14 @@ pub mod prosopo {
             contract: AccountId,
             payee: DappPayee,
         ) -> Result<(), Error> {
-            
             // expect dapp to be new
             self.check_dapp_does_not_exist(contract)?;
 
             // configure the new dapp
-            let dapp = self.dapp_configure(contract, payee, self.env().caller() // the caller is made the owner of the contract
+            let dapp = self.dapp_configure(
+                contract,
+                payee,
+                self.env().caller(), // the caller is made the owner of the contract
             )?;
 
             // emit event
@@ -916,7 +921,6 @@ pub mod prosopo {
             payee: DappPayee,
             owner: AccountId,
         ) -> Result<(), Error> {
-
             // expect dapp to exist
             self.get_dapp(contract)?;
 
@@ -940,7 +944,7 @@ pub mod prosopo {
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
             let mut dapp = self.get_dapp(contract)?;
-            
+
             // check current contract for ownership
             self.check_dapp_owner_is_caller(contract)?;
 
@@ -3084,9 +3088,15 @@ pub mod prosopo {
             // Mark the the dapp account as being a contract on-chain
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
 
-            contract.dapp_register(dapp_contract, DappPayee::Dapp).unwrap();
-            assert_eq!(Error::DappExists, contract.dapp_register(dapp_contract, DappPayee::Dapp).unwrap_err());
+            contract
+                .dapp_register(dapp_contract, DappPayee::Dapp)
+                .unwrap();
+            assert_eq!(
+                Error::DappExists,
+                contract
+                    .dapp_register(dapp_contract, DappPayee::Dapp)
+                    .unwrap_err()
+            );
         }
-
     }
 }
