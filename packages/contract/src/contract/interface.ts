@@ -13,13 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import type { AbiMessage, ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
-import { AbiMetadata, ContractAbi, TransactionResponse } from '../types'
-import { decodeEvents, dispatchErrorHandler, encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
+import type { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
+import { AbiMetadata, ContractAbi } from '../types'
+import { encodeStringArgs, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
-import { ApiPromise, SubmittableResult } from '@polkadot/api'
+import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
-import { KeyringPair } from '@polkadot/keyring/types'
 import { ContractExecResult } from '@polkadot/types/interfaces/contracts'
 import { createType } from '@polkadot/types'
 import { ApiBase, ApiDecoration } from '@polkadot/api/types'
@@ -27,16 +26,20 @@ import { firstValueFrom, map } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
 import { BN, BN_ONE, BN_ZERO } from '@polkadot/util'
 import { Weight } from '@polkadot/types/interfaces/runtime'
-import { WeightV2 } from '@polkadot/types/interfaces'
+import { EventRecord, WeightV2 } from '@polkadot/types/interfaces'
 import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { useWeightImpl } from './useWeight'
+import { IKeyringPair, ISubmittableResult } from '@polkadot/types/types'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { applyOnEvent } from '@polkadot/api-contract/util'
+import { Bytes } from '@polkadot/types-codec'
 // 4_999_999_999_999
 const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE)
 
 export class ProsopoContractApi extends ContractPromise {
     contractName: string
-    pair: KeyringPair
+    pair: IKeyringPair
     options: ContractOptions
     nonce: number
 
@@ -44,7 +47,7 @@ export class ProsopoContractApi extends ContractPromise {
         api: ApiPromise,
         abi: ContractAbi,
         address: string,
-        pair: KeyringPair,
+        pair: IKeyringPair,
         contractName: string,
         currentNonce: number
     ) {
@@ -82,7 +85,7 @@ export class ProsopoContractApi extends ContractPromise {
         contractMethodName: string,
         args: T[],
         value?: number | BN | undefined
-    ): Promise<SubmittableExtrinsic> {
+    ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions }> {
         // Always query first as errors are passed back from a dry run but not from a transaction
         const message = this.getContractMethod(contractMethodName)
         const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
@@ -96,14 +99,14 @@ export class ProsopoContractApi extends ContractPromise {
             },
             ...encodedArgs
         )
-        const { gasRequired, result } = await extrinsic
+        const response = await extrinsic
 
-        if (result.isOk) {
-            const options = this.getOptions(message, value, gasRequired)
-
-            return this.tx[contractMethodName](options, ...encodedArgs)
+        if (response.result.isOk) {
+            const options = this.getOptions(message, value, response.gasRequired)
+            handleContractCallOutcomeErrors(response, contractMethodName)
+            return { extrinsic: this.tx[contractMethodName](options, ...encodedArgs), options }
         } else {
-            throw new ProsopoContractError(result.asErr, this.buildExtrinsic.name)
+            throw new ProsopoContractError(response.result.asErr, this.buildExtrinsic.name)
         }
     }
 
@@ -114,45 +117,55 @@ export class ProsopoContractApi extends ContractPromise {
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx<T>(contractMethodName: string, args: T[], value?: number | BN | undefined): Promise<any> {
-        const extrinsic = await this.buildExtrinsic(contractMethodName, args, value)
+    async contractTx<T>(
+        contractMethodName: string,
+        args: T[],
+        value?: number | BN | undefined
+    ): Promise<ContractSubmittableResult> {
+        const { extrinsic } = await this.buildExtrinsic(contractMethodName, args, value)
         const nextNonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
         this.nonce = nextNonce ? nextNonce.toNumber() : this.nonce
 
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
-            const unsub = await extrinsic.signAndSend(this.pair, { nonce: this.nonce }, (result: SubmittableResult) => {
-                const actionStatus = {
-                    from: this.pair.address.toString(),
-                    txHash: result.txHash.hash.toHex(),
-                } as Partial<TransactionResponse>
-                if (result.status.isInBlock) {
-                    actionStatus.blockHash = result.status.asInBlock.toHex()
-                }
-                if (result.status.isFinalized || result.status.isInBlock) {
-                    result.events
-                        .filter(({ event: { section } }: any): boolean => section === 'system')
-                        .forEach((event): void => {
-                            const {
-                                event: { method },
-                            } = event
+            const unsub = await extrinsic.signAndSend(
+                this.pair,
+                { nonce: this.nonce },
+                (result: ISubmittableResult) => {
+                    if (result.status.isFinalized || result.status.isInBlock) {
+                        // ContractEmitted is the current generation, ContractExecution is the previous generation
+                        const contractResult = new ContractSubmittableResult(
+                            result,
+                            applyOnEvent(result, ['ContractEmitted', 'ContractExecution'], (records: EventRecord[]) =>
+                                records
+                                    .map(
+                                        ({
+                                            event: {
+                                                data: [, data],
+                                            },
+                                        }): DecodedEvent | null => {
+                                            try {
+                                                return this.abi.decodeEvent(data as Bytes)
+                                            } catch (error) {
+                                                console.error(
+                                                    `Unable to decode contract event: ${(error as Error).message}`
+                                                )
 
-                            if (method === 'ExtrinsicFailed') {
-                                dispatchErrorHandler(this.api.registry, event)
-                            } else if (method === 'ExtrinsicSuccess') {
-                                actionStatus.result = result
-                                if ('events' in result) {
-                                    actionStatus.events = decodeEvents(this.address, result, this.abi)
-                                }
-                            }
-                        })
-                    unsub()
-                    resolve(actionStatus as TransactionResponse)
-                } else if (result.isError) {
-                    unsub()
-                    reject(new ProsopoContractError(result.status.type))
+                                                return null
+                                            }
+                                        }
+                                    )
+                                    .filter((decoded): decoded is DecodedEvent => !!decoded)
+                            )
+                        )
+                        unsub()
+                        resolve(contractResult)
+                    } else if (result.isError) {
+                        unsub()
+                        reject(new ProsopoContractError(result.status.type))
+                    }
                 }
-            })
+            )
         })
     }
 

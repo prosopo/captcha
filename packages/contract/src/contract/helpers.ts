@@ -13,18 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { AbiMessage, ContractCallOutcome } from '@polkadot/api-contract/types'
-import { bnFromHex, isHex, isU8a, stringCamelCase, stringToHex, stringUpperFirst } from '@polkadot/util'
+import { AbiMessage, ContractCallOutcome, DecodedEvent } from '@polkadot/api-contract/types'
+import { bnFromHex, isHex, isU8a, stringToHex } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
-import { DecodedEvent, TransactionResponse } from '../types/contract'
 import { ProsopoContractError } from '../handlers'
-import { SubmittableResult } from '@polkadot/api'
 import { Abi } from '@polkadot/api-contract'
 import { AccountId, DispatchError, EventRecord } from '@polkadot/types/interfaces'
-import { addressEq } from '@polkadot/util-crypto'
 import { Bytes } from '@polkadot/types-codec'
-import { AnyString } from '@polkadot/util/types'
 import { Registry } from '@polkadot/types-codec/types/registry'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 
 /**
  * Get the event name from the contract method name
@@ -41,12 +38,16 @@ export function getEventNameFromMethodName(contractMethodName: string): string {
  * @return {AnyJson} array of events filtered by calculated event name
  */
 export function getEventsFromMethodName(
-    response: TransactionResponse,
+    response: ContractSubmittableResult,
     contractMethodName: string
 ): AnyJson | DecodedEvent[] | any {
     const eventName = getEventNameFromMethodName(contractMethodName)
-    if (response && response['events']) {
-        return response && response['events'] && response['events'].filter((x) => x.name === eventName)
+    if (response && response.contractEvents) {
+        return (
+            response &&
+            response.contractEvents &&
+            response.contractEvents.filter((x) => x.event.identifier === eventName)
+        )
     } else {
         return []
     }
@@ -99,29 +100,31 @@ export function stringToHexPadded(data: string): string {
     return `0x${Array(maxLength - hexString.length + 1).join('0')}${hexString}`
 }
 
-export function decodeEvents(
-    contractAddress: AccountId,
-    records: SubmittableResult,
-    abi: Abi
-): DecodedEvent[] | undefined {
-    let events: EventRecord[]
-
-    events = records.filterRecords('contracts', ['ContractEmitted', 'ContractExecution'])
-
-    events = events.filter((event) => {
-        const accountId = event.event.data[0] as AccountId
-        return addressEq(accountId, contractAddress)
-    })
-
-    if (!events.length) {
-        return undefined
-    }
-
-    return events.map((event) => {
-        const decoded = abi.decodeEvent(event.event.data[1] as Bytes) as Partial<DecodedEvent>
-        decoded.name = stringUpperFirst(stringCamelCase(<AnyString>decoded.event?.identifier))
-        return decoded as DecodedEvent
-    })
+// TODO add test for this
+export function decodeEvents(contractAddress: AccountId, records: EventRecord[], abi: Abi): DecodedEvent[] | undefined {
+    return records
+        .filter(
+            ({ event }) =>
+                function () {
+                    console.log(event.toPrimitive())
+                    return (
+                        event.toPrimitive().section === 'contracts' &&
+                        event.toPrimitive().data!['contract'] === contractAddress.toString()
+                    )
+                }
+        )
+        .map((record): DecodedEvent | null => {
+            try {
+                console.log(record.event.toHuman())
+                // @ts-ignore
+                console.log(record.event.index.toPrimitive())
+                return abi.decodeEvent(record.event.data.toU8a() as Bytes)
+            } catch (error) {
+                console.log(error)
+                return null
+            }
+        })
+        .filter((decoded): decoded is DecodedEvent => !!decoded)
 }
 
 export function dispatchErrorHandler(registry: Registry, event: EventRecord): ProsopoContractError {

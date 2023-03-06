@@ -15,13 +15,7 @@
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
 
 import { SubmittableResult } from '@polkadot/api'
-import { Codec, ISubmittableResult } from '@polkadot/types/types'
-import { AbiEvent } from '@polkadot/api-contract/types'
-import { SignerOptions, SubmittableExtrinsic } from '@polkadot/api/types'
-
-import { KeypairType } from '@polkadot/util-crypto/types'
-import { Compact, u64 } from '@polkadot/types-codec'
-import { AnyNumber } from '@polkadot/types-codec/types'
+import { DecodedEvent } from '@polkadot/api-contract/types'
 
 export interface TransactionResponse {
     from: string
@@ -34,44 +28,3 @@ export interface TransactionResponse {
     result: SubmittableResult
     events?: DecodedEvent[]
 }
-
-export interface DecodedEvent {
-    args: Codec[]
-    name: string
-    event: AbiEvent
-}
-
-export interface InjectedAccountWithMeta {
-    address: string
-    meta: {
-        genesisHash?: string | null
-        name?: string
-        source: string
-    }
-    type?: KeypairType
-}
-
-export interface CallParams {
-    dest: any
-    value: AnyNumber
-    gasLimit: AnyNumber | Compact<u64>
-    inputData: Uint8Array
-}
-
-export interface CallOverrides extends SignerOptions {
-    dest?: any
-    salt?: any
-    value?: AnyNumber
-    gasLimit?: AnyNumber | Compact<u64>
-    storageDepositLimit?: AnyNumber
-    signer: never
-}
-
-export type TransactionParams = (unknown | Partial<CallOverrides>)[]
-
-export interface PopulatedTransaction extends Partial<SignerOptions> {
-    callParams: CallParams
-    extrinsic: SubmittableExtrinsic<'promise', ISubmittableResult>
-}
-
-export type ContractFunction<T = any> = (...args: TransactionParams) => Promise<T>

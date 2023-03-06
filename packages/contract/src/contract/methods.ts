@@ -1,4 +1,3 @@
-import { TransactionResponse } from '../types/index'
 import { ProsopoContractApi } from './interface'
 import {
     CaptchaData,
@@ -14,6 +13,7 @@ import {
 import { Vec, u128 } from '@polkadot/types-codec'
 import { AccountId } from '@polkadot/types/interfaces'
 import { BN, hexToU8a } from '@polkadot/util'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 
 export class ProsopoContractMethods extends ProsopoContractApi {
     // transactions
@@ -23,7 +23,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         fee: number,
         payee: ProsopoPayee,
         address: string
-    ): Promise<TransactionResponse> {
+    ): Promise<ContractSubmittableResult> {
         return await this.contractTx('providerRegister', [serviceOrigin, fee, payee, address])
     }
 
@@ -33,19 +33,19 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         payee: ProsopoPayee,
         address: string,
         value?: number | BN | undefined
-    ): Promise<TransactionResponse> {
+    ): Promise<ContractSubmittableResult> {
         return await this.contractTx('providerUpdate', [serviceOrigin, fee, payee, address], value)
     }
 
-    public async providerDeregister(address: string): Promise<TransactionResponse> {
+    public async providerDeregister(address: string): Promise<ContractSubmittableResult> {
         return await this.contractTx('providerDeregister', [address])
     }
 
-    public async providerUnstake(value: number | BN | undefined): Promise<TransactionResponse> {
+    public async providerUnstake(value: number | BN | undefined): Promise<ContractSubmittableResult> {
         return await this.contractTx('providerUnstake', [], value)
     }
 
-    public async providerAddDataset(datasetId: string, datasetContentId: string): Promise<TransactionResponse> {
+    public async providerAddDataset(datasetId: string, datasetContentId: string): Promise<ContractSubmittableResult> {
         return await this.contractTx('providerAddDataset', [hexToU8a(datasetId), hexToU8a(datasetContentId)])
     }
 
@@ -53,15 +53,18 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         dappServiceOrigin: string,
         dappContractAddress: string,
         dappOwner?: string
-    ): Promise<TransactionResponse> {
+    ): Promise<ContractSubmittableResult> {
         return await this.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
     }
 
-    public async dappFund(contractAccount: string, value?: number | BN | undefined): Promise<TransactionResponse> {
+    public async dappFund(
+        contractAccount: string,
+        value?: number | BN | undefined
+    ): Promise<ContractSubmittableResult> {
         return await this.contractTx('dappFund', [contractAccount], value)
     }
 
-    public async dappCancel(contractAccount: string): Promise<TransactionResponse> {
+    public async dappCancel(contractAccount: string): Promise<ContractSubmittableResult> {
         return await this.contractTx('dappCancel', [contractAccount])
     }
 
@@ -72,7 +75,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         providerAddress: string,
         dappUserAddress: string,
         status?: ProsopoCaptchaStatus
-    ): Promise<TransactionResponse> {
+    ): Promise<ContractSubmittableResult> {
         return await this.contractTx('dappUserCommit', [
             contractAccount,
             captchaDatasetId,
@@ -83,11 +86,11 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         ])
     }
 
-    public async providerApprove(captchaSolutionCommitmentId, refundFee): Promise<TransactionResponse> {
+    public async providerApprove(captchaSolutionCommitmentId, refundFee): Promise<ContractSubmittableResult> {
         return await this.contractTx('providerApprove', [captchaSolutionCommitmentId, refundFee])
     }
 
-    public async providerDisapprove(captchaSolutionCommitmentId): Promise<TransactionResponse> {
+    public async providerDisapprove(captchaSolutionCommitmentId): Promise<ContractSubmittableResult> {
         return await this.contractTx('providerDisapprove', [captchaSolutionCommitmentId])
     }
 
