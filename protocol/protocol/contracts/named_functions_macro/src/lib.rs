@@ -30,14 +30,15 @@ fn named_impl(params: TokenStream, input: TokenStream) -> Result<TokenStream, &'
 fn handle(input: TokenStream) -> TokenStream {
     let mut input = input.into_iter().peekable();
     let mut output = Vec::<TokenTree>::new();
+    let mut found_fn_name = false;
     let mut found_fn = false;
-    let mut fname = TokenTree::from(Literal::string(&String::from("unknown")));
+    let mut fname: String = "unknown".to_string();
     while let Some(tt) = input.next() {
         match tt {
             TokenTree::Group(mut g) => {
                 let span = g.span();
                 let mut sub_ts = handle(g.stream());
-                if found_fn && g.delimiter() == Delimiter::Brace {
+                if found_fn_name && g.delimiter() == Delimiter::Brace {
                     let mut inject = quote!(
                         macro_rules! function_name {() => (
                             #fname
@@ -45,6 +46,7 @@ fn handle(input: TokenStream) -> TokenStream {
                     );
                     inject.extend(sub_ts);
                     sub_ts = inject;
+                    found_fn_name = false;
                     found_fn = false;
                 }
                 g = Group::new(g.delimiter(), sub_ts);
@@ -54,8 +56,11 @@ fn handle(input: TokenStream) -> TokenStream {
             TokenTree::Ident(i) => {
                 if i == "fn" {
                     found_fn = true;
-                    let s = input.peek().unwrap().to_string();
-                    fname = TokenTree::from(Literal::string(&s));
+                }
+                if found_fn {
+                    fname = i.to_string();
+                    found_fn = false;
+                    found_fn_name = true;
                 }
                 output.push(i.into());
             }

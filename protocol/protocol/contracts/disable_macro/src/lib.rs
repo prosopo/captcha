@@ -75,7 +75,6 @@ fn handle(input: TokenStream) -> TokenStream {
                     fname = i.to_string();
                     found_fn = false;
                     found_fn_name = true;
-                    
                 }
                 output.push(i.into());
             }
