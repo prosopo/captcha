@@ -244,9 +244,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "inject_self_macro"
+version = "0.3.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
 name = "ink"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "derive_more",
  "ink_env",
@@ -260,16 +268,16 @@ dependencies = [
 
 [[package]]
 name = "ink_allocator"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "cfg-if",
 ]
 
 [[package]]
 name = "ink_codegen"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "blake2",
  "derive_more",
@@ -291,8 +299,8 @@ dependencies = [
 
 [[package]]
 name = "ink_engine"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "blake2",
  "derive_more",
@@ -305,8 +313,8 @@ dependencies = [
 
 [[package]]
 name = "ink_env"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "arrayref",
  "blake2",
@@ -331,8 +339,8 @@ dependencies = [
 
 [[package]]
 name = "ink_ir"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "blake2",
  "either",
@@ -344,8 +352,8 @@ dependencies = [
 
 [[package]]
 name = "ink_macro"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "ink_codegen",
  "ink_ir",
@@ -359,8 +367,8 @@ dependencies = [
 
 [[package]]
 name = "ink_metadata"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "derive_more",
  "impl-serde",
@@ -372,16 +380,16 @@ dependencies = [
 
 [[package]]
 name = "ink_prelude"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "cfg-if",
 ]
 
 [[package]]
 name = "ink_primitives"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "derive_more",
  "ink_prelude",
@@ -392,8 +400,8 @@ dependencies = [
 
 [[package]]
 name = "ink_storage"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "array-init",
  "cfg-if",
@@ -409,8 +417,8 @@ dependencies = [
 
 [[package]]
 name = "ink_storage_traits"
-version = "4.0.0-beta"
-source = "git+https://github.com/paritytech/ink?rev=4655a8b4413cb50cbc38d1b7c173ad426ab06cde#4655a8b4413cb50cbc38d1b7c173ad426ab06cde"
+version = "4.0.0"
+source = "git+https://github.com/prosopo/ink?rev=bec5105fb79926377341179389336fcac620c50d#bec5105fb79926377341179389336fcac620c50d"
 dependencies = [
  "ink_metadata",
  "ink_prelude",
@@ -494,6 +502,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 
 [[package]]
+name = "named_functions_macro"
+version = "0.3.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
 name = "nom8"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -567,18 +583,20 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.50"
+version = "1.0.51"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ef7d57beacfaf2d8aee5937dab7b7f28de3cb8b1828479bb5de2a7106f2bae2"
+checksum = "5d727cae5b39d21da60fa540906919ad737832fe0b1c165da3a34d6548c849d6"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "prosopo"
-version = "4.0.0-beta"
+version = "4.0.0"
 dependencies = [
+ "inject_self_macro",
  "ink",
+ "named_functions_macro",
  "parity-scale-codec",
  "prosopo_storage_derive",
  "rand_chacha",
@@ -697,18 +715,18 @@ dependencies = [
 
 [[package]]
 name = "secp256k1"
-version = "0.25.0"
+version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "550fc3b723a478be77bf74718947cdcdd75144d508aaa70f0a320036905df2a8"
+checksum = "4124a35fe33ae14259c490fd70fa199a32b9ce9502f2ee6bc4f81ec06fa65894"
 dependencies = [
  "secp256k1-sys",
 ]
 
 [[package]]
 name = "secp256k1-sys"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8058e28ae464daf5ac14c5c0f78110b58616e796c4e4e28cfcca38fdb13d8f22"
+checksum = "642a62736682fdd8c71da0eb273e453c8ac74e33b9fb310e22ba5b03ec7651ff"
 dependencies = [
  "cc",
 ]
