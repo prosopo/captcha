@@ -60,10 +60,10 @@ pub mod prosopo {
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
-        Active,
-        Suspended,
+        Active,    // active and available for use
+        Suspended, // a state that should be used for dapps/providers whose stake drops below the minimum required or who are being investigated as part of a slashing event etc.
         #[default]
-        Deactivated,
+        Deactivated, // temporarily inactive
     }
 
     /// CaptchaStatus is the status of a CaptchaSolutionCommitment, submitted by a DappUser
@@ -452,6 +452,8 @@ pub mod prosopo {
         InvalidCaptchaStatus,
         /// No correct captchas in history (either history is empty or all captchas are incorrect)
         NoCorrectCaptcha,
+        /// Returned if the function has been disabled in the contract
+        FunctionDisabled,
     }
 
     impl Prosopo {
