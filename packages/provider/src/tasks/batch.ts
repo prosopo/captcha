@@ -115,7 +115,6 @@ export class BatchCommitter {
         let totalRefTime = new BN(0)
         const maxBlockWeight = this.contractApi.api.consts.system.blockWeights.maxBlock
         const batchedCommitmentIds: string[] = []
-        let breakBatchLoop = false
         for (const commitment of commitments) {
             const args = [
                 commitment.dappAccount,
@@ -135,15 +134,12 @@ export class BatchCommitter {
                 totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
                 this.batchCommitConfig.maxBatchExtrinsicPercentage
             ) {
-                breakBatchLoop = true
+                // Break out of the loop so that we can submit the transactions. Additional batch processes will pickup the
+                // remaining commitments
+                break
             } else {
                 batchedCommitmentIds.push(commitment.commitmentId)
                 txs.push(extrinsic)
-            }
-            // Break out of the loop so that we can submit the transactions. Additional batch processes will pickup the
-            // remaining commitments
-            if (breakBatchLoop) {
-                break
             }
         }
         // TODO use dryRun to get weight
