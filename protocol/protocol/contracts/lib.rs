@@ -528,7 +528,7 @@ pub mod prosopo {
             let slice = data.as_slice();
             let mut hash_output = <Blake2x256 as HashOutput>::Type::default();
             <Blake2x256 as CryptoHash>::hash(slice, &mut hash_output);
-            
+
             Hash::from(hash_output)
         }
 
