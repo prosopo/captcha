@@ -49,7 +49,7 @@ fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u
 pub mod prosopo {
 
     use ink::env::debug_println as debug;
-    use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
+    use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
     use ink::storage::Lazy;
@@ -120,7 +120,7 @@ pub mod prosopo {
 
     /// Providers are suppliers of human verification methods (captchas, etc.) to DappUsers, either
     /// paying or receiving a fee for this service.
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Provider {
         status: GovernanceStatus,
@@ -128,13 +128,13 @@ pub mod prosopo {
         // an amount in the base unit of the default parachain token (e.g. Planck on chains using DOT)
         fee: u32,
         payee: Payee,
-        service_origin: Hash,
+        service_origin: Vec<u8>,
         dataset_id: Hash,
         dataset_id_content: Hash,
     }
 
     /// RandomProvider is selected randomly by the contract for the client side application
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct RandomProvider {
         provider_id: AccountId,
@@ -525,11 +525,20 @@ pub mod prosopo {
             self.dapp_stake_default
         }
 
+        /// Convert a vec of u8 into a Hash
+        fn hash_vec_u8(&self, data: &Vec<u8>) -> Hash {
+            let slice = data.as_slice();
+            let mut hash_output = <Blake2x256 as HashOutput>::Type::default();
+            <Blake2x256 as CryptoHash>::hash(slice, &mut hash_output);
+
+            Hash::from(hash_output)
+        }
+
         /// Register a provider, their service origin and fee
         #[ink(message)]
         pub fn provider_register(
             &mut self,
-            service_origin: Hash,
+            service_origin: Vec<u8>,
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
@@ -538,8 +547,11 @@ pub mod prosopo {
             if self.providers.get(provider_account).is_some() {
                 return err!(Error::ProviderExists);
             }
+
+            let service_origin_hash = self.hash_vec_u8(&service_origin);
+
             // prevent duplicate service origins
-            if self.service_origins.get(service_origin).is_some() {
+            if self.service_origins.get(service_origin_hash).is_some() {
                 return err!(Error::ProviderServiceOriginUsed);
             }
             let balance: u128 = 0;
@@ -554,7 +566,7 @@ pub mod prosopo {
                 payee,
             };
             self.providers.insert(provider_account, &provider);
-            self.service_origins.insert(service_origin, &());
+            self.service_origins.insert(service_origin_hash, &());
             let mut provider_accounts_map = self
                 .provider_accounts
                 .get(ProviderState {
@@ -581,7 +593,7 @@ pub mod prosopo {
         #[ink(payable)]
         pub fn provider_update(
             &mut self,
-            service_origin: Hash,
+            service_origin: Vec<u8>,
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
@@ -594,13 +606,15 @@ pub mod prosopo {
 
             let existing = self.get_provider_details(provider_account)?;
 
-            // prevent duplicate service origins
             if existing.service_origin != service_origin {
-                if self.service_origins.get(service_origin).is_some() {
+                let service_origin_hash = self.hash_vec_u8(&service_origin);
+                // prevent duplicate service origins
+                if self.service_origins.get(service_origin_hash).is_some() {
                     return err!(Error::ProviderServiceOriginUsed);
                 } else {
-                    self.service_origins.remove(existing.service_origin);
-                    self.service_origins.insert(service_origin, &());
+                    let existing_service_origin_hash = self.hash_vec_u8(&existing.service_origin);
+                    self.service_origins.remove(existing_service_origin_hash);
+                    self.service_origins.insert(service_origin_hash, &());
                 }
             }
 
@@ -1784,7 +1798,7 @@ pub mod prosopo {
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             contract.provider_register(service_origin, fee, Payee::Dapp);
             assert!(contract.providers.get(provider_account).is_some());
@@ -1806,7 +1820,7 @@ pub mod prosopo {
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             contract.provider_register(service_origin, fee, Payee::Dapp);
             assert!(contract.providers.get(provider_account).is_some());
@@ -1822,7 +1836,7 @@ pub mod prosopo {
             let mut contract =
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract.provider_register(service_origin, fee, Payee::Dapp);
@@ -1882,9 +1896,9 @@ pub mod prosopo {
         }
 
         /// Provider Register Helper
-        fn generate_provider_data(id: u8, port: &str, fee: u32) -> (AccountId, Hash, u32) {
+        fn generate_provider_data(id: u8, port: &str, fee: u32) -> (AccountId, Vec<u8>, u32) {
             let provider_account = AccountId::from([id; 32]);
-            let service_origin = str_to_hash(format!("https://localhost:{}", port));
+            let service_origin = port.as_bytes().to_vec();
 
             (provider_account, service_origin, fee)
         }
@@ -1909,12 +1923,13 @@ pub mod prosopo {
                 })
                 .unwrap()
                 .contains(&provider_account));
-            let service_origin = str_to_hash("https://localhost:4242".to_string());
+
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Dapp);
+            contract.provider_update(service_origin.clone(), fee, Payee::Dapp);
             assert!(contract
                 .provider_accounts
                 .get(ProviderState {
@@ -1961,7 +1976,7 @@ pub mod prosopo {
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // try creating the second provider and make sure the error is correct and that it doesn't exist
@@ -2010,7 +2025,7 @@ pub mod prosopo {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
             // try updating the second provider and make sure the error is correct and that it didn't change
-            match contract.provider_update(service_origin, fee, Payee::Dapp) {
+            match contract.provider_update(service_origin.clone(), fee, Payee::Dapp) {
                 Result::Err(Error::ProviderServiceOriginUsed) => {}
                 _ => {
                     unreachable!();
@@ -2035,7 +2050,7 @@ pub mod prosopo {
             let balance: u128 = 10;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .ok();
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
@@ -2080,7 +2095,7 @@ pub mod prosopo {
             let balance: u128 = 2000000000000;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .ok();
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                 provider_account,
@@ -2360,11 +2375,12 @@ pub mod prosopo {
 
             // Register the provider
             let provider_account = AccountId::from([0x2; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
+
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .ok();
 
             // Call from the provider account to add data and stake tokens
@@ -2425,7 +2441,7 @@ pub mod prosopo {
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2512,7 +2528,7 @@ pub mod prosopo {
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2575,7 +2591,7 @@ pub mod prosopo {
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2659,7 +2675,7 @@ pub mod prosopo {
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2753,10 +2769,10 @@ pub mod prosopo {
             let mut contract =
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            contract.provider_register(service_origin, fee, Payee::Dapp);
+            contract.provider_register(service_origin.clone(), fee, Payee::Dapp);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
@@ -2790,14 +2806,14 @@ pub mod prosopo {
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
             let dapp_user_account = AccountId::from([0x30; 32]);
-            let service_origin = str_to_hash("https://localhost:2424".to_string());
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            contract.provider_register(service_origin, fee, Payee::Provider);
+            contract.provider_register(service_origin.clone(), fee, Payee::Provider);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider);
+            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2);
@@ -2850,7 +2866,7 @@ pub mod prosopo {
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2933,7 +2949,7 @@ pub mod prosopo {
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
@@ -2963,7 +2979,7 @@ pub mod prosopo {
             let (provider_account2, service_origin, fee) = generate_provider_data(0x5, "2424", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account2);
             contract
-                .provider_register(service_origin, fee, Payee::Dapp)
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
                 .unwrap();
 
             // Call from the provider account to add data and stake tokens
