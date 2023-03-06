@@ -460,6 +460,8 @@ pub mod prosopo {
         InvalidCaptchaStatus,
         /// No correct captchas in history (either history is empty or all captchas are incorrect)
         NoCorrectCaptcha,
+        /// Returned if the function has been disabled in the contract
+        FunctionDisabled,
     }
 
     impl Prosopo {
