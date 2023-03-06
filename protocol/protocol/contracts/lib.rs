@@ -983,7 +983,7 @@ pub mod prosopo {
                 completed_at: self.env().block_timestamp(),
             };
 
-            self.record_captcha_result(dapp_user, user_merkle_tree_root, commitment);
+            self.record_commitment(dapp_user, user_merkle_tree_root, commitment);
 
             // Insert the commitment and mark as approved or disapproved if a Provider is the caller
             let provider_details = self.get_provider_details(caller);
@@ -1137,7 +1137,7 @@ pub mod prosopo {
             if commitment.status == CaptchaStatus::Pending {
                 commitment.status = CaptchaStatus::Approved;
 
-                self.record_captcha_result(
+                self.record_commitment(
                     commitment.account,
                     captcha_solution_commitment_id,
                     commitment,
@@ -1178,7 +1178,7 @@ pub mod prosopo {
             if commitment.status == CaptchaStatus::Pending {
                 commitment.status = CaptchaStatus::Disapproved;
 
-                self.record_captcha_result(
+                self.record_commitment(
                     commitment.account,
                     captcha_solution_commitment_id,
                     commitment,
