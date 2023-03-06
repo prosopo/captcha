@@ -1297,8 +1297,9 @@ pub mod prosopo {
             user: AccountId,
         ) -> Result<LastCorrectCaptcha, Error> {
             let user = self.get_dapp_user(user)?;
+            let (history, _expired) = self.trim_user_history(user.history);
             let mut last_correct_captcha = None;
-            for hash in user.history {
+            for hash in history {
                 let entry = self.captcha_solution_commitments.get(hash).unwrap();
                 if entry.status == CaptchaStatus::Approved {
                     last_correct_captcha = Some(entry);
