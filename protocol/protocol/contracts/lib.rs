@@ -1014,7 +1014,9 @@ pub mod prosopo {
             Ok(())
         }
 
-        fn trim_user_history(&self, mut history: Vec<Hash>) -> Vec<Hash> {
+        /// Trim the user history to the max length and age.
+        /// Returns the history and expired hashes.
+        fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             // note that the age is based on the block timestamp, so calling this method as blocks roll over will result in different outcomes as the age threshold will change but the history will not (assuming no new results are added)
             let block_timestamp = self.env().block_timestamp();
             let max_age = if block_timestamp < self.max_user_history_age {
@@ -1023,9 +1025,11 @@ pub mod prosopo {
                 self.max_user_history_age
             };
             let age_threshold = block_timestamp - max_age;
+            let mut expired = Vec::new();
             // trim the history down to max length
             while history.len() > self.max_user_history_len.into() {
-                history.pop();
+                let hash = history.pop().unwrap();
+                expired.push(hash);
             }
             // trim the history down to max age
             while !history.is_empty()
@@ -1036,14 +1040,15 @@ pub mod prosopo {
                     .completed_at
                     < age_threshold
             {
-                history.pop();
+                let hash = history.pop().unwrap();
+                expired.push(hash);
             }
-            history
+            (history, expired)
         }
 
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_captcha_result(
+        fn record_commitment(
             &mut self,
             account: AccountId,
             hash: Hash,
@@ -1057,7 +1062,14 @@ pub mod prosopo {
             self.captcha_solution_commitments.insert(hash, &result);
             user.history.insert(0, hash);
 
-            user.history = self.trim_user_history(user.history);
+            // trim the user history by len and age, removing any expired commitments
+            let (history, expired) = self.trim_user_history(user.history);
+            // update the user history to the in age / length window set of commitment hashes
+            user.history = history;
+            // remove the expired commitments
+            for hash in expired.iter() {
+                self.captcha_solution_commitments.remove(hash);
+            }
 
             self.dapp_users.insert(account, &user);
         }
@@ -1067,7 +1079,7 @@ pub mod prosopo {
             account: AccountId,
         ) -> Result<UserHistorySummary, Error> {
             let user = self.get_dapp_user(account)?;
-            let history = self.trim_user_history(user.history);
+            let (history, _expired) = self.trim_user_history(user.history);
 
             let mut summary = UserHistorySummary {
                 correct: 0,
