@@ -527,9 +527,9 @@ pub mod prosopo {
         fn hash_vec_u8(&self, data: &Vec<u8>) -> Hash {
             let slice = data.as_slice();
             let mut hash_output = <Blake2x256 as HashOutput>::Type::default();
-            <Blake2x256 as CryptoHash>::hash(&slice, &mut hash_output);
-            let hash = Hash::from(hash_output);
-            hash
+            <Blake2x256 as CryptoHash>::hash(slice, &mut hash_output);
+            
+            Hash::from(hash_output)
         }
 
         /// Register a provider, their service origin and fee
@@ -549,7 +549,7 @@ pub mod prosopo {
             let service_origin_hash = self.hash_vec_u8(&service_origin);
 
             // prevent duplicate service origins
-            if self.service_origins.get(&service_origin_hash).is_some() {
+            if self.service_origins.get(service_origin_hash).is_some() {
                 return err!(Error::ProviderServiceOriginUsed);
             }
             let balance: u128 = 0;
@@ -1980,7 +1980,7 @@ pub mod prosopo {
             // try creating the second provider and make sure the error is correct and that it doesn't exist
             let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            match contract.provider_register(service_origin.clone(), fee, Payee::Dapp) {
+            match contract.provider_register(service_origin, fee, Payee::Dapp) {
                 Result::Err(Error::ProviderServiceOriginUsed) => {}
                 _ => {
                     unreachable!();
@@ -2007,13 +2007,13 @@ pub mod prosopo {
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                .provider_register(service_origin, fee, Payee::Dapp)
                 .unwrap();
 
             let (provider_account, service_origin, fee) = generate_provider_data(0x3, "2424", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
-                .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                .provider_register(service_origin, fee, Payee::Dapp)
                 .unwrap();
 
             let (_, service_origin, fee) = generate_provider_data(0x3, "4242", 100);
@@ -2056,7 +2056,7 @@ pub mod prosopo {
             );
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             contract.provider_unstake().ok();
             let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
 
@@ -2101,7 +2101,7 @@ pub mod prosopo {
             );
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             let root1 = str_to_hash("merkle tree".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2).ok();
@@ -2387,7 +2387,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
@@ -2448,7 +2448,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
 
             let provider = contract.providers.get(provider_account).unwrap();
             // can only add data set after staking
@@ -2535,7 +2535,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
@@ -2598,7 +2598,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
@@ -2682,7 +2682,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2);
 
@@ -2774,7 +2774,7 @@ pub mod prosopo {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Dapp);
+            contract.provider_update(service_origin, fee, Payee::Dapp);
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2);
@@ -2839,7 +2839,7 @@ pub mod prosopo {
 
             // Switch the provider payee to Dapp
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            contract.provider_update(service_origin.clone(), fee, Payee::Dapp);
+            contract.provider_update(service_origin, fee, Payee::Dapp);
 
             // Call from the dapp_user_account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
@@ -2873,7 +2873,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
@@ -2956,7 +2956,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
@@ -2985,7 +2985,7 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree1".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            contract.provider_update(service_origin, fee, Payee::Provider);
             // can only add data set after staking
             contract.provider_add_dataset(root1, root2).ok();
 
