@@ -21,6 +21,10 @@ path = "inject_self_macro"
 version = "0.3.0"
 path = "named_functions_macro"
 
+[dependencies.disable_macro]
+version = "0.3.0"
+path = "disable_macro"
+
 [lib]
 name = "prosopo"
 path = "lib.rs"
