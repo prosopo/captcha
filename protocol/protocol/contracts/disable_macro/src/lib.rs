@@ -30,30 +30,33 @@ fn disable_impl(params: TokenStream, input: TokenStream) -> Result<TokenStream, 
 fn handle(input: TokenStream) -> TokenStream {
     let input = input.into_iter().peekable();
     let mut output = Vec::<TokenTree>::new();
+    let mut found_fn_name = false;
     let mut found_fn = false;
     let mut found_return_start = false;
     let mut return_type_result = false;
     let mut inject_enable = false;
+    let mut fname: String = "unknown".to_string();
     for tt in input {
         match tt {
             TokenTree::Group(mut g) => {
                 let span = g.span();
                 let mut sub_ts = handle(g.stream());
                 if inject_enable && g.delimiter() == Delimiter::Brace {
-                    let mut inject = if return_type_result {
-                        // return an error from the function instead of panicking
-                        quote!(
-                            return Err(Error::FunctionDisabled);
-                        )
-                    } else {
-                        // function does not return a result type, so we panic
-                        quote!(
-                            panic!("Function disabled");
-                        )
-                    };
-                    inject.extend(sub_ts);
-                    sub_ts = inject;
-                    found_fn = false;
+                    if fname.to_string() != "default" {
+                        let inject = if return_type_result {
+                            // return an error from the function instead of panicking
+                            quote!(
+                                Err(Error::FunctionDisabled)
+                            )
+                        } else {
+                            // function does not return a result type, so we panic
+                            quote!(
+                                panic!("Function disabled");
+                            )
+                        };
+                        sub_ts = inject;
+                    }
+                    inject_enable = false;
                 }
                 g = Group::new(g.delimiter(), sub_ts);
                 g.set_span(span);
@@ -68,12 +71,18 @@ fn handle(input: TokenStream) -> TokenStream {
                 if i == "fn" {
                     found_fn = true;
                 }
+                if found_fn {
+                    fname = i.to_string();
+                    found_fn = false;
+                    found_fn_name = true;
+                    
+                }
                 output.push(i.into());
             }
             TokenTree::Punct(p) => {
-                if found_fn && p.as_char() == '>' {
+                if found_fn_name && p.as_char() == '>' {
                     found_return_start = true;
-                    found_fn = false;
+                    found_fn_name = false;
                 }
                 output.push(p.into());
             }
