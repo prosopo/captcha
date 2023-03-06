@@ -605,7 +605,6 @@ pub mod prosopo {
             let existing = self.get_provider_details(provider_account)?;
 
             if existing.service_origin != service_origin {
-
                 let service_origin_hash = self.hash_vec_u8(&service_origin);
                 // prevent duplicate service origins
                 if self.service_origins.get(service_origin_hash).is_some() {
@@ -1797,7 +1796,7 @@ pub mod prosopo {
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let service_origin: Vec<u8> = vec![1,2,3];
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             contract.provider_register(service_origin, fee, Payee::Dapp);
             assert!(contract.providers.get(provider_account).is_some());
@@ -1819,7 +1818,7 @@ pub mod prosopo {
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let service_origin: Vec<u8> = vec![1,2,3];
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             contract.provider_register(service_origin, fee, Payee::Dapp);
             assert!(contract.providers.get(provider_account).is_some());
@@ -1835,7 +1834,7 @@ pub mod prosopo {
             let mut contract =
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
-            let service_origin: Vec<u8> = vec![1,2,3];
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract.provider_register(service_origin, fee, Payee::Dapp);
@@ -1922,8 +1921,8 @@ pub mod prosopo {
                 })
                 .unwrap()
                 .contains(&provider_account));
-            
-            let service_origin: Vec<u8> = vec![1,2,3];
+
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let balance = 20000000000000;
@@ -2374,8 +2373,8 @@ pub mod prosopo {
 
             // Register the provider
             let provider_account = AccountId::from([0x2; 32]);
-            
-            let service_origin: Vec<u8> = vec![1,2,3];
+
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
@@ -2768,7 +2767,7 @@ pub mod prosopo {
             let mut contract =
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
-            let service_origin: Vec<u8> = vec![1,2,3];
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract.provider_register(service_origin.clone(), fee, Payee::Dapp);
@@ -2805,7 +2804,7 @@ pub mod prosopo {
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             let provider_account = AccountId::from([0x2; 32]);
             let dapp_user_account = AccountId::from([0x30; 32]);
-            let service_origin: Vec<u8> = vec![1,2,3];
+            let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract.provider_register(service_origin.clone(), fee, Payee::Provider);
