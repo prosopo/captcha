@@ -84,6 +84,7 @@ export class MockEnvironment implements ProsopoEnvironment {
             },
             batchCommit: {
                 interval: 1000000,
+                maxBatchExtrinsicPercentage: 50,
             },
         }
         this.mnemonic = '//Alice'

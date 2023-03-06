@@ -11,7 +11,8 @@
 //    "./tests/**/*.ts"
   ],
   "files": [
-    "./src/prosopo.config.ts"
+    "./src/prosopo.config.ts",
+    "./src/db/mongo.ts"
   ],
   "references": [
     {

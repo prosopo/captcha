@@ -14,11 +14,10 @@
 import { IDappAccount, IProviderAccount } from '../../src/types/accounts'
 import { BN } from '@polkadot/util'
 import { ProsopoEnvironment, Tasks } from '../../src/index'
-import { Account, AccountKey, IDatabaseAccounts, accountMnemonic } from '../dataUtils/DatabaseAccounts'
-import { populateDatabase } from '../dataUtils/populateDatabase'
-import { ProsopoEnvError } from '@prosopo/common'
-import { ESLint } from 'eslint'
-import Environment = ESLint.Environment
+
+export const accountMnemonic = (account: Account) => account[0]
+export const accountAddress = (account: Account) => account[1]
+export type Account = [mnemonic: string, address: string]
 
 export const PROVIDER: IProviderAccount = {
     serviceOrigin: 'http://localhost:8282',
@@ -37,23 +36,6 @@ export const DAPP: IDappAccount = {
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed
     optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
     fundAmount: new BN(1000000000000000),
-}
-
-export const DAPP_USER = {
-    mnemonic: '//Charlie',
-    address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y',
-}
-
-// Create a user of specified type using the databasePopulator
-export async function getUser(env: ProsopoEnvironment, accountType: AccountKey): Promise<Account> {
-    const accountConfig = Object.assign({}, ...Object.keys(AccountKey).map((item) => ({ [item]: 0 })))
-    accountConfig[accountType] = 1
-    const databaseAccounts: IDatabaseAccounts = await populateDatabase(env, accountConfig, false)
-    const account = databaseAccounts[accountType].pop()
-    if (account === undefined) {
-        throw new ProsopoEnvError(new Error(`${accountType} not created by databasePopulator`))
-    }
-    return account
 }
 
 export async function getSignedTasks(env: ProsopoEnvironment, account: Account): Promise<Tasks> {

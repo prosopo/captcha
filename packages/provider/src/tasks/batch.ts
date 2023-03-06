@@ -1,18 +1,15 @@
 import { BatchCommitConfig, Database, UserCommitmentRecord } from '../types/index'
-import {
-    ProsopoContractApi,
-    ProsopoContractError,
-    TransactionResponse,
-    decodeEvents,
-    encodeStringArgs,
-} from '@prosopo/contract'
+import { ProsopoContractApi, ProsopoContractError, encodeStringArgs } from '@prosopo/contract'
 import consola from 'consola'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '../types/scheduler'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { DispatchError, Hash } from '@polkadot/types/interfaces'
+import { Hash } from '@polkadot/types/interfaces'
 import { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types'
 import { SubmittableResult } from '@polkadot/api'
+import { SignatureOptions } from '@polkadot/types/types'
 import { BN } from '@polkadot/util'
+
+const BN_TEN_THOUSAND = new BN(10_000)
 
 export class BatchCommitter {
     contractApi: ProsopoContractApi
@@ -73,16 +70,20 @@ export class BatchCommitter {
                 const commitments = await this.getCommitments()
                 if (commitments.length > 0) {
                     //commit
-                    await this.batchCommit(commitments)
+                    const commitmentIds = await this.batchCommit(commitments)
                     //remove commitments
-                    await this.removeCommitmentsAndSolutions()
-                    // update last commit time
+                    await this.removeCommitmentsAndSolutions(commitmentIds)
+                    // update last commit time and store the commitmentIds that were batched
                     await this.db.storeScheduledTaskStatus(
                         taskId,
                         ScheduledTaskNames.BatchCommitment,
                         ScheduledTaskStatus.Completed,
                         {
-                            data: commitments.map((c) => c.commitmentId),
+                            data: {
+                                commitmentIds: commitments
+                                    .filter((commitment) => commitmentIds.indexOf(commitment.commitmentId) > -1)
+                                    .map((c) => c.commitmentId),
+                            },
                         }
                     )
                 }
@@ -108,9 +109,12 @@ export class BatchCommitter {
      * Batch commits a list of commitment records to the contract
      * @param commitments
      */
-    async batchCommit(commitments: UserCommitmentRecord[]): Promise<TransactionResponse> {
+    async batchCommit(commitments: UserCommitmentRecord[]): Promise<string[]> {
         const txs: SubmittableExtrinsic<any>[] = []
         const fragment = this.contractApi.getContractMethod('dappUserCommit')
+        let totalRefTime = new BN(0)
+        const maxBlockWeight = this.contractApi.api.consts.system.blockWeights.maxBlock
+        const batchedCommitmentIds: string[] = []
         for (const commitment of commitments) {
             const args = [
                 commitment.dappAccount,
@@ -121,94 +125,66 @@ export class BatchCommitter {
                 commitment.approved ? 'Approved' : 'Disapproved',
             ]
             const encodedArgs: Uint8Array[] = encodeStringArgs(this.contractApi.abi, fragment, args)
-            const extrinsic = await this.contractApi.buildExtrinsic('dappUserCommit', encodedArgs)
-
-            txs.push(extrinsic)
+            const { extrinsic, options } = await this.contractApi.buildExtrinsic('dappUserCommit', encodedArgs)
+            totalRefTime = totalRefTime.add(
+                this.contractApi.api.registry.createType('WeightV2', options.gasLimit).refTime.toBn()
+            )
+            // Check if we have a maximum number of transactions that we can successfully submit in a block
+            if (
+                totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
+                this.batchCommitConfig.maxBatchExtrinsicPercentage
+            ) {
+                // Break out of the loop so that we can submit the transactions. Additional batch processes will pickup the
+                // remaining commitments
+                break
+            } else {
+                batchedCommitmentIds.push(commitment.commitmentId)
+                txs.push(extrinsic)
+            }
         }
-
+        // TODO use dryRun to get weight
         // const result = await this.contractApi.api.tx.utility.batchAll(txs).dryRun(this.contractApi.pair)
         // 2023-02-01 21:23:51        RPC-CORE: dryRun(extrinsic: Bytes, at?: BlockHash): ApplyExtrinsicResult:: -32601: RPC call is unsafe to be called externally
         //
         // ERROR  -32601: RPC call is unsafe to be called externally                                                            21:23:51
-
+        // TODO use weight.v1Weight.mul(BN_TEN_THOUSAND).div(maxBlockWeight).toNumber() / 100 to get percentage of max
+        //   block weight. If > 50% then divide the txs into smaller batches (extrinsics can only be x% of a block)
         //if (result.isOk) {
+
+        const nonce = (await this.contractApi.api.rpc.system.accountNextIndex(this.contractApi.pair.address)).toNumber()
+        const genesisHash = await this.contractApi.api.rpc.chain.getBlockHash(0)
+        const blockHash = await this.contractApi.api.rpc.chain.getBlockHash()
+        const runtimeVersion = await this.contractApi.api.rpc.state.getRuntimeVersion(blockHash)
+        const options: SignatureOptions = {
+            nonce: nonce,
+            tip: 0,
+            genesisHash,
+            blockHash,
+            runtimeVersion,
+        }
+        const batchExtrinsic = this.contractApi.api.tx.utility.batchAll(txs)
+
+        const batchExtrinsicSigned = batchExtrinsic.sign(this.contractApi.pair, options)
+        this.logger.info('signed batch extrinsic encodedLength', batchExtrinsicSigned.encodedLength)
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
-            const unsub = await this.contractApi.api.tx.utility
-                .batchAll(txs)
-                .signAndSend(this.contractApi.pair, (result: SubmittableResult) => {
-                    const actionStatus = {
-                        from: this.contractApi.pair.address.toString(),
-                    } as Partial<TransactionResponse>
-                    if (result.status.isInBlock) {
-                        actionStatus.blockHash = result.status.asInBlock.toHex()
-                    }
-
-                    if (result.status.isFinalized || result.status.isInBlock) {
-                        result.events
-                            .filter(({ event: { section } }: any): boolean => section === 'system')
-                            .forEach((event): void => {
-                                const {
-                                    event: { method },
-                                } = event
-
-                                if (method === 'ExtrinsicFailed') {
-                                    const dispatchError = event.event.data[0] as DispatchError
-                                    let message: string = dispatchError.type
-
-                                    if (dispatchError.isModule) {
-                                        try {
-                                            const mod = dispatchError.asModule
-                                            console.log(mod.toHuman())
-                                            const error = this.contractApi.api.registry.findMetaError(
-                                                new Uint8Array([
-                                                    mod.index.toNumber(),
-                                                    new BN(mod.error.slice(0, 4)).toNumber(),
-                                                ])
-                                            )
-                                            console.log(JSON.stringify(error))
-                                            message = `${error.section}.${error.name}${
-                                                Array.isArray(error.docs)
-                                                    ? `(${error.docs.join('')})`
-                                                    : error.docs || ''
-                                            }`
-                                        } catch (error) {
-                                            // swallow
-                                        }
-                                    }
-
-                                    reject(new ProsopoContractError(message))
-                                } else if (method === 'ExtrinsicSuccess') {
-                                    actionStatus.result = result
-                                    if ('events' in result) {
-                                        actionStatus.events = decodeEvents(
-                                            this.contractApi.api.createType('AccountId', this.contractApi.pair.address),
-                                            result,
-                                            this.contractApi.abi
-                                        )
-                                    }
-                                }
-                            })
-                        unsub()
-                        resolve(actionStatus as TransactionResponse)
-                    } else if (result.isError) {
-                        console.log('error sending batch')
-                        unsub()
-                        reject(new ProsopoContractError(result.status.type))
-                    }
-                })
+            const unsub = await batchExtrinsic.signAndSend(this.contractApi.pair, (result: SubmittableResult) => {
+                if (result.status.isFinalized || result.status.isInBlock) {
+                    unsub()
+                    resolve(batchedCommitmentIds)
+                } else if (result.isError) {
+                    unsub()
+                    reject(new ProsopoContractError(result.status.type))
+                }
+            })
         })
-        // } else {
-        //     throw new ProsopoContractError(result.asErr.toString())
-        //     process.exit()
-        // }
     }
 
-    async removeCommitmentsAndSolutions(): Promise<void> {
-        const deleteSolutionsResult = await this.db.removeProcessedDappUserSolutions()
-        const deleteCommitmentsResult = await this.db.removeProcessedDappUserCommitments()
-        this.logger.info('Deleted user solutions', deleteSolutionsResult)
-        this.logger.info('Deleted user commitments', deleteCommitmentsResult)
+    async removeCommitmentsAndSolutions(commitmentIds: string[]): Promise<void> {
+        const removeSolutionsResult = await this.db.removeProcessedDappUserSolutions(commitmentIds)
+        const removeCommitmentsResult = await this.db.removeProcessedDappUserCommitments(commitmentIds)
+        this.logger.info('Deleted user solutions', removeSolutionsResult)
+        this.logger.info('Deleted user commitments', removeCommitmentsResult)
     }
 
     async nextNonce(): Promise<bigint> {

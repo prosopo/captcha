@@ -14,10 +14,12 @@
 import { promiseQueue } from '../../src/util'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator'
-import { Environment } from '../../src/env'
+import { Environment, loadEnv } from '../../src/env'
 import { ProsopoEnvironment } from '../../src/types'
 import consola from 'consola'
 import { ProsopoEnvError } from '@prosopo/common'
+
+loadEnv()
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
@@ -105,6 +107,9 @@ export async function populateDatabase(
 
 if (require.main === module) {
     const startDate = Date.now()
+    if (!process.env.PROVIDER_MNEMONIC) {
+        throw new Error('Please set PROVIDER_MNEMONIC in your environment')
+    }
     populateDatabase(new Environment(process.env.PROVIDER_MNEMONIC || ''), DEFAULT_USER_COUNT, true)
         .then(() => console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`))
         .finally(() => process.exit())

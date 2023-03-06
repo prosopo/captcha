@@ -143,7 +143,12 @@ export const ScheduledTaskSchema = z.object({
     processName: z.nativeEnum(ScheduledTaskNames),
     datetime: z.date(),
     status: z.nativeEnum(ScheduledTaskStatus),
-    result: z.any(),
+    result: z
+        .object({
+            data: z.any().optional(),
+            error: z.any().optional(),
+        })
+        .optional(),
 })
 
 export type ScheduledTaskRecord = z.infer<typeof ScheduledTaskSchema>
@@ -154,15 +159,14 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
     datetime: { type: Date, required: true },
     status: { type: String, enum: ScheduledTaskStatus, require: true },
     result: {
-        type: [
-            new Schema<ScheduledTaskResult>(
-                {
-                    error: { type: String, required: false },
-                    data: { type: Object, required: false },
-                },
-                { _id: false }
-            ),
-        ],
+        type: new Schema<ScheduledTaskResult>(
+            {
+                error: { type: String, required: false },
+                data: { type: Object, required: false },
+            },
+            { _id: false }
+        ),
+
         required: false,
     },
 })
@@ -220,9 +224,9 @@ export interface Database {
 
     approveDappUserCommitment(commitmentId: string): Promise<void>
 
-    removeProcessedDappUserSolutions(): Promise<DeleteResult | undefined>
+    removeProcessedDappUserSolutions(commitmentIds: string[]): Promise<DeleteResult | undefined>
 
-    removeProcessedDappUserCommitments(): Promise<DeleteResult | undefined>
+    removeProcessedDappUserCommitments(commitmentIds: string[]): Promise<DeleteResult | undefined>
 
     getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>
 

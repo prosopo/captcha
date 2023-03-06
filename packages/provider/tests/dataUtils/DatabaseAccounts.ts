@@ -13,9 +13,8 @@
 // limitations under the License.
 import { readFile, writeFile } from 'fs'
 import path from 'path'
+import { Account } from '../mocks/accounts'
 import { IDatabasePopulatorMethods } from './DatabasePopulator'
-
-export type Account = [mnemonic: string, address: string]
 
 export enum AccountKey {
     providers = 'providers',
@@ -25,9 +24,6 @@ export enum AccountKey {
     dappsWithStake = 'dappsWithStake',
     dappUsers = 'dappUsers',
 }
-
-export const accountMnemonic = (account: Account) => account[0]
-export const accountAddress = (account: Account) => account[1]
 
 export interface IDatabaseAccounts {
     providers: Account[]
