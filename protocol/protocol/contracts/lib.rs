@@ -139,6 +139,7 @@ pub mod prosopo {
         provider_id: AccountId,
         provider: Provider,
         block_number: u32,
+        dataset_id_content: Hash,
     }
 
     /// Operators are controllers of this contract with admin rights
@@ -1568,10 +1569,14 @@ pub mod prosopo {
                 .get(provider_id)
                 .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
 
+            let captcha_data = self.get_captcha_data(provider.dataset_id)?;
+            let dataset_id_content = captcha_data.dataset_id_content;
+
             Ok(RandomProvider {
                 provider_id,
                 provider,
                 block_number: self.env().block_number(),
+                dataset_id_content,
             })
         }
 
