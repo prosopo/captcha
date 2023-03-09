@@ -130,7 +130,6 @@ pub mod prosopo {
         payee: Payee,
         service_origin: Vec<u8>,
         dataset_id: Hash,
-        dataset_id_content: Hash,
     }
 
     /// RandomProvider is selected randomly by the contract for the client side application
@@ -140,6 +139,7 @@ pub mod prosopo {
         provider_id: AccountId,
         provider: Provider,
         block_number: u32,
+        dataset_id_content: Hash,
     }
 
     /// Operators are controllers of this contract with admin rights
@@ -562,7 +562,6 @@ pub mod prosopo {
                 fee,
                 service_origin,
                 dataset_id: Hash::default(),
-                dataset_id_content: Hash::default(),
                 payee,
             };
             self.providers.insert(provider_account, &provider);
@@ -633,7 +632,6 @@ pub mod prosopo {
                 fee,
                 service_origin,
                 dataset_id: existing.dataset_id,
-                dataset_id_content: existing.dataset_id_content,
                 payee,
             };
 
@@ -772,7 +770,6 @@ pub mod prosopo {
 
             // set the captcha data id on the provider
             provider.dataset_id = dataset_id;
-            provider.dataset_id_content = dataset_id_content;
             let old_status = provider.status;
 
             // change the provider status to active if it was not active
@@ -1588,10 +1585,14 @@ pub mod prosopo {
                 .get(provider_id)
                 .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
 
+            let captcha_data = self.get_captcha_data(provider.dataset_id)?;
+            let dataset_id_content = captcha_data.dataset_id_content;
+
             Ok(RandomProvider {
                 provider_id,
                 provider,
                 block_number: self.env().block_number(),
+                dataset_id_content,
             })
         }
 
