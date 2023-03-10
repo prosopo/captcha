@@ -868,11 +868,8 @@ pub mod prosopo {
                 self.check_dapp_owner_is_caller(contract)?;
             }
 
-            // update the dapp payee
-            dapp.payee = payee;
-
-            // update the owner
-            dapp.owner = owner;
+            dapp.payee = payee; // update the dapp payee            
+            dapp.owner = owner; // update the owner
 
             self.dapp_configure_funding(&mut dapp);
 
@@ -946,9 +943,6 @@ pub mod prosopo {
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
             let mut dapp = self.get_dapp(contract)?;
-
-            // check current contract for ownership
-            self.check_dapp_owner_is_caller(contract)?;
 
             // configure funds and status of the dapp
             self.dapp_configure_funding(&mut dapp);
