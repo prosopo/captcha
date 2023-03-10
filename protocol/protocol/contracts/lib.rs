@@ -1890,21 +1890,22 @@ pub mod prosopo {
             let operator_account = operator_accounts[0];
             let contract =
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
-            contract.get_random_number(0, operator_account);
+            contract.get_random_number(0, operator_account, operator_account);
         }
 
         // Test get random number
         #[ink::test]
         fn test_get_random_number() {
             let operator_accounts = get_operator_accounts();
-            let operator_account = operator_accounts[0];
+            let acc1 = AccountId::from([0x1; 32]);
+            let acc2 = AccountId::from([0x2; 32]);
             let contract =
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             const len: usize = 10;
             let mut arr = [0; len];
             // get several random numbers, one per block
             for item in arr.iter_mut().take(len) {
-                let number = contract.get_random_number(100, operator_account);
+                let number = contract.get_random_number(100, acc1, acc2);
                 *item = number;
                 println!(
                     "{:?} {:?} {:?}",
@@ -1915,7 +1916,7 @@ pub mod prosopo {
                 ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
             }
             // check that the random numbers match precomputed values
-            assert_eq!(&[58, 1, 45, 93, 87, 19, 99, 5, 66, 39], &arr);
+            assert_eq!(&[29, 95, 86, 92, 88, 24, 59, 73, 96, 53], &arr);
         }
 
         /// Helper function for converting string to Hash
