@@ -868,7 +868,7 @@ pub mod prosopo {
                 self.check_dapp_owner_is_caller(contract)?;
             }
 
-            dapp.payee = payee; // update the dapp payee            
+            dapp.payee = payee; // update the dapp payee
             dapp.owner = owner; // update the owner
 
             self.dapp_configure_funding(&mut dapp);
