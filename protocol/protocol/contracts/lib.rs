@@ -239,6 +239,14 @@ pub mod prosopo {
         pub payee: Payee,
     }
 
+    /// Set of actions which can be performed by operators given a successful vote
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub enum Vote {
+        SetCodeHash([u8; 32]),
+        Withdraw(Balance),
+    }
+
     // Contract storage
     #[ink(storage)]
     pub struct Prosopo {
@@ -257,7 +265,7 @@ pub mod prosopo {
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
-        operator_code_hash_votes: Mapping<AccountId, [u8; 32]>,
+        operator_votes: Mapping<AccountId, Vote>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
     }
