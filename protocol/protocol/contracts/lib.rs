@@ -245,6 +245,7 @@ pub mod prosopo {
     pub enum Vote {
         SetCodeHash([u8; 32]), // accepts the code hash
         Withdraw(AccountId, Balance), // accepts the recipient and the amount
+        Terminate(AccountId), // accepts the account to send the remaining balance of this contract to after termination
     }
 
     // Contract storage
@@ -1749,6 +1750,11 @@ pub mod prosopo {
             
             // implement the voted action
             match vote {
+                Vote::Terminate(recipient) => {
+                    // terminate the contract and send the remaining balance to the recipient
+                    ink::env::terminate_contract::<ink::env::DefaultEnvironment>(recipient);
+                    // note that the contract is now terminated, so the remaining code will not be executed
+                }
                 Vote::Withdraw(recipient, amount) => {
                     let transfer_result = ink::env::transfer::<ink::env::DefaultEnvironment>(recipient, amount);
                     if transfer_result.is_err() {
