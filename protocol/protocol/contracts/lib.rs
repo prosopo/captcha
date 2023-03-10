@@ -3120,6 +3120,9 @@ pub mod prosopo {
             // Mark the the dapp account as being a contract on-chain
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
 
+            // the caller should be someone who isn't an operator
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x3; 32]));
+
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
                 .unwrap();
