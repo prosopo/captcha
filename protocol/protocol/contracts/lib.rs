@@ -1615,7 +1615,11 @@ pub mod prosopo {
                 }
 
                 // Get a random number between 0 and the length of the active providers
-                index = self.get_random_number(active_providers.len() as u128, user_account, dapp_contract_account);
+                index = self.get_random_number(
+                    active_providers.len() as u128,
+                    user_account,
+                    dapp_contract_account,
+                );
             }
 
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
@@ -1659,7 +1663,12 @@ pub mod prosopo {
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
-        pub fn get_random_number(&self, len: u128, user_account: AccountId, dapp_account: AccountId) -> u128 {
+        pub fn get_random_number(
+            &self,
+            len: u128,
+            user_account: AccountId,
+            dapp_account: AccountId,
+        ) -> u128 {
             if len == 0 {
                 panic!("Cannot generate a random number for a length of 0 or less");
             }
@@ -1674,9 +1683,14 @@ pub mod prosopo {
             // pack all the data into a single byte array
             let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
-            let tmp1: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE] = crate::concat_u8(&block_number_arr, &block_timestamp_arr);
-            let tmp2: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE] = crate::concat_u8(&tmp1, user_account_bytes);
-            let bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE + ACCOUNT_SIZE] = crate::concat_u8(&tmp2, dapp_account_bytes);
+            let tmp1: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE] =
+                crate::concat_u8(&block_number_arr, &block_timestamp_arr);
+            let tmp2: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE] =
+                crate::concat_u8(&tmp1, user_account_bytes);
+            let bytes: [u8; BLOCK_TIMESTAMP_SIZE
+                + BLOCK_NUMBER_SIZE
+                + ACCOUNT_SIZE
+                + ACCOUNT_SIZE] = crate::concat_u8(&tmp2, dapp_account_bytes);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
