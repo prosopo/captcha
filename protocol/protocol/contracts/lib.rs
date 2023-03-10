@@ -253,7 +253,6 @@ pub mod prosopo {
         operators: Mapping<AccountId, Operator>,
         operator_accounts: Lazy<Vec<AccountId>>,
         operator_stake_default: u128,
-        operator_fee_currency: Hash,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
@@ -494,7 +493,6 @@ pub mod prosopo {
                 captcha_data: Default::default(),
                 operator_accounts: operator_accounts_lazy,
                 operator_stake_default: 0,
-                operator_fee_currency: Default::default(),
                 dapp_users: Default::default(),
                 operators,
                 provider_stake_default,
