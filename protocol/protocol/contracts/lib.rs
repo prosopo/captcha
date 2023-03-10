@@ -1591,7 +1591,7 @@ pub mod prosopo {
                 }
 
                 // Get a random number between 0 and max
-                index = self.get_random_number(max as u128, user_account);
+                index = self.get_random_number(max as u128, user_account, dapp_contract_account);
 
                 // Work out which BTreeset to get the provider from and modify the index accordingly
                 if index < active_providers_initial.len() as u128 {
@@ -1615,7 +1615,7 @@ pub mod prosopo {
                 }
 
                 // Get a random number between 0 and the length of the active providers
-                index = self.get_random_number(active_providers.len() as u128, user_account);
+                index = self.get_random_number(active_providers.len() as u128, user_account, dapp_contract_account);
             }
 
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
@@ -1659,24 +1659,24 @@ pub mod prosopo {
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
-        pub fn get_random_number(&self, len: u128, user_account: AccountId) -> u128 {
+        pub fn get_random_number(&self, len: u128, user_account: AccountId, dapp_account: AccountId) -> u128 {
             if len == 0 {
                 panic!("Cannot generate a random number for a length of 0 or less");
             }
             // build a random seed from user account, block number, block timestamp and (TODO) block hash
             const BLOCK_NUMBER_SIZE: usize = 4;
             const BLOCK_TIMESTAMP_SIZE: usize = 8;
-            const USER_ACCOUNT_SIZE: usize = 32;
+            const ACCOUNT_SIZE: usize = 32;
             let block_number: u32 = self.env().block_number();
             let block_timestamp: u64 = self.env().block_timestamp();
-            let user_account_bytes: &[u8; USER_ACCOUNT_SIZE] = user_account.as_ref();
+            let user_account_bytes: &[u8; ACCOUNT_SIZE] = user_account.as_ref();
+            let dapp_account_bytes: &[u8; ACCOUNT_SIZE] = dapp_account.as_ref();
             // pack all the data into a single byte array
             let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
-            let tmp: [u8; USER_ACCOUNT_SIZE + BLOCK_NUMBER_SIZE] =
-                crate::concat_u8(user_account_bytes, &block_number_arr);
-            let bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + USER_ACCOUNT_SIZE] =
-                crate::concat_u8(&tmp, &block_timestamp_arr);
+            let tmp1: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE] = crate::concat_u8(&block_number_arr, &block_timestamp_arr);
+            let tmp2: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE] = crate::concat_u8(&tmp1, &user_account_bytes);
+            let bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE + ACCOUNT_SIZE] = crate::concat_u8(&tmp2, &dapp_account_bytes);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
@@ -1686,12 +1686,6 @@ pub mod prosopo {
             // e.g. if len = 10 then range would be 0-9
 
             next % len
-        }
-
-        /// Get a random number from 0 to `len` - 1 inclusive. Uses the caller account for additional random entropy.
-        #[ink(message)]
-        pub fn get_random_number_caller(&self, len: u128) -> u128 {
-            self.get_random_number(len, self.env().caller())
         }
 
         /// Modifies the code which is used to execute calls to this contract address (`AccountId`).
