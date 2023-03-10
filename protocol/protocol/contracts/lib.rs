@@ -243,7 +243,7 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Vote {
-        SetCodeHash([u8; 32]), // accepts the code hash
+        SetCodeHash([u8; 32]),        // accepts the code hash
         Withdraw(AccountId, Balance), // accepts the recipient and the amount
         Terminate(AccountId), // accepts the account to send the remaining balance of this contract to after termination
     }
@@ -1747,7 +1747,7 @@ pub mod prosopo {
             for operator in self.operator_accounts.get().unwrap().iter() {
                 self.operator_votes.remove(operator);
             }
-            
+
             // implement the voted action
             match vote {
                 Vote::Terminate(recipient) => {
@@ -1756,7 +1756,8 @@ pub mod prosopo {
                     // note that the contract is now terminated, so the remaining code will not be executed
                 }
                 Vote::Withdraw(recipient, amount) => {
-                    let transfer_result = ink::env::transfer::<ink::env::DefaultEnvironment>(recipient, amount);
+                    let transfer_result =
+                        ink::env::transfer::<ink::env::DefaultEnvironment>(recipient, amount);
                     if transfer_result.is_err() {
                         return err!(Error::ContractTransferFailed);
                     }
