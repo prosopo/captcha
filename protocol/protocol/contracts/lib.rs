@@ -259,6 +259,7 @@ pub mod prosopo {
         operator_code_hash_votes: Mapping<AccountId, [u8; 32]>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
+        max_provider_fee: Balance,
     }
 
     // Event emitted when a new provider registers
@@ -461,6 +462,8 @@ pub mod prosopo {
         NoCorrectCaptcha,
         /// Returned if the function has been disabled in the contract
         FunctionDisabled,
+        /// Returned if provider fee is too high
+        ProviderFeeTooHigh,
     }
 
     impl Prosopo {
@@ -472,6 +475,7 @@ pub mod prosopo {
             dapp_stake_default: u128,
             max_user_history_len: u16,
             max_user_history_age: u64,
+            max_provider_fee: Balance,
         ) -> Self {
             if operator_accounts.len() < 2 {
                 panic!("{:?}", Error::MinimumTwoOperatorsRequired)
@@ -504,6 +508,7 @@ pub mod prosopo {
                 max_user_history_len,
                 max_user_history_age,
                 captcha_solution_commitments: Default::default(),
+                max_provider_fee,
             }
         }
 
@@ -540,6 +545,13 @@ pub mod prosopo {
             Hash::from(hash_output)
         }
 
+        fn check_provider_fee(&self, fee: u32) -> Result<(), Error> {
+            if fee as u128 > self.max_provider_fee {
+                return err!(Error::ProviderFeeTooHigh);
+            }
+            Ok(())
+        }
+
         /// Register a provider, their service origin and fee
         #[ink(message)]
         pub fn provider_register(
@@ -553,6 +565,8 @@ pub mod prosopo {
             if self.providers.get(provider_account).is_some() {
                 return err!(Error::ProviderExists);
             }
+
+            self.check_provider_fee(fee)?;
 
             let service_origin_hash = self.hash_vec_u8(&service_origin);
 
@@ -608,6 +622,8 @@ pub mod prosopo {
             if self.providers.get(provider_account).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
+
+            self.check_provider_fee(fee)?;
 
             let existing = self.get_provider_details(provider_account)?;
 
