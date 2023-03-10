@@ -260,6 +260,7 @@ pub mod prosopo {
         operator_code_hash_votes: Mapping<AccountId, [u8; 32]>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
+        min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
     }
 
     // Event emitted when a new provider registers
@@ -462,6 +463,8 @@ pub mod prosopo {
         NoCorrectCaptcha,
         /// Returned if the function has been disabled in the contract
         FunctionDisabled,
+        /// Returned if not enough providers are active
+        NotEnoughActiveProviders,
     }
 
     impl Prosopo {
@@ -473,6 +476,7 @@ pub mod prosopo {
             dapp_stake_default: u128,
             max_user_history_len: u16,
             max_user_history_age: u64,
+            min_num_active_providers: u16,
         ) -> Self {
             if operator_accounts.len() < 2 {
                 panic!("{:?}", Error::MinimumTwoOperatorsRequired)
@@ -506,6 +510,7 @@ pub mod prosopo {
                 max_user_history_len,
                 max_user_history_age,
                 captcha_solution_commitments: Default::default(),
+                min_num_active_providers,
             }
         }
 
@@ -1590,6 +1595,10 @@ pub mod prosopo {
                     return err!(Error::NoActiveProviders);
                 }
 
+                if max < self.min_num_active_providers.into() {
+                    return err!(Error::NotEnoughActiveProviders);
+                }
+
                 // Get a random number between 0 and max
                 index = self.get_random_number(max as u128, user_account);
 
@@ -1612,6 +1621,10 @@ pub mod prosopo {
                 // If the length is 0, then there are no active providers
                 if active_providers.is_empty() {
                     return err!(Error::NoActiveProviders);
+                }
+
+                if active_providers.len() < self.min_num_active_providers.into() {
+                    return err!(Error::NotEnoughActiveProviders);
                 }
 
                 // Get a random number between 0 and the length of the active providers
