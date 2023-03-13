@@ -253,13 +253,13 @@ pub mod prosopo {
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
         service_origins: Mapping<Hash, ()>,
         captcha_data: Mapping<Hash, CaptchaData>,
-        provider_stake_default: u128,
-        dapp_stake_default: u128,
+        provider_stake_default: Balance,
+        dapp_stake_default: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Lazy<Vec<AccountId>>,
         operators: Mapping<AccountId, Operator>,
         operator_accounts: Lazy<Vec<AccountId>>,
-        operator_stake_default: u128,
+        operator_stake_default: Balance,
         operator_fee_currency: Hash,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
@@ -476,8 +476,8 @@ pub mod prosopo {
         #[ink(constructor, payable)]
         pub fn default(
             operator_accounts: Vec<AccountId>,
-            provider_stake_default: u128,
-            dapp_stake_default: u128,
+            provider_stake_default: Balance,
+            dapp_stake_default: Balance,
             max_user_history_len: u16,
             max_user_history_age: u64,
         ) -> Self {
@@ -530,13 +530,13 @@ pub mod prosopo {
 
         /// Get contract provider minimum stake default.
         #[ink(message)]
-        pub fn get_provider_stake_default(&self) -> u128 {
+        pub fn get_provider_stake_default(&self) -> Balance {
             self.provider_stake_default
         }
 
         /// Get contract dapp minimum stake default.
         #[ink(message)]
-        pub fn get_dapp_stake_default(&self) -> u128 {
+        pub fn get_dapp_stake_default(&self) -> Balance {
             self.dapp_stake_default
         }
 
@@ -569,7 +569,7 @@ pub mod prosopo {
             if self.service_origins.get(service_origin_hash).is_some() {
                 return err!(Error::ProviderServiceOriginUsed);
             }
-            let balance: u128 = 0;
+            let balance: Balance = 0;
             // add a new provider
             let provider = Provider {
                 status: GovernanceStatus::Deactivated,
