@@ -248,6 +248,15 @@ pub mod prosopo {
         Terminate(AccountId), // accepts the account to send the remaining balance of this contract to after termination
     }
 
+    /// The status of the current voting process.
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub enum VoteStatus {
+        Pass, // vote has been successful
+        Fail, // vote has failed due to disagreement in votes
+        Pending, // not enough people have voted
+    }
+
     // Contract storage
     #[ink(storage)]
     pub struct Prosopo {
@@ -1702,7 +1711,7 @@ pub mod prosopo {
 
         /// Remove a vote from an operator
         #[ink(message)]
-        pub fn operator_unvote(&mut self) -> Result<(), Error> {
+        pub fn operator_unvote(&mut self) -> Result<Option<Vote>, Error> {
             let caller = self.env().caller();
 
             // check if the caller is an operator
@@ -1710,14 +1719,22 @@ pub mod prosopo {
                 return err!(Error::NotAuthorised);
             }
 
+            let vote = self.operator_votes.get(caller);
+
             self.operator_votes.remove(caller);
 
-            Ok(())
+            Ok(vote)
+        }
+
+        fn clear_votes(&mut self) {
+            for operator in self.operator_accounts.get().unwrap().iter() {
+                self.operator_votes.remove(operator);
+            }
         }
 
         /// Carries out a vote from the set of operators
         #[ink(message)]
-        pub fn operator_vote(&mut self, vote: Vote) -> Result<bool, Error> {
+        pub fn operator_vote(&mut self, vote: Vote) -> Result<VoteStatus, Error> {
             let caller = self.env().caller();
 
             // check if the caller is an operator
@@ -1731,22 +1748,26 @@ pub mod prosopo {
             for operator in self.operator_accounts.get().unwrap().iter() {
                 let other_vote_lookup = self.operator_votes.get(operator);
                 if other_vote_lookup.is_none() {
-                    // not all operators have voted yet, so return false indicating the vote has not yet passed
-                    return Ok(false);
+                    // not all operators have voted yet, so return pending indicating the vote has not yet passed
+                    return Ok(VoteStatus::Pending);
                 }
-                let other_vote = other_vote_lookup.unwrap();
+            }
+
+            // by here all operators have voted, so check if they all voted the same way
+            for operator in self.operator_accounts.get().unwrap().iter() {
+                let other_vote = self.operator_votes.get(operator).unwrap();
                 if other_vote != vote {
-                    // votes differ, so return false indicating the vote has not yet passed
-                    return Ok(false);
+                    // votes differ, so return false indicating the vote has not passed
+                    // clear votes first to force a re-vote
+                    self.clear_votes();
+                    return Ok(VoteStatus::Fail);
                 }
             }
 
             // at this point all operators have voted the same way, so the vote has passed
             // clear the votes as the vote has passed
             // remove the votes
-            for operator in self.operator_accounts.get().unwrap().iter() {
-                self.operator_votes.remove(operator);
-            }
+            self.clear_votes();
 
             // implement the voted action
             match vote {
@@ -1779,7 +1800,7 @@ pub mod prosopo {
             }
 
             // return true indicating the vote has passed
-            Ok(true)
+            Ok(VoteStatus::Pass)
         }
 
         /// Modifies the code which is used to execute calls to this contract address (`AccountId`).
