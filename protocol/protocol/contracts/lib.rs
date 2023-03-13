@@ -157,6 +157,13 @@ pub mod prosopo {
         status: GovernanceStatus,
     }
 
+    /// Enum for various types of captcha
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub enum CaptchaType {
+        ImageGrid,
+    }
+
     /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
     /// the captchas received by a DappUser did belong to the Provider's original dataset
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -165,7 +172,7 @@ pub mod prosopo {
         provider: AccountId,
         dataset_id: Hash,
         dataset_id_content: Hash,
-        captcha_type: u16,
+        captcha_type: CaptchaType,
     }
 
     /// CaptchaSolutionCommitments are submitted by DAppUsers upon completion of one or more
@@ -778,7 +785,7 @@ pub mod prosopo {
                 provider: provider_id,
                 dataset_id,
                 dataset_id_content,
-                captcha_type: 0,
+                captcha_type: CaptchaType::ImageGrid,
             };
 
             let mut provider = self
