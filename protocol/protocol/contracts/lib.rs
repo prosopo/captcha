@@ -259,8 +259,8 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum VoteStatus {
-        Pass, // vote has been successful
-        Fail, // vote has failed due to disagreement in votes
+        Pass,    // vote has been successful
+        Fail,    // vote has failed due to disagreement in votes
         Pending, // not enough people have voted
     }
 
