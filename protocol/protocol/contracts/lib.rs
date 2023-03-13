@@ -654,7 +654,7 @@ pub mod prosopo {
             }
 
             self.check_provider_fee(fee)?;
-            
+
             // provider cannot be an operator
             self.check_not_operator(provider_account)?;
 
