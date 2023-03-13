@@ -1632,7 +1632,7 @@ pub mod prosopo {
                 }
 
                 // Get a random number between 0 and max
-                index = self.get_random_number(max as u128, user_account);
+                index = self.get_random_number(max as u128, user_account, dapp_contract_account);
 
                 // Work out which BTreeset to get the provider from and modify the index accordingly
                 if index < active_providers_initial.len() as u128 {
@@ -1656,7 +1656,11 @@ pub mod prosopo {
                 }
 
                 // Get a random number between 0 and the length of the active providers
-                index = self.get_random_number(active_providers.len() as u128, user_account);
+                index = self.get_random_number(
+                    active_providers.len() as u128,
+                    user_account,
+                    dapp_contract_account,
+                );
             }
 
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
@@ -1700,24 +1704,34 @@ pub mod prosopo {
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
         #[ink(message)]
-        pub fn get_random_number(&self, len: u128, user_account: AccountId) -> u128 {
+        pub fn get_random_number(
+            &self,
+            len: u128,
+            user_account: AccountId,
+            dapp_account: AccountId,
+        ) -> u128 {
             if len == 0 {
                 panic!("Cannot generate a random number for a length of 0 or less");
             }
             // build a random seed from user account, block number, block timestamp and (TODO) block hash
             const BLOCK_NUMBER_SIZE: usize = 4;
             const BLOCK_TIMESTAMP_SIZE: usize = 8;
-            const USER_ACCOUNT_SIZE: usize = 32;
+            const ACCOUNT_SIZE: usize = 32;
             let block_number: u32 = self.env().block_number();
             let block_timestamp: u64 = self.env().block_timestamp();
-            let user_account_bytes: &[u8; USER_ACCOUNT_SIZE] = user_account.as_ref();
+            let user_account_bytes: &[u8; ACCOUNT_SIZE] = user_account.as_ref();
+            let dapp_account_bytes: &[u8; ACCOUNT_SIZE] = dapp_account.as_ref();
             // pack all the data into a single byte array
             let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
-            let tmp: [u8; USER_ACCOUNT_SIZE + BLOCK_NUMBER_SIZE] =
-                crate::concat_u8(user_account_bytes, &block_number_arr);
-            let bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + USER_ACCOUNT_SIZE] =
-                crate::concat_u8(&tmp, &block_timestamp_arr);
+            let tmp1: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE] =
+                crate::concat_u8(&block_number_arr, &block_timestamp_arr);
+            let tmp2: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE] =
+                crate::concat_u8(&tmp1, user_account_bytes);
+            let bytes: [u8; BLOCK_TIMESTAMP_SIZE
+                + BLOCK_NUMBER_SIZE
+                + ACCOUNT_SIZE
+                + ACCOUNT_SIZE] = crate::concat_u8(&tmp2, dapp_account_bytes);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
@@ -1727,12 +1741,6 @@ pub mod prosopo {
             // e.g. if len = 10 then range would be 0-9
 
             next % len
-        }
-
-        /// Get a random number from 0 to `len` - 1 inclusive. Uses the caller account for additional random entropy.
-        #[ink(message)]
-        pub fn get_random_number_caller(&self, len: u128) -> u128 {
-            self.get_random_number(len, self.env().caller())
         }
 
         /// Remove a vote from an operator
@@ -2035,21 +2043,22 @@ pub mod prosopo {
             let operator_account = operator_accounts[0];
             let contract =
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
-            contract.get_random_number(0, operator_account);
+            contract.get_random_number(0, operator_account, operator_account);
         }
 
         // Test get random number
         #[ink::test]
         fn test_get_random_number() {
             let operator_accounts = get_operator_accounts();
-            let operator_account = operator_accounts[0];
+            let acc1 = AccountId::from([0x1; 32]);
+            let acc2 = AccountId::from([0x2; 32]);
             let contract =
                 Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
             const len: usize = 10;
             let mut arr = [0; len];
             // get several random numbers, one per block
             for item in arr.iter_mut().take(len) {
-                let number = contract.get_random_number(100, operator_account);
+                let number = contract.get_random_number(100, acc1, acc2);
                 *item = number;
                 println!(
                     "{:?} {:?} {:?}",
@@ -2060,7 +2069,7 @@ pub mod prosopo {
                 ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
             }
             // check that the random numbers match precomputed values
-            assert_eq!(&[58, 1, 45, 93, 87, 19, 99, 5, 66, 39], &arr);
+            assert_eq!(&[29, 95, 86, 92, 88, 24, 59, 73, 96, 53], &arr);
         }
 
         /// Helper function for converting string to Hash
