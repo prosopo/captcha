@@ -1775,6 +1775,7 @@ pub mod prosopo {
                 let other_vote_lookup = self.operator_votes.get(operator);
                 if other_vote_lookup.is_none() {
                     // not all operators have voted yet, so return pending indicating the vote has not yet passed
+                    debug!("Vote pending");
                     return Ok(VoteStatus::Pending);
                 }
             }
@@ -1786,6 +1787,7 @@ pub mod prosopo {
                     // votes differ, so return false indicating the vote has not passed
                     // clear votes first to force a re-vote
                     self.clear_votes();
+                    debug!("Vote failed: {:?} != {:?}", other_vote, vote);
                     return Ok(VoteStatus::Fail);
                 }
             }
@@ -1794,6 +1796,8 @@ pub mod prosopo {
             // clear the votes as the vote has passed
             // remove the votes
             self.clear_votes();
+
+            debug!("Vote passed: {:?}", vote);
 
             // implement the voted action
             match vote {
