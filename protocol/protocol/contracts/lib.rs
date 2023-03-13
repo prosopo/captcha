@@ -253,13 +253,13 @@ pub mod prosopo {
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
         service_origins: Mapping<Hash, ()>,
         captcha_data: Mapping<Hash, CaptchaData>,
-        provider_stake_default: u128,
-        dapp_stake_default: u128,
+        provider_stake_default: Balance,
+        dapp_stake_default: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Lazy<Vec<AccountId>>,
         operators: Mapping<AccountId, Operator>,
         operator_accounts: Lazy<Vec<AccountId>>,
-        operator_stake_default: u128,
+        operator_stake_default: Balance,
         operator_fee_currency: Hash,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
@@ -469,6 +469,8 @@ pub mod prosopo {
         NoCorrectCaptcha,
         /// Returned if the function has been disabled in the contract
         FunctionDisabled,
+        /// Returned if the account is an operator, hence the operation is not allowed due to conflict of interest
+        AccountIsOperator,
     }
 
     impl Prosopo {
@@ -476,8 +478,8 @@ pub mod prosopo {
         #[ink(constructor, payable)]
         pub fn default(
             operator_accounts: Vec<AccountId>,
-            provider_stake_default: u128,
-            dapp_stake_default: u128,
+            provider_stake_default: Balance,
+            dapp_stake_default: Balance,
             max_user_history_len: u16,
             max_user_history_age: u64,
         ) -> Self {
@@ -530,13 +532,13 @@ pub mod prosopo {
 
         /// Get contract provider minimum stake default.
         #[ink(message)]
-        pub fn get_provider_stake_default(&self) -> u128 {
+        pub fn get_provider_stake_default(&self) -> Balance {
             self.provider_stake_default
         }
 
         /// Get contract dapp minimum stake default.
         #[ink(message)]
-        pub fn get_dapp_stake_default(&self) -> u128 {
+        pub fn get_dapp_stake_default(&self) -> Balance {
             self.dapp_stake_default
         }
 
@@ -563,13 +565,16 @@ pub mod prosopo {
                 return err!(Error::ProviderExists);
             }
 
+            // provider cannot be an operator
+            self.check_not_operator(provider_account)?;
+
             let service_origin_hash = self.hash_vec_u8(&service_origin);
 
             // prevent duplicate service origins
             if self.service_origins.get(service_origin_hash).is_some() {
                 return err!(Error::ProviderServiceOriginUsed);
             }
-            let balance: u128 = 0;
+            let balance: Balance = 0;
             // add a new provider
             let provider = Provider {
                 status: GovernanceStatus::Deactivated,
@@ -617,6 +622,9 @@ pub mod prosopo {
             if self.providers.get(provider_account).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
+
+            // provider cannot be an operator
+            self.check_not_operator(provider_account)?;
 
             let existing = self.get_provider_details(provider_account)?;
 
@@ -889,6 +897,9 @@ pub mod prosopo {
             dapp.payee = payee; // update the dapp payee
             dapp.owner = owner; // update the owner
 
+            // owner of the dapp cannot be an operator
+            self.check_not_operator(owner)?;
+
             self.dapp_configure_funding(&mut dapp);
 
             // if the dapp is new then add it to the list of dapps
@@ -994,6 +1005,14 @@ pub mod prosopo {
                 contract,
                 value: balance,
             });
+
+            Ok(())
+        }
+
+        fn check_not_operator(&self, operator: AccountId) -> Result<(), Error> {
+            if self.operators.get(operator).is_some() {
+                return err!(Error::AccountIsOperator);
+            }
 
             Ok(())
         }
@@ -3116,6 +3135,9 @@ pub mod prosopo {
 
             // Mark the the dapp account as being a contract on-chain
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
+
+            // the caller should be someone who isn't an operator
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x3; 32]));
 
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
