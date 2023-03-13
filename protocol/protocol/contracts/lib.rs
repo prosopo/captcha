@@ -234,9 +234,9 @@ pub mod prosopo {
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct OperatorCodeHashVote {
+    pub struct OperatorVote {
         pub account_id: AccountId,
-        pub code_hash: [u8; 32],
+        pub vote: Option<Vote>,
     }
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -244,6 +244,24 @@ pub mod prosopo {
     pub struct ProviderState {
         pub status: GovernanceStatus,
         pub payee: Payee,
+    }
+
+    /// Set of actions which can be performed by operators given a successful vote
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub enum Vote {
+        SetCodeHash([u8; 32]),        // accepts the code hash
+        Withdraw(AccountId, Balance), // accepts the recipient and the amount
+        Terminate(AccountId), // accepts the account to send the remaining balance of this contract to after termination
+    }
+
+    /// The status of the current voting process.
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub enum VoteStatus {
+        Pass,    // vote has been successful
+        Fail,    // vote has failed due to disagreement in votes
+        Pending, // not enough people have voted
     }
 
     // Contract storage
@@ -264,7 +282,7 @@ pub mod prosopo {
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
-        operator_code_hash_votes: Mapping<AccountId, [u8; 32]>,
+        operator_votes: Mapping<AccountId, Vote>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
     }
@@ -511,7 +529,7 @@ pub mod prosopo {
                 dapps: Default::default(),
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
-                operator_code_hash_votes: Default::default(),
+                operator_votes: Default::default(),
                 max_user_history_len,
                 max_user_history_age,
                 captcha_solution_commitments: Default::default(),
@@ -1517,18 +1535,15 @@ pub mod prosopo {
 
         /// Returns the operator votes for code hashes
         #[ink(message)]
-        pub fn get_operator_code_hash_votes(&self) -> Vec<OperatorCodeHashVote> {
-            let mut code_hash_votes: Vec<OperatorCodeHashVote> = Vec::new();
+        pub fn get_operator_votes(&self) -> Vec<OperatorVote> {
+            let mut votes: Vec<OperatorVote> = Vec::new();
             for account_id in self.operator_accounts.get().unwrap().iter() {
-                code_hash_votes.push(OperatorCodeHashVote {
+                votes.push(OperatorVote {
                     account_id: *account_id,
-                    code_hash: self
-                        .operator_code_hash_votes
-                        .get(account_id)
-                        .unwrap_or([0; 32]),
+                    vote: self.operator_votes.get(*account_id),
                 });
             }
-            code_hash_votes
+            votes
         }
 
         /// List providers given an array of account id
@@ -1720,6 +1735,104 @@ pub mod prosopo {
             self.get_random_number(len, self.env().caller())
         }
 
+        /// Remove a vote from an operator
+        #[ink(message)]
+        pub fn operator_unvote(&mut self) -> Result<Option<Vote>, Error> {
+            let caller = self.env().caller();
+
+            // check if the caller is an operator
+            if self.operators.get(caller).is_none() {
+                return err!(Error::NotAuthorised);
+            }
+
+            let vote = self.operator_votes.get(caller);
+
+            self.operator_votes.remove(caller);
+
+            Ok(vote)
+        }
+
+        fn clear_votes(&mut self) {
+            for operator in self.operator_accounts.get().unwrap().iter() {
+                self.operator_votes.remove(operator);
+            }
+        }
+
+        /// Carries out a vote from the set of operators
+        #[ink(message)]
+        pub fn operator_vote(&mut self, vote: Vote) -> Result<VoteStatus, Error> {
+            let caller = self.env().caller();
+
+            // check if the caller is an operator
+            if self.operators.get(caller).is_none() {
+                return err!(Error::NotAuthorised);
+            }
+
+            // save the vote
+            self.operator_votes.insert(caller, &vote);
+
+            for operator in self.operator_accounts.get().unwrap().iter() {
+                let other_vote_lookup = self.operator_votes.get(operator);
+                if other_vote_lookup.is_none() {
+                    // not all operators have voted yet, so return pending indicating the vote has not yet passed
+                    debug!("Vote pending");
+                    return Ok(VoteStatus::Pending);
+                }
+            }
+
+            // by here all operators have voted, so check if they all voted the same way
+            for operator in self.operator_accounts.get().unwrap().iter() {
+                let other_vote = self.operator_votes.get(operator).unwrap();
+                if other_vote != vote {
+                    // votes differ, so return false indicating the vote has not passed
+                    // clear votes first to force a re-vote
+                    self.clear_votes();
+                    debug!("Vote failed: {:?} != {:?}", other_vote, vote);
+                    return Ok(VoteStatus::Fail);
+                }
+            }
+
+            // at this point all operators have voted the same way, so the vote has passed
+            // clear the votes as the vote has passed
+            // remove the votes
+            self.clear_votes();
+
+            debug!("Vote passed: {:?}", vote);
+
+            // implement the voted action
+            match vote {
+                Vote::Terminate(recipient) => {
+                    // terminate the contract and send the remaining balance to the recipient
+                    ink::env::terminate_contract::<ink::env::DefaultEnvironment>(recipient);
+                    // note that the contract is now terminated, so the remaining code will not be executed
+                }
+                Vote::Withdraw(recipient, amount) => {
+                    let transfer_result =
+                        ink::env::transfer::<ink::env::DefaultEnvironment>(recipient, amount);
+                    if transfer_result.is_err() {
+                        return err!(Error::ContractTransferFailed);
+                    }
+                }
+                Vote::SetCodeHash(code_hash) => {
+                    // Set the new code hash after all operators have voted for the same code hash.
+                    let set_code_hash_result = ink::env::set_code_hash(&code_hash);
+                    if let Err(e) = set_code_hash_result {
+                        match e {
+                            ink::env::Error::CodeNotFound => {
+                                return err!(Error::CodeNotFound);
+                            }
+                            _ => {
+                                return err!(Error::Unknown);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // return true indicating the vote has passed
+            Ok(VoteStatus::Pass)
+        }
+
         /// Modifies the code which is used to execute calls to this contract address (`AccountId`).
         /// We use this to upgrade the contract logic. The caller must be an operator.
         /// `true` is returned on successful upgrade, `false` otherwise
@@ -1745,41 +1858,41 @@ pub mod prosopo {
                 return err!(Error::InvalidCodeHash);
             }
 
-            // Insert the operators latest vote into the votes map
-            self.operator_code_hash_votes.insert(caller, &code_hash);
+            // // Insert the operators latest vote into the votes map
+            // self.operator_code_hash_votes.insert(caller, &code_hash);
 
-            // Make sure each operator has voted for the same code hash. If an operator has not voted
-            // an Ok result is returned. If an operator has voted for a conflicting code hash, an error
-            // is returned.
-            for operator in self.operator_accounts.get().unwrap().iter() {
-                if self.operator_code_hash_votes.get(operator).is_none() {
-                    return Ok(false);
-                }
+            // // Make sure each operator has voted for the same code hash. If an operator has not voted
+            // // an Ok result is returned. If an operator has voted for a conflicting code hash, an error
+            // // is returned.
+            // for operator in self.operator_accounts.get().unwrap().iter() {
+            //     if self.operator_code_hash_votes.get(operator).is_none() {
+            //         return Ok(false);
+            //     }
 
-                let vote = self.operator_code_hash_votes.get(operator).unwrap();
-                if vote != code_hash {
-                    return Ok(false);
-                }
-            }
+            //     let vote = self.operator_code_hash_votes.get(operator).unwrap();
+            //     if vote != code_hash {
+            //         return Ok(false);
+            //     }
+            // }
 
-            // Set the new code hash after all operators have voted for the same code hash.
-            let set_code_hash_result = ink::env::set_code_hash(&code_hash);
+            // // Set the new code hash after all operators have voted for the same code hash.
+            // let set_code_hash_result = ink::env::set_code_hash(&code_hash);
 
-            if let Err(e) = set_code_hash_result {
-                match e {
-                    ink::env::Error::CodeNotFound => {
-                        return err!(Error::CodeNotFound);
-                    }
-                    _ => {
-                        return err!(Error::Unknown);
-                    }
-                }
-            }
+            // if let Err(e) = set_code_hash_result {
+            //     match e {
+            //         ink::env::Error::CodeNotFound => {
+            //             return err!(Error::CodeNotFound);
+            //         }
+            //         _ => {
+            //             return err!(Error::Unknown);
+            //         }
+            //     }
+            // }
 
-            // remove the votes
-            for operator in self.operator_accounts.get().unwrap().iter() {
-                self.operator_code_hash_votes.remove(operator);
-            }
+            // // remove the votes
+            // for operator in self.operator_accounts.get().unwrap().iter() {
+            //     self.operator_code_hash_votes.remove(operator);
+            // }
 
             Ok(true)
         }
