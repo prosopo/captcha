@@ -487,6 +487,8 @@ pub mod prosopo {
         NoCorrectCaptcha,
         /// Returned if the function has been disabled in the contract
         FunctionDisabled,
+        /// Returned if the account is an operator, hence the operation is not allowed due to conflict of interest
+        AccountIsOperator,
     }
 
     impl Prosopo {
@@ -581,6 +583,9 @@ pub mod prosopo {
                 return err!(Error::ProviderExists);
             }
 
+            // provider cannot be an operator
+            self.check_not_operator(provider_account)?;
+
             let service_origin_hash = self.hash_vec_u8(&service_origin);
 
             // prevent duplicate service origins
@@ -635,6 +640,9 @@ pub mod prosopo {
             if self.providers.get(provider_account).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
+
+            // provider cannot be an operator
+            self.check_not_operator(provider_account)?;
 
             let existing = self.get_provider_details(provider_account)?;
 
@@ -907,6 +915,9 @@ pub mod prosopo {
             dapp.payee = payee; // update the dapp payee
             dapp.owner = owner; // update the owner
 
+            // owner of the dapp cannot be an operator
+            self.check_not_operator(owner)?;
+
             self.dapp_configure_funding(&mut dapp);
 
             // if the dapp is new then add it to the list of dapps
@@ -1012,6 +1023,14 @@ pub mod prosopo {
                 contract,
                 value: balance,
             });
+
+            Ok(())
+        }
+
+        fn check_not_operator(&self, operator: AccountId) -> Result<(), Error> {
+            if self.operators.get(operator).is_some() {
+                return err!(Error::AccountIsOperator);
+            }
 
             Ok(())
         }
@@ -3216,6 +3235,9 @@ pub mod prosopo {
 
             // Mark the the dapp account as being a contract on-chain
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
+
+            // the caller should be someone who isn't an operator
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x3; 32]));
 
             contract
                 .dapp_register(dapp_contract, DappPayee::Dapp)
