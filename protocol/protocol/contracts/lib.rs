@@ -278,13 +278,13 @@ pub mod prosopo {
         operators: Mapping<AccountId, Operator>,
         operator_accounts: Lazy<Vec<AccountId>>,
         operator_stake_default: Balance,
-        operator_fee_currency: Hash,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
         operator_votes: Mapping<AccountId, Vote>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
+        max_provider_fee: Balance,
     }
 
     // Event emitted when a new provider registers
@@ -487,6 +487,8 @@ pub mod prosopo {
         NoCorrectCaptcha,
         /// Returned if the function has been disabled in the contract
         FunctionDisabled,
+        /// Returned if provider fee is too high
+        ProviderFeeTooHigh,
         /// Returned if the account is an operator, hence the operation is not allowed due to conflict of interest
         AccountIsOperator,
     }
@@ -500,6 +502,7 @@ pub mod prosopo {
             dapp_stake_default: Balance,
             max_user_history_len: u16,
             max_user_history_age: u64,
+            max_provider_fee: Balance,
         ) -> Self {
             if operator_accounts.len() < 2 {
                 panic!("{:?}", Error::MinimumTwoOperatorsRequired)
@@ -521,7 +524,6 @@ pub mod prosopo {
                 captcha_data: Default::default(),
                 operator_accounts: operator_accounts_lazy,
                 operator_stake_default: 0,
-                operator_fee_currency: Default::default(),
                 dapp_users: Default::default(),
                 operators,
                 provider_stake_default,
@@ -533,6 +535,7 @@ pub mod prosopo {
                 max_user_history_len,
                 max_user_history_age,
                 captcha_solution_commitments: Default::default(),
+                max_provider_fee,
             }
         }
 
@@ -569,6 +572,13 @@ pub mod prosopo {
             Hash::from(hash_output)
         }
 
+        fn check_provider_fee(&self, fee: u32) -> Result<(), Error> {
+            if fee as u128 > self.max_provider_fee {
+                return err!(Error::ProviderFeeTooHigh);
+            }
+            Ok(())
+        }
+
         /// Register a provider, their service origin and fee
         #[ink(message)]
         pub fn provider_register(
@@ -582,6 +592,8 @@ pub mod prosopo {
             if self.providers.get(provider_account).is_some() {
                 return err!(Error::ProviderExists);
             }
+
+            self.check_provider_fee(fee)?;
 
             // provider cannot be an operator
             self.check_not_operator(provider_account)?;
@@ -640,6 +652,8 @@ pub mod prosopo {
             if self.providers.get(provider_account).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
+
+            self.check_provider_fee(fee)?;
 
             // provider cannot be an operator
             self.check_not_operator(provider_account)?;
@@ -1946,8 +1960,14 @@ pub mod prosopo {
         fn test_default_works() {
             let operator_accounts = get_operator_accounts();
             let operator_account = operator_accounts[0];
-            let contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             assert!(contract.operators.get(operator_account).is_some());
             assert!(contract
                 .operator_accounts
@@ -1960,8 +1980,14 @@ pub mod prosopo {
         #[ink::test]
         pub fn test_provider_stake_default() {
             let operator_accounts = get_operator_accounts();
-            let contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let provider_stake_default: u128 = contract.get_provider_stake_default();
             assert!(STAKE_DEFAULT.eq(&provider_stake_default));
         }
@@ -1971,8 +1997,14 @@ pub mod prosopo {
         pub fn test_dapp_stake_default() {
             let operator_accounts = get_operator_accounts();
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator_accounts[0]);
-            let contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let dapp_stake_default: u128 = contract.get_dapp_stake_default();
             assert!(STAKE_DEFAULT.eq(&dapp_stake_default));
         }
@@ -1981,8 +2013,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_provider_register() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let service_origin: Vec<u8> = vec![1, 2, 3];
@@ -2003,8 +2041,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_provider_deregister() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let service_origin: Vec<u8> = vec![1, 2, 3];
@@ -2020,8 +2064,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_list_providers_by_ids() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
@@ -2041,8 +2091,14 @@ pub mod prosopo {
         fn test_get_random_number_zero_len() {
             let operator_accounts = get_operator_accounts();
             let operator_account = operator_accounts[0];
-            let contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             contract.get_random_number(0, operator_account, operator_account);
         }
 
@@ -2052,8 +2108,14 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
             let acc1 = AccountId::from([0x1; 32]);
             let acc2 = AccountId::from([0x2; 32]);
-            let contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             const len: usize = 10;
             let mut arr = [0; len];
             // get several random numbers, one per block
@@ -2095,8 +2157,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_provider_register_and_update() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "2424", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract
@@ -2158,8 +2226,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_provider_register_with_service_origin_error() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
 
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2191,8 +2265,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_provider_update_with_service_origin_error() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
 
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2232,8 +2312,14 @@ pub mod prosopo {
         fn test_provider_unstake() {
             let operator_accounts = get_operator_accounts();
             let operator_account = operator_accounts[0];
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2277,8 +2363,14 @@ pub mod prosopo {
         fn test_provider_add_dataset() {
             let operator_accounts = get_operator_accounts();
             let operator_account = operator_accounts[0];
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 2000000000000;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2329,8 +2421,14 @@ pub mod prosopo {
         fn test_provider_cannot_add_dataset_if_inactive() {
             let operator_accounts = get_operator_accounts();
             let operator_account = operator_accounts[0];
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2353,8 +2451,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_dapp_register_zero_balance_transfer() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
             // Call from the dapp account
@@ -2385,8 +2489,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_dapp_register_positive_balance_transfer() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
 
@@ -2423,8 +2533,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_dapp_register_and_update() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract_account = AccountId::from([0x3; 32]);
 
@@ -2477,8 +2593,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_dapp_fund() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
 
@@ -2509,8 +2631,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_dapp_cancel() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let caller = AccountId::from([0x2; 32]);
             let contract_account = AccountId::from([0x3; 32]);
             let callers_initial_balance =
@@ -2558,8 +2686,14 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
 
             // Register the provider
             let provider_account = AccountId::from([0x2; 32]);
@@ -2622,8 +2756,14 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2709,8 +2849,14 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2772,8 +2918,14 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2856,8 +3008,14 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2926,8 +3084,14 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
             let dapp_account = AccountId::from([0x2; 32]);
             // initialise the contract
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             contract.get_dapp_balance(dapp_account).unwrap_err();
         }
 
@@ -2943,10 +3107,17 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                1000,
             );
             contract.get_provider_balance(provider_account).unwrap_err();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             contract.get_provider_balance(provider_account).unwrap_err();
         }
 
@@ -2954,8 +3125,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_get_random_active_provider() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
@@ -2990,8 +3167,14 @@ pub mod prosopo {
         #[ink::test]
         fn test_get_random_active_provider_dapp_any() {
             let operator_accounts = get_operator_accounts();
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             let provider_account = AccountId::from([0x2; 32]);
             let dapp_user_account = AccountId::from([0x30; 32]);
             let service_origin: Vec<u8> = vec![1, 2, 3];
@@ -3047,8 +3230,14 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -3130,8 +3319,14 @@ pub mod prosopo {
             let operator_accounts = get_operator_accounts();
 
             // initialise the contract
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
 
             // Register the provider
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -3208,8 +3403,14 @@ pub mod prosopo {
             let operator1 = operator_accounts[0];
             let operator2 = operator_accounts[1];
             // initialise the contract
-            let mut contract =
-                Prosopo::default(operator_accounts, STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                1000,
+            );
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator1);
             let op1result = contract.operator_set_code([0x01; 32]); // this is the operators AccountId, not a valid contract
             assert_eq!(Error::InvalidCodeHash, op1result.unwrap_err());
@@ -3236,7 +3437,8 @@ pub mod prosopo {
             let op2 = AccountId::from([0x2; 32]);
             let ops = vec![op1, op2];
             // initialise the contract
-            let contract = Prosopo::default(ops.clone(), STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000);
+            let contract =
+                Prosopo::default(ops.clone(), STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 1000);
             (op1, op2, ops, contract)
         }
 
