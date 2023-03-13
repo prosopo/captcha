@@ -2099,14 +2099,15 @@ pub mod prosopo {
                 1000000,
                 1000,
             );
-            contract.get_random_number(0, operator_account);
+            contract.get_random_number(0, operator_account, operator_account);
         }
 
         // Test get random number
         #[ink::test]
         fn test_get_random_number() {
             let operator_accounts = get_operator_accounts();
-            let operator_account = operator_accounts[0];
+            let acc1 = AccountId::from([0x1; 32]);
+            let acc2 = AccountId::from([0x2; 32]);
             let contract = Prosopo::default(
                 operator_accounts,
                 STAKE_DEFAULT,
