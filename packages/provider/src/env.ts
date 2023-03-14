@@ -24,7 +24,7 @@ import prosopoConfig from './prosopo.config'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
-import { IKeyringPair } from '@polkadot/types/types'
+import { KeyringPair } from '@polkadot/keyring/types'
 
 export function loadEnv() {
     const args = { path: getEnvFile() }
@@ -40,7 +40,6 @@ export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
     contractInterface: ProsopoContractMethods
-    mnemonic: string
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     contractName: string
@@ -49,27 +48,30 @@ export class Environment implements ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
-    pair: IKeyringPair
+    pair: KeyringPair
     api: ApiPromise
 
-    constructor(mnemonic: string) {
+    constructor(pair: KeyringPair) {
         loadEnv()
         this.config = Environment.getConfig()
-        this.mnemonic = mnemonic
+        this.pair = pair
+        this.logger = consola.create({
+            level: this.config.logLevel as unknown as LogLevel,
+        })
         if (
             this.config.defaultEnvironment &&
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
         ) {
             this.defaultEnvironment = this.config.defaultEnvironment
+            this.logger.info(`Endpoint: ${this.config.networks[this.defaultEnvironment].endpoint}`)
             this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment].endpoint)
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.logger = consola.create({
-                level: this.config.logLevel as unknown as LogLevel,
-            })
+
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
             })
+            this.keyring.addPair(this.pair)
 
             this.abi = abiJson as ContractAbi
             this.importDatabase().catch((err) => {
@@ -95,16 +97,16 @@ export class Environment implements ProsopoEnvironment {
             this.api = await ApiPromise.create({ provider: this.wsProvider })
         }
         await this.api.isReadyOrError
-        const { mnemonic } = this
-        if (!mnemonic) {
-            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED')
+        try {
+            this.pair = this.keyring.addPair(this.pair)
+        } catch (err) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
         }
-        this.pair = this.keyring.addFromMnemonic(mnemonic)
     }
 
-    async changeSigner(mnemonic: string): Promise<void> {
+    async changeSigner(pair: KeyringPair): Promise<void> {
         await this.api.isReadyOrError
-        this.mnemonic = mnemonic
+        this.pair = pair
         await this.getSigner()
         await this.getContractApi()
     }
@@ -125,6 +127,7 @@ export class Environment implements ProsopoEnvironment {
 
     async isReady() {
         try {
+            this.pair.unlock(this.config.account.password)
             this.api = await ApiPromise.create({ provider: this.wsProvider })
             await this.getSigner()
             await this.getContractApi()

@@ -19,8 +19,10 @@ import { Environment, loadEnv } from '../env'
 import { handleErrors } from '../errors'
 import { ProsopoEnvironment } from '../types/env'
 import { Server } from 'http'
-import { ProsopoEnvError } from '@prosopo/common'
 import { i18nMiddleware } from '@prosopo/common'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
+import { getPair, getPairType, getSs58Format } from './util'
 
 let apiAppSrv: Server
 
@@ -65,10 +67,22 @@ async function start(nodeEnv: string) {
     let env: ProsopoEnvironment
 
     if (nodeEnv !== 'test') {
-        if (!process.env.PROVIDER_MNEMONIC) {
-            throw new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED')
+        let pair: KeyringPair
+        const ss58Format = getSs58Format()
+
+        if (process.env.PROVIDER_JSON) {
+            const json = JSON.parse(process.env.PROVIDER_JSON) as KeyringPair$Json
+            const {
+                encoding: { content },
+            } = json
+
+            pair = await getPair(content[1] as KeypairType, ss58Format, undefined, undefined, json)
+        } else {
+            const pairType = getPairType()
+            pair = await getPair(pairType, ss58Format, process.env.PROVIDER_MNEMONIC, process.env.PROVIDER_SEED)
         }
-        env = new Environment(process.env.PROVIDER_MNEMONIC)
+
+        env = new Environment(pair)
     } else {
         // env = new MockEnvironment();
         return

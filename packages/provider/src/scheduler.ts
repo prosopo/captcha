@@ -16,14 +16,20 @@
 
 import { CronJob } from 'cron'
 
-import { mnemonicValidate } from '@polkadot/util-crypto'
-
 import { Tasks } from './tasks/tasks'
 import { Environment } from './env'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { getPair, getSs58Format } from './cli/util'
 
 async function main() {
-    mnemonicValidate(process.env.PROVIDER_MNEMONIC as string)
-    const env = new Environment(process.env.PROVIDER_MNEMONIC!)
+    const ss58Format = getSs58Format()
+    const pair = await getPair(
+        process.env.PAIR_TYPE as KeypairType,
+        ss58Format,
+        process.env.PROVIDER_MNEMONIC,
+        process.env.PROVIDER_SEED
+    )
+    const env = new Environment(pair)
 
     await env.isReady()
 

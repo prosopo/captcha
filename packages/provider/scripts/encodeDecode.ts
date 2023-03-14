@@ -30,6 +30,7 @@ if (argIsAddress) {
         console.log(`Hex address ${hexAddress}`)
     } else {
         console.log(`Encoded address ${encodedAddress}`)
+
         console.log(`Address as hex ${u8aToHex(decodeAddress(encodedAddress))}`)
     }
 }

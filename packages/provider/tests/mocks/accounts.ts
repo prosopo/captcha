@@ -13,7 +13,9 @@
 // limitations under the License.
 import { IDappAccount, IProviderAccount } from '../../src/types/accounts'
 import { BN } from '@polkadot/util'
-import { ProsopoEnvironment, Tasks } from '../../src/index'
+import { ProsopoEnvironment, Tasks, getPair } from '../../src/index'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { getSs58Format } from '../../src/cli/util'
 
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]
@@ -39,6 +41,13 @@ export const DAPP: IDappAccount = {
 }
 
 export async function getSignedTasks(env: ProsopoEnvironment, account: Account): Promise<Tasks> {
-    await env.changeSigner(accountMnemonic(account))
+    const ss58Format = getSs58Format()
+    const pair = await getPair(
+        (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
+        ss58Format,
+        accountMnemonic(account)
+    )
+
+    await env.changeSigner(pair)
     return new Tasks(env)
 }

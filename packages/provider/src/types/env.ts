@@ -19,12 +19,11 @@ import { ProsopoConfig } from './config'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
 import { ApiPromise } from '@polkadot/api'
-import { IKeyringPair } from '@polkadot/types/types'
+import { KeyringPair } from '@polkadot/keyring/types'
 export interface ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
     contractInterface: ProsopoContractMethods
-    mnemonic: string
     contractAddress: string
     defaultEnvironment: string
     contractName: string
@@ -33,9 +32,9 @@ export interface ProsopoEnvironment {
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
-    pair: IKeyringPair
+    pair: KeyringPair
     api: ApiPromise
     isReady(): Promise<void>
     importDatabase(): Promise<void>
-    changeSigner(mnemonic: string): Promise<void>
+    changeSigner(pair: KeyringPair): Promise<void>
 }

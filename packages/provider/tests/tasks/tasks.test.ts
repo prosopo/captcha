@@ -36,9 +36,11 @@ import { i18n } from '@prosopo/common'
 import { before } from 'mocha'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
-import { DappUserSolutionResult, parseBlockNumber } from '../../src/index'
+import { DappUserSolutionResult, getPair, parseBlockNumber } from '../../src/index'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { accountAddress, accountMnemonic } from '../mocks/accounts'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { getSs58Format } from '../../src/cli/util'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -53,9 +55,12 @@ export async function sleep(timeout) {
 }
 const PROVIDER_PAYEE = 'Provider'
 
-describe('CONTRACT TASKS', () => {
+describe('CONTRACT TASKS', async () => {
     let providerStakeDefault: BN
-    const mockEnv = new MockEnvironment()
+    const ss58Format = getSs58Format()
+    const pairType = (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
+    const alicePair = await getPair(pairType, ss58Format, undefined, undefined, undefined, '//Alice')
+    const mockEnv = new MockEnvironment(alicePair)
 
     before(async () => {
         try {
@@ -73,7 +78,7 @@ describe('CONTRACT TASKS', () => {
         const tasks = new Tasks(mockEnv)
 
         try {
-            await mockEnv.changeSigner('//Alice')
+            await mockEnv.changeSigner(alicePair)
         } catch (e) {
             throw new ProsopoEnvError(e, 'changeSigner')
         }
@@ -112,7 +117,8 @@ describe('CONTRACT TASKS', () => {
             providerDetails.datasetId.toString(),
             2
         )
-        await mockEnv.changeSigner(accountMnemonic(dappUserAccount))
+        const pair = await getPair(pairType, ss58Format, accountMnemonic(dappUserAccount))
+        await mockEnv.changeSigner(pair)
 
         const userSalt = randomAsHex()
         const captchaSolutions: CaptchaSolution[] = solvedCaptchas.map((captcha) => ({
@@ -866,6 +872,7 @@ describe('CONTRACT TASKS', () => {
         const providerTasks = await getSignedTasks(mockEnv, providerAccount)
         const providerDetails = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
         const dappAccount = await getUser(mockEnv, AccountKey.dapps)
+
         const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
         if (randomCaptchasResult) {
             const unsolvedCaptcha = randomCaptchasResult[0]
@@ -882,7 +889,7 @@ describe('CONTRACT TASKS', () => {
                 await providerTasks.db.storeDappUserSolution(
                     [captchaSolution],
                     commitmentId,
-                    'test',
+                    randomAsHex(),
                     accountAddress(dappAccount),
                     providerDetails.datasetId.toString()
                 )

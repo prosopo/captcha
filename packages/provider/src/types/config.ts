@@ -44,6 +44,9 @@ export const ProsopoConfigSchema = z.object({
     logLevel: z.string(),
     contract: z.object({ abi: z.string() }),
     defaultEnvironment: z.nativeEnum(EnvironmentTypes),
+    account: z.object({
+        password: z.string().optional(),
+    }),
     networks: z.object({
         development: z.object({
             endpoint: z.string().url(),

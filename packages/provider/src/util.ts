@@ -14,9 +14,8 @@
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { BN, hexToU8a, isHex } from '@polkadot/util'
 import fs, { WriteStream, createWriteStream } from 'fs'
-import { Captcha } from '@prosopo/datasets'
+import { Captcha, CaptchaSolution, arrayJoin } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
-import { CaptchaSolution, arrayJoin } from '@prosopo/datasets'
 import pl from 'nodejs-polars'
 import consola from 'consola'
 import { ApiPromise } from '@polkadot/api'
@@ -28,18 +27,6 @@ export function encodeStringAddress(address: string) {
         throw new ProsopoEnvError(error, 'CONTRACT.INVALID_ADDRESS', {}, address)
     }
 }
-
-// export function handleFileProtocol(filePath: string, logger?): string {
-//     let parsedFilePath = filePath;
-//     try {
-//         parsedFilePath = node_url.fileURLToPath(filePath);
-//     } catch (err) {
-//         if (logger) {
-//             logger.debug(err, filePath);
-//         }
-//     }
-//     return parsedFilePath
-// }
 
 export function loadJSONFile(filePath: string, logger?: any) {
     // const parsedFilePath = handleFileProtocol(filePath, logger)
@@ -128,14 +115,6 @@ export function parseBlockNumber(blockNumberString: string) {
     return parseInt(blockNumberString.replace(/,/g, ''))
 }
 
-// export function loadEnvFile() {
-//     const envPath =
-//       process.env.NODE_ENV !== undefined
-//         ? { override: true, path: `.env.${process.env.NODE_ENV.toLowerCase()}` }
-//         : undefined;
-//     config(envPath);
-// }
-
 export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumberOfSolutions: number) {
     if (solutions.length === 0) {
         return pl.DataFrame([])
@@ -172,8 +151,7 @@ export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], lo
     })
 }
 
-export function getOneUnit(api: ApiPromise): BN {
+export function oneUnit(api: ApiPromise): BN {
     const chainDecimals = new BN(api.registry.chainDecimals[0])
-
-    return new BN(10 ** chainDecimals.toNumber())
+    return new BN((10 ** chainDecimals.toNumber()).toString())
 }

@@ -27,6 +27,8 @@ import { BN } from '@polkadot/util'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { accountAddress, accountMnemonic } from '../mocks/accounts'
 import { Account } from '../mocks/accounts'
+import { getPair } from '../../src/index'
+import { getPairType, getSs58Format } from '../../src/cli/util'
 
 const serviceOriginBase = 'http://localhost:'
 
@@ -168,17 +170,20 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return _sendFunds(this.mockEnv, address, payee.toString(), amount)
     }
 
-    private changeSigner(account: Account)
-    private changeSigner(mnemonic: string)
+    private async changeSigner(account: Account)
+    private async changeSigner(mnemonic: string)
 
-    private changeSigner(account: Account | string) {
+    private async changeSigner(account: Account | string) {
         const mnemonic = typeof account === 'string' ? account : accountMnemonic(account)
 
         if (!this.mockEnv.contractInterface) {
             throw new ProsopoEnvError('DEVELOPER.NO_MOCK_ENV')
         }
+        const ss58Format = getSs58Format()
+        const pairType = getPairType()
+        const pair = await getPair(pairType, ss58Format, mnemonic)
 
-        return this.mockEnv.changeSigner(mnemonic)
+        return this.mockEnv.changeSigner(pair)
     }
 
     public async registerProvider(serviceOrigin?: string, noPush?: boolean): Promise<Account> {
@@ -186,9 +191,12 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
             const account = this.createAccount()
-            this.mockEnv.logger.info(
+            this.mockEnv.logger.debug(
                 'Registering provider',
                 accountAddress(account),
+                '`',
+                accountMnemonic(account),
+                '`',
                 'with service origin',
                 _serviceOrigin
             )
@@ -201,7 +209,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 accountAddress(account)
             )
-            this.mockEnv.logger.info(
+            this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
             )
@@ -229,7 +237,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 this.stakeAmount
             )
-            this.mockEnv.logger.info(
+            this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
             )
@@ -266,7 +274,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const captchaFilePath = path.resolve(__dirname, '../../tests/mocks/data/captchas.json')
 
             const result = await tasks.providerAddDatasetFromFile(captchaFilePath)
-            this.mockEnv.logger.info(
+            this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
             )
@@ -307,7 +315,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 createType(this.mockEnv.contractInterface.abi.registry, 'AccountId', accountAddress(account)).toString()
             )
-            this.mockEnv.logger.info(
+            this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
             )
@@ -329,7 +337,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const result = await tasks.contractApi.dappFund(accountAddress(account), this.stakeAmount)
 
-        this.mockEnv.logger.info(
+        this.mockEnv.logger.debug(
             'Event: ',
             result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
         )
@@ -339,7 +347,6 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         try {
             const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
             const account = await this.registerDapp(serviceOrigin, true)
-
             await this.dappFund(account)
 
             this._registeredDappsWithStake.push(account)

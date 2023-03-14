@@ -5,9 +5,10 @@ import { ScheduledTaskNames, ScheduledTaskStatus } from '../types/scheduler'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { Hash } from '@polkadot/types/interfaces'
 import { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types'
-import { SubmittableResult } from '@polkadot/api'
+import { ApiPromise, SubmittableResult } from '@polkadot/api'
 import { SignatureOptions } from '@polkadot/types/types'
 import { BN } from '@polkadot/util'
+import { oneUnit } from '../util'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 
@@ -102,6 +103,7 @@ export class BatchCommitter {
     }
 
     async getCommitments(): Promise<UserCommitmentRecord[]> {
+        // get commitments that have already been used to generate a solution
         return await this.db.getProcessedDappUserCommitments()
     }
 
@@ -110,45 +112,12 @@ export class BatchCommitter {
      * @param commitments
      */
     async batchCommit(commitments: UserCommitmentRecord[]): Promise<string[]> {
-        const txs: SubmittableExtrinsic<any>[] = []
-        const fragment = this.contractApi.getContractMethod('dappUserCommit')
-        let totalRefTime = new BN(0)
-        const maxBlockWeight = this.contractApi.api.consts.system.blockWeights.maxBlock
-        const batchedCommitmentIds: string[] = []
-        for (const commitment of commitments) {
-            const args = [
-                commitment.dappAccount,
-                commitment.datasetId,
-                commitment.commitmentId,
-                this.contractApi.pair.address,
-                commitment.userAccount,
-                commitment.approved ? 'Approved' : 'Disapproved',
-            ]
-            const encodedArgs: Uint8Array[] = encodeStringArgs(this.contractApi.abi, fragment, args)
-            const { extrinsic, options } = await this.contractApi.buildExtrinsic('dappUserCommit', encodedArgs)
-            totalRefTime = totalRefTime.add(
-                this.contractApi.api.registry.createType('WeightV2', options.gasLimit).refTime.toBn()
-            )
-            // Check if we have a maximum number of transactions that we can successfully submit in a block
-            if (
-                totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
-                this.batchCommitConfig.maxBatchExtrinsicPercentage
-            ) {
-                // Break out of the loop so that we can submit the transactions. Additional batch processes will pickup the
-                // remaining commitments
-                break
-            } else {
-                batchedCommitmentIds.push(commitment.commitmentId)
-                txs.push(extrinsic)
-            }
-        }
+        const { extrinsics, commitmentIds } = await this.createCommitmentTxs(commitments)
         // TODO use dryRun to get weight
         // const result = await this.contractApi.api.tx.utility.batchAll(txs).dryRun(this.contractApi.pair)
         // 2023-02-01 21:23:51        RPC-CORE: dryRun(extrinsic: Bytes, at?: BlockHash): ApplyExtrinsicResult:: -32601: RPC call is unsafe to be called externally
         //
         // ERROR  -32601: RPC call is unsafe to be called externally                                                            21:23:51
-        // TODO use weight.v1Weight.mul(BN_TEN_THOUSAND).div(maxBlockWeight).toNumber() / 100 to get percentage of max
-        //   block weight. If > 50% then divide the txs into smaller batches (extrinsics can only be x% of a block)
         //if (result.isOk) {
 
         const nonce = (await this.contractApi.api.rpc.system.accountNextIndex(this.contractApi.pair.address)).toNumber()
@@ -162,22 +131,80 @@ export class BatchCommitter {
             blockHash,
             runtimeVersion,
         }
-        const batchExtrinsic = this.contractApi.api.tx.utility.batchAll(txs)
-
+        const batchExtrinsic = this.contractApi.api.tx.utility.batchAll(extrinsics)
+        const balance = await this.contractApi.api.query.system.account(this.contractApi.pair.address)
+        const paymentInfo = await batchExtrinsic.paymentInfo(this.contractApi.pair)
+        this.logger.info(
+            'Sender balance',
+            balance.data.free.div(oneUnit(this.contractApi.api as ApiPromise)).toString(),
+            'UNIT'
+        )
+        this.logger.info('Payment Info', paymentInfo.toHuman())
         const batchExtrinsicSigned = batchExtrinsic.sign(this.contractApi.pair, options)
-        this.logger.info('signed batch extrinsic encodedLength', batchExtrinsicSigned.encodedLength)
+        this.logger.info('Signed batch extrinsic encodedLength', batchExtrinsicSigned.encodedLength)
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             const unsub = await batchExtrinsic.signAndSend(this.contractApi.pair, (result: SubmittableResult) => {
+                if (result.dispatchError) {
+                    this.logger.debug(result.toHuman())
+                    reject(new ProsopoContractError(result.dispatchError))
+                }
+                this.logger.debug(result.toHuman())
+
                 if (result.status.isFinalized || result.status.isInBlock) {
                     unsub()
-                    resolve(batchedCommitmentIds)
+                    resolve(commitmentIds)
                 } else if (result.isError) {
                     unsub()
+
                     reject(new ProsopoContractError(result.status.type))
                 }
             })
         })
+    }
+
+    async createCommitmentTxs(
+        commitments
+    ): Promise<{ extrinsics: SubmittableExtrinsic<any>[]; commitmentIds: string[] }> {
+        const txs: SubmittableExtrinsic<any>[] = []
+        const fragment = this.contractApi.abi.findMessage('dappUserCommit')
+        const batchedCommitmentIds: string[] = []
+        const utilityConstants = await this.contractApi.api.consts.utility
+        let totalRefTime = new BN(0)
+        const maxBlockWeight = this.contractApi.api.consts.system.blockWeights.maxBlock
+        //let totalEncodedLength = 0
+        this.logger.debug('utilityConstants.batchedCallsLimit', utilityConstants.batchedCallsLimit.toNumber())
+        this.logger.debug('ss58Format', this.contractApi.api.registry.chainSS58)
+        for (const commitment of commitments) {
+            const args = [
+                commitment.dappAccount, // contract account
+                commitment.datasetId,
+                commitment.commitmentId,
+                this.contractApi.pair.address,
+                commitment.userAccount,
+                commitment.approved ? 'Approved' : 'Disapproved',
+            ]
+            this.logger.debug('Address', this.contractApi.pair.address)
+            const encodedArgs: Uint8Array[] = encodeStringArgs(this.contractApi.abi, fragment, args)
+            const { extrinsic, options } = await this.contractApi.buildExtrinsic('dappUserCommit', encodedArgs)
+
+            //totalEncodedLength += extrinsic.encodedLength
+            totalRefTime = totalRefTime.add(
+                this.contractApi.api.registry.createType('WeightV2', options.gasLimit).refTime.toBn()
+            )
+            // Check if we have a maximum number of transactions that we can successfully submit in a block
+            if (
+                totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
+                this.batchCommitConfig.maxBatchExtrinsicPercentage
+            ) {
+                break
+            } else {
+                batchedCommitmentIds.push(commitment.commitmentId)
+                txs.push(extrinsic)
+            }
+        }
+        this.logger.info(`${txs.length} transactions will be batched`)
+        return { extrinsics: txs, commitmentIds: batchedCommitmentIds }
     }
 
     async removeCommitmentsAndSolutions(commitmentIds: string[]): Promise<void> {
@@ -185,66 +212,5 @@ export class BatchCommitter {
         const removeCommitmentsResult = await this.db.removeProcessedDappUserCommitments(commitmentIds)
         this.logger.info('Deleted user solutions', removeSolutionsResult)
         this.logger.info('Deleted user commitments', removeCommitmentsResult)
-    }
-
-    async nextNonce(): Promise<bigint> {
-        const tmp = this.nonce
-        this.nonce = tmp + BigInt(1)
-        return tmp
-    }
-
-    async returnNonce(activeNonce: bigint): Promise<boolean> {
-        if (this.nonce === activeNonce + BigInt(1)) {
-            this.nonce = activeNonce
-            return true
-        } else {
-            return Promise.reject(
-                'Nonce has already progressed. Account out of sync with dispatcher. Need to abort or inject xt with nonce: ' +
-                    activeNonce +
-                    ' in order to progress.'
-            )
-        }
-    }
-
-    async batchDispatch(xts: Array<SubmittableExtrinsic<ApiTypes, SubmittableResult>>): Promise<void> {
-        while (this.running >= this.maxConcurrent) {
-            await new Promise((r) => setTimeout(r, 6000))
-        }
-        this.dispatched += BigInt(1)
-        this.running += 1
-
-        const send = async (): Promise<void> => {
-            const activeNonce = await this.nextNonce()
-            const unsub = await this.contractApi.api.tx.utility
-                .batchAll(xts)
-                .signAndSend(this.contractApi.pair, { nonce: activeNonce }, ({ status, events }) => {
-                    if (status.isInBlock) {
-                        events.forEach(({ event: { data, method, section }, phase }) => {
-                            if (method === 'ExtrinsicSuccess') {
-                                console.log(status.asInBlock, phase.asApplyExtrinsic.toBigInt())
-                                this.dispatchHashes.push([status.asInBlock, phase.asApplyExtrinsic.toBigInt()])
-                            } else if (method === 'ExtrinsicFailed') {
-                                this.dispatchHashes.push([status.asInBlock, phase.asApplyExtrinsic.toBigInt()])
-                                this.cbErr(xts)
-                            }
-                        })
-
-                        this.running -= 1
-                    } else if (status.isFinalized) {
-                        console.log('tx finalized', status.asFinalized.toString())
-                        // @ts-ignore
-                        unsub(events)
-                    }
-                })
-                .catch(async (err) => {
-                    this.running -= 1
-                    this.dispatched -= BigInt(1)
-                    this.cbErr(xts)
-                    await this.returnNonce(activeNonce).catch((err) => console.log(err))
-                    console.log(err)
-                })
-        }
-
-        await send()
     }
 }

@@ -13,7 +13,7 @@
 // limitations under the License.
 import { IDappAccount, IProviderAccount, ProsopoEnvironment } from '../types/index'
 import { BN } from '@polkadot/util'
-import { getOneUnit } from '../util'
+import { oneUnit } from '../util'
 import { Keyring, decodeAddress } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { blake2AsHex, cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto'
@@ -40,7 +40,7 @@ export async function generateMnemonic(keyring?: Keyring): Promise<[string, stri
 
 const devMnemonics = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
 let current = -1
-const MAX_ACCOUNT_FUND = 1000 // 1000 UNIT
+const MAX_ACCOUNT_FUND = 10000 // 10000 UNIT
 
 /** Cycle through the dev mnemonics so as not to deplete the funds too quickly
  */
@@ -72,8 +72,8 @@ export async function sendFunds(
     }
 
     const api = env.contractInterface.api
-    const unit = getOneUnit(env.api)
-    env.logger.info(
+    const unit = oneUnit(env.api)
+    env.logger.debug(
         'Sending funds from',
         pair.address,
         'to',
@@ -112,7 +112,7 @@ export async function sendFunds(
     })
     await result
         .then((result: ISubmittableResult) => {
-            env.logger.info(who, 'sent amount', amount.toString(), 'at tx hash ', result.status.asInBlock.toHex())
+            env.logger.debug(who, 'sent amount', amount.toString(), 'at tx hash ', result.status.asInBlock.toHex())
         })
         .catch((e) => {
             throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', undefined, undefined, { e })
@@ -141,7 +141,7 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     )
     logger.info('   - providerAddDataset')
     const datasetResult = await tasks.providerAddDatasetFromFile(provider.datasetFile)
-    datasetResult.contractEvents!.map((event) => logger.info(JSON.stringify(event, null, 4)))
+    datasetResult.contractEvents!.map((event) => logger.debug(JSON.stringify(event, null, 4)))
     const events = getEventsFromMethodName(datasetResult, 'ProviderAddDataset')
     return events[0].event.args[1] as Hash
 }
@@ -169,7 +169,7 @@ export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
  * @param stakeMultiplier
  */
 export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN, stakeMultiplier?: number): BN {
-    const unit = getOneUnit(env.api)
+    const unit = oneUnit(env.api)
 
     // We want to give each provider 100 * the required stake or 1 UNIT, whichever is greater, so that gas fees can be
     // refunded to the Dapp User from within the contract
@@ -192,14 +192,14 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
  * @param stakeAmount
  */
 export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
-    const unit = getOneUnit(env.api)
-    env.logger.info('Stake amount', stakeAmount.div(unit).toString(), 'UNIT')
+    const unit = oneUnit(env.api)
+    env.logger.debug('Stake amount', stakeAmount.div(unit).toString(), 'UNIT')
     const sendAmount = BN.max(
         new BN(stakeAmount).muln(2).add(unit.muln(MAX_ACCOUNT_FUND)),
-        env.api.consts.balances.existentialDeposit.muln(100)
+        env.api.consts.balances.existentialDeposit.muln(10000)
     )
 
     // Should result in each account receiving a minimum of MAX_ACCOUNT_FUND UNIT
-    env.logger.info('Setting send amount to', sendAmount.div(unit).toString(), 'UNIT')
+    env.logger.debug('Setting send amount to', sendAmount.div(unit).toString(), 'UNIT')
     return sendAmount
 }

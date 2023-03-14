@@ -21,6 +21,9 @@ export default (): ProsopoConfig => ({
     contract: {
         abi: '../contract/src/abi/prosopo.json',
     },
+    account: {
+        password: process.env.PROVIDER_ACCOUNT_PASSWORD || '',
+    },
     networks: {
         development: {
             endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944',

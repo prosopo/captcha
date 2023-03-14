@@ -18,6 +18,8 @@ import { Environment, loadEnv } from '../../src/env'
 import { ProsopoEnvironment } from '../../src/types'
 import consola from 'consola'
 import { ProsopoEnvError } from '@prosopo/common'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { getPair, getSs58Format } from '../../src/cli/util'
 
 loadEnv()
 
@@ -78,7 +80,7 @@ export async function populateDatabase(
     userCounts: UserCount,
     exportData: boolean
 ): Promise<IDatabaseAccounts> {
-    env.logger.info('Starting database populator...')
+    env.logger.debug('Starting database populator...')
     const databasePopulator = new DatabasePopulator(env)
     await databasePopulator.isReady()
     const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
@@ -105,12 +107,24 @@ export async function populateDatabase(
     return databasePopulator
 }
 
+async function run() {
+    const ss58Format = getSs58Format()
+    const pair = await getPair(
+        process.env.PAIR_TYPE as KeypairType,
+        ss58Format,
+        process.env.PROVIDER_MNEMONIC,
+        process.env.PROVIDER_SEED
+    )
+
+    await populateDatabase(new Environment(pair), DEFAULT_USER_COUNT, true)
+}
+
 if (require.main === module) {
     const startDate = Date.now()
-    if (!process.env.PROVIDER_MNEMONIC) {
-        throw new Error('Please set PROVIDER_MNEMONIC in your environment')
+    if (!process.env.PROVIDER_MNEMONIC && !process.env.PROVIDER_SEED) {
+        throw new Error('Please set PROVIDER_MNEMONIC or PROVIDER_SEED in your environment')
     }
-    populateDatabase(new Environment(process.env.PROVIDER_MNEMONIC || ''), DEFAULT_USER_COUNT, true)
+    run()
         .then(() => console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`))
         .finally(() => process.exit())
 }

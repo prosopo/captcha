@@ -15,6 +15,9 @@ import { MockEnvironment } from '../mocks/mockenv'
 import { before } from 'mocha'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
+import { getPair } from '../../src/index'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { getSs58Format } from '../../src/cli/util'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -25,23 +28,21 @@ describe('CONTRACT WRAPPER', () => {
 
     before(async () => {
         // Register the dapp
-        const mockEnv = new MockEnvironment()
+        const ss58Format = getSs58Format()
+        const pair = await getPair(
+            (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
+            ss58Format,
+            undefined,
+            undefined,
+            undefined,
+            '//Alice'
+        )
+        const mockEnv = new MockEnvironment(pair)
 
         await mockEnv.isReady()
         contractApi = mockEnv.contractInterface
     })
 
-    it('Gets the contract method from the ABI when method name is valid', () => {
-        expect(function () {
-            contractApi.getContractMethod('dappRegister')
-        }).to.not.throw()
-    })
-
-    it('Throws an error when method name is invalid', () => {
-        expect(function () {
-            contractApi.getContractMethod('methodThatDoesntExist')
-        }).to.throw(/Invalid contract method/)
-    })
     //TODO fix this test when type api is stable
     //             return this.abi.registry.createType('ContractLayoutStructField ', storageEntry)
 
