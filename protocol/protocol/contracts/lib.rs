@@ -3482,8 +3482,15 @@ pub mod prosopo {
             let op2 = AccountId::from([0x2; 32]);
             let ops = vec![op1, op2];
             // initialise the contract
-            let contract =
-                Prosopo::default(ops.clone(), STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+            let contract = Prosopo::default(
+                ops.clone(),
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                0,
+                1000,
+            );
             (op1, op2, ops, contract)
         }
 
