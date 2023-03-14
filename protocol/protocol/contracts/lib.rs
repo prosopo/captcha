@@ -554,8 +554,16 @@ pub mod prosopo {
                     ink::env::debug_println!("Error: {:?}", e);
                 }
             }
-            let account = AccountId::from(account_bytes);
-            account
+            let mut output = <Blake2x256 as HashOutput>::Type::default();
+            <Blake2x256 as CryptoHash>::hash(&account_bytes, &mut output);
+            
+            let acc = AccountId::from(output);
+
+            debug!("caller {:?}", self.env().caller());
+            debug!("acc {:?}", acc);
+
+            acc
+            // account_bytes
         }
 
         /// Print and return an error
