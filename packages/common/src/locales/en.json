@@ -19,10 +19,12 @@
         "GENERATE_CPATCHAS_JSON_FAILED": "Something went wrong while creating captchas json file",
         "CALCULATE_CAPTCHA_SOLUTION": "Something went wrong while calculating captcha solutions",
         "MNEMONIC_UNDEFINED": "Provider mnemonic Undefined. Please set `PROVIDER_MNEMONIC` in environment variables",
+        "NO_MNEMONIC_OR_SEED": "No mnemonic or seed provided",
         "ASYNC_FACTORY_CREATE": "Use `create` factory method",
         "CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}",
         "ENVIRONMENT_NOT_READY": "Environment not ready",
         "INVALID_SIGNATURE": "Invalid signature",
+        "PAIR_TYPE_UNDEFINED" : "Pair type undefined"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Invalid contract method",

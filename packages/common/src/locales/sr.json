@@ -19,10 +19,12 @@
         "GENERATE_CPATCHAS_JSON_FAILED": "Nešto je pošlo naopako pri pravljenju captchas json datoteke",
         "CALCULATE_CAPTCHA_SOLUTION": "Nešto je pošlo naopako pri izračunavanju captcha rešenja",
         "MNEMONIC_UNDEFINED": "Mnemonik snabdevača nedefinisan. Podesite `PROVIDER_MNEMONIC` u promenljivama okruženja",
+        "NO_MNEMONIC_OR_SEED": "Mnemonik / seed snabdevača nedefinisan.",
         "ASYNC_FACTORY_CREATE": "Koristite factory metodu „kreiraj“.",
         "CANT_FIND_KEYRINGPAIR": "Keyringpair nije pronađen za {{address}}",
         "ENVIRONMENT_NOT_READY": "Environment not ready",
-        "INVALID_SIGNATURE": "Invalid signature"
+        "INVALID_SIGNATURE": "Invalid signature",
+        "PAIR_TYPE_UNDEFINED" : "Pair type undefined"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Nevažeća metoda ugovora",
