@@ -539,6 +539,25 @@ pub mod prosopo {
             }
         }
 
+        #[ink(message)]
+        pub fn abc(&self, sig: [u8; 65], msg_hash: [u8; 32]) -> AccountId {
+            let mut account_bytes = [0u8; 33];
+            // ecdsa recover will populate the account bytes from the signature and message hash if successful
+            let opt = ink::env::ecdsa_recover(&sig, &msg_hash, &mut account_bytes);
+            match opt {
+                Ok(_) => {
+                    // account_bytes will be populated with the recovered address
+                    ink::env::debug_println!("Recovered address: {:?}", account_bytes);
+                }
+                Err(e) => {
+                    // account_bytes will be empty as unable to recover address, bad signature or message hash
+                    ink::env::debug_println!("Error: {:?}", e);
+                }
+            }
+            let account = AccountId::from(account_bytes);
+            account
+        }
+
         /// Print and return an error
         fn print_err(&self, err: Error, fn_name: &str) -> Error {
             debug!(
