@@ -7,7 +7,6 @@ import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
 import { hexHash } from '@prosopo/datasets'
 import Extension from './Extension'
 import FingerprintJS, { hashComponents } from '@fingerprintjs/fingerprintjs'
-import { MessageTypesWithNullRequest } from '@polkadot/extension-base/background/types'
 import Signer from '@polkadot/extension-base/page/Signer'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
 import { Account, ProcaptchaConfig } from '../types'
@@ -61,7 +60,7 @@ export default class ExtWeb2 extends Extension {
                 },
             },
             name: 'procaptcha-web2',
-            version: '0.1.10',
+            version: '0.1.11',
             signer,
         }
     }
@@ -92,7 +91,10 @@ export default class ExtWeb2 extends Extension {
 
         await cryptoWaitReady()
         const keypair = keyring.addFromMnemonic(mnemonic)
-        const address = keypair.address.length === 42 ? keypair.address : encodeAddress(decodeAddress(keypair.address))
+        const address =
+            keypair.address.length === 42
+                ? keypair.address
+                : encodeAddress(decodeAddress(keypair.address), api.registry.chainSS58)
         return {
             address,
             type,

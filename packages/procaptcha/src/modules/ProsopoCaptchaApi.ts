@@ -28,13 +28,9 @@ import { TCaptchaSubmitResult } from '../types/client'
 import { ProsopoApiError } from '../api/handlers'
 import { ProsopoEnvError } from '@prosopo/common'
 import { computeCaptchaSolutionHash } from '@prosopo/datasets'
-import {
-    ProsopoCaptchaSolutionCommitment,
-    ProsopoContractMethods,
-    ProsopoRandomProvider,
-    TransactionResponse,
-} from '@prosopo/contract'
+import { ProsopoCaptchaSolutionCommitment, ProsopoContractMethods, ProsopoRandomProvider } from '@prosopo/contract'
 import { stringToHex } from '@polkadot/util'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 
 export class ProsopoCaptchaApi {
     userAccount: string
@@ -111,7 +107,7 @@ export class ProsopoCaptchaApi {
         // console.log("solveCaptchaChallenge USER ACCOUNT", this.contract.getAccount().address);
         // console.log("solveCaptchaChallenge DAPP ACCOUNT", this.contract.getDappAddress());
         // console.log("solveCaptchaChallenge CONTRACT ADDRESS", this.contract.getContract().address.toString());
-        let tx: TransactionResponse | undefined = undefined
+        let tx: ContractSubmittableResult | undefined = undefined
 
         if (!this.web2) {
             try {
@@ -150,7 +146,7 @@ export class ProsopoCaptchaApi {
                 requestHash,
                 this.contract.pair.address,
                 salt,
-                tx ? tx?.blockHash : undefined,
+                tx && tx.blockNumber ? tx.blockNumber.hash.toHex() : undefined,
                 tx ? (tx.txHash ? tx.txHash.toString() : undefined) : undefined,
                 this.web2,
                 signature
