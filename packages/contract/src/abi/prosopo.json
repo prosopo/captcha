@@ -1,11 +1,11 @@
 {
   "source": {
-    "hash": "0xb398c34eeaa6631344073ab704806495f35c84bc73f79e69784e4dbf5ad96b02",
-    "language": "ink! 4.0.0-beta",
+    "hash": "0xfd7f0bc5cc8e936fb851761cbcc31965676fa1ca7e356466a979064402df3c49",
+    "language": "ink! 4.0.0-rc",
     "compiler": "rustc 1.67.0",
     "build_info": {
-      "build_mode": "Debug",
-      "cargo_contract_version": "2.0.0-rc",
+      "build_mode": "Release",
+      "cargo_contract_version": "2.0.1",
       "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
       "wasm_opt_settings": {
         "keep_debug_symbols": true,
@@ -464,6 +464,23 @@
       "type": 12
     },
     "messages": [
+      {
+        "args": [],
+        "docs": [
+          " Terminate the contract and return the remaining balance to the caller."
+        ],
+        "label": "terminate",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 11
+        },
+        "selector": "0x476d839f"
+      },
       {
         "args": [],
         "docs": [

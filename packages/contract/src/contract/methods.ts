@@ -119,7 +119,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
     public async getProviderDetails(accountId: string): Promise<ProsopoProvider> {
         const response = await this.contractQuery('getProviderDetails', [accountId])
         // Type is Result<Result<ProsopoProvider, ProsopoError>, InkPrimitivesLangError>
-        // const fragment = this.getContractMethod('getProviderDetails')
+        // const fragment = this.abi.findMessage('getProviderDetails')
         // console.log(fragment.typeDef.type)
         // ts-ignore could be removed by explicitly creating the type using the registry
         // @ts-ignore
@@ -140,28 +140,28 @@ export class ProsopoContractMethods extends ProsopoContractApi {
 
     public async getCaptchaSolutionCommitment(solutionId: string): Promise<ProsopoCaptchaSolutionCommitment> {
         const { result } = await this.contractQuery('getCaptchaSolutionCommitment', [solutionId])
-        const fragment = this.getContractMethod('getCaptchaSolutionCommitment')
+        const fragment = this.abi.findMessage('getCaptchaSolutionCommitment')
         // @ts-ignore
         return this.abi.registry.createType(fragment.returnType?.type, result.asOk.data).asOk.asOk.toPrimitive()
     }
 
     public async getDappOperatorLastCorrectCaptcha(accountId: string): Promise<ProsopoLastCorrectCaptcha> {
         const { result } = await this.contractQuery('dappOperatorLastCorrectCaptcha', [accountId])
-        const fragment = this.getContractMethod('dappOperatorLastCorrectCaptcha')
+        const fragment = this.abi.findMessage('dappOperatorLastCorrectCaptcha')
         // @ts-ignore
         return this.abi.registry.createType(fragment.returnType?.type, result.asOk.data).asOk.asOk.toPrimitive()
     }
 
     public async getProviderStakeDefault(): Promise<u128> {
         const { result } = await this.contractQuery('getProviderStakeDefault', [])
-        const fragment = this.getContractMethod('getProviderStakeDefault')
+        const fragment = this.abi.findMessage('getProviderStakeDefault')
         // @ts-ignore
         return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk
     }
 
     public async getProviderAccounts(): Promise<Vec<AccountId>> {
         const { result } = await this.contractQuery('getAllProviderIds', [])
-        const fragment = this.getContractMethod('getAllProviderIds')
+        const fragment = this.abi.findMessage('getAllProviderIds')
         // @ts-ignore
         return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk
     }

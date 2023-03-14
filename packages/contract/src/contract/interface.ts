@@ -26,7 +26,7 @@ import { firstValueFrom, map } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
 import { BN, BN_ONE, BN_ZERO } from '@polkadot/util'
 import { Weight } from '@polkadot/types/interfaces/runtime'
-import { EventRecord, WeightV2 } from '@polkadot/types/interfaces'
+import { EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
 import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { useWeightImpl } from './useWeight'
@@ -34,6 +34,7 @@ import { IKeyringPair, ISubmittableResult } from '@polkadot/types/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { applyOnEvent } from '@polkadot/api-contract/util'
 import { Bytes } from '@polkadot/types-codec'
+import consola from 'consola'
 // 4_999_999_999_999
 const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE)
 
@@ -42,6 +43,7 @@ export class ProsopoContractApi extends ContractPromise {
     pair: IKeyringPair
     options: ContractOptions
     nonce: number
+    logger: typeof consola
 
     constructor(
         api: ApiPromise,
@@ -55,13 +57,19 @@ export class ProsopoContractApi extends ContractPromise {
         this.pair = pair
         this.contractName = contractName
         this.nonce = currentNonce
+        this.logger = consola.withScope(`ProsopoContractApi: ${contractName}`)
     }
 
     public getContract(): ProsopoContractApi {
         return this
     }
 
-    getOptions(message: AbiMessage, value?: number | BN, gasLimit?: Weight | WeightV2): ContractOptions {
+    getOptions(
+        message: AbiMessage,
+        value?: number | BN,
+        gasLimit?: Weight | WeightV2,
+        storageDeposit?: StorageDeposit
+    ): ContractOptions {
         const _gasLimit: Weight | WeightV2 | undefined = gasLimit
             ? gasLimit
             : message.isMutating
@@ -72,7 +80,7 @@ export class ProsopoContractApi extends ContractPromise {
             : undefined
         return {
             gasLimit: _gasLimit,
-            storageDepositLimit: null,
+            storageDepositLimit: storageDeposit ? storageDeposit.asCharge : null,
             value: value || BN_ZERO,
         }
     }
@@ -87,22 +95,25 @@ export class ProsopoContractApi extends ContractPromise {
         value?: number | BN | undefined
     ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions }> {
         // Always query first as errors are passed back from a dry run but not from a transaction
-        const message = this.getContractMethod(contractMethodName)
+        const message = this.abi.findMessage(contractMethodName)
         const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
-        const weight = await useWeightImpl(this.api as ApiPromise, new BN(this.api.consts.babe?.expectedBlockTime))
+        const expectedBlockTime = new BN(this.api.consts.babe?.expectedBlockTime)
+        const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime)
+        const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
+        this.logger.debug('Sending address: ', this.pair.address)
         const extrinsic = this.query[message.method](
             this.pair.address,
             {
                 value,
-                gasLimit: weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight,
+                gasLimit,
                 storageDepositLimit: null,
             },
             ...encodedArgs
         )
-        const response = await extrinsic
 
+        const response = await extrinsic
         if (response.result.isOk) {
-            const options = this.getOptions(message, value, response.gasRequired)
+            const options = this.getOptions(message, value, response.gasRequired, response.storageDeposit)
             handleContractCallOutcomeErrors(response, contractMethodName)
             return { extrinsic: this.tx[contractMethodName](options, ...encodedArgs), options }
         } else {
@@ -125,7 +136,7 @@ export class ProsopoContractApi extends ContractPromise {
         const { extrinsic } = await this.buildExtrinsic(contractMethodName, args, value)
         const nextNonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
         this.nonce = nextNonce ? nextNonce.toNumber() : this.nonce
-
+        this.logger.debug(`Sending ${contractMethodName} tx`)
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             const unsub = await extrinsic.signAndSend(
@@ -147,7 +158,7 @@ export class ProsopoContractApi extends ContractPromise {
                                             try {
                                                 return this.abi.decodeEvent(data as Bytes)
                                             } catch (error) {
-                                                console.error(
+                                                this.logger.error(
                                                     `Unable to decode contract event: ${(error as Error).message}`
                                                 )
 
@@ -183,7 +194,7 @@ export class ProsopoContractApi extends ContractPromise {
         value?: number | BN | undefined,
         atBlock?: string | Uint8Array
     ): Promise<ContractCallOutcome> {
-        const message = this.getContractMethod(contractMethodName)
+        const message = this.abi.findMessage(contractMethodName)
         const origin = this.pair.address
 
         const params: Uint8Array[] = encodeStringArgs(this.abi, message, args)
@@ -243,17 +254,6 @@ export class ProsopoContractApi extends ContractPromise {
             gasLimit: options.gasLimit?.toString(),
             ...(value && { value: value.toString() }),
         })
-    }
-
-    /** Get the contract method from the ABI
-     * @return the contract method object
-     */
-    getContractMethod(contractMethodName: string): AbiMessage {
-        const methodObj = this.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
-        if (methodObj !== undefined) {
-            return methodObj
-        }
-        throw new ProsopoContractError('CONTRACT.INVALID_METHOD', 'contractMethodName')
     }
 
     /** Get the storage entry from the ABI given a storage name
