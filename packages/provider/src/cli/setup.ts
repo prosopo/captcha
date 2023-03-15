@@ -20,7 +20,7 @@ import { Environment, getEnvFile, loadEnv } from '../env'
 import { generateMnemonic, getSendAmount, getStakeAmount, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
 import { ProsopoEnvError } from '@prosopo/common'
-import { getPair, getPairType, getSecret, getSs58Format } from './util'
+import { getPair, getPairType, getSs58Format } from './util'
 
 loadEnv()
 
@@ -112,7 +112,7 @@ async function setup() {
 
     const pairType = getPairType()
     const ss58Format = getSs58Format()
-    const secret = getSecret()
+    const secret = '//Alice'
     const pair = await getPair(pairType, ss58Format, secret)
     const env = new Environment(pair)
     await env.isReady()
