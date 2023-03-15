@@ -59,7 +59,7 @@ describe('CONTRACT TASKS', async () => {
     let providerStakeDefault: BN
     const ss58Format = getSs58Format()
     const pairType = (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
-    const alicePair = await getPair(pairType, ss58Format, undefined, undefined, undefined, '//Alice')
+    const alicePair = await getPair(pairType, ss58Format, '//Alice')
     const mockEnv = new MockEnvironment(alicePair)
 
     before(async () => {

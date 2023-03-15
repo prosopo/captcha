@@ -22,7 +22,7 @@ export default (): ProsopoConfig => ({
         abi: '../contract/src/abi/prosopo.json',
     },
     account: {
-        password: process.env.PROVIDER_ACCOUNT_PASSWORD || '',
+        password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
     },
     networks: {
         development: {

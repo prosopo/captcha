@@ -13,27 +13,38 @@ export function getPairType(): KeypairType {
     return (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
 }
 
-export async function getPair(
-    pairType: KeypairType,
-    ss58Format: number,
-    mnemonic?: string,
-    seed?: string,
-    json?: KeyringPair$Json,
-    uri?: string
-): Promise<KeyringPair> {
+export function getSecret(): string {
+    const secret =
+        process.env.PROVIDER_MNEMONIC ||
+        process.env.PROVIDER_SEED ||
+        process.env.PROVIDER_URI ||
+        process.env.PROVIDER_JSON
+    if (!secret) {
+        throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
+    }
+    return secret
+}
+
+export async function getPair(pairType: KeypairType, ss58Format: number, secret: string): Promise<KeyringPair> {
     await cryptoWaitReady()
     const keyring = new Keyring({ type: pairType, ss58Format })
-    if (mnemonic && mnemonicValidate(mnemonic)) {
-        return keyring.addFromUri(mnemonic)
+    if (mnemonicValidate(secret)) {
+        return keyring.addFromUri(secret)
     }
-    if (seed && isHex(seed)) {
-        return keyring.addFromSeed(hexToU8a(seed))
+    if (isHex(secret)) {
+        return keyring.addFromSeed(hexToU8a(secret))
     }
-    if (json) {
-        return keyring.addFromJson(json)
+    if (secret.startsWith('//')) {
+        return keyring.addFromUri(secret)
     }
-    if (uri) {
-        return keyring.addFromUri(uri)
+    try {
+        const json = JSON.parse(secret)
+        const {
+            encoding: { content },
+        } = json
+        const keyring = new Keyring({ type: content[1], ss58Format })
+        return keyring.addFromJson(json as KeyringPair$Json)
+    } catch (e) {
+        throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
     }
-    throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
 }

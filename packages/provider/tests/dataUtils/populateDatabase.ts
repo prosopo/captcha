@@ -18,8 +18,7 @@ import { Environment, loadEnv } from '../../src/env'
 import { ProsopoEnvironment } from '../../src/types'
 import consola from 'consola'
 import { ProsopoEnvError } from '@prosopo/common'
-import { KeypairType } from '@polkadot/util-crypto/types'
-import { getPair, getSs58Format } from '../../src/cli/util'
+import { getPair, getPairType, getSecret, getSs58Format } from '../../src/cli/util'
 
 loadEnv()
 
@@ -109,12 +108,9 @@ export async function populateDatabase(
 
 async function run() {
     const ss58Format = getSs58Format()
-    const pair = await getPair(
-        process.env.PAIR_TYPE as KeypairType,
-        ss58Format,
-        process.env.PROVIDER_MNEMONIC,
-        process.env.PROVIDER_SEED
-    )
+    const pairType = getPairType()
+    const secret = getSecret()
+    const pair = await getPair(pairType, ss58Format, secret)
 
     await populateDatabase(new Environment(pair), DEFAULT_USER_COUNT, true)
 }

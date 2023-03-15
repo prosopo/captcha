@@ -15,32 +15,16 @@
 // import { LocalAssetsResolver } from '../assets';
 import { Environment, loadEnv } from '../env'
 import { processArgs } from './argv'
-import { ProsopoEnvError } from '@prosopo/common'
-import { KeypairType } from '@polkadot/util-crypto/types'
-import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
-import { getPair, getPairType, getSs58Format } from './util'
+import { getPair, getPairType, getSecret, getSs58Format } from './util'
 
 loadEnv()
 
 async function main() {
-    if (!process.env.PROVIDER_MNEMONIC && !process.env.PROVIDER_SEED && !process.env.PROVIDER_JSON) {
-        throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
-    }
-    let pair: KeyringPair
-
+    const secret = getSecret()
     const ss58Format = getSs58Format()
+    const pairType = getPairType()
 
-    if (process.env.PROVIDER_JSON) {
-        const json = JSON.parse(process.env.PROVIDER_JSON) as KeyringPair$Json
-        const {
-            encoding: { content },
-        } = json
-
-        pair = await getPair(content[1] as KeypairType, ss58Format, undefined, undefined, json)
-    } else {
-        const pairType = getPairType()
-        pair = await getPair(pairType, ss58Format, process.env.PROVIDER_MNEMONIC, process.env.PROVIDER_SEED)
-    }
+    const pair = await getPair(pairType, ss58Format, secret)
 
     console.log(`Pair address: ${pair.address}`)
 

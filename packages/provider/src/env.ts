@@ -127,7 +127,9 @@ export class Environment implements ProsopoEnvironment {
 
     async isReady() {
         try {
-            this.pair.unlock(this.config.account.password)
+            if (this.config.account.password) {
+                this.pair.unlock(this.config.account.password)
+            }
             this.api = await ApiPromise.create({ provider: this.wsProvider })
             await this.getSigner()
             await this.getContractApi()

@@ -120,7 +120,7 @@ export async function sendFunds(
 }
 
 export async function setupProvider(env, provider: IProviderAccount): Promise<Hash> {
-    await env.changeSigner(provider.mnemonic)
+    await env.changeSigner(provider.pair)
     const logger = env.logger
     const tasks = new Tasks(env)
     const payeeKey = 'ProsopoPayee'
@@ -149,7 +149,7 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
 export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
     const tasks = new Tasks(env)
     const logger = env.logger
-    await env.changeSigner(dapp.mnemonic)
+    await env.changeSigner(dapp.pair)
     logger.info('   - dappRegister')
     await tasks.contractApi.dappRegister(
         hexHash(dapp.serviceOrigin),

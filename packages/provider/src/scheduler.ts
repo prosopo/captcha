@@ -18,17 +18,13 @@ import { CronJob } from 'cron'
 
 import { Tasks } from './tasks/tasks'
 import { Environment } from './env'
-import { KeypairType } from '@polkadot/util-crypto/types'
-import { getPair, getSs58Format } from './cli/util'
+import { getPair, getPairType, getSecret, getSs58Format } from './cli/util'
 
 async function main() {
     const ss58Format = getSs58Format()
-    const pair = await getPair(
-        process.env.PAIR_TYPE as KeypairType,
-        ss58Format,
-        process.env.PROVIDER_MNEMONIC,
-        process.env.PROVIDER_SEED
-    )
+    const secret = getSecret()
+    const pairType = getPairType()
+    const pair = await getPair(pairType, ss58Format, secret)
     const env = new Environment(pair)
 
     await env.isReady()

@@ -1,4 +1,5 @@
 import { BN } from '@polkadot/util'
+import { KeyringPair } from '@polkadot/keyring/types'
 
 export interface IUserAccount {
     mnemonic: string
@@ -12,6 +13,7 @@ export interface IProviderAccount extends IUserAccount {
     stake: number | BN
     payee: string
     captchaDatasetId: string
+    pair?: KeyringPair
 }
 
 export interface IDappAccount {
@@ -20,4 +22,5 @@ export interface IDappAccount {
     contractAccount: string
     optionalOwner: string
     fundAmount: number | BN
+    pair?: KeyringPair
 }

@@ -32,9 +32,6 @@ describe('CONTRACT WRAPPER', () => {
         const pair = await getPair(
             (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
             ss58Format,
-            undefined,
-            undefined,
-            undefined,
             '//Alice'
         )
         const mockEnv = new MockEnvironment(pair)

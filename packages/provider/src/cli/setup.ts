@@ -14,13 +14,13 @@
 // import { Keyring } from '@polkadot/keyring';
 // import yargs from 'yargs/yargs';
 // import { hideBin } from 'yargs/helpers';
-import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
+import { KeyringPair } from '@polkadot/keyring/types'
 import fse from 'fs-extra'
 import { Environment, getEnvFile, loadEnv } from '../env'
 import { generateMnemonic, getSendAmount, getStakeAmount, sendFunds, setupDapp, setupProvider } from '../tasks/setup'
 import { IDappAccount, IProviderAccount } from '../types/accounts'
 import { ProsopoEnvError } from '@prosopo/common'
-import { getPair, getPairType, getSs58Format } from './util'
+import { getPair, getPairType, getSecret, getSs58Format } from './util'
 
 loadEnv()
 
@@ -112,24 +112,22 @@ async function setup() {
 
     const pairType = getPairType()
     const ss58Format = getSs58Format()
-
-    const pair = await getPair(
-        pairType,
-        ss58Format,
-        '//Alice',
-        process.env.PROVIDER_SEED,
-        (process.env.PROVIDER_JSON as unknown as KeyringPair$Json) || undefined,
-        process.env.PROVIDER_URI || undefined
-    )
+    const secret = getSecret()
+    const pair = await getPair(pairType, ss58Format, secret)
     const env = new Environment(pair)
     await env.isReady()
 
     defaultProvider.mnemonic = mnemonic
 
     env.logger.info(`Registering provider... ${defaultProvider.address}`)
+
+    defaultProvider.pair = await getPair(pairType, ss58Format, mnemonic)
+
     await registerProvider(env, defaultProvider)
 
     defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS
+
+    defaultDapp.pair = await getPair(pairType, ss58Format, defaultDapp.mnemonic)
 
     env.logger.info('Registering dapp...')
     await registerDapp(env, defaultDapp)
