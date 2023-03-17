@@ -548,14 +548,16 @@ pub mod prosopo {
             }
         }
 
-        /// Verify a signature. The payload is a blake256 hash of the payload wrapped in the Byte tag. E.g.
+        /// Verify a signature. The payload is a blake128 hash of the payload wrapped in the Byte tag. E.g.
         ///     message="hello"
-        ///     hash=blake256(message) // 0x1234... (32 bytes)
-        ///     payload="<Byte>0x1234...</Byte>" (32 bytes + 15 bytes = 47 bytes)
+        ///     hash=blake128(message) // 0x1234... (32 bytes)
+        ///     payload="<Byte>0x1234...</Byte>" (32 bytes + 13 bytes (tags) + 2 bytes (multihash notation) = 47 bytes)
+        /// 
+        /// Read more about multihash notation here https://w3c-ccg.github.io/multihash/index.xml#mh-example (adds two bytes to identify type and length of hash function)
         /// 
         /// Note the signature must be sr25519 type.
         #[ink(message)]
-        pub fn verify_signature(&self, signature: [u8; 64], payload: [u8; 47]) -> Result<bool, Error> {
+        pub fn verify_signature(&self, signature: [u8; 64], payload: [u8; 31]) -> Result<bool, Error> {
             let caller = self.env().caller();
             let mut caller_bytes = [0u8; 32];
             let caller_ref: &[u8] = caller.as_ref();
