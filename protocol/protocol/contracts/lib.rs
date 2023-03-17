@@ -15,6 +15,10 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 #![cfg_attr(not(feature = "std"), no_std)]
 
+// We must make sure that this is the same as declared in the substrate source code.
+// this is the signing context used by the schnorrkel library when signing messages. It has to be the same binary blob on both sides of the signing process (i.e. the signing and the verifying) as it is used in the encryption/decryption process.
+const CTX: &'static [u8] = b"substrate";
+
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
 /// Print and return an error in ink
@@ -63,6 +67,7 @@ pub mod prosopo {
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
+    use schnorrkel::{Signature, PublicKey};
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -491,6 +496,10 @@ pub mod prosopo {
         ProviderFeeTooHigh,
         /// Returned if the account is an operator, hence the operation is not allowed due to conflict of interest
         AccountIsOperator,
+        /// Returned if the signature is invalid during signing
+        InvalidSignature,
+        /// Returned if the public key is invalid during signing
+        InvalidPublicKey,
     }
 
     impl Prosopo {
@@ -539,31 +548,23 @@ pub mod prosopo {
             }
         }
 
+        /// Verify a signature. The payload is a blake256 hash of the payload wrapped in the Byte tag. E.g.
+        ///     message="hello"
+        ///     hash=blake256(message) // 0x1234... (32 bytes)
+        ///     payload="<Byte>0x1234...</Byte>" (32 bytes + 15 bytes = 47 bytes)
+        /// 
+        /// Note the signature must be sr25519 type.
         #[ink(message)]
-        pub fn abc(&self, sig: [u8; 65], msg_hash: [u8; 32]) -> AccountId {
-            let mut account_bytes = [0u8; 33];
-            // ecdsa recover will populate the account bytes from the signature and message hash if successful
-            let opt = ink::env::ecdsa_recover(&sig, &msg_hash, &mut account_bytes);
-            match opt {
-                Ok(_) => {
-                    // account_bytes will be populated with the recovered address
-                    ink::env::debug_println!("Recovered address: {:?}", account_bytes);
-                }
-                Err(e) => {
-                    // account_bytes will be empty as unable to recover address, bad signature or message hash
-                    ink::env::debug_println!("Error: {:?}", e);
-                }
-            }
-            let mut output = <Blake2x256 as HashOutput>::Type::default();
-            <Blake2x256 as CryptoHash>::hash(&account_bytes, &mut output);
+        pub fn verify_signature(&self, signature: [u8; 64], payload: [u8; 47]) -> Result<bool, Error> {
+            let caller = self.env().caller();
+            let mut caller_bytes = [0u8; 32];
+            let caller_ref: &[u8] = caller.as_ref();
+            caller_bytes.copy_from_slice(&caller_ref[..32]);
             
-            let acc = AccountId::from(output);
-
-            debug!("caller {:?}", self.env().caller());
-            debug!("acc {:?}", acc);
-
-            acc
-            // account_bytes
+            let sig = Signature::from_bytes(&signature).map_err(|_| Error::InvalidSignature)?;
+            let pub_key = PublicKey::from_bytes(&caller_bytes).map_err(|_| Error::InvalidPublicKey)?;
+            let res = pub_key.verify_simple(crate::CTX, &payload, &sig);
+            Ok(res.is_ok())
         }
 
         /// Print and return an error
