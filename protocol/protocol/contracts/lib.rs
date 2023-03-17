@@ -557,7 +557,7 @@ pub mod prosopo {
         /// 
         /// Note the signature must be sr25519 type.
         #[ink(message)]
-        pub fn verify_signature(&self, signature: [u8; 64], payload: [u8; 31]) -> Result<bool, Error> {
+        pub fn verify_signature(&self, signature: [u8; 64], payload: [u8; 47]) -> Result<bool, Error> {
             let caller = self.env().caller();
             let mut caller_bytes = [0u8; 32];
             let caller_ref: &[u8] = caller.as_ref();
