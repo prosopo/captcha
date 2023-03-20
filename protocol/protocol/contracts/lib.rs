@@ -289,6 +289,7 @@ pub mod prosopo {
         operator_votes: Mapping<AccountId, Vote>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
+        min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
     }
 
@@ -492,6 +493,8 @@ pub mod prosopo {
         NoCorrectCaptcha,
         /// Returned if the function has been disabled in the contract
         FunctionDisabled,
+        /// Returned if not enough providers are active
+        NotEnoughActiveProviders,
         /// Returned if provider fee is too high
         ProviderFeeTooHigh,
         /// Returned if the account is an operator, hence the operation is not allowed due to conflict of interest
@@ -511,6 +514,7 @@ pub mod prosopo {
             dapp_stake_default: Balance,
             max_user_history_len: u16,
             max_user_history_age: u64,
+            min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
             if operator_accounts.len() < 2 {
@@ -544,6 +548,7 @@ pub mod prosopo {
                 max_user_history_len,
                 max_user_history_age,
                 captcha_solution_commitments: Default::default(),
+                min_num_active_providers,
                 max_provider_fee,
             }
         }
@@ -1690,6 +1695,10 @@ pub mod prosopo {
                     return err!(Error::NoActiveProviders);
                 }
 
+                if max < self.min_num_active_providers.into() {
+                    return err!(Error::NotEnoughActiveProviders);
+                }
+
                 // Get a random number between 0 and max
                 index = self.get_random_number(max as u128, user_account, dapp_contract_account);
 
@@ -1712,6 +1721,10 @@ pub mod prosopo {
                 // If the length is 0, then there are no active providers
                 if active_providers.is_empty() {
                     return err!(Error::NoActiveProviders);
+                }
+
+                if active_providers.len() < self.min_num_active_providers.into() {
+                    return err!(Error::NotEnoughActiveProviders);
                 }
 
                 // Get a random number between 0 and the length of the active providers
@@ -2012,6 +2025,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             assert!(contract.operators.get(operator_account).is_some());
@@ -2032,6 +2046,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let provider_stake_default: u128 = contract.get_provider_stake_default();
@@ -2049,6 +2064,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let dapp_stake_default: u128 = contract.get_dapp_stake_default();
@@ -2065,6 +2081,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let provider_account = AccountId::from([0x2; 32]);
@@ -2093,6 +2110,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let provider_account = AccountId::from([0x2; 32]);
@@ -2116,6 +2134,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let provider_account = AccountId::from([0x2; 32]);
@@ -2143,6 +2162,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             contract.get_random_number(0, operator_account, operator_account);
@@ -2160,6 +2180,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             const len: usize = 10;
@@ -2209,6 +2230,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "2424", 0);
@@ -2278,6 +2300,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -2317,6 +2340,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -2364,6 +2388,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2415,6 +2440,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2473,6 +2499,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2503,6 +2530,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let caller = AccountId::from([0x2; 32]);
@@ -2541,6 +2569,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let caller = AccountId::from([0x2; 32]);
@@ -2820,6 +2849,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let caller = AccountId::from([0x2; 32]);
@@ -2880,6 +2910,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let caller = AccountId::from([0x2; 32]);
@@ -2918,6 +2949,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let caller = AccountId::from([0x2; 32]);
@@ -2973,6 +3005,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -3043,6 +3076,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -3136,6 +3170,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -3205,6 +3240,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -3295,6 +3331,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -3371,6 +3408,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             contract.get_dapp_balance(dapp_account).unwrap_err();
@@ -3388,6 +3426,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             contract.get_provider_balance(provider_account).unwrap_err();
@@ -3397,6 +3436,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             contract.get_provider_balance(provider_account).unwrap_err();
@@ -3412,6 +3452,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let provider_account = AccountId::from([0x2; 32]);
@@ -3454,6 +3495,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             let provider_account = AccountId::from([0x2; 32]);
@@ -3517,6 +3559,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -3606,6 +3649,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -3690,6 +3734,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator1);
@@ -3718,8 +3763,15 @@ pub mod prosopo {
             let op2 = AccountId::from([0x2; 32]);
             let ops = vec![op1, op2];
             // initialise the contract
-            let contract =
-                Prosopo::default(ops.clone(), STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 1000);
+            let contract = Prosopo::default(
+                ops.clone(),
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                0,
+                1000,
+            );
             (op1, op2, ops, contract)
         }
 
