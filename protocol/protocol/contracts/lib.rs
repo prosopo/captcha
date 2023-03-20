@@ -67,7 +67,7 @@ pub mod prosopo {
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-    use schnorrkel::{Signature, PublicKey};
+    use schnorrkel::{PublicKey, Signature};
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -552,12 +552,16 @@ pub mod prosopo {
         ///     message="hello"
         ///     hash=blake128(message) // 0x1234... (32 bytes)
         ///     payload="<Bytes>0x1234...</Bytes>" (32 bytes + 15 bytes (tags) + 2 bytes (multihash notation) = 47 bytes)
-        /// 
+        ///
         /// Read more about multihash notation here https://w3c-ccg.github.io/multihash/index.xml#mh-example (adds two bytes to identify type and length of hash function)
-        /// 
+        ///
         /// Note the signature must be sr25519 type.
         #[ink(message)]
-        pub fn verify_sr25519(&self, signature: [u8; 64], payload: [u8; 49]) -> Result<bool, Error> {
+        pub fn verify_sr25519(
+            &self,
+            signature: [u8; 64],
+            payload: [u8; 49],
+        ) -> Result<bool, Error> {
             let caller = self.env().caller();
             let mut caller_bytes = [0u8; 32];
             let caller_ref: &[u8] = caller.as_ref();
@@ -566,9 +570,10 @@ pub mod prosopo {
             debug!("caller {:?}", caller);
             debug!("sig {:?}", signature);
             debug!("payload {:?}", payload);
-            
+
             let sig = Signature::from_bytes(&signature).map_err(|_| Error::InvalidSignature)?;
-            let pub_key = PublicKey::from_bytes(&caller_bytes).map_err(|_| Error::InvalidPublicKey)?;
+            let pub_key =
+                PublicKey::from_bytes(&caller_bytes).map_err(|_| Error::InvalidPublicKey)?;
             let res = pub_key.verify_simple(crate::CTX, &payload, &sig);
             Ok(res.is_ok())
         }
@@ -1985,12 +1990,7 @@ pub mod prosopo {
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
-        use schnorrkel::{
-            SecretKey,
-            MiniSecretKey,
-            Keypair,
-            ExpansionMode,
-        };
+        use schnorrkel::{ExpansionMode, Keypair, MiniSecretKey, SecretKey};
 
         use crate::prosopo::Error::{ProviderInactive, ProviderInsufficientFunds};
 
@@ -2588,7 +2588,7 @@ pub mod prosopo {
             );
 
             let data = "hello";
-            let mut data_hash = [0u8;16];
+            let mut data_hash = [0u8; 16];
             Blake2x128::hash(data.as_bytes(), &mut data_hash);
             println!("data_hash: {:?}", data_hash);
             let data_hex = hex::encode(data_hash);
@@ -2609,16 +2609,17 @@ pub mod prosopo {
             let mut signature_bytes = [0u8; 64];
             signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-            const ALICE: [u8; 32] = [212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125];
+            const ALICE: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
             // verify the signature
-            let valid = contract.verify_sr25519(
-                signature_bytes,
-                payload_bytes
-            ).unwrap();
+            let valid = contract
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap();
             assert!(valid);
-
         }
 
         #[ink::test]
@@ -2634,7 +2635,7 @@ pub mod prosopo {
             );
 
             let data = "hello";
-            let mut data_hash = [0u8;16];
+            let mut data_hash = [0u8; 16];
             Blake2x128::hash(data.as_bytes(), &mut data_hash);
             println!("data_hash: {:?}", data_hash);
             let data_hex = hex::encode(data_hash);
@@ -2655,16 +2656,17 @@ pub mod prosopo {
             let mut signature_bytes = [0u8; 64];
             signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-            const ALICE: [u8; 32] = [212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125];
+            const ALICE: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
             // verify the signature
-            let valid = contract.verify_sr25519(
-                signature_bytes,
-                payload_bytes
-            ).unwrap();
+            let valid = contract
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap();
             assert!(!valid);
-
         }
 
         #[ink::test]
@@ -2680,7 +2682,7 @@ pub mod prosopo {
             );
 
             let data = "hello";
-            let mut data_hash = [0u8;16];
+            let mut data_hash = [0u8; 16];
             Blake2x128::hash(data.as_bytes(), &mut data_hash);
             println!("data_hash: {:?}", data_hash);
             let data_hex = hex::encode(data_hash);
@@ -2701,16 +2703,17 @@ pub mod prosopo {
             let mut signature_bytes = [0u8; 64];
             signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-            const ALICE: [u8; 32] = [213, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125];
+            const ALICE: [u8; 32] = [
+                213, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
             // verify the signature
-            let valid = contract.verify_sr25519(
-                signature_bytes,
-                payload_bytes
-            ).unwrap_err();
+            let valid = contract
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap_err();
             assert_eq!(Error::InvalidPublicKey, valid);
-
         }
 
         #[ink::test]
@@ -2726,7 +2729,7 @@ pub mod prosopo {
             );
 
             let data = "hello2";
-            let mut data_hash = [0u8;16];
+            let mut data_hash = [0u8; 16];
             Blake2x128::hash(data.as_bytes(), &mut data_hash);
             println!("data_hash: {:?}", data_hash);
             let data_hex = hex::encode(data_hash);
@@ -2747,16 +2750,17 @@ pub mod prosopo {
             let mut signature_bytes = [0u8; 64];
             signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-            const ALICE: [u8; 32] = [212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125];
+            const ALICE: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
             // verify the signature
-            let valid = contract.verify_sr25519(
-                signature_bytes,
-                payload_bytes
-            ).unwrap();
+            let valid = contract
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap();
             assert!(!valid);
-
         }
 
         #[ink::test]
@@ -2772,7 +2776,7 @@ pub mod prosopo {
             );
 
             let data = "hello";
-            let mut data_hash = [0u8;16];
+            let mut data_hash = [0u8; 16];
             Blake2x128::hash(data.as_bytes(), &mut data_hash);
             println!("data_hash: {:?}", data_hash);
             let data_hex = hex::encode(data_hash);
@@ -2793,16 +2797,17 @@ pub mod prosopo {
             let mut signature_bytes = [0u8; 64];
             signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-            const ALICE: [u8; 32] = [212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125];
+            const ALICE: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
             // verify the signature
-            let valid = contract.verify_sr25519(
-                signature_bytes,
-                payload_bytes
-            ).unwrap();
+            let valid = contract
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap();
             assert!(!valid);
-
         }
 
         /// Test dapp register and then update
