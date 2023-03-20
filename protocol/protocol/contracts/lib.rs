@@ -2613,6 +2613,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -2660,6 +2661,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -2707,6 +2709,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -2754,6 +2757,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
@@ -2801,6 +2805,7 @@ pub mod prosopo {
                 STAKE_DEFAULT,
                 10,
                 1000000,
+                0,
                 1000,
             );
 
