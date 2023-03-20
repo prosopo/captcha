@@ -17,7 +17,7 @@
 
 // We must make sure that this is the same as declared in the substrate source code.
 // this is the signing context used by the schnorrkel library when signing messages. It has to be the same binary blob on both sides of the signing process (i.e. the signing and the verifying) as it is used in the encryption/decryption process.
-const CTX: &'static [u8] = b"substrate";
+const CTX: &[u8] = b"substrate";
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
@@ -2594,7 +2594,7 @@ pub mod prosopo {
             let data_hex = hex::encode(data_hash);
             println!("data_hex: {:?}", data_hex);
             // hex of prefix + hex of message hash + hex of suffix make the payload
-            let payload = "<Bytes>0x".to_string() + &data_hex + &"</Bytes>".to_string();
+            let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
             println!("payload: {}", payload);
             let payload_hex = hex::encode(payload);
             println!("payload_hex: {}", payload_hex);
@@ -2641,7 +2641,7 @@ pub mod prosopo {
             let data_hex = hex::encode(data_hash);
             println!("data_hex: {:?}", data_hex);
             // hex of prefix + hex of message hash + hex of suffix make the payload
-            let payload = "<Bytes>0x".to_string() + &data_hex + &"</Bytes>".to_string();
+            let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
             println!("payload: {}", payload);
             let payload_hex = hex::encode(payload);
             println!("payload_hex: {}", payload_hex);
@@ -2688,7 +2688,7 @@ pub mod prosopo {
             let data_hex = hex::encode(data_hash);
             println!("data_hex: {:?}", data_hex);
             // hex of prefix + hex of message hash + hex of suffix make the payload
-            let payload = "<Bytes>0x".to_string() + &data_hex + &"</Bytes>".to_string();
+            let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
             println!("payload: {}", payload);
             let payload_hex = hex::encode(payload);
             println!("payload_hex: {}", payload_hex);
@@ -2735,7 +2735,7 @@ pub mod prosopo {
             let data_hex = hex::encode(data_hash);
             println!("data_hex: {:?}", data_hex);
             // hex of prefix + hex of message hash + hex of suffix make the payload
-            let payload = "<Bytes>0x".to_string() + &data_hex + &"</Bytes>".to_string();
+            let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
             println!("payload: {}", payload);
             let payload_hex = hex::encode(payload);
             println!("payload_hex: {}", payload_hex);
@@ -2782,7 +2782,7 @@ pub mod prosopo {
             let data_hex = hex::encode(data_hash);
             println!("data_hex: {:?}", data_hex);
             // hex of prefix + hex of message hash + hex of suffix make the payload
-            let payload = "<Aytes>0x".to_string() + &data_hex + &"</Bytes>".to_string();
+            let payload = "<Aytes>0x".to_string() + &data_hex + "</Bytes>";
             println!("payload: {}", payload);
             let payload_hex = hex::encode(payload);
             println!("payload_hex: {}", payload_hex);
