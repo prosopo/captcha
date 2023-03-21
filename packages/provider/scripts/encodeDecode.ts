@@ -11,23 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { blake2AsHex, decodeAddress, encodeAddress, isAddress } from '@polkadot/util-crypto'
+import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { hexToString, isHex, u8aToHex } from '@polkadot/util'
+import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 
 const ss58Format = 42
 const arg = process.argv.slice(2)[0].trim()
 const argIsHex = isHex(arg)
 const argIsAddress = isAddress(arg, false, ss58Format)
-// console.log(`arg is: ${arg}`)
+console.log(`arg is: ${arg}`)
 // console.log(`argIsAddress of bitLength ${bitLength} : ${argIsAddress}`)
 // console.log(`argIsHex of bitLength ${bitLength}     : ${argIsHex}`)
 
 if (argIsAddress) {
     const encodedAddress = encodeAddress(decodeAddress(arg, false, ss58Format), ss58Format)
-
+    const decodedAddress = decodeAddress(encodedAddress, false, ss58Format)
     if (encodedAddress === arg) {
-        const hexAddress = u8aToHex(decodeAddress(encodedAddress, false, ss58Format))
+        const hexAddress = u8aToHex(decodedAddress)
         console.log(`Hex address ${hexAddress}`)
+        console.log(`Address bytes ${decodedAddress}`)
     } else {
         console.log(`Encoded address ${encodedAddress}`)
 
@@ -38,6 +40,6 @@ if (argIsHex) {
     console.log(`Decoding hex ${arg} to string`)
     console.log(hexToString(arg))
 } else {
-    console.log(`Encoding string ${arg} to hex`)
+    console.log(`Hashing string ${arg} using blake2AsHex`)
     console.log(blake2AsHex(arg))
 }

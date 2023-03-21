@@ -2,7 +2,7 @@ import { BN } from '@polkadot/util'
 import { KeyringPair } from '@polkadot/keyring/types'
 
 export interface IUserAccount {
-    mnemonic: string
+    secret: string
     address: string
 }
 
@@ -18,9 +18,8 @@ export interface IProviderAccount extends IUserAccount {
 
 export interface IDappAccount {
     serviceOrigin: string
-    mnemonic: string
+    secret: string
     contractAccount: string
-    optionalOwner: string
     fundAmount: number | BN
     pair?: KeyringPair
 }

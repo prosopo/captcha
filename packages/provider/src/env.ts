@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ContractAbi, ProsopoContractApi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
+import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { AssetsResolver } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
 import consola, { LogLevel } from 'consola'
@@ -108,19 +108,20 @@ export class Environment implements ProsopoEnvironment {
         await this.api.isReadyOrError
         this.pair = pair
         await this.getSigner()
-        await this.getContractApi()
+        this.contractInterface = await this.getContractApi()
     }
 
-    async getContractApi(): Promise<ProsopoContractApi> {
-        //console.log('getting nonce')
-        //const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+    async getContractApi(): Promise<ProsopoContractMethods> {
+        const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+        this.logger.debug('Getting new contract instance with pair', this.pair.address, 'nonce', nonce.toString())
         this.contractInterface = new ProsopoContractMethods(
             this.api,
             this.abi,
             this.contractAddress,
             this.pair,
             this.contractName,
-            -1
+            nonce.toNumber(),
+            this.config.logLevel as unknown as LogLevel
         )
         return this.contractInterface
     }
@@ -132,7 +133,7 @@ export class Environment implements ProsopoEnvironment {
             }
             this.api = await ApiPromise.create({ provider: this.wsProvider })
             await this.getSigner()
-            await this.getContractApi()
+            this.contractInterface = await this.getContractApi()
             await this.db?.connect()
         } catch (err) {
             throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')

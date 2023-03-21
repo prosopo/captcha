@@ -310,11 +310,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             await this.changeSigner(accountMnemonic(account))
 
             const tasks = new Tasks(this.mockEnv)
-            const result = await tasks.contractApi.dappRegister(
-                stringToHexPadded(_serviceOrigin),
-                accountAddress(account),
-                createType(this.mockEnv.contractInterface.abi.registry, 'AccountId', accountAddress(account)).toString()
-            )
+            const result = await tasks.contractApi.dappRegister(accountAddress(account), 'Dapp')
             this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'

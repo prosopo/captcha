@@ -28,15 +28,14 @@ export const PROVIDER: IProviderAccount = {
     stake: new BN(1000000000000000),
     datasetFile: './data/captchas.json',
     captchaDatasetId: '',
-    mnemonic: '',
+    secret: '',
     address: '',
 }
 
 export const DAPP: IDappAccount = {
     serviceOrigin: 'http://localhost:9393',
-    mnemonic: '//Ferdie',
+    secret: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed
-    optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
     fundAmount: new BN(1000000000000000),
 }
 

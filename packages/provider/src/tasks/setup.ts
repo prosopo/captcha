@@ -14,15 +14,14 @@
 import { IDappAccount, IProviderAccount, ProsopoEnvironment } from '../types/index'
 import { BN } from '@polkadot/util'
 import { oneUnit } from '../util'
-import { Keyring, decodeAddress } from '@polkadot/keyring'
+import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
-import { blake2AsHex, cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto'
+import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { dispatchErrorHandler, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import { createType } from '@polkadot/types'
-import { hexHash } from '@prosopo/datasets'
 import { Tasks } from './tasks'
 
 /** Generate a mnemonic, returning the mnemonic and associated address
@@ -146,18 +145,16 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     return events[0].event.args[1] as Hash
 }
 
-export async function setupDapp(env, dapp: IDappAccount): Promise<void> {
-    const tasks = new Tasks(env)
+export async function setupDapp(env: ProsopoEnvironment, dapp: IDappAccount): Promise<void> {
     const logger = env.logger
-    await env.changeSigner(dapp.pair)
-    logger.info('   - dappRegister')
-    await tasks.contractApi.dappRegister(
-        hexHash(dapp.serviceOrigin),
-        dapp.contractAccount,
-        blake2AsHex(decodeAddress(dapp.optionalOwner))
-    )
-    logger.info('   - dappFund')
-    await tasks.contractApi.dappFund(dapp.contractAccount, dapp.fundAmount)
+    if (dapp.pair) {
+        await env.changeSigner(dapp.pair)
+        const tasks = new Tasks(env)
+        logger.info('   - dappRegister')
+        await tasks.contractApi.dappRegister(dapp.contractAccount, 'Dapp')
+        logger.info('   - dappFund')
+        await tasks.contractApi.dappFund(dapp.contractAccount, dapp.fundAmount)
+    }
 }
 
 /**

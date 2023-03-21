@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { generateMnemonic } from '../tests/devsetup/utils/setup'
+import { generateMnemonic } from '../src/tasks/setup'
 
 async function mnemonic() {
     const [mnemonic, address] = await generateMnemonic()
@@ -21,3 +21,8 @@ async function mnemonic() {
 }
 
 mnemonic()
+    .then(() => process.exit(0))
+    .catch((e) => {
+        console.error(e)
+        process.exit(1)
+    })

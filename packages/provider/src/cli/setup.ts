@@ -30,20 +30,19 @@ const defaultProvider: IProviderAccount = {
     payee: 'Provider',
     stake: Math.pow(10, 13),
     datasetFile: './data/captchas.json',
-    mnemonic: process.env.PROVIDER_MNEMONIC || '',
+    secret: process.env.PROVIDER_MNEMONIC || '',
     address: process.env.PROVIDER_ADDRESS || '',
     captchaDatasetId: '',
 }
 
 const defaultDapp: IDappAccount = {
     serviceOrigin: 'http://localhost:9393',
-    mnemonic: '//Ferdie',
+    secret: '//Eve',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
-    optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
     fundAmount: Math.pow(10, 12),
 }
 
-const hasProviderAccount = defaultProvider.mnemonic && defaultProvider.address
+const hasProviderAccount = defaultProvider.secret && defaultProvider.address
 
 async function copyEnvFile() {
     const tplEnvFile = getEnvFile('env')
@@ -72,19 +71,24 @@ async function updateEnvFile(vars: Record<string, string>) {
 }
 
 async function registerProvider(env: Environment, account: IProviderAccount) {
-    const providerKeyringPair: KeyringPair = env.keyring.addFromMnemonic(account.mnemonic)
+    try {
+        await env.contractInterface.getProviderDetails(account.address)
+        env.logger.info('Provider exists, skipping registration.')
+    } catch {
+        const providerKeyringPair: KeyringPair = env.keyring.addFromMnemonic(account.secret)
 
-    account.address = providerKeyringPair.address
+        account.address = providerKeyringPair.address
 
-    const stakeAmount = await env.contractInterface.getProviderStakeDefault()
+        const stakeAmount = await env.contractInterface.getProviderStakeDefault()
 
-    // use the minimum stake amount from the contract to create a reasonable stake amount
-    account.stake = getStakeAmount(env, stakeAmount)
+        // use the minimum stake amount from the contract to create a reasonable stake amount
+        account.stake = getStakeAmount(env, stakeAmount)
 
-    // send enough funds to cover the stake amount and more
-    await sendFunds(env, account.address, 'Provider', getSendAmount(env, stakeAmount))
+        // send enough funds to cover the stake amount and more
+        await sendFunds(env, account.address, 'Provider', getSendAmount(env, stakeAmount))
 
-    await setupProvider(env, account)
+        await setupProvider(env, account)
+    }
 }
 
 async function registerDapp(env: Environment, dapp: IDappAccount) {
@@ -96,7 +100,7 @@ async function setup() {
 
     const [mnemonic, address] = !hasProviderAccount
         ? await generateMnemonic()
-        : [defaultProvider.mnemonic, defaultProvider.address]
+        : [defaultProvider.secret, defaultProvider.address]
 
     console.log(`Address: ${address}`)
     console.log(`Mnemonic: ${mnemonic}`)
@@ -117,7 +121,7 @@ async function setup() {
     const env = new Environment(pair)
     await env.isReady()
 
-    defaultProvider.mnemonic = mnemonic
+    defaultProvider.secret = mnemonic
 
     env.logger.info(`Registering provider... ${defaultProvider.address}`)
 
@@ -127,7 +131,7 @@ async function setup() {
 
     defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS
 
-    defaultDapp.pair = await getPair(pairType, ss58Format, defaultDapp.mnemonic)
+    defaultDapp.pair = await getPair(pairType, ss58Format, defaultDapp.secret)
 
     env.logger.info('Registering dapp...')
     await registerDapp(env, defaultDapp)

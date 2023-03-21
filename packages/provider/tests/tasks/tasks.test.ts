@@ -376,11 +376,7 @@ describe('CONTRACT TASKS', async () => {
         const sendAmount = getSendAmount(mockEnv, stakeAmount)
         await sendFunds(mockEnv, accountAddress(newAccount), 'Dapp', sendAmount)
         const clientOrigin = DAPP.serviceOrigin + randomAsHex().slice(0, 8)
-        const result: ContractSubmittableResult = await tasks.contractApi.dappRegister(
-            clientOrigin,
-            accountAddress(newAccount),
-            accountAddress(newAccount)
-        )
+        const result: ContractSubmittableResult = await tasks.contractApi.dappRegister(DAPP.contractAccount, 'Dapp')
 
         expect(result.txHash).to.not.be.empty
         //contract, owner, client origin, value
