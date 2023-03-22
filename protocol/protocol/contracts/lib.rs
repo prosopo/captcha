@@ -556,7 +556,7 @@ pub mod prosopo {
         /// Verify a signature. The payload is a blake128 hash of the payload wrapped in the Byte tag. E.g.
         ///     message="hello"
         ///     hash=blake128(message) // 0x1234... (32 bytes)
-        ///     payload="<Bytes>0x1234...</Bytes>" (32 bytes + 15 bytes (tags) + 2 bytes (multihash notation) = 47 bytes)
+        ///     payload="<Bytes>0x1234...</Bytes>" (32 bytes + 15 bytes (tags) + 2 bytes (multihash notation) = 49 bytes)
         ///
         /// Read more about multihash notation here https://w3c-ccg.github.io/multihash/index.xml#mh-example (adds two bytes to identify type and length of hash function)
         ///
