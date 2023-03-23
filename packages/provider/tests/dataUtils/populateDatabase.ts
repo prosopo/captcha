@@ -19,8 +19,8 @@ import { ProsopoEnvironment } from '../../src/types'
 import consola from 'consola'
 import { ProsopoEnvError } from '@prosopo/common'
 import { getPair, getPairType, getSecret, getSs58Format } from '../../src/cli/util'
-import { ContractAbi } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles'
+import { Abi } from '@polkadot/api-contract'
 
 loadEnv()
 
@@ -80,11 +80,11 @@ export async function populateDatabase(
     env: ProsopoEnvironment,
     userCounts: UserCount,
     exportData: boolean,
-    dappAbiMetadata: ContractAbi,
+    dappAbi: Abi,
     dappWasm: Uint8Array
 ): Promise<IDatabaseAccounts> {
     env.logger.debug('Starting database populator...')
-    const databasePopulator = new DatabasePopulator(env, dappAbiMetadata, dappWasm)
+    const databasePopulator = new DatabasePopulator(env, dappAbi, dappWasm)
     await databasePopulator.isReady()
     const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
         if (userCount > 0) {

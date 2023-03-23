@@ -325,7 +325,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const deployer = new ContractDeployer(
                 this.mockEnv.api,
                 this.dappAbiMetadata,
-                this.dappWasm,
+                this.dappAbiMetadata.wasm,
                 this.mockEnv.pair,
                 dappParams,
                 0,
