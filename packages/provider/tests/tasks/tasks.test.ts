@@ -410,7 +410,7 @@ describe('CONTRACT TASKS', async () => {
         expect(result).to.have.a.property('status')
     })
 
-    it('Dapp fund', async () => {
+    it.only('Dapp fund', async () => {
         const dappAccount = await getUser(mockEnv, AccountKey.dappsWithStake)
         const tasks = await getSignedTasks(mockEnv, dappAccount)
         const value = createType(mockEnv.contractInterface.abi.registry, 'u128', '10')

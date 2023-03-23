@@ -19,6 +19,8 @@ import { ProsopoEnvironment } from '../../src/types'
 import consola from 'consola'
 import { ProsopoEnvError } from '@prosopo/common'
 import { getPair, getPairType, getSecret, getSs58Format } from '../../src/cli/util'
+import { ContractAbi } from '@prosopo/contract'
+import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles'
 
 loadEnv()
 
@@ -77,10 +79,12 @@ async function populateStep(
 export async function populateDatabase(
     env: ProsopoEnvironment,
     userCounts: UserCount,
-    exportData: boolean
+    exportData: boolean,
+    dappAbiMetadata: ContractAbi,
+    dappWasm: Uint8Array
 ): Promise<IDatabaseAccounts> {
     env.logger.debug('Starting database populator...')
-    const databasePopulator = new DatabasePopulator(env)
+    const databasePopulator = new DatabasePopulator(env, dappAbiMetadata, dappWasm)
     await databasePopulator.isReady()
     const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
         if (userCount > 0) {
@@ -111,8 +115,10 @@ async function run() {
     const pairType = getPairType()
     const secret = getSecret()
     const pair = await getPair(pairType, ss58Format, secret)
+    const dappAbiMetadata = await DappAbiJSON()
+    const dappWasm = await DappWasm()
 
-    await populateDatabase(new Environment(pair), DEFAULT_USER_COUNT, true)
+    await populateDatabase(new Environment(pair), DEFAULT_USER_COUNT, true, dappAbiMetadata, dappWasm)
 }
 
 if (require.main === module) {

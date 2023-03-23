@@ -29,6 +29,8 @@ import { accountAddress, accountMnemonic } from '../mocks/accounts'
 import { Account } from '../mocks/accounts'
 import { getPair } from '../../src/index'
 import { getPairType, getSs58Format } from '../../src/cli/util'
+import { ContractDeployer } from '@prosopo/contract'
+import { Abi } from '@polkadot/api-contract'
 
 const serviceOriginBase = 'http://localhost:'
 
@@ -72,11 +74,15 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     private stakeAmount: number | BN = 0
     private sendAmount: number | BN = 0
+    private dappAbiMetadata: Abi
+    private dappWasm: Uint8Array
 
     private _isReady: Promise<void>
 
-    constructor(env) {
+    constructor(env, dappAbiMetadata: Abi, dappWasm: Uint8Array) {
         this.mockEnv = env
+        this.dappAbiMetadata = dappAbiMetadata
+        this.dappWasm = dappWasm
         this._isReady = this.mockEnv.isReady().then(() => {
             try {
                 const tasks = new Tasks(this.mockEnv)
@@ -305,11 +311,31 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
             const account = this.createAccount()
+            this.mockEnv.logger.debug('Sending funds to ', accountAddress(account))
             await this.sendFunds(accountAddress(account), 'Dapp', this.sendAmount)
 
+            this.mockEnv.logger.debug('Changing signer to ', accountAddress(account))
             await this.changeSigner(accountMnemonic(account))
 
+            this.mockEnv.logger.debug('MockEnv pair address', this.mockEnv.pair.address)
             const tasks = new Tasks(this.mockEnv)
+            const dappParams = ['1000000000000000000', 1000, this.mockEnv.contractInterface.address, 65, 1000000]
+
+            console.log('deploying')
+            const deployer = new ContractDeployer(
+                this.mockEnv.api,
+                this.dappAbiMetadata,
+                this.dappWasm,
+                this.mockEnv.pair,
+                dappParams,
+                0,
+                0,
+                randomAsHex()
+            )
+            const deployResult = await deployer.deploy()
+
+            console.log(deployResult.contract)
+
             const result = await tasks.contractApi.dappRegister(accountAddress(account), 'Dapp')
             this.mockEnv.logger.debug(
                 'Event: ',
