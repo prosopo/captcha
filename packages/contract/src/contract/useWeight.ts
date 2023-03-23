@@ -80,7 +80,7 @@ export function useWeightImpl(api: ApiPromise, blockTime: BN): Promise<UseWeight
 
             // execution is 2s of 6s blocks, i.e. 1/3
             executionTime = executionTime / 3000
-            isValid = !megaRefTime.isZero() // && percentage < 65;
+            isValid = !megaRefTime.isZero() && percentage < 65
         }
 
         resolve({

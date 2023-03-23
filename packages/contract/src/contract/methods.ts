@@ -49,12 +49,9 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         return await this.contractTx('providerAddDataset', [hexToU8a(datasetId), hexToU8a(datasetContentId)])
     }
 
-    public async dappRegister(
-        dappServiceOrigin: string,
-        dappContractAddress: string,
-        dappOwner?: string
-    ): Promise<ContractSubmittableResult> {
-        return await this.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
+    public async dappRegister(dappContractAddress: string, dappPayee: string): Promise<ContractSubmittableResult> {
+        const dappContractAddress2 = process.env.DAPP_CONTRACT_ADDRESS
+        return await this.contractTx('dappRegister', [dappContractAddress2, dappPayee])
     }
 
     public async dappFund(

@@ -13,15 +13,17 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { AbiMessage, ContractCallOutcome, DecodedEvent } from '@polkadot/api-contract/types'
-import { bnFromHex, isHex, isU8a, stringToHex } from '@polkadot/util'
+import { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
+import { BN, BN_ONE, BN_ZERO, bnFromHex, isHex, isU8a, stringToHex } from '@polkadot/util'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { ProsopoContractError } from '../handlers'
 import { Abi } from '@polkadot/api-contract'
-import { AccountId, DispatchError, EventRecord } from '@polkadot/types/interfaces'
+import { AccountId, DispatchError, EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
 import { Bytes } from '@polkadot/types-codec'
 import { Registry } from '@polkadot/types-codec/types/registry'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { Weight } from '@polkadot/types/interfaces/runtime/index'
+import { ApiBase } from '@polkadot/api/types'
 
 /**
  * Get the event name from the contract method name
@@ -145,4 +147,29 @@ export function dispatchErrorHandler(registry: Registry, event: EventRecord): Pr
         }
     }
     return new ProsopoContractError(message)
+}
+
+// 4_999_999_999_999
+const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE)
+
+export function getOptions(
+    api: ApiBase<'promise'>,
+    isMutating?: boolean,
+    value?: number | BN,
+    gasLimit?: Weight | WeightV2,
+    storageDeposit?: StorageDeposit
+): ContractOptions {
+    const _gasLimit: Weight | WeightV2 | undefined = gasLimit
+        ? gasLimit
+        : isMutating
+        ? (api.registry.createType('WeightV2', {
+              proofTime: new BN(1_000_000),
+              refTime: MAX_CALL_WEIGHT,
+          }) as WeightV2)
+        : undefined
+    return {
+        gasLimit: _gasLimit,
+        storageDepositLimit: storageDeposit ? storageDeposit.asCharge : null,
+        value: value || BN_ZERO,
+    }
 }
