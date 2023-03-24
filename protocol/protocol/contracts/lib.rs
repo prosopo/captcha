@@ -264,6 +264,13 @@ pub mod prosopo {
         Pending, // not enough people have voted
     }
 
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct Seed {
+        pub value: u128,
+        pub timestamp: Timestamp,
+    }
+
     // Contract storage
     #[ink(storage)]
     pub struct Prosopo {
@@ -286,6 +293,10 @@ pub mod prosopo {
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
+        seeds: Mapping<u8, u128>,
+        seed_history: Vec<Seed>,
+        n_seeds: u8,
+        a: u128,
     }
 
     // Event emitted when a new provider registers
@@ -500,48 +511,45 @@ pub mod prosopo {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn default(
-            operator_accounts: Vec<AccountId>,
-            provider_stake_default: Balance,
-            dapp_stake_default: Balance,
-            max_user_history_len: u16,
-            max_user_history_age: u64,
-            min_num_active_providers: u16,
-            max_provider_fee: Balance,
         ) -> Self {
-            if operator_accounts.len() < 2 {
-                panic!("{:?}", Error::MinimumTwoOperatorsRequired)
-            }
-            let mut operators = Mapping::new();
-            let mut operator_accounts_lazy = Lazy::new();
-            for operator_account in operator_accounts.iter() {
-                let operator = Operator {
-                    status: GovernanceStatus::Active,
-                };
-                operators.insert(operator_account, &operator);
-                operator_accounts_lazy.set(&operator_accounts);
-            }
 
             Self {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 service_origins: Default::default(),
                 captcha_data: Default::default(),
-                operator_accounts: operator_accounts_lazy,
+                operator_accounts: Default::default(),
                 operator_stake_default: 0,
                 dapp_users: Default::default(),
-                operators,
-                provider_stake_default,
-                dapp_stake_default,
+                operators: Default::default(),
+                provider_stake_default: 0,
+                dapp_stake_default: 0,
                 dapps: Default::default(),
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
                 operator_votes: Default::default(),
-                max_user_history_len,
-                max_user_history_age,
+                max_user_history_len: 0,
+                max_user_history_age: 0,
                 captcha_solution_commitments: Default::default(),
-                min_num_active_providers,
-                max_provider_fee,
+                min_num_active_providers: 0,
+                max_provider_fee: 0,
+                n_seeds: 10,
+                seeds: Default::default(),
+                seed_history: Default::default(),
+                a: 1,
             }
+        }
+
+        #[ink(message)]
+        pub fn a(&self) -> u128 {
+            debug!("a: {}, block: {}", self.a, self.env().block_number());
+            self.a
+        }
+
+        #[ink(message)]
+        pub fn set_a(&mut self, a: u128) {
+            self.a = a;
+            debug!("a: {}, block: {}", self.a, self.env().block_number());
         }
 
         /// Print and return an error
@@ -1050,6 +1058,81 @@ pub mod prosopo {
             if self.operators.get(operator).is_some() {
                 return err!(Error::AccountIsOperator);
             }
+
+            Ok(())
+        }
+
+        fn update_seed(&mut self) {
+            let caller_block_id = self.get_caller_block_id();
+            let caller_block_id_u128 = u128::from_le_bytes(caller_block_id);
+            let seed_index: u8 = (caller_block_id_u128 % self.n_seeds as u128) as u8;
+            let current = self.seeds.get(seed_index).unwrap_or(0);
+            let next = self.hash_u128_pair(&current.to_le_bytes(), &caller_block_id);
+            let next_u128 = u128::from_le_bytes(next);
+            self.seeds.insert(seed_index, &next_u128);
+        }
+
+        fn hash_u128_pair(&self, a: &[u8; 16], b: &[u8; 16]) -> [u8; 16] {
+            let mut input = [0u8; 32];
+            input[0..16].copy_from_slice(&a[..]);
+            input[16..32].copy_from_slice(&b[..]);
+
+            let hash = self.env().hash_bytes::<Blake2x128>(&input);
+            hash
+        }
+
+        fn get_caller_block_id(&self) -> [u8; 16] {
+            // uniquely identify caller and block by hashing them together
+            let caller = self.env().caller(); // provides caller-oriented seed setting (i.e. calling from different accounts will result in different seed updates)
+            let block_number = self.env().block_number(); // provides block-oriented seed setting (i.e. calling from same account will result in different seed updates across different blocks)
+            let block_timestamp = self.env().block_timestamp(); // provides uncertainty as block timestamp is only known for the current block (6s) and cannot be known for future blocks (albeit is likely in the range 5s-7s, so has 2000 possible values due to ms resolution)
+
+            let mut input = [0u8; 96];
+            input[0..32].copy_from_slice(&caller.as_ref());
+            input[32..64].copy_from_slice(&block_number.to_le_bytes());
+            input[64..96].copy_from_slice(&block_timestamp.to_le_bytes());
+
+            let hash = self.env().hash_bytes::<Blake2x128>(&input);
+            hash
+        }
+
+        #[ink(message)]
+        pub fn provider_commit(&mut self,
+            contract: AccountId,
+            dataset_id: Hash,
+            commitment_id: Hash,
+            dapp_user: AccountId,
+            approved: bool,
+        ) -> Result<(), Error> {
+
+            // todo check dapp is contract
+            // todo check provider valid
+            // todo check dataset_id valid
+
+            let provider = self.env().caller();
+
+            // what to use in seed updates:
+            // - dataset_id: yes bc would have had to be put on-chain first *** no if aura doesn't work
+            // - contract: no bc other than being a valid contract, can be manipulated by the provider
+            // - commitment_id: no bc set by the provider so can be manipulated
+            // - provider: yes bc has to be a valid provider registered beforehand and provider cannot change this easily
+            // - dapp_user: no bc other than the user picking this provider in the past, this can be manipulated by the provider
+            // - approved: no bc set by the provider so can be manipulated
+            // - block_timestamp: yes because comes from env so cannot be manipulated, changes every block so difficult to predict
+            // - block_number: yes because comes from env so cannot be manipulated, changes every block so difficult to predict, makes same data inputs + same timestamp in another block impossible as block number is monotonic
+            // - current seed value(s) - yes bc outside of this provider's control, change based on events in the contract
+            // - user commit history - no because changes block by block and outside of provider's control, but essentially the same as using the seeds
+
+            // which seed do we target?
+            // - use block number to keep shifting
+            // - use block timestamp to provide some uncertainty for the future
+            // - use provider acc to provide a different selection per provider
+            // 
+            // use the above to locate one of the seeds and use that value to choose the seed to set
+            // e.g. hash(block_number, block_timestamp, provider_acc) % 10 (the number of seeds) = 7 <-- update seed 7
+
+            // hash all of the seed contribution inputs together to get the seed
+            // e.g. seed_7 = hash(dataset_id, provider, block_timestamp, block_number, seed_7)
 
             Ok(())
         }
