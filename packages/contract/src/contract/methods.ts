@@ -50,8 +50,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
     }
 
     public async dappRegister(dappContractAddress: string, dappPayee: string): Promise<ContractSubmittableResult> {
-        const dappContractAddress2 = process.env.DAPP_CONTRACT_ADDRESS
-        return await this.contractTx('dappRegister', [dappContractAddress2, dappPayee])
+        return await this.contractTx('dappRegister', [dappContractAddress, dappPayee])
     }
 
     public async dappFund(
