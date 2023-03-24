@@ -31,6 +31,7 @@ import { getPair } from '../../src/index'
 import { getPairType, getSs58Format } from '../../src/cli/util'
 import { ContractDeployer } from '@prosopo/contract'
 import { Abi } from '@polkadot/api-contract'
+import { EventRecord } from '@polkadot/types/interfaces'
 
 const serviceOriginBase = 'http://localhost:'
 
@@ -321,11 +322,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const tasks = new Tasks(this.mockEnv)
             const dappParams = ['1000000000000000000', 1000, this.mockEnv.contractInterface.address, 65, 1000000]
 
-            console.log('deploying')
             const deployer = new ContractDeployer(
                 this.mockEnv.api,
                 this.dappAbiMetadata,
-                this.dappAbiMetadata.wasm,
+                this.dappWasm,
                 this.mockEnv.pair,
                 dappParams,
                 0,
@@ -334,9 +334,17 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             )
             const deployResult = await deployer.deploy()
 
-            console.log(deployResult.contract)
+            this.mockEnv.logger.debug('deployResult', JSON.stringify(deployResult?.toHuman() || '', null, 2))
 
-            const result = await tasks.contractApi.dappRegister(accountAddress(account), 'Dapp')
+            const instantiateEvent: EventRecord | undefined = deployResult.events.find(
+                (event) => event.event.section === 'contracts'
+            )
+            this.mockEnv.logger.debug('contract Address', instantiateEvent?.event.data['contract'].toString())
+
+            const result = await tasks.contractApi.dappRegister(
+                instantiateEvent?.event.data['contract'].toString(),
+                'Dapp'
+            )
             this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
