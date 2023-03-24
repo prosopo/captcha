@@ -40,7 +40,7 @@ export class ContractDeployer {
     ) {
         this.api = api
         this.abi = abi
-        this.wasm = wasm
+        this.wasm = this.api.registry.createType('Raw', wasm)
         this.pair = pair
         this.params = params
         this.constructorIndex = constructorIndex
@@ -118,42 +118,41 @@ export async function dryRunDeploy(
 ): Promise<DryRunResult> {
     const accountId = pair.address
     let contract: SubmittableExtrinsic<'promise'> | null = null
-    const error: string | null = null
+    let error: string | null = null
 
-    // try {
-    const message = contractAbi?.constructors[constructorIndex]
-    const method = message.method
-    if (code && message && accountId) {
-        const dryRunParams: Parameters<typeof api.call.contractsApi.instantiate> = [
-            accountId,
-            message.isPayable ? api.registry.createType('Balance', value) : api.registry.createType('Balance', BN_ZERO),
-            weight.weightV2,
-            null,
-            { Upload: wasm },
-            message.toU8a(params),
-            '',
-        ]
+    try {
+        const message = contractAbi?.constructors[constructorIndex]
+        const method = message.method
+        if (code && message && accountId) {
+            const dryRunParams: Parameters<typeof api.call.contractsApi.instantiate> = [
+                accountId,
+                message.isPayable
+                    ? api.registry.createType('Balance', value)
+                    : api.registry.createType('Balance', BN_ZERO),
+                weight.weightV2,
+                null,
+                { Upload: wasm },
+                message.toU8a(params),
+                '',
+            ]
 
-        const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
-        console.log(
-            'storageDepositLimit',
-            dryRunResult.storageDeposit.isCharge ? dryRunResult.storageDeposit.asCharge : null,
-            'account',
-            pair.address
-        )
-        contract = code.tx[method](
-            {
-                gasLimit: dryRunResult.gasRequired,
-                storageDepositLimit: dryRunResult.storageDeposit.isCharge ? dryRunResult.storageDeposit.asCharge : null,
-                value: message.isPayable ? value : undefined,
-                salt,
-            },
-            ...params
-        )
+            const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
+
+            contract = code.tx[method](
+                {
+                    gasLimit: dryRunResult.gasRequired,
+                    storageDepositLimit: dryRunResult.storageDeposit.isCharge
+                        ? dryRunResult.storageDeposit.asCharge
+                        : null,
+                    value: message.isPayable ? value : undefined,
+                    salt,
+                },
+                ...params
+            )
+        }
+    } catch (e) {
+        error = (e as Error).message
     }
-    // } catch (e) {
-    //     error = (e as Error).message
-    // }
 
     return { contract, error }
 }
