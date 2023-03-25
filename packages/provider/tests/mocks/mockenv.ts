@@ -88,7 +88,7 @@ export class MockEnvironment implements ProsopoEnvironment {
             },
             batchCommit: {
                 interval: 1000000,
-                maxBatchExtrinsicPercentage: 59,
+                maxBatchExtrinsicPercentage: 55,
             },
         }
 

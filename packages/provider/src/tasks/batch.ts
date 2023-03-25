@@ -171,6 +171,7 @@ export class BatchCommitter {
         const batchedCommitmentIds: string[] = []
         const utilityConstants = await this.contractApi.api.consts.utility
         let totalRefTime = new BN(0)
+        let totalProofSize = new BN(0)
         const maxBlockWeight = this.contractApi.api.consts.system.blockWeights.maxBlock
         //let totalEncodedLength = 0
         this.logger.debug('utilityConstants.batchedCallsLimit', utilityConstants.batchedCallsLimit.toNumber())
@@ -192,6 +193,9 @@ export class BatchCommitter {
             totalRefTime = totalRefTime.add(
                 this.contractApi.api.registry.createType('WeightV2', options.gasLimit).refTime.toBn()
             )
+            totalProofSize = totalProofSize.add(
+                this.contractApi.api.registry.createType('WeightV2', options.gasLimit).proofSize.toBn()
+            )
             // Check if we have a maximum number of transactions that we can successfully submit in a block
             if (
                 totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
@@ -204,6 +208,8 @@ export class BatchCommitter {
             }
         }
         this.logger.info(`${txs.length} transactions will be batched`)
+        this.logger.debug('totalRefTime:', totalRefTime.toString())
+        this.logger.debug('totalProofSize:', totalProofSize.toString())
         return { extrinsics: txs, commitmentIds: batchedCommitmentIds }
     }
 
