@@ -169,7 +169,13 @@ export function getOptions(
         : undefined
     return {
         gasLimit: _gasLimit,
-        storageDepositLimit: storageDeposit ? storageDeposit.asCharge : null,
+        storageDepositLimit: storageDeposit
+            ? storageDeposit.isCharge
+                ? storageDeposit.asCharge
+                : storageDeposit.isRefund
+                ? storageDeposit.asRefund
+                : null
+            : null,
         value: value || BN_ZERO,
     }
 }
