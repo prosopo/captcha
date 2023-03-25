@@ -729,7 +729,7 @@ describe('CONTRACT TASKS', async () => {
         expect(valid).to.be.true
     })
 
-    it.only('Get random captchas and request hash', async () => {
+    it('Get random captchas and request hash', async () => {
         try {
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -752,6 +752,12 @@ describe('CONTRACT TASKS', async () => {
             const solvedCaptchaCount = mockEnv.config.captchas.solved.count
             const unsolvedCaptchaCount = mockEnv.config.captchas.unsolved.count
 
+            console.log(
+                'userAccount',
+                accountAddress(dappUserAccount),
+                'dappContractAccount',
+                accountContract(dappAccount)
+            )
             const { provider } = await dappUserTasks.contractApi.getRandomProvider(
                 accountAddress(dappUserAccount),
                 accountContract(dappAccount)

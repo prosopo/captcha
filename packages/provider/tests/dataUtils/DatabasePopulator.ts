@@ -36,7 +36,7 @@ import { EventRecord } from '@polkadot/types/interfaces'
 const serviceOriginBase = 'http://localhost:'
 
 const PROVIDER_FEE = 10
-const PROVIDER_PAYEE = 'Provider'
+const PROVIDER_PAYEE = 'Dapp'
 
 export enum IDatabasePopulatorMethodNames {
     registerProvider = 'registerProvider',
@@ -309,8 +309,6 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     public async registerDapp(serviceOrigin?: string, noPush?: boolean): Promise<Account> {
         try {
-            const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
-
             const account = this.createAccount()
             this.mockEnv.logger.debug('Sending funds to ', accountAddress(account))
             await this.sendFunds(accountAddress(account), 'Dapp', this.sendAmount)
