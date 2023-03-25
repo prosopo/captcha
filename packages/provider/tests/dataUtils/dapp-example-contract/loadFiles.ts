@@ -21,7 +21,6 @@ export async function DappWasm(): Promise<Uint8Array> {
     const wasm: `0x${string}` = `0x${fse.readFileSync(path.resolve(__dirname, './dapp.wasm')).toString('hex')}`
     const wasmBytes = hexToU8a(wasm)
     if (isWasm(wasmBytes)) {
-        console.debug(`wasm loaded: ${wasm.slice(0, 10) + '...' + wasm.slice(-10, wasm.length)}`)
         return wasmBytes
     } else {
         console.error(`Error loading dapp.wasm: ${wasm.slice(0, 10)}...`)

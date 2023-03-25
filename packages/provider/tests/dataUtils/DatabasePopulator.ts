@@ -25,7 +25,7 @@ import { TranslationKey } from '@prosopo/common'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
 import { AnyNumber } from '@polkadot/types-codec/types'
-import { accountAddress, accountMnemonic } from '../mocks/accounts'
+import { accountAddress, accountContract, accountMnemonic } from '../mocks/accounts'
 import { Account } from '../mocks/accounts'
 import { getPair } from '../../src/index'
 import { getPairType, getSs58Format } from '../../src/cli/util'
@@ -334,17 +334,16 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             )
             const deployResult = await deployer.deploy()
 
-            this.mockEnv.logger.debug('deployResult', JSON.stringify(deployResult?.toHuman() || '', null, 2))
-
             const instantiateEvent: EventRecord | undefined = deployResult.events.find(
                 (event) => event.event.section === 'contracts'
             )
-            this.mockEnv.logger.debug('contract Address', instantiateEvent?.event.data['contract'].toString())
+            const contractAddress = instantiateEvent?.event.data['contract'].toString()
 
-            const result = await tasks.contractApi.dappRegister(
-                instantiateEvent?.event.data['contract'].toString(),
-                'Dapp'
-            )
+            account.push(contractAddress)
+
+            this.mockEnv.logger.debug('Dapp contract address', contractAddress)
+
+            const result = await tasks.contractApi.dappRegister(contractAddress, 'Dapp')
             this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
@@ -365,7 +364,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const tasks = new Tasks(this.mockEnv)
 
-        const result = await tasks.contractApi.dappFund(accountAddress(account), this.stakeAmount)
+        const result = await tasks.contractApi.dappFund(accountContract(account), this.stakeAmount)
 
         this.mockEnv.logger.debug(
             'Event: ',

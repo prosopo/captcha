@@ -27,9 +27,9 @@ import {
     hexHash,
 } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
-import { getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { ContractDeployer, getEventsFromMethodName } from '@prosopo/contract'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
-import { DAPP, PROVIDER, getSignedTasks } from '../mocks/accounts'
+import { DAPP, PROVIDER, accountContract, getSignedTasks } from '../mocks/accounts'
 import { getUser } from '../mocks/getUser'
 import { MockEnvironment } from '../mocks/mockenv'
 import { i18n } from '@prosopo/common'
@@ -41,6 +41,8 @@ import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { accountAddress, accountMnemonic } from '../mocks/accounts'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { getSs58Format } from '../../src/cli/util'
+import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles'
+import { EventRecord } from '@polkadot/types/interfaces'
 
 chai.should()
 chai.use(chaiAsPromised)
@@ -241,7 +243,7 @@ describe('CONTRACT TASKS', async () => {
 
             const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
             await tasks.contractApi.dappUserCommit(
-                accountAddress(dappContractAccount),
+                accountContract(dappContractAccount),
                 provider.datasetId.toString(),
                 commitmentId,
                 accountAddress(providerAccount),
@@ -280,7 +282,7 @@ describe('CONTRACT TASKS', async () => {
         const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
 
         await tasks.contractApi.dappUserCommit(
-            accountAddress(dappContractAccount),
+            accountContract(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
             accountAddress(providerAccount),
@@ -317,7 +319,7 @@ describe('CONTRACT TASKS', async () => {
         const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
 
         await tasks.contractApi.dappUserCommit(
-            accountAddress(dappContractAccount),
+            accountContract(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
             accountAddress(providerAccount),
@@ -376,18 +378,28 @@ describe('CONTRACT TASKS', async () => {
         const sendAmount = getSendAmount(mockEnv, stakeAmount)
         await sendFunds(mockEnv, accountAddress(newAccount), 'Dapp', sendAmount)
         const clientOrigin = DAPP.serviceOrigin + randomAsHex().slice(0, 8)
-        const result: ContractSubmittableResult = await tasks.contractApi.dappRegister(DAPP.contractAccount, 'Dapp')
+        const dappParams = ['1000000000000000000', 1000, mockEnv.contractInterface.address, 65, 1000000]
 
+        const deployer = new ContractDeployer(
+            mockEnv.api,
+            await DappAbiJSON(),
+            await DappWasm(),
+            mockEnv.pair,
+            dappParams,
+            0,
+            0,
+            randomAsHex()
+        )
+        const deployResult = await deployer.deploy()
+        const instantiateEvent: EventRecord | undefined = deployResult.events.find(
+            (event) => event.event.section === 'contracts'
+        )
+        const contractAddress = instantiateEvent?.event.data['contract'].toString()
+        const result: ContractSubmittableResult = await tasks.contractApi.dappRegister(contractAddress, 'Dapp')
         expect(result.txHash).to.not.be.empty
-        //contract, owner, client origin, value
-        if (result.contractEvents) {
-            expect(result.contractEvents[0].args[0].toHuman()).to.equal(accountAddress(newAccount))
-            expect(result.contractEvents[0].args[1].toHuman()).to.equal(accountAddress(newAccount))
-            expect(result.contractEvents[0].args[2].toHuman()).to.equal(stringToHexPadded(clientOrigin))
-            expect(result.contractEvents[0].args[3].toPrimitive()).to.equal(0)
-        } else {
-            expect(true).to.be.false
-        }
+
+        const dapp = await tasks.contractApi.getDappDetails(contractAddress)
+        expect(dapp.owner).to.equal(accountAddress(newAccount))
     })
 
     it('Dapp is active', async () => {
@@ -395,7 +407,7 @@ describe('CONTRACT TASKS', async () => {
 
         const tasks = await getSignedTasks(mockEnv, dappAccount)
 
-        const result: any = await tasks.dappIsActive(accountAddress(dappAccount))
+        const result: any = await tasks.dappIsActive(accountContract(dappAccount))
 
         expect(result).to.equal(true)
     })
@@ -405,24 +417,22 @@ describe('CONTRACT TASKS', async () => {
 
         const tasks = await getSignedTasks(mockEnv, dappAccount)
 
-        const result: any = await tasks.contractApi.getDappDetails(accountAddress(dappAccount))
+        const result: any = await tasks.contractApi.getDappDetails(accountContract(dappAccount))
 
         expect(result).to.have.a.property('status')
     })
 
-    it.only('Dapp fund', async () => {
+    it('Dapp fund', async () => {
         const dappAccount = await getUser(mockEnv, AccountKey.dappsWithStake)
         const tasks = await getSignedTasks(mockEnv, dappAccount)
         const value = createType(mockEnv.contractInterface.abi.registry, 'u128', '10')
-        const address = accountAddress(dappAccount)
-        const result: ContractSubmittableResult = await tasks.contractApi.dappFund(accountAddress(dappAccount), value)
-        const events = getEventsFromMethodName(result, 'DappFund')
-        const decoded = events![0].args.map((arg) => arg.toHuman())
-        expect(decoded[0]).to.equal(address)
-        const dappStruct = await tasks.contractApi.getDappDetails(address)
+        const dappContractAddress = accountContract(dappAccount)
+        const dappBefore = await tasks.contractApi.getDappDetails(dappContractAddress)
+        await tasks.contractApi.dappFund(dappContractAddress, value)
+        const dappAfter = await tasks.contractApi.getDappDetails(dappContractAddress)
         // Do not do this https://github.com/polkadot-js/api/issues/5365
         //const dapp = createType(mockEnv.contractInterface.abi.registry, 'ProsopoDapp', dappStruct.toU8a())
-        expect(events![0].args[1].toPrimitive()).to.equal(dappStruct.balance)
+        expect(dappBefore.balance + value.toNumber()).to.equal(dappAfter.balance)
     })
 
     it('Dapp user commit', async () => {
@@ -451,7 +461,7 @@ describe('CONTRACT TASKS', async () => {
         const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
 
         const result: ContractSubmittableResult = await tasks.contractApi.dappUserCommit(
-            accountAddress(dappContractAccount),
+            accountContract(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
             accountAddress(providerAccount),
@@ -464,7 +474,7 @@ describe('CONTRACT TASKS', async () => {
 
         const events = getEventsFromMethodName(result, 'DappUserCommit')
 
-        expect(events![0].args[2].toHuman()).to.equal(accountAddress(dappContractAccount))
+        expect(events![0].args[2].toHuman()).to.equal(accountContract(dappContractAccount))
     })
 
     //TODO reinstate when https://github.com/polkadot-js/api/issues/5410 is resolved
@@ -513,7 +523,7 @@ describe('CONTRACT TASKS', async () => {
         const provider = await dappUserTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
 
         const dappUserCommitResponse = await dappUserTasks.contractApi.dappUserCommit(
-            accountAddress(dappContractAccount),
+            accountContract(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
             accountAddress(providerAccount),
@@ -525,7 +535,7 @@ describe('CONTRACT TASKS', async () => {
         const blockHash = await mockEnv.api.rpc.chain.getBlockHash(dappUserCommitResponse.blockNumber)
         const result: DappUserSolutionResult = await providerTasks.dappUserSolution(
             accountAddress(dappUserAccount),
-            accountAddress(dappContractAccount),
+            accountContract(dappContractAccount),
             requestHash,
             JSON.parse(JSON.stringify(captchaSolutionsSalted)),
             blockHash.toString(),
@@ -663,7 +673,7 @@ describe('CONTRACT TASKS', async () => {
         const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
 
         await tasks.contractApi.dappUserCommit(
-            accountAddress(dappAccount),
+            accountContract(dappAccount),
             provider.datasetId.toString(),
             initialCommitmentId,
             accountAddress(providerAccount),
@@ -719,7 +729,7 @@ describe('CONTRACT TASKS', async () => {
         expect(valid).to.be.true
     })
 
-    it('Get random captchas and request hash', async () => {
+    it.only('Get random captchas and request hash', async () => {
         try {
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -744,7 +754,7 @@ describe('CONTRACT TASKS', async () => {
 
             const { provider } = await dappUserTasks.contractApi.getRandomProvider(
                 accountAddress(dappUserAccount),
-                accountAddress(dappAccount)
+                accountContract(dappAccount)
             )
             const { captchas, requestHash } = await dappUserTasks.getRandomCaptchasAndRequestHash(
                 provider.datasetId.toString(),
@@ -765,18 +775,21 @@ describe('CONTRACT TASKS', async () => {
 
         const tasks = await getSignedTasks(mockEnv, dappAccount)
 
-        const res = await tasks.contractApi.getRandomProvider(accountAddress(dappAccount), accountAddress(dappAccount))
+        const res = await tasks.contractApi.getRandomProvider(
+            accountContract(dappAccount),
+            accountContract(dappAccount)
+        )
         const blockNumberParsed = parseBlockNumber(res.blockNumber.toString())
         await tasks.validateProviderWasRandomlyChosen(
-            accountAddress(dappAccount),
-            accountAddress(dappAccount),
+            accountContract(dappAccount),
+            accountContract(dappAccount),
             res.provider.datasetId.toString() as string,
             blockNumberParsed
         )
         const valid = await tasks
             .validateProviderWasRandomlyChosen(
-                accountAddress(dappAccount),
-                accountAddress(dappAccount),
+                accountContract(dappAccount),
+                accountContract(dappAccount),
                 res.provider.datasetId.toString() as string,
                 blockNumberParsed
             )
@@ -821,13 +834,13 @@ describe('CONTRACT TASKS', async () => {
 
         const res = await dappUserTasks.contractApi.getRandomProvider(
             accountAddress(dappUser),
-            accountAddress(dappAccount)
+            accountContract(dappAccount)
         )
         const blockNumberParsed = parseBlockNumber(res.blockNumber.toString())
         const valid = await dappUserTasks
             .validateProviderWasRandomlyChosen(
                 accountAddress(dappUser),
-                accountAddress(dappAccount),
+                accountContract(dappAccount),
                 '0x1dc833d14a257f21967feddafb3b3876b75b3fc9b0a2d071f29da9bfebc84f5a',
                 blockNumberParsed
             )
@@ -886,7 +899,7 @@ describe('CONTRACT TASKS', async () => {
                     [captchaSolution],
                     commitmentId,
                     randomAsHex(),
-                    accountAddress(dappAccount),
+                    accountContract(dappAccount),
                     providerDetails.datasetId.toString()
                 )
                 const userSolutions = await providerTasks.db.getDappUserSolutionById(commitmentId)
