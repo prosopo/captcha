@@ -21,20 +21,18 @@ export class ProsopoContractMethods extends ProsopoContractApi {
     public async providerRegister(
         serviceOrigin: string,
         fee: number,
-        payee: ProsopoPayee,
-        address: string
+        payee: ProsopoPayee
     ): Promise<ContractSubmittableResult> {
-        return await this.contractTx('providerRegister', [serviceOrigin, fee, payee, address])
+        return await this.contractTx('providerRegister', [serviceOrigin, fee, payee])
     }
 
     async providerUpdate(
         serviceOrigin: string,
         fee: number,
         payee: ProsopoPayee,
-        address: string,
         value?: number | BN | undefined
     ): Promise<ContractSubmittableResult> {
-        return await this.contractTx('providerUpdate', [serviceOrigin, fee, payee, address], value)
+        return await this.contractTx('providerUpdate', [serviceOrigin, fee, payee], value)
     }
 
     public async providerDeregister(address: string): Promise<ContractSubmittableResult> {
