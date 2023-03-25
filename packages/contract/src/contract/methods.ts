@@ -157,7 +157,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         const { result } = await this.contractQuery('getAllProviderIds', [])
         const fragment = this.abi.findMessage('getAllProviderIds')
         // @ts-ignore
-        return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk
+        return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk.asOk.toPrimitive()
     }
 
     public async getDappAccounts(): Promise<DappAccounts> {
