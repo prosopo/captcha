@@ -20,11 +20,10 @@ import { getSs58Format } from '../../src/cli/util'
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]
 export const accountContract = function (account: Account): string {
-    try {
+    if (account[2]) {
         return account[2]
-    } catch (e) {
-        throw new Error(`Account ${account[1]} does not have a contract`)
     }
+    throw new Error(`Account ${account[1]} does not have a contract`)
 }
 export type Account = [mnemonic: string, address: string, contractAddress?: string]
 

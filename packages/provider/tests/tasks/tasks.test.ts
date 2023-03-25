@@ -29,7 +29,7 @@ import {
 import { ProsopoEnvError } from '@prosopo/common'
 import { ContractDeployer, getEventsFromMethodName } from '@prosopo/contract'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
-import { DAPP, PROVIDER, accountContract, getSignedTasks } from '../mocks/accounts'
+import { PROVIDER, accountContract, getSignedTasks } from '../mocks/accounts'
 import { getUser } from '../mocks/getUser'
 import { MockEnvironment } from '../mocks/mockenv'
 import { i18n } from '@prosopo/common'
@@ -166,33 +166,26 @@ describe('CONTRACT TASKS', async () => {
         const result: ContractSubmittableResult = await tasks.contractApi.providerRegister(
             PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
             PROVIDER.fee,
-            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-            providerAddress
+            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE)
         )
 
         expect(result.txHash!).to.not.be.empty
     })
 
     it('Provider update', async () => {
-        try {
-            const providerAccount = await getUser(mockEnv, AccountKey.providers)
-            const tasks = await getSignedTasks(mockEnv, providerAccount)
+        const providerAccount = await getUser(mockEnv, AccountKey.providers)
+        const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-            const value = providerStakeDefault
+        const value = providerStakeDefault
+        const result: ContractSubmittableResult = await tasks.contractApi.providerUpdate(
+            PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
+            PROVIDER.fee,
+            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
+            value
+        )
 
-            const result: ContractSubmittableResult = await tasks.contractApi.providerUpdate(
-                PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
-                PROVIDER.fee,
-                createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-                accountAddress(providerAccount),
-                value
-            )
-
-            const eventData = getEventsFromMethodName(result, 'ProviderUpdate')
-            expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
-        } catch (err) {
-            throw new ProsopoEnvError(err, 'providerUpdate')
-        }
+        const eventData = getEventsFromMethodName(result, 'ProviderUpdate')
+        expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
     })
 
     it('Provider add dataset', async () => {
@@ -377,7 +370,6 @@ describe('CONTRACT TASKS', async () => {
         const stakeAmount = getStakeAmount(mockEnv, providerStakeDefault)
         const sendAmount = getSendAmount(mockEnv, stakeAmount)
         await sendFunds(mockEnv, accountAddress(newAccount), 'Dapp', sendAmount)
-        const clientOrigin = DAPP.serviceOrigin + randomAsHex().slice(0, 8)
         const dappParams = ['1000000000000000000', 1000, mockEnv.contractInterface.address, 65, 1000000]
 
         const deployer = new ContractDeployer(
@@ -432,6 +424,7 @@ describe('CONTRACT TASKS', async () => {
         const dappAfter = await tasks.contractApi.getDappDetails(dappContractAddress)
         // Do not do this https://github.com/polkadot-js/api/issues/5365
         //const dapp = createType(mockEnv.contractInterface.abi.registry, 'ProsopoDapp', dappStruct.toU8a())
+        // @ts-ignore
         expect(dappBefore.balance + value.toNumber()).to.equal(dappAfter.balance)
     })
 
@@ -818,7 +811,6 @@ describe('CONTRACT TASKS', async () => {
             provider.serviceOrigin.toString(),
             provider.fee as unknown as number,
             createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-            accountAddress(providerAccount),
             0
         )
         provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
@@ -827,7 +819,6 @@ describe('CONTRACT TASKS', async () => {
             provider.serviceOrigin.toString() as string,
             provider.fee as unknown as number,
             createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-            accountAddress(providerAccount),
             providerStakeDefault
         )
 

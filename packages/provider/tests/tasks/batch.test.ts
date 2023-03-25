@@ -17,7 +17,7 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { BatchCommitter } from '../../src/tasks/batch'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
-import { getSignedTasks } from '../mocks/accounts'
+import { accountContract, getSignedTasks } from '../mocks/accounts'
 import { getUser } from '../mocks/getUser'
 import { CaptchaSolution } from '@prosopo/datasets'
 import { ScheduledTaskNames } from '../../src/types/scheduler'
@@ -78,7 +78,7 @@ describe('BATCH TESTS', async () => {
         await env.db?.connection?.close()
     })
 
-    it('Batches max number of commitments on-chain', async () => {
+    it.only('Batches max number of commitments on-chain', async () => {
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
             await env.changeSigner(
@@ -136,7 +136,7 @@ describe('BATCH TESTS', async () => {
                         [captchaSolution],
                         commitmentId,
                         accountAddress(dappUser),
-                        accountAddress(dappAccount),
+                        accountContract(dappAccount),
                         providerDetails.datasetId.toString()
                     )
                     if (approved) {

@@ -213,8 +213,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const result = await tasks.contractApi.providerRegister(
                 stringToHexPadded(_serviceOrigin),
                 PROVIDER_FEE,
-                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-                accountAddress(account)
+                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE)
             )
             this.mockEnv.logger.debug(
                 'Event: ',
@@ -241,7 +240,6 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 stringToHexPadded(serviceOrigin),
                 PROVIDER_FEE,
                 createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-                accountAddress(account),
                 this.stakeAmount
             )
             this.mockEnv.logger.debug(

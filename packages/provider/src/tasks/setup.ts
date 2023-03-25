@@ -127,15 +127,13 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     await tasks.contractApi.providerRegister(
         stringToHexPadded(provider.serviceOrigin),
         provider.fee,
-        createType(env.contractInterface.abi.registry, payeeKey, provider.payee),
-        provider.address
+        createType(env.contractInterface.abi.registry, payeeKey, provider.payee)
     )
     logger.info('   - providerStake')
     await tasks.contractApi.providerUpdate(
         stringToHexPadded(provider.serviceOrigin),
         provider.fee,
         createType(env.contractInterface.abi.registry, payeeKey, provider.payee),
-        provider.address,
         provider.stake
     )
     logger.info('   - providerAddDataset')
