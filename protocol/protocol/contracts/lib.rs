@@ -2079,7 +2079,6 @@ pub mod prosopo {
             assert_eq!(provider.payee, Payee::Dapp);
             assert_eq!(provider.balance, balance);
             assert_eq!(provider.status, GovernanceStatus::Deactivated);
-
         }
 
         /// Test provider register with service_origin error
