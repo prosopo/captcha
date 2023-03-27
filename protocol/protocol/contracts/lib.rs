@@ -852,7 +852,7 @@ pub mod prosopo {
             self.check_dapp_does_not_exist(contract)?;
 
             // configure the new dapp
-            let dapp = self.dapp_configure(
+            let _dapp = self.dapp_configure(
                 contract,
                 payee,
                 self.env().caller(), // the caller is made the owner of the contract
@@ -872,7 +872,7 @@ pub mod prosopo {
             self.get_dapp(contract)?;
 
             // configure the new dapp
-            let dapp = self.dapp_configure(contract, payee, owner)?;
+            let _dapp = self.dapp_configure(contract, payee, owner)?;
 
             Ok(())
         }
