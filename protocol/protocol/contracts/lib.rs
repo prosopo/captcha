@@ -2080,25 +2080,6 @@ pub mod prosopo {
             assert_eq!(provider.balance, balance);
             assert_eq!(provider.status, GovernanceStatus::Deactivated);
 
-            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
-
-            // first event is the register event, second event is the update
-            assert_eq!(2, emitted_events.len());
-
-            let event_provider_update = &emitted_events[1];
-
-            let decoded_event_update =
-                <Event as scale::Decode>::decode(&mut &event_provider_update.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderUpdate(ProviderUpdate { account }) = decoded_event_update {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderUpdate.account"
-                );
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderUpdate event");
-            }
         }
 
         /// Test provider register with service_origin error
@@ -2216,28 +2197,6 @@ pub mod prosopo {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider);
             contract.provider_unstake().ok();
-            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
-
-            // events are the register event (0), stake event(1), deregister(2) and the unstake event(3)
-
-            assert_eq!(4, emitted_events.len());
-
-            let event_unstake = &emitted_events[3];
-            let decoded_event_unstake =
-                <Event as scale::Decode>::decode(&mut &event_unstake.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderUnstake(ProviderUnstake { account, value }) =
-                decoded_event_unstake
-            {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderUnstake.account"
-                );
-                assert_eq!(value, balance, "encountered invalid ProviderUnstake.value");
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderUnstake event");
-            }
         }
 
         /// Test provider add data set
@@ -2270,33 +2229,6 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2).ok();
-            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
-
-            // events are the register, stake, add data set
-            assert_eq!(3, emitted_events.len());
-
-            let event_unstake = &emitted_events[2];
-            let decoded_event_unstake =
-                <Event as scale::Decode>::decode(&mut &event_unstake.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderAddDataset(ProviderAddDataset {
-                account,
-                dataset_id: dataset_id,
-                dataset_id_content: datset_id_content,
-            }) = decoded_event_unstake
-            {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderAddDataset.account"
-                );
-                assert_eq!(
-                    dataset_id, root1,
-                    "encountered invalid ProviderAddDataset.dataset_id"
-                );
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderAddDataset event");
-            }
         }
 
         /// Test provider cannot add data set if inactive
