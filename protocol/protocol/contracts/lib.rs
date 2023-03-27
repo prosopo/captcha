@@ -547,9 +547,6 @@ pub mod prosopo {
                 },
                 &provider_accounts_map,
             );
-            self.env().emit_event(ProviderRegister {
-                account: provider_account,
-            });
             Ok(())
         }
 
@@ -609,9 +606,6 @@ pub mod prosopo {
             self.provider_change_status(provider_account, old_status, new_status, payee);
             self.providers.insert(provider_account, &provider);
 
-            self.env().emit_event(ProviderUpdate {
-                account: provider_account,
-            });
             Ok(())
         }
 
@@ -675,9 +669,6 @@ pub mod prosopo {
             provider.status = GovernanceStatus::Deactivated;
             self.providers.insert(provider_account, &provider);
 
-            self.env().emit_event(ProviderDeregister {
-                account: provider_account,
-            });
             Ok(())
         }
 
@@ -697,10 +688,6 @@ pub mod prosopo {
                     .transfer(caller, balance)
                     .map_err(|_| Error::ContractTransferFailed)?;
                 self.provider_deregister(caller)?;
-                self.env().emit_event(ProviderUnstake {
-                    account: caller,
-                    value: balance,
-                });
             }
 
             Ok(())
@@ -758,13 +745,6 @@ pub mod prosopo {
             }
 
             self.providers.insert(provider_id, &provider);
-
-            // emit event
-            self.env().emit_event(ProviderAddDataset {
-                account: provider_id,
-                dataset_id,
-                dataset_id_content,
-            });
 
             Ok(())
         }
@@ -878,15 +858,6 @@ pub mod prosopo {
                 self.env().caller(), // the caller is made the owner of the contract
             )?;
 
-            // emit event
-            self.env().emit_event(DappRegister {
-                contract,
-                owner: dapp.owner,
-                value: dapp.balance,
-                payee,
-                status: dapp.status,
-            });
-
             Ok(())
         }
 
@@ -902,15 +873,6 @@ pub mod prosopo {
 
             // configure the new dapp
             let dapp = self.dapp_configure(contract, payee, owner)?;
-
-            // emit event
-            self.env().emit_event(DappUpdate {
-                contract,
-                owner,
-                value: dapp.balance,
-                payee,
-                status: dapp.status,
-            });
 
             Ok(())
         }
@@ -948,11 +910,6 @@ pub mod prosopo {
             dapp.status = GovernanceStatus::Deactivated;
             dapp.balance = 0;
             self.dapps.insert(contract, &dapp);
-
-            self.env().emit_event(DappCancel {
-                contract,
-                value: balance,
-            });
 
             Ok(())
         }
@@ -1031,12 +988,6 @@ pub mod prosopo {
                 }
             }
 
-            self.env().emit_event(DappUserCommit {
-                account: caller,
-                merkle_tree_root: user_merkle_tree_root,
-                contract,
-                dataset_id,
-            });
             Ok(())
         }
 
@@ -1183,9 +1134,6 @@ pub mod prosopo {
 
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.refund_transaction_fee(commitment, transaction_fee)?;
-                self.env().emit_event(ProviderApprove {
-                    captcha_solution_commitment_id,
-                });
             } else {
                 return err!(Error::CaptchaSolutionCommitmentAlreadyApproved);
             }
@@ -1223,9 +1171,6 @@ pub mod prosopo {
                 );
 
                 self.pay_fee(&caller, &commitment.contract)?;
-                self.env().emit_event(ProviderDisapprove {
-                    captcha_solution_commitment_id,
-                });
             } else {
                 return err!(Error::CaptchaSolutionCommitmentAlreadyDisapproved);
             }
