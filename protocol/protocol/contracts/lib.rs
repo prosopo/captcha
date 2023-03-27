@@ -295,8 +295,9 @@ pub mod prosopo {
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
         seeds: Mapping<u8, Seed>,
-        seed_history: Vec<Seed>,
+        seed_history: Mapping<u8, Vec<Seed>>,
         n_seeds: u8,
+        max_seed_history_len: u8, // the number of blocks to store an old seed for before deletion
         a: u128,
     }
 
@@ -513,7 +514,6 @@ pub mod prosopo {
         #[ink(constructor, payable)]
         pub fn default(
         ) -> Self {
-
             Self {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
@@ -537,6 +537,7 @@ pub mod prosopo {
                 n_seeds: 10,
                 seeds: Default::default(),
                 seed_history: Default::default(),
+                max_seed_history_len: 10,
                 a: 1,
             }
         }
@@ -1104,13 +1105,26 @@ pub mod prosopo {
             let seed_value = seed.map(|s| s.value).unwrap_or(0);
             // record the current seed value in history
             // newer values at start of vec
+            let mut history = self.seed_history.get(seed_index).unwrap_or_else(|| Vec::new());
+            // prune old historic seeds which are out of date (no longer need to be stored for replays)
+            for i in (0..history.len() - 1).rev() {
+                if history[i].block < self.env().block_number() - self.max_seed_history_len as u32 {
+                    // entry is old enough to be removed
+                    history.remove(i);
+                } else {
+                    // entries are in order, so can stop here, all entries from this and earlier are valid
+                    break;
+                }
+            }
             
             let next_value = self.hash_u128_pair(seed_value, caller_block_id);
-            self.seeds.insert(seed_index, &Seed {
+            let next_seed = Seed {
                 value: next_value,
                 block: self.env().block_number(),
                 author: self.env().caller(),
-            });
+            };
+            self.seeds.insert(seed_index, &next_seed);
+            history.insert(0, next_seed);
         }
 
         fn hash_u128_pair(&self, a: u128, b: u128) -> u128 {
