@@ -81,25 +81,19 @@ export class ProsopoContractApi extends ContractPromise {
         const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime)
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
         this.logger.debug('Sending address: ', this.pair.address)
-        const extrinsic = this.query[message.method](
-            this.pair.address,
-            {
-                value,
-                gasLimit,
-                storageDepositLimit: null,
-            },
-            ...encodedArgs
-        )
+        const initialOptions = {
+            value,
+            gasLimit,
+            storageDepositLimit: null,
+        }
+        const extrinsic = this.query[message.method](this.pair.address, initialOptions, ...encodedArgs)
 
         const response = await extrinsic
         if (response.result.isOk) {
-            const options = getOptions(
-                this.api,
-                message.isMutating,
-                value,
-                response.gasRequired,
-                response.storageDeposit
-            )
+            let options = getOptions(this.api, message.isMutating, value, response.gasRequired, response.storageDeposit)
+            const extrinsicTx = this.tx[contractMethodName](options, ...encodedArgs)
+            const paymentInfo = await extrinsicTx.paymentInfo(this.pair.address)
+            options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit)
             handleContractCallOutcomeErrors(response, contractMethodName)
             return { extrinsic: this.tx[contractMethodName](options, ...encodedArgs), options }
         } else {
@@ -123,6 +117,8 @@ export class ProsopoContractApi extends ContractPromise {
         const nextNonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
         this.nonce = nextNonce ? nextNonce.toNumber() : this.nonce
         this.logger.debug(`Sending ${contractMethodName} tx`)
+        const paymentInfo = await extrinsic.paymentInfo(this.pair)
+        this.logger.debug(`${contractMethodName} paymentInfo:`, paymentInfo.toHuman())
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             const unsub = await extrinsic.signAndSend(
