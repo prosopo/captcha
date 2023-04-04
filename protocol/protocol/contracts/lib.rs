@@ -1086,7 +1086,8 @@ pub mod prosopo {
             seeds
         }
 
-        fn update_seed(&mut self) {
+        #[ink(message)]
+        pub fn update_seed(&mut self) {
             let caller_block_id = self.get_caller_block_id_u128();
             
             // let the caller block id determine the seed index
@@ -1095,36 +1096,49 @@ pub mod prosopo {
             // use the caller block id and current seed value to generate the next seed value
             let seed = self.seeds.get(seed_index);
             if seed.is_some() {
+                debug!("found existing seed");
                 // check the caller is not the author of the current seed
                 // this avoids the caller being able to update the seed value multiple times in the same block
                 if seed.unwrap().author == self.env().caller()
                     && seed.unwrap().block == self.env().block_number() {
+                    debug!("cannot update seed twice in same block");
                     return;
                 }
             }
             let seed_value = seed.map(|s| s.value).unwrap_or(0);
+            debug!("seed value {}", seed_value);
             // record the current seed value in history
             // newer values at start of vec
             let mut history = self.seed_history.get(seed_index).unwrap_or_else(|| Vec::new());
+            debug!("seed history {:?}", history);
             // prune old historic seeds which are out of date (no longer need to be stored for replays)
-            for i in (0..history.len() - 1).rev() {
-                if history[i].block < self.env().block_number() - self.max_seed_history_len as u32 {
-                    // entry is old enough to be removed
-                    history.remove(i);
-                } else {
-                    // entries are in order, so can stop here, all entries from this and earlier are valid
-                    break;
+            if history.len() > 0 {
+                for i in (0..history.len() - 1).rev() {
+                    debug!("pruning seed {}", i);
+                    if history[i].block < self.env().block_number() - self.max_seed_history_len as u32 {
+                        // entry is old enough to be removed
+                        debug!("removing seed {}", i);
+                        history.remove(i);
+                    } else {
+                        // entries are in order, so can stop here, all entries from this and earlier are valid
+                        debug!("stopped pruning at seed {}", i);
+                        break;
+                    }
                 }
             }
             
             let next_value = self.hash_u128_pair(seed_value, caller_block_id);
+            debug!("next seed value {}", next_value);
             let next_seed = Seed {
                 value: next_value,
                 block: self.env().block_number(),
                 author: self.env().caller(),
             };
+            debug!("next seed {:?}", next_seed);
             self.seeds.insert(seed_index, &next_seed);
             history.insert(0, next_seed);
+            self.seed_history.insert(seed_index, &history);
+            debug!("seed history {:?}", history);
         }
 
         fn hash_u128_pair(&self, a: u128, b: u128) -> u128 {
