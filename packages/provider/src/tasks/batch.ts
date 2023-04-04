@@ -3,12 +3,14 @@ import { ProsopoContractApi, ProsopoContractError, encodeStringArgs } from '@pro
 import consola from 'consola'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '../types/scheduler'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { Hash } from '@polkadot/types/interfaces'
+import { DispatchError, Event, Hash } from '@polkadot/types/interfaces'
 import { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types'
 import { ApiPromise, SubmittableResult } from '@polkadot/api'
 import { SignatureOptions } from '@polkadot/types/types'
 import { BN } from '@polkadot/util'
 import { oneUnit } from '../util'
+import { DecodedEvent } from '@polkadot/api-contract/types'
+import { Bytes } from '@polkadot/types-codec'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 
@@ -70,6 +72,7 @@ export class BatchCommitter {
                 //get commitments
                 const commitments = await this.getCommitments()
                 if (commitments.length > 0) {
+                    this.logger.info(`Found ${commitments.length} commitments to commit`)
                     //commit
                     const commitmentIds = await this.batchCommit(commitments)
                     //remove commitments
@@ -107,12 +110,38 @@ export class BatchCommitter {
         return await this.db.getProcessedDappUserCommitments()
     }
 
+    // Get the error from inside the batch interrupted event
+    batchInterrupted({ data: [index, error] }: Event): string | null {
+        return `error: ${index.toString()}: ${this.getDispatchError(error as DispatchError)}`
+    }
+
+    getDispatchError(dispatchError: DispatchError): string {
+        let message: string = dispatchError.type
+
+        if (dispatchError.isModule) {
+            try {
+                const mod = dispatchError.asModule
+                const error = dispatchError.registry.findMetaError(mod)
+
+                message = `${error.section}.${error.name}`
+            } catch (error) {
+                // swallow
+            }
+        } else if (dispatchError.isToken) {
+            message = `${dispatchError.type}.${dispatchError.asToken.type}`
+        }
+
+        return message
+    }
+
     /**
      * Batch commits a list of commitment records to the contract
      * @param commitments
      */
     async batchCommit(commitments: UserCommitmentRecord[]): Promise<string[]> {
         const { extrinsics, commitmentIds } = await this.createCommitmentTxs(commitments)
+        this.logger.debug('commitmentIds', commitmentIds)
+
         // TODO use dryRun to get weight
         // const result = await this.contractApi.api.tx.utility.batchAll(txs).dryRun(this.contractApi.pair)
         // 2023-02-01 21:23:51        RPC-CORE: dryRun(extrinsic: Bytes, at?: BlockHash): ApplyExtrinsicResult:: -32601: RPC call is unsafe to be called externally
@@ -124,6 +153,7 @@ export class BatchCommitter {
         const genesisHash = await this.contractApi.api.rpc.chain.getBlockHash(0)
         const blockHash = await this.contractApi.api.rpc.chain.getBlockHash()
         const runtimeVersion = await this.contractApi.api.rpc.state.getRuntimeVersion(blockHash)
+
         const options: SignatureOptions = {
             nonce: nonce,
             tip: 0,
@@ -140,26 +170,54 @@ export class BatchCommitter {
             'UNIT'
         )
         this.logger.info('Payment Info', paymentInfo.toHuman())
-        const batchExtrinsicSigned = batchExtrinsic.sign(this.contractApi.pair, options)
-        this.logger.info('Signed batch extrinsic encodedLength', batchExtrinsicSigned.encodedLength)
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
-            const unsub = await batchExtrinsic.signAndSend(this.contractApi.pair, (result: SubmittableResult) => {
-                if (result.dispatchError) {
-                    this.logger.debug(result.toHuman())
-                    reject(new ProsopoContractError(result.dispatchError))
-                }
-                this.logger.debug(result.toHuman())
+            const unsub = await batchExtrinsic.signAndSend(
+                this.contractApi.pair,
+                options,
+                (result: SubmittableResult) => {
+                    this.logger.debug('DispatchInfo', result.dispatchInfo?.toHuman())
+                    if (result.dispatchError) {
+                        this.logger.error('DispatchError')
+                        reject(new ProsopoContractError(result.dispatchError))
+                    }
 
-                if (result.status.isFinalized || result.status.isInBlock) {
-                    unsub()
-                    resolve(commitmentIds)
-                } else if (result.isError) {
-                    unsub()
+                    if (result.status.isFinalized || result.status.isInBlock) {
+                        unsub()
+                        const events = result.events
+                            .filter(
+                                (e) =>
+                                    e.event.section === 'contracts' &&
+                                    ['ContractEmitted', 'ContractExecution'].indexOf(e.event.method) > -1
+                            )
+                            .map((eventRec): DecodedEvent | null => {
+                                const {
+                                    event: {
+                                        data: [, data],
+                                    },
+                                } = eventRec
+                                try {
+                                    return this.contractApi.abi.decodeEvent(data as Bytes)
+                                } catch (error) {
+                                    this.logger.error(`Unable to decode contract event: ${(error as Error).message}`)
+                                    this.logger.error(eventRec.event.toHuman())
 
-                    reject(new ProsopoContractError(result.status.type))
+                                    return null
+                                }
+                            })
+                            .filter((decoded): decoded is DecodedEvent => !!decoded)
+                        this.logger.debug(
+                            'Events',
+                            events.map((e) => e.event.identifier)
+                        )
+                        resolve(commitmentIds)
+                    } else if (result.isError) {
+                        unsub()
+
+                        reject(new ProsopoContractError(result.status.type))
+                    }
                 }
-            })
+            )
         })
     }
 
@@ -167,7 +225,8 @@ export class BatchCommitter {
         commitments
     ): Promise<{ extrinsics: SubmittableExtrinsic<any>[]; commitmentIds: string[] }> {
         const txs: SubmittableExtrinsic<any>[] = []
-        const fragment = this.contractApi.abi.findMessage('dappUserCommit')
+        const contractMethodName = 'dappUserCommit'
+        const fragment = this.contractApi.abi.findMessage(contractMethodName)
         const batchedCommitmentIds: string[] = []
         const utilityConstants = await this.contractApi.api.consts.utility
         let totalRefTime = new BN(0)
@@ -185,10 +244,12 @@ export class BatchCommitter {
                 commitment.userAccount,
                 commitment.approved ? 'Approved' : 'Disapproved',
             ]
-            this.logger.debug('Address', this.contractApi.pair.address)
+            this.logger.debug('Provider Address', this.contractApi.pair.address)
             const encodedArgs: Uint8Array[] = encodeStringArgs(this.contractApi.abi, fragment, args)
+            this.logger.debug(`Commitment:`, args)
             const { extrinsic, options } = await this.contractApi.buildExtrinsic('dappUserCommit', encodedArgs)
-
+            const paymentInfo = await extrinsic.paymentInfo(this.contractApi.pair)
+            this.logger.debug(`${contractMethodName} paymentInfo:`, paymentInfo.toHuman())
             //totalEncodedLength += extrinsic.encodedLength
             totalRefTime = totalRefTime.add(
                 this.contractApi.api.registry.createType('WeightV2', options.gasLimit).refTime.toBn()
@@ -201,6 +262,7 @@ export class BatchCommitter {
                 totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
                 this.batchCommitConfig.maxBatchExtrinsicPercentage
             ) {
+                this.logger.warn('Max batch extrinsic percentage reached')
                 break
             } else {
                 batchedCommitmentIds.push(commitment.commitmentId)

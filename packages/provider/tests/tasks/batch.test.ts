@@ -28,7 +28,7 @@ import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util'
 import { ApiPromise } from '@polkadot/api'
 import { getPair } from '../../src/index'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { getSs58Format } from '../../src/cli/util'
+import { getPairType, getSs58Format } from '../../src/cli/util'
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -63,6 +63,7 @@ function calcInterval(api: ApiPromise): BN {
 describe('BATCH TESTS', async () => {
     const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
     const ss58Format = getSs58Format()
+    const pairType = getPairType()
     const pair = await getPair(
         (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
         ss58Format,
@@ -78,23 +79,19 @@ describe('BATCH TESTS', async () => {
         await env.db?.connection?.close()
     })
 
-    it.only('Batches max number of commitments on-chain', async () => {
+    it('Batches max number of commitments on-chain', async () => {
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
-            await env.changeSigner(
-                await getPair(
-                    (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
-                    ss58Format,
-                    accountMnemonic(providerAccount)
-                )
-            )
+
+            await env.changeSigner(await getPair(pairType, ss58Format, accountMnemonic(providerAccount)))
             // contract API must be initialized with an account that has funds or the error StorageDepositLimitExhausted
             // will be thrown when trying to batch commitments
             const contractApi = await env.getContractApi()
             // Remove any existing commitments and solutions from the db
-            // Note - don't do this as it messes with other tests
-            // await env.db.tables?.commitment.deleteMany({})
-            // await env.db.tables?.usersolution.deleteMany({})
+            // FIXME - deleting these can mess with other tests since they're all running asynchronously. The database
+            //    instance *should* be separate for this batch file but issues have been seen in the past...
+            await env.db.tables?.commitment.deleteMany({})
+            await env.db.tables?.usersolution.deleteMany({})
 
             // Get account nonce
             const startNonce = await contractApi.api.call.accountNonceApi.accountNonce(accountAddress(providerAccount))
@@ -124,10 +121,12 @@ describe('BATCH TESTS', async () => {
                 ]
                 const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: randomAsHex() }
                 const commitmentIds: string[] = []
-                const dappUser = await getUser(env, AccountKey.dappUsers)
-                const commitmentCount = 300
+                const commitmentCount = 3
                 // Store 10 commitments in the local db
                 for (let count = 0; count < commitmentCount; count++) {
+                    // need to submit different commits under different user accounts to avoid the commitments being
+                    // trimmed by the contract when the max number of commitments per user is reached (e.g. 10 per user)
+                    const dappUser = await getUser(env, AccountKey.dappUsers)
                     // not the real commitment id, which would be calculated as the root of a merkle tree
                     const commitmentId = randomAsHex()
                     commitmentIds.push(commitmentId)
@@ -237,7 +236,8 @@ describe('BATCH TESTS', async () => {
                     )
 
                     // We have to wait for batched commitments to become available on-chain
-                    const waitTime = calcInterval(contractApi.api as ApiPromise).toNumber()
+                    const waitTime = calcInterval(contractApi.api as ApiPromise).toNumber() * 2
+                    env.logger.debug(`waiting ${waitTime}ms for commitments to be available on-chain`)
                     await sleep(waitTime)
 
                     // Check the commitments are in the contract
@@ -245,6 +245,7 @@ describe('BATCH TESTS', async () => {
                     let count = 0
                     for (const commitment of processedCommitments) {
                         const approved = count % 2 === 0 ? 'Approved' : 'Disapproved'
+                        env.logger.debug(`Getting commitmentId ${commitment.commitmentId} from contract`)
                         const contractCommitment = await contractApi.getCaptchaSolutionCommitment(
                             commitment.commitmentId
                         )

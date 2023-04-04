@@ -27,7 +27,7 @@ import {
     hexHash,
 } from '@prosopo/datasets'
 import { ProsopoEnvError } from '@prosopo/common'
-import { ContractDeployer, getEventsFromMethodName } from '@prosopo/contract'
+import { ContractDeployer, ProsopoCaptchaStatus, getEventsFromMethodName } from '@prosopo/contract'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import { PROVIDER, accountContract, getSignedTasks } from '../mocks/accounts'
 import { getUser } from '../mocks/getUser'
@@ -288,6 +288,60 @@ describe('CONTRACT TASKS', async () => {
         const events = getEventsFromMethodName(result, 'ProviderDisapprove')
 
         expect(events![0].args[0].toHuman()).to.equal(commitmentId)
+    })
+
+    it('Provider commit and disapprove', async () => {
+        const { captchaSolutions, dappUserAccount, dappContractAccount } =
+            await createMockCaptchaSolutionsAndRequestHash()
+
+        const salt = randomAsHex()
+
+        const tree = new CaptchaMerkleTree()
+
+        const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
+            ...captcha,
+            salt: salt,
+        }))
+
+        const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
+
+        tree.build(captchasHashed)
+
+        const commitmentId = tree.root!.hash
+
+        const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
+
+        const tasks = await getSignedTasks(mockEnv, providerAccount)
+
+        const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+
+        const commitment = [
+            accountContract(dappContractAccount),
+            provider.datasetId.toString(),
+            commitmentId,
+            accountAddress(providerAccount),
+            accountAddress(dappUserAccount),
+            'Disapproved' as unknown as ProsopoCaptchaStatus,
+        ] // TODO how to fix this?
+
+        console.log('Commitment:', commitment)
+
+        const result: ContractSubmittableResult = await tasks.contractApi.dappUserCommit(
+            accountContract(dappContractAccount),
+            provider.datasetId.toString(),
+            commitmentId,
+            accountAddress(providerAccount),
+            accountAddress(dappUserAccount),
+            'Disapproved' as unknown as ProsopoCaptchaStatus
+        )
+
+        if (!result) {
+            throw new ProsopoEnvError(new Error('Result is null'))
+        }
+
+        const events = getEventsFromMethodName(result, 'DappUserCommit')
+
+        expect(events![0].args[2].toHuman()).to.equal(accountContract(dappContractAccount))
     })
 
     it('Timestamps check', async () => {
