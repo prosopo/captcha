@@ -72,13 +72,14 @@ export async function sendFunds(
 
     const api = env.contractInterface.api
     const unit = oneUnit(env.api)
+    const unitAmount = new BN(amount.toString()).div(unit).toString()
     env.logger.debug(
         'Sending funds from',
         pair.address,
         'to',
         address,
         'Amount:',
-        new BN(amount.toString()).div(unit).toString(),
+        unitAmount,
         'UNIT. Free balance:',
         previousFree.div(unit).toString(),
         'UNIT'
@@ -111,7 +112,7 @@ export async function sendFunds(
     })
     await result
         .then((result: ISubmittableResult) => {
-            env.logger.debug(who, 'sent amount', amount.toString(), 'at tx hash ', result.status.asInBlock.toHex())
+            env.logger.debug(who, 'sent amount', unitAmount, 'UNIT at tx hash ', result.status.asInBlock.toHex())
         })
         .catch((e) => {
             throw new ProsopoEnvError('DEVELOPER.FUNDING_FAILED', undefined, undefined, { e })
@@ -124,11 +125,15 @@ export async function setupProvider(env, provider: IProviderAccount): Promise<Ha
     const tasks = new Tasks(env)
     const payeeKey = 'ProsopoPayee'
     logger.info('   - providerRegister')
-    await tasks.contractApi.providerRegister(
-        stringToHexPadded(provider.serviceOrigin),
-        provider.fee,
-        createType(env.contractInterface.abi.registry, payeeKey, provider.payee)
-    )
+    try {
+        await tasks.contractApi.providerRegister(
+            stringToHexPadded(provider.serviceOrigin),
+            provider.fee,
+            createType(env.contractInterface.abi.registry, payeeKey, provider.payee)
+        )
+    } catch (e) {
+        logger.warn(e)
+    }
     logger.info('   - providerStake')
     await tasks.contractApi.providerUpdate(
         stringToHexPadded(provider.serviceOrigin),
@@ -148,10 +153,16 @@ export async function setupDapp(env: ProsopoEnvironment, dapp: IDappAccount): Pr
     if (dapp.pair) {
         await env.changeSigner(dapp.pair)
         const tasks = new Tasks(env)
-        logger.info('   - dappRegister')
-        await tasks.contractApi.dappRegister(dapp.contractAccount, 'Dapp')
-        logger.info('   - dappFund')
-        await tasks.contractApi.dappFund(dapp.contractAccount, dapp.fundAmount)
+
+        try {
+            await tasks.contractApi.getDappDetails(dapp.contractAccount)
+            logger.info('   - dapp is already registered')
+        } catch (e) {
+            logger.info('   - dappRegister')
+            await tasks.contractApi.dappRegister(dapp.contractAccount, 'Dapp')
+            logger.info('   - dappFund')
+            await tasks.contractApi.dappFund(dapp.contractAccount, dapp.fundAmount)
+        }
     }
 }
 
@@ -188,10 +199,10 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
  */
 export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
     const unit = oneUnit(env.api)
-    env.logger.debug('Stake amount', stakeAmount.div(unit).toString(), 'UNIT')
+    env.logger.debug('Stake amount', stakeAmount.div(unit).toNumber(), 'UNIT')
     const sendAmount = new BN(stakeAmount).muln(2)
 
     // Should result in each account receiving a minimum of MAX_ACCOUNT_FUND UNIT
-    env.logger.debug('Setting send amount to', sendAmount.div(unit).toString(), 'UNIT')
+    env.logger.debug('Setting send amount to', sendAmount.div(unit).toNumber(), 'UNIT')
     return sendAmount
 }

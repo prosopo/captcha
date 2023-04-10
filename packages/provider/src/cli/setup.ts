@@ -72,23 +72,31 @@ async function updateEnvFile(vars: Record<string, string>) {
 
 async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
-        await env.contractInterface.getProviderDetails(account.address)
-        env.logger.info('Provider exists, skipping registration.')
+        const providerDetails = await env.contractInterface.getProviderDetails(account.address)
+        if (
+            providerDetails.status ===
+            env.contractInterface.abi.registry.createType('ProsopoGovernanceStatus', 'Active')
+        ) {
+            env.logger.info('Provider exists and is active, skipping registration.')
+            return
+        }
     } catch {
-        const providerKeyringPair: KeyringPair = env.keyring.addFromMnemonic(account.secret)
-
-        account.address = providerKeyringPair.address
-
-        const stakeAmount = await env.contractInterface.getProviderStakeDefault()
-
-        // use the minimum stake amount from the contract to create a reasonable stake amount
-        account.stake = getStakeAmount(env, stakeAmount)
-
-        // send enough funds to cover the stake amount and more
-        await sendFunds(env, account.address, 'Provider', getSendAmount(env, stakeAmount))
-
-        await setupProvider(env, account)
+        env.logger.info('Provider does not exist, registering...')
     }
+    const providerKeyringPair: KeyringPair = env.keyring.addFromMnemonic(account.secret)
+
+    account.address = providerKeyringPair.address
+
+    const stakeAmount = await env.contractInterface.getProviderStakeDefault()
+
+    // use the minimum stake amount from the contract to create a reasonable stake amount
+    account.stake = getStakeAmount(env, stakeAmount)
+    const sendAmount = getSendAmount(env, account.stake)
+
+    // send enough funds to cover the stake amount and more
+    await sendFunds(env, account.address, 'Provider', sendAmount)
+
+    await setupProvider(env, account)
 }
 
 async function registerDapp(env: Environment, dapp: IDappAccount) {
