@@ -27,7 +27,7 @@ loadEnv()
 const defaultProvider: IProviderAccount = {
     serviceOrigin: process.env.API_PORT ? `http://localhost:${process.env.API_PORT}` : 'http://localhost:3000',
     fee: 10,
-    payee: 'Provider',
+    payee: 'Dapp',
     stake: Math.pow(10, 13),
     datasetFile: './data/captchas.json',
     secret: process.env.PROVIDER_MNEMONIC || '',
@@ -73,10 +73,8 @@ async function updateEnvFile(vars: Record<string, string>) {
 async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
         const providerDetails = await env.contractInterface.getProviderDetails(account.address)
-        if (
-            providerDetails.status ===
-            env.contractInterface.abi.registry.createType('ProsopoGovernanceStatus', 'Active')
-        ) {
+        console.log(providerDetails.status)
+        if (providerDetails.status.toString() === 'Active') {
             env.logger.info('Provider exists and is active, skipping registration.')
             return
         }

@@ -28,7 +28,7 @@ export default (): ProsopoConfig => ({
         development: {
             endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944',
             contract: {
-                address: process.env.CONTRACT_ADDRESS || '',
+                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
                 name: 'prosopo',
             },
             accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
