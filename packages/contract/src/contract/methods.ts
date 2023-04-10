@@ -11,7 +11,7 @@ import {
     ProsopoRandomProvider,
 } from '../interfaces'
 import { Vec, u128 } from '@polkadot/types-codec'
-import { AccountId } from '@polkadot/types/interfaces'
+import { AccountId, Balance } from '@polkadot/types/interfaces'
 import { BN, hexToU8a } from '@polkadot/util'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 
@@ -20,7 +20,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
 
     public async providerRegister(
         serviceOrigin: string,
-        fee: number,
+        fee: number | Balance,
         payee: ProsopoPayee
     ): Promise<ContractSubmittableResult> {
         return await this.contractTx('providerRegister', [serviceOrigin, fee, payee])
@@ -30,7 +30,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         serviceOrigin: string,
         fee: number,
         payee: ProsopoPayee,
-        value?: number | BN | undefined
+        value?: number | BN | Balance | undefined
     ): Promise<ContractSubmittableResult> {
         return await this.contractTx('providerUpdate', [serviceOrigin, fee, payee], value)
     }
@@ -162,5 +162,9 @@ export class ProsopoContractMethods extends ProsopoContractApi {
 
     public async getDappAccounts(): Promise<DappAccounts> {
         return await this.getStorage<DappAccounts>('dapp_accounts', 'DappAccounts')
+    }
+
+    public getProviderMaxFee(): Promise<u128> {
+        return this.getStorage<u128>('max_provider_fee', 'u128')
     }
 }

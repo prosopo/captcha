@@ -152,6 +152,11 @@ export function dispatchErrorHandler(registry: Registry, event: EventRecord): Pr
 // 4_999_999_999_999
 const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE)
 
+// The values returned by the dry run transactions are sometimes not large enough
+// to guarantee that the transaction will succeed. This is a safety margin to ensure
+// that the transaction will succeed.
+export const GAS_INCREASE_FACTOR = 1.01
+
 export function getOptions(
     api: ApiBase<'promise'>,
     isMutating?: boolean,
@@ -171,7 +176,7 @@ export function getOptions(
         gasLimit: _gasLimit,
         storageDepositLimit: storageDeposit
             ? storageDeposit.isCharge
-                ? storageDeposit.asCharge
+                ? storageDeposit.asCharge.muln(GAS_INCREASE_FACTOR)
                 : storageDeposit.isRefund
                 ? storageDeposit.asRefund
                 : null

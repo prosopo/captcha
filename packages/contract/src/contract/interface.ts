@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
 import { AbiMetadata, ContractAbi } from '../types'
-import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
+import { GAS_INCREASE_FACTOR, encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
@@ -92,8 +92,15 @@ export class ProsopoContractApi extends ContractPromise {
         if (response.result.isOk) {
             let options = getOptions(this.api, message.isMutating, value, response.gasRequired, response.storageDeposit)
             const extrinsicTx = this.tx[contractMethodName](options, ...encodedArgs)
+            // paymentInfo is larger than gasRequired returned by query so use paymentInfo
             const paymentInfo = await extrinsicTx.paymentInfo(this.pair.address)
-            options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit)
+
+            // increase the gas limit again to make sure the tx succeeds
+            const increasedWeight = createType(this.api.registry, 'WeightV2', {
+                refTime: Math.floor(paymentInfo.weight.refTime.toNumber() * GAS_INCREASE_FACTOR),
+                proofSize: Math.floor(paymentInfo.weight.proofSize.toNumber() * GAS_INCREASE_FACTOR),
+            })
+            options = getOptions(this.api, message.isMutating, value, increasedWeight, response.storageDeposit)
             handleContractCallOutcomeErrors(response, contractMethodName)
             return { extrinsic: this.tx[contractMethodName](options, ...encodedArgs), options }
         } else {
@@ -261,7 +268,6 @@ export class ProsopoContractApi extends ContractPromise {
      * @return {any} data
      */
     async getStorage<T>(name: string, type: string): Promise<T> {
-        await this.getContract()
         const storageEntry = this.getStorageEntry(name)
         if (storageEntry.layout.isCell) {
             const storageCell = storageEntry.layout.asCell
