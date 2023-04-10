@@ -210,9 +210,15 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             await this.sendFunds(accountAddress(account), 'Provider', this.sendAmount)
             await this.changeSigner(accountMnemonic(account))
             const tasks = new Tasks(this.mockEnv)
+
+            // const providerMaxFee = await tasks.contractApi.getProviderMaxFee()
+            //
+            // console.log(providerMaxFee)
+            // process.exit()
+
             const result = await tasks.contractApi.providerRegister(
                 stringToHexPadded(_serviceOrigin),
-                PROVIDER_FEE,
+                createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
                 createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE)
             )
             this.mockEnv.logger.debug(
@@ -238,7 +244,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const result = await tasks.contractApi.providerUpdate(
                 stringToHexPadded(serviceOrigin),
-                PROVIDER_FEE,
+                createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
                 createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
                 this.stakeAmount
             )

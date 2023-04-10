@@ -189,10 +189,7 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
 export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
     const unit = oneUnit(env.api)
     env.logger.debug('Stake amount', stakeAmount.div(unit).toString(), 'UNIT')
-    const sendAmount = BN.max(
-        new BN(stakeAmount).muln(2).add(unit.muln(MAX_ACCOUNT_FUND)),
-        env.api.consts.balances.existentialDeposit.muln(10000)
-    )
+    const sendAmount = new BN(stakeAmount).muln(2)
 
     // Should result in each account receiving a minimum of MAX_ACCOUNT_FUND UNIT
     env.logger.debug('Setting send amount to', sendAmount.div(unit).toString(), 'UNIT')

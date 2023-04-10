@@ -161,7 +161,7 @@ export class BatchCommitter {
             blockHash,
             runtimeVersion,
         }
-        const batchExtrinsic = this.contractApi.api.tx.utility.batchAll(extrinsics)
+        const batchExtrinsic = this.contractApi.api.tx.utility.batch(extrinsics)
         const balance = await this.contractApi.api.query.system.account(this.contractApi.pair.address)
         const paymentInfo = await batchExtrinsic.paymentInfo(this.contractApi.pair)
         this.logger.info(
@@ -176,10 +176,26 @@ export class BatchCommitter {
                 this.contractApi.pair,
                 options,
                 (result: SubmittableResult) => {
-                    this.logger.debug('DispatchInfo', result.dispatchInfo?.toHuman())
-                    if (result.dispatchError) {
-                        this.logger.error('DispatchError')
-                        reject(new ProsopoContractError(result.dispatchError))
+                    this.logger.debug('batchExtrinsic DispatchInfo', result.dispatchInfo?.toHuman())
+
+                    const batchInterruptedEvent = result.events.filter((e) => e.event.method === 'BatchInterrupted')
+                    const tooManyCalls = result.events.filter((e) => e.event.method === 'TooManyCalls')
+                    if (tooManyCalls.length > 0) {
+                        this.logger.error('Too many calls')
+                        const error = tooManyCalls[0].event
+                        const message = `${error.section}.${error.method}${
+                            'docs' in error
+                                ? Array.isArray(error.docs)
+                                    ? `(${error.docs.join('')})`
+                                    : error.docs || ''
+                                : ''
+                        }`
+                        reject(new ProsopoContractError(message))
+                    }
+
+                    if (batchInterruptedEvent.length > 0) {
+                        this.logger.error('Batch interrupted')
+                        reject(this.batchInterrupted(batchInterruptedEvent[0].event))
                     }
 
                     if (result.status.isFinalized || result.status.isInBlock) {
@@ -206,10 +222,7 @@ export class BatchCommitter {
                                 }
                             })
                             .filter((decoded): decoded is DecodedEvent => !!decoded)
-                        this.logger.debug(
-                            'Events',
-                            events.map((e) => e.event.identifier)
-                        )
+
                         resolve(commitmentIds)
                     } else if (result.isError) {
                         unsub()

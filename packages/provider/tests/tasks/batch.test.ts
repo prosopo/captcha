@@ -79,7 +79,8 @@ describe('BATCH TESTS', async () => {
         await env.db?.connection?.close()
     })
 
-    it('Batches max number of commitments on-chain', async () => {
+    const commitmentCount = 100
+    it(`Batches ~${commitmentCount} commitments on-chain`, async () => {
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
@@ -121,7 +122,7 @@ describe('BATCH TESTS', async () => {
                 ]
                 const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: randomAsHex() }
                 const commitmentIds: string[] = []
-                const commitmentCount = 3
+
                 // Store 10 commitments in the local db
                 for (let count = 0; count < commitmentCount; count++) {
                     // need to submit different commits under different user accounts to avoid the commitments being
@@ -196,7 +197,7 @@ describe('BATCH TESTS', async () => {
                 //                     '0x38ed96eeb240c2c3b5dbb7d29fad276317b5a6bb30094ddf0b845585503dd830', ...
 
                 const batcherResult = await env.db.getLastScheduledTask(ScheduledTaskNames.BatchCommitment)
-
+                console.log('batcherResult', batcherResult)
                 if (
                     !batcherResult ||
                     (batcherResult && !batcherResult.result) ||
