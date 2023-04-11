@@ -203,7 +203,7 @@ export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
     let sendAmount = new BN(stakeAmount).muln(2)
 
     // Should result in each account receiving a minimum of existentialDeposit
-    sendAmount = BN.max(sendAmount, env.api.consts.balances.existentialDeposit.muln(10))
+    sendAmount = BN.max(sendAmount, env.api.consts.balances.existentialDeposit.muln(100))
     env.logger.debug('Setting send amount to', sendAmount.div(unit).toNumber(), 'UNIT')
     return sendAmount
 }
