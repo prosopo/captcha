@@ -34,7 +34,7 @@ export async function run(): Promise<AccountId> {
     const deployResult = await deploy(wasm, abi)
 
     const instantiateEvent: EventRecord | undefined = deployResult.events.find(
-        (event) => event.event.section === 'contracts'
+        (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
     )
     console.log('instantiateEvent', instantiateEvent?.toHuman())
     return instantiateEvent?.event.data['contract'].toString()
