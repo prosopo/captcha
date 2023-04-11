@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { z } from 'zod'
+import { LogLevel } from 'consola'
 
 export enum DatabaseTypes {
     mongo = 'mongo',
@@ -41,7 +42,7 @@ export type BatchCommitConfig = z.infer<typeof BatchCommitConfigSchema>
 export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 
 export const ProsopoConfigSchema = z.object({
-    logLevel: z.string(),
+    logLevel: z.nativeEnum(LogLevel),
     contract: z.object({ abi: z.string() }),
     defaultEnvironment: z.nativeEnum(EnvironmentTypes),
     account: z.object({

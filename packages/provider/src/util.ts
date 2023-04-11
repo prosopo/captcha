@@ -15,9 +15,8 @@ import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { BN, hexToU8a, isHex } from '@polkadot/util'
 import fs, { WriteStream, createWriteStream } from 'fs'
 import { Captcha, CaptchaSolution, arrayJoin } from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoEnvError } from '@prosopo/common'
 import pl from 'nodejs-polars'
-import consola from 'consola'
 import { ApiPromise } from '@polkadot/api'
 
 export function encodeStringAddress(address: string) {
@@ -129,7 +128,7 @@ export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumbe
     return filtered.withColumn(filtered['solutionKey'].str.split(',').rename('solution'))
 }
 
-export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], logger: typeof consola): Captcha[] {
+export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], logger: Logger): Captcha[] {
     // Note - loading the dataset in nodejs-polars doesn't work because of nested objects, which is why this is done in
     // a map instead of a join
     return captchas.map((captcha: Captcha) => {

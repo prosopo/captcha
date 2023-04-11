@@ -35,7 +35,7 @@ import {
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import consola from 'consola'
 import { DappUserSolutionResult, Database, ProsopoEnvironment, UserCommitmentRecord } from '../types'
 import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
@@ -58,7 +58,7 @@ export class Tasks {
 
     captchaSolutionConfig: CaptchaSolutionConfig
 
-    logger: typeof consola
+    logger: Logger
 
     constructor(env: ProsopoEnvironment) {
         if (!env.contractInterface) {
@@ -74,7 +74,7 @@ export class Tasks {
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
         this.captchaSolutionConfig = env.config.captchaSolutions
-        this.logger = env.logger
+        this.logger = logger(env.config.logLevel, 'Tasks')
     }
 
     async providerAddDatasetFromFile(file: string): Promise<ContractSubmittableResult> {

@@ -23,11 +23,11 @@ import {
     Item,
 } from '@prosopo/datasets'
 import { PendingCaptchaRequest } from './api'
-import consola from 'consola'
 import { z } from 'zod'
 import { Connection, Model, Schema } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from './scheduler'
 import { DeleteResult } from 'mongodb'
+import { Logger } from '@prosopo/common'
 
 export const UserCommitmentSchema = z.object({
     userAccount: z.string(),
@@ -176,7 +176,7 @@ export interface Database {
     tables?: Tables
     dbname: string
     connection?: Connection
-    logger: typeof consola
+    logger: Logger
 
     connect(): Promise<void>
 

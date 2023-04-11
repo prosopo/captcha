@@ -14,8 +14,8 @@
 
 import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { AssetsResolver } from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
-import consola, { LogLevel } from 'consola'
+import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { LogLevel } from 'consola'
 import dotenv from 'dotenv'
 import path from 'path'
 import { LocalAssetsResolver } from './assets'
@@ -44,7 +44,7 @@ export class Environment implements ProsopoEnvironment {
     defaultEnvironment: EnvironmentTypes
     contractName: string
     abi: ContractAbi
-    logger: typeof consola
+    logger: Logger
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
@@ -55,9 +55,7 @@ export class Environment implements ProsopoEnvironment {
         loadEnv()
         this.config = Environment.getConfig()
         this.pair = pair
-        this.logger = consola.create({
-            level: this.config.logLevel as unknown as LogLevel,
-        })
+        this.logger = logger(this.config.logLevel, `ProsopoEnvironment`)
         if (
             this.config.defaultEnvironment &&
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)

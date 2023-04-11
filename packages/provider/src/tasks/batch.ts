@@ -1,59 +1,34 @@
 import { BatchCommitConfig, Database, UserCommitmentRecord } from '../types/index'
-import { ProsopoContractApi, ProsopoContractError, encodeStringArgs } from '@prosopo/contract'
-import consola from 'consola'
+import { ProsopoContractApi, ProsopoContractError } from '@prosopo/contract'
 import { ScheduledTaskNames, ScheduledTaskStatus } from '../types/scheduler'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { DispatchError, Event, Hash } from '@polkadot/types/interfaces'
-import { ApiTypes, SubmittableExtrinsic } from '@polkadot/api/types'
+import { DispatchError, Event } from '@polkadot/types/interfaces'
 import { ApiPromise, SubmittableResult } from '@polkadot/api'
 import { SignatureOptions } from '@polkadot/types/types'
-import { BN } from '@polkadot/util'
 import { oneUnit } from '../util'
 import { DecodedEvent } from '@polkadot/api-contract/types'
 import { Bytes } from '@polkadot/types-codec'
-
-const BN_TEN_THOUSAND = new BN(10_000)
+import { commitmentExtrinsicBatcher } from '../batch/commitments'
+import { Logger } from '@prosopo/common'
 
 export class BatchCommitter {
     contractApi: ProsopoContractApi
-
     db: Database
-
     batchCommitConfig: BatchCommitConfig
-
-    logger: typeof consola
-    readonly maxConcurrent: number
-    readonly cbErr: (xts: Array<SubmittableExtrinsic<ApiTypes, SubmittableResult>>) => void
-    private running: number
-    private dispatched: bigint
+    logger: Logger
     private nonce: bigint
-    private dispatchHashes: Array<[Hash, bigint]>
     constructor(
         batchCommitConfig: BatchCommitConfig,
         contractApi: ProsopoContractApi,
         db: Database,
         concurrent: number,
         startNonce: bigint,
-        logger: typeof consola,
-        cbErr?: (xts: Array<SubmittableExtrinsic<ApiTypes, SubmittableResult>>) => void
+        logger: Logger
     ) {
-        if (cbErr !== undefined) {
-            this.cbErr = cbErr
-        } else {
-            this.cbErr = (xts: Array<SubmittableExtrinsic<ApiTypes, SubmittableResult>>) => {
-                xts.map((xt) => {
-                    logger.error(xt.toHuman())
-                })
-            }
-        }
         this.contractApi = contractApi
         this.db = db
         this.batchCommitConfig = batchCommitConfig
         this.logger = logger
-        this.running = 0
-        this.dispatchHashes = []
-        this.dispatched = BigInt(0)
-        this.maxConcurrent = concurrent
         this.nonce = startNonce
     }
     async runBatch(): Promise<void> {
@@ -139,7 +114,8 @@ export class BatchCommitter {
      * @param commitments
      */
     async batchCommit(commitments: UserCommitmentRecord[]): Promise<string[]> {
-        const { extrinsics, commitmentIds } = await this.createCommitmentTxs(commitments)
+        const commitmentBuilder = new commitmentExtrinsicBatcher(this.contractApi, this.logger, this.batchCommitConfig)
+        const { extrinsics, commitmentIds } = await commitmentBuilder.createExtrinsics(commitments)
         this.logger.debug('commitmentIds', commitmentIds)
 
         // TODO use dryRun to get weight
@@ -161,6 +137,7 @@ export class BatchCommitter {
             blockHash,
             runtimeVersion,
         }
+
         const batchExtrinsic = this.contractApi.api.tx.utility.batch(extrinsics)
         const balance = await this.contractApi.api.query.system.account(this.contractApi.pair.address)
         const paymentInfo = await batchExtrinsic.paymentInfo(this.contractApi.pair)
@@ -232,60 +209,6 @@ export class BatchCommitter {
                 }
             )
         })
-    }
-
-    async createCommitmentTxs(
-        commitments
-    ): Promise<{ extrinsics: SubmittableExtrinsic<any>[]; commitmentIds: string[] }> {
-        const txs: SubmittableExtrinsic<any>[] = []
-        const contractMethodName = 'dappUserCommit'
-        const fragment = this.contractApi.abi.findMessage(contractMethodName)
-        const batchedCommitmentIds: string[] = []
-        const utilityConstants = await this.contractApi.api.consts.utility
-        let totalRefTime = new BN(0)
-        let totalProofSize = new BN(0)
-        const maxBlockWeight = this.contractApi.api.consts.system.blockWeights.maxBlock
-        //let totalEncodedLength = 0
-        this.logger.debug('utilityConstants.batchedCallsLimit', utilityConstants.batchedCallsLimit.toNumber())
-        this.logger.debug('ss58Format', this.contractApi.api.registry.chainSS58)
-        for (const commitment of commitments) {
-            const args = [
-                commitment.dappAccount, // contract account
-                commitment.datasetId,
-                commitment.commitmentId,
-                this.contractApi.pair.address,
-                commitment.userAccount,
-                commitment.approved ? 'Approved' : 'Disapproved',
-            ]
-            this.logger.debug('Provider Address', this.contractApi.pair.address)
-            const encodedArgs: Uint8Array[] = encodeStringArgs(this.contractApi.abi, fragment, args)
-            this.logger.debug(`Commitment:`, args)
-            const { extrinsic, options } = await this.contractApi.buildExtrinsic('dappUserCommit', encodedArgs)
-            const paymentInfo = await extrinsic.paymentInfo(this.contractApi.pair)
-            this.logger.debug(`${contractMethodName} paymentInfo:`, paymentInfo.toHuman())
-            //totalEncodedLength += extrinsic.encodedLength
-            totalRefTime = totalRefTime.add(
-                this.contractApi.api.registry.createType('WeightV2', options.gasLimit).refTime.toBn()
-            )
-            totalProofSize = totalProofSize.add(
-                this.contractApi.api.registry.createType('WeightV2', options.gasLimit).proofSize.toBn()
-            )
-            // Check if we have a maximum number of transactions that we can successfully submit in a block
-            if (
-                totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
-                this.batchCommitConfig.maxBatchExtrinsicPercentage
-            ) {
-                this.logger.warn('Max batch extrinsic percentage reached')
-                break
-            } else {
-                batchedCommitmentIds.push(commitment.commitmentId)
-                txs.push(extrinsic)
-            }
-        }
-        this.logger.info(`${txs.length} transactions will be batched`)
-        this.logger.debug('totalRefTime:', totalRefTime.toString())
-        this.logger.debug('totalProofSize:', totalProofSize.toString())
-        return { extrinsics: txs, commitmentIds: batchedCommitmentIds }
     }
 
     async removeCommitmentsAndSolutions(commitmentIds: string[]): Promise<void> {

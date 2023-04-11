@@ -41,7 +41,7 @@ import {
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
 } from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoEnvError } from '@prosopo/common'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '../types/scheduler'
@@ -70,11 +70,11 @@ export class ProsopoDatabase implements Database {
 
     dbname: string
 
-    logger: typeof consola
+    logger: Logger
 
     connection?: Connection
 
-    constructor(url: string, dbname: string, logger: typeof consola, authSource?: string) {
+    constructor(url: string, dbname: string, logger: Logger, authSource?: string) {
         const authSourceString = authSource ? `?authSource=${authSource}` : ''
         const separator = url.slice(-1) === '/' ? '' : '/'
         this.url = `${url || DEFAULT_ENDPOINT}${separator}${dbname}${authSourceString}`

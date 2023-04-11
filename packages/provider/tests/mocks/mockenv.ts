@@ -13,8 +13,7 @@
 // limitations under the License.
 import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { AssetsResolver } from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
-import consola, { LogLevel } from 'consola'
+import { LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import path from 'path'
 import { LocalAssetsResolver } from '../../src/assets'
@@ -34,7 +33,7 @@ export class MockEnvironment implements ProsopoEnvironment {
     defaultEnvironment: string
     contractName: string
     abi: ContractAbi
-    logger: typeof consola
+    logger: Logger
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
@@ -45,7 +44,7 @@ export class MockEnvironment implements ProsopoEnvironment {
         loadEnv()
         this.pair = pair
         this.config = {
-            logLevel: 'debug',
+            logLevel: LogLevel.Debug,
             contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.
             defaultEnvironment: EnvironmentTypes.development,
             account: {
@@ -99,7 +98,7 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.logger = consola.create({ level: this.config.logLevel as unknown as LogLevel })
+            this.logger = logger(this.config.logLevel, 'MockEnvironment')
             this.abi = MockEnvironment.getContractAbi(this.config.contract.abi, this.logger)
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain

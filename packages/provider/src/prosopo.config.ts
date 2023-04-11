@@ -14,9 +14,10 @@
 // import {ProsopoConfig} from './types';
 
 import { DatabaseTypes, EnvironmentTypes, ProsopoConfig } from './types/index'
+import { LogLevel } from '@prosopo/common'
 
 export default (): ProsopoConfig => ({
-    logLevel: 'debug',
+    logLevel: LogLevel.Debug,
     defaultEnvironment: EnvironmentTypes.development,
     contract: {
         abi: '../contract/src/abi/prosopo.json',

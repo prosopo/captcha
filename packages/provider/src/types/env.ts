@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import consola from 'consola'
 import { ContractAbi, ProsopoContractMethods } from '@prosopo/contract'
 import { AssetsResolver } from '@prosopo/datasets'
 import { Database } from './db'
@@ -20,6 +19,7 @@ import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
 import { ApiPromise } from '@polkadot/api'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { Logger } from '@prosopo/common'
 export interface ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
@@ -28,7 +28,7 @@ export interface ProsopoEnvironment {
     defaultEnvironment: string
     contractName: string
     abi: ContractAbi
-    logger: typeof consola
+    logger: Logger
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring

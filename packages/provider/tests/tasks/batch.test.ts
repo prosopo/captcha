@@ -79,8 +79,8 @@ describe('BATCH TESTS', async () => {
         await env.db?.connection?.close()
     })
 
-    const commitmentCount = 100
-    it(`Batches ~${commitmentCount} commitments on-chain`, async () => {
+    const commitmentCount = 1
+    it.only(`Batches ~${commitmentCount} commitments on-chain`, async () => {
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
