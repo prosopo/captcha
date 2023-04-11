@@ -32,9 +32,11 @@ export async function run(): Promise<AccountId> {
     const wasm = await Wasm(path.resolve(process.env.WASM_PATH || '.'))
     const abi = await AbiJSON(path.resolve(process.env.ABI_PATH || '.'))
     const deployResult = await deploy(wasm, abi)
+
     const instantiateEvent: EventRecord | undefined = deployResult.events.find(
         (event) => event.event.section === 'contracts'
     )
+    console.log('instantiateEvent', instantiateEvent?.toHuman())
     return instantiateEvent?.event.data['contract'].toString()
 }
 // run the script if the main process is running this file
