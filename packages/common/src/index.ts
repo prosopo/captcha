@@ -5,4 +5,5 @@ export { TFunctionParams, TranslationKey, translationKeys, trimProviderUrl } fro
 export * from './custom'
 export * from './error'
 export * from './logger'
+export * from './cli'
 export { default as AccountSigner } from './signer'

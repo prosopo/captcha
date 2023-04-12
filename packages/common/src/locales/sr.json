@@ -109,6 +109,7 @@
         "CREATE_ACCOUNT_FAILED_OUT_OF_FUNDS": "Could not create an account as there are no funds. Restart the substrate node.",
         "NO_MOCK_ENV": "MockEnvironment nije podešen",
         "ACCOUNT_TYPE_MISSING": "{{accountType}} nije kreiran od strane databasePopulator-a",
-        "FUNDING_FAILED": "Finansiranje nije uspelo"
+        "FUNDING_FAILED": "Finansiranje nije uspelo",
+        "MISSING_PROVIDER_PAIR": "Missing provider pair"
     }
 }
