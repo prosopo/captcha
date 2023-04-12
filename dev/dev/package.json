@@ -1,14 +1,15 @@
 {
   "name": "@prosopo/dev",
-  "version": "1.0.0",
+  "version": "0.1.11",
   "description": "Dev tools for working with prosopo packages",
-  "main": "dist/cli/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy": "node dist/deploy/protocol.js",
-    "cli": "node dist/cli/index.js"
+    "cli": "node dist/cli/index.js",
+    "setup": "node dist/cli/index.js setup"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +18,8 @@
     "@polkadot/api-contract": "9.13.6",
     "@polkadot/types": "9.13.6",
     "@polkadot/util-crypto": "10.3.1",
+    "@prosopo/provider": "^0.1.11",
+    "@prosopo/common": "^0.1.11",
     "consola": "^2.15.3",
     "dotenv": "^16.0.3",
     "glob": "^10.0.0",
