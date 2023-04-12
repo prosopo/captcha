@@ -15,7 +15,7 @@
 import { MockEnvironment } from '../mocks/mockenv'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { BatchCommitter } from '../../src/tasks/batch'
+import { BatchCommitments } from '../../src/batch'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import { accountContract, getSignedTasks } from '../mocks/accounts'
 import { getUser } from '../mocks/getUser'
@@ -99,7 +99,7 @@ describe('BATCH TESTS', async () => {
 
             // Batcher must be created with the provider account as the pair on the contractApi, otherwise the batcher
             // will fail with `ProviderDoesNotExist` error.
-            const batcher = new BatchCommitter(
+            const batcher = new BatchCommitments(
                 env.config.batchCommit,
                 await env.getContractApi(),
                 env.db,
