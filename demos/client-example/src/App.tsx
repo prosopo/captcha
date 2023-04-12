@@ -135,6 +135,8 @@ function App() {
         },
         solutionThreshold: 80,
     }
+    console.log(config)
+    console.log(process.env)
 
     return (
         <div>
