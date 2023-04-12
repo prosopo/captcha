@@ -14,8 +14,9 @@ import { Vec, u128 } from '@polkadot/types-codec'
 import { AccountId, Balance } from '@polkadot/types/interfaces'
 import { BN, hexToU8a } from '@polkadot/util'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { IProsopoContractMethods } from '@prosopo/types'
 
-export class ProsopoContractMethods extends ProsopoContractApi {
+export class ProsopoContractMethods extends ProsopoContractApi implements IProsopoContractMethods {
     // transactions
 
     public async providerRegister(

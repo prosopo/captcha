@@ -3,7 +3,7 @@
 
 import type { Weight, WeightV2 } from '@polkadot/types/interfaces'
 import type { BN } from '@polkadot/util'
-import type { UseWeight } from '../types'
+import type { UseWeight } from '@prosopo/types'
 import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util'
 import { ApiPromise } from '@polkadot/api'
 import { convertWeight } from '@polkadot/api-contract/base/util'

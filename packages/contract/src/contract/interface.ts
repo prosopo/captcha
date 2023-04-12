@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
-import { AbiMetadata, ContractAbi } from '../types'
+import { AbiMetadata, ContractAbi } from '@prosopo/types'
 import { GAS_INCREASE_FACTOR, encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
