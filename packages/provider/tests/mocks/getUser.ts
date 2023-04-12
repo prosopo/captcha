@@ -11,10 +11,11 @@ export async function getUser(env: ProsopoEnvironment, accountType: AccountKey, 
     accountConfig[accountType] = 1
     const dappWasm = await DappWasm()
     const dappAbiJSON = await DappAbiJSON()
+    const fundMap = { ...userFundMapDefault, [accountType]: fund }
     const databaseAccounts: IDatabaseAccounts = await populateDatabase(
         env,
         accountConfig,
-        { ...userFundMapDefault, [accountType]: fund },
+        fundMap,
         false,
         dappAbiJSON,
         dappWasm

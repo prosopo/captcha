@@ -66,7 +66,7 @@ const DEFAULT_USER_COUNT: UserCount = {
 async function populateStep(
     databasePopulator: DatabasePopulator,
     key: IDatabasePopulatorMethodNames,
-    fundMap: UserFund,
+    fund: boolean,
     text: string,
     userCount: number,
     logger: typeof consola
@@ -75,7 +75,7 @@ async function populateStep(
     logger.debug(text)
 
     const dummyArray = new Array(userCount).fill(userCount)
-    const promise = await promiseQueue(dummyArray.map(() => () => databasePopulator[key](fundMap[key])))
+    const promise = await promiseQueue(dummyArray.map(() => () => databasePopulator[key](fund)))
     const time = Date.now() - startDate
 
     logger.debug(` [ ${msToSecString(time)} ]\n`)
@@ -104,6 +104,7 @@ export async function populateDatabase(
 
     const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
         if (userCount > 0) {
+            env.logger.debug(`Fund ${userType}`, fundMap[userType])
             await populateStep(
                 databasePopulator,
                 userPopulatorMethodMap[userType],
