@@ -15,5 +15,10 @@
   "include": [
     "./src/**/*.ts",
     "./src/**/*.json"
+  ],
+  "references": [
+    {
+      "path": "../types"
+    },
   ]
 }
