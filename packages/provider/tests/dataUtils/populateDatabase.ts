@@ -30,6 +30,19 @@ export type UserCount = {
     [key in AccountKey]: number
 }
 
+export type UserFund = {
+    [key in AccountKey]: boolean
+}
+
+export const userFundMapDefault: UserFund = {
+    [AccountKey.providers]: true,
+    [AccountKey.providersWithStake]: true,
+    [AccountKey.providersWithStakeAndDataset]: true,
+    [AccountKey.dapps]: true,
+    [AccountKey.dappsWithStake]: true,
+    [AccountKey.dappUsers]: true,
+}
+
 const userPopulatorMethodMap: {
     [key in AccountKey]: IDatabasePopulatorMethodNames
 } = {
@@ -53,6 +66,7 @@ const DEFAULT_USER_COUNT: UserCount = {
 async function populateStep(
     databasePopulator: DatabasePopulator,
     key: IDatabasePopulatorMethodNames,
+    fundMap: UserFund,
     text: string,
     userCount: number,
     logger: typeof consola
@@ -61,7 +75,7 @@ async function populateStep(
     logger.debug(text)
 
     const dummyArray = new Array(userCount).fill(userCount)
-    const promise = await promiseQueue(dummyArray.map(() => () => databasePopulator[key]()))
+    const promise = await promiseQueue(dummyArray.map(() => () => databasePopulator[key](fundMap[key])))
     const time = Date.now() - startDate
 
     logger.debug(` [ ${msToSecString(time)} ]\n`)
@@ -79,6 +93,7 @@ async function populateStep(
 export async function populateDatabase(
     env: ProsopoEnvironment,
     userCounts: UserCount,
+    fundMap: UserFund,
     exportData: boolean,
     dappAbi: Abi,
     dappWasm: Uint8Array
@@ -86,11 +101,13 @@ export async function populateDatabase(
     env.logger.debug('Starting database populator...')
     const databasePopulator = new DatabasePopulator(env, dappAbi, dappWasm)
     await databasePopulator.isReady()
+
     const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
         if (userCount > 0) {
             await populateStep(
                 databasePopulator,
                 userPopulatorMethodMap[userType],
+                fundMap[userType],
                 `Running ${userType}...`,
                 userCount,
                 env.logger
@@ -118,7 +135,14 @@ async function run() {
     const dappAbiMetadata = await DappAbiJSON()
     const dappWasm = await DappWasm()
 
-    await populateDatabase(new Environment(pair), DEFAULT_USER_COUNT, true, dappAbiMetadata, dappWasm)
+    await populateDatabase(
+        new Environment(pair),
+        DEFAULT_USER_COUNT,
+        userFundMapDefault,
+        true,
+        dappAbiMetadata,
+        dappWasm
+    )
 }
 
 if (require.main === module) {

@@ -1,26 +1,86 @@
-import { ProsopoContractApi, encodeStringArgs } from '@prosopo/contract'
-import { oneUnit } from '../util'
+import { ExtrinsicBatch, ProsopoContractApi, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { BN } from '@polkadot/util'
-import { BatchCommitConfig } from '../types/index'
+import { BatchCommitConfig, Database, UserCommitmentRecord } from '../types/index'
 import { ApiPromise } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { Logger } from '@prosopo/common'
+import { ScheduledTaskNames, ScheduledTaskStatus } from '../types/scheduler'
+import { randomAsHex } from '@polkadot/util-crypto'
+import { WeightV2 } from '@polkadot/types/interfaces'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'dappUserCommit'
-export class commitmentExtrinsicBatcher {
+
+export class BatchCommitments {
+    contract: ProsopoContractApi
+    db: Database
+    batchCommitConfig: BatchCommitConfig
+    logger: Logger
+    private nonce: bigint
     constructor(
-        private readonly contract: ProsopoContractApi,
-        private readonly logger: Logger,
-        private readonly batchCommitConfig: BatchCommitConfig
+        batchCommitConfig: BatchCommitConfig,
+        contractApi: ProsopoContractApi,
+        db: Database,
+        concurrent: number,
+        startNonce: bigint,
+        logger: Logger
     ) {
-        this.logger = logger.withScope('commitmentExtrinsicBatcher')
-        this.contract = contract
+        this.contract = contractApi
+        this.db = db
         this.batchCommitConfig = batchCommitConfig
-        return
+        this.logger = logger
+        this.nonce = startNonce
+    }
+    async runBatch(): Promise<void> {
+        // create a task id
+        const taskId = randomAsHex(32)
+        if (await this.batchIntervalExceeded()) {
+            try {
+                // update last commit time
+                await this.db.storeScheduledTaskStatus(
+                    taskId,
+                    ScheduledTaskNames.BatchCommitment,
+                    ScheduledTaskStatus.Running
+                )
+                //get commitments
+                const commitments = await this.getCommitments()
+                if (commitments.length > 0) {
+                    this.logger.info(`Found ${commitments.length} commitments to commit`)
+                    // get the extrinsics that are to be batched and an id associated with each one
+                    const { extrinsics, ids: commitmentIds } = await this.createExtrinsics(commitments)
+                    // commit and get the Ids of the commitments that were committed on-chain
+                    await batch(this.contract, extrinsics, this.logger)
+                    // remove commitments
+                    await this.removeCommitmentsAndSolutions(commitmentIds)
+                    // update last commit time and store the commitmentIds that were batched
+                    await this.db.storeScheduledTaskStatus(
+                        taskId,
+                        ScheduledTaskNames.BatchCommitment,
+                        ScheduledTaskStatus.Completed,
+                        {
+                            data: {
+                                commitmentIds: commitments
+                                    .filter((commitment) => commitmentIds.indexOf(commitment.commitmentId) > -1)
+                                    .map((c) => c.commitmentId),
+                            },
+                        }
+                    )
+                }
+            } catch (e) {
+                this.logger.error(e)
+                await this.db.storeScheduledTaskStatus(
+                    taskId,
+                    ScheduledTaskNames.BatchCommitment,
+                    ScheduledTaskStatus.Failed,
+                    {
+                        error: JSON.stringify(e),
+                    }
+                )
+            }
+        }
     }
 
-    async createExtrinsics(commitments): Promise<{ extrinsics: SubmittableExtrinsic<any>[]; commitmentIds: string[] }> {
+    async createExtrinsics(commitments): Promise<ExtrinsicBatch> {
         const txs: SubmittableExtrinsic<any>[] = []
         const fragment = this.contract.abi.findMessage(CONTRACT_METHOD_NAME)
         const batchedCommitmentIds: string[] = []
@@ -45,8 +105,7 @@ export class commitmentExtrinsicBatcher {
             const paymentInfo = await extrinsic.paymentInfo(this.contract.pair)
 
             console.log(JSON.stringify(this.contract.api.consts.transactionPayment))
-            console.log(await this.contract.api.derive.contracts.fees())
-            process.exit(0)
+
             this.logger.debug(`${CONTRACT_METHOD_NAME} paymentInfo:`, paymentInfo.toHuman())
             //totalEncodedLength += extrinsic.encodedLength
             totalRefTime = totalRefTime.add(
@@ -56,9 +115,7 @@ export class commitmentExtrinsicBatcher {
                 this.contract.api.registry.createType('WeightV2', options.gasLimit).proofSize.toBn()
             )
             totalFee = totalFee.add(paymentInfo.partialFee.toBn())
-            const extrinsicTooHigh =
-                totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
-                this.batchCommitConfig.maxBatchExtrinsicPercentage
+            const extrinsicTooHigh = this.extrinsicTooHigh(totalRefTime, totalProofSize, maxBlockWeight)
             console.log(
                 'Free balance',
                 (await this.contract.api.query.system.account(this.contract.pair.address)).data.free
@@ -85,6 +142,31 @@ export class commitmentExtrinsicBatcher {
         this.logger.info(`${txs.length} transactions will be batched`)
         this.logger.debug('totalRefTime:', totalRefTime.toString())
         this.logger.debug('totalProofSize:', totalProofSize.toString())
-        return { extrinsics: txs, commitmentIds: batchedCommitmentIds }
+        return { extrinsics: txs, ids: batchedCommitmentIds, totalFee, totalRefTime, totalProofSize }
+    }
+
+    extrinsicTooHigh(totalRefTime: BN, totalProofSize: BN, maxBlockWeight: WeightV2): boolean {
+        return (
+            totalRefTime.mul(BN_TEN_THOUSAND).div(maxBlockWeight.refTime.toBn()).toNumber() / 100 >
+            this.batchCommitConfig.maxBatchExtrinsicPercentage
+        )
+    }
+
+    async batchIntervalExceeded(): Promise<boolean> {
+        //if time since last commit > batchCommitInterval
+        const lastTime = await this.db.getLastBatchCommitTime()
+        return Date.now() - lastTime > this.batchCommitConfig.interval
+    }
+
+    async getCommitments(): Promise<UserCommitmentRecord[]> {
+        // get commitments that have already been used to generate a solution
+        return await this.db.getProcessedDappUserCommitments()
+    }
+
+    async removeCommitmentsAndSolutions(commitmentIds: string[]): Promise<void> {
+        const removeSolutionsResult = await this.db.removeProcessedDappUserSolutions(commitmentIds)
+        const removeCommitmentsResult = await this.db.removeProcessedDappUserCommitments(commitmentIds)
+        this.logger.info('Deleted user solutions', removeSolutionsResult)
+        this.logger.info('Deleted user commitments', removeCommitmentsResult)
     }
 }

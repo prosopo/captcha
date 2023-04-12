@@ -25,7 +25,7 @@ import { ProsopoEnvironment } from '../types/env'
 import { encodeStringAddress } from '../util'
 import { PayeeSchema } from '@prosopo/contract'
 import consola from 'consola'
-import { BatchCommitter } from '../tasks/batch'
+import { BatchCommitments } from '../batch/index'
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)
@@ -349,7 +349,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                     })
                 } else {
                     if (env.db) {
-                        const batchCommitter = new BatchCommitter(
+                        const batchCommitter = new BatchCommitments(
                             env.config.batchCommit,
                             env.contractInterface,
                             env.db,

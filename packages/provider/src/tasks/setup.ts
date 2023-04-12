@@ -13,14 +13,13 @@
 // limitations under the License.
 import { IDappAccount, IProviderAccount, ProsopoEnvironment } from '../types/index'
 import { BN } from '@polkadot/util'
-import { oneUnit } from '../util'
 import { Keyring } from '@polkadot/keyring'
 import { Hash } from '@polkadot/types/interfaces'
 import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ISubmittableResult } from '@polkadot/types/types'
-import { dispatchErrorHandler, getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { dispatchErrorHandler, getEventsFromMethodName, oneUnit, stringToHexPadded } from '@prosopo/contract'
 import { createType } from '@polkadot/types'
 import { Tasks } from './tasks'
 

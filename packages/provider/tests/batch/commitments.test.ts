@@ -22,7 +22,7 @@ import { getUser } from '../mocks/getUser'
 import { CaptchaSolution } from '@prosopo/datasets'
 import { ScheduledTaskNames } from '../../src/types/scheduler'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { sleep } from './tasks.test'
+import { sleep } from '../tasks/tasks.test'
 import { accountAddress, accountMnemonic } from '../mocks/accounts'
 import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util'
 import { ApiPromise } from '@polkadot/api'
@@ -127,7 +127,7 @@ describe('BATCH TESTS', async () => {
                 for (let count = 0; count < commitmentCount; count++) {
                     // need to submit different commits under different user accounts to avoid the commitments being
                     // trimmed by the contract when the max number of commitments per user is reached (e.g. 10 per user)
-                    const dappUser = await getUser(env, AccountKey.dappUsers)
+                    const dappUser = await getUser(env, AccountKey.dappUsers, false)
                     // not the real commitment id, which would be calculated as the root of a merkle tree
                     const commitmentId = randomAsHex()
                     commitmentIds.push(commitmentId)

@@ -48,12 +48,12 @@ export enum IDatabasePopulatorMethodNames {
 }
 
 export class IDatabasePopulatorMethods {
-    registerProvider: (serviceOrigin?: string, noPush?: boolean) => Promise<Account>
-    registerProviderWithStake: () => Promise<Account>
-    registerProviderWithStakeAndDataset: () => Promise<Account>
-    registerDapp: (serviceOrigin?: string, noPush?: boolean) => Promise<Account>
-    registerDappWithStake: () => Promise<Account>
-    registerDappUser: () => Promise<Account>
+    registerProvider: (fund: boolean, serviceOrigin?: string, noPush?: boolean) => Promise<Account>
+    registerProviderWithStake: (fund: boolean) => Promise<Account>
+    registerProviderWithStakeAndDataset: (fund: boolean) => Promise<Account>
+    registerDapp: (fund: boolean, serviceOrigin?: string, noPush?: boolean) => Promise<Account>
+    registerDappWithStake: (fund: boolean) => Promise<Account>
+    registerDappUser: (fund: boolean) => Promise<Account>
 }
 
 class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods {
@@ -193,7 +193,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return this.mockEnv.changeSigner(pair)
     }
 
-    public async registerProvider(serviceOrigin?: string, noPush?: boolean): Promise<Account> {
+    public async registerProvider(fund: boolean, serviceOrigin?: string, noPush?: boolean): Promise<Account> {
         try {
             const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
 
@@ -207,7 +207,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 'with service origin',
                 _serviceOrigin
             )
-            await this.sendFunds(accountAddress(account), 'Provider', this.sendAmount)
+            if (fund) {
+                await this.sendFunds(accountAddress(account), 'Provider', this.sendAmount)
+            }
             await this.changeSigner(accountMnemonic(account))
             const tasks = new Tasks(this.mockEnv)
 
@@ -260,11 +262,11 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    public async registerProviderWithStake(): Promise<Account> {
+    public async registerProviderWithStake(fund: boolean): Promise<Account> {
         try {
             const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
 
-            const account = await this.registerProvider(serviceOrigin, true)
+            const account = await this.registerProvider(fund, serviceOrigin, true)
 
             await this.updateProvider(account, serviceOrigin)
 
@@ -294,11 +296,11 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    public async registerProviderWithStakeAndDataset(): Promise<Account> {
+    public async registerProviderWithStakeAndDataset(fund: boolean): Promise<Account> {
         try {
             const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
 
-            const account = await this.registerProvider(serviceOrigin, true)
+            const account = await this.registerProvider(fund, serviceOrigin, true)
             await this.updateProvider(account, serviceOrigin)
 
             await this.addDataset(account)
@@ -311,11 +313,13 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    public async registerDapp(serviceOrigin?: string, noPush?: boolean): Promise<Account> {
+    public async registerDapp(fund: boolean, serviceOrigin?: string, noPush?: boolean): Promise<Account> {
         try {
             const account = this.createAccount()
             this.mockEnv.logger.debug('Sending funds to ', accountAddress(account))
-            await this.sendFunds(accountAddress(account), 'Dapp', this.sendAmount)
+            if (fund) {
+                await this.sendFunds(accountAddress(account), 'Dapp', this.sendAmount)
+            }
 
             this.mockEnv.logger.debug('Changing signer to ', accountAddress(account))
             await this.changeSigner(accountMnemonic(account))
@@ -374,10 +378,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         )
     }
 
-    public async registerDappWithStake(): Promise<Account> {
+    public async registerDappWithStake(fund: boolean): Promise<Account> {
         try {
             const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
-            const account = await this.registerDapp(serviceOrigin, true)
+            const account = await this.registerDapp(fund, serviceOrigin, true)
             await this.dappFund(account)
 
             this._registeredDappsWithStake.push(account)
@@ -388,10 +392,11 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    public async registerDappUser(): Promise<Account> {
+    public async registerDappUser(fund: boolean): Promise<Account> {
         const account = this.createAccount()
-
-        await this.sendFunds(accountAddress(account), 'DappUser', this.sendAmount)
+        if (fund) {
+            await this.sendFunds(accountAddress(account), 'DappUser', this.sendAmount)
+        }
 
         this._registeredDappUsers.push(account)
 
