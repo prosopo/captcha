@@ -11,8 +11,8 @@
     "cli": "node dist/cli/index.js",
     "setup": "node dist/cli/index.js setup"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Prosopo Limited",
+  "license": "Apache-2.0",
   "dependencies": {
     "@polkadot/api": "9.13.6",
     "@polkadot/api-contract": "9.13.6",
@@ -20,6 +20,7 @@
     "@polkadot/util-crypto": "10.3.1",
     "@prosopo/provider": "^0.1.11",
     "@prosopo/common": "^0.1.11",
+    "@prosopo/types": "^0.1.11",
     "consola": "^2.15.3",
     "dotenv": "^16.0.3",
     "glob": "^10.0.0",
