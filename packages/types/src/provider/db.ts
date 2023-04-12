@@ -21,13 +21,13 @@ import {
     DatasetBase,
     DatasetWithIds,
     Item,
-} from '@prosopo/datasets'
+} from '../datasets'
 import { PendingCaptchaRequest } from './api'
 import { z } from 'zod'
 import { Connection, Model, Schema } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from './scheduler'
 import { DeleteResult } from 'mongodb'
-import { Logger } from '@prosopo/common'
+import { Logger } from '../common'
 
 export const UserCommitmentSchema = z.object({
     userAccount: z.string(),

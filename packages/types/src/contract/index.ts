@@ -15,6 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 export * from './artifacts'
 export * from './contract'
-export * from './prosopo'
 export * from './useWeight'
 export * from './batch'
+export * from './typegen'
+export * from './methods'

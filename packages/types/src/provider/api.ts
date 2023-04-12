@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { z } from 'zod'
-import { CaptchaSolutionSchema } from '@prosopo/datasets'
-import { DappAccounts } from '@prosopo/contract'
+import { CaptchaSolutionSchema } from '../datasets'
+import { DappAccounts } from '../contract'
 import { AccountId } from '@polkadot/types/interfaces'
 import { Vec } from '@polkadot/types-codec'
 
