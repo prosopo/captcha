@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { hexHashArray } from './util'
-import { MerkleLayer, MerkleLeaf, MerkleNodeInterface, MerkleProof, MerkleProofLayer } from '../types/merkle'
+import { MerkleLayer, MerkleLeaf, MerkleNodeInterface, MerkleProof, MerkleProofLayer } from '@prosopo/types'
 
 class MerkleNode implements MerkleNodeInterface {
     hash: string

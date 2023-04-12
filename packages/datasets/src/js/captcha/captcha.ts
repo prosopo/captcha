@@ -25,7 +25,7 @@ import {
     HashedSolution,
     Item,
     RawSolution,
-} from '../types/index'
+} from '@prosopo/types'
 import { downloadImage, hexHash, hexHashArray } from './util'
 import { ProsopoEnvError } from '@prosopo/common'
 import { isHex } from '@polkadot/util'

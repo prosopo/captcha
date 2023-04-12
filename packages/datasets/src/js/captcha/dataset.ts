@@ -1,5 +1,5 @@
-import { Dataset, DatasetRaw } from '../types/dataset'
-import { Captcha, CaptchaWithoutId } from '../types/captcha'
+import { Dataset, DatasetRaw } from '@prosopo/types'
+import { Captcha, CaptchaWithoutId } from '@prosopo/types'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
 import { CaptchaMerkleTree } from './merkle'
 import { ProsopoEnvError } from '@prosopo/common'
