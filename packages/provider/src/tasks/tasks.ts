@@ -37,7 +37,7 @@ import {
 } from '@prosopo/datasets'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import consola from 'consola'
-import { DappUserSolutionResult, Database, ProsopoEnvironment, UserCommitmentRecord } from '../types'
+import { DappUserSolutionResult, Database, ProsopoEnvironment, UserCommitmentRecord } from '@prosopo/types'
 import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
 
 import { i18n } from '@prosopo/common'

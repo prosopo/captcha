@@ -17,7 +17,7 @@ import { prosopoRouter } from '../api'
 import { LocalAssetsResolver } from '../assets'
 import { Environment } from '../env'
 import { handleErrors } from '../errors'
-import { ProsopoEnvironment } from '../types/env'
+import { ProsopoEnvironment } from '@prosopo/types'
 import { Server } from 'http'
 import { getPair, getPairType, getSecret, getSs58Format, i18nMiddleware, loadEnv } from '@prosopo/common'
 

@@ -31,7 +31,7 @@ import {
     UserSolutionRecord,
     UserSolutionRecordSchema,
     UserSolutionSchema,
-} from '../types'
+} from '@prosopo/types'
 import {
     Captcha,
     CaptchaSolution,
@@ -44,7 +44,7 @@ import {
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'
-import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '../types/scheduler'
+import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import { DeleteResult } from 'mongodb'
 
 mongoose.set('strictQuery', false)
