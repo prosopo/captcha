@@ -21,6 +21,8 @@ import { ContractAbi, ProsopoContractMethods, ProsopoRandomProvider, abiJson } f
 import { WsProvider } from '@polkadot/rpc-provider'
 import { ApiPromise, Keyring } from '@polkadot/api'
 import { u32 } from '@polkadot/types'
+import { stringToU8a } from '@polkadot/util'
+import { SignerPayloadRaw } from '@polkadot/types/types'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -182,6 +184,13 @@ export const Manager = (
                     // continue as if the provider was not in storage
                 }
             }
+            const payload = {
+                address: account.account.address,
+                data: stringToU8a('message'),
+                type: 'bytes',
+            }
+            const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
+            console.log('Signature:', signed)
 
             // get a random provider
             const getRandomProviderResponse = await contract.getRandomProvider(
@@ -196,6 +205,7 @@ export const Manager = (
             console.log('providerApi', providerApi)
             // get the captcha challenge and begin the challenge
             const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
+
             console.log('captchaApi', captchaApi)
             const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
             console.log('challenge', challenge)
