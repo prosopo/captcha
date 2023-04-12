@@ -18,7 +18,7 @@ import { CronJob } from 'cron'
 
 import { Tasks } from './tasks/tasks'
 import { Environment } from './env'
-import { getPair, getPairType, getSecret, getSs58Format } from './cli/util'
+import { getPair, getPairType, getSecret, getSs58Format } from '@prosopo/common'
 
 async function main() {
     const ss58Format = getSs58Format()

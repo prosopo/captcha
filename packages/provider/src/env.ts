@@ -16,8 +16,6 @@ import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { AssetsResolver } from '@prosopo/datasets'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { LogLevel } from 'consola'
-import dotenv from 'dotenv'
-import path from 'path'
 import { LocalAssetsResolver } from './assets'
 import { Database, EnvironmentTypes, ProsopoConfig, ProsopoEnvironment } from './types'
 import prosopoConfig from './prosopo.config'
@@ -25,16 +23,7 @@ import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-
-export function loadEnv() {
-    const args = { path: getEnvFile() }
-    dotenv.config(args)
-}
-
-export function getEnvFile(filename = '.env', filepath = path.join(__dirname, '..')) {
-    const env = process.env.NODE_ENV || 'development'
-    return path.join(filepath, `${filename}.${env}`)
-}
+import { loadEnv } from '@prosopo/common'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig

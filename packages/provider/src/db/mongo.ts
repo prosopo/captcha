@@ -179,6 +179,7 @@ export class ProsopoDatabase implements Database {
                             upsert: true,
                         },
                     })),
+                    // @ts-ignore
                     callbackFn
                 )
             }
@@ -381,7 +382,7 @@ export class ProsopoDatabase implements Database {
                     upsert: true,
                 },
             }))
-
+            // @ts-ignore
             await this.tables?.usersolution.bulkWrite(ops, callbackFn)
         }
     }

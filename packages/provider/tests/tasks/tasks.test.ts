@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-import { getSendAmount, getStakeAmount, sendFunds } from '../../src/tasks/setup'
+import { getSendAmount, getStakeAmount, sendFunds } from '@prosopo/dev'
 import { Tasks } from '../../src/tasks'
 
 import chai from 'chai'
@@ -26,7 +26,7 @@ import {
     computePendingRequestHash,
     hexHash,
 } from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoEnvError, getPair, getSs58Format } from '@prosopo/common'
 import { ContractDeployer, ProsopoCaptchaStatus, getEventsFromMethodName } from '@prosopo/contract'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import { PROVIDER, accountContract, getSignedTasks } from '../mocks/accounts'
@@ -36,11 +36,10 @@ import { i18n } from '@prosopo/common'
 import { before } from 'mocha'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
-import { DappUserSolutionResult, getPair, parseBlockNumber } from '../../src/index'
+import { DappUserSolutionResult, parseBlockNumber } from '../../src/index'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { accountAddress, accountMnemonic } from '../mocks/accounts'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { getSs58Format } from '../../src/cli/util'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles'
 import { EventRecord } from '@polkadot/types/interfaces'
 

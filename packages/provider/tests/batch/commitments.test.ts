@@ -26,9 +26,8 @@ import { sleep } from '../tasks/tasks.test'
 import { accountAddress, accountMnemonic } from '../mocks/accounts'
 import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util'
 import { ApiPromise } from '@polkadot/api'
-import { getPair } from '../../src/index'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { getPairType, getSs58Format } from '../../src/cli/util'
+import { getPair, getPairType, getSs58Format } from '@prosopo/common'
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect

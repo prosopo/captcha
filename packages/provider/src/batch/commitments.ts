@@ -73,7 +73,7 @@ export class BatchCommitments {
                     ScheduledTaskNames.BatchCommitment,
                     ScheduledTaskStatus.Failed,
                     {
-                        error: JSON.stringify(e),
+                        error: JSON.stringify(e && e.message ? e.message : e),
                     }
                 )
             }
@@ -102,6 +102,7 @@ export class BatchCommitments {
             const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.abi, fragment, args)
             this.logger.debug(`Commitment:`, args)
             const { extrinsic, options } = await this.contract.buildExtrinsic('dappUserCommit', encodedArgs)
+
             const paymentInfo = await extrinsic.paymentInfo(this.contract.pair)
 
             console.log(JSON.stringify(this.contract.api.consts.transactionPayment))

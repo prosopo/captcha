@@ -15,9 +15,8 @@ import { MockEnvironment } from '../mocks/mockenv'
 import { before } from 'mocha'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { getPair } from '../../src/index'
+import { getPair, getSs58Format } from '@prosopo/common'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { getSs58Format } from '../../src/cli/util'
 
 chai.should()
 chai.use(chaiAsPromised)

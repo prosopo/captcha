@@ -15,12 +15,11 @@ import express from 'express'
 import cors from 'cors'
 import { prosopoRouter } from '../api'
 import { LocalAssetsResolver } from '../assets'
-import { Environment, loadEnv } from '../env'
+import { Environment } from '../env'
 import { handleErrors } from '../errors'
 import { ProsopoEnvironment } from '../types/env'
 import { Server } from 'http'
-import { i18nMiddleware } from '@prosopo/common'
-import { getPair, getPairType, getSecret, getSs58Format } from './util'
+import { getPair, getPairType, getSecret, getSs58Format, i18nMiddleware, loadEnv } from '@prosopo/common'
 
 let apiAppSrv: Server
 

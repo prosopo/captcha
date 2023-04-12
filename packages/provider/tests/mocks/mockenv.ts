@@ -13,11 +13,10 @@
 // limitations under the License.
 import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { AssetsResolver } from '@prosopo/datasets'
-import { LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoEnvError, loadEnv, logger } from '@prosopo/common'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import path from 'path'
 import { LocalAssetsResolver } from '../../src/assets'
-import { loadEnv } from '../../src/env'
 import { Database, DatabaseTypes, EnvironmentTypes, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
