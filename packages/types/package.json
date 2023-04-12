@@ -1,0 +1,21 @@
+{
+  "name": "@prosopo/types",
+  "version": "0.1.11",
+  "description": "Types for prosopo TypeScript packages",
+  "main": "index.js",
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/prosopo/types.git"
+  },
+  "author": "Prosopo Limited",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/prosopo/types/issues"
+  },
+  "homepage": "https://github.com/prosopo/types#readme"
+}
