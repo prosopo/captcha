@@ -1,7 +1,7 @@
 import { ApiPromise } from '@polkadot/api'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { Abi, CodePromise } from '@polkadot/api-contract'
-import { BN_ZERO } from '@polkadot/util'
+import { BN, BN_ZERO } from '@polkadot/util'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { useWeightImpl } from './useWeight'
 import { UseWeight } from '../types/index'
@@ -100,7 +100,7 @@ export class ContractDeployer {
 
 async function getWeight(api: ApiPromise): Promise<UseWeight> {
     const expectedBlockTime = calcInterval(api)
-    return await useWeightImpl(api as ApiPromise, expectedBlockTime)
+    return await useWeightImpl(api as ApiPromise, expectedBlockTime, new BN(10))
 }
 
 // Taken from apps/packages/page-contracts/src/Codes/Upload.tsx

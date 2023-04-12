@@ -78,7 +78,7 @@ export class ProsopoContractApi extends ContractPromise {
         const message = this.abi.findMessage(contractMethodName)
         const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
         const expectedBlockTime = new BN(this.api.consts.babe?.expectedBlockTime)
-        const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime)
+        const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(10))
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
         this.logger.debug('Sending address: ', this.pair.address)
         const initialOptions = {
@@ -94,7 +94,7 @@ export class ProsopoContractApi extends ContractPromise {
             const extrinsicTx = this.tx[contractMethodName](options, ...encodedArgs)
             // paymentInfo is larger than gasRequired returned by query so use paymentInfo
             const paymentInfo = await extrinsicTx.paymentInfo(this.pair.address)
-
+            this.logger.debug('Payment info: ', paymentInfo.partialFee.toHuman())
             // increase the gas limit again to make sure the tx succeeds
             const increasedWeight = createType(this.api.registry, 'WeightV2', {
                 refTime: Math.floor(paymentInfo.weight.refTime.toNumber() * GAS_INCREASE_FACTOR),

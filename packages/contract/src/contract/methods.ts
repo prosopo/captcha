@@ -28,7 +28,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
 
     async providerUpdate(
         serviceOrigin: string,
-        fee: number,
+        fee: number | Balance,
         payee: ProsopoPayee,
         value?: number | BN | Balance | undefined
     ): Promise<ContractSubmittableResult> {
@@ -91,8 +91,12 @@ export class ProsopoContractMethods extends ProsopoContractApi {
     //queries
 
     public async getDappOperatorIsHumanUser(userAccount: string, solutionThreshold: number): Promise<boolean> {
-        const { result } = await this.contractQuery('dappOperatorIsHumanUser', [userAccount, solutionThreshold])
-        return this.abi.registry.createType('bool', result.asOk.data.toU8a(true)).isTrue
+        try {
+            const { result } = await this.contractQuery('dappOperatorIsHumanUser', [userAccount, solutionThreshold])
+            return this.abi.registry.createType('bool', result.asOk.data.toU8a(true)).isTrue
+        } catch (e) {
+            return false
+        }
     }
 
     public async getRandomProvider(

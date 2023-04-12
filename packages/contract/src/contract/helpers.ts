@@ -18,12 +18,14 @@ import { BN, BN_ONE, BN_ZERO, bnFromHex, isHex, isU8a, stringToHex } from '@polk
 import { AnyJson } from '@polkadot/types/types/codec'
 import { ProsopoContractError } from '../handlers'
 import { Abi } from '@polkadot/api-contract'
-import { AccountId, DispatchError, EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
+import { AccountId, DispatchError, Event, EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
 import { Bytes } from '@polkadot/types-codec'
 import { Registry } from '@polkadot/types-codec/types/registry'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Weight } from '@polkadot/types/interfaces/runtime/index'
 import { ApiBase } from '@polkadot/api/types'
+import { SubmittableResult } from '@polkadot/api'
+import { Logger } from '@prosopo/common'
 
 /**
  * Get the event name from the contract method name
@@ -183,4 +185,54 @@ export function getOptions(
             : null,
         value: value || BN_ZERO,
     }
+}
+
+// Convert a dispatch error to a readable message
+export function getDispatchError(dispatchError: DispatchError): string {
+    let message: string = dispatchError.type
+
+    if (dispatchError.isModule) {
+        try {
+            const mod = dispatchError.asModule
+            const error = dispatchError.registry.findMetaError(mod)
+
+            message = `${error.section}.${error.name}`
+        } catch (error) {
+            // swallow
+        }
+    } else if (dispatchError.isToken) {
+        message = `${dispatchError.type}.${dispatchError.asToken.type}`
+    }
+
+    return message
+}
+
+export function filterAndDecodeContractEvents(result: SubmittableResult, abi: Abi, logger: Logger): DecodedEvent[] {
+    return result.events
+        .filter(
+            (e) =>
+                e.event.section === 'contracts' && ['ContractEmitted', 'ContractExecution'].indexOf(e.event.method) > -1
+        )
+        .map((eventRecord): DecodedEvent | null => {
+            const {
+                event: {
+                    data: [, data],
+                },
+            } = eventRecord
+            try {
+                return abi.decodeEvent(data as Bytes)
+            } catch (error) {
+                logger.error(`Unable to decode contract event: ${(error as Error).message}`)
+                logger.error(eventRecord.event.toHuman())
+
+                return null
+            }
+        })
+        .filter((decoded): decoded is DecodedEvent => !!decoded)
+}
+
+export function formatEvent(event: Event): string {
+    return `${event.section}.${event.method}${
+        'docs' in event ? (Array.isArray(event.docs) ? `(${event.docs.join('')})` : event.docs || '') : ''
+    }`
 }
