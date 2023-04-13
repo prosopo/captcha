@@ -10,6 +10,8 @@
     "./src/**/*.ts",
   ],
   "references": [
-
+    {
+      "path": "../common"
+    }
   ]
 }

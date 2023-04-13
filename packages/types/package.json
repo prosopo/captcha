@@ -2,7 +2,7 @@
   "name": "@prosopo/types",
   "version": "0.1.11",
   "description": "Types for prosopo TypeScript packages",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
@@ -25,6 +25,7 @@
     "@polkadot/api": "9.13.6",
     "@polkadot/api-contract": "9.13.6",
     "@polkadot/types": "9.13.6",
+    "@prosopo/common": "^0.1.11",
     "zod": "^3.17.9"
   },
   "devDependencies": {

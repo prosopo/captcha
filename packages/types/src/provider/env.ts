@@ -19,7 +19,7 @@ import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
 import { ApiPromise } from '@polkadot/api'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { Logger } from '../common'
+import { Logger } from '@prosopo/common'
 export interface ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined

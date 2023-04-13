@@ -27,7 +27,7 @@ import { z } from 'zod'
 import { Connection, Model, Schema } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from './scheduler'
 import { DeleteResult } from 'mongodb'
-import { Logger } from '../common'
+import { Logger } from '@prosopo/common'
 
 export const UserCommitmentSchema = z.object({
     userAccount: z.string(),

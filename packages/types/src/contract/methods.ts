@@ -12,9 +12,11 @@ import {
     ProsopoRandomProvider,
 } from './typegen'
 import { BN } from '@polkadot/util'
-import { u128, Vec } from '@polkadot/types-codec'
+import { Vec, u128 } from '@polkadot/types-codec'
+import { IProsopoContractApi } from './interface'
 
-export interface IProsopoContractMethods {
+// Protocol contract functions
+export interface IProsopoContractMethods extends IProsopoContractApi {
     providerRegister(
         serviceOrigin: string,
         fee: number | Balance,
