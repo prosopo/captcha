@@ -29,7 +29,7 @@ jobs:
 
       - name: Check if workspaces branch exists
         run: |
-          if [[ $(git ls-remote --heads origin ${{ github.head_ref }}) ]]; then
+          if [[ $(git ls-remote --heads https://github.com/prosopo/workspaces.git ${{ github.head_ref }}) ]]; then
             echo "Workspaces branch exists"
             echo "WORKSPACES_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
             else
