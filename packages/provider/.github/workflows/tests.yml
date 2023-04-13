@@ -128,7 +128,6 @@ jobs:
         run: |
           cd workspaces
           git status | head -n 1
-          NODE_ENV=$ENVIRONMENT npm run setup
           cd packages/provider
           git status | head -n 1
           docker container ls
