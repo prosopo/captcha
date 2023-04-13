@@ -10,8 +10,8 @@ import { LogLevel, logger } from '../logger'
 
 const log = logger(LogLevel.Info, 'Env setup')
 
-export function loadEnv(rootDir?: string, filename?: string, path?: string) {
-    const args = { path: getEnvFile(rootDir, filename, path) }
+export function loadEnv(rootDir?: string, filename?: string, filePath?: string) {
+    const args = { path: getEnvFile(path.resolve(rootDir || '.'), filename, filePath) }
     dotenv.config(args)
 }
 

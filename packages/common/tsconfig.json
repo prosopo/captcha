@@ -17,8 +17,6 @@
     "./src/**/*.json"
   ],
   "references": [
-    {
-      "path": "../types"
-    },
+
   ]
 }
