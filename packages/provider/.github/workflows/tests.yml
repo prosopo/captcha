@@ -118,11 +118,11 @@ jobs:
         run: |
           cd workspaces
           echo $(npx tsc --version)
-          cd packages/common && echo $(pwd) && echo $(git show) && npm run build
-          cd ../types && echo $(pwd) && echo $(git show) && npm run build
-          cd ../datasets && echo $(pwd) && npm run build
-          cd ../contract && echo $(pwd) && echo $(git show) && npm run build
-          cd ../provider && echo $(pwd) && echo $(git show) && npm run build
+          cd packages/common && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../types && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../datasets && echo $(pwd) && && echo $(git rev-parse HEAD) && npm run build
+          cd ../contract && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../provider && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
 
       - name: Setup the environment and run the unit tests
         run: |
