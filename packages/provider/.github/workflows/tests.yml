@@ -17,6 +17,8 @@ jobs:
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
 
+
+
     steps:
       - name: Check github refname
         run: |
@@ -25,13 +27,23 @@ jobs:
           echo ${{ github.head_ref }}
           echo ${{ github.base_ref }}
 
+      - name: Check if workspaces branch exists
+        run: |
+          if [[ $(git ls-remote --heads origin ${{ github.head_ref }}) ]]; then
+            echo "Workspaces branch exists"
+            echo "WORKSPACES_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
+            else
+            echo "Workspaces branch does not exist"
+            echo "WORKSPACES_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
+          fi
+
       - name: Remove stopped containers
         run: docker rm $(docker ps -a -q) || true
 
       - name: Clone workspaces
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.base_ref }}
+          ref: ${{ WORKSPACES_BRANCH }}
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
