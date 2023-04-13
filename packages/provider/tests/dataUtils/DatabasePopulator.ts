@@ -198,9 +198,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const account = this.createAccount()
             this.mockEnv.logger.debug(
                 'Registering provider',
-                accountAddress(account),
                 '`',
-                accountMnemonic(account),
+                accountAddress(account),
                 '`',
                 'with service origin',
                 _serviceOrigin
