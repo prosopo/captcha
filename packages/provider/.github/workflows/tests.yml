@@ -43,7 +43,7 @@ jobs:
       - name: Clone workspaces
         uses: actions/checkout@v3
         with:
-          ref: ${{ WORKSPACES_BRANCH }}
+          ref: ${{ env.WORKSPACES_BRANCH }}
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
