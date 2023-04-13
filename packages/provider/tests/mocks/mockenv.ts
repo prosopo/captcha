@@ -11,13 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import { AssetsResolver } from '@prosopo/datasets'
+import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
+import {} from '@prosopo/datasets'
 import { LogLevel, Logger, ProsopoEnvError, loadEnv, logger } from '@prosopo/common'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import path from 'path'
 import { LocalAssetsResolver } from '../../src/assets'
-import { Database, DatabaseTypes, EnvironmentTypes, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
+import {
+    AssetsResolver,
+    ContractAbi,
+    Database,
+    DatabaseTypes,
+    EnvironmentTypes,
+    IProsopoContractMethods,
+    ProsopoConfig,
+    ProsopoEnvironment,
+} from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
@@ -27,7 +36,7 @@ import { mnemonicGenerate } from '@polkadot/util-crypto'
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: ProsopoContractMethods
+    contractInterface: IProsopoContractMethods
     contractAddress: string
     defaultEnvironment: string
     contractName: string
@@ -40,7 +49,7 @@ export class MockEnvironment implements ProsopoEnvironment {
     api: ApiPromise
 
     constructor(pair: KeyringPair) {
-        loadEnv()
+        loadEnv('../..')
         this.pair = pair
         this.config = {
             logLevel: LogLevel.Debug,
@@ -143,7 +152,7 @@ export class MockEnvironment implements ProsopoEnvironment {
         await this.getContractApi()
     }
 
-    async getContractApi(): Promise<ProsopoContractMethods> {
+    async getContractApi(): Promise<IProsopoContractMethods> {
         this.contractInterface = new ProsopoContractMethods(
             this.api,
             this.abi,

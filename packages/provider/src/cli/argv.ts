@@ -21,9 +21,8 @@ const yargs = require('yargs')
 import { Compact, u128 } from '@polkadot/types'
 
 import { Tasks } from '../tasks/tasks'
-import { ProsopoEnvironment } from '@prosopo/types'
+import { PayeeSchema, ProsopoEnvironment } from '@prosopo/types'
 import { encodeStringAddress } from '../util'
-import { PayeeSchema } from '@prosopo/contract'
 import consola from 'consola'
 import { BatchCommitments } from '../batch/index'
 

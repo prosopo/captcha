@@ -14,6 +14,5 @@
 import '@polkadot/api-augment'
 export { Environment } from './env'
 export * from './tasks'
-export * from './types'
 export * from './util'
 export * from './batch'

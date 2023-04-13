@@ -19,8 +19,7 @@ import { BatchCommitments } from '../../src/batch'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import { accountContract, getSignedTasks } from '../mocks/accounts'
 import { getUser } from '../mocks/getUser'
-import { CaptchaSolution } from '@prosopo/datasets'
-import { ScheduledTaskNames } from '../../src/types/scheduler'
+import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../tasks/tasks.test'
 import { accountAddress, accountMnemonic } from '../mocks/accounts'
@@ -79,7 +78,7 @@ describe('BATCH TESTS', async () => {
     })
 
     const commitmentCount = 1
-    it.only(`Batches ~${commitmentCount} commitments on-chain`, async () => {
+    it(`Batches ~${commitmentCount} commitments on-chain`, async () => {
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 

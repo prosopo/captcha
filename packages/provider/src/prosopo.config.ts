@@ -13,7 +13,7 @@
 // limitations under the License.
 // import {ProsopoConfig} from './types';
 
-import { DatabaseTypes, EnvironmentTypes, ProsopoConfig } from './types/index'
+import { DatabaseTypes, EnvironmentTypes, ProsopoConfig } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 
 export default (): ProsopoConfig => ({

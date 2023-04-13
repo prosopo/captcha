@@ -14,19 +14,8 @@
 import { Hash } from '@polkadot/types/interfaces'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import { ProsopoContractMethods } from '@prosopo/contract'
 import {
-    Captcha,
-    CaptchaConfig,
     CaptchaMerkleTree,
-    CaptchaSolution,
-    CaptchaSolutionConfig,
-    CaptchaSolutionToUpdate,
-    CaptchaStates,
-    CaptchaWithProof,
-    CaptchaWithoutId,
-    DatasetBase,
-    DatasetRaw,
     buildDataset,
     captchaSort,
     compareCaptchaSolutions,
@@ -37,7 +26,23 @@ import {
 } from '@prosopo/datasets'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import consola from 'consola'
-import { DappUserSolutionResult, Database, ProsopoEnvironment, UserCommitmentRecord } from '@prosopo/types'
+import {
+    Captcha,
+    CaptchaConfig,
+    CaptchaSolution,
+    CaptchaSolutionConfig,
+    CaptchaSolutionToUpdate,
+    CaptchaStates,
+    CaptchaWithProof,
+    CaptchaWithoutId,
+    DappUserSolutionResult,
+    Database,
+    DatasetBase,
+    DatasetRaw,
+    IProsopoContractMethods,
+    ProsopoEnvironment,
+    UserCommitmentRecord,
+} from '@prosopo/types'
 import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
 
 import { i18n } from '@prosopo/common'
@@ -50,7 +55,7 @@ import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
  * @description Tasks that are shared by the API and CLI
  */
 export class Tasks {
-    contractApi: ProsopoContractMethods
+    contractApi: IProsopoContractMethods
 
     db: Database
 

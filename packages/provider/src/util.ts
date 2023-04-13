@@ -14,8 +14,9 @@
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import fs, { WriteStream, createWriteStream } from 'fs'
-import { Captcha, CaptchaSolution, arrayJoin } from '@prosopo/datasets'
+import { arrayJoin } from '@prosopo/datasets'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
+import { Captcha, CaptchaSolution } from '@prosopo/types'
 import pl from 'nodejs-polars'
 
 export function encodeStringAddress(address: string) {

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Asset, AssetsResolver } from '@prosopo/datasets'
+import { Asset, AssetsResolver } from '@prosopo/types'
 import { URL } from 'url'
 import { Application } from 'express'
 

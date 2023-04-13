@@ -13,17 +13,19 @@
 // limitations under the License.
 import { validateAddress } from '@polkadot/util-crypto'
 import { ProsopoApiError } from '@prosopo/common'
-import { CaptchaWithProof, parseCaptchaAssets } from '@prosopo/datasets'
+import { parseCaptchaAssets } from '@prosopo/datasets'
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'
 import {
+    CaptchaSolutionBody,
+    CaptchaWithProof,
     DappUserSolutionResult,
     DappsAccountsResponse,
+    ProsopoEnvironment,
     ProvidersAccountsResponse,
     VerifySolutionBody,
-} from './types/api'
-import { ProsopoEnvironment } from './types/env'
-import { CaptchaSolutionBody } from './types/api'
+} from '@prosopo/types'
+
 import { parseBlockNumber } from './util'
 import { DappAccounts } from '@prosopo/contract'
 import { AccountId } from '@polkadot/types/interfaces'

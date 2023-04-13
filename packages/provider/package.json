@@ -50,7 +50,6 @@
     "zod": "^3.17.9"
   },
   "devDependencies": {
-    "@prosopo/dev": "^0.1.11",
     "@types/chai-as-promised": "^7.1.5",
     "@types/fs-extra": "^9.0.13",
     "@types/mocha": "^10.0.1",

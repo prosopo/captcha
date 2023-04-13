@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { IDappAccount, IProviderAccount } from '@prosopo/dev'
+import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { BN } from '@polkadot/util'
-import { ProsopoEnvironment, Tasks } from '../../src/index'
+import { Tasks } from '../../src/index'
+import { ProsopoEnvironment } from '@prosopo/types'
 import { getPair, getSs58Format } from '@prosopo/common'
 import { KeypairType } from '@polkadot/util-crypto/types'
 

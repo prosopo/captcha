@@ -1,10 +1,16 @@
-import { ExtrinsicBatch, ProsopoContractApi, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import { ProsopoContractApi, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { BN } from '@polkadot/util'
-import { BatchCommitConfig, Database, UserCommitmentRecord } from '@prosopo/types'
+import {
+    BatchCommitConfig,
+    Database,
+    ExtrinsicBatch,
+    ScheduledTaskNames,
+    ScheduledTaskStatus,
+    UserCommitmentRecord,
+} from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { Logger } from '@prosopo/common'
-import { ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { WeightV2 } from '@polkadot/types/interfaces'
 

@@ -12,12 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ContractAbi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import { AssetsResolver } from '@prosopo/datasets'
+import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { LogLevel } from 'consola'
 import { LocalAssetsResolver } from './assets'
-import { Database, EnvironmentTypes, ProsopoConfig, ProsopoEnvironment } from './types'
+import {
+    AssetsResolver,
+    ContractAbi,
+    Database,
+    EnvironmentTypes,
+    IProsopoContractMethods,
+    ProsopoConfig,
+    ProsopoEnvironment,
+} from '@prosopo/types'
 import prosopoConfig from './prosopo.config'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -28,7 +35,7 @@ import { loadEnv } from '@prosopo/common'
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: ProsopoContractMethods
+    contractInterface: IProsopoContractMethods
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     contractName: string
@@ -98,7 +105,7 @@ export class Environment implements ProsopoEnvironment {
         this.contractInterface = await this.getContractApi()
     }
 
-    async getContractApi(): Promise<ProsopoContractMethods> {
+    async getContractApi(): Promise<IProsopoContractMethods> {
         const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
         this.logger.debug('Getting new contract instance with pair', this.pair.address, 'nonce', nonce.toString())
         this.contractInterface = new ProsopoContractMethods(

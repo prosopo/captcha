@@ -15,9 +15,16 @@
 import { Hash } from '@polkadot/types/interfaces'
 import { isHex } from '@polkadot/util'
 import {
+    Captcha,
     CaptchaRecordSchema,
+    CaptchaSolution,
+    CaptchaStates,
     Database,
+    DatasetBase,
     DatasetRecordSchema,
+    DatasetWithIds,
+    DatasetWithIdsAndTree,
+    DatasetWithIdsAndTreeSchema,
     PendingCaptchaRequest,
     PendingRecordSchema,
     ScheduledTaskRecord,
@@ -32,15 +39,7 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types'
-import {
-    Captcha,
-    CaptchaSolution,
-    CaptchaStates,
-    DatasetBase,
-    DatasetWithIds,
-    DatasetWithIdsAndTree,
-    DatasetWithIdsAndTreeSchema,
-} from '@prosopo/datasets'
+
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'

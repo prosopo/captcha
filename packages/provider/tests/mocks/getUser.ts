@@ -1,5 +1,5 @@
 // Create a user of specified type using the databasePopulator
-import { ProsopoEnvironment } from '../../src/index'
+import { ProsopoEnvironment } from '@prosopo/types'
 import { AccountKey, IDatabaseAccounts } from '../dataUtils/DatabaseAccounts'
 import { populateDatabase, userFundMapDefault } from '../dataUtils/populateDatabase'
 import { ProsopoEnvError } from '@prosopo/common'
