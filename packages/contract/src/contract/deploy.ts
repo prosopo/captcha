@@ -11,6 +11,7 @@ import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { calcInterval } from './useBlockInterval'
 import { dispatchErrorHandler } from './helpers'
+import { LogLevel, Logger, logger } from '@prosopo/common'
 
 interface DryRunResult {
     contract: null | SubmittableExtrinsic<'promise'>
@@ -26,6 +27,7 @@ export class ContractDeployer {
     private readonly params: any[]
     private readonly constructorIndex: number
     private readonly value: number
+    private readonly logger: Logger
     private readonly salt?: string
 
     constructor(
@@ -36,7 +38,8 @@ export class ContractDeployer {
         params: any[] = [],
         value = 0,
         constructorIndex = 0,
-        salt?: string
+        salt?: string,
+        logLevel?: LogLevel
     ) {
         this.api = api
         this.abi = abi
@@ -46,6 +49,7 @@ export class ContractDeployer {
         this.constructorIndex = constructorIndex
         this.value = value
         this.salt = salt
+        this.logger = logger(logLevel || LogLevel.Info, 'ContractDeployer')
         this.code = new CodePromise(api, abi, wasm)
     }
 
@@ -63,6 +67,7 @@ export class ContractDeployer {
             this.constructorIndex,
             this.salt
         )
+        this.logger.debug('Weight', weight.weightV2?.toHuman())
 
         const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
 
@@ -125,7 +130,7 @@ export async function dryRunDeploy(
         const method = message.method
         if (code && message && accountId) {
             const dryRunParams: Parameters<typeof api.call.contractsApi.instantiate> = [
-                accountId,
+                pair.address,
                 message.isPayable
                     ? api.registry.createType('Balance', value)
                     : api.registry.createType('Balance', BN_ZERO),
@@ -137,13 +142,14 @@ export async function dryRunDeploy(
             ]
 
             const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
-
+            console.log('dryRunResult', dryRunResult.toHuman())
             contract = code.tx[method](
                 {
                     gasLimit: dryRunResult.gasRequired,
                     storageDepositLimit: dryRunResult.storageDeposit.isCharge
                         ? dryRunResult.storageDeposit.asCharge
                         : null,
+                    //storageDepositLimit: null,
                     value: message.isPayable ? value : undefined,
                     salt,
                 },
