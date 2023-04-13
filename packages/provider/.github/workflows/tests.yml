@@ -43,6 +43,7 @@ jobs:
           cd workspaces
           git fetch
           git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
+          echo "On workspaces branch $(git rev-parse --abbrev-ref HEAD)"
           git pull
 
       - name: Clone scripts repository
