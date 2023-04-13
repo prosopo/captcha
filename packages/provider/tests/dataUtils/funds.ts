@@ -44,15 +44,15 @@ export async function sendFunds(
     const unit = oneUnit(env.api)
     const unitAmount = new BN(amount.toString()).div(unit).toString()
     env.logger.debug(
-        'Sending funds from',
+        'Sending funds from`',
         pair.address,
-        'to',
+        '`to`',
         address,
-        'Amount:',
+        '`Amount:`',
         unitAmount,
-        'UNIT. Free balance:',
+        '`UNIT. Free balance:`',
         previousFree.div(unit).toString(),
-        'UNIT'
+        '`UNIT'
     )
     // eslint-disable-next-line no-async-promise-executor
     const result: Promise<ISubmittableResult> = new Promise(async (resolve, reject) => {
@@ -102,10 +102,14 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
 
     // We want to give each provider 100 * the required stake or 1 UNIT, whichever is greater, so that gas fees can be
     // refunded to the Dapp User from within the contract
-    const stake100 = BN.max(providerStakeDefault.muln(stakeMultiplier || 100), unit)
+    const stake100 = BN.max(
+        providerStakeDefault.muln(stakeMultiplier || 100),
+        env.api.consts.balances.existentialDeposit.toBn()
+    )
 
-    // We don't want to stake any more than MAX_ACCOUNT_FUND UNIT per provider as the test account funds will be depleted too quickly
-    const maxStake = unit.muln(MAX_ACCOUNT_FUND)
+    // We don't want to stake any more than MAX_ACCOUNT_FUND * existentialDeposit UNIT per provider as the test account
+    // funds will be depleted too quickly
+    const maxStake = env.api.consts.balances.existentialDeposit.toBn().muln(MAX_ACCOUNT_FUND)
 
     if (stake100.lt(maxStake)) {
         env.logger.debug('Setting stake amount to', stake100.div(unit).toNumber(), 'UNIT')
@@ -116,7 +120,7 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
 }
 
 /**
- * Send funds to a test account, adding the max of 2 * stakeAmount or 100 * the
+ * Send funds to a test account, adding the max of 2 * stakeAmount or 1000 * the
  * existential deposit
  * @param env
  * @param stakeAmount
@@ -127,7 +131,7 @@ export function getSendAmount(env: ProsopoEnvironment, stakeAmount: BN): BN {
     let sendAmount = new BN(stakeAmount).muln(2)
 
     // Should result in each account receiving a minimum of existentialDeposit
-    sendAmount = BN.max(sendAmount, env.api.consts.balances.existentialDeposit.muln(100))
+    sendAmount = BN.max(sendAmount, env.api.consts.balances.existentialDeposit.muln(10000))
     env.logger.debug('Setting send amount to', sendAmount.div(unit).toNumber(), 'UNIT')
     return sendAmount
 }

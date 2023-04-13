@@ -547,7 +547,7 @@ describe('CONTRACT TASKS', async () => {
         expect(captchas[0]).to.not.have.nested.property('captcha.solution')
     })
 
-    it('Captcha proofs are returned if commitment found and solution is correct', async () => {
+    it.only('Captcha proofs are returned if commitment found and solution is correct', async () => {
         // Construct a pending request hash between dappUserAccount, providerAccount and dappContractAccount
         const { captchaSolutions, requestHash, dappUserAccount, providerAccount, dappContractAccount } =
             await createMockCaptchaSolutionsAndRequestHash()

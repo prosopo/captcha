@@ -313,15 +313,15 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
     public async registerDapp(fund: boolean, serviceOrigin?: string, noPush?: boolean): Promise<Account> {
         try {
             const account = this.createAccount()
-            this.mockEnv.logger.debug('Sending funds to ', accountAddress(account))
+            this.mockEnv.logger.debug('Sending funds to `', accountAddress(account), '`')
             if (fund) {
                 await this.sendFunds(accountAddress(account), 'Dapp', this.sendAmount)
             }
 
-            this.mockEnv.logger.debug('Changing signer to ', accountAddress(account))
+            this.mockEnv.logger.debug('Changing signer to `', accountAddress(account), '`')
             await this.changeSigner(accountMnemonic(account))
 
-            this.mockEnv.logger.debug('MockEnv pair address', this.mockEnv.pair.address)
+            this.mockEnv.logger.debug('Pair address`', this.mockEnv.pair.address, '`')
             const tasks = new Tasks(this.mockEnv)
             const dappParams = ['1000000000000000000', 1000, this.mockEnv.contractInterface.address, 65, 1000000]
 
@@ -333,12 +333,13 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 dappParams,
                 0,
                 0,
-                randomAsHex()
+                randomAsHex(),
+                this.mockEnv.config.logLevel
             )
             const deployResult = await deployer.deploy()
 
             const instantiateEvent: EventRecord | undefined = deployResult.events.find(
-                (event) => event.event.section === 'contracts'
+                (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
             )
             const contractAddress = instantiateEvent?.event.data['contract'].toString()
 

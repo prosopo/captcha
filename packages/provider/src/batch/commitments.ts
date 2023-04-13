@@ -54,8 +54,12 @@ export class BatchCommitments {
                     this.logger.info(`Found ${commitments.length} commitments to commit`)
                     // get the extrinsics that are to be batched and an id associated with each one
                     const { extrinsics, ids: commitmentIds } = await this.createExtrinsics(commitments)
+                    console.log(
+                        'extrinsics',
+                        extrinsics.map((e) => e.toHuman())
+                    )
                     // commit and get the Ids of the commitments that were committed on-chain
-                    await batch(this.contract, extrinsics, this.logger)
+                    await batch(this.contract, this.contract.pair, extrinsics, this.logger)
                     // remove commitments
                     await this.removeCommitmentsAndSolutions(commitmentIds)
                     // update last commit time and store the commitmentIds that were batched
