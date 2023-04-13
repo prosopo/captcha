@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { IProviderAccount } from '../types/index'
 import { Hash } from '@polkadot/types/interfaces'
 import { ProsopoEnvError } from '@prosopo/common'
 import { getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
 import { createType } from '@polkadot/types'
-import { Environment, ProsopoEnvironment, Tasks } from '@prosopo/provider'
+import { Environment, Tasks } from '@prosopo/provider'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { IProviderAccount, ProsopoEnvironment } from '@prosopo/types'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {

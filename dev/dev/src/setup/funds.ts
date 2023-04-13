@@ -1,4 +1,4 @@
-import { ProsopoEnvironment } from '@prosopo/provider'
+import { ProsopoEnvironment } from '@prosopo/types'
 import { BN } from '@polkadot/util'
 import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
 import { AnyNumber } from '@polkadot/types-codec/types'
@@ -115,7 +115,8 @@ export function getStakeAmount(env: ProsopoEnvironment, providerStakeDefault: BN
 }
 
 /**
- * Send funds to a test account, adding one more unit than the amount to be staked
+ * Send funds to a test account, adding the max of 2 * stakeAmount or 100 * the
+ * existential deposit
  * @param env
  * @param stakeAmount
  */
