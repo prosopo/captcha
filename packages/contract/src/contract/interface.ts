@@ -33,14 +33,14 @@ import { IKeyringPair, ISubmittableResult } from '@polkadot/types/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { applyOnEvent } from '@polkadot/api-contract/util'
 import { Bytes } from '@polkadot/types-codec'
-import consola, { LogLevel } from 'consola'
+import { LogLevel, Logger, logger } from '@prosopo/common'
 
 export class ProsopoContractApi extends ContractPromise {
     contractName: string
     pair: IKeyringPair
     options: ContractOptions
     nonce: number
-    logger: typeof consola
+    logger: Logger
 
     constructor(
         api: ApiPromise,
@@ -55,10 +55,7 @@ export class ProsopoContractApi extends ContractPromise {
         this.pair = pair
         this.contractName = contractName
         this.nonce = currentNonce
-        this.logger = consola.create({
-            level: logLevel || ('info' as unknown as LogLevel),
-        })
-        this.logger.withScope(`ProsopoContractApi: ${contractName}`)
+        this.logger = logger(logLevel || LogLevel.Info, `ProsopoContractApi: ${contractName}`)
     }
 
     public getContract(): ProsopoContractApi {

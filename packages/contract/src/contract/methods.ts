@@ -9,7 +9,7 @@ import {
     ProsopoPayee,
     ProsopoProvider,
     ProsopoRandomProvider,
-} from '../interfaces'
+} from '@prosopo/types'
 import { Vec, u128 } from '@polkadot/types-codec'
 import { AccountId, Balance } from '@polkadot/types/interfaces'
 import { BN, hexToU8a } from '@polkadot/util'
