@@ -264,6 +264,7 @@ pub mod prosopo {
         Pending, // not enough people have voted
     }
 
+    // A seed stores a value, the block number it was created at and the author. Many seeds are combined together as a source of rng.
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Seed {
@@ -294,11 +295,10 @@ pub mod prosopo {
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
-        seeds: Mapping<u8, Seed>,
-        seed_history: Mapping<u8, Vec<Seed>>,
-        n_seeds: u8,
+        seeds: Mapping<u8, Seed>, // up to 255 seeds are stored
+        seed_history: Mapping<u8, Vec<Seed>>, // store the history of seed updates for replay
+        n_seeds: u8, // the number of seeds to use
         max_seed_history_len: u8, // the number of blocks to store an old seed for before deletion
-        a: u128,
     }
 
     // Event emitted when a new provider registers
@@ -1087,7 +1087,7 @@ pub mod prosopo {
         }
 
         #[ink(message)]
-        pub fn update_seed(&mut self) {
+        pub fn update_seed(&mut self) -> Result<bool, Error> {
             let caller_block_id = self.get_caller_block_id_u128();
             
             // let the caller block id determine the seed index
@@ -1098,11 +1098,10 @@ pub mod prosopo {
             if seed.is_some() {
                 debug!("found existing seed");
                 // check the caller is not the author of the current seed
-                // this avoids the caller being able to update the seed value multiple times in the same block
+                // this avoids the caller being able to update the seed value multiple times in the same block, as this would allow spamming of all seed values
                 if seed.unwrap().author == self.env().caller()
                     && seed.unwrap().block == self.env().block_number() {
-                    debug!("cannot update seed twice in same block");
-                    return;
+                    return Ok(false);
                 }
             }
             let seed_value = seed.map(|s| s.value).unwrap_or(0);
