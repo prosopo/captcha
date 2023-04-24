@@ -41,7 +41,13 @@ async function main() {
     if (!process.env.REACT_APP_SERVER_MNEMONIC) {
         throw new Error('No mnemonic found')
     }
-    const prosopoServer = new ProsopoServer(process.env.REACT_APP_SERVER_MNEMONIC, prosopoConfig())
+    console.log(process.env)
+
+    const config = prosopoConfig()
+
+    console.log('config', config)
+
+    const prosopoServer = new ProsopoServer(process.env.REACT_APP_SERVER_MNEMONIC, config)
 
     app.use(routesFactory(mongoose, prosopoServer))
 
