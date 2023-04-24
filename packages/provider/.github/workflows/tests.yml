@@ -17,6 +17,8 @@ jobs:
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
 
+
+
     steps:
       - name: Check github refname
         run: |
@@ -25,13 +27,23 @@ jobs:
           echo ${{ github.head_ref }}
           echo ${{ github.base_ref }}
 
+      - name: Check if workspaces branch exists
+        run: |
+          if [[ $(git ls-remote --heads https://github.com/prosopo/workspaces.git ${{ github.head_ref }}) ]]; then
+            echo "Workspaces branch exists"
+            echo "WORKSPACES_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
+            else
+            echo "Workspaces branch does not exist"
+            echo "WORKSPACES_BRANCH=${{ github.base_ref }}" >> $GITHUB_ENV
+          fi
+
       - name: Remove stopped containers
         run: docker rm $(docker ps -a -q) || true
 
       - name: Clone workspaces
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.base_ref }}
+          ref: ${{ env.WORKSPACES_BRANCH }}
           repository: prosopo/workspaces
           path: workspaces
           submodules: recursive
@@ -43,6 +55,8 @@ jobs:
           cd workspaces
           git fetch
           git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
+          echo "On workspaces branch $(git rev-parse --abbrev-ref HEAD)"
+          git submodule update --init --recursive --force --checkout
           git pull
 
       - name: Clone scripts repository
@@ -71,8 +85,8 @@ jobs:
 
       - if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
-          docker pull prosopo/substrate:demo-v1.0.5
-          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:demo-v1.0.5
+          docker pull prosopo/substrate:dev-aura-bd39450fa8794ef385be198d239372a469a73b39
+          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:dev-aura-bd39450fa8794ef385be198d239372a469a73b39
           docker pull mongo:5.0.4
           docker save -o ~/image-cache/mongo.tar mongo:5.0.4
 
@@ -118,22 +132,18 @@ jobs:
         run: |
           cd workspaces
           echo $(npx tsc --version)
-          echo $(ls)
-          echo $(ls packages/common)
-          echo $(ls packages/datasets)
-          echo $(ls packages/contract)
-          echo $(ls packages/provider)
-          cd packages/common && echo $(pwd) && echo $(ls) && echo $(pwd) && npm run build
-          cd ../datasets && echo $(pwd) && echo $(ls) && echo $(git show) && npm run build
-          cd ../contract && echo $(pwd) && echo $(ls) && echo $(git show) && npm run build
-          cd ../provider && echo $(pwd) && echo $(ls) && echo $(git show) && npm run build
+          cd packages/common && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../types && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../datasets && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../contract && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../provider && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
 
       - name: Setup the environment and run the unit tests
         run: |
           cd workspaces
           git status | head -n 1
-          NODE_ENV=$ENVIRONMENT npm run setup
           cd packages/provider
+          cp env.development .env.development
           git status | head -n 1
           docker container ls
           cat .env.development

@@ -19,13 +19,21 @@ import { encodeStringArgs } from '@prosopo/contract'
 import { describe } from 'mocha'
 import chai from 'chai'
 import { MockEnvironment } from '../mocks/mockenv'
+import { getPair, getSs58Format } from '@prosopo/common'
+import { KeypairType } from '@polkadot/util-crypto/types'
 
 const expect = chai.expect
 
 describe('CONTRACT HELPERS', () => {
     it('Properly encodes `Hash` arguments when passed unhashed', async () => {
         const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
-        const env = new MockEnvironment(mnemonic)
+        const ss58Format = getSs58Format()
+        const pair = await getPair(
+            (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
+            ss58Format,
+            mnemonic
+        )
+        const env = new MockEnvironment(pair)
         await env.isReady()
         const args = ['https://localhost:8282']
         const methodObj = {
@@ -43,7 +51,6 @@ describe('CONTRACT HELPERS', () => {
                 return {} as AbiMessage
             },
         }
-        console.log(encodeStringArgs(env.contractInterface.abi, methodObj, args))
         expect(encodeStringArgs(env.contractInterface.abi, methodObj, args)[0].toString()).to.equal(
             hexToU8a('0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a38323832').toString()
         )

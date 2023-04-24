@@ -15,9 +15,16 @@
 import { Hash } from '@polkadot/types/interfaces'
 import { isHex } from '@polkadot/util'
 import {
+    Captcha,
     CaptchaRecordSchema,
+    CaptchaSolution,
+    CaptchaStates,
     Database,
+    DatasetBase,
     DatasetRecordSchema,
+    DatasetWithIds,
+    DatasetWithIdsAndTree,
+    DatasetWithIdsAndTreeSchema,
     PendingCaptchaRequest,
     PendingRecordSchema,
     ScheduledTaskRecord,
@@ -31,20 +38,12 @@ import {
     UserSolutionRecord,
     UserSolutionRecordSchema,
     UserSolutionSchema,
-} from '../types'
-import {
-    Captcha,
-    CaptchaSolution,
-    CaptchaStates,
-    DatasetBase,
-    DatasetWithIds,
-    DatasetWithIdsAndTree,
-    DatasetWithIdsAndTreeSchema,
-} from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
+} from '@prosopo/types'
+
+import { Logger, ProsopoEnvError } from '@prosopo/common'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'
-import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '../types/scheduler'
+import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import { DeleteResult } from 'mongodb'
 
 mongoose.set('strictQuery', false)
@@ -70,11 +69,11 @@ export class ProsopoDatabase implements Database {
 
     dbname: string
 
-    logger: typeof consola
+    logger: Logger
 
     connection?: Connection
 
-    constructor(url: string, dbname: string, logger: typeof consola, authSource?: string) {
+    constructor(url: string, dbname: string, logger: Logger, authSource?: string) {
         const authSourceString = authSource ? `?authSource=${authSource}` : ''
         const separator = url.slice(-1) === '/' ? '' : '/'
         this.url = `${url || DEFAULT_ENDPOINT}${separator}${dbname}${authSourceString}`
@@ -179,6 +178,7 @@ export class ProsopoDatabase implements Database {
                             upsert: true,
                         },
                     })),
+                    // @ts-ignore
                     callbackFn
                 )
             }
@@ -381,7 +381,7 @@ export class ProsopoDatabase implements Database {
                     upsert: true,
                 },
             }))
-
+            // @ts-ignore
             await this.tables?.usersolution.bulkWrite(ops, callbackFn)
         }
     }

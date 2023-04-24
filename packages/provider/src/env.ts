@@ -12,64 +12,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ContractAbi, ProsopoContractApi, ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import { AssetsResolver } from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
-import consola, { LogLevel } from 'consola'
-import dotenv from 'dotenv'
-import path from 'path'
+import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
+import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { LogLevel } from 'consola'
 import { LocalAssetsResolver } from './assets'
-import { Database, EnvironmentTypes, ProsopoConfig, ProsopoEnvironment } from './types'
+import {
+    AssetsResolver,
+    ContractAbi,
+    Database,
+    EnvironmentTypes,
+    IProsopoContractMethods,
+    ProsopoConfig,
+    ProsopoEnvironment,
+} from '@prosopo/types'
 import prosopoConfig from './prosopo.config'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
-import { IKeyringPair } from '@polkadot/types/types'
-
-export function loadEnv() {
-    const args = { path: getEnvFile() }
-    dotenv.config(args)
-}
-
-export function getEnvFile(filename = '.env', filepath = path.join(__dirname, '..')) {
-    const env = process.env.NODE_ENV || 'development'
-    return path.join(filepath, `${filename}.${env}`)
-}
+import { KeyringPair } from '@polkadot/keyring/types'
+import { loadEnv } from '@prosopo/common'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: ProsopoContractMethods
-    mnemonic: string
+    contractInterface: IProsopoContractMethods
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     contractName: string
     abi: ContractAbi
-    logger: typeof consola
+    logger: Logger
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
-    pair: IKeyringPair
+    pair: KeyringPair
     api: ApiPromise
 
-    constructor(mnemonic: string) {
+    constructor(pair: KeyringPair) {
         loadEnv()
         this.config = Environment.getConfig()
-        this.mnemonic = mnemonic
+        this.pair = pair
+        this.logger = logger(this.config.logLevel, `ProsopoEnvironment`)
         if (
             this.config.defaultEnvironment &&
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
         ) {
             this.defaultEnvironment = this.config.defaultEnvironment
+            this.logger.info(`Endpoint: ${this.config.networks[this.defaultEnvironment].endpoint}`)
             this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment].endpoint)
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.logger = consola.create({
-                level: this.config.logLevel as unknown as LogLevel,
-            })
+
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
             })
+            this.keyring.addPair(this.pair)
 
             this.abi = abiJson as ContractAbi
             this.importDatabase().catch((err) => {
@@ -95,39 +91,43 @@ export class Environment implements ProsopoEnvironment {
             this.api = await ApiPromise.create({ provider: this.wsProvider })
         }
         await this.api.isReadyOrError
-        const { mnemonic } = this
-        if (!mnemonic) {
-            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED')
+        try {
+            this.pair = this.keyring.addPair(this.pair)
+        } catch (err) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
         }
-        this.pair = this.keyring.addFromMnemonic(mnemonic)
     }
 
-    async changeSigner(mnemonic: string): Promise<void> {
+    async changeSigner(pair: KeyringPair): Promise<void> {
         await this.api.isReadyOrError
-        this.mnemonic = mnemonic
+        this.pair = pair
         await this.getSigner()
-        await this.getContractApi()
+        this.contractInterface = await this.getContractApi()
     }
 
-    async getContractApi(): Promise<ProsopoContractApi> {
-        //console.log('getting nonce')
-        //const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+    async getContractApi(): Promise<IProsopoContractMethods> {
+        const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+        this.logger.debug('Getting new contract instance with pair', this.pair.address, 'nonce', nonce.toString())
         this.contractInterface = new ProsopoContractMethods(
             this.api,
             this.abi,
             this.contractAddress,
             this.pair,
             this.contractName,
-            -1
+            nonce.toNumber(),
+            this.config.logLevel as unknown as LogLevel
         )
         return this.contractInterface
     }
 
     async isReady() {
         try {
+            if (this.config.account.password) {
+                this.pair.unlock(this.config.account.password)
+            }
             this.api = await ApiPromise.create({ provider: this.wsProvider })
             await this.getSigner()
-            await this.getContractApi()
+            this.contractInterface = await this.getContractApi()
             await this.db?.connect()
         } catch (err) {
             throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')

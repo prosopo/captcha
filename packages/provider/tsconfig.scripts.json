@@ -1,18 +1,18 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": "./src",
+    "rootDirs": ["./src", "./tests"],
     "outDir": "./dist",
     "module": "commonjs",
-    "target": "esnext"
+    "target": "esnext",
+    "noEmit": true
   },
   "include": [
     "./src/**/*.ts",
-//    "./tests/**/*.ts"
+    "./scripts/**/*.ts"
   ],
   "files": [
-    "./src/prosopo.config.ts",
-    "./src/db/mongo.ts"
+    "./src/prosopo.config.ts"
   ],
   "references": [
     {
@@ -23,9 +23,6 @@
     },
     {
       "path": "../common"
-    },
-    {
-      "path": "../types"
     }
   ]
 }

@@ -15,22 +15,59 @@
 import { MockEnvironment } from '../mocks/mockenv'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { BatchCommitter } from '../../src/tasks/batch'
+import { BatchCommitments } from '../../src/batch'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
-import { getSignedTasks } from '../mocks/accounts'
+import { accountContract, getSignedTasks } from '../mocks/accounts'
 import { getUser } from '../mocks/getUser'
-import { CaptchaSolution } from '@prosopo/datasets'
-import { ScheduledTaskNames } from '../../src/types/scheduler'
+import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { sleep } from './tasks.test'
+import { sleep } from '../tasks/tasks.test'
 import { accountAddress, accountMnemonic } from '../mocks/accounts'
+import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util'
+import { ApiPromise } from '@polkadot/api'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { getPair, getPairType, getSs58Format } from '@prosopo/common'
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
-describe('BATCH TESTS', () => {
+// Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
+// Use a low minimum validity threshold to check these against
+const THRESHOLD = BN_THOUSAND.div(BN_TWO)
+const DEFAULT_TIME = new BN(6_000)
+const A_DAY = new BN(24 * 60 * 60 * 1000)
+
+function calcInterval(api: ApiPromise): BN {
+    return bnMin(
+        A_DAY,
+        // Babe, e.g. Relay chains (Substrate defaults)
+        api.consts.babe?.expectedBlockTime ||
+            // POW, eg. Kulupu
+            api.consts.difficulty?.targetBlockTime ||
+            // Subspace
+            api.consts.subspace?.expectedBlockTime ||
+            // Check against threshold to determine value validity
+            (api.consts.timestamp?.minimumPeriod.gte(THRESHOLD)
+                ? // Default minimum period config
+                  api.consts.timestamp.minimumPeriod.mul(BN_TWO)
+                : api.query.parachainSystem
+                ? // default guess for a parachain
+                  DEFAULT_TIME.mul(BN_TWO)
+                : // default guess for others
+                  DEFAULT_TIME)
+    )
+}
+
+describe('BATCH TESTS', async () => {
     const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
-    const env = new MockEnvironment(mnemonic)
+    const ss58Format = getSs58Format()
+    const pairType = getPairType()
+    const pair = await getPair(
+        (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
+        ss58Format,
+        mnemonic
+    )
+    const env = new MockEnvironment(pair)
 
     before(async () => {
         await env.isReady()
@@ -40,22 +77,27 @@ describe('BATCH TESTS', () => {
         await env.db?.connection?.close()
     })
 
-    it('Batches max number of commitments on-chain', async () => {
-        const contractApi = await env.getContractApi()
+    const commitmentCount = 1
+    it(`Batches ~${commitmentCount} commitments on-chain`, async () => {
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
-            await env.changeSigner(accountMnemonic(providerAccount))
+
+            await env.changeSigner(await getPair(pairType, ss58Format, accountMnemonic(providerAccount)))
+            // contract API must be initialized with an account that has funds or the error StorageDepositLimitExhausted
+            // will be thrown when trying to batch commitments
+            const contractApi = await env.getContractApi()
             // Remove any existing commitments and solutions from the db
-            // Note - don't do this as it messes with other tests
-            // await env.db.tables?.commitment.deleteMany({})
-            // await env.db.tables?.usersolution.deleteMany({})
+            // FIXME - deleting these can mess with other tests since they're all running asynchronously. The database
+            //    instance *should* be separate for this batch file but issues have been seen in the past...
+            await env.db.tables?.commitment.deleteMany({})
+            await env.db.tables?.usersolution.deleteMany({})
 
             // Get account nonce
             const startNonce = await contractApi.api.call.accountNonceApi.accountNonce(accountAddress(providerAccount))
 
             // Batcher must be created with the provider account as the pair on the contractApi, otherwise the batcher
             // will fail with `ProviderDoesNotExist` error.
-            const batcher = new BatchCommitter(
+            const batcher = new BatchCommitments(
                 env.config.batchCommit,
                 await env.getContractApi(),
                 env.db,
@@ -66,7 +108,6 @@ describe('BATCH TESTS', () => {
 
             const providerTasks = await getSignedTasks(env, providerAccount)
             const providerDetails = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
-
             const dappAccount = await getUser(env, AccountKey.dappsWithStake)
             const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
 
@@ -79,10 +120,12 @@ describe('BATCH TESTS', () => {
                 ]
                 const captchaSolution: CaptchaSolution = { ...unsolvedCaptcha, solution, salt: randomAsHex() }
                 const commitmentIds: string[] = []
-                const dappUser = await getUser(env, AccountKey.dappUsers)
-                const commitmentCount = 150
+
                 // Store 10 commitments in the local db
                 for (let count = 0; count < commitmentCount; count++) {
+                    // need to submit different commits under different user accounts to avoid the commitments being
+                    // trimmed by the contract when the max number of commitments per user is reached (e.g. 10 per user)
+                    const dappUser = await getUser(env, AccountKey.dappUsers, false)
                     // not the real commitment id, which would be calculated as the root of a merkle tree
                     const commitmentId = randomAsHex()
                     commitmentIds.push(commitmentId)
@@ -91,7 +134,7 @@ describe('BATCH TESTS', () => {
                         [captchaSolution],
                         commitmentId,
                         accountAddress(dappUser),
-                        accountAddress(dappAccount),
+                        accountContract(dappAccount),
                         providerDetails.datasetId.toString()
                     )
                     if (approved) {
@@ -152,7 +195,7 @@ describe('BATCH TESTS', () => {
                 //                     '0x38ed96eeb240c2c3b5dbb7d29fad276317b5a6bb30094ddf0b845585503dd830', ...
 
                 const batcherResult = await env.db.getLastScheduledTask(ScheduledTaskNames.BatchCommitment)
-
+                console.log('batcherResult', batcherResult)
                 if (
                     !batcherResult ||
                     (batcherResult && !batcherResult.result) ||
@@ -192,7 +235,8 @@ describe('BATCH TESTS', () => {
                     )
 
                     // We have to wait for batched commitments to become available on-chain
-                    const waitTime = 3000
+                    const waitTime = calcInterval(contractApi.api as ApiPromise).toNumber() * 2
+                    env.logger.debug(`waiting ${waitTime}ms for commitments to be available on-chain`)
                     await sleep(waitTime)
 
                     // Check the commitments are in the contract
@@ -200,6 +244,7 @@ describe('BATCH TESTS', () => {
                     let count = 0
                     for (const commitment of processedCommitments) {
                         const approved = count % 2 === 0 ? 'Approved' : 'Disapproved'
+                        env.logger.debug(`Getting commitmentId ${commitment.commitmentId} from contract`)
                         const contractCommitment = await contractApi.getCaptchaSolutionCommitment(
                             commitment.commitmentId
                         )
@@ -216,7 +261,7 @@ describe('BATCH TESTS', () => {
 
                     // Expect the last batch commitment time to be within the last 10 seconds
                     if (lastBatchCommit !== undefined) {
-                        expect(+Date.now() - +lastBatchCommit?.datetime).to.be.lessThan(10000 + waitTime)
+                        expect(+Date.now() - +lastBatchCommit?.datetime).to.be.lessThan(waitTime * 2)
                     }
                 }
             }

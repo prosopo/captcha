@@ -13,19 +13,23 @@
 // limitations under the License.
 // import {ProsopoConfig} from './types';
 
-import { DatabaseTypes, EnvironmentTypes, ProsopoConfig } from './types/index'
+import { DatabaseTypes, EnvironmentTypes, ProsopoConfig } from '@prosopo/types'
+import { LogLevel } from '@prosopo/common'
 
 export default (): ProsopoConfig => ({
-    logLevel: 'debug',
+    logLevel: LogLevel.Debug,
     defaultEnvironment: EnvironmentTypes.development,
     contract: {
         abi: '../contract/src/abi/prosopo.json',
+    },
+    account: {
+        password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
     },
     networks: {
         development: {
             endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944',
             contract: {
-                address: process.env.CONTRACT_ADDRESS || '',
+                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
                 name: 'prosopo',
             },
             accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
@@ -55,7 +59,7 @@ export default (): ProsopoConfig => ({
     },
     batchCommit: {
         interval: 300,
-        maxBatchExtrinsicPercentage: 50,
+        maxBatchExtrinsicPercentage: 59,
     },
     assets: {
         absolutePath: '',

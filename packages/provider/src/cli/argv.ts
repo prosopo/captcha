@@ -21,11 +21,10 @@ const yargs = require('yargs')
 import { Compact, u128 } from '@polkadot/types'
 
 import { Tasks } from '../tasks/tasks'
-import { ProsopoEnvironment } from '../types/env'
+import { PayeeSchema, ProsopoEnvironment } from '@prosopo/types'
 import { encodeStringAddress } from '../util'
-import { PayeeSchema } from '@prosopo/contract'
 import consola from 'consola'
-import { BatchCommitter } from '../tasks/batch'
+import { BatchCommitments } from '../batch/index'
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)
@@ -92,14 +91,9 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         type: 'string',
                         demand: true,
                         desc: 'The person who receives the fee (`Provider` or `Dapp`)',
-                    })
-                    .option('address', {
-                        type: 'string',
-                        demand: true,
-                        desc: 'The AccountId of the Provider',
                     }),
             async (argv) => {
-                const result = await tasks.contractApi.providerRegister(argv.origin, argv.fee, argv.payee, argv.address)
+                const result = await tasks.contractApi.providerRegister(argv.origin, argv.fee, argv.payee)
 
                 logger.info(JSON.stringify(result, null, 2))
             },
@@ -125,11 +119,6 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         demand: false,
                         desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                     })
-                    .option('address', {
-                        type: 'string',
-                        demand: true,
-                        desc: 'The AccountId of the Provider',
-                    })
                     .option('value', {
                         type: 'number',
                         demand: false,
@@ -142,7 +131,6 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         argv.origin || provider.serviceOrigin,
                         argv.fee || provider.fee,
                         argv.payee || provider.payee,
-                        argv.address,
                         argv.value || 0
                     )
 
@@ -360,7 +348,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                     })
                 } else {
                     if (env.db) {
-                        const batchCommitter = new BatchCommitter(
+                        const batchCommitter = new BatchCommitments(
                             env.config.batchCommit,
                             env.contractInterface,
                             env.db,

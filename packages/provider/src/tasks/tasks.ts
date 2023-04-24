@@ -14,19 +14,8 @@
 import { Hash } from '@polkadot/types/interfaces'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import { ProsopoContractMethods } from '@prosopo/contract'
 import {
-    Captcha,
-    CaptchaConfig,
     CaptchaMerkleTree,
-    CaptchaSolution,
-    CaptchaSolutionConfig,
-    CaptchaSolutionToUpdate,
-    CaptchaStates,
-    CaptchaWithProof,
-    CaptchaWithoutId,
-    DatasetBase,
-    DatasetRaw,
     buildDataset,
     captchaSort,
     compareCaptchaSolutions,
@@ -35,9 +24,25 @@ import {
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
-import { ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import consola from 'consola'
-import { DappUserSolutionResult, Database, ProsopoEnvironment, UserCommitmentRecord } from '../types'
+import {
+    Captcha,
+    CaptchaConfig,
+    CaptchaSolution,
+    CaptchaSolutionConfig,
+    CaptchaSolutionToUpdate,
+    CaptchaStates,
+    CaptchaWithProof,
+    CaptchaWithoutId,
+    DappUserSolutionResult,
+    Database,
+    DatasetBase,
+    DatasetRaw,
+    IProsopoContractMethods,
+    ProsopoEnvironment,
+    UserCommitmentRecord,
+} from '@prosopo/types'
 import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
 
 import { i18n } from '@prosopo/common'
@@ -50,7 +55,7 @@ import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
  * @description Tasks that are shared by the API and CLI
  */
 export class Tasks {
-    contractApi: ProsopoContractMethods
+    contractApi: IProsopoContractMethods
 
     db: Database
 
@@ -58,7 +63,7 @@ export class Tasks {
 
     captchaSolutionConfig: CaptchaSolutionConfig
 
-    logger: typeof consola
+    logger: Logger
 
     constructor(env: ProsopoEnvironment) {
         if (!env.contractInterface) {
@@ -74,7 +79,7 @@ export class Tasks {
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
         this.captchaSolutionConfig = env.config.captchaSolutions
-        this.logger = env.logger
+        this.logger = logger(env.config.logLevel, 'Tasks')
     }
 
     async providerAddDatasetFromFile(file: string): Promise<ContractSubmittableResult> {

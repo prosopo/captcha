@@ -15,12 +15,11 @@ import express from 'express'
 import cors from 'cors'
 import { prosopoRouter } from '../api'
 import { LocalAssetsResolver } from '../assets'
-import { Environment, loadEnv } from '../env'
+import { Environment } from '../env'
 import { handleErrors } from '../errors'
-import { ProsopoEnvironment } from '../types/env'
+import { ProsopoEnvironment } from '@prosopo/types'
 import { Server } from 'http'
-import { ProsopoEnvError } from '@prosopo/common'
-import { i18nMiddleware } from '@prosopo/common'
+import { getPair, getPairType, getSecret, getSs58Format, i18nMiddleware, loadEnv } from '@prosopo/common'
 
 let apiAppSrv: Server
 
@@ -65,10 +64,12 @@ async function start(nodeEnv: string) {
     let env: ProsopoEnvironment
 
     if (nodeEnv !== 'test') {
-        if (!process.env.PROVIDER_MNEMONIC) {
-            throw new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED')
-        }
-        env = new Environment(process.env.PROVIDER_MNEMONIC)
+        const ss58Format = getSs58Format()
+        const pairType = getPairType()
+        const secret = getSecret()
+        const pair = await getPair(pairType, ss58Format, secret)
+
+        env = new Environment(pair)
     } else {
         // env = new MockEnvironment();
         return
