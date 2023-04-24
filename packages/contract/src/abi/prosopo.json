@@ -1,11 +1,11 @@
 {
   "source": {
-    "hash": "0xb398c34eeaa6631344073ab704806495f35c84bc73f79e69784e4dbf5ad96b02",
-    "language": "ink! 4.0.0-beta",
+    "hash": "0x6e84490f1a24cbea49390ab53cc296fadd5cae621f48276690376ea39775c6e2",
+    "language": "ink! 4.0.0",
     "compiler": "rustc 1.67.0",
     "build_info": {
-      "build_mode": "Debug",
-      "cargo_contract_version": "2.0.0-rc",
+      "build_mode": "Release",
+      "cargo_contract_version": "2.0.1",
       "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
       "wasm_opt_settings": {
         "keep_debug_symbols": true,
@@ -15,7 +15,7 @@
   },
   "contract": {
     "name": "prosopo",
-    "version": "4.0.0-beta",
+    "version": "4.0.0",
     "authors": [
       "Chris Taylor chris@prosopo.io, George Oastler george@prosopo.io, Vincenzo Ferrara, Siniša Čanak"
     ]
@@ -25,19 +25,19 @@
       {
         "args": [
           {
-            "label": "operator_account",
+            "label": "operator_accounts",
             "type": {
               "displayName": [
-                "AccountId"
+                "Vec"
               ],
-              "type": 6
+              "type": 8
             }
           },
           {
             "label": "provider_stake_default",
             "type": {
               "displayName": [
-                "u128"
+                "Balance"
               ],
               "type": 0
             }
@@ -46,7 +46,43 @@
             "label": "dapp_stake_default",
             "type": {
               "displayName": [
-                "u128"
+                "Balance"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "label": "max_user_history_len",
+            "type": {
+              "displayName": [
+                "u16"
+              ],
+              "type": 10
+            }
+          },
+          {
+            "label": "max_user_history_age",
+            "type": {
+              "displayName": [
+                "u64"
+              ],
+              "type": 11
+            }
+          },
+          {
+            "label": "min_num_active_providers",
+            "type": {
+              "displayName": [
+                "u16"
+              ],
+              "type": 10
+            }
+          },
+          {
+            "label": "max_provider_fee",
+            "type": {
+              "displayName": [
+                "Balance"
               ],
               "type": 0
             }
@@ -62,7 +98,7 @@
             "ink_primitives",
             "ConstructorResult"
           ],
-          "type": 11
+          "type": 13
         },
         "selector": "0xed4b9d1b"
       }
@@ -79,7 +115,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -96,7 +132,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -113,7 +149,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -130,7 +166,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -158,7 +194,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -169,7 +205,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           },
           {
@@ -180,7 +216,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           }
         ],
@@ -197,7 +233,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -225,7 +261,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           }
         ],
@@ -242,7 +278,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           }
         ],
@@ -259,7 +295,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -270,18 +306,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
-            }
-          },
-          {
-            "docs": [],
-            "indexed": false,
-            "label": "client_origin",
-            "type": {
-              "displayName": [
-                "Hash"
-              ],
-              "type": 2
+              "type": 7
             }
           },
           {
@@ -293,6 +318,28 @@
                 "Balance"
               ],
               "type": 0
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "payee",
+            "type": {
+              "displayName": [
+                "DappPayee"
+              ],
+              "type": 26
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "status",
+            "type": {
+              "displayName": [
+                "GovernanceStatus"
+              ],
+              "type": 42
             }
           }
         ],
@@ -309,7 +356,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -320,18 +367,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
-            }
-          },
-          {
-            "docs": [],
-            "indexed": false,
-            "label": "client_origin",
-            "type": {
-              "displayName": [
-                "Hash"
-              ],
-              "type": 2
+              "type": 7
             }
           },
           {
@@ -343,6 +379,28 @@
                 "Balance"
               ],
               "type": 0
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "payee",
+            "type": {
+              "displayName": [
+                "DappPayee"
+              ],
+              "type": 26
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "status",
+            "type": {
+              "displayName": [
+                "GovernanceStatus"
+              ],
+              "type": 42
             }
           }
         ],
@@ -359,7 +417,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -387,7 +445,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -415,7 +473,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -426,7 +484,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           },
           {
@@ -437,7 +495,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -448,7 +506,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           }
         ],
@@ -461,9 +519,63 @@
         "ink",
         "LangError"
       ],
-      "type": 12
+      "type": 14
     },
     "messages": [
+      {
+        "args": [
+          {
+            "label": "signature",
+            "type": {
+              "displayName": [],
+              "type": 15
+            }
+          },
+          {
+            "label": "payload",
+            "type": {
+              "displayName": [],
+              "type": 16
+            }
+          }
+        ],
+        "docs": [
+          " Verify a signature. The payload is a blake128 hash of the payload wrapped in the Byte tag. E.g.",
+          "     message=\"hello\"",
+          "     hash=blake128(message) // 0x1234... (32 bytes)",
+          "     payload=\"<Bytes>0x1234...</Bytes>\" (32 bytes + 15 bytes (tags) + 2 bytes (multihash notation) = 49 bytes)",
+          "",
+          " Read more about multihash notation here https://w3c-ccg.github.io/multihash/index.xml#mh-example (adds two bytes to identify type and length of hash function)",
+          "",
+          " Note the signature must be sr25519 type."
+        ],
+        "label": "verify_sr25519",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 17
+        },
+        "selector": "0x6ed3bda3"
+      },
+      {
+        "args": [],
+        "docs": [],
+        "label": "get_caller",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 21
+        },
+        "selector": "0x8dd15f8f"
+      },
       {
         "args": [],
         "docs": [
@@ -477,7 +589,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 13
+          "type": 22
         },
         "selector": "0xf6c00565"
       },
@@ -494,7 +606,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 13
+          "type": 22
         },
         "selector": "0x76e26191"
       },
@@ -504,7 +616,7 @@
             "label": "service_origin",
             "type": {
               "displayName": [
-                "Hash"
+                "Vec"
               ],
               "type": 2
             }
@@ -524,16 +636,7 @@
               "displayName": [
                 "Payee"
               ],
-              "type": 14
-            }
-          },
-          {
-            "label": "provider_account",
-            "type": {
-              "displayName": [
-                "AccountId"
-              ],
-              "type": 6
+              "type": 23
             }
           }
         ],
@@ -548,7 +651,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 24
         },
         "selector": "0xc66f9a2a"
       },
@@ -558,7 +661,7 @@
             "label": "service_origin",
             "type": {
               "displayName": [
-                "Hash"
+                "Vec"
               ],
               "type": 2
             }
@@ -578,16 +681,7 @@
               "displayName": [
                 "Payee"
               ],
-              "type": 14
-            }
-          },
-          {
-            "label": "provider_account",
-            "type": {
-              "displayName": [
-                "AccountId"
-              ],
-              "type": 6
+              "type": 23
             }
           }
         ],
@@ -602,7 +696,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 24
         },
         "selector": "0xd2f70de8"
       },
@@ -614,7 +708,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -629,7 +723,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 24
         },
         "selector": "0x5eff53cf"
       },
@@ -646,7 +740,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 24
         },
         "selector": "0x95980b6f"
       },
@@ -658,7 +752,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           },
           {
@@ -667,7 +761,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           }
         ],
@@ -682,37 +776,28 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 24
         },
         "selector": "0x75980ea7"
       },
       {
         "args": [
           {
-            "label": "client_origin",
-            "type": {
-              "displayName": [
-                "Hash"
-              ],
-              "type": 2
-            }
-          },
-          {
             "label": "contract",
             "type": {
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
-            "label": "optional_owner",
+            "label": "payee",
             "type": {
               "displayName": [
-                "Option"
+                "DappPayee"
               ],
-              "type": 18
+              "type": 26
             }
           }
         ],
@@ -727,7 +812,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 11
+          "type": 24
         },
         "selector": "0x42b45efa"
       },
@@ -739,7 +824,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -754,7 +839,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 11
+          "type": 24
         },
         "selector": "0x55da62a9"
       },
@@ -766,7 +851,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -781,7 +866,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 24
         },
         "selector": "0x3b2a7048"
       },
@@ -793,7 +878,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -802,7 +887,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           },
           {
@@ -811,7 +896,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           },
           {
@@ -820,7 +905,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -829,7 +914,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -838,7 +923,7 @@
               "displayName": [
                 "Option"
               ],
-              "type": 19
+              "type": 27
             }
           }
         ],
@@ -853,7 +938,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 24
         },
         "selector": "0x5b965eab"
       },
@@ -865,7 +950,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           },
           {
@@ -889,7 +974,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 24
         },
         "selector": "0xd33625c0"
       },
@@ -901,7 +986,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           }
         ],
@@ -916,7 +1001,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 15
+          "type": 24
         },
         "selector": "0xb04fd5fb"
       },
@@ -928,7 +1013,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -937,7 +1022,7 @@
               "displayName": [
                 "u8"
               ],
-              "type": 4
+              "type": 3
             }
           }
         ],
@@ -953,7 +1038,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 21
+          "type": 17
         },
         "selector": "0xbe7b6ef9"
       },
@@ -965,7 +1050,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -978,36 +1063,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 23
+          "type": 29
         },
         "selector": "0xbe930f18"
-      },
-      {
-        "args": [
-          {
-            "label": "operator_account",
-            "type": {
-              "displayName": [
-                "AccountId"
-              ],
-              "type": 6
-            }
-          }
-        ],
-        "docs": [
-          " Add an operator"
-        ],
-        "label": "add_prosopo_operator",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 11
-        },
-        "selector": "0x7c282016"
       },
       {
         "args": [
@@ -1017,7 +1075,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 2
+              "type": 4
             }
           }
         ],
@@ -1034,38 +1092,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 26
+          "type": 32
         },
         "selector": "0x7a54158d"
-      },
-      {
-        "args": [
-          {
-            "label": "captcha_solution_commitment_id",
-            "type": {
-              "displayName": [
-                "Hash"
-              ],
-              "type": 2
-            }
-          }
-        ],
-        "docs": [
-          " Get a solution commitment",
-          "",
-          " Returns an error if the commitment does not exist"
-        ],
-        "label": "get_captcha_solution_commitment",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 29
-        },
-        "selector": "0x028ebe00"
       },
       {
         "args": [
@@ -1075,7 +1104,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -1092,7 +1121,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 32
+          "type": 36
         },
         "selector": "0x42dd7f6b"
       },
@@ -1104,7 +1133,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -1121,7 +1150,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 35
+          "type": 39
         },
         "selector": "0x812d61e2"
       },
@@ -1133,7 +1162,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
@@ -1150,9 +1179,38 @@
             "ink",
             "MessageResult"
           ],
-          "type": 39
+          "type": 43
         },
         "selector": "0xb3dfdaf9"
+      },
+      {
+        "args": [
+          {
+            "label": "captcha_solution_commitment_id",
+            "type": {
+              "displayName": [
+                "Hash"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "docs": [
+          " Get a solution commitment",
+          "",
+          " Returns an error if the commitment does not exist"
+        ],
+        "label": "get_captcha_solution_commitment",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 46
+        },
+        "selector": "0x028ebe00"
       },
       {
         "args": [
@@ -1162,14 +1220,13 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
         "docs": [
           " Returns the account balance for the specified `dapp`.",
-          "",
-          " Returns `0` if the account does not exist."
+          ""
         ],
         "label": "get_dapp_balance",
         "mutates": false,
@@ -1179,7 +1236,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 13
+          "type": 49
         },
         "selector": "0xf8fd5066"
       },
@@ -1191,14 +1248,13 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
         "docs": [
           " Returns the account balance for the specified `provider`.",
-          "",
-          " Returns `0` if the account does not exist."
+          ""
         ],
         "label": "get_provider_balance",
         "mutates": false,
@@ -1208,9 +1264,26 @@
             "ink",
             "MessageResult"
           ],
-          "type": 13
+          "type": 49
         },
         "selector": "0x998d522c"
+      },
+      {
+        "args": [],
+        "docs": [
+          " Returns the operator votes for code hashes"
+        ],
+        "label": "get_operator_votes",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 51
+        },
+        "selector": "0x018b8a65"
       },
       {
         "args": [
@@ -1220,7 +1293,7 @@
               "displayName": [
                 "Vec"
               ],
-              "type": 7
+              "type": 8
             }
           }
         ],
@@ -1237,7 +1310,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 42
+          "type": 56
         },
         "selector": "0xd542160b"
       },
@@ -1249,7 +1322,7 @@
               "displayName": [
                 "Vec"
               ],
-              "type": 44
+              "type": 59
             }
           }
         ],
@@ -1266,7 +1339,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 42
+          "type": 56
         },
         "selector": "0x54b28ab4"
       },
@@ -1278,7 +1351,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           },
           {
@@ -1287,14 +1360,14 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
             }
           }
         ],
         "docs": [
           " Get a random active provider",
           "",
-          " Returns error if no active providers is found"
+          " Returns error if no active provider is found"
         ],
         "label": "get_random_active_provider",
         "mutates": false,
@@ -1304,7 +1377,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 45
+          "type": 60
         },
         "selector": "0x4aee5bad"
       },
@@ -1323,7 +1396,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 48
+          "type": 63
         },
         "selector": "0xd2ed90d7"
       },
@@ -1344,7 +1417,16 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 6
+              "type": 7
+            }
+          },
+          {
+            "label": "dapp_account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
             }
           }
         ],
@@ -1359,36 +1441,82 @@
             "ink",
             "MessageResult"
           ],
-          "type": 13
+          "type": 22
         },
         "selector": "0x2306aecd"
       },
       {
-        "args": [
-          {
-            "label": "len",
-            "type": {
-              "displayName": [
-                "u128"
-              ],
-              "type": 0
-            }
-          }
-        ],
+        "args": [],
         "docs": [
-          " Get a random number from 0 to `len` - 1 inclusive. Uses the caller account for additional random entropy."
+          " Remove a vote from an operator"
         ],
-        "label": "get_random_number_caller",
-        "mutates": false,
+        "label": "operator_unvote",
+        "mutates": true,
         "payable": false,
         "returnType": {
           "displayName": [
             "ink",
             "MessageResult"
           ],
-          "type": 13
+          "type": 65
         },
-        "selector": "0x6402e771"
+        "selector": "0xf33f4d02"
+      },
+      {
+        "args": [
+          {
+            "label": "vote",
+            "type": {
+              "displayName": [
+                "Vote"
+              ],
+              "type": 55
+            }
+          }
+        ],
+        "docs": [
+          " Carries out a vote from the set of operators"
+        ],
+        "label": "operator_vote",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 67
+        },
+        "selector": "0xde280c52"
+      },
+      {
+        "args": [
+          {
+            "label": "code_hash",
+            "type": {
+              "displayName": [],
+              "type": 5
+            }
+          }
+        ],
+        "docs": [
+          " Modifies the code which is used to execute calls to this contract address (`AccountId`).",
+          " We use this to upgrade the contract logic. The caller must be an operator.",
+          " `true` is returned on successful upgrade, `false` otherwise",
+          " Errors are returned if the caller is not an operator, if the code hash is the callers",
+          " account_id, if the code is not found, and for any other unknown ink errors"
+        ],
+        "label": "operator_set_code",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 17
+        },
+        "selector": "0x00ae585a"
       }
     ]
   },
@@ -1457,10 +1585,6 @@
                                 "1": {
                                   "fields": [],
                                   "name": "Dapp"
-                                },
-                                "2": {
-                                  "fields": [],
-                                  "name": "None"
                                 }
                               }
                             }
@@ -1480,19 +1604,10 @@
                           "layout": {
                             "leaf": {
                               "key": "0x9a884073",
-                              "ty": 2
+                              "ty": 4
                             }
                           },
                           "name": "dataset_id"
-                        },
-                        {
-                          "layout": {
-                            "leaf": {
-                              "key": "0x9a884073",
-                              "ty": 2
-                            }
-                          },
-                          "name": "dataset_id_content"
                         }
                       ],
                       "name": "Provider"
@@ -1509,7 +1624,7 @@
                   "layout": {
                     "leaf": {
                       "key": "0xae6923be",
-                      "ty": 5
+                      "ty": 6
                     }
                   },
                   "root_key": "0xae6923be"
@@ -1523,7 +1638,7 @@
                   "layout": {
                     "leaf": {
                       "key": "0xd0d11a6e",
-                      "ty": 8
+                      "ty": 9
                     }
                   },
                   "root_key": "0xd0d11a6e"
@@ -1541,7 +1656,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x08c8fa98",
-                              "ty": 6
+                              "ty": 7
                             }
                           },
                           "name": "provider"
@@ -1550,7 +1665,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x08c8fa98",
-                              "ty": 2
+                              "ty": 4
                             }
                           },
                           "name": "dataset_id"
@@ -1559,7 +1674,22 @@
                           "layout": {
                             "leaf": {
                               "key": "0x08c8fa98",
-                              "ty": 9
+                              "ty": 4
+                            }
+                          },
+                          "name": "dataset_id_content"
+                        },
+                        {
+                          "layout": {
+                            "enum": {
+                              "dispatchKey": "0x08c8fa98",
+                              "name": "CaptchaType",
+                              "variants": {
+                                "0": {
+                                  "fields": [],
+                                  "name": "ImageGrid"
+                                }
+                              }
                             }
                           },
                           "name": "captcha_type"
@@ -1572,89 +1702,6 @@
                 }
               },
               "name": "captcha_data"
-            },
-            {
-              "layout": {
-                "root": {
-                  "layout": {
-                    "struct": {
-                      "fields": [
-                        {
-                          "layout": {
-                            "leaf": {
-                              "key": "0xc90d44ed",
-                              "ty": 6
-                            }
-                          },
-                          "name": "account"
-                        },
-                        {
-                          "layout": {
-                            "leaf": {
-                              "key": "0xc90d44ed",
-                              "ty": 2
-                            }
-                          },
-                          "name": "dataset_id"
-                        },
-                        {
-                          "layout": {
-                            "enum": {
-                              "dispatchKey": "0xc90d44ed",
-                              "name": "CaptchaStatus",
-                              "variants": {
-                                "0": {
-                                  "fields": [],
-                                  "name": "Pending"
-                                },
-                                "1": {
-                                  "fields": [],
-                                  "name": "Approved"
-                                },
-                                "2": {
-                                  "fields": [],
-                                  "name": "Disapproved"
-                                }
-                              }
-                            }
-                          },
-                          "name": "status"
-                        },
-                        {
-                          "layout": {
-                            "leaf": {
-                              "key": "0xc90d44ed",
-                              "ty": 6
-                            }
-                          },
-                          "name": "contract"
-                        },
-                        {
-                          "layout": {
-                            "leaf": {
-                              "key": "0xc90d44ed",
-                              "ty": 6
-                            }
-                          },
-                          "name": "provider"
-                        },
-                        {
-                          "layout": {
-                            "leaf": {
-                              "key": "0xc90d44ed",
-                              "ty": 10
-                            }
-                          },
-                          "name": "completed_at"
-                        }
-                      ],
-                      "name": "CaptchaSolutionCommitment"
-                    }
-                  },
-                  "root_key": "0xc90d44ed"
-                }
-              },
-              "name": "captcha_solution_commitments"
             },
             {
               "layout": {
@@ -1716,7 +1763,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x2783455b",
-                              "ty": 6
+                              "ty": 7
                             }
                           },
                           "name": "owner"
@@ -1725,19 +1772,33 @@
                           "layout": {
                             "leaf": {
                               "key": "0x2783455b",
-                              "ty": 9
+                              "ty": 10
                             }
                           },
                           "name": "min_difficulty"
                         },
                         {
                           "layout": {
-                            "leaf": {
-                              "key": "0x2783455b",
-                              "ty": 2
+                            "enum": {
+                              "dispatchKey": "0x2783455b",
+                              "name": "DappPayee",
+                              "variants": {
+                                "0": {
+                                  "fields": [],
+                                  "name": "Provider"
+                                },
+                                "1": {
+                                  "fields": [],
+                                  "name": "Dapp"
+                                },
+                                "2": {
+                                  "fields": [],
+                                  "name": "Any"
+                                }
+                              }
                             }
                           },
-                          "name": "client_origin"
+                          "name": "payee"
                         }
                       ],
                       "name": "Dapp"
@@ -1750,9 +1811,14 @@
             },
             {
               "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 7
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x87c1e648",
+                      "ty": 8
+                    }
+                  },
+                  "root_key": "0x87c1e648"
                 }
               },
               "name": "dapp_accounts"
@@ -1797,53 +1863,109 @@
             },
             {
               "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 7
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0xded2e72f",
+                      "ty": 8
+                    }
+                  },
+                  "root_key": "0xded2e72f"
                 }
               },
               "name": "operator_accounts"
             },
             {
               "layout": {
-                "enum": {
-                  "dispatchKey": "0x00000000",
-                  "name": "GovernanceStatus",
-                  "variants": {
-                    "0": {
-                      "fields": [],
-                      "name": "Active"
-                    },
-                    "1": {
-                      "fields": [],
-                      "name": "Suspended"
-                    },
-                    "2": {
-                      "fields": [],
-                      "name": "Deactivated"
-                    }
-                  }
-                }
-              },
-              "name": "status"
-            },
-            {
-              "layout": {
                 "leaf": {
                   "key": "0x00000000",
-                  "ty": 10
+                  "ty": 0
                 }
               },
               "name": "operator_stake_default"
             },
             {
               "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 2
+                "root": {
+                  "layout": {
+                    "struct": {
+                      "fields": [
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc90d44ed",
+                              "ty": 7
+                            }
+                          },
+                          "name": "account"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc90d44ed",
+                              "ty": 4
+                            }
+                          },
+                          "name": "dataset_id"
+                        },
+                        {
+                          "layout": {
+                            "enum": {
+                              "dispatchKey": "0xc90d44ed",
+                              "name": "CaptchaStatus",
+                              "variants": {
+                                "0": {
+                                  "fields": [],
+                                  "name": "Pending"
+                                },
+                                "1": {
+                                  "fields": [],
+                                  "name": "Approved"
+                                },
+                                "2": {
+                                  "fields": [],
+                                  "name": "Disapproved"
+                                }
+                              }
+                            }
+                          },
+                          "name": "status"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc90d44ed",
+                              "ty": 7
+                            }
+                          },
+                          "name": "contract"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc90d44ed",
+                              "ty": 7
+                            }
+                          },
+                          "name": "provider"
+                        },
+                        {
+                          "layout": {
+                            "leaf": {
+                              "key": "0xc90d44ed",
+                              "ty": 11
+                            }
+                          },
+                          "name": "completed_at"
+                        }
+                      ],
+                      "name": "CaptchaSolutionCommitment"
+                    }
+                  },
+                  "root_key": "0xc90d44ed"
                 }
               },
-              "name": "operator_fee_currency"
+              "name": "captcha_solution_commitments"
             },
             {
               "layout": {
@@ -1855,37 +1977,10 @@
                           "layout": {
                             "leaf": {
                               "key": "0xecaaade2",
-                              "ty": 10
+                              "ty": 12
                             }
                           },
-                          "name": "correct_captchas"
-                        },
-                        {
-                          "layout": {
-                            "leaf": {
-                              "key": "0xecaaade2",
-                              "ty": 10
-                            }
-                          },
-                          "name": "incorrect_captchas"
-                        },
-                        {
-                          "layout": {
-                            "leaf": {
-                              "key": "0xecaaade2",
-                              "ty": 10
-                            }
-                          },
-                          "name": "last_correct_captcha"
-                        },
-                        {
-                          "layout": {
-                            "leaf": {
-                              "key": "0xecaaade2",
-                              "ty": 6
-                            }
-                          },
-                          "name": "last_correct_captcha_dapp_id"
+                          "name": "history"
                         }
                       ],
                       "name": "User"
@@ -1898,12 +1993,126 @@
             },
             {
               "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 7
+                "root": {
+                  "layout": {
+                    "leaf": {
+                      "key": "0x990540f6",
+                      "ty": 8
+                    }
+                  },
+                  "root_key": "0x990540f6"
                 }
               },
               "name": "dapp_user_accounts"
+            },
+            {
+              "layout": {
+                "root": {
+                  "layout": {
+                    "enum": {
+                      "dispatchKey": "0x0d1f1c57",
+                      "name": "Vote",
+                      "variants": {
+                        "0": {
+                          "fields": [
+                            {
+                              "layout": {
+                                "array": {
+                                  "layout": {
+                                    "leaf": {
+                                      "key": "0x0d1f1c57",
+                                      "ty": 3
+                                    }
+                                  },
+                                  "len": 32,
+                                  "offset": "0x0d1f1c57"
+                                }
+                              },
+                              "name": "0"
+                            }
+                          ],
+                          "name": "SetCodeHash"
+                        },
+                        "1": {
+                          "fields": [
+                            {
+                              "layout": {
+                                "leaf": {
+                                  "key": "0x0d1f1c57",
+                                  "ty": 7
+                                }
+                              },
+                              "name": "0"
+                            },
+                            {
+                              "layout": {
+                                "leaf": {
+                                  "key": "0x0d1f1c57",
+                                  "ty": 0
+                                }
+                              },
+                              "name": "1"
+                            }
+                          ],
+                          "name": "Withdraw"
+                        },
+                        "2": {
+                          "fields": [
+                            {
+                              "layout": {
+                                "leaf": {
+                                  "key": "0x0d1f1c57",
+                                  "ty": 7
+                                }
+                              },
+                              "name": "0"
+                            }
+                          ],
+                          "name": "Terminate"
+                        }
+                      }
+                    }
+                  },
+                  "root_key": "0x0d1f1c57"
+                }
+              },
+              "name": "operator_votes"
+            },
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 10
+                }
+              },
+              "name": "max_user_history_len"
+            },
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 11
+                }
+              },
+              "name": "max_user_history_age"
+            },
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 10
+                }
+              },
+              "name": "min_num_active_providers"
+            },
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 0
+                }
+              },
+              "name": "max_provider_fee"
             }
           ],
           "name": "Prosopo"
@@ -1933,10 +2142,28 @@
       "id": 2,
       "type": {
         "def": {
+          "sequence": {
+            "type": 3
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": {
+        "def": {
+          "primitive": "u8"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": {
+        "def": {
           "composite": {
             "fields": [
               {
-                "type": 3,
+                "type": 5,
                 "typeName": "[u8; 32]"
               }
             ]
@@ -1950,45 +2177,14 @@
       }
     },
     {
-      "id": 3,
+      "id": 5,
       "type": {
         "def": {
           "array": {
             "len": 32,
-            "type": 4
+            "type": 3
           }
         }
-      }
-    },
-    {
-      "id": 4,
-      "type": {
-        "def": {
-          "primitive": "u8"
-        }
-      }
-    },
-    {
-      "id": 5,
-      "type": {
-        "def": {
-          "composite": {
-            "fields": [
-              {
-                "type": 7
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 6
-          }
-        ],
-        "path": [
-          "BTreeSet"
-        ]
       }
     },
     {
@@ -1998,7 +2194,30 @@
           "composite": {
             "fields": [
               {
-                "type": 3,
+                "type": 8
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 7
+          }
+        ],
+        "path": [
+          "BTreeSet"
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 5,
                 "typeName": "[u8; 32]"
               }
             ]
@@ -2012,20 +2231,12 @@
       }
     },
     {
-      "id": 7,
-      "type": {
-        "def": {
-          "sequence": {
-            "type": 6
-          }
-        }
-      }
-    },
-    {
       "id": 8,
       "type": {
         "def": {
-          "tuple": []
+          "sequence": {
+            "type": 7
+          }
         }
       }
     },
@@ -2033,7 +2244,7 @@
       "id": 9,
       "type": {
         "def": {
-          "primitive": "u16"
+          "tuple": []
         }
       }
     },
@@ -2041,7 +2252,7 @@
       "id": 10,
       "type": {
         "def": {
-          "primitive": "u64"
+          "primitive": "u16"
         }
       }
     },
@@ -2049,12 +2260,30 @@
       "id": 11,
       "type": {
         "def": {
+          "primitive": "u64"
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 4
+          }
+        }
+      }
+    },
+    {
+      "id": 13,
+      "type": {
+        "def": {
           "variant": {
             "variants": [
               {
                 "fields": [
                   {
-                    "type": 8
+                    "type": 9
                   }
                 ],
                 "index": 0,
@@ -2063,7 +2292,7 @@
               {
                 "fields": [
                   {
-                    "type": 12
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -2075,11 +2304,11 @@
         "params": [
           {
             "name": "T",
-            "type": 8
+            "type": 9
           },
           {
             "name": "E",
-            "type": 12
+            "type": 14
           }
         ],
         "path": [
@@ -2088,7 +2317,7 @@
       }
     },
     {
-      "id": 12,
+      "id": 14,
       "type": {
         "def": {
           "variant": {
@@ -2107,7 +2336,319 @@
       }
     },
     {
-      "id": 13,
+      "id": 15,
+      "type": {
+        "def": {
+          "array": {
+            "len": 64,
+            "type": 3
+          }
+        }
+      }
+    },
+    {
+      "id": 16,
+      "type": {
+        "def": {
+          "array": {
+            "len": 49,
+            "type": 3
+          }
+        }
+      }
+    },
+    {
+      "id": 17,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 18
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 18
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 19
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 19
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "type": {
+        "def": {
+          "primitive": "bool"
+        }
+      }
+    },
+    {
+      "id": 20,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "MinimumTwoOperatorsRequired"
+              },
+              {
+                "index": 1,
+                "name": "NotAuthorised"
+              },
+              {
+                "index": 2,
+                "name": "ContractInsufficientFunds"
+              },
+              {
+                "index": 3,
+                "name": "ContractTransferFailed"
+              },
+              {
+                "index": 4,
+                "name": "ProviderExists"
+              },
+              {
+                "index": 5,
+                "name": "ProviderDoesNotExist"
+              },
+              {
+                "index": 6,
+                "name": "ProviderInsufficientFunds"
+              },
+              {
+                "index": 7,
+                "name": "ProviderInactive"
+              },
+              {
+                "index": 8,
+                "name": "ProviderServiceOriginUsed"
+              },
+              {
+                "index": 9,
+                "name": "DuplicateCaptchaDataId"
+              },
+              {
+                "index": 10,
+                "name": "DappExists"
+              },
+              {
+                "index": 11,
+                "name": "DappDoesNotExist"
+              },
+              {
+                "index": 12,
+                "name": "DappInactive"
+              },
+              {
+                "index": 13,
+                "name": "DappInsufficientFunds"
+              },
+              {
+                "index": 14,
+                "name": "CaptchaDataDoesNotExist"
+              },
+              {
+                "index": 15,
+                "name": "CaptchaSolutionCommitmentDoesNotExist"
+              },
+              {
+                "index": 16,
+                "name": "CaptchaSolutionCommitmentExists"
+              },
+              {
+                "index": 17,
+                "name": "DappUserDoesNotExist"
+              },
+              {
+                "index": 18,
+                "name": "NoActiveProviders"
+              },
+              {
+                "index": 19,
+                "name": "DatasetIdSolutionsSame"
+              },
+              {
+                "index": 20,
+                "name": "CaptchaSolutionCommitmentAlreadyApproved"
+              },
+              {
+                "index": 21,
+                "name": "CaptchaSolutionCommitmentAlreadyDisapproved"
+              },
+              {
+                "index": 22,
+                "name": "InvalidCodeHash"
+              },
+              {
+                "index": 23,
+                "name": "CodeNotFound"
+              },
+              {
+                "index": 24,
+                "name": "Unknown"
+              },
+              {
+                "index": 25,
+                "name": "InvalidContract"
+              },
+              {
+                "index": 26,
+                "name": "InvalidPayee"
+              },
+              {
+                "index": 27,
+                "name": "InvalidCaptchaStatus"
+              },
+              {
+                "index": 28,
+                "name": "NoCorrectCaptcha"
+              },
+              {
+                "index": 29,
+                "name": "FunctionDisabled"
+              },
+              {
+                "index": 30,
+                "name": "NotEnoughActiveProviders"
+              },
+              {
+                "index": 31,
+                "name": "ProviderFeeTooHigh"
+              },
+              {
+                "index": 32,
+                "name": "AccountIsOperator"
+              },
+              {
+                "index": 33,
+                "name": "InvalidSignature"
+              },
+              {
+                "index": 34,
+                "name": "InvalidPublicKey"
+              }
+            ]
+          }
+        },
+        "path": [
+          "prosopo",
+          "prosopo",
+          "Error"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 7
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 7
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 22,
       "type": {
         "def": {
           "variant": {
@@ -2124,7 +2665,7 @@
               {
                 "fields": [
                   {
-                    "type": 12
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -2140,7 +2681,7 @@
           },
           {
             "name": "E",
-            "type": 12
+            "type": 14
           }
         ],
         "path": [
@@ -2149,7 +2690,115 @@
       }
     },
     {
-      "id": 14,
+      "id": 23,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "Provider"
+              },
+              {
+                "index": 1,
+                "name": "Dapp"
+              }
+            ]
+          }
+        },
+        "path": [
+          "prosopo",
+          "prosopo",
+          "Payee"
+        ]
+      }
+    },
+    {
+      "id": 24,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 25
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 25
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 9
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 9
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 26,
       "type": {
         "def": {
           "variant": {
@@ -2164,7 +2813,7 @@
               },
               {
                 "index": 2,
-                "name": "None"
+                "name": "Any"
               }
             ]
           }
@@ -2172,188 +2821,12 @@
         "path": [
           "prosopo",
           "prosopo",
-          "Payee"
+          "DappPayee"
         ]
       }
     },
     {
-      "id": 15,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 16
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 12
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 16
-          },
-          {
-            "name": "E",
-            "type": 12
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 16,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 8
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 17
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 8
-          },
-          {
-            "name": "E",
-            "type": 17
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 17,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "index": 0,
-                "name": "NotAuthorised"
-              },
-              {
-                "index": 1,
-                "name": "ContractInsufficientFunds"
-              },
-              {
-                "index": 2,
-                "name": "ContractTransferFailed"
-              },
-              {
-                "index": 3,
-                "name": "ProviderExists"
-              },
-              {
-                "index": 4,
-                "name": "ProviderDoesNotExist"
-              },
-              {
-                "index": 5,
-                "name": "ProviderInsufficientFunds"
-              },
-              {
-                "index": 6,
-                "name": "ProviderInactive"
-              },
-              {
-                "index": 7,
-                "name": "ProviderServiceOriginUsed"
-              },
-              {
-                "index": 8,
-                "name": "DuplicateCaptchaDataId"
-              },
-              {
-                "index": 9,
-                "name": "DappExists"
-              },
-              {
-                "index": 10,
-                "name": "DappDoesNotExist"
-              },
-              {
-                "index": 11,
-                "name": "DappInactive"
-              },
-              {
-                "index": 12,
-                "name": "DappInsufficientFunds"
-              },
-              {
-                "index": 13,
-                "name": "CaptchaDataDoesNotExist"
-              },
-              {
-                "index": 14,
-                "name": "CaptchaSolutionCommitmentDoesNotExist"
-              },
-              {
-                "index": 15,
-                "name": "CaptchaSolutionCommitmentExists"
-              },
-              {
-                "index": 16,
-                "name": "DappUserDoesNotExist"
-              },
-              {
-                "index": 17,
-                "name": "NoActiveProviders"
-              },
-              {
-                "index": 18,
-                "name": "DatasetIdSolutionsSame"
-              }
-            ]
-          }
-        },
-        "path": [
-          "prosopo",
-          "prosopo",
-          "Error"
-        ]
-      }
-    },
-    {
-      "id": 18,
+      "id": 27,
       "type": {
         "def": {
           "variant": {
@@ -2365,7 +2838,7 @@
               {
                 "fields": [
                   {
-                    "type": 6
+                    "type": 28
                   }
                 ],
                 "index": 1,
@@ -2377,7 +2850,7 @@
         "params": [
           {
             "name": "T",
-            "type": 6
+            "type": 28
           }
         ],
         "path": [
@@ -2386,40 +2859,7 @@
       }
     },
     {
-      "id": 19,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "index": 0,
-                "name": "None"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 20
-                  }
-                ],
-                "index": 1,
-                "name": "Some"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 20
-          }
-        ],
-        "path": [
-          "Option"
-        ]
-      }
-    },
-    {
-      "id": 20,
+      "id": 28,
       "type": {
         "def": {
           "variant": {
@@ -2447,281 +2887,6 @@
       }
     },
     {
-      "id": 21,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 22
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 12
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 22
-          },
-          {
-            "name": "E",
-            "type": 12
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 22,
-      "type": {
-        "def": {
-          "primitive": "bool"
-        }
-      }
-    },
-    {
-      "id": 23,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 24
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 12
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 24
-          },
-          {
-            "name": "E",
-            "type": 12
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 24,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 25
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 17
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 25
-          },
-          {
-            "name": "E",
-            "type": 17
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 25,
-      "type": {
-        "def": {
-          "composite": {
-            "fields": [
-              {
-                "name": "before_ms",
-                "type": 1,
-                "typeName": "u32"
-              },
-              {
-                "name": "dapp_id",
-                "type": 6,
-                "typeName": "AccountId"
-              }
-            ]
-          }
-        },
-        "path": [
-          "prosopo",
-          "prosopo",
-          "LastCorrectCaptcha"
-        ]
-      }
-    },
-    {
-      "id": 26,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 27
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 12
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 27
-          },
-          {
-            "name": "E",
-            "type": 12
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 27,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 28
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 17
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 28
-          },
-          {
-            "name": "E",
-            "type": 17
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 28,
-      "type": {
-        "def": {
-          "composite": {
-            "fields": [
-              {
-                "name": "provider",
-                "type": 6,
-                "typeName": "AccountId"
-              },
-              {
-                "name": "dataset_id",
-                "type": 2,
-                "typeName": "Hash"
-              },
-              {
-                "name": "captcha_type",
-                "type": 9,
-                "typeName": "u16"
-              }
-            ]
-          }
-        },
-        "path": [
-          "prosopo",
-          "prosopo",
-          "CaptchaData"
-        ]
-      }
-    },
-    {
       "id": 29,
       "type": {
         "def": {
@@ -2739,7 +2904,7 @@
               {
                 "fields": [
                   {
-                    "type": 12
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -2755,7 +2920,7 @@
           },
           {
             "name": "E",
-            "type": 12
+            "type": 14
           }
         ],
         "path": [
@@ -2781,7 +2946,7 @@
               {
                 "fields": [
                   {
-                    "type": 17
+                    "type": 20
                   }
                 ],
                 "index": 1,
@@ -2797,7 +2962,7 @@
           },
           {
             "name": "E",
-            "type": 17
+            "type": 20
           }
         ],
         "path": [
@@ -2812,34 +2977,14 @@
           "composite": {
             "fields": [
               {
-                "name": "account",
-                "type": 6,
+                "name": "before_ms",
+                "type": 11,
+                "typeName": "u64"
+              },
+              {
+                "name": "dapp_id",
+                "type": 7,
                 "typeName": "AccountId"
-              },
-              {
-                "name": "dataset_id",
-                "type": 2,
-                "typeName": "Hash"
-              },
-              {
-                "name": "status",
-                "type": 20,
-                "typeName": "CaptchaStatus"
-              },
-              {
-                "name": "contract",
-                "type": 6,
-                "typeName": "AccountId"
-              },
-              {
-                "name": "provider",
-                "type": 6,
-                "typeName": "AccountId"
-              },
-              {
-                "name": "completed_at",
-                "type": 10,
-                "typeName": "Timestamp"
               }
             ]
           }
@@ -2847,7 +2992,7 @@
         "path": [
           "prosopo",
           "prosopo",
-          "CaptchaSolutionCommitment"
+          "LastCorrectCaptcha"
         ]
       }
     },
@@ -2869,7 +3014,7 @@
               {
                 "fields": [
                   {
-                    "type": 12
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -2885,7 +3030,7 @@
           },
           {
             "name": "E",
-            "type": 12
+            "type": 14
           }
         ],
         "path": [
@@ -2911,7 +3056,7 @@
               {
                 "fields": [
                   {
-                    "type": 17
+                    "type": 20
                   }
                 ],
                 "index": 1,
@@ -2927,7 +3072,7 @@
           },
           {
             "name": "E",
-            "type": 17
+            "type": 20
           }
         ],
         "path": [
@@ -2942,24 +3087,24 @@
           "composite": {
             "fields": [
               {
-                "name": "correct_captchas",
-                "type": 10,
-                "typeName": "u64"
-              },
-              {
-                "name": "incorrect_captchas",
-                "type": 10,
-                "typeName": "u64"
-              },
-              {
-                "name": "last_correct_captcha",
-                "type": 10,
-                "typeName": "Timestamp"
-              },
-              {
-                "name": "last_correct_captcha_dapp_id",
-                "type": 6,
+                "name": "provider",
+                "type": 7,
                 "typeName": "AccountId"
+              },
+              {
+                "name": "dataset_id",
+                "type": 4,
+                "typeName": "Hash"
+              },
+              {
+                "name": "dataset_id_content",
+                "type": 4,
+                "typeName": "Hash"
+              },
+              {
+                "name": "captcha_type",
+                "type": 35,
+                "typeName": "CaptchaType"
               }
             ]
           }
@@ -2967,7 +3112,7 @@
         "path": [
           "prosopo",
           "prosopo",
-          "User"
+          "CaptchaData"
         ]
       }
     },
@@ -2978,38 +3123,16 @@
           "variant": {
             "variants": [
               {
-                "fields": [
-                  {
-                    "type": 36
-                  }
-                ],
                 "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 12
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
+                "name": "ImageGrid"
               }
             ]
           }
         },
-        "params": [
-          {
-            "name": "T",
-            "type": 36
-          },
-          {
-            "name": "E",
-            "type": 12
-          }
-        ],
         "path": [
-          "Result"
+          "prosopo",
+          "prosopo",
+          "CaptchaType"
         ]
       }
     },
@@ -3031,7 +3154,7 @@
               {
                 "fields": [
                   {
-                    "type": 17
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -3047,7 +3170,7 @@
           },
           {
             "name": "E",
-            "type": 17
+            "type": 14
           }
         ],
         "path": [
@@ -3059,11 +3182,158 @@
       "id": 37,
       "type": {
         "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 38
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 38
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 38,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "history",
+                "type": 12,
+                "typeName": "Vec<Hash>"
+              }
+            ]
+          }
+        },
+        "path": [
+          "prosopo",
+          "prosopo",
+          "User"
+        ]
+      }
+    },
+    {
+      "id": 39,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 40
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 40
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 40,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 41
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 41
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 41,
+      "type": {
+        "def": {
           "composite": {
             "fields": [
               {
                 "name": "status",
-                "type": 38,
+                "type": 42,
                 "typeName": "GovernanceStatus"
               },
               {
@@ -3078,22 +3348,17 @@
               },
               {
                 "name": "payee",
-                "type": 14,
+                "type": 23,
                 "typeName": "Payee"
               },
               {
                 "name": "service_origin",
                 "type": 2,
-                "typeName": "Hash"
+                "typeName": "Vec<u8>"
               },
               {
                 "name": "dataset_id",
-                "type": 2,
-                "typeName": "Hash"
-              },
-              {
-                "name": "dataset_id_content",
-                "type": 2,
+                "type": 4,
                 "typeName": "Hash"
               }
             ]
@@ -3107,7 +3372,7 @@
       }
     },
     {
-      "id": 38,
+      "id": 42,
       "type": {
         "def": {
           "variant": {
@@ -3135,7 +3400,7 @@
       }
     },
     {
-      "id": 39,
+      "id": 43,
       "type": {
         "def": {
           "variant": {
@@ -3143,7 +3408,7 @@
               {
                 "fields": [
                   {
-                    "type": 40
+                    "type": 44
                   }
                 ],
                 "index": 0,
@@ -3152,7 +3417,7 @@
               {
                 "fields": [
                   {
-                    "type": 12
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -3164,11 +3429,11 @@
         "params": [
           {
             "name": "T",
-            "type": 40
+            "type": 44
           },
           {
             "name": "E",
-            "type": 12
+            "type": 14
           }
         ],
         "path": [
@@ -3177,7 +3442,7 @@
       }
     },
     {
-      "id": 40,
+      "id": 44,
       "type": {
         "def": {
           "variant": {
@@ -3185,7 +3450,7 @@
               {
                 "fields": [
                   {
-                    "type": 41
+                    "type": 45
                   }
                 ],
                 "index": 0,
@@ -3194,7 +3459,7 @@
               {
                 "fields": [
                   {
-                    "type": 17
+                    "type": 20
                   }
                 ],
                 "index": 1,
@@ -3206,11 +3471,11 @@
         "params": [
           {
             "name": "T",
-            "type": 41
+            "type": 45
           },
           {
             "name": "E",
-            "type": 17
+            "type": 20
           }
         ],
         "path": [
@@ -3219,14 +3484,14 @@
       }
     },
     {
-      "id": 41,
+      "id": 45,
       "type": {
         "def": {
           "composite": {
             "fields": [
               {
                 "name": "status",
-                "type": 38,
+                "type": 42,
                 "typeName": "GovernanceStatus"
               },
               {
@@ -3236,18 +3501,18 @@
               },
               {
                 "name": "owner",
-                "type": 6,
+                "type": 7,
                 "typeName": "AccountId"
               },
               {
                 "name": "min_difficulty",
-                "type": 9,
+                "type": 10,
                 "typeName": "u16"
               },
               {
-                "name": "client_origin",
-                "type": 2,
-                "typeName": "Hash"
+                "name": "payee",
+                "type": 26,
+                "typeName": "DappPayee"
               }
             ]
           }
@@ -3256,110 +3521,6 @@
           "prosopo",
           "prosopo",
           "Dapp"
-        ]
-      }
-    },
-    {
-      "id": 42,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 43
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 12
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 43
-          },
-          {
-            "name": "E",
-            "type": 12
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 43,
-      "type": {
-        "def": {
-          "sequence": {
-            "type": 37
-          }
-        }
-      }
-    },
-    {
-      "id": 44,
-      "type": {
-        "def": {
-          "sequence": {
-            "type": 38
-          }
-        }
-      }
-    },
-    {
-      "id": 45,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 46
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 12
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 46
-          },
-          {
-            "name": "E",
-            "type": 12
-          }
-        ],
-        "path": [
-          "Result"
         ]
       }
     },
@@ -3381,7 +3542,7 @@
               {
                 "fields": [
                   {
-                    "type": 17
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -3397,7 +3558,7 @@
           },
           {
             "name": "E",
-            "type": 17
+            "type": 14
           }
         ],
         "path": [
@@ -3409,22 +3570,548 @@
       "id": 47,
       "type": {
         "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 48
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 48
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 48,
+      "type": {
+        "def": {
           "composite": {
             "fields": [
               {
-                "name": "provider_id",
-                "type": 6,
+                "name": "account",
+                "type": 7,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "dataset_id",
+                "type": 4,
+                "typeName": "Hash"
+              },
+              {
+                "name": "status",
+                "type": 28,
+                "typeName": "CaptchaStatus"
+              },
+              {
+                "name": "contract",
+                "type": 7,
                 "typeName": "AccountId"
               },
               {
                 "name": "provider",
-                "type": 37,
+                "type": 7,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "completed_at",
+                "type": 11,
+                "typeName": "Timestamp"
+              }
+            ]
+          }
+        },
+        "path": [
+          "prosopo",
+          "prosopo",
+          "CaptchaSolutionCommitment"
+        ]
+      }
+    },
+    {
+      "id": 49,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 50
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 50
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 50,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 0
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 0
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 51,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 52
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 52
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 52,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 53
+          }
+        }
+      }
+    },
+    {
+      "id": 53,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "account_id",
+                "type": 7,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "vote",
+                "type": 54,
+                "typeName": "Option<Vote>"
+              }
+            ]
+          }
+        },
+        "path": [
+          "prosopo",
+          "prosopo",
+          "OperatorVote"
+        ]
+      }
+    },
+    {
+      "id": 54,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "None"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 55
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 55
+          }
+        ],
+        "path": [
+          "Option"
+        ]
+      }
+    },
+    {
+      "id": 55,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 5,
+                    "typeName": "[u8; 32]"
+                  }
+                ],
+                "index": 0,
+                "name": "SetCodeHash"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 7,
+                    "typeName": "AccountId"
+                  },
+                  {
+                    "type": 0,
+                    "typeName": "Balance"
+                  }
+                ],
+                "index": 1,
+                "name": "Withdraw"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 7,
+                    "typeName": "AccountId"
+                  }
+                ],
+                "index": 2,
+                "name": "Terminate"
+              }
+            ]
+          }
+        },
+        "path": [
+          "prosopo",
+          "prosopo",
+          "Vote"
+        ]
+      }
+    },
+    {
+      "id": 56,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 57
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 57
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 57,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 58
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 58
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 41
+          }
+        }
+      }
+    },
+    {
+      "id": 59,
+      "type": {
+        "def": {
+          "sequence": {
+            "type": 42
+          }
+        }
+      }
+    },
+    {
+      "id": 60,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 61
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 61
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 61,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 62
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 62
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 62,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "provider_id",
+                "type": 7,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "provider",
+                "type": 41,
                 "typeName": "Provider"
               },
               {
                 "name": "block_number",
                 "type": 1,
                 "typeName": "u32"
+              },
+              {
+                "name": "dataset_id_content",
+                "type": 4,
+                "typeName": "Hash"
               }
             ]
           }
@@ -3437,7 +4124,7 @@
       }
     },
     {
-      "id": 48,
+      "id": 63,
       "type": {
         "def": {
           "variant": {
@@ -3445,7 +4132,7 @@
               {
                 "fields": [
                   {
-                    "type": 7
+                    "type": 64
                   }
                 ],
                 "index": 0,
@@ -3454,7 +4141,7 @@
               {
                 "fields": [
                   {
-                    "type": 12
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -3466,15 +4153,253 @@
         "params": [
           {
             "name": "T",
-            "type": 7
+            "type": 64
           },
           {
             "name": "E",
-            "type": 12
+            "type": 14
           }
         ],
         "path": [
           "Result"
+        ]
+      }
+    },
+    {
+      "id": 64,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 8
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 8
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 65,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 66
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 66
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 66,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 54
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 54
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 67,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 68
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 68
+          },
+          {
+            "name": "E",
+            "type": 14
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 68,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 69
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 69
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 69,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "Pass"
+              },
+              {
+                "index": 1,
+                "name": "Fail"
+              },
+              {
+                "index": 2,
+                "name": "Pending"
+              }
+            ]
+          }
+        },
+        "path": [
+          "prosopo",
+          "prosopo",
+          "VoteStatus"
         ]
       }
     }

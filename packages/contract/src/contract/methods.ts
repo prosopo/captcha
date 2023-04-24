@@ -9,32 +9,31 @@ import {
     ProsopoPayee,
     ProsopoProvider,
     ProsopoRandomProvider,
-} from '../interfaces'
+} from '@prosopo/types'
 import { Vec, u128 } from '@polkadot/types-codec'
-import { AccountId } from '@polkadot/types/interfaces'
+import { AccountId, Balance } from '@polkadot/types/interfaces'
 import { BN, hexToU8a } from '@polkadot/util'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { IProsopoContractMethods } from '@prosopo/types'
 
-export class ProsopoContractMethods extends ProsopoContractApi {
+export class ProsopoContractMethods extends ProsopoContractApi implements IProsopoContractMethods {
     // transactions
 
     public async providerRegister(
         serviceOrigin: string,
-        fee: number,
-        payee: ProsopoPayee,
-        address: string
+        fee: number | Balance,
+        payee: ProsopoPayee
     ): Promise<ContractSubmittableResult> {
-        return await this.contractTx('providerRegister', [serviceOrigin, fee, payee, address])
+        return await this.contractTx('providerRegister', [serviceOrigin, fee, payee])
     }
 
     async providerUpdate(
         serviceOrigin: string,
-        fee: number,
+        fee: number | Balance,
         payee: ProsopoPayee,
-        address: string,
-        value?: number | BN | undefined
+        value?: number | BN | Balance | undefined
     ): Promise<ContractSubmittableResult> {
-        return await this.contractTx('providerUpdate', [serviceOrigin, fee, payee, address], value)
+        return await this.contractTx('providerUpdate', [serviceOrigin, fee, payee], value)
     }
 
     public async providerDeregister(address: string): Promise<ContractSubmittableResult> {
@@ -49,12 +48,8 @@ export class ProsopoContractMethods extends ProsopoContractApi {
         return await this.contractTx('providerAddDataset', [hexToU8a(datasetId), hexToU8a(datasetContentId)])
     }
 
-    public async dappRegister(
-        dappServiceOrigin: string,
-        dappContractAddress: string,
-        dappOwner?: string
-    ): Promise<ContractSubmittableResult> {
-        return await this.contractTx('dappRegister', [dappServiceOrigin, dappContractAddress, dappOwner])
+    public async dappRegister(dappContractAddress: string, dappPayee: string): Promise<ContractSubmittableResult> {
+        return await this.contractTx('dappRegister', [dappContractAddress, dappPayee])
     }
 
     public async dappFund(
@@ -97,8 +92,12 @@ export class ProsopoContractMethods extends ProsopoContractApi {
     //queries
 
     public async getDappOperatorIsHumanUser(userAccount: string, solutionThreshold: number): Promise<boolean> {
-        const { result } = await this.contractQuery('dappOperatorIsHumanUser', [userAccount, solutionThreshold])
-        return this.abi.registry.createType('bool', result.asOk.data.toU8a(true)).isTrue
+        try {
+            const { result } = await this.contractQuery('dappOperatorIsHumanUser', [userAccount, solutionThreshold])
+            return this.abi.registry.createType('bool', result.asOk.data.toU8a(true)).isTrue
+        } catch (e) {
+            return false
+        }
     }
 
     public async getRandomProvider(
@@ -119,7 +118,7 @@ export class ProsopoContractMethods extends ProsopoContractApi {
     public async getProviderDetails(accountId: string): Promise<ProsopoProvider> {
         const response = await this.contractQuery('getProviderDetails', [accountId])
         // Type is Result<Result<ProsopoProvider, ProsopoError>, InkPrimitivesLangError>
-        // const fragment = this.getContractMethod('getProviderDetails')
+        // const fragment = this.abi.findMessage('getProviderDetails')
         // console.log(fragment.typeDef.type)
         // ts-ignore could be removed by explicitly creating the type using the registry
         // @ts-ignore
@@ -140,33 +139,37 @@ export class ProsopoContractMethods extends ProsopoContractApi {
 
     public async getCaptchaSolutionCommitment(solutionId: string): Promise<ProsopoCaptchaSolutionCommitment> {
         const { result } = await this.contractQuery('getCaptchaSolutionCommitment', [solutionId])
-        const fragment = this.getContractMethod('getCaptchaSolutionCommitment')
+        const fragment = this.abi.findMessage('getCaptchaSolutionCommitment')
         // @ts-ignore
         return this.abi.registry.createType(fragment.returnType?.type, result.asOk.data).asOk.asOk.toPrimitive()
     }
 
     public async getDappOperatorLastCorrectCaptcha(accountId: string): Promise<ProsopoLastCorrectCaptcha> {
         const { result } = await this.contractQuery('dappOperatorLastCorrectCaptcha', [accountId])
-        const fragment = this.getContractMethod('dappOperatorLastCorrectCaptcha')
+        const fragment = this.abi.findMessage('dappOperatorLastCorrectCaptcha')
         // @ts-ignore
         return this.abi.registry.createType(fragment.returnType?.type, result.asOk.data).asOk.asOk.toPrimitive()
     }
 
     public async getProviderStakeDefault(): Promise<u128> {
         const { result } = await this.contractQuery('getProviderStakeDefault', [])
-        const fragment = this.getContractMethod('getProviderStakeDefault')
+        const fragment = this.abi.findMessage('getProviderStakeDefault')
         // @ts-ignore
         return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk
     }
 
     public async getProviderAccounts(): Promise<Vec<AccountId>> {
         const { result } = await this.contractQuery('getAllProviderIds', [])
-        const fragment = this.getContractMethod('getAllProviderIds')
+        const fragment = this.abi.findMessage('getAllProviderIds')
         // @ts-ignore
-        return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk
+        return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk.asOk.toPrimitive()
     }
 
     public async getDappAccounts(): Promise<DappAccounts> {
         return await this.getStorage<DappAccounts>('dapp_accounts', 'DappAccounts')
+    }
+
+    public getProviderMaxFee(): Promise<u128> {
+        return this.getStorage<u128>('max_provider_fee', 'u128')
     }
 }

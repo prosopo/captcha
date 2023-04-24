@@ -41,9 +41,8 @@
     "@polkadot/util-crypto": "10.3.1",
     "@prosopo/common": "^0.1.11",
     "@prosopo/datasets": "^0.1.11",
-    "bn.js": "^5.2.1",
-    "consola": "^2.15.3",
-    "zod": "^3.17.9"
+    "@prosopo/types": "^0.1.11",
+    "bn.js": "^5.2.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.30.7",

@@ -3,12 +3,12 @@
 
 import type { Weight, WeightV2 } from '@polkadot/types/interfaces'
 import type { BN } from '@polkadot/util'
-import type { UseWeight } from '../types'
+import type { UseWeight } from '@prosopo/types'
 import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util'
 import { ApiPromise } from '@polkadot/api'
 import { convertWeight } from '@polkadot/api-contract/base/util'
 
-export function useWeightImpl(api: ApiPromise, blockTime: BN): Promise<UseWeight> {
+export function useWeightImpl(api: ApiPromise, blockTime: BN, scalingFactor: BN): Promise<UseWeight> {
     const isWeightV2 = !!api.registry.createType<WeightV2>('Weight').proofSize
     const megaGas = <BN>convertWeight(
         api.consts.system.blockWeights
@@ -62,8 +62,8 @@ export function useWeightImpl(api: ApiPromise, blockTime: BN): Promise<UseWeight
 
         if (isWeightV2 && megaRefTime && proofSize) {
             weightV2 = api.registry.createType('WeightV2', {
-                proofSize: proofSize,
-                refTime: megaRefTime.mul(BN_MILLION),
+                proofSize: proofSize.div(scalingFactor),
+                refTime: megaRefTime.mul(BN_MILLION).div(scalingFactor),
             })
 
             executionTime = megaRefTime
@@ -80,7 +80,7 @@ export function useWeightImpl(api: ApiPromise, blockTime: BN): Promise<UseWeight
 
             // execution is 2s of 6s blocks, i.e. 1/3
             executionTime = executionTime / 3000
-            isValid = !megaRefTime.isZero() // && percentage < 65;
+            isValid = !megaRefTime.isZero() && percentage < 65
         }
 
         resolve({
