@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { generateMnemonic } from '../src/tasks/setup'
+import { generateMnemonic } from '@prosopo/contract'
 
 async function mnemonic() {
     const [mnemonic, address] = await generateMnemonic()

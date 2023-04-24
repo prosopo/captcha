@@ -1,4 +1,4 @@
-import { getEnv } from '../cli/env'
+import { getEnv } from '@prosopo/common'
 import { glob } from 'glob'
 import dotenv from 'dotenv'
 import fs from 'fs'

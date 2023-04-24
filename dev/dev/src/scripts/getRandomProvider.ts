@@ -11,18 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Environment } from '../src/env'
-import { Tasks } from '../src/tasks/tasks'
+import { Environment, Tasks } from '@prosopo/provider'
+import { getPair, getPairType, getSs58Format } from '@prosopo/common'
+import { generateMnemonic } from '@prosopo/contract'
 
 require('dotenv').config()
 
 async function main() {
-    const env = new Environment('//Alice')
+    const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
+    const env = new Environment(pair)
     await env.isReady()
     const tasks = new Tasks(env)
-    const [mnemonic, address] = (await env.contractInterface?.createAccountAndAddToKeyring()) || ['', '']
+    const [mnemonic, address] = (await generateMnemonic(env.keyring)) || ['', '']
     const dappContractAccount = process.env.DAPP_CONTRACT_ADDRESS || ''
-    const provider = await tasks.getRandomProvider(address, dappContractAccount)
+    const provider = await tasks.contractApi.getRandomProvider(address, dappContractAccount)
     console.log(provider)
     process.exit()
 }

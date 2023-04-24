@@ -11,19 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Environment } from '../src/env'
-import { Tasks } from '../src/tasks/tasks'
+import { Environment, Tasks } from '@prosopo/provider'
+import { getPair, getPairType, getSs58Format } from '@prosopo/common'
 
 require('dotenv').config()
 
 async function main() {
-    const env = new Environment('//Alice')
+    const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
+    const env = new Environment(pair)
 
     await env.isReady()
     const tasks = new Tasks(env)
 
-    await tasks.getProviderAccounts()
-    await tasks.getDappAccounts()
+    // await tasks.getProviderAccounts()
+    // await tasks.getDappAccounts()
     process.exit()
 }
 
