@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
+import { ApiPromise } from '@polkadot/api'
+import { Keyring } from '@polkadot/keyring'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { WsProvider } from '@polkadot/rpc-provider'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { LogLevel } from 'consola'
-import { LocalAssetsResolver } from './assets'
+import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
+import { loadEnv } from '@prosopo/env'
 import {
     AssetsResolver,
     ContractAbi,
@@ -25,12 +28,9 @@ import {
     ProsopoConfig,
     ProsopoEnvironment,
 } from '@prosopo/types'
+import { LogLevel } from 'consola'
+import { LocalAssetsResolver } from './assets'
 import prosopoConfig from './prosopo.config'
-import { ApiPromise } from '@polkadot/api'
-import { WsProvider } from '@polkadot/rpc-provider'
-import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { loadEnv } from '@prosopo/common'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig

@@ -13,10 +13,10 @@
 // limitations under the License.
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
+import { getPair } from '@prosopo/common'
+import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
 import { Environment } from '../env'
-import { loadEnv } from '@prosopo/common'
 import { processArgs } from './argv'
-import { getPair, getPairType, getSecret, getSs58Format } from '@prosopo/common'
 
 loadEnv()
 
