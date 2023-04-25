@@ -16,13 +16,16 @@
   ],
   "references": [
     {
-      "path": "../datasets"
+      "path": "../common"
     },
     {
       "path": "../contract"
     },
     {
-      "path": "../common"
+      "path": "../datasets"
+    },
+    {
+      "path": "../env"
     },
     {
       "path": "../types"
