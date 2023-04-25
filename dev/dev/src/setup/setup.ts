@@ -11,14 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import fse from 'fs-extra'
-import { ProsopoEnvError, getEnvFile, getPair, getPairType, getSecret, getSs58Format } from '@prosopo/common'
-import { Environment } from '@prosopo/provider'
-import { setupDapp } from './dapp'
-import { IDappAccount, IProviderAccount } from '@prosopo/types'
+import { ProsopoEnvError, getPair } from '@prosopo/common'
 import { generateMnemonic } from '@prosopo/contract'
-import { registerProvider } from './provider'
+import { getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/env'
+import { Environment } from '@prosopo/provider'
+import { IDappAccount, IProviderAccount } from '@prosopo/types'
+import fse from 'fs-extra'
 import path from 'path'
+import { setupDapp } from './dapp'
+import { registerProvider } from './provider'
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
