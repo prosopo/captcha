@@ -158,6 +158,13 @@ export class ProsopoContractMethods extends ProsopoContractApi implements IProso
         return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk
     }
 
+    public async getDappStakeDefault(): Promise<u128> {
+        const { result } = await this.contractQuery(this.getDappStakeDefault.name, [])
+        const fragment = this.abi.findMessage(this.getDappStakeDefault.name)
+        // @ts-ignore
+        return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk
+    }
+
     public async getProviderAccounts(): Promise<Vec<AccountId>> {
         const { result } = await this.contractQuery('getAllProviderIds', [])
         const fragment = this.abi.findMessage('getAllProviderIds')
