@@ -2,7 +2,6 @@ import storage from './storage'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { trimProviderUrl } from '@prosopo/common'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
-import { CaptchaSolution } from '@prosopo/datasets'
 import {
     Account,
     ProcaptchaCallbacks,
@@ -17,12 +16,13 @@ import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import { TCaptchaSubmitResult } from '../types/client'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { ContractAbi, ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
+import { ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { ApiPromise, Keyring } from '@polkadot/api'
 import { u32 } from '@polkadot/types'
 import { stringToU8a } from '@polkadot/util'
 import { SignerPayloadRaw } from '@polkadot/types/types'
+import { CaptchaSolution, ContractAbi } from '@prosopo/types'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
