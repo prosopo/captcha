@@ -11,11 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Environment, Tasks } from '@prosopo/provider'
-import { getPair, getPairType, getSs58Format } from '@prosopo/common'
+import { getPair } from '@prosopo/common'
 import { generateMnemonic } from '@prosopo/contract'
+import { getPairType, getSs58Format } from '@prosopo/env'
+import { Environment, Tasks } from '@prosopo/provider'
+import dotenv from 'dotenv'
 
-require('dotenv').config()
+dotenv.config()
 
 async function main() {
     const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
