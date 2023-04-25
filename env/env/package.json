@@ -1,0 +1,23 @@
+{
+  "name": "@prosopo/env",
+  "version": "0.1.11",
+  "description": "Path env prosopo environment",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "@polkadot/keyring": "10.3.1",
+    "@polkadot/util": "10.3.1",
+    "@polkadot/util-crypto": "10.3.1",
+    "@prosopo/common": "0.1.11"
+  },
+  "devDependencies": {
+    "typescript": "^4.8.3"
+  },
+  "author": "Prosopo",
+  "license": "Apache-2.0"
+}
