@@ -20,6 +20,7 @@ import fse from 'fs-extra'
 import path from 'path'
 import { setupDapp } from './dapp'
 import { registerProvider } from './provider'
+import { BN } from '@polkadot/util'
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
@@ -41,7 +42,6 @@ function getDefaultProvider(): IProviderAccount {
 
 function getDefaultDapp(): IDappAccount {
     return {
-        serviceOrigin: 'http://localhost:9393',
         secret: '//Eve',
         contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
         fundAmount: Math.pow(10, 12),
@@ -106,7 +106,8 @@ export async function setup() {
         const pair = await getPair(pairType, ss58Format, secret)
         const env = new Environment(pair)
         await env.isReady()
-
+        const dappStakeDefault = await env.contractInterface.getDappStakeDefault()
+        defaultDapp.fundAmount = BN.max(dappStakeDefault, new BN(defaultDapp.fundAmount))
         defaultProvider.secret = mnemonic
 
         env.logger.info(`Registering provider... ${defaultProvider.address}`)
