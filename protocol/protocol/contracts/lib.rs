@@ -17,6 +17,14 @@
 
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
+fn max<T: PartialOrd>(a: T, b: T) -> T {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
 /// Print and return an error in ink
 macro_rules! err {
     ($err:expr) => {{
@@ -63,6 +71,7 @@ pub mod prosopo {
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
+    use crate::max;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -270,7 +279,13 @@ pub mod prosopo {
     pub struct Seed {
         pub value: u128,
         pub block: BlockNumber,
-        pub author: AccountId,
+    }
+
+    // A seed history stores a vector of seeds. It is used to store the history of seed updates to enable replaying the rng.
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct SeedRecord {
+        pub history: Vec<Seed>, // stored most recent to last recent
     }
 
     // Contract storage
@@ -296,9 +311,9 @@ pub mod prosopo {
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
         seeds: Mapping<u8, Seed>, // up to 255 seeds are stored
-        seed_history: Mapping<u8, Vec<Seed>>, // store the history of seed updates for replay
+        seed_records: Mapping<u8, SeedRecord>, // store the history of seed updates for replay
         n_seeds: u8, // the number of seeds to use
-        max_seed_history_len: u8, // the number of blocks to store an old seed for before deletion
+        max_seed_history_len: u8, // the number of blocks before seed updates are discarded. This enables replay of the rng for the last X blocks.
     }
 
     // Event emitted when a new provider registers
@@ -507,6 +522,9 @@ pub mod prosopo {
         ProviderFeeTooHigh,
         /// Returned if the account is an operator, hence the operation is not allowed due to conflict of interest
         AccountIsOperator,
+        SeedRecordMissing, // if the seed record is missing
+        BlockTooOld, // if the block is too old
+        BlockInFuture, // if the block is in the future
     }
 
     impl Prosopo {
@@ -536,22 +554,9 @@ pub mod prosopo {
                 max_provider_fee: 0,
                 n_seeds: 10,
                 seeds: Default::default(),
-                seed_history: Default::default(),
+                seed_records: Default::default(),
                 max_seed_history_len: 10,
-                a: 1,
             }
-        }
-
-        #[ink(message)]
-        pub fn a(&self) -> u128 {
-            debug!("a: {}, block: {}", self.a, self.env().block_number());
-            self.a
-        }
-
-        #[ink(message)]
-        pub fn set_a(&mut self, a: u128) {
-            self.a = a;
-            debug!("a: {}, block: {}", self.a, self.env().block_number());
         }
 
         /// Print and return an error
@@ -1064,118 +1069,168 @@ pub mod prosopo {
             Ok(())
         }
 
+        /// Get the seed value
         #[ink(message)]
         pub fn get_seed(&self) -> u128 {
-            // use the n seeds hashed together as the overall seed value
-            // start with the caller block id to make this different per caller + block
-            let mut result: u128 = self.get_caller_block_id_u128();
-            for i in 0..self.n_seeds {
-                let seed = self.seeds.get(i).map(|s| s.value).unwrap_or(0);
-                result = self.hash_u128_pair(result, seed);
+            // hash together each seed to produce a single seed
+            let seeds = self.get_seeds();
+            let mut result = seeds[0];
+            for i in 1..seeds.len() {
+                result = self.hash_u128_pair(result, seeds[i]);
             }
             result
         }
 
+        /// Get the n seed values
         #[ink(message)]
         pub fn get_seeds(&self) -> Vec<u128> {
             let mut seeds = Vec::new();
             for i in 0..self.n_seeds {
+                // default to 0 if not found. This might be because the number of seeds to keep has increased, but the new seeds have not yet been generated
                 let seed = self.seeds.get(i).map(|s| s.value).unwrap_or(0);
                 seeds.push(seed);
             }
             seeds
         }
 
+        /// Update the seed value
         #[ink(message)]
         pub fn update_seed(&mut self) -> Result<bool, Error> {
-            let caller_block_id = self.get_caller_block_id_u128();
-            
-            // let the caller block id determine the seed index
-            let seed_index: u8 = (caller_block_id % self.n_seeds as u128) as u8;
+            // update one of the n seeds
+            // given we don't know who else is updating which seed and when, we have a rng
+            // further, with transaction ordering in the same block we don't know who would win in updating the same seed (the caller with the last tx in the block would win, but cannot know who that is until the block is published)
 
-            // use the caller block id and current seed value to generate the next seed value
-            let seed = self.seeds.get(seed_index);
-            if seed.is_some() {
-                debug!("found existing seed");
-                // check the caller is not the author of the current seed
-                // this avoids the caller being able to update the seed value multiple times in the same block, as this would allow spamming of all seed values
-                if seed.unwrap().author == self.env().caller()
-                    && seed.unwrap().block == self.env().block_number() {
-                    return Ok(false);
-                }
+            // which of the n seeds should we update?
+            // it doesn't particularly matter whether someone can predict which seed will be updated for a given caller, as we're relying on the unpredictability of who updates a seed and when.
+            // therefore the seed to update can be chosen in the most simple way possible to save gas
+
+            // use the block number for changing the target per block
+            // use the block timestamp for unpredictability far in advance (we don't know the block timestamp until it has been published)
+            // use the caller to ensure different callers target different seeds
+            let caller = self.env().caller();
+            let caller_bytes: &[u8; 32] = AsRef::<[u8; 32]>::as_ref(&caller);
+            let caller1 = u128::from_le_bytes(caller_bytes[0..16].try_into().unwrap());
+            let caller2 = u128::from_le_bytes(caller_bytes[16..32].try_into().unwrap());
+            let block_number = self.env().block_number();
+            let block_timestamp = self.env().block_timestamp();
+            // add 1 to block number and timestamp to avoid 0
+            // max 1 against caller1&2 to avoid 0
+            let seed_index = ((
+                max(1, caller1)
+                .wrapping_mul(max(1, caller2))
+                .wrapping_mul(1 + block_number as u128)
+                .wrapping_mul(1 + block_timestamp as u128)
+            ) % self.n_seeds as u128) as u8;
+            debug!("seed index {}", seed_index);
+
+            // what should the new seed value be?
+            // should be a combination of:
+            // - the current block number (no 2 blocks produce the same update)
+            // - the current block timestamp (varies by block, difficult to predict accurately)
+            // - the calling account (different accounts produce different results)
+            // - the current seed value (different seeds produce different results)
+
+            // get the target seed or default to 0 if not found
+            // not found might occur if the number of seeds to keep has increased, but the new seeds have not yet been generated
+            let seed = self.seeds.get(seed_index).unwrap_or(Seed {
+                block: 0,
+                value: 0,
+            });
+
+            if seed.block >= block_number {
+                // the caller has already updated this seed in this block
+                // disallow multiple seed updates to avoid spamming
+                debug!("same block update disallowed");
+                return Ok(false);
             }
-            let seed_value = seed.map(|s| s.value).unwrap_or(0);
-            debug!("seed value {}", seed_value);
-            // record the current seed value in history
-            // newer values at start of vec
-            let mut history = self.seed_history.get(seed_index).unwrap_or_else(|| Vec::new());
-            debug!("seed history {:?}", history);
-            // prune old historic seeds which are out of date (no longer need to be stored for replays)
-            if history.len() > 0 {
-                for i in (0..history.len() - 1).rev() {
-                    debug!("pruning seed {}", i);
-                    if history[i].block < self.env().block_number() - self.max_seed_history_len as u32 {
+
+            // hash all of these together to get the new seed value
+            let mut input = [0u8; 60];
+            input[0..32].copy_from_slice(&caller_bytes[..]);
+            input[32..36].copy_from_slice(&block_number.to_le_bytes()[..]);
+            input[36..44].copy_from_slice(&block_timestamp.to_le_bytes()[..]);
+            input[44..60].copy_from_slice(&seed.value.to_le_bytes()[..]);
+
+            let hash = self.env().hash_bytes::<Blake2x128>(&input);
+            // convert hash to u128 for the new seed value
+            let new_seed_value = u128::from_le_bytes(hash);
+            debug!("new seed value {}", new_seed_value);
+            let new_seed = Seed {
+                block: block_number,
+                value: new_seed_value,
+            };
+
+            // update the seed value
+            self.seeds.insert(seed_index, &new_seed);
+
+            // update the history for the seed
+            let mut seed_record = self.seed_records.get(seed_index).unwrap_or_else(|| SeedRecord {
+                history: Vec::new(), // construct a new empty history if not found
+            });
+            seed_record.history.insert(0, new_seed);
+
+            // prune old history entries
+            if seed_record.history.len() > 0 {
+                for i in (0..seed_record.history.len() - 1).rev() {
+                    if seed_record.history[i].block < self.env().block_number() - self.max_seed_history_len as u32 {
                         // entry is old enough to be removed
-                        debug!("removing seed {}", i);
-                        history.remove(i);
+                        seed_record.history.remove(i);
                     } else {
                         // entries are in order, so can stop here, all entries from this and earlier are valid
-                        debug!("stopped pruning at seed {}", i);
                         break;
                     }
                 }
             }
             
-            let next_value = self.hash_u128_pair(seed_value, caller_block_id);
-            debug!("next seed value {}", next_value);
-            let next_seed = Seed {
-                value: next_value,
-                block: self.env().block_number(),
-                author: self.env().caller(),
-            };
-            debug!("next seed {:?}", next_seed);
-            self.seeds.insert(seed_index, &next_seed);
-            history.insert(0, next_seed);
-            self.seed_history.insert(seed_index, &history);
-            debug!("seed history {:?}", history);
+            // update the seed record
+            self.seed_records.insert(seed_index, &seed_record);
+
+            Ok(true)
+        }
+
+        /// Replay the seed history to get the seed value at a given block
+        #[ink(message)]
+        pub fn get_seed_at_block(&self, block: u32) -> Result<Vec<u128>, Error> {
+            
+            if block > self.env().block_number() {
+                // cannot get seed value for a block in the future
+                return err!(Error::BlockInFuture);
+            }
+
+            if block < self.env().block_number() - self.max_seed_history_len as u32 {
+                // cannot get seed value for a block that is too old
+                return err!(Error::BlockTooOld);
+            }
+
+            let mut seeds: Vec<u128> = Vec::new();
+            // loop through each seed history and find the seed value at the given block
+            for i in 0..self.n_seeds {
+                seeds.push(0); // put a default seed on
+
+                let seed_record = self.seed_records.get(i).ok_or_else(err_fn!(Error::SeedRecordMissing))?;
+
+                for seed in seed_record.history.iter() {
+                    if seed.block >= block {
+                        // replay the seed change
+                        seeds[i as usize] = seed.value;
+                    } else {
+                        // seed change is too old, stop here
+                        // stored in age order, so further seed changes are even older
+                        break;
+                    }
+                }
+            }
+
+            Ok(seeds)
         }
 
         fn hash_u128_pair(&self, a: u128, b: u128) -> u128 {
-            let a_bytes = a.to_le_bytes();
-            let b_bytes = b.to_le_bytes();
-            let hash_bytes = self.hash_u128_pair_bytes(&a_bytes, &b_bytes);
-            let hash = u128::from_le_bytes(hash_bytes);
-            hash
-        }
-
-        fn hash_u128_pair_bytes(&self, a: &[u8; 16], b: &[u8; 16]) -> [u8; 16] {
             let mut input = [0u8; 32];
-            input[0..16].copy_from_slice(&a[..]);
-            input[16..32].copy_from_slice(&b[..]);
-
+            input[0..16].copy_from_slice(&a.to_le_bytes()[..]);
+            input[16..32].copy_from_slice(&b.to_le_bytes()[..]);
             let hash = self.env().hash_bytes::<Blake2x128>(&input);
-            hash
-        }
-
-        fn get_caller_block_id_u128(&self) -> u128 {
-            let caller_block_id = self.get_caller_block_id();
-            let caller_block_id_u128 = u128::from_le_bytes(caller_block_id);
-            caller_block_id_u128
-        }
-
-        fn get_caller_block_id(&self) -> [u8; 16] {
-            // uniquely identify caller and block by hashing them together
-            let caller = self.env().caller(); // provides caller-oriented seed setting (i.e. calling from different accounts will result in different seed updates)
-            let block_number = self.env().block_number(); // provides block-oriented seed setting (i.e. calling from same account will result in different seed updates across different blocks)
-            let block_timestamp = self.env().block_timestamp(); // provides uncertainty as block timestamp is only known for the current block (6s) and cannot be known for future blocks (albeit is likely in the range 5s-7s, so has 2000 possible values due to ms resolution)
-
-            let mut input = [0u8; 44];
-            input[0..32].copy_from_slice(&caller.as_ref());
-            input[32..36].copy_from_slice(&block_number.to_le_bytes()[..]);
-            input[36..44].copy_from_slice(&block_timestamp.to_le_bytes()[..]);
-
-            let hash = self.env().hash_bytes::<Blake2x128>(&input);
-            hash
+            let result = u128::from_le_bytes(hash);
+            result
         }
 
         #[ink(message)]
@@ -2158,6 +2213,11 @@ pub mod prosopo {
             println!("seed: {}", contract.get_seed());
 
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x2; 32]));
+            contract.update_seed();
+            println!("seeds: {:#?}", contract.get_seeds());
+            println!("seed: {}", contract.get_seed());
+
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
             contract.update_seed();
             println!("seeds: {:#?}", contract.get_seeds());
             println!("seed: {}", contract.get_seed());
