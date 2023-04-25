@@ -2178,6 +2178,11 @@ pub mod prosopo {
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
+        use ink::env::DefaultEnvironment;
+        use ink::env::test::{
+            advance_block,
+            set_caller,
+        };
 
         use crate::prosopo::Error::{ProviderInactive, ProviderInsufficientFunds};
 
@@ -2189,40 +2194,73 @@ pub mod prosopo {
         const STAKE_DEFAULT: u128 = 1000000000000;
 
         #[ink::test]
-        fn test_tmp() {
+        fn test_cannot_update_seed_more_than_once_per_block() {
             let mut contract = Prosopo::default();
             
-            println!("seeds: {:#?}", contract.get_seeds());
-            println!("seed: {}", contract.get_seed());
+            // start on block 0
+            let seed0 = contract.get_seed();
 
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
+            // cannot update seed as the seed is set to block 0 at the moment
+            assert_eq!(contract.update_seed().unwrap(), false);
+
+            // advance to block 1
+            advance_block::<DefaultEnvironment>();
+
+            // should now be able to set the seed
+            assert_eq!(contract.update_seed().unwrap(), true);
+            // seed should now be different
+            let seed1 = contract.get_seed();
+            assert_ne!(seed0, seed1);
+
+            // should not be able to update the seed again in this block (block 1)
+            assert_eq!(contract.update_seed().unwrap(), false);
+            // seed should remain the same
+            assert_eq!(seed1, contract.get_seed());
+        }
+
+        #[ink::test]
+        fn test_seed_default() {
+            let mut contract = Prosopo::default();
+            let seeds = contract.get_seeds();
+            assert_eq!(seeds, vec![0,0,0,0,0,0,0,0,0,0]);
+        }
+
+        #[ink::test]
+        fn test_seed_reproducible() {
+            let mut contract = Prosopo::default();
+            let seed0 = contract.get_seed();
+            
+            // advance to block 1
+            advance_block::<DefaultEnvironment>();
+
+            // let acc 1 update the seed
+            set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
             contract.update_seed();
-            println!("seeds: {:#?}", contract.get_seeds());
-            println!("seed: {}", contract.get_seed());
 
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x2; 32]));
+            // let acc 2 update the seed
+            set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x2; 32]));
             contract.update_seed();
-            println!("seeds: {:#?}", contract.get_seeds());
-            println!("seed: {}", contract.get_seed());
 
-            ink::env::test::advance_block::<ink::env::DefaultEnvironment>();
+            let seed1 = contract.get_seed();
 
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
+            // advance to block 2
+            advance_block::<ink::env::DefaultEnvironment>();
+            
+            // let acc 1 update the seed
+            set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
             contract.update_seed();
-            println!("seeds: {:#?}", contract.get_seeds());
-            println!("seed: {}", contract.get_seed());
 
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x2; 32]));
+            // let acc 2 update the seed
+            set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x2; 32]));
             contract.update_seed();
-            println!("seeds: {:#?}", contract.get_seeds());
-            println!("seed: {}", contract.get_seed());
 
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x1; 32]));
-            contract.update_seed();
-            println!("seeds: {:#?}", contract.get_seeds());
-            println!("seed: {}", contract.get_seed());
+            let seed2 = contract.get_seed();
 
-            assert!(false);
+            // check the seeds match what we have seen before, i.e. seed changes are reproducible. This ensures nothing has changed in how seed values are calculated or which seed values are updated when
+
+            assert_eq!(seed0, 34675802303002212079048678787350816162);
+            assert_eq!(seed1, 148585542226182554527834846717539506710);
+            assert_eq!(seed2, 296288204380945070423543170595204398988);
 
         }
 
