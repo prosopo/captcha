@@ -84,7 +84,9 @@
   },
   "workspaces": [
     "packages/*",
-    "demos/*"
+    "demos/*",
+    "env",
+    "dev"
   ],
   "devDependencies": {
     "depcheck": "^1.4.3",
