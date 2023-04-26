@@ -56,6 +56,7 @@ export interface IProsopoContractMethods extends IProsopoContractApi {
     getCaptchaSolutionCommitment(solutionId: string): Promise<ProsopoCaptchaSolutionCommitment>
     getDappOperatorLastCorrectCaptcha(accountId: string): Promise<ProsopoLastCorrectCaptcha>
     getProviderStakeDefault(): Promise<u128>
+    getDappStakeDefault(): Promise<u128>
     getProviderAccounts(): Promise<Vec<AccountId>>
     getDappAccounts(): Promise<DappAccounts>
 }
