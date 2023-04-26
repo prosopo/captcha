@@ -269,6 +269,13 @@ pub mod prosopo {
         Pending, // not enough people have voted
     }
 
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct Seed {
+        pub value: u128,
+        pub block: BlockNumber,
+    }
+
     // Contract storage
     #[ink(storage)]
     pub struct Prosopo {
@@ -291,6 +298,10 @@ pub mod prosopo {
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
+        seed: Seed, // the current seed for rng
+        seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
+        rng_replay_lag: u16, // the number of blocks in the past that the rng can be replayed
+        active_providers_log: Lazy<Vec<AccountId>>, // the history of active providers (i.e. a log of when providers became active/inactive)
     }
 
     // Event emitted when a new provider registers
@@ -550,6 +561,13 @@ pub mod prosopo {
                 captcha_solution_commitments: Default::default(),
                 min_num_active_providers,
                 max_provider_fee,
+                rng_replay_lag: 10, // TODO make this configurable
+                seed_log: Default::default(),
+                active_providers_log: Default::default(),
+                seed: Seed {
+                    value: 0, // set the seed to default 0
+                    block: 0, // default to block 0, doesn't matter if this is wrong
+                },
             }
         }
 
@@ -583,12 +601,6 @@ pub mod prosopo {
             Ok(res.is_ok())
         }
 
-        #[ink(message)]
-        pub fn get_caller(&self) -> AccountId {
-            debug!("caller: {:?}", self.env().caller());
-            self.env().caller()
-        }
-
         /// Print and return an error
         fn print_err(&self, err: Error, fn_name: &str) -> Error {
             debug!(
@@ -599,6 +611,80 @@ pub mod prosopo {
                 err
             );
             err
+        }
+
+        /// Get the seed
+        #[ink(message)]
+        pub fn get_seed(&self) -> Seed {
+            self.seed
+        }
+
+        /// Update the seed
+        #[ink(message)]
+        pub fn update_seed(&mut self) -> bool {
+            // TODO only providers can call this function
+            // TODO only providers which have been registered in a previous block can call this function
+            // TODO only providers with a sufficient stake can call this function (i.e. only active ones?)
+
+            let block_number = self.env().block_number();
+            let seed = self.seed;
+            if seed.block == block_number {
+                // seed already updated for this block
+                // disallow updating the seed for the same block twice to avoid spamming
+                return false;
+            }
+            // else seed has not been updated for the current block
+
+            // put the old seed into the log
+            let mut seed_log = self.seed_log.get_or_default();
+            // prune the seed log as old entries may have become too old and land outside the rng_replay_lag window
+            let mut oldest_seed_block: BlockNumber = 0;
+            let rng_replay_lag = self.rng_replay_lag as BlockNumber;
+            if block_number > rng_replay_lag {
+                oldest_seed_block = block_number - rng_replay_lag;
+            }
+            // iterate over the seed log from oldest to newest
+            for i in (0..seed_log.len()).rev() {
+                let entry = seed_log[i];
+                // pop the last entry if it is too old
+                if entry.block < oldest_seed_block {
+                    seed_log.pop();
+                }
+            }
+            // add the current seed to the log
+            seed_log.insert(0, seed);
+
+            // then compute new seed value
+            let block_timestamp = self.env().block_timestamp();
+            let caller = self.env().caller();
+            
+            // what to use in the seed?
+            // block number - different value for each block
+            // block timestamp - unpredictable until the block is mined (but can be predicted by miners)
+            // caller - unpredictable, we don't know who's going to update the seed and when
+            // old seed - build upon the old seed
+
+
+            // hash all of these together to get the new seed value
+            let mut input = [0u8; 60];
+            let caller_bytes: &[u8; 32] = AsRef::<[u8;32]>::as_ref(&caller);
+            input[0..32].copy_from_slice(&caller_bytes[..]);
+            input[32..36].copy_from_slice(&block_number.to_le_bytes()[..]);
+            input[36..44].copy_from_slice(&block_timestamp.to_le_bytes()[..]);
+            input[44..60].copy_from_slice(&seed.value.to_le_bytes()[..]);
+
+            let hash = self.env().hash_bytes::<Blake2x128>(&input);
+            // convert hash to u128 for the new seed value
+            let new_seed_value = u128::from_le_bytes(hash);
+
+            // update seed and history
+            self.seed = Seed {
+                value: new_seed_value,
+                block: block_number,
+            };
+            self.seed_log.set(&seed_log);
+
+            return true;
         }
 
         /// Get contract provider minimum stake default.
