@@ -143,6 +143,7 @@ pub mod prosopo {
         payee: Payee,
         service_origin: Vec<u8>,
         dataset_id: Hash,
+        active_at: BlockNumber,
     }
 
     /// RandomProvider is selected randomly by the contract for the client side application
@@ -276,6 +277,13 @@ pub mod prosopo {
         pub block: BlockNumber,
     }
 
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct ProviderActiveRecord {
+        pub active: bool, // is the provider active as of this block?
+        pub block: BlockNumber, // the block number at which the provider status changed
+    }
+
     // Contract storage
     #[ink(storage)]
     pub struct Prosopo {
@@ -301,7 +309,7 @@ pub mod prosopo {
         seed: Seed, // the current seed for rng
         seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
         rng_replay_lag: u16, // the number of blocks in the past that the rng can be replayed
-        active_providers_log: Lazy<Vec<AccountId>>, // the history of active providers (i.e. a log of when providers became active/inactive)
+        active_providers_log: Lazy<Vec<ProviderActiveRecord>>, // the history of active providers (i.e. a log of when providers became active/inactive)
     }
 
     // Event emitted when a new provider registers
@@ -514,6 +522,8 @@ pub mod prosopo {
         InvalidSignature,
         /// Returned if the public key is invalid during signing
         InvalidPublicKey,
+        /// Returned if operator not found
+        OperatorNotFound,
     }
 
     impl Prosopo {
@@ -613,6 +623,20 @@ pub mod prosopo {
             err
         }
 
+        /// Get a provider
+        #[ink(message)]
+        pub fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
+            let provider = self.providers.get(&account).ok_or(Error::ProviderDoesNotExist)?;
+            Ok(provider)
+        }
+
+        /// Get an operator
+        #[ink(message)]
+        pub fn get_operator(&self, account: AccountId) -> Result<Operator, Error> {
+            let operator = self.operators.get(&account).ok_or(Error::OperatorNotFound)?;
+            Ok(operator)
+        }
+
         /// Get the seed
         #[ink(message)]
         pub fn get_seed(&self) -> Seed {
@@ -621,17 +645,39 @@ pub mod prosopo {
 
         /// Update the seed
         #[ink(message)]
-        pub fn update_seed(&mut self) -> bool {
-            // TODO only providers can call this function
-            // TODO only providers which have been registered in a previous block can call this function
-            // TODO only providers with a sufficient stake can call this function (i.e. only active ones?)
-
+        pub fn update_seed(&mut self) -> Result<bool, Error> {
+            let caller = self.env().caller();
             let block_number = self.env().block_number();
+
+            // only providers can call this function
+            let provider_lookup = self.get_provider(self.env().caller());
+            if provider_lookup.is_ok() {
+                let provider = provider_lookup.unwrap();
+                // only active providers can call this method
+                if provider.status != GovernanceStatus::Active {
+                    return err!(Error::NotAuthorised)
+                }
+                // only providers which have been activated in a previous block can call this function
+                if provider.active_at >= block_number {
+                    return err!(Error::NotAuthorised)
+                }
+                // else continue, provider is active and has been active from the previous block or before
+            } else {
+                // caller is not a provider
+                // allow if they are an operator
+                let operator_lookup = self.get_operator(caller);
+                if operator_lookup.is_err() {
+                    // caller is not an operator and not a provider
+                    return err!(Error::NotAuthorised)
+                }
+                // else continue, caller is an operator
+            }
+
             let seed = self.seed;
             if seed.block == block_number {
                 // seed already updated for this block
                 // disallow updating the seed for the same block twice to avoid spamming
-                return false;
+                return Ok(false);
             }
             // else seed has not been updated for the current block
 
@@ -656,14 +702,12 @@ pub mod prosopo {
 
             // then compute new seed value
             let block_timestamp = self.env().block_timestamp();
-            let caller = self.env().caller();
             
             // what to use in the seed?
             // block number - different value for each block
             // block timestamp - unpredictable until the block is mined (but can be predicted by miners)
             // caller - unpredictable, we don't know who's going to update the seed and when
             // old seed - build upon the old seed
-
 
             // hash all of these together to get the new seed value
             let mut input = [0u8; 60];
@@ -684,7 +728,21 @@ pub mod prosopo {
             };
             self.seed_log.set(&seed_log);
 
-            return true;
+            // trim the active provider log list to be within the rng_replay_lag window
+            let mut active_providers_log = self.active_providers_log.get_or_default();
+            // iterate over the active providers log from oldest to newest
+            for i in (0..active_providers_log.len()).rev() {
+                let entry = active_providers_log[i];
+                // pop the last entry if it is too old
+                if entry.block < oldest_seed_block {
+                    active_providers_log.pop();
+                }
+            }
+
+            // update the active providers log
+            self.active_providers_log.set(&active_providers_log);
+
+            Ok(true)
         }
 
         /// Get contract provider minimum stake default.
@@ -749,6 +807,7 @@ pub mod prosopo {
                 service_origin,
                 dataset_id: Hash::default(),
                 payee,
+                active_at: 0,
             };
             self.providers.insert(provider_account, &provider);
             self.service_origins.insert(service_origin_hash, &());
@@ -817,6 +876,7 @@ pub mod prosopo {
             }
 
             // update an existing provider
+            let active_at = if new_status == GovernanceStatus::Active { self.env().block_number() } else { 0 };
             let provider = Provider {
                 status: new_status,
                 balance,
@@ -824,6 +884,7 @@ pub mod prosopo {
                 service_origin,
                 dataset_id: existing.dataset_id,
                 payee,
+                active_at,
             };
 
             self.provider_change_status(provider_account, old_status, new_status, payee);
