@@ -1,0 +1,69 @@
+{
+  "name": "@prosopo/contract",
+  "version": "0.1.11",
+  "author": "PROSOPO LIMITED <info@prosopo.io>",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix",
+    "generate:pull-meta": "curl -H \"Content-Type: application/json\" -d '{\"id\":\"1\", \"jsonrpc\":\"2.0\", \"method\": \"state_getMetadata\", \"params\":[]}' http://127.0.0.1:9933 -o metadata.json",
+    "generate:defs": "ts-node --skip-project ../../node_modules/.bin/polkadot-types-from-defs --package . --input ./src/interfaces --endpoint ./metadata.json",
+    "generate:meta": "ts-node --skip-project ../../node_modules/.bin/polkadot-types-from-chain --package . --endpoint ./metadata.json --output ./src/interfaces"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./types": "./dist/types/index.js",
+    "./captcha": "./dist/captcha/index.js"
+  },
+  "typesVersions": {
+    "*": {
+      "types": [
+        "dist/types"
+      ],
+      "captcha": [
+        "dist/captcha"
+      ]
+    }
+  },
+  "dependencies": {
+    "@polkadot/api": "9.13.6",
+    "@polkadot/api-contract": "9.13.6",
+    "@polkadot/keyring": "10.3.1",
+    "@polkadot/rpc-provider": "9.13.6",
+    "@polkadot/typegen": "9.13.6",
+    "@polkadot/types": "9.13.6",
+    "@polkadot/types-create": "9.13.6",
+    "@polkadot/util": "10.3.1",
+    "@polkadot/util-crypto": "10.3.1",
+    "@prosopo/common": "^0.1.11",
+    "@prosopo/datasets": "^0.1.11",
+    "@prosopo/types": "^0.1.11",
+    "bn.js": "^5.2.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
+    "eslint": "^8.20.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "2.7.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prosopo/contract.git"
+  },
+  "bugs": {
+    "url": "https://github.com/prosopo/contract/issues"
+  },
+  "homepage": "https://github.com/prosopo/contract#readme",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "description": ""
+}
