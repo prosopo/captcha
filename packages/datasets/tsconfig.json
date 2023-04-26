@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "rootDir": "./src/js",
+    "outDir": "./dist/js",
+  },
+  "include": [
+    "./src/js/**/*.ts",
+    "./src/js/abi/*.json"
+  ],
+  "exclude": ["**/*.test.ts"],
+  "references": [
+    {
+      "path": "../common"
+    },
+  ]
+}
