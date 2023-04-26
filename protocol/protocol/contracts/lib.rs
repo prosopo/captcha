@@ -282,6 +282,7 @@ pub mod prosopo {
     pub struct ProviderActiveRecord {
         pub active: bool, // is the provider active as of this block?
         pub block: BlockNumber, // the block number at which the provider status changed
+        pub account: AccountId, // the provider account
     }
 
     // Contract storage
@@ -309,7 +310,7 @@ pub mod prosopo {
         seed: Seed, // the current seed for rng
         seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
         rng_replay_lag: u16, // the number of blocks in the past that the rng can be replayed
-        active_providers_log: Lazy<Vec<ProviderActiveRecord>>, // the history of active providers (i.e. a log of when providers became active/inactive)
+        active_providers_log: Lazy<Vec<ProviderActiveRecord>>, // the history of active providers (i.e. a log of when providers became active/inactive). Stored newest first.
     }
 
     // Event emitted when a new provider registers
@@ -876,7 +877,26 @@ pub mod prosopo {
             }
 
             // update an existing provider
-            let active_at = if new_status == GovernanceStatus::Active { self.env().block_number() } else { 0 };
+            let mut active_at = existing.active_at;
+            if old_status != new_status {
+                // status has changed, need to update logs
+                let mut active_provider_log = self.active_providers_log.get().unwrap_or_default();
+                let active = new_status == GovernanceStatus::Active;
+                if active {
+                    // record when the provider became active
+                    active_at = self.env().block_number();
+                } else {
+                    // provider is not active, so default to 0
+                    active_at = 0;
+                }
+                active_provider_log.insert(0, ProviderActiveRecord {
+                    account: provider_account,
+                    active,
+                    block: active_at,
+                });
+                self.active_providers_log.set(&active_provider_log);
+            }
+
             let provider = Provider {
                 status: new_status,
                 balance,
