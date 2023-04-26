@@ -1,7 +1,11 @@
-import { ProsopoContractApi } from './interface'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { Vec, u128 } from '@polkadot/types-codec'
+import { AccountId, Balance } from '@polkadot/types/interfaces'
+import { BN, hexToU8a } from '@polkadot/util'
 import {
     CaptchaData,
     DappAccounts,
+    IProsopoContractMethods,
     ProsopoCaptchaSolutionCommitment,
     ProsopoCaptchaStatus,
     ProsopoDapp,
@@ -10,11 +14,7 @@ import {
     ProsopoProvider,
     ProsopoRandomProvider,
 } from '@prosopo/types'
-import { Vec, u128 } from '@polkadot/types-codec'
-import { AccountId, Balance } from '@polkadot/types/interfaces'
-import { BN, hexToU8a } from '@polkadot/util'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { IProsopoContractMethods } from '@prosopo/types'
+import { ProsopoContractApi } from './interface'
 
 export class ProsopoContractMethods extends ProsopoContractApi implements IProsopoContractMethods {
     // transactions
@@ -111,6 +111,7 @@ export class ProsopoContractMethods extends ProsopoContractApi implements IProso
             undefined,
             at
         )
+        console.log('\n\n\n\n\n\n', 'response', response)
         // @ts-ignore
         return response.output?.asOk.asOk.toPrimitive() as unknown as ProsopoRandomProvider
     }
