@@ -1,7 +1,16 @@
-import storage from './storage'
+import { ApiPromise, Keyring } from '@polkadot/api'
+import { WsProvider } from '@polkadot/rpc-provider'
+import { u32 } from '@polkadot/types'
+import { SignerPayloadRaw } from '@polkadot/types/types'
+import { stringToU8a } from '@polkadot/util'
+import { randomAsHex } from '@polkadot/util-crypto'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { trimProviderUrl } from '@prosopo/common'
-import ProsopoCaptchaApi from './ProsopoCaptchaApi'
+import { ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
+import { CaptchaSolution, ContractAbi } from '@prosopo/types'
+import ExtensionWeb2 from '../api/ExtensionWeb2'
+import ExtensionWeb3 from '../api/ExtensionWeb3'
+import { TCaptchaSubmitResult } from '../types/client'
 import {
     Account,
     ProcaptchaCallbacks,
@@ -12,17 +21,8 @@ import {
     ProcaptchaStateUpdateFn,
 } from '../types/manager'
 import { sleep } from '../utils/utils'
-import ExtensionWeb2 from '../api/ExtensionWeb2'
-import ExtensionWeb3 from '../api/ExtensionWeb3'
-import { TCaptchaSubmitResult } from '../types/client'
-import { randomAsHex } from '@polkadot/util-crypto'
-import { ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
-import { WsProvider } from '@polkadot/rpc-provider'
-import { ApiPromise, Keyring } from '@polkadot/api'
-import { u32 } from '@polkadot/types'
-import { stringToU8a } from '@polkadot/util'
-import { SignerPayloadRaw } from '@polkadot/types/types'
-import { CaptchaSolution, ContractAbi } from '@prosopo/types'
+import ProsopoCaptchaApi from './ProsopoCaptchaApi'
+import storage from './storage'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
