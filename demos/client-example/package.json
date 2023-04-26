@@ -1,0 +1,49 @@
+{
+  "name": "@prosopo/client-example",
+  "version": "0.1.10",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.9.3",
+    "@emotion/styled": "^11.9.3",
+    "@mui/material": "^5.9.1",
+    "@mui/styles": "^5.9.1",
+    "@prosopo/procaptcha-react": "^0.1.10",
+    "@testing-library/jest-dom": "^5.16.4",
+    "bootstrap": "^5.2.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "5.0.1",
+    "typescript": "^4.7.4",
+    "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "cypress": "^10.8.0",
+    "cypress-promise": "^1.1.0",
+    "eslint-config-react-app": "^7.0.1"
+  },
+  "scripts": {
+    "start": "NODE_ENV=development PORT=3001 react-scripts start",
+    "build": "NODE_ENV=production react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "cypress:open": "cypress open"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
