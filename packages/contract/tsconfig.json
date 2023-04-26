@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+  },
+  "include": [
+    "./src/**/*.ts",
+    "./src/abi/*.json"
+  ],
+  "references": [
+    {
+      "path": "../datasets"
+    },
+    {
+      "path": "../i18n"
+    }
+  ]
+}
