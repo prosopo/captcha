@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* purgecss start ignore */
+@tailwind base;
+@tailwind components;
+/* purgecss end ignore */
+
+@tailwind utilities;
+
+html,
+body {
+  @apply bg-main;
+}
+
+@layer base {
+  @font-face {
+    font-family: 'Montserrat', sans-serif;
+  }
+}
+
+.prosopo-extension > div > div > * {
+  background-color: white;
+}
+
+.prosopo-extension > div {
+  @apply max-w-xs md:max-w-none;
+}
+
+.prosopo-extension label.Mui-focused {
+  border-radius: 2px;
+  padding: 0 3px;
+}
+
+.blur {
+  filter: blur(8px);
+  -webkit-filter: blur(8px);
+}
