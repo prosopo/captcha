@@ -1,0 +1,91 @@
+{
+  "name": "@prosopo/demo-nft-marketplace",
+  "version": "0.1.10",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3002",
+    "build": "next build",
+    "build-prod": "next build",
+    "start": "next start -p 3002",
+    "build:tailwind": "postcss src/scss/base.scss -o src/scss/tailwind.scss",
+    "lint": "eslint '*/**/*.{ts,tsx}'",
+    "lint:fix": "npm run lint --fix",
+    "find:unused": "next-unused",
+    "setup": "node ./scripts/setup.js"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.9.3",
+    "@emotion/styled": "^11.9.3",
+    "@headlessui/react": "^1.6.6",
+    "@heroicons/react": "^1.0.6",
+    "@polkadot/api": "^8.13.1",
+    "@polkadot/api-contract": "^8.13.1",
+    "@polkadot/rpc-provider": "^8.13.1",
+    "@polkadot/util": "^10.0.2",
+    "@polkadot/util-crypto": "^10.0.2",
+    "@prosopo/procaptcha-react": "^0.1.9",
+    "axios": "^0.27.2",
+    "browserify-fs": "^1.0.0",
+    "ethereum-blockies-base64": "^1.0.2",
+    "next": "12.1.4",
+    "next-images": "^1.8.4",
+    "node-polyfill-webpack-plugin": "^2.0.0",
+    "react": "^17.0.0",
+    "react-currency-input-field": "^3.6.4",
+    "react-dom": "^17.0.0",
+    "react-hot-toast": "^2.3.0",
+    "react-top-loading-bar": "^2.1.0",
+    "webpack": "^5.73.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.18.9",
+    "@polkadot/types": "^8.13.1",
+    "@tailwindcss/forms": "^0.5.2",
+    "@types/node": "^18.0.6",
+    "@types/react": "^18.0.15",
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
+    "autoprefixer": "^10.4.7",
+    "babel-loader": "^8.2.5",
+    "babel-plugin-css-modules-transform": "^1.6.2",
+    "electron": "^19.0.8",
+    "eslint": "^8.20.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "fs-extra": "^10.1.0",
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
+    "next-unused": "^0.0.6",
+    "postcss": "^8.4.14",
+    "postcss-preset-env": "^7.7.2",
+    "prettier": "^2.7.1",
+    "react-docgen-typescript-loader": "^3.7.2",
+    "tailwindcss": "^3.1.6",
+    "typescript": "^4.7.4"
+  },
+  "resolutions": {
+    "did-jwt": "5.1.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint"
+    ]
+  },
+  "next-unused": {
+    "alias": {},
+    "include": [
+      "src/*"
+    ],
+    "exclude": [],
+    "entrypoints": [
+      "src/pages"
+    ]
+  }
+}
