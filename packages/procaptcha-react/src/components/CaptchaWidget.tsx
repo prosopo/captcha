@@ -13,11 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
-import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
-
 import CheckIcon from '@mui/icons-material/Check'
-import { Box, Fade, Theme } from '@mui/material'
+import { Theme } from '@mui/material'
+import Box from '@mui/material/Box'
+import Fade from '@mui/material/Fade'
 import useTheme from '@mui/styles/useTheme'
+import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
 import { Item } from '@prosopo/types'
 
 export interface CaptchaWidgetProps {

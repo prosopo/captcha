@@ -16,12 +16,11 @@
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
-import { GetCaptchaResponse } from '@prosopo/procaptcha'
-
-import { CaptchaWidget } from './CaptchaWidget'
-import { useTranslation } from '@prosopo/common'
-import { addDataAttr } from '../util'
 import ThemeProvider from '@mui/material/styles/ThemeProvider'
+import useTranslation from '@prosopo/common/dist/react/useTranslation'
+import { GetCaptchaResponse } from '@prosopo/procaptcha'
+import addDataAttr from '../util'
+import CaptchaWidget from './CaptchaWidget'
 import theme from './theme'
 
 export interface CaptchaComponentProps {
@@ -36,7 +35,6 @@ export interface CaptchaComponentProps {
 
 export const CaptchaComponent = (props: CaptchaComponentProps) => {
     const { t } = useTranslation()
-    // console.log('CaptchaComponent', props)
     const { challenge, index, solutions, onSubmit, onCancel, onClick, onNext } = props
     const captcha = challenge.captchas[index]
     const solution = solutions[index]
