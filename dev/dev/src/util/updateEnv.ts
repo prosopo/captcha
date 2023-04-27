@@ -1,9 +1,9 @@
-import { getEnv } from '@prosopo/common'
-import { glob } from 'glob'
+import { getEnv } from '@prosopo/env'
+import consola from 'consola'
 import dotenv from 'dotenv'
 import fs from 'fs'
+import { glob } from 'glob'
 import path from 'path'
-import consola from 'consola'
 
 export async function findEnvFiles(logger: typeof consola) {
     const env = getEnv()

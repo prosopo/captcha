@@ -21,6 +21,7 @@
     "@prosopo/provider": "^0.1.11",
     "@prosopo/common": "^0.1.11",
     "@prosopo/types": "^0.1.11",
+    "@prosopo/env": "^0.1.11",
     "consola": "^2.15.3",
     "dotenv": "^16.0.3",
     "glob": "^10.0.0",

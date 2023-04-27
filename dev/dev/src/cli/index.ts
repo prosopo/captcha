@@ -1,10 +1,10 @@
+import { loadEnv } from '@prosopo/env'
+import consola, { LogLevel } from 'consola'
+import path from 'path'
 import yargs from 'yargs'
 import { deployDapp, deployProtocol } from '../deploy/index'
-import { updateEnvFiles } from '../util/updateEnv'
-import consola, { LogLevel } from 'consola'
 import { setup } from '../setup/index'
-import { loadEnv } from '@prosopo/common'
-import path from 'path'
+import { updateEnvFiles } from '../util/updateEnv'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
