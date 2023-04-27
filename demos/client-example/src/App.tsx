@@ -1,9 +1,9 @@
+import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
-import { Box, Button, Typography, FormControl, FormGroup, Stack, TextField, Alert } from '@mui/material'
 
 import { ProcaptchaOutput } from '@prosopo/procaptcha'
 
-import { Procaptcha, ExtensionAccountSelect } from '@prosopo/procaptcha-react'
+import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 
 import './App.css'
 
@@ -135,8 +135,6 @@ function App() {
         },
         solutionThreshold: 80,
     }
-    console.log(config)
-    console.log(process.env)
 
     return (
         <div>
