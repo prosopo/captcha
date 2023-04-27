@@ -11,12 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Hash } from '@polkadot/types/interfaces'
-import { ProsopoEnvError } from '@prosopo/common'
-import { getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
-import { createType } from '@polkadot/types'
-import { Environment, Tasks } from '@prosopo/provider'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { createType } from '@polkadot/types'
+import { ProsopoEnvError } from '@prosopo/common'
+import { stringToHexPadded } from '@prosopo/contract'
+import { Environment, Tasks } from '@prosopo/provider'
 import { IProviderAccount, ProsopoEnvironment } from '@prosopo/types'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds'
 
@@ -51,7 +50,7 @@ export async function registerProvider(env: Environment, account: IProviderAccou
     }
 }
 
-export async function setupProvider(env: ProsopoEnvironment, provider: IProviderAccount): Promise<Hash> {
+export async function setupProvider(env: ProsopoEnvironment, provider: IProviderAccount): Promise<void> {
     if (!provider.pair) {
         throw new ProsopoEnvError('DEVELOPER.MISSING_PROVIDER_PAIR', undefined, undefined, { provider })
     }
@@ -78,7 +77,7 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
     )
     logger.info('   - providerAddDataset')
     const datasetResult = await tasks.providerAddDatasetFromFile(provider.datasetFile)
-    datasetResult.contractEvents!.map((event) => logger.debug(JSON.stringify(event, null, 4)))
-    const events = getEventsFromMethodName(datasetResult, 'ProviderAddDataset')
-    return events[0].event.args[1] as Hash
+    // datasetResult.contractEvents!.map((event) => logger.debug(JSON.stringify(event, null, 4)))
+    // const events = getEventsFromMethodName(datasetResult, 'ProviderAddDataset')
+    // return events[0].event.args[1] as Hash
 }
