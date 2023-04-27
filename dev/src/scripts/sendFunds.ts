@@ -11,10 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BN } from '@polkadot/util'
+import { getPair } from '@prosopo/common'
+import { getPairType, getSs58Format } from '@prosopo/env'
 import { Environment } from '@prosopo/provider'
 import { sendFunds } from '../setup'
-import { BN } from '@polkadot/util'
-import { getPair, getPairType, getSs58Format } from '@prosopo/common'
 
 require('dotenv').config()
 
