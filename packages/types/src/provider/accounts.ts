@@ -17,7 +17,6 @@ export interface IProviderAccount extends IUserAccount {
 }
 
 export interface IDappAccount {
-    serviceOrigin: string
     secret: string
     contractAccount: string
     fundAmount: number | BN
