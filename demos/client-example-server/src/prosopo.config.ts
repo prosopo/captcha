@@ -18,7 +18,7 @@ import { ProsopoServerConfig } from '@prosopo/api'
 export default () =>
     ({
         logLevel: 'debug',
-        defaultEnvironment: 'shiden',
+        defaultEnvironment: 'development', // enviromental variables - TODO: check through other repos
         web2: process.env.REACT_APP_WEB2 || true,
         serverUrl:
             process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_PORT

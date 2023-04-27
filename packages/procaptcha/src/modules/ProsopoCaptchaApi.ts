@@ -13,24 +13,23 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { Signer } from '@polkadot/api/types'
+import { stringToHex } from '@polkadot/util'
+import { ProviderApi } from '@prosopo/api'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoCaptchaSolutionCommitment, ProsopoContractMethods, ProsopoRandomProvider } from '@prosopo/contract'
 import {
     CaptchaMerkleTree,
-    CaptchaSolution,
-    CaptchaWithProof,
     computeCaptchaHash,
+    computeCaptchaSolutionHash,
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
-import { Signer } from '@polkadot/api/types'
-import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
-import { ProviderApi } from '@prosopo/api'
-import { TCaptchaSubmitResult } from '../types/client'
+import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { ProsopoApiError } from '../api/handlers'
-import { ProsopoEnvError } from '@prosopo/common'
-import { computeCaptchaSolutionHash } from '@prosopo/datasets'
-import { ProsopoCaptchaSolutionCommitment, ProsopoContractMethods, ProsopoRandomProvider } from '@prosopo/contract'
-import { stringToHex } from '@polkadot/util'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
+import { TCaptchaSubmitResult } from '../types/client'
 
 export class ProsopoCaptchaApi {
     userAccount: string
@@ -70,8 +69,8 @@ export class ProsopoCaptchaApi {
         // TODO make sure root is equal to root on the provider
         const proofLength = captchaChallenge.captchas[0].proof.length
         console.log(provider.provider)
-        console.log(provider.provider.datasetIdContent, captchaChallenge.captchas[0].proof[proofLength - 1][0])
-        if (provider.provider.datasetIdContent.toString() !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
+        console.log(provider.datasetIdContent, captchaChallenge.captchas[0].proof[proofLength - 1][0])
+        if (provider.datasetIdContent.toString() !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_DATASET_CONTENT_ID')
         }
 
