@@ -306,6 +306,16 @@ pub mod prosopo {
         pub account: AccountId, // the provider account
     }
 
+
+    /// Record when dapp become active or inactive and at what block
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct DappActiveRecord {
+        pub active: bool, // is the provider active as of this block?
+        pub block: BlockNumber, // the block number at which the provider status changed
+        pub account: AccountId, // the provider account
+    }
+
     // Record when dapp payee changes
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
@@ -342,6 +352,7 @@ pub mod prosopo {
         rng_replay_lag: u16, // the number of blocks in the past that the rng can be replayed
         active_provider_log: Lazy<Vec<ProviderActiveRecord>>, // the history of active providers (i.e. a log of when providers became active/inactive). Stored newest first.
         dapp_payee_log: Lazy<Vec<DappPayeeRecord>>, // the history of dapp payees. Stored newest first.
+        active_dapp_log: Lazy<Vec<DappActiveRecord>>, // the history of dapp active status. Stored newest first.
     }
 
     // Event emitted when a new provider registers
@@ -608,9 +619,10 @@ pub mod prosopo {
                 seed_log: Default::default(),
                 active_provider_log: Default::default(),
                 dapp_payee_log: Default::default(),
+                active_dapp_log: Default::default(),
                 seed: Seed {
-                    value: 0, // set the seed to default 0
-                    block: 0, // default to block 0, doesn't matter if this is wrong
+                    value: 0,
+                    block: 0,
                 },
             }
         }
