@@ -146,7 +146,6 @@ export interface ProsopoProvider extends Struct {
     readonly payee: ProsopoPayee
     readonly serviceOrigin: Hash
     readonly datasetId: Hash
-    readonly datasetIdContent: Hash
 }
 
 /** @name ProsopoRandomProvider */
@@ -154,6 +153,7 @@ export interface ProsopoRandomProvider extends Struct {
     readonly providerId: AccountId
     readonly provider: ProsopoProvider
     readonly blockNumber: u32
+    readonly datasetIdContent: Hash
 }
 
 /** @name ProsopoUser */
