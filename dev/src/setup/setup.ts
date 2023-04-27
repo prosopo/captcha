@@ -52,9 +52,7 @@ async function copyEnvFile() {
     const rootDir = getRootDir()
     const tplEnvFile = getEnvFile(rootDir, 'env')
     const envFile = getEnvFile(rootDir, '.env')
-    console.log('await')
     await fse.copy(tplEnvFile, envFile, { overwrite: false })
-    console.log('await')
 }
 
 function updateEnvFileVar(source: string, name: string, value: string) {
@@ -96,26 +94,19 @@ export async function setup() {
         console.log(`Address: ${address}`)
         console.log(`Mnemonic: ${mnemonic}`)
         console.log('Writing .env file...')
-        console.log(`start`)
         await copyEnvFile()
-        console.log(`start`)
 
         if (!process.env.DAPP_CONTRACT_ADDRESS) {
             throw new ProsopoEnvError('DEVELOPER.DAPP_CONTRACT_ADDRESS_MISSING')
         }
 
-        console.log(`start`)
         const pairType = getPairType()
-        console.log(`start`)
         const ss58Format = getSs58Format()
-        console.log(`start`)
         const secret = '//Alice'
         const pair = await getPair(pairType, ss58Format, secret)
-        console.log(`start`)
         const env = new Environment(pair)
-        console.log(`start`)
         await env.isReady()
-        console.log(`end`)
+
         const dappStakeDefault = await env.contractInterface.getDappStakeDefault()
         defaultDapp.fundAmount = BN.max(dappStakeDefault, new BN(defaultDapp.fundAmount))
         defaultProvider.secret = mnemonic
