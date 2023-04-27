@@ -54,6 +54,23 @@ fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u
     c
 }
 
+/// Prune an desc ordered list
+fn prune<T, U: PartialOrd>(list: &mut Vec<T>, threshold: &U, f: fn (&T) -> &U) {
+    // iter from end to start
+    for i in (0..list.len()).rev() {
+        // if element is less than threshold, remove it
+        let value: &U = f(&list[i]);
+        if value < threshold {
+            // we're always looking at the last element, so we can just pop it
+            list.pop();
+        } else {
+            // hit an element that is greater than threshold, so we can stop
+            // all elements from this element to the start of the list are also greater than threshold, because list is in desc order
+            break;
+        }
+    }
+}
+
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
@@ -68,6 +85,7 @@ pub mod prosopo {
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
     use schnorrkel::{PublicKey, Signature};
+    use crate::prune;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -270,6 +288,7 @@ pub mod prosopo {
         Pending, // not enough people have voted
     }
 
+    /// A seed for rng.
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Seed {
@@ -277,12 +296,22 @@ pub mod prosopo {
         pub block: BlockNumber,
     }
 
+    /// Record when providers become active or inactive and at what block
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderActiveRecord {
         pub active: bool, // is the provider active as of this block?
         pub block: BlockNumber, // the block number at which the provider status changed
         pub account: AccountId, // the provider account
+    }
+
+    // Record when dapp payee changes
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct DappPayeeRecord {
+        pub payee: DappPayee, // the payee setting for the dapp
+        pub block: BlockNumber, // the block number at which the change occurred
+        pub account: AccountId, // the dapp account
     }
 
     // Contract storage
@@ -310,7 +339,8 @@ pub mod prosopo {
         seed: Seed, // the current seed for rng
         seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
         rng_replay_lag: u16, // the number of blocks in the past that the rng can be replayed
-        active_providers_log: Lazy<Vec<ProviderActiveRecord>>, // the history of active providers (i.e. a log of when providers became active/inactive). Stored newest first.
+        active_provider_log: Lazy<Vec<ProviderActiveRecord>>, // the history of active providers (i.e. a log of when providers became active/inactive). Stored newest first.
+        dapp_payee_log: Lazy<Vec<DappPayeeRecord>>, // the history of dapp payees. Stored newest first.
     }
 
     // Event emitted when a new provider registers
@@ -525,6 +555,7 @@ pub mod prosopo {
         InvalidPublicKey,
         /// Returned if operator not found
         OperatorNotFound,
+        IndexOutOfBounds,
     }
 
     impl Prosopo {
@@ -574,7 +605,8 @@ pub mod prosopo {
                 max_provider_fee,
                 rng_replay_lag: 10, // TODO make this configurable
                 seed_log: Default::default(),
-                active_providers_log: Default::default(),
+                active_provider_log: Default::default(),
+                dapp_payee_log: Default::default(),
                 seed: Seed {
                     value: 0, // set the seed to default 0
                     block: 0, // default to block 0, doesn't matter if this is wrong
@@ -685,19 +717,12 @@ pub mod prosopo {
             // put the old seed into the log
             let mut seed_log = self.seed_log.get_or_default();
             // prune the seed log as old entries may have become too old and land outside the rng_replay_lag window
-            let mut oldest_seed_block: BlockNumber = 0;
             let rng_replay_lag = self.rng_replay_lag as BlockNumber;
-            if block_number > rng_replay_lag {
-                oldest_seed_block = block_number - rng_replay_lag;
-            }
-            // iterate over the seed log from oldest to newest
-            for i in (0..seed_log.len()).rev() {
-                let entry = seed_log[i];
-                // pop the last entry if it is too old
-                if entry.block < oldest_seed_block {
-                    seed_log.pop();
-                }
-            }
+            let oldest_seed_block: BlockNumber = if block_number > rng_replay_lag {
+                block_number - rng_replay_lag
+            } else { 0 };
+            prune(&mut seed_log, &oldest_seed_block, |seed| &seed.block);
+
             // add the current seed to the log
             seed_log.insert(0, seed);
 
@@ -730,20 +755,83 @@ pub mod prosopo {
             self.seed_log.set(&seed_log);
 
             // trim the active provider log list to be within the rng_replay_lag window
-            let mut active_providers_log = self.active_providers_log.get_or_default();
-            // iterate over the active providers log from oldest to newest
-            for i in (0..active_providers_log.len()).rev() {
-                let entry = active_providers_log[i];
-                // pop the last entry if it is too old
-                if entry.block < oldest_seed_block {
-                    active_providers_log.pop();
+            let mut active_provider_log = self.active_provider_log.get_or_default();
+            prune(&mut active_provider_log, &oldest_seed_block, |active_provider| &active_provider.block);
+
+            // update the active providers log
+            self.active_provider_log.set(&active_provider_log);
+
+            Ok(true)
+        }
+
+        // #[ink(message)]
+        // pub fn get_random_active_provider_replay(&self, user_account: AccountId, dapp_contract_account: AccountId, block: BlockNumber) -> Vec<Seed> {
+            
+        // }
+
+        // /// Choose a provider from a group of providers
+        // fn choose_provider(&self, groups: Vec<BTreeSet<AccountId>>) {
+
+        // }
+
+        #[ink(message)]
+        pub fn abc(&self, user_account: AccountId, dapp_contract_account: AccountId) -> Result<RandomProvider, Error> {
+            let dapp = self.validate_dapp(dapp_contract_account)?;
+            
+            let mut provider_groups: Vec<BTreeSet<AccountId>> = Vec::new();
+            
+            // for each group of providers
+            for payee in vec![Payee::Provider, Payee::Dapp] {
+                // check to see if dapp is targetting them as the payee
+                let dapp_payee: DappPayee = payee.try_into().unwrap();
+                if dapp_payee == dapp.payee || dapp.payee == DappPayee::Any {
+                    // if so, add to the groups to pick between
+                    let provider_group = self.provider_accounts.get(ProviderState {
+                        status: GovernanceStatus::Active,
+                        payee,
+                    }).unwrap_or_default();
+                    provider_groups.push(provider_group);
+                }
+            }
+            
+            // choose a provider from the groups
+            let provider_count: u128 = provider_groups.iter().map(|group| group.len() as u128).sum();
+            if provider_count == 0 {
+                return err!(Error::NoActiveProviders);
+            }
+            if provider_count < self.min_num_active_providers as u128 {
+                return err!(Error::NotEnoughActiveProviders);
+            }
+
+            let mut index = self.get_random_number(
+                provider_count as u128,
+                user_account,
+                dapp_contract_account,
+            );
+
+            for group in provider_groups.iter() {
+                let len = group.len() as u128;
+                if index >= len {
+                    // not in this group
+                    index -= len;
+                } else {
+                    // in this group
+                    let provider_id = *group.iter().nth(index as usize).unwrap();
+                    let provider = self.get_provider(provider_id)?;
+                    let captcha_data = self.get_captcha_data(provider.dataset_id)?;
+                    let dataset_id_content = captcha_data.dataset_id_content;
+
+                    return Ok(RandomProvider {
+                        provider,
+                        provider_id,
+                        block_number: self.env().block_number(),
+                        dataset_id_content,
+                    });
                 }
             }
 
-            // update the active providers log
-            self.active_providers_log.set(&active_providers_log);
+            err!(Error::IndexOutOfBounds)
 
-            Ok(true)
         }
 
         /// Get contract provider minimum stake default.
@@ -880,7 +968,7 @@ pub mod prosopo {
             let mut active_at = existing.active_at;
             if old_status != new_status {
                 // status has changed, need to update logs
-                let mut active_provider_log = self.active_providers_log.get().unwrap_or_default();
+                let mut active_provider_log = self.active_provider_log.get().unwrap_or_default();
                 let active = new_status == GovernanceStatus::Active;
                 if active {
                     // record when the provider became active
@@ -894,7 +982,7 @@ pub mod prosopo {
                     active,
                     block: active_at,
                 });
-                self.active_providers_log.set(&active_provider_log);
+                self.active_provider_log.set(&active_provider_log);
             }
 
             let provider = Provider {
