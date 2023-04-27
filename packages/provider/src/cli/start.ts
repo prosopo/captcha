@@ -11,15 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import express from 'express'
+import { getPair, i18nMiddleware } from '@prosopo/common'
+import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
+import { ProsopoEnvironment } from '@prosopo/types'
 import cors from 'cors'
+import express from 'express'
+import { Server } from 'http'
 import { prosopoRouter } from '../api'
 import { LocalAssetsResolver } from '../assets'
 import { Environment } from '../env'
 import { handleErrors } from '../errors'
-import { ProsopoEnvironment } from '@prosopo/types'
-import { Server } from 'http'
-import { getPair, getPairType, getSecret, getSs58Format, i18nMiddleware, loadEnv } from '@prosopo/common'
 
 let apiAppSrv: Server
 
