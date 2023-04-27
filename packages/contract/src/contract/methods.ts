@@ -111,7 +111,6 @@ export class ProsopoContractMethods extends ProsopoContractApi implements IProso
             undefined,
             at
         )
-        console.log('\n\n\n\n\n\n', 'response', response)
         // @ts-ignore
         return response.output?.asOk.asOk.toPrimitive() as unknown as ProsopoRandomProvider
     }
