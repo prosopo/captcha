@@ -80,6 +80,7 @@ pub mod prosopo {
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
+    use ink::prelude::collections::btree_map::BTreeMap;
     use ink::prelude::vec::Vec;
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
@@ -108,7 +109,7 @@ pub mod prosopo {
     }
 
     /// Payee is the recipient of any fees that are paid when a CaptchaSolutionCommitment is approved
-    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, Ord, PartialOrd)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Payee {
         Provider,
@@ -764,6 +765,32 @@ pub mod prosopo {
             Ok(true)
         }
 
+        #[ink(message)]
+        pub fn rng_caller_block_ink(&self) {
+
+        }
+
+        fn rand(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber, seed: u128) -> u128 {
+            // hash the account, block and seed
+            const BLOCK_NUMBER_SIZE: usize = 4;
+            const ACCOUNT_SIZE: usize = 32;
+            let block_number: u32 = self.env().block_number();
+            let user_account_bytes: &[u8; ACCOUNT_SIZE] = user_account.as_ref();
+            let dapp_account_bytes: &[u8; ACCOUNT_SIZE] = dapp_account.as_ref();
+            // pack all the data into a single byte array
+            let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
+            let tmp2: [u8; BLOCK_NUMBER_SIZE + ACCOUNT_SIZE] =
+                crate::concat_u8(&block_number_arr, user_account_bytes);
+            let bytes: [u8; BLOCK_NUMBER_SIZE
+                + ACCOUNT_SIZE
+                + ACCOUNT_SIZE] = crate::concat_u8(&tmp2, dapp_account_bytes);
+            // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
+            let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
+            <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
+            // the random number can be derived from the hash
+            u128::from_le_bytes(hash_output)
+        }
+
         // #[ink(message)]
         // pub fn get_random_active_provider_replay(&self, user_account: AccountId, dapp_contract_account: AccountId, block: BlockNumber) -> Vec<Seed> {
             
@@ -775,7 +802,31 @@ pub mod prosopo {
         // }
 
         #[ink(message)]
-        pub fn abc(&self, user_account: AccountId, dapp_contract_account: AccountId) -> Result<RandomProvider, Error> {
+        pub fn get_payees(&self) -> Vec<Payee> {
+            vec![Payee::Provider, Payee::Dapp]
+        }
+
+        #[ink(message)]
+        pub fn get_dapp_payees(&self) -> Vec<DappPayee> {
+            vec![DappPayee::Provider, DappPayee::Dapp, DappPayee::Any]
+        }
+
+        #[ink(message)]
+        pub fn def(&self, user_account: AccountId, dapp_contract_account: AccountId) {
+            // pull out the active providers
+            let active_providers = self.get_payees().iter().map(|payee| {
+                let provider_accounts = self.provider_accounts.get(ProviderState {
+                    status: GovernanceStatus::Active,
+                    payee: *payee,
+                }).unwrap_or_default();
+                (*payee, provider_accounts)
+            }).collect::<BTreeMap<Payee, BTreeSet<AccountId>>>();
+
+            abc(user_account, dapp_contract_account, active_providers, self.seed.value);
+        }
+        
+        fn get_random_provider_replay(&self, user_account: AccountId, dapp_contract_account: AccountId, active_providers: BTreeMap<Payee, BTreeSet<AccountId>>, seed: u128
+        ) -> Result<RandomProvider, Error> {
             let dapp = self.validate_dapp(dapp_contract_account)?;
             
             let mut provider_groups: Vec<BTreeSet<AccountId>> = Vec::new();
