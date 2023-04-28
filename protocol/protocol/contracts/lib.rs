@@ -54,23 +54,6 @@ fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u
     c
 }
 
-/// Prune an desc ordered list
-fn prune<T, U: PartialOrd>(list: &mut Vec<T>, threshold: &U, f: fn (&T) -> &U) {
-    // iter from end to start
-    for i in (0..list.len()).rev() {
-        // if element is less than threshold, remove it
-        let value: &U = f(&list[i]);
-        if value < threshold {
-            // we're always looking at the last element, so we can just pop it
-            list.pop();
-        } else {
-            // hit an element that is greater than threshold, so we can stop
-            // all elements from this element to the start of the list are also greater than threshold, because list is in desc order
-            break;
-        }
-    }
-}
-
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
@@ -617,15 +600,32 @@ pub mod prosopo {
                 captcha_solution_commitments: Default::default(),
                 min_num_active_providers,
                 max_provider_fee,
-                rng_replay_lag: 10, // TODO make this configurable
+                rewind_window: 10, // TODO make this configurable
                 seed_log: Default::default(),
-                active_provider_log: Default::default(),
-                dapp_payee_log: Default::default(),
-                active_dapp_log: Default::default(),
+                provider_status_and_payee_log: Default::default(),
+                dapp_status_and_payee_log: Default::default(),
                 seed: Seed {
                     value: 0,
                     block: 0,
                 },
+            }
+        }
+
+
+        /// Prune an desc ordered list
+        fn prune<T, U: PartialOrd>(&self, list: &mut Vec<T>, threshold: &U, f: fn (&T) -> &U) {
+            // iter from end to start
+            for i in (0..list.len()).rev() {
+                // if element is less than threshold, remove it
+                let value: &U = f(&list[i]);
+                if value < threshold {
+                    // we're always looking at the last element, so we can just pop it
+                    list.pop();
+                } else {
+                    // hit an element that is greater than threshold, so we can stop
+                    // all elements from this element to the start of the list are also greater than threshold, because list is in desc order
+                    break;
+                }
             }
         }
 
