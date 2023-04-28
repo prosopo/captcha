@@ -81,12 +81,14 @@ pub mod prosopo {
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::collections::btree_map::BTreeMap;
-    use ink::prelude::vec::Vec;
+    use ink::prelude::{
+        vec,
+        vec::Vec
+    };
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
     use schnorrkel::{PublicKey, Signature};
-    use crate::prune;
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
