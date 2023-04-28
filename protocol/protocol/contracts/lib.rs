@@ -1185,48 +1185,6 @@ pub mod prosopo {
             Ok(())
         }
 
-        /// Transfer a refund fee from payer account to user account
-        /// Payee == Provider => Dapp pays solve fee and Dapp pays Dapp User tx fee
-        /// Payee == Dapp => Provider pays solve fee and Provider pays Dapp Use
-        fn refund_transaction_fee(
-            &mut self,
-            commitment: CaptchaSolutionCommitment,
-            amount: Balance,
-        ) -> Result<(), Error> {
-            if self.env().balance() < amount {
-                return err!(Error::ContractInsufficientFunds);
-            }
-
-            if amount > 0 {
-                let mut provider = self
-                    .providers
-                    .get(commitment.provider)
-                    .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
-                let mut dapp = self
-                    .dapps
-                    .get(commitment.contract)
-                    .ok_or_else(err_fn!(Error::DappDoesNotExist))?;
-                if provider.payee == Payee::Provider {
-                    if dapp.balance < amount {
-                        return err!(Error::DappInsufficientFunds);
-                    }
-                    dapp.balance -= amount;
-                    self.dapps.insert(commitment.contract, &dapp);
-                } else {
-                    if provider.balance < amount {
-                        return err!(Error::ProviderInsufficientFunds);
-                    }
-                    provider.balance -= amount;
-                    self.providers.insert(commitment.provider, &provider);
-                }
-                self.env()
-                    .transfer(commitment.account, amount)
-                    .map_err(|_| Error::ContractTransferFailed)?;
-            }
-
-            Ok(())
-        }
-
         /// Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
         /// Threshold is decided by the calling user
         #[ink(message)]
