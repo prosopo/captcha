@@ -683,6 +683,16 @@ pub mod prosopo {
             Ok(operator)
         }
 
+        #[ink(message)]
+        pub fn get_payees(&self) -> Vec<Payee> {
+            vec![Payee::Provider, Payee::Dapp]
+        }
+
+        #[ink(message)]
+        pub fn get_dapp_payees(&self) -> Vec<DappPayee> {
+            vec![DappPayee::Provider, DappPayee::Dapp, DappPayee::Any]
+        }
+
         /// Get the seed
         #[ink(message)]
         pub fn get_seed(&self) -> Seed {
