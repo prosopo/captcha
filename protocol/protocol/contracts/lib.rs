@@ -330,140 +330,6 @@ pub mod prosopo {
         dapp_status_and_payee_log: Lazy<Vec<DappStatusAndPayeeRecord>>, // a log of changes to the status and payee of dapps
     }
 
-    // Event emitted when a new provider registers
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderRegister {
-        #[ink(topic)]
-        account: AccountId,
-    }
-
-    // Event emitted when a new provider deregisters
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderDeregister {
-        #[ink(topic)]
-        account: AccountId,
-    }
-
-    // Event emitted when a new provider is updated
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderUpdate {
-        #[ink(topic)]
-        account: AccountId,
-    }
-
-    // Event emitted when a provider stakes
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderStake {
-        #[ink(topic)]
-        account: AccountId,
-        value: Balance,
-    }
-
-    // Event emitted when a provider adds a data set
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderAddDataset {
-        #[ink(topic)]
-        account: AccountId,
-        dataset_id: Hash,
-        dataset_id_content: Hash,
-    }
-
-    // Event emitted when a provider unstakes
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderUnstake {
-        #[ink(topic)]
-        account: AccountId,
-        value: Balance,
-    }
-
-    // Event emitted when a provider approves a solution
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderApprove {
-        #[ink(topic)]
-        captcha_solution_commitment_id: Hash,
-    }
-
-    // Event emitted when a provider disapproves a solution
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderDisapprove {
-        #[ink(topic)]
-        captcha_solution_commitment_id: Hash,
-    }
-
-    // Event emitted when a dapp registers
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappRegister {
-        #[ink(topic)]
-        contract: AccountId,
-        owner: AccountId,
-        value: Balance,
-        payee: DappPayee,
-        status: GovernanceStatus,
-    }
-
-    // Event emitted when a dapp updates
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappUpdate {
-        #[ink(topic)]
-        contract: AccountId,
-        owner: AccountId,
-        value: Balance,
-        payee: DappPayee,
-        status: GovernanceStatus,
-    }
-
-    // Event emitted when a dapp funds
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappFund {
-        #[ink(topic)]
-        contract: AccountId,
-        value: Balance,
-    }
-
-    // Event emitted when a dapp cancels
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappCancel {
-        #[ink(topic)]
-        contract: AccountId,
-        value: Balance,
-    }
-
-    // Event emitted when a dapp user commits a solution hash
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappUserCommit {
-        #[ink(topic)]
-        account: AccountId,
-        merkle_tree_root: Hash,
-        contract: AccountId,
-        dataset_id: Hash,
-    }
-
     /// The Prosopo error types
     ///
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -1102,9 +968,6 @@ pub mod prosopo {
                 },
                 &provider_accounts_map,
             );
-            self.env().emit_event(ProviderRegister {
-                account: provider_account,
-            });
             Ok(())
         }
 
@@ -1176,9 +1039,6 @@ pub mod prosopo {
             self.provider_change_status(provider_account, old_status, new_status, payee);
             self.providers.insert(provider_account, &provider);
 
-            self.env().emit_event(ProviderUpdate {
-                account: provider_account,
-            });
             Ok(())
         }
 
@@ -1242,9 +1102,6 @@ pub mod prosopo {
             provider.status = GovernanceStatus::Deactivated;
             self.providers.insert(provider_account, &provider);
 
-            self.env().emit_event(ProviderDeregister {
-                account: provider_account,
-            });
             Ok(())
         }
 
@@ -1264,10 +1121,6 @@ pub mod prosopo {
                     .transfer(caller, balance)
                     .map_err(|_| Error::ContractTransferFailed)?;
                 self.provider_deregister(caller)?;
-                self.env().emit_event(ProviderUnstake {
-                    account: caller,
-                    value: balance,
-                });
             }
 
             Ok(())
@@ -1325,13 +1178,6 @@ pub mod prosopo {
             }
 
             self.providers.insert(provider_id, &provider);
-
-            // emit event
-            self.env().emit_event(ProviderAddDataset {
-                account: provider_id,
-                dataset_id,
-                dataset_id_content,
-            });
 
             Ok(())
         }
@@ -1432,20 +1278,11 @@ pub mod prosopo {
             self.check_dapp_does_not_exist(contract)?;
 
             // configure the new dapp
-            let dapp = self.dapp_configure(
+            let _dapp = self.dapp_configure(
                 contract,
                 payee,
                 self.env().caller(), // the caller is made the owner of the contract
             )?;
-
-            // emit event
-            self.env().emit_event(DappRegister {
-                contract,
-                owner: dapp.owner,
-                value: dapp.balance,
-                payee,
-                status: dapp.status,
-            });
 
             Ok(())
         }
@@ -1461,16 +1298,7 @@ pub mod prosopo {
             self.get_dapp(contract)?;
 
             // configure the new dapp
-            let dapp = self.dapp_configure(contract, payee, owner)?;
-
-            // emit event
-            self.env().emit_event(DappUpdate {
-                contract,
-                owner,
-                value: dapp.balance,
-                payee,
-                status: dapp.status,
-            });
+            let _dapp = self.dapp_configure(contract, payee, owner)?;
 
             Ok(())
         }
@@ -1508,11 +1336,6 @@ pub mod prosopo {
             dapp.status = GovernanceStatus::Deactivated;
             dapp.balance = 0;
             self.dapps.insert(contract, &dapp);
-
-            self.env().emit_event(DappCancel {
-                contract,
-                value: balance,
-            });
 
             Ok(())
         }
@@ -1591,12 +1414,6 @@ pub mod prosopo {
                 }
             }
 
-            self.env().emit_event(DappUserCommit {
-                account: caller,
-                merkle_tree_root: user_merkle_tree_root,
-                contract,
-                dataset_id,
-            });
             Ok(())
         }
 
@@ -1743,9 +1560,6 @@ pub mod prosopo {
 
                 self.pay_fee(&caller, &commitment.contract)?;
                 self.refund_transaction_fee(commitment, transaction_fee)?;
-                self.env().emit_event(ProviderApprove {
-                    captcha_solution_commitment_id,
-                });
             } else {
                 return err!(Error::CaptchaSolutionCommitmentAlreadyApproved);
             }
@@ -1783,9 +1597,6 @@ pub mod prosopo {
                 );
 
                 self.pay_fee(&caller, &commitment.contract)?;
-                self.env().emit_event(ProviderDisapprove {
-                    captcha_solution_commitment_id,
-                });
             } else {
                 return err!(Error::CaptchaSolutionCommitmentAlreadyDisapproved);
             }
@@ -2596,26 +2407,6 @@ pub mod prosopo {
             assert_eq!(provider.payee, Payee::Dapp);
             assert_eq!(provider.balance, balance);
             assert_eq!(provider.status, GovernanceStatus::Deactivated);
-
-            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
-
-            // first event is the register event, second event is the update
-            assert_eq!(2, emitted_events.len());
-
-            let event_provider_update = &emitted_events[1];
-
-            let decoded_event_update =
-                <Event as scale::Decode>::decode(&mut &event_provider_update.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderUpdate(ProviderUpdate { account }) = decoded_event_update {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderUpdate.account"
-                );
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderUpdate event");
-            }
         }
 
         /// Test provider register with service_origin error
@@ -2733,28 +2524,6 @@ pub mod prosopo {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider);
             contract.provider_unstake().ok();
-            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
-
-            // events are the register event (0), stake event(1), deregister(2) and the unstake event(3)
-
-            assert_eq!(4, emitted_events.len());
-
-            let event_unstake = &emitted_events[3];
-            let decoded_event_unstake =
-                <Event as scale::Decode>::decode(&mut &event_unstake.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderUnstake(ProviderUnstake { account, value }) =
-                decoded_event_unstake
-            {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderUnstake.account"
-                );
-                assert_eq!(value, balance, "encountered invalid ProviderUnstake.value");
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderUnstake event");
-            }
         }
 
         /// Test provider add data set
@@ -2787,33 +2556,6 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2).ok();
-            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
-
-            // events are the register, stake, add data set
-            assert_eq!(3, emitted_events.len());
-
-            let event_unstake = &emitted_events[2];
-            let decoded_event_unstake =
-                <Event as scale::Decode>::decode(&mut &event_unstake.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderAddDataset(ProviderAddDataset {
-                account,
-                dataset_id: dataset_id,
-                dataset_id_content: datset_id_content,
-            }) = decoded_event_unstake
-            {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderAddDataset.account"
-                );
-                assert_eq!(
-                    dataset_id, root1,
-                    "encountered invalid ProviderAddDataset.dataset_id"
-                );
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderAddDataset event");
-            }
         }
 
         /// Test provider cannot add data set if inactive
