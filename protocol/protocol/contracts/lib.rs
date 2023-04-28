@@ -369,6 +369,8 @@ pub mod prosopo {
         InvalidSignature,
         /// Returned if the public key is invalid during signing
         InvalidPublicKey,
+        /// Returned if the captcha solution commitment is not pending, i.e. has already been dealt with
+        CaptchaSolutionCommitmentNotPending,
     }
 
     impl Prosopo {
@@ -980,9 +982,9 @@ pub mod prosopo {
 
                 // call provider_approve or provider_disapprove depending on whether the status is Approved or Disapproved
                 match status_option.unwrap_or(CaptchaStatus::Pending) {
-                    CaptchaStatus::Approved => self.provider_approve(user_merkle_tree_root, 0)?,
+                    CaptchaStatus::Approved => self.provider_commit(user_merkle_tree_root, true)?,
                     CaptchaStatus::Disapproved => {
-                        self.provider_disapprove(user_merkle_tree_root)?
+                        self.provider_commit(user_merkle_tree_root, false)?
                     }
                     _ => {}
                 }
@@ -1102,12 +1104,12 @@ pub mod prosopo {
             user
         }
 
-        /// Approve a solution commitment, increment correct captchas, and refund the users tx fee
+        /// Provider submits a captcha solution commitment
         #[ink(message)]
-        pub fn provider_approve(
+        pub fn provider_commit(
             &mut self,
             captcha_solution_commitment_id: Hash,
-            transaction_fee: Balance,
+            approved: bool,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
@@ -1124,55 +1126,29 @@ pub mod prosopo {
 
             // only make changes if commitment is Pending approval or disapproval
             if commitment.status == CaptchaStatus::Pending {
-                commitment.status = CaptchaStatus::Approved;
+                if approved {
+                    commitment.status = CaptchaStatus::Approved;
 
-                self.record_commitment(
-                    commitment.account,
-                    captcha_solution_commitment_id,
-                    commitment,
-                );
+                    self.record_commitment(
+                        commitment.account,
+                        captcha_solution_commitment_id,
+                        commitment,
+                    );
 
-                self.pay_fee(&caller, &commitment.contract)?;
-                self.refund_transaction_fee(commitment, transaction_fee)?;
+                    self.pay_fee(&caller, &commitment.contract)?;
+                } else {
+                    commitment.status = CaptchaStatus::Disapproved;
+
+                    self.record_commitment(
+                        commitment.account,
+                        captcha_solution_commitment_id,
+                        commitment,
+                    );
+
+                    self.pay_fee(&caller, &commitment.contract)?;
+                }
             } else {
-                return err!(Error::CaptchaSolutionCommitmentAlreadyApproved);
-            }
-
-            Ok(())
-        }
-
-        /// Disapprove a solution commitment and increment incorrect captchas
-        #[ink(message)]
-        pub fn provider_disapprove(
-            &mut self,
-            captcha_solution_commitment_id: Hash,
-        ) -> Result<(), Error> {
-            let caller = self.env().caller();
-            self.validate_provider_active(caller)?;
-
-            let mut commitment = self
-                .captcha_solution_commitments
-                .get(captcha_solution_commitment_id)
-                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            // Guard against incorrect solution id
-            if commitment.provider != caller {
-                return err!(Error::NotAuthorised);
-            }
-            self.validate_dapp(commitment.contract)?;
-
-            // only make changes if commitment is Pending approval or disapproval
-            if commitment.status == CaptchaStatus::Pending {
-                commitment.status = CaptchaStatus::Disapproved;
-
-                self.record_commitment(
-                    commitment.account,
-                    captcha_solution_commitment_id,
-                    commitment,
-                );
-
-                self.pay_fee(&caller, &commitment.contract)?;
-            } else {
-                return err!(Error::CaptchaSolutionCommitmentAlreadyDisapproved);
+                return err!(Error::CaptchaSolutionCommitmentNotPending);
             }
 
             Ok(())
@@ -2876,7 +2852,7 @@ pub mod prosopo {
             // Call from the provider account to mark the solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_approve(solution_id, 0);
+            contract.provider_commit(solution_id, true);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -2889,7 +2865,7 @@ pub mod prosopo {
 
             // Now make sure that the provider cannot later set the solution to disapproved and make
             // sure that the dapp balance is unchanged
-            contract.provider_disapprove(solution_id);
+            contract.provider_commit(solution_id, false);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -2968,7 +2944,7 @@ pub mod prosopo {
             // Call from the provider account to mark the wrong solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = str_to_hash("id that does not exist".to_string());
-            let result = contract.provider_approve(solution_id, 0);
+            let result = contract.provider_commit(solution_id, true);
             assert_eq!(
                 Error::CaptchaSolutionCommitmentDoesNotExist,
                 result.unwrap_err()
@@ -3038,7 +3014,7 @@ pub mod prosopo {
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_disapprove(solution_id);
+            contract.provider_commit(solution_id, false);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -3050,7 +3026,7 @@ pub mod prosopo {
             assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
             // Now make sure that the provider cannot later set the solution to approved
-            contract.provider_approve(solution_id, 0);
+            contract.provider_commit(solution_id, true);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -3131,7 +3107,7 @@ pub mod prosopo {
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_disapprove(solution_id);
+            contract.provider_commit(solution_id, false);
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
