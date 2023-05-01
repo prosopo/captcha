@@ -28,6 +28,14 @@ jobs:
       - name: Remove stopped containers
         run: docker rm $(docker ps -a -q) || true
 
+      - name: Clone captcha
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          repository: prosopo/captcha
+          path: captcha
+          submodules: recursive
+
       - name: Clone scripts repository
         uses: actions/checkout@v3
         with:
@@ -85,11 +93,13 @@ jobs:
 
       - name: Install dependencies
         run: |
+          cd captcha
           ls .
           npm install
 
       - name: Build provider and dependencies
         run: |
+          cd captcha
           echo $(npx tsc --version)
           cd packages/common && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cd ../types && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
@@ -100,6 +110,7 @@ jobs:
 
       - name: Setup the environment and run the unit tests
         run: |
+          cd captcha
           git status | head -n 1
           cd packages/provider
           cp env.development .env.development
