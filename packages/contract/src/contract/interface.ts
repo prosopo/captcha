@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
 import { AbiMetadata, ContractAbi } from '@prosopo/types'
-import { GAS_INCREASE_FACTOR, encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
+import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
@@ -92,15 +92,8 @@ export class ProsopoContractApi extends ContractPromise {
             // paymentInfo is larger than gasRequired returned by query so use paymentInfo
             const paymentInfo = await extrinsicTx.paymentInfo(this.pair.address)
             this.logger.debug('Payment info: ', paymentInfo.partialFee.toHuman())
-            // increase the gas limit again to make sure the tx succeeds
-            const increasedWeight = createType(this.api.registry, 'WeightV2', {
-                refTime: paymentInfo.weight.refTime.toBn().muln(GAS_INCREASE_FACTOR),
-                proofSize: paymentInfo.weight.proofSize.toBn().muln(GAS_INCREASE_FACTOR),
-            })
-            console.log(increasedWeight.toHuman())
-            options = getOptions(this.api, message.isMutating, value, increasedWeight, response.storageDeposit)
-            // // @ts-ignore
-            // console.log(options.gasLimit?.toHuman())
+            // increase the gas limit to make sure the tx succeeds
+            options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit, true)
             handleContractCallOutcomeErrors(response, contractMethodName)
             return {
                 extrinsic: this.tx[contractMethodName](options, ...encodedArgs),

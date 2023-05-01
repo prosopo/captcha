@@ -164,25 +164,27 @@ export function getOptions(
     isMutating?: boolean,
     value?: number | BN,
     gasLimit?: Weight | WeightV2,
-    storageDeposit?: StorageDeposit
+    storageDeposit?: StorageDeposit,
+    increaseGas?: boolean
 ): ContractOptions {
+    const gasIncreaseFactor = increaseGas ? GAS_INCREASE_FACTOR : 1
     const _gasLimit: Weight | WeightV2 | undefined = gasLimit
-        ? gasLimit
-        : // ? api.registry.createType('WeightV2', {
-        //       refTime: gasLimit.refTime.toBn().muln(GAS_INCREASE_FACTOR),
-        //       proofSize: gasLimit.proofSize.toBn().muln(GAS_INCREASE_FACTOR),
-        //   })
-        isMutating
+        ? api.registry.createType('WeightV2', {
+              refTime: gasLimit.refTime.toBn().muln(gasIncreaseFactor),
+              proofSize: gasLimit.proofSize.toBn().muln(gasIncreaseFactor),
+          })
+        : isMutating
         ? (api.registry.createType('WeightV2', {
               proofSize: new BN(1_000_000),
               refTime: MAX_CALL_WEIGHT,
           }) as WeightV2)
         : undefined
+
     return {
         gasLimit: _gasLimit,
         storageDepositLimit: storageDeposit
             ? storageDeposit.isCharge
-                ? storageDeposit.asCharge.muln(GAS_INCREASE_FACTOR)
+                ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
                 : storageDeposit.isRefund
                 ? storageDeposit.asRefund
                 : null
