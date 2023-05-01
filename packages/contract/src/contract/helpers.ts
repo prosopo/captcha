@@ -157,7 +157,7 @@ const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE)
 // The values returned by the dry run transactions are sometimes not large enough
 // to guarantee that the transaction will succeed. This is a safety margin to ensure
 // that the transaction will succeed.
-export const GAS_INCREASE_FACTOR = 1.01
+export const GAS_INCREASE_FACTOR = 1.1
 
 export function getOptions(
     api: ApiBase<'promise'>,
@@ -168,9 +168,13 @@ export function getOptions(
 ): ContractOptions {
     const _gasLimit: Weight | WeightV2 | undefined = gasLimit
         ? gasLimit
-        : isMutating
+        : // ? api.registry.createType('WeightV2', {
+        //       refTime: gasLimit.refTime.toBn().muln(GAS_INCREASE_FACTOR),
+        //       proofSize: gasLimit.proofSize.toBn().muln(GAS_INCREASE_FACTOR),
+        //   })
+        isMutating
         ? (api.registry.createType('WeightV2', {
-              proofTime: new BN(1_000_000),
+              proofSize: new BN(1_000_000),
               refTime: MAX_CALL_WEIGHT,
           }) as WeightV2)
         : undefined

@@ -27,9 +27,9 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     const deployer = new ContractDeployer(env.api, abi, wasm, env.pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()
 }
-export async function run(): Promise<AccountId> {
-    const wasm = await Wasm(path.resolve(process.env.PROTOCOL_WASM_PATH || '.'))
-    const abi = await AbiJSON(path.resolve(process.env.PROTOCOL_ABI_PATH || '.'))
+export async function run(wasmPath: string, abiPath: string): Promise<AccountId> {
+    const wasm = await Wasm(path.resolve(wasmPath))
+    const abi = await AbiJSON(path.resolve(abiPath))
     const deployResult = await deploy(wasm, abi)
 
     const instantiateEvent: EventRecord | undefined = deployResult.events.find(
@@ -40,8 +40,12 @@ export async function run(): Promise<AccountId> {
 }
 // run the script if the main process is running this file
 if (typeof require !== 'undefined' && require.main === module) {
-    loadEnv(path.resolve('../..'))
-    run()
+    console.log('Loading env from', path.resolve('.'))
+    loadEnv(path.resolve('.'))
+    if (!process.env.PROTOCOL_WASM_PATH || !process.env.PROTOCOL_ABI_PATH) {
+        throw new Error('Missing protocol wasm or abi path')
+    }
+    run(process.env.PROTOCOL_WASM_PATH, process.env.PROTOCOL_ABI_PATH)
         .then((deployResult) => {
             console.log('Deployed with address', deployResult)
             process.exit(0)

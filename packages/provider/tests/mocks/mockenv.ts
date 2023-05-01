@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import {} from '@prosopo/datasets'
-import { LogLevel, Logger, ProsopoEnvError, loadEnv, logger } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { loadEnv } from '@prosopo/env'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import path from 'path'
 import { LocalAssetsResolver } from '../../src/assets'

@@ -6,6 +6,7 @@ import { BN } from '@polkadot/util'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi/index'
+import { StorageDeposit } from '@polkadot/types/interfaces'
 
 export interface IProsopoContractApi extends ContractPromise {
     contractName: string
@@ -22,7 +23,7 @@ export interface IProsopoContractApi extends ContractPromise {
         contractMethodName: string,
         args: T[],
         value?: number | BN | undefined
-    ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions }>
+    ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions; storageDeposit: StorageDeposit }>
 
     contractTx<T>(
         contractMethodName: string,

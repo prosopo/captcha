@@ -26,7 +26,8 @@ import { accountAddress, accountMnemonic } from '../mocks/accounts'
 import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util'
 import { ApiPromise } from '@polkadot/api'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { getPair, getPairType, getSs58Format } from '@prosopo/common'
+import { getPair } from '@prosopo/common'
+import { getPairType, getSs58Format } from '@prosopo/env'
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -77,7 +78,7 @@ describe('BATCH TESTS', async () => {
         await env.db?.connection?.close()
     })
 
-    const commitmentCount = 1
+    const commitmentCount = 50
     it(`Batches ~${commitmentCount} commitments on-chain`, async () => {
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)

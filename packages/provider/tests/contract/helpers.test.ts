@@ -19,7 +19,8 @@ import { encodeStringArgs } from '@prosopo/contract'
 import { describe } from 'mocha'
 import chai from 'chai'
 import { MockEnvironment } from '../mocks/mockenv'
-import { getPair, getSs58Format } from '@prosopo/common'
+import { getPair } from '@prosopo/common'
+import { getSs58Format } from '@prosopo/env'
 import { KeypairType } from '@polkadot/util-crypto/types'
 
 const expect = chai.expect

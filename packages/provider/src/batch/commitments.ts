@@ -1,9 +1,10 @@
-import { ProsopoContractApi, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import { batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { BN } from '@polkadot/util'
 import {
     BatchCommitConfig,
     Database,
     ExtrinsicBatch,
+    IProsopoContractMethods,
     ScheduledTaskNames,
     ScheduledTaskStatus,
     UserCommitmentRecord,
@@ -18,14 +19,14 @@ const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'dappUserCommit'
 
 export class BatchCommitments {
-    contract: ProsopoContractApi
+    contract: IProsopoContractMethods
     db: Database
     batchCommitConfig: BatchCommitConfig
     logger: Logger
     private nonce: bigint
     constructor(
         batchCommitConfig: BatchCommitConfig,
-        contractApi: ProsopoContractApi,
+        contractApi: IProsopoContractMethods,
         db: Database,
         concurrent: number,
         startNonce: bigint,
@@ -111,11 +112,14 @@ export class BatchCommitments {
             this.logger.debug('Provider Address', this.contract.pair.address)
             const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.abi, fragment, args)
             this.logger.debug(`Commitment:`, args)
-            const { extrinsic, options } = await this.contract.buildExtrinsic('dappUserCommit', encodedArgs)
+            const { extrinsic, options, storageDeposit } = await this.contract.buildExtrinsic(
+                'dappUserCommit',
+                encodedArgs
+            )
 
             const paymentInfo = await extrinsic.paymentInfo(this.contract.pair)
 
-            console.log(JSON.stringify(this.contract.api.consts.transactionPayment))
+            //console.log(JSON.stringify(this.contract.api.consts.transactionPayment))
 
             this.logger.debug(`${CONTRACT_METHOD_NAME} paymentInfo:`, paymentInfo.toHuman())
             //totalEncodedLength += extrinsic.encodedLength
@@ -125,16 +129,19 @@ export class BatchCommitments {
             totalProofSize = totalProofSize.add(
                 this.contract.api.registry.createType('WeightV2', options.gasLimit).proofSize.toBn()
             )
-            totalFee = totalFee.add(paymentInfo.partialFee.toBn())
+            totalFee = totalFee.add(paymentInfo.partialFee.toBn().add(storageDeposit.asCharge.toBn()))
             const extrinsicTooHigh = this.extrinsicTooHigh(totalRefTime, totalProofSize, maxBlockWeight)
             console.log(
                 'Free balance',
+                '`',
                 (await this.contract.api.query.system.account(this.contract.pair.address)).data.free
                     .toBn()
                     .div(oneUnit(this.contract.api as ApiPromise))
-                    .toString()
+                    .toString(),
+                '`',
+                'UNIT'
             )
-            console.log('Total Fee', totalFee.div(oneUnit(this.contract.api as ApiPromise)).toString())
+            console.log('Total Fee `', totalFee.div(oneUnit(this.contract.api as ApiPromise)).toString(), '`', 'UNIT')
             const feeTooHigh = totalFee.gt(
                 (await this.contract.api.query.system.account(this.contract.pair.address)).data.free.toBn()
             )

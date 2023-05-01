@@ -25,7 +25,7 @@ import { ApiBase, ApiDecoration } from '@polkadot/api/types'
 import { firstValueFrom, map } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
 import { BN, BN_ZERO } from '@polkadot/util'
-import { EventRecord, WeightV2 } from '@polkadot/types/interfaces'
+import { EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
 import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { useWeightImpl } from './useWeight'
@@ -70,12 +70,12 @@ export class ProsopoContractApi extends ContractPromise {
         contractMethodName: string,
         args: T[],
         value?: number | BN | undefined
-    ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions }> {
+    ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions; storageDeposit: StorageDeposit }> {
         // Always query first as errors are passed back from a dry run but not from a transaction
         const message = this.abi.findMessage(contractMethodName)
         const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
         const expectedBlockTime = new BN(this.api.consts.babe?.expectedBlockTime)
-        const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(10))
+        const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(1))
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
         this.logger.debug('Sending address: ', this.pair.address)
         const initialOptions = {
@@ -94,12 +94,19 @@ export class ProsopoContractApi extends ContractPromise {
             this.logger.debug('Payment info: ', paymentInfo.partialFee.toHuman())
             // increase the gas limit again to make sure the tx succeeds
             const increasedWeight = createType(this.api.registry, 'WeightV2', {
-                refTime: Math.floor(paymentInfo.weight.refTime.toNumber() * GAS_INCREASE_FACTOR),
-                proofSize: Math.floor(paymentInfo.weight.proofSize.toNumber() * GAS_INCREASE_FACTOR),
+                refTime: paymentInfo.weight.refTime.toBn().muln(GAS_INCREASE_FACTOR),
+                proofSize: paymentInfo.weight.proofSize.toBn().muln(GAS_INCREASE_FACTOR),
             })
+            console.log(increasedWeight.toHuman())
             options = getOptions(this.api, message.isMutating, value, increasedWeight, response.storageDeposit)
+            // // @ts-ignore
+            // console.log(options.gasLimit?.toHuman())
             handleContractCallOutcomeErrors(response, contractMethodName)
-            return { extrinsic: this.tx[contractMethodName](options, ...encodedArgs), options }
+            return {
+                extrinsic: this.tx[contractMethodName](options, ...encodedArgs),
+                options,
+                storageDeposit: response.storageDeposit,
+            }
         } else {
             throw new ProsopoContractError(response.result.asErr, this.buildExtrinsic.name)
         }
