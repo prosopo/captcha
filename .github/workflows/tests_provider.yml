@@ -85,6 +85,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          ls .
           npm install
 
       - name: Build provider and dependencies
