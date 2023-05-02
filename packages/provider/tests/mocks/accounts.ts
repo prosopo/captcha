@@ -15,7 +15,8 @@ import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { BN } from '@polkadot/util'
 import { Tasks } from '../../src/index'
 import { ProsopoEnvironment } from '@prosopo/types'
-import { getPair, getSs58Format } from '@prosopo/common'
+import { getPair } from '@prosopo/common'
+import { getSs58Format } from '@prosopo/env'
 import { KeypairType } from '@polkadot/util-crypto/types'
 
 export const accountMnemonic = (account: Account) => account[0]
@@ -40,7 +41,6 @@ export const PROVIDER: IProviderAccount = {
 }
 
 export const DAPP: IDappAccount = {
-    serviceOrigin: 'http://localhost:9393',
     secret: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed
     fundAmount: new BN(1000000000000000),
