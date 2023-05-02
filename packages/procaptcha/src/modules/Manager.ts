@@ -58,7 +58,7 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
 /**
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
-const Manager = (
+export const Manager = (
     configOptional: ProcaptchaConfigOptional,
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
@@ -477,5 +477,3 @@ const Manager = (
         nextRound,
     }
 }
-
-export default Manager
