@@ -293,140 +293,6 @@ pub mod prosopo {
         max_provider_fee: Balance,
     }
 
-    // Event emitted when a new provider registers
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderRegister {
-        #[ink(topic)]
-        account: AccountId,
-    }
-
-    // Event emitted when a new provider deregisters
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderDeregister {
-        #[ink(topic)]
-        account: AccountId,
-    }
-
-    // Event emitted when a new provider is updated
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderUpdate {
-        #[ink(topic)]
-        account: AccountId,
-    }
-
-    // Event emitted when a provider stakes
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderStake {
-        #[ink(topic)]
-        account: AccountId,
-        value: Balance,
-    }
-
-    // Event emitted when a provider adds a data set
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderAddDataset {
-        #[ink(topic)]
-        account: AccountId,
-        dataset_id: Hash,
-        dataset_id_content: Hash,
-    }
-
-    // Event emitted when a provider unstakes
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderUnstake {
-        #[ink(topic)]
-        account: AccountId,
-        value: Balance,
-    }
-
-    // Event emitted when a provider approves a solution
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderApprove {
-        #[ink(topic)]
-        captcha_solution_commitment_id: Hash,
-    }
-
-    // Event emitted when a provider disapproves a solution
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderDisapprove {
-        #[ink(topic)]
-        captcha_solution_commitment_id: Hash,
-    }
-
-    // Event emitted when a dapp registers
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappRegister {
-        #[ink(topic)]
-        contract: AccountId,
-        owner: AccountId,
-        value: Balance,
-        payee: DappPayee,
-        status: GovernanceStatus,
-    }
-
-    // Event emitted when a dapp updates
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappUpdate {
-        #[ink(topic)]
-        contract: AccountId,
-        owner: AccountId,
-        value: Balance,
-        payee: DappPayee,
-        status: GovernanceStatus,
-    }
-
-    // Event emitted when a dapp funds
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappFund {
-        #[ink(topic)]
-        contract: AccountId,
-        value: Balance,
-    }
-
-    // Event emitted when a dapp cancels
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappCancel {
-        #[ink(topic)]
-        contract: AccountId,
-        value: Balance,
-    }
-
-    // Event emitted when a dapp user commits a solution hash
-    #[ink(event)]
-    #[derive(PartialEq, Debug, Eq, Clone, Copy)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct DappUserCommit {
-        #[ink(topic)]
-        account: AccountId,
-        merkle_tree_root: Hash,
-        contract: AccountId,
-        dataset_id: Hash,
-    }
-
     /// The Prosopo error types
     ///
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -503,6 +369,10 @@ pub mod prosopo {
         InvalidSignature,
         /// Returned if the public key is invalid during signing
         InvalidPublicKey,
+        /// Returned if the captcha solution commitment is not pending, i.e. has already been dealt with
+        CaptchaSolutionCommitmentNotPending,
+        /// Returned if the commitment already exists
+        CaptchaSolutionCommitmentAlreadyExists,
     }
 
     impl Prosopo {
@@ -681,9 +551,6 @@ pub mod prosopo {
                 },
                 &provider_accounts_map,
             );
-            self.env().emit_event(ProviderRegister {
-                account: provider_account,
-            });
             Ok(())
         }
 
@@ -743,9 +610,6 @@ pub mod prosopo {
             self.provider_change_status(provider_account, old_status, new_status, payee);
             self.providers.insert(provider_account, &provider);
 
-            self.env().emit_event(ProviderUpdate {
-                account: provider_account,
-            });
             Ok(())
         }
 
@@ -809,9 +673,6 @@ pub mod prosopo {
             provider.status = GovernanceStatus::Deactivated;
             self.providers.insert(provider_account, &provider);
 
-            self.env().emit_event(ProviderDeregister {
-                account: provider_account,
-            });
             Ok(())
         }
 
@@ -831,10 +692,6 @@ pub mod prosopo {
                     .transfer(caller, balance)
                     .map_err(|_| Error::ContractTransferFailed)?;
                 self.provider_deregister(caller)?;
-                self.env().emit_event(ProviderUnstake {
-                    account: caller,
-                    value: balance,
-                });
             }
 
             Ok(())
@@ -892,13 +749,6 @@ pub mod prosopo {
             }
 
             self.providers.insert(provider_id, &provider);
-
-            // emit event
-            self.env().emit_event(ProviderAddDataset {
-                account: provider_id,
-                dataset_id,
-                dataset_id_content,
-            });
 
             Ok(())
         }
@@ -1006,20 +856,11 @@ pub mod prosopo {
             self.check_dapp_does_not_exist(contract)?;
 
             // configure the new dapp
-            let dapp = self.dapp_configure(
+            let _dapp = self.dapp_configure(
                 contract,
                 payee,
                 self.env().caller(), // the caller is made the owner of the contract
             )?;
-
-            // emit event
-            self.env().emit_event(DappRegister {
-                contract,
-                owner: dapp.owner,
-                value: dapp.balance,
-                payee,
-                status: dapp.status,
-            });
 
             Ok(())
         }
@@ -1035,16 +876,7 @@ pub mod prosopo {
             self.get_dapp(contract)?;
 
             // configure the new dapp
-            let dapp = self.dapp_configure(contract, payee, owner)?;
-
-            // emit event
-            self.env().emit_event(DappUpdate {
-                contract,
-                owner,
-                value: dapp.balance,
-                payee,
-                status: dapp.status,
-            });
+            let _dapp = self.dapp_configure(contract, payee, owner)?;
 
             Ok(())
         }
@@ -1083,11 +915,6 @@ pub mod prosopo {
             dapp.balance = 0;
             self.dapps.insert(contract, &dapp);
 
-            self.env().emit_event(DappCancel {
-                contract,
-                value: balance,
-            });
-
             Ok(())
         }
 
@@ -1096,81 +923,6 @@ pub mod prosopo {
                 return err!(Error::AccountIsOperator);
             }
 
-            Ok(())
-        }
-
-        /// Submit a captcha solution commit
-        #[ink(message)]
-        pub fn dapp_user_commit(
-            &mut self,
-            contract: AccountId,
-            dataset_id: Hash,
-            user_merkle_tree_root: Hash,
-            provider: AccountId,
-            dapp_user: AccountId,
-            status_option: Option<CaptchaStatus>,
-        ) -> Result<(), Error> {
-            let caller = self.env().caller();
-
-            // Guard against dapp submitting a commit on behalf of a user
-            if self.dapps.get(caller).is_some() {
-                return err!(Error::NotAuthorised);
-            }
-
-            // Guard against incorrect data being submitted
-            self.get_captcha_data(dataset_id)?;
-
-            // Guard against solution commitment being submitted more than once
-            if self
-                .captcha_solution_commitments
-                .get(user_merkle_tree_root)
-                .is_some()
-            {
-                return err!(Error::CaptchaSolutionCommitmentExists);
-            }
-
-            // Guard against inactive dapps and providers
-            self.validate_dapp(contract)?;
-            self.validate_provider_active(provider)?;
-
-            // Create and insert the commitment
-            let commitment = CaptchaSolutionCommitment {
-                account: dapp_user,
-                dataset_id,
-                status: CaptchaStatus::Pending,
-                contract,
-                provider,
-                completed_at: self.env().block_timestamp(),
-            };
-
-            self.record_commitment(dapp_user, user_merkle_tree_root, commitment);
-
-            // Insert the commitment and mark as approved or disapproved if a Provider is the caller
-            let provider_details = self.get_provider_details(caller);
-            if provider_details.ok().is_some() {
-                // Provider is not the caller
-                if caller != provider {
-                    // Provider cannot submit dapp user commits on behalf of another provider
-                    ink::env::debug_println!("{}", "NotAuthorised");
-                    return err!(Error::NotAuthorised);
-                }
-
-                // call provider_approve or provider_disapprove depending on whether the status is Approved or Disapproved
-                match status_option.unwrap_or(CaptchaStatus::Pending) {
-                    CaptchaStatus::Approved => self.provider_approve(user_merkle_tree_root, 0)?,
-                    CaptchaStatus::Disapproved => {
-                        self.provider_disapprove(user_merkle_tree_root)?
-                    }
-                    _ => {}
-                }
-            }
-
-            self.env().emit_event(DappUserCommit {
-                account: caller,
-                merkle_tree_root: user_merkle_tree_root,
-                contract,
-                dataset_id,
-            });
             Ok(())
         }
 
@@ -1285,84 +1037,33 @@ pub mod prosopo {
             user
         }
 
-        /// Approve a solution commitment, increment correct captchas, and refund the users tx fee
+        /// Provider submits a captcha solution commitment
         #[ink(message)]
-        pub fn provider_approve(
+        pub fn provider_commit(
             &mut self,
             captcha_solution_commitment_id: Hash,
-            transaction_fee: Balance,
+            commitment: CaptchaSolutionCommitment,
         ) -> Result<(), Error> {
             let caller = self.env().caller();
             self.validate_provider_active(caller)?;
-
-            let mut commitment = self
-                .captcha_solution_commitments
-                .get(captcha_solution_commitment_id)
-                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            // Guard against incorrect solution id
-            if commitment.provider != caller {
-                return err!(Error::NotAuthorised);
-            }
             self.validate_dapp(commitment.contract)?;
 
-            // only make changes if commitment is Pending approval or disapproval
-            if commitment.status == CaptchaStatus::Pending {
-                commitment.status = CaptchaStatus::Approved;
-
-                self.record_commitment(
-                    commitment.account,
-                    captcha_solution_commitment_id,
-                    commitment,
-                );
-
-                self.pay_fee(&caller, &commitment.contract)?;
-                self.refund_transaction_fee(commitment, transaction_fee)?;
-                self.env().emit_event(ProviderApprove {
-                    captcha_solution_commitment_id,
-                });
-            } else {
-                return err!(Error::CaptchaSolutionCommitmentAlreadyApproved);
-            }
-
-            Ok(())
-        }
-
-        /// Disapprove a solution commitment and increment incorrect captchas
-        #[ink(message)]
-        pub fn provider_disapprove(
-            &mut self,
-            captcha_solution_commitment_id: Hash,
-        ) -> Result<(), Error> {
-            let caller = self.env().caller();
-            self.validate_provider_active(caller)?;
-
-            let mut commitment = self
+            // check commitment doesn't already exist
+            if self
                 .captcha_solution_commitments
                 .get(captcha_solution_commitment_id)
-                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
-            // Guard against incorrect solution id
-            if commitment.provider != caller {
-                return err!(Error::NotAuthorised);
+                .is_some()
+            {
+                return err!(Error::CaptchaSolutionCommitmentAlreadyExists);
             }
-            self.validate_dapp(commitment.contract)?;
 
-            // only make changes if commitment is Pending approval or disapproval
-            if commitment.status == CaptchaStatus::Pending {
-                commitment.status = CaptchaStatus::Disapproved;
+            self.record_commitment(
+                commitment.account,
+                captcha_solution_commitment_id,
+                commitment,
+            );
 
-                self.record_commitment(
-                    commitment.account,
-                    captcha_solution_commitment_id,
-                    commitment,
-                );
-
-                self.pay_fee(&caller, &commitment.contract)?;
-                self.env().emit_event(ProviderDisapprove {
-                    captcha_solution_commitment_id,
-                });
-            } else {
-                return err!(Error::CaptchaSolutionCommitmentAlreadyDisapproved);
-            }
+            self.pay_fee(&caller, &commitment.contract)?;
 
             Ok(())
         }
@@ -1395,48 +1096,6 @@ pub mod prosopo {
                 self.providers.insert(*provider_account, &provider);
                 self.dapps.insert(*dapp_account, &dapp);
             }
-            Ok(())
-        }
-
-        /// Transfer a refund fee from payer account to user account
-        /// Payee == Provider => Dapp pays solve fee and Dapp pays Dapp User tx fee
-        /// Payee == Dapp => Provider pays solve fee and Provider pays Dapp Use
-        fn refund_transaction_fee(
-            &mut self,
-            commitment: CaptchaSolutionCommitment,
-            amount: Balance,
-        ) -> Result<(), Error> {
-            if self.env().balance() < amount {
-                return err!(Error::ContractInsufficientFunds);
-            }
-
-            if amount > 0 {
-                let mut provider = self
-                    .providers
-                    .get(commitment.provider)
-                    .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
-                let mut dapp = self
-                    .dapps
-                    .get(commitment.contract)
-                    .ok_or_else(err_fn!(Error::DappDoesNotExist))?;
-                if provider.payee == Payee::Provider {
-                    if dapp.balance < amount {
-                        return err!(Error::DappInsufficientFunds);
-                    }
-                    dapp.balance -= amount;
-                    self.dapps.insert(commitment.contract, &dapp);
-                } else {
-                    if provider.balance < amount {
-                        return err!(Error::ProviderInsufficientFunds);
-                    }
-                    provider.balance -= amount;
-                    self.providers.insert(commitment.provider, &provider);
-                }
-                self.env()
-                    .transfer(commitment.account, amount)
-                    .map_err(|_| Error::ContractTransferFailed)?;
-            }
-
             Ok(())
         }
 
@@ -2268,26 +1927,6 @@ pub mod prosopo {
             assert_eq!(provider.payee, Payee::Dapp);
             assert_eq!(provider.balance, balance);
             assert_eq!(provider.status, GovernanceStatus::Deactivated);
-
-            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
-
-            // first event is the register event, second event is the update
-            assert_eq!(2, emitted_events.len());
-
-            let event_provider_update = &emitted_events[1];
-
-            let decoded_event_update =
-                <Event as scale::Decode>::decode(&mut &event_provider_update.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderUpdate(ProviderUpdate { account }) = decoded_event_update {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderUpdate.account"
-                );
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderUpdate event");
-            }
         }
 
         /// Test provider register with service_origin error
@@ -2405,28 +2044,6 @@ pub mod prosopo {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.provider_update(service_origin, fee, Payee::Provider);
             contract.provider_unstake().ok();
-            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
-
-            // events are the register event (0), stake event(1), deregister(2) and the unstake event(3)
-
-            assert_eq!(4, emitted_events.len());
-
-            let event_unstake = &emitted_events[3];
-            let decoded_event_unstake =
-                <Event as scale::Decode>::decode(&mut &event_unstake.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderUnstake(ProviderUnstake { account, value }) =
-                decoded_event_unstake
-            {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderUnstake.account"
-                );
-                assert_eq!(value, balance, "encountered invalid ProviderUnstake.value");
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderUnstake event");
-            }
         }
 
         /// Test provider add data set
@@ -2459,33 +2076,6 @@ pub mod prosopo {
             let root1 = str_to_hash("merkle tree".to_string());
             let root2 = str_to_hash("merkle tree2".to_string());
             contract.provider_add_dataset(root1, root2).ok();
-            let emitted_events = ink::env::test::recorded_events().collect::<Vec<_>>();
-
-            // events are the register, stake, add data set
-            assert_eq!(3, emitted_events.len());
-
-            let event_unstake = &emitted_events[2];
-            let decoded_event_unstake =
-                <Event as scale::Decode>::decode(&mut &event_unstake.data[..])
-                    .expect("encountered invalid contract event data buffer");
-
-            if let Event::ProviderAddDataset(ProviderAddDataset {
-                account,
-                dataset_id: dataset_id,
-                dataset_id_content: datset_id_content,
-            }) = decoded_event_unstake
-            {
-                assert_eq!(
-                    account, provider_account,
-                    "encountered invalid ProviderAddDataset.account"
-                );
-                assert_eq!(
-                    dataset_id, root1,
-                    "encountered invalid ProviderAddDataset.dataset_id"
-                );
-            } else {
-                panic!("encountered unexpected event kind: expected a ProviderAddDataset event");
-            }
         }
 
         /// Test provider cannot add data set if inactive
@@ -2996,79 +2586,6 @@ pub mod prosopo {
             assert_eq!(callers_initial_balance + balance, callers_balance);
         }
 
-        /// Test dapp user commit
-        /// A dapp user can only commit a solution to the chain when there is at least one captcha
-        /// provider and one dapp available.
-        #[ink::test]
-        fn test_dapp_user_commit() {
-            let operator_accounts = get_operator_accounts();
-
-            // initialise the contract
-            let mut contract = Prosopo::default(
-                operator_accounts,
-                STAKE_DEFAULT,
-                STAKE_DEFAULT,
-                10,
-                1000000,
-                0,
-                1000,
-            );
-
-            // Register the provider
-            let provider_account = AccountId::from([0x2; 32]);
-
-            let service_origin: Vec<u8> = vec![1, 2, 3];
-            let fee: u32 = 100;
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            contract
-                .provider_register(service_origin.clone(), fee, Payee::Dapp)
-                .ok();
-
-            // Call from the provider account to add data and stake tokens
-            let balance = 2000000000000;
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let root1 = str_to_hash("merkle tree1".to_string());
-            let root2 = str_to_hash("merkle tree2".to_string());
-            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.provider_update(service_origin, fee, Payee::Provider);
-            // can only add data set after staking
-            contract.provider_add_dataset(root1, root2).ok();
-
-            // Register the dapp
-            let dapp_user_account = AccountId::from([0x3; 32]);
-            let dapp_contract_account = AccountId::from([0x4; 32]);
-            // Mark the the dapp account as being a contract on-chain
-            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
-
-            // Call from the dapp contract account
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_contract_account);
-            // Give the dap a balance
-            let balance = 2000000000000;
-            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
-
-            // Call from the dapp user account
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
-            //Dapp User commit
-            let user_root = str_to_hash("user merkle tree root".to_string());
-            contract
-                .dapp_user_commit(
-                    dapp_contract_account,
-                    root1,
-                    user_root,
-                    provider_account,
-                    dapp_user_account,
-                    None,
-                )
-                .ok();
-
-            // check that the data is in the captcha_solution_commitments hashmap
-            assert!(contract
-                .captcha_solution_commitments
-                .get(user_root)
-                .is_some());
-        }
-
         /// Test provider approve
         #[ink::test]
         fn test_provider_approve() {
@@ -3120,21 +2637,21 @@ pub mod prosopo {
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            contract
-                .dapp_user_commit(
-                    dapp_contract_account,
-                    root1,
-                    user_root,
-                    provider_account,
-                    dapp_user_account,
-                    None,
-                )
-                .ok();
 
             // Call from the provider account to mark the solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_approve(solution_id, 0);
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -3147,7 +2664,18 @@ pub mod prosopo {
 
             // Now make sure that the provider cannot later set the solution to disapproved and make
             // sure that the dapp balance is unchanged
-            contract.provider_disapprove(solution_id);
+
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -3212,24 +2740,21 @@ pub mod prosopo {
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            contract
-                .dapp_user_commit(
-                    dapp_contract_account,
-                    root1,
-                    user_root,
-                    provider_account,
-                    dapp_user_account,
-                    None,
-                )
-                .ok();
 
             // Call from the provider account to mark the wrong solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = str_to_hash("id that does not exist".to_string());
-            let result = contract.provider_approve(solution_id, 0);
-            assert_eq!(
-                Error::CaptchaSolutionCommitmentDoesNotExist,
-                result.unwrap_err()
+
+            let result = contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
             );
         }
 
@@ -3282,21 +2807,21 @@ pub mod prosopo {
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            contract
-                .dapp_user_commit(
-                    dapp_contract_account,
-                    root1,
-                    user_root,
-                    provider_account,
-                    dapp_user_account,
-                    None,
-                )
-                .ok();
 
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_disapprove(solution_id);
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -3308,7 +2833,17 @@ pub mod prosopo {
             assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
             // Now make sure that the provider cannot later set the solution to approved
-            contract.provider_approve(solution_id, 0);
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -3375,21 +2910,21 @@ pub mod prosopo {
             // Call from the Dapp User Account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            contract
-                .dapp_user_commit(
-                    dapp_contract_account,
-                    root1,
-                    user_root,
-                    provider_account,
-                    dapp_user_account,
-                    None,
-                )
-                .ok();
 
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_disapprove(solution_id);
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -3604,16 +3139,17 @@ pub mod prosopo {
             //Dapp User commit and approve
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root1 = str_to_hash("user merkle tree root to approve".to_string());
-            contract
-                .dapp_user_commit(
-                    dapp_contract_account,
-                    root1,
-                    user_root1,
-                    provider_account,
-                    dapp_user_account,
-                    Some(CaptchaStatus::Approved),
-                )
-                .ok();
+            contract.provider_commit(
+                user_root1,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: root1,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
 
             // Get the commitment and make sure it is approved
             let commitment = contract
@@ -3624,16 +3160,17 @@ pub mod prosopo {
             //Dapp User commit and disapprove
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root2 = str_to_hash("user merkle tree root to disapprove".to_string());
-            contract
-                .dapp_user_commit(
-                    dapp_contract_account,
-                    root1,
-                    user_root2,
-                    provider_account,
-                    dapp_user_account,
-                    Some(CaptchaStatus::Disapproved),
-                )
-                .ok();
+            contract.provider_commit(
+                user_root2,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: root2,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
 
             // Get the commitment and make sure it is disapproved
             let commitment = contract
@@ -3708,17 +3245,6 @@ pub mod prosopo {
             // Should not be authorised
             let dapp_user_account = AccountId::from([0x6; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            let dapp_user_commit_result = contract
-                .dapp_user_commit(
-                    dapp_contract_account,
-                    root1,
-                    user_root,
-                    provider_account,
-                    dapp_user_account,
-                    Some(CaptchaStatus::Approved),
-                )
-                .err();
-            assert_eq!(Error::NotAuthorised, dapp_user_commit_result.unwrap());
         }
 
         /// Test provider cannot supply a dapp user commit for a different Provider. We can't test
