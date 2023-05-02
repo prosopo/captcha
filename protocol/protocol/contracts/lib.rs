@@ -553,7 +553,7 @@ pub mod prosopo {
         pub fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
             let provider = self
                 .providers
-                .get(&account)
+                .get(account)
                 .ok_or(Error::ProviderDoesNotExist)?;
             Ok(provider)
         }
@@ -561,7 +561,7 @@ pub mod prosopo {
         /// Get a dapp
         #[ink(message)]
         pub fn get_dapp(&self, account: AccountId) -> Result<Dapp, Error> {
-            let provider = self.dapps.get(&account).ok_or(Error::DappNotFound)?;
+            let provider = self.dapps.get(account).ok_or(Error::DappNotFound)?;
             Ok(provider)
         }
 
@@ -570,7 +570,7 @@ pub mod prosopo {
         pub fn get_operator(&self, account: AccountId) -> Result<Operator, Error> {
             let operator = self
                 .operators
-                .get(&account)
+                .get(account)
                 .ok_or(Error::OperatorNotFound)?;
             Ok(operator)
         }
@@ -612,7 +612,7 @@ pub mod prosopo {
             let provider = self.get_provider(provider_id)?;
             let captcha_data = self
                 .captcha_data
-                .get(&provider.dataset_id)
+                .get(provider.dataset_id)
                 .ok_or_else(err_fn!(Error::CaptchaDataNotFound))?;
             Ok(captcha_data)
         }
@@ -764,7 +764,7 @@ pub mod prosopo {
             if block < self.env().block_number() - self.rewind_window as BlockNumber {
                 return Ok(());
             }
-            return err!(Error::RewindWindowExceeded);
+            err!(Error::RewindWindowExceeded)
         }
 
         /// Rewind a dapp's status and payee fields back to block X
