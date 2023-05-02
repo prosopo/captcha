@@ -610,12 +610,12 @@ pub mod prosopo {
 
         /// Get the seed
         #[ink(message)]
-        pub fn get_seed_current(&self) -> Seed {
+        pub fn get_seed(&self) -> Seed {
             self.seed
         }
 
         #[ink(message)]
-        pub fn get_seed(&self, block: BlockNumber) -> Result<Seed, Error> {
+        pub fn get_seed_at(&self, block: BlockNumber) -> Result<Seed, Error> {
             // check if the block is within the rewind window
             self.check_rewind_window(block)?;
             // rewind the seed
@@ -877,8 +877,14 @@ pub mod prosopo {
         /// Get a random active provider. This uses the user id and dapp id to select a random active provider, i.e. different users and dapps will get different providers, spreading the load.
         #[ink(message)]
         pub fn get_random_active_provider(&self, user_account: AccountId, dapp_account: AccountId) -> Result<RandomActiveProvider, Error> {
+            // use the current block number
             let block = self.env().block_number();
-            let seed = self.get_seed(block)?;
+            self.get_random_active_provider_at(user_account, dapp_account, block)
+        }
+
+        #[ink(message)]
+        pub fn get_random_active_provider_at(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> Result<RandomActiveProvider, Error> {
+            let seed = self.get_seed_at(block)?;
             // let user_account = self.env().caller();
             let provider_id = self.choose_random_active_provider(user_account, dapp_account, seed)?;
             let provider = self.get_provider(provider_id)?;
