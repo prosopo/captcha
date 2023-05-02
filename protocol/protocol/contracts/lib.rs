@@ -1051,7 +1051,7 @@ pub mod prosopo {
             // check commitment doesn't already exist
             if self
                 .captcha_solution_commitments
-                .get(&captcha_solution_commitment_id)
+                .get(captcha_solution_commitment_id)
                 .is_some()
             {
                 return err!(Error::CaptchaSolutionCommitmentAlreadyExists);
