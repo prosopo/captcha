@@ -62,12 +62,9 @@ pub mod prosopo {
 
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
-    use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::collections::btree_map::BTreeMap;
-    use ink::prelude::{
-        vec,
-        vec::Vec
-    };
+    use ink::prelude::collections::btree_set::BTreeSet;
+    use ink::prelude::{vec, vec::Vec};
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
@@ -94,7 +91,9 @@ pub mod prosopo {
     }
 
     /// Payee is the recipient of any fees that are paid when a CaptchaSolutionCommitment is approved
-    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, Ord, PartialOrd)]
+    #[derive(
+        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, Ord, PartialOrd,
+    )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Payee {
         Provider,
@@ -285,20 +284,20 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderStatusAndPayeeRecord {
-        pub payee: Payee, // the payee setting of the provider at this block
+        pub payee: Payee,             // the payee setting of the provider at this block
         pub status: GovernanceStatus, // the status of the provider at this block
-        pub block: BlockNumber, // the block number at which the provider status changed
-        pub account: AccountId, // the provider account
+        pub block: BlockNumber,       // the block number at which the provider status changed
+        pub account: AccountId,       // the provider account
     }
 
     /// Record when dapp status and/or payee change occurs and at what block
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct DappStatusAndPayeeRecord {
-        pub payee: DappPayee, // the payee setting for the dapp
+        pub payee: DappPayee,         // the payee setting for the dapp
         pub status: GovernanceStatus, // the status of the dapp at this block
-        pub block: BlockNumber, // the block number at which the provider status changed
-        pub account: AccountId, // the provider account
+        pub block: BlockNumber,       // the block number at which the provider status changed
+        pub account: AccountId,       // the provider account
     }
 
     // Contract storage
@@ -323,7 +322,7 @@ pub mod prosopo {
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
-        seed: Seed, // the current seed for rng
+        seed: Seed,                // the current seed for rng
         seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u16, // the number of blocks in the past that the rng can be replayed/rewinded
         provider_status_and_payee_log: Lazy<Vec<ProviderStatusAndPayeeRecord>>, // a log of changes to the status and payee of providers
@@ -414,7 +413,6 @@ pub mod prosopo {
         DappNotFound,
         CaptchaDataNotFound,
         ProviderNotFound,
-        
 
         /// Returned if the captcha solution commitment is not pending, i.e. has already been dealt with
         CaptchaSolutionCommitmentNotPending,
@@ -472,16 +470,12 @@ pub mod prosopo {
                 seed_log: Default::default(),
                 provider_status_and_payee_log: Default::default(),
                 dapp_status_and_payee_log: Default::default(),
-                seed: Seed {
-                    value: 0,
-                    block: 0,
-                },
+                seed: Seed { value: 0, block: 0 },
             }
         }
 
-
         /// Prune an desc ordered list
-        fn prune<T, U: PartialOrd>(&self, list: &mut Vec<T>, threshold: &U, f: fn (&T) -> &U) {
+        fn prune<T, U: PartialOrd>(&self, list: &mut Vec<T>, threshold: &U, f: fn(&T) -> &U) {
             // iter from end to start
             for i in (0..list.len()).rev() {
                 // if element is less than threshold, remove it
@@ -557,7 +551,10 @@ pub mod prosopo {
         /// Get a provider
         #[ink(message)]
         pub fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
-            let provider = self.providers.get(&account).ok_or(Error::ProviderDoesNotExist)?;
+            let provider = self
+                .providers
+                .get(&account)
+                .ok_or(Error::ProviderDoesNotExist)?;
             Ok(provider)
         }
 
@@ -571,7 +568,10 @@ pub mod prosopo {
         /// Get an operator
         #[ink(message)]
         pub fn get_operator(&self, account: AccountId) -> Result<Operator, Error> {
-            let operator = self.operators.get(&account).ok_or(Error::OperatorNotFound)?;
+            let operator = self
+                .operators
+                .get(&account)
+                .ok_or(Error::OperatorNotFound)?;
             Ok(operator)
         }
 
@@ -585,11 +585,14 @@ pub mod prosopo {
             vec![DappPayee::Provider, DappPayee::Dapp, DappPayee::Any]
         }
 
-        pub fn get_providers_by_payee_and_status(&self, payee: Payee, status: GovernanceStatus) -> BTreeSet<AccountId> {
-            self.provider_accounts.get(ProviderState {
-                status,
-                payee,
-            }).unwrap_or_default()
+        pub fn get_providers_by_payee_and_status(
+            &self,
+            payee: Payee,
+            status: GovernanceStatus,
+        ) -> BTreeSet<AccountId> {
+            self.provider_accounts
+                .get(ProviderState { status, payee })
+                .unwrap_or_default()
         }
 
         #[ink(message)]
@@ -602,9 +605,15 @@ pub mod prosopo {
         }
 
         #[ink(message)]
-        pub fn get_captcha_data_from_provider(&self, provider_id: AccountId) -> Result<CaptchaData, Error> {
+        pub fn get_captcha_data_from_provider(
+            &self,
+            provider_id: AccountId,
+        ) -> Result<CaptchaData, Error> {
             let provider = self.get_provider(provider_id)?;
-            let captcha_data = self.captcha_data.get(&provider.dataset_id).ok_or_else(err_fn!(Error::CaptchaDataNotFound))?;
+            let captcha_data = self
+                .captcha_data
+                .get(&provider.dataset_id)
+                .ok_or_else(err_fn!(Error::CaptchaDataNotFound))?;
             Ok(captcha_data)
         }
 
@@ -647,7 +656,7 @@ pub mod prosopo {
                 let provider = provider_lookup.unwrap();
                 // only active providers can call this method
                 if provider.status != GovernanceStatus::Active {
-                    return err!(Error::NotAuthorised)
+                    return err!(Error::NotAuthorised);
                 }
                 // else continue, provider is active and has been active from the previous block or before
             } else {
@@ -656,7 +665,7 @@ pub mod prosopo {
                 let operator_lookup = self.get_operator(caller);
                 if operator_lookup.is_err() {
                     // caller is not an operator and not a provider
-                    return err!(Error::NotAuthorised)
+                    return err!(Error::NotAuthorised);
                 }
                 // else continue, caller is an operator
             }
@@ -675,7 +684,9 @@ pub mod prosopo {
             let rewind_window = self.rewind_window as BlockNumber;
             let oldest_seed_block: BlockNumber = if block_number > rewind_window {
                 block_number - rewind_window
-            } else { 0 };
+            } else {
+                0
+            };
             self.prune(&mut seed_log, &oldest_seed_block, |seed| &seed.block);
 
             // add the current seed to the log
@@ -683,7 +694,7 @@ pub mod prosopo {
 
             // then compute new seed value
             let block_timestamp = self.env().block_timestamp();
-            
+
             // what to use in the seed?
             // block number - different value for each block
             // block timestamp - unpredictable until the block is mined (but can be predicted by miners)
@@ -692,7 +703,7 @@ pub mod prosopo {
 
             // hash all of these together to get the new seed value
             let mut input = [0u8; 60];
-            let caller_bytes: &[u8; 32] = AsRef::<[u8;32]>::as_ref(&caller);
+            let caller_bytes: &[u8; 32] = AsRef::<[u8; 32]>::as_ref(&caller);
             input[0..32].copy_from_slice(&caller_bytes[..]);
             input[32..36].copy_from_slice(&block_number.to_le_bytes()[..]);
             input[36..44].copy_from_slice(&block_timestamp.to_le_bytes()[..]);
@@ -710,16 +721,27 @@ pub mod prosopo {
             self.seed_log.set(&seed_log);
 
             // trim the active provider log list to be within the rewind_window window
-            let mut provider_status_and_payee_log = self.provider_status_and_payee_log.get_or_default();
-            self.prune(&mut provider_status_and_payee_log, &oldest_seed_block, |active_provider| &active_provider.block);
+            let mut provider_status_and_payee_log =
+                self.provider_status_and_payee_log.get_or_default();
+            self.prune(
+                &mut provider_status_and_payee_log,
+                &oldest_seed_block,
+                |active_provider| &active_provider.block,
+            );
 
             // update the active providers log
-            self.provider_status_and_payee_log.set(&provider_status_and_payee_log);
+            self.provider_status_and_payee_log
+                .set(&provider_status_and_payee_log);
 
             Ok(true)
         }
 
-        fn rand_from_user_and_dapp(&self, user_account: AccountId, dapp_account: AccountId, seed: Seed) -> u128 {
+        fn rand_from_user_and_dapp(
+            &self,
+            user_account: AccountId,
+            dapp_account: AccountId,
+            seed: Seed,
+        ) -> u128 {
             // hash the account, block and seed
             let seed_value_bytes: [u8; 16] = seed.value.to_le_bytes();
             let block_number_bytes: [u8; 4] = seed.block.to_le_bytes();
@@ -773,7 +795,10 @@ pub mod prosopo {
         }
 
         /// Rewind the providers' payee and status back to block X. Note this only splits providers into inactive and active and does not provide better resolution on the inactive status, so only use for querying whether provider(s) were active or inactive at block X
-        fn rewind_active_providers(&self, block: BlockNumber) -> Result<BTreeMap<Payee, BTreeSet<AccountId>>, Error> {
+        fn rewind_active_providers(
+            &self,
+            block: BlockNumber,
+        ) -> Result<BTreeMap<Payee, BTreeSet<AccountId>>, Error> {
             // check the rewind window is valid (i.e. we have enough history to do a rewind)
             self.check_rewind_window(block)?;
 
@@ -781,7 +806,7 @@ pub mod prosopo {
             // providers are mapped by their payee setting
             // note that we do not map them by payee AND status, because if they're in the set they are active and if not then they are not active. We do not care why they are inactive exactly.
             let mut map: BTreeMap<Payee, BTreeSet<AccountId>> = Default::default();
-            
+
             // for each payee setting (can be any valid payee setting)
             for payee in self.get_payees() {
                 // get the group containing the active providers
@@ -811,15 +836,19 @@ pub mod prosopo {
                         // provider has the wrong payee setting for this group, so remove it
                         group.remove(&entry.account);
                     }
-                }                
+                }
             }
 
             Ok(map)
         }
-        
+
         /// Choose a random active provider given the user and dapp alongside the block number + seed from when the choice should be made.
         /// Returns the account ID of the chosen provider. However, the data for the provider may not be the same as the current block, e.g. the provider could have become inactive since, changed payee, changed dataset, etc.
-        fn choose_random_active_provider(&self, user_account: AccountId, dapp_account: AccountId, seed: Seed
+        fn choose_random_active_provider(
+            &self,
+            user_account: AccountId,
+            dapp_account: AccountId,
+            seed: Seed,
         ) -> Result<AccountId, Error> {
             // get the dapp in the state it was at the block
             let dapp = self.rewind_dapp(dapp_account, seed.block)?;
@@ -845,16 +874,15 @@ pub mod prosopo {
             }
 
             // choose a provider from the groups
-            let provider_count: u128 = matching_groups.iter().map(|group| group.len() as u128).sum();
+            let provider_count: u128 = matching_groups
+                .iter()
+                .map(|group| group.len() as u128)
+                .sum();
             if provider_count == 0 {
                 return err!(Error::NoActiveProviders);
             }
 
-            let rand = self.rand_from_user_and_dapp(
-                user_account,
-                dapp_account,
-                seed
-            );
+            let rand = self.rand_from_user_and_dapp(user_account, dapp_account, seed);
 
             // use modulo to put the random number in the 0..#providers range
             let mut index = rand % provider_count;
@@ -871,22 +899,31 @@ pub mod prosopo {
             }
 
             err!(Error::ProviderNotFound)
-
         }
 
         /// Get a random active provider. This uses the user id and dapp id to select a random active provider, i.e. different users and dapps will get different providers, spreading the load.
         #[ink(message)]
-        pub fn get_random_active_provider(&self, user_account: AccountId, dapp_account: AccountId) -> Result<RandomActiveProvider, Error> {
+        pub fn get_random_active_provider(
+            &self,
+            user_account: AccountId,
+            dapp_account: AccountId,
+        ) -> Result<RandomActiveProvider, Error> {
             // use the current block number
             let block = self.env().block_number();
             self.get_random_active_provider_at(user_account, dapp_account, block)
         }
 
         #[ink(message)]
-        pub fn get_random_active_provider_at(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> Result<RandomActiveProvider, Error> {
+        pub fn get_random_active_provider_at(
+            &self,
+            user_account: AccountId,
+            dapp_account: AccountId,
+            block: BlockNumber,
+        ) -> Result<RandomActiveProvider, Error> {
             let seed = self.get_seed_at(block)?;
             // let user_account = self.env().caller();
-            let provider_id = self.choose_random_active_provider(user_account, dapp_account, seed)?;
+            let provider_id =
+                self.choose_random_active_provider(user_account, dapp_account, seed)?;
             let provider = self.get_provider(provider_id)?;
             let captcha_data = self.get_captcha_data_from_provider(provider_id)?;
             Ok(RandomActiveProvider {
@@ -1035,14 +1072,19 @@ pub mod prosopo {
 
             if provider.status != existing.status || existing.payee != provider.payee {
                 // status and/or payee has changed, need to update logs
-                let mut provider_status_and_payee_log = self.provider_status_and_payee_log.get().unwrap_or_default();
-                provider_status_and_payee_log.insert(0, ProviderStatusAndPayeeRecord {
-                    account: provider_account,
-                    status: provider.status,
-                    block: self.env().block_number(),
-                    payee: provider.payee,
-                });
-                self.provider_status_and_payee_log.set(&provider_status_and_payee_log);
+                let mut provider_status_and_payee_log =
+                    self.provider_status_and_payee_log.get().unwrap_or_default();
+                provider_status_and_payee_log.insert(
+                    0,
+                    ProviderStatusAndPayeeRecord {
+                        account: provider_account,
+                        status: provider.status,
+                        block: self.env().block_number(),
+                        payee: provider.payee,
+                    },
+                );
+                self.provider_status_and_payee_log
+                    .set(&provider_status_and_payee_log);
             }
 
             self.provider_change_status(provider_account, old_status, new_status, payee);
