@@ -433,6 +433,7 @@ pub mod prosopo {
             max_user_history_age: u64,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
+            rewind_window: u16,
         ) -> Self {
             if operator_accounts.len() < 2 {
                 panic!("{:?}", Error::MinimumTwoOperatorsRequired)
@@ -467,7 +468,7 @@ pub mod prosopo {
                 captcha_solution_commitments: Default::default(),
                 min_num_active_providers,
                 max_provider_fee,
-                rewind_window: 10, // TODO make this configurable
+                rewind_window,
                 seed_log: Default::default(),
                 provider_status_and_payee_log: Default::default(),
                 dapp_status_and_payee_log: Default::default(),
@@ -584,7 +585,6 @@ pub mod prosopo {
             vec![DappPayee::Provider, DappPayee::Dapp, DappPayee::Any]
         }
 
-        // TODO should this be ink msg?
         pub fn get_providers_by_payee_and_status(&self, payee: Payee, status: GovernanceStatus) -> BTreeSet<AccountId> {
             self.provider_accounts.get(ProviderState {
                 status,
@@ -835,7 +835,6 @@ pub mod prosopo {
             let mut matching_groups = Vec::new();
 
             // for each group of providers
-            // TODO iter over map of k,v pairs
             for (payee, group) in provider_map.iter() {
                 // check to see if dapp is targetting them as the payee
                 let dapp_payee: DappPayee = DappPayee::try_from(*payee).unwrap();
