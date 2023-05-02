@@ -20,6 +20,7 @@ jobs:
 
       - run: ls -la
       - run: ls -la ~
+      - run: mkdir -p rust_env_cache
 
       - name: Restore rust_env_cache
         uses: actions/cache/restore@v3
