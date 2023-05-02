@@ -36,7 +36,7 @@ jobs:
       - name: Load contracts-ci docker image
         run: |
           ls rust_env_cache
-          docker load -i rust_env_cache/contracts-ci-linux.tar || :
+          docker load -i rust_env_cache/contracts-ci-linux.tar || true
       
       - run: ls -la
       - run: ls -la ~
