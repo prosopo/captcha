@@ -35,6 +35,7 @@ jobs:
       # load imgs from cache
       - name: Load contracts-ci docker image
         run: |
+          mkdir -p rust_env_cache
           ls rust_env_cache
           docker load -i rust_env_cache/contracts-ci-linux.tar || true
       
