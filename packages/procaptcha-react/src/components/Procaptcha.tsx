@@ -9,6 +9,7 @@ import { u32 } from '@polkadot/types'
 import {
     Account,
     GetCaptchaResponse,
+    Manager,
     ProcaptchaCallbacks,
     ProcaptchaConfigOptional,
     ProcaptchaState,
@@ -16,7 +17,6 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
-import Manager from '@prosopo/procaptcha/dist/modules/Manager'
 import { useRef, useState } from 'react'
 import CaptchaComponent from './CaptchaComponent'
 
