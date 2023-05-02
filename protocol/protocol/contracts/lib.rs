@@ -2061,6 +2061,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             assert!(contract.operators.get(operator_account).is_some());
             assert!(contract
@@ -2082,6 +2083,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let provider_stake_default: u128 = contract.get_provider_stake_default();
             assert!(STAKE_DEFAULT.eq(&provider_stake_default));
@@ -2100,6 +2102,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let dapp_stake_default: u128 = contract.get_dapp_stake_default();
             assert!(STAKE_DEFAULT.eq(&dapp_stake_default));
@@ -2117,6 +2120,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2146,6 +2150,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let provider_account = AccountId::from([0x2; 32]);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2170,6 +2175,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin: Vec<u8> = vec![1, 2, 3];
@@ -2198,6 +2204,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             contract.get_random_number(0, operator_account, operator_account);
         }
@@ -2216,6 +2223,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             const len: usize = 10;
             let mut arr = [0; len];
@@ -2266,6 +2274,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "2424", 0);
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2316,6 +2325,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2356,6 +2366,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2404,6 +2415,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
@@ -2434,6 +2446,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 2000000000000;
@@ -2466,6 +2479,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
@@ -2497,6 +2511,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
@@ -2536,6 +2551,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
@@ -2580,6 +2596,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             let data = "hello";
@@ -2628,6 +2645,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             let data = "hello";
@@ -2676,6 +2694,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             let data = "hello";
@@ -2724,6 +2743,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             let data = "hello2";
@@ -2772,6 +2792,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             let data = "hello";
@@ -2821,6 +2842,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract_account = AccountId::from([0x3; 32]);
@@ -2882,6 +2904,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let caller = AccountId::from([0x2; 32]);
             let dapp_contract = AccountId::from([0x3; 32]);
@@ -2921,6 +2944,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let caller = AccountId::from([0x2; 32]);
             let contract_account = AccountId::from([0x3; 32]);
@@ -2975,6 +2999,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             // Register the provider
@@ -3080,6 +3105,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             // Register the provider
@@ -3147,6 +3173,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             // Register the provider
@@ -3248,6 +3275,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             // Register the provider
@@ -3325,6 +3353,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             contract.get_dapp_balance(dapp_account).unwrap_err();
         }
@@ -3343,6 +3372,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             contract.get_provider_balance(provider_account).unwrap_err();
             let mut contract = Prosopo::default(
@@ -3353,6 +3383,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             contract.get_provider_balance(provider_account).unwrap_err();
         }
@@ -3369,6 +3400,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let provider_account = AccountId::from([0x2; 32]);
             let service_origin: Vec<u8> = vec![1, 2, 3];
@@ -3412,6 +3444,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             let provider_account = AccountId::from([0x2; 32]);
             let dapp_user_account = AccountId::from([0x30; 32]);
@@ -3476,6 +3509,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             // Register the provider
@@ -3568,6 +3602,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
 
             // Register the provider
@@ -3642,6 +3677,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(operator1);
             let op1result = contract.operator_set_code([0x01; 32]); // this is the operators AccountId, not a valid contract
@@ -3677,6 +3713,7 @@ pub mod prosopo {
                 1000000,
                 0,
                 1000,
+                10,
             );
             (op1, op2, ops, contract)
         }
