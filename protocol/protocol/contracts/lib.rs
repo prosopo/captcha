@@ -1049,7 +1049,11 @@ pub mod prosopo {
             self.validate_dapp(commitment.contract)?;
 
             // check commitment doesn't already exist
-            if self.captcha_solution_commitments.get(&captcha_solution_commitment_id).is_some() {
+            if self
+                .captcha_solution_commitments
+                .get(&captcha_solution_commitment_id)
+                .is_some()
+            {
                 return err!(Error::CaptchaSolutionCommitmentAlreadyExists);
             }
 
@@ -2633,18 +2637,21 @@ pub mod prosopo {
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            
+
             // Call from the provider account to mark the solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_commit(solution_id, CaptchaSolutionCommitment {
-                contract: dapp_contract_account,
-                dataset_id: user_root,
-                status: CaptchaStatus::Approved,
-                provider: provider_account,
-                account: dapp_user_account,
-                completed_at: 0,
-            });
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -2657,15 +2664,18 @@ pub mod prosopo {
 
             // Now make sure that the provider cannot later set the solution to disapproved and make
             // sure that the dapp balance is unchanged
-            
-            contract.provider_commit(solution_id, CaptchaSolutionCommitment {
-                contract: dapp_contract_account,
-                dataset_id: user_root,
-                status: CaptchaStatus::Disapproved,
-                provider: provider_account,
-                account: dapp_user_account,
-                completed_at: 0,
-            });
+
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -2730,20 +2740,22 @@ pub mod prosopo {
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            
 
             // Call from the provider account to mark the wrong solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = str_to_hash("id that does not exist".to_string());
-            
-            let result = contract.provider_commit(solution_id, CaptchaSolutionCommitment {
-                contract: dapp_contract_account,
-                dataset_id: user_root,
-                status: CaptchaStatus::Approved,
-                provider: provider_account,
-                account: dapp_user_account,
-                completed_at: 0,
-            });
+
+            let result = contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
         }
 
         /// Test provider disapprove
@@ -2795,18 +2807,21 @@ pub mod prosopo {
             //Dapp User commit
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            
+
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_commit(solution_id, CaptchaSolutionCommitment {
-                contract: dapp_contract_account,
-                dataset_id: user_root,
-                status: CaptchaStatus::Disapproved,
-                provider: provider_account,
-                account: dapp_user_account,
-                completed_at: 0,
-            });
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -2818,14 +2833,17 @@ pub mod prosopo {
             assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
             // Now make sure that the provider cannot later set the solution to approved
-            contract.provider_commit(solution_id, CaptchaSolutionCommitment {
-                contract: dapp_contract_account,
-                dataset_id: user_root,
-                status: CaptchaStatus::Approved,
-                provider: provider_account,
-                account: dapp_user_account,
-                completed_at: 0,
-            });
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -2892,19 +2910,21 @@ pub mod prosopo {
             // Call from the Dapp User Account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            
 
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             let solution_id = user_root;
-            contract.provider_commit(solution_id, CaptchaSolutionCommitment {
-                contract: dapp_contract_account,
-                dataset_id: user_root,
-                status: CaptchaStatus::Disapproved,
-                provider: provider_account,
-                account: dapp_user_account,
-                completed_at: 0,
-            });
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
             let commitment = contract
                 .captcha_solution_commitments
                 .get(solution_id)
@@ -3119,14 +3139,17 @@ pub mod prosopo {
             //Dapp User commit and approve
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root1 = str_to_hash("user merkle tree root to approve".to_string());
-            contract.provider_commit(user_root1, CaptchaSolutionCommitment {
-                contract: dapp_contract_account,
-                dataset_id: root1,
-                status: CaptchaStatus::Approved,
-                provider: provider_account,
-                account: dapp_user_account,
-                completed_at: 0,
-            });
+            contract.provider_commit(
+                user_root1,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: root1,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
 
             // Get the commitment and make sure it is approved
             let commitment = contract
@@ -3137,14 +3160,17 @@ pub mod prosopo {
             //Dapp User commit and disapprove
             let dapp_user_account = AccountId::from([0x5; 32]);
             let user_root2 = str_to_hash("user merkle tree root to disapprove".to_string());
-            contract.provider_commit(user_root2, CaptchaSolutionCommitment {
-                contract: dapp_contract_account,
-                dataset_id: root2,
-                status: CaptchaStatus::Disapproved,
-                provider: provider_account,
-                account: dapp_user_account,
-                completed_at: 0,
-            });
+            contract.provider_commit(
+                user_root2,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: root2,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
 
             // Get the commitment and make sure it is disapproved
             let commitment = contract
@@ -3219,7 +3245,6 @@ pub mod prosopo {
             // Should not be authorised
             let dapp_user_account = AccountId::from([0x6; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
-            
         }
 
         /// Test provider cannot supply a dapp user commit for a different Provider. We can't test
