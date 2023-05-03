@@ -155,13 +155,6 @@ pub mod prosopo {
         dataset_id_content: Hash,
     }
 
-    /// Operators are controllers of this contract with admin rights
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct Operator {
-        status: GovernanceStatus,
-    }
-
     /// Enum for various types of captcha
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
@@ -239,39 +232,15 @@ pub mod prosopo {
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct OperatorVote {
-        pub account_id: AccountId,
-        pub vote: Option<Vote>,
-    }
-
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderState {
         pub status: GovernanceStatus,
         pub payee: Payee,
     }
 
-    /// Set of actions which can be performed by operators given a successful vote
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum Vote {
-        SetCodeHash([u8; 32]),        // accepts the code hash
-        Withdraw(AccountId, Balance), // accepts the recipient and the amount
-        Terminate(AccountId), // accepts the account to send the remaining balance of this contract to after termination
-    }
-
-    /// The status of the current voting process.
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum VoteStatus {
-        Pass,    // vote has been successful
-        Fail,    // vote has failed due to disagreement in votes
-        Pending, // not enough people have voted
-    }
-
     // Contract storage
     #[ink(storage)]
     pub struct Prosopo {
+        admin: AccountId, // the admin in control of this contract
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
         service_origins: Mapping<Hash, ()>,
@@ -280,13 +249,9 @@ pub mod prosopo {
         dapp_stake_default: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Lazy<Vec<AccountId>>,
-        operators: Mapping<AccountId, Operator>,
-        operator_accounts: Lazy<Vec<AccountId>>,
-        operator_stake_default: Balance,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
-        operator_votes: Mapping<AccountId, Vote>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
@@ -503,13 +468,15 @@ pub mod prosopo {
         InvalidSignature,
         /// Returned if the public key is invalid during signing
         InvalidPublicKey,
+        /// Returned if the account is not an admin
+        IsNotAdmin,
+        IsAdmin,
     }
 
     impl Prosopo {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn default(
-            operator_accounts: Vec<AccountId>,
             provider_stake_default: Balance,
             dapp_stake_default: Balance,
             max_user_history_len: u16,
@@ -517,34 +484,18 @@ pub mod prosopo {
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
-            if operator_accounts.len() < 2 {
-                panic!("{:?}", Error::MinimumTwoOperatorsRequired)
-            }
-            let mut operators = Mapping::new();
-            let mut operator_accounts_lazy = Lazy::new();
-            for operator_account in operator_accounts.iter() {
-                let operator = Operator {
-                    status: GovernanceStatus::Active,
-                };
-                operators.insert(operator_account, &operator);
-                operator_accounts_lazy.set(&operator_accounts);
-            }
-
             Self {
+                admin: Self::env().caller(),
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 service_origins: Default::default(),
                 captcha_data: Default::default(),
-                operator_accounts: operator_accounts_lazy,
-                operator_stake_default: 0,
                 dapp_users: Default::default(),
-                operators,
                 provider_stake_default,
                 dapp_stake_default,
                 dapps: Default::default(),
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
-                operator_votes: Default::default(),
                 max_user_history_len,
                 max_user_history_age,
                 captcha_solution_commitments: Default::default(),
@@ -645,8 +596,8 @@ pub mod prosopo {
 
             self.check_provider_fee(fee)?;
 
-            // provider cannot be an operator
-            self.check_not_operator(provider_account)?;
+            // provider cannot be the admin
+            self.check_not_admin(provider_account)?;
 
             let service_origin_hash = self.hash_vec_u8(&service_origin);
 
@@ -706,7 +657,7 @@ pub mod prosopo {
             self.check_provider_fee(fee)?;
 
             // provider cannot be an operator
-            self.check_not_operator(provider_account)?;
+            self.check_not_admin(provider_account)?;
 
             let existing = self.get_provider_details(provider_account)?;
 
@@ -980,7 +931,7 @@ pub mod prosopo {
             dapp.owner = owner; // update the owner
 
             // owner of the dapp cannot be an operator
-            self.check_not_operator(owner)?;
+            self.check_not_admin(owner)?;
 
             self.dapp_configure_funding(&mut dapp);
 
@@ -1087,14 +1038,6 @@ pub mod prosopo {
                 contract,
                 value: balance,
             });
-
-            Ok(())
-        }
-
-        fn check_not_operator(&self, operator: AccountId) -> Result<(), Error> {
-            if self.operators.get(operator).is_some() {
-                return err!(Error::AccountIsOperator);
-            }
 
             Ok(())
         }
@@ -1597,19 +1540,6 @@ pub mod prosopo {
             Ok(self.get_provider_details(provider)?.balance)
         }
 
-        /// Returns the operator votes for code hashes
-        #[ink(message)]
-        pub fn get_operator_votes(&self) -> Vec<OperatorVote> {
-            let mut votes: Vec<OperatorVote> = Vec::new();
-            for account_id in self.operator_accounts.get().unwrap().iter() {
-                votes.push(OperatorVote {
-                    account_id: *account_id,
-                    vote: self.operator_votes.get(*account_id),
-                });
-            }
-            votes
-        }
-
         /// List providers given an array of account id
         ///
         /// Returns empty if none were matched
@@ -1815,167 +1745,72 @@ pub mod prosopo {
             next % len
         }
 
-        /// Remove a vote from an operator
+        /// Terminate this contract and return any/all funds in this contract to the destination
         #[ink(message)]
-        pub fn operator_unvote(&mut self) -> Result<Option<Vote>, Error> {
-            let caller = self.env().caller();
-
-            // check if the caller is an operator
-            if self.operators.get(caller).is_none() {
-                return err!(Error::NotAuthorised);
-            }
-
-            let vote = self.operator_votes.get(caller);
-
-            self.operator_votes.remove(caller);
-
-            Ok(vote)
+        pub fn terminate(&mut self, dest: AccountId) -> Result<(), Error> {
+            self.check_caller_admin()?;
+            self.env().terminate_contract(dest);
         }
 
-        fn clear_votes(&mut self) {
-            for operator in self.operator_accounts.get().unwrap().iter() {
-                self.operator_votes.remove(operator);
+        /// Withdraw some funds from the contract to the specified destination
+        #[ink(message)]
+        pub fn withdraw(&mut self, dest: AccountId, amount: Balance) -> Result<(), Error> {
+            self.check_caller_admin()?;
+            let transfer_result =
+                        ink::env::transfer::<ink::env::DefaultEnvironment>(dest, amount);
+            if transfer_result.is_err() {
+                return err!(Error::ContractTransferFailed);
             }
+            Ok(())
         }
 
-        /// Carries out a vote from the set of operators
+        /// Set the code hash for this contract
         #[ink(message)]
-        pub fn operator_vote(&mut self, vote: Vote) -> Result<VoteStatus, Error> {
-            let caller = self.env().caller();
-
-            // check if the caller is an operator
-            if self.operators.get(caller).is_none() {
-                return err!(Error::NotAuthorised);
-            }
-
-            // save the vote
-            self.operator_votes.insert(caller, &vote);
-
-            for operator in self.operator_accounts.get().unwrap().iter() {
-                let other_vote_lookup = self.operator_votes.get(operator);
-                if other_vote_lookup.is_none() {
-                    // not all operators have voted yet, so return pending indicating the vote has not yet passed
-                    debug!("Vote pending");
-                    return Ok(VoteStatus::Pending);
-                }
-            }
-
-            // by here all operators have voted, so check if they all voted the same way
-            for operator in self.operator_accounts.get().unwrap().iter() {
-                let other_vote = self.operator_votes.get(operator).unwrap();
-                if other_vote != vote {
-                    // votes differ, so return false indicating the vote has not passed
-                    // clear votes first to force a re-vote
-                    self.clear_votes();
-                    debug!("Vote failed: {:?} != {:?}", other_vote, vote);
-                    return Ok(VoteStatus::Fail);
-                }
-            }
-
-            // at this point all operators have voted the same way, so the vote has passed
-            // clear the votes as the vote has passed
-            // remove the votes
-            self.clear_votes();
-
-            debug!("Vote passed: {:?}", vote);
-
-            // implement the voted action
-            match vote {
-                Vote::Terminate(recipient) => {
-                    // terminate the contract and send the remaining balance to the recipient
-                    ink::env::terminate_contract::<ink::env::DefaultEnvironment>(recipient);
-                    // note that the contract is now terminated, so the remaining code will not be executed
-                }
-                Vote::Withdraw(recipient, amount) => {
-                    let transfer_result =
-                        ink::env::transfer::<ink::env::DefaultEnvironment>(recipient, amount);
-                    if transfer_result.is_err() {
-                        return err!(Error::ContractTransferFailed);
+        pub fn set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
+            self.check_caller_admin()?;
+            let set_code_hash_result = ink::env::set_code_hash(&code_hash);
+            if let Err(e) = set_code_hash_result {
+                match e {
+                    ink::env::Error::CodeNotFound => {
+                        return err!(Error::CodeNotFound);
                     }
-                }
-                Vote::SetCodeHash(code_hash) => {
-                    // Set the new code hash after all operators have voted for the same code hash.
-                    let set_code_hash_result = ink::env::set_code_hash(&code_hash);
-                    if let Err(e) = set_code_hash_result {
-                        match e {
-                            ink::env::Error::CodeNotFound => {
-                                return err!(Error::CodeNotFound);
-                            }
-                            _ => {
-                                return err!(Error::Unknown);
-                            }
-                        }
+                    _ => {
+                        return err!(Error::Unknown);
                     }
                 }
             }
-
-            // return true indicating the vote has passed
-            Ok(VoteStatus::Pass)
+            Ok(())
         }
 
-        /// Modifies the code which is used to execute calls to this contract address (`AccountId`).
-        /// We use this to upgrade the contract logic. The caller must be an operator.
-        /// `true` is returned on successful upgrade, `false` otherwise
-        /// Errors are returned if the caller is not an operator, if the code hash is the callers
-        /// account_id, if the code is not found, and for any other unknown ink errors
+        /// Set the admin for this contract
         #[ink(message)]
-        pub fn operator_set_code(&mut self, code_hash: [u8; 32]) -> Result<bool, Error> {
-            let code_hash_account = AccountId::from(code_hash);
-            let caller = self.env().caller();
-
-            // check if the caller is an operator
-            if self.operators.get(caller).is_none() {
-                return err!(Error::NotAuthorised);
-            }
-
-            // Check that the caller has not submitted the AccountId of a contract instead of the code hash
-            if self.env().is_contract(&code_hash_account) {
-                return err!(Error::InvalidCodeHash);
-            }
-
-            // Check that caller has not submitted the code hash of the contract itself
-            if self.env().own_code_hash().unwrap() == code_hash.into() {
-                return err!(Error::InvalidCodeHash);
-            }
-
-            // // Insert the operators latest vote into the votes map
-            // self.operator_code_hash_votes.insert(caller, &code_hash);
-
-            // // Make sure each operator has voted for the same code hash. If an operator has not voted
-            // // an Ok result is returned. If an operator has voted for a conflicting code hash, an error
-            // // is returned.
-            // for operator in self.operator_accounts.get().unwrap().iter() {
-            //     if self.operator_code_hash_votes.get(operator).is_none() {
-            //         return Ok(false);
-            //     }
-
-            //     let vote = self.operator_code_hash_votes.get(operator).unwrap();
-            //     if vote != code_hash {
-            //         return Ok(false);
-            //     }
-            // }
-
-            // // Set the new code hash after all operators have voted for the same code hash.
-            // let set_code_hash_result = ink::env::set_code_hash(&code_hash);
-
-            // if let Err(e) = set_code_hash_result {
-            //     match e {
-            //         ink::env::Error::CodeNotFound => {
-            //             return err!(Error::CodeNotFound);
-            //         }
-            //         _ => {
-            //             return err!(Error::Unknown);
-            //         }
-            //     }
-            // }
-
-            // // remove the votes
-            // for operator in self.operator_accounts.get().unwrap().iter() {
-            //     self.operator_code_hash_votes.remove(operator);
-            // }
-
-            Ok(true)
+        pub fn set_admin(&mut self, new_admin: AccountId) -> Result<(), Error> {
+            self.check_caller_admin()?;
+            self.admin = new_admin;
+            Ok(())
         }
+
+        /// Is the caller the admin for this contract?
+        fn check_caller_admin(&self) -> Result<(), Error> {
+            self.check_admin(self.env().caller())
+        }
+
+        /// Is the specified account the admin for this contract?
+        fn check_admin(&self, acc: AccountId) -> Result<(), Error> {
+            if self.admin != acc {
+                return err!(Error::IsNotAdmin);
+            }
+            Ok(())
+        }
+
+        fn check_not_admin(&self, acc: AccountId) -> Result<(), Error> {
+            if self.check_admin(acc).is_ok() {
+                return err!(Error::IsAdmin);
+            } else {
+                Ok(())
+            }
+        }
+
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -2013,6 +1848,135 @@ pub mod prosopo {
         type Event = <Prosopo as ::ink::reflect::ContractEventBase>::Type;
 
         const STAKE_DEFAULT: u128 = 1000000000000;
+
+        const set_caller: fn(AccountId) = ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
+
+        pub struct DefaultAccounts {
+            unused_account: AccountId,
+            admins: Vec<AccountId>,
+            dapps: Vec<AccountId>,
+            providers: Vec<AccountId>,
+            users: Vec<AccountId>,
+        }
+
+
+        mod tests_inner {
+            
+            /// Imports all the definitions from the outer scope so we can use them here.
+            use super::*;
+
+        // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
+        // admin accounts should be in range 0x01 - 0x10
+        // dapp accounts should be in range 0x11 - 0x20
+        // provider accounts should be in range 0x21 - 0x30
+        // user accounts should be in range 0x31 - 0x40
+
+        fn default_unused_account() -> AccountId {
+            AccountId::from([0x00; 32])
+        }
+
+        fn default_admins() -> Vec<AccountId> {
+            let mut list = Vec::new();
+            for i in 1..=10 {
+                list.push(AccountId::from([i; 32]));
+            }
+            list
+        }
+
+        fn default_dapps() -> Vec<AccountId> {
+            let mut list = Vec::new();
+            for i in 11..=20 {
+                list.push(AccountId::from([i; 32]));
+            }
+            list
+        }
+
+        fn default_providers() -> Vec<AccountId> {
+            let mut list = Vec::new();
+            for i in 21..=30 {
+                list.push(AccountId::from([i; 32]));
+            }
+            list
+        }
+
+        fn default_users() -> Vec<AccountId> {
+            let mut list = Vec::new();
+            for i in 31..=40 {
+                list.push(AccountId::from([i; 32]));
+            }
+            list
+        }
+
+        fn default_accounts() -> DefaultAccounts {
+            DefaultAccounts {
+                unused_account: default_unused_account(),
+                admins: default_admins(),
+                dapps: default_dapps(),
+                providers: default_providers(),
+                users: default_users(),
+            }
+        }
+
+        fn default_contract() -> Prosopo {
+            let accounts = default_accounts();
+            // use the first admin acc as the caller
+            set_caller(accounts.admins[0]);
+            let contract = Prosopo::default(
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                0,
+                1000,
+            );
+            // set the caller back to the unused acc
+            set_caller(accounts.unused_account);
+            contract
+        }
+
+        #[ink::test]
+        fn test_check_admin() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(default_unused_account());
+            let accounts = default_accounts();
+
+            let contract = default_contract();
+            for acc in accounts.admins.iter() {
+                if acc == &contract.admin {
+                    assert!(contract.check_admin(*acc).is_ok());
+                    assert!(contract.check_not_admin(*acc).is_err());
+                    set_caller(*acc);
+                    assert!(contract.check_caller_admin().is_ok());
+                } else {
+                    assert!(contract.check_admin(*acc).is_err());
+                    assert!(contract.check_not_admin(*acc).is_ok());
+                    set_caller(*acc);
+                    assert!(contract.check_caller_admin().is_err());
+                }
+            }
+        }
+
+        #[ink::test]
+        fn test_set_admin() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(unused_account());
+            let accounts = default_accounts();
+
+            let contract = default_contract();
+            let old_admin = contract.admin;
+            let new_admin = accounts.admins[1];
+            assert_ne!(old_admin, new_admin);
+            
+            contract.check_admin(old_admin)?;
+            contract.check_not_admin(new_admin)?;
+            
+            set_caller(new_admin);
+            contract.set_admin(new_admin)?;
+
+            contract.check_admin(new_admin)?;
+            contract.check_not_admin(old_admin)?;
+            
+        }
 
         /// We test if the default constructor does its job.
         #[ink::test]
@@ -3803,4 +3767,6 @@ pub mod prosopo {
             );
         }
     }
+}
+
 }
