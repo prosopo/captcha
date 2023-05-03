@@ -24,7 +24,9 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 /// Print and return an error in ink
 macro_rules! err {
     ($err:expr) => {{
-        Err(get_self!().print_err($err, function_name!()))
+        function_name!();
+        Err($err)
+        // Err(get_self!().print_err($err, function_name!()))
     }};
 }
 
@@ -34,7 +36,11 @@ macro_rules! err {
 
 macro_rules! err_fn {
     ($err:expr) => {
-        || get_self!().print_err($err, function_name!())
+        || {
+            function_name!();
+            Err($err)
+        }
+        // || get_self!().print_err($err, function_name!())
     };
 }
 
@@ -1849,7 +1855,7 @@ pub mod prosopo {
 
         const STAKE_DEFAULT: u128 = 1000000000000;
 
-        const set_caller: fn(AccountId) = ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
+        // const set_caller: fn(AccountId) = ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
 
         pub struct DefaultAccounts {
             unused_account: AccountId,

@@ -27,43 +27,72 @@ fn named_impl(params: TokenStream, input: TokenStream) -> Result<TokenStream, &'
     Ok(output.into_iter().collect())
 }
 
+#[derive(PartialEq, Debug, Eq, Clone, Copy)]
+enum State {
+    Fn,
+    FnName,
+    Dash,
+    Arrow,
+    Body,
+}
+
 fn handle(input: TokenStream) -> TokenStream {
     let mut input = input.into_iter().peekable();
     let mut output = Vec::<TokenTree>::new();
-    let mut found_fn_name = false;
-    let mut found_fn = false;
+    let mut state = State::Fn;
     let mut fname: String = "unknown".to_string();
     while let Some(tt) = input.next() {
         match tt {
             TokenTree::Group(mut g) => {
                 let span = g.span();
                 let mut sub_ts = handle(g.stream());
-                if !found_fn && found_fn_name && g.delimiter() == Delimiter::Brace {
+                // the group following the arrow with the curly delimiter will be the body of the func
+                if state == State::Body && g.delimiter() == Delimiter::Brace {
                     let mut inject = quote!(
                         macro_rules! function_name {() => (
-                            #fname
+                            "hello"
                         )}
                     );
                     inject.extend(sub_ts);
                     sub_ts = inject;
+                    state = State::Fn;
                 }
                 g = Group::new(g.delimiter(), sub_ts);
                 g.set_span(span);
                 output.push(g.into());
-                found_fn_name = false;
-                found_fn = false;
             }
-            TokenTree::Ident(i) => {
-                if found_fn {
-                    fname = i.to_string();
-                    found_fn = false;
-                    found_fn_name = true;
-                } else if i == "fn" {
-                    found_fn = true;
-                    found_fn_name = false;
-                }
-                output.push(i.into());
-            }
+            // TokenTree::Ident(i) => {
+            //     if i == "fn" {
+            //         // found the "fn" keyword
+            //         // now look for the fn name
+            //         state = State::FnName;
+            //     } else if state == State::Fn {
+            //         // if already found the "fn" , the func name should follow
+            //         fname = i.to_string();
+            //         // look for the dash and ">" after the params
+            //         state = State::Dash;
+            //     }
+            //     output.push(i.into());
+            // }
+            // TokenTree::Punct(p) => {
+            //     if state == State::Dash {
+            //         if p.to_string() == "-" {
+            //             // found the dash
+            //             // look for the arrow next
+            //             state = State::Arrow;
+            //         }
+            //     } else if state == State::Arrow {
+            //         if p.to_string() == ">" {
+            //             // found the arrow
+            //             // look for the body next
+            //             state = State::Body;
+            //         } else {
+            //             // if the arrow is not found, it's a standalone dash. Keep looking.
+            //             state = State::Dash;
+            //         }
+            //     }
+            //     output.push(p.into());
+            // }
             _ => output.push(tt),
         }
     }
