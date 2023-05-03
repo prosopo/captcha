@@ -25,7 +25,8 @@ async function main() {
     await env.isReady()
     const tasks = new Tasks(env)
 
-    // await tasks.getProviderAccounts()
+    const accounts = await tasks.contractApi.getDappAccounts()
+    console.log(accounts.toHuman())
     // await tasks.getDappAccounts()
     process.exit()
 }

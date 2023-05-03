@@ -25,6 +25,7 @@
     "@polkadot/api": "9.13.6",
     "@polkadot/api-contract": "9.13.6",
     "@polkadot/types": "9.13.6",
+    "@polkadot/types-codec": "9.13.6",
     "@prosopo/common": "^0.1.11",
     "zod": "^3.17.9"
   },

@@ -38,7 +38,7 @@ export interface IProsopoContractApi extends ContractPromise {
         atBlock?: string | Uint8Array
     ): Promise<ContractCallOutcome>
 
-    getStorageEntry(storageName: string): ContractLayoutStructField
+    getStorageKey(storageName: string): string
 
     getStorage<T>(name: string, type: string): Promise<T>
 }

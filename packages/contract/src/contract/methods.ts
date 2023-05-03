@@ -1,6 +1,6 @@
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Vec, u128 } from '@polkadot/types-codec'
-import { AccountId, Balance } from '@polkadot/types/interfaces'
+import { AccountId, Balance, PortableType } from '@polkadot/types/interfaces'
 import { BN, hexToU8a } from '@polkadot/util'
 import {
     CaptchaData,
@@ -173,6 +173,9 @@ export class ProsopoContractMethods extends ProsopoContractApi implements IProso
     }
 
     public async getDappAccounts(): Promise<DappAccounts> {
+        console.log(this.abi.registry.knownTypes)
+        console.log(this.abi.registry.unknownTypes)
+        const type = this.abi.registry.lookup.types.find('DappAccounts' as PortableType)
         return await this.getStorage<DappAccounts>('dapp_accounts', 'DappAccounts')
     }
 
