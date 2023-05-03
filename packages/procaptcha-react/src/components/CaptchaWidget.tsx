@@ -19,7 +19,6 @@ import Box from '@mui/material/Box'
 import Fade from '@mui/material/Fade'
 import useTheme from '@mui/styles/useTheme'
 import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
-import { Item } from '@prosopo/types'
 
 export interface CaptchaWidgetProps {
     challenge: CaptchaResponseCaptcha
@@ -27,7 +26,7 @@ export interface CaptchaWidgetProps {
     onClick: (hash: string) => void
 }
 
-const getHash = (item: Item) => {
+const getHash = (item: any) => {
     if (!item.hash) {
         throw new Error('item.hash is undefined')
     }

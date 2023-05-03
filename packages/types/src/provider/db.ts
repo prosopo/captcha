@@ -175,7 +175,7 @@ export interface Database {
     readonly url: string
     tables?: Tables
     dbname: string
-    connection?: Connection
+    connection?: any
     logger: Logger
 
     connect(): Promise<void>
