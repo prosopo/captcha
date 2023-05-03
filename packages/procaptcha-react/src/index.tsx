@@ -20,4 +20,6 @@ const config = {
     solutionThreshold: 80,
 }
 
-ReactDOM.render(<Procaptcha config={config} />, document.getElementById('root'));
+ReactDOM.render(<Procaptcha config={config} />, document.getElementById('root')); //wrap in fn and give user access to func
+
+// prosopo.exewcute/props/whatever
