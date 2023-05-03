@@ -1938,6 +1938,18 @@ pub mod prosopo {
                 contract
             }
 
+            #[ink::test]
+            fn test_default_accounts_unique() {
+                let accs = default_accounts();
+                let mut set = std::collections::HashSet::new();
+                for group in vec![&accs.admins, &accs.dapps, &accs.providers, &accs.users, &accs.code_hashes] {
+                    for acc in group {
+                        assert!(set.insert(acc), "Duplicate account ID found: {:?}", acc);
+                    }
+                }
+                accs
+            }
+
             // #[ink::test]
             // fn test_set_code_hash() {
 
