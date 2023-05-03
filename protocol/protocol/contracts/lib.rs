@@ -552,6 +552,33 @@ pub mod prosopo {
             err
         }
 
+        #[ink(message)]
+        pub fn get_payees(&self) -> Vec<Payee> {
+            vec![
+                Payee::Dapp,
+                Payee::Provider,
+            ]
+        }
+
+
+        #[ink(message)]
+        pub fn get_dapp_payees(&self) -> Vec<DappPayee> {
+            vec![
+                DappPayee::Dapp,
+                DappPayee::Provider,
+                DappPayee::Any,
+            ]
+        }
+
+        #[ink(message)]
+        pub fn get_statuses(&self) -> Vec<GovernanceStatus> {
+            vec![
+                GovernanceStatus::Active,
+                GovernanceStatus::Suspended,
+                GovernanceStatus::Deactivated,
+            ]
+        }
+
         /// Get contract provider minimum stake default.
         #[ink(message)]
         pub fn get_provider_stake_default(&self) -> Balance {
@@ -1936,6 +1963,37 @@ pub mod prosopo {
                 // set the caller back to the unused acc
                 set_caller(accounts.unused_account);
                 contract
+            }
+
+            #[ink::test]
+            fn test_ctor() {
+
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(default_unused_account());
+                let accounts = default_accounts();
+
+                let mut contract = default_contract();
+
+                // ctor params should be set
+                assert_eq!(contract.provider_stake_default, STAKE_DEFAULT);
+                assert_eq!(contract.dapp_stake_default, STAKE_DEFAULT);
+                assert_eq!(contract.admin, accounts.admins[0]);
+                assert_eq!(contract.max_user_history_len, 10);
+                assert_eq!(contract.max_user_history_age, 1000000);
+                assert_eq!(contract.min_num_active_providers, 0);
+                assert_eq!(contract.max_provider_fee, 1000);
+
+                // default state should be set
+                for payee in contract.get_payees().iter() {
+                    for status in contract.get_statuses().iter() {
+                        assert_eq!(contract.provider_accounts.get(ProviderState {
+                            payee: *payee,
+                            status: *status
+                        }), None);
+                    }
+                }
+                assert_eq!(contract.dapp_accounts.get(), None);
+                assert_eq!(contract.dapp_user_accounts.get(), None);
             }
 
             #[ink::test]
