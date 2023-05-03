@@ -1,0 +1,49 @@
+{
+  "name": "@prosopo/dev",
+  "version": "0.1.11",
+  "description": "Dev tools for working with prosopo packages",
+  "main": "dist/index.js",
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "node dist/deploy/protocol.js",
+    "cli": "node dist/cli/index.js",
+    "setup": "node dist/cli/index.js setup"
+  },
+  "author": "Prosopo Limited",
+  "license": "Apache-2.0",
+  "exports": {
+    "./config/*": "./config/*"
+  },
+  "dependencies": {
+    "@polkadot/api": "9.13.6",
+    "@polkadot/api-contract": "9.13.6",
+    "@polkadot/types": "9.13.6",
+    "@polkadot/util-crypto": "10.3.1",
+    "@prosopo/common": "^0.1.11",
+    "@prosopo/env": "^0.1.11",
+    "@prosopo/provider": "^0.1.11",
+    "@prosopo/types": "^0.1.11",
+    "consola": "^2.15.3",
+    "dotenv": "^16.0.3",
+    "glob": "^10.0.0",
+    "yargs": "^17.5.1",
+    "yargs-parser": "^21.0.1"
+  },
+  "devDependencies": {
+    "@tsconfig/strictest": "^2.0.1",
+    "@types/node": "^18.0.6",
+    "@types/yargs": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.30.7",
+    "@typescript-eslint/parser": "^5.30.7",
+    "eslint": "^8.20.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "fs-extra": "^10.1.0",
+    "prettier": "2.7.1",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  }
+}

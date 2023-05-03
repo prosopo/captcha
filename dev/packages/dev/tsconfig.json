@@ -1,5 +1,5 @@
 {
-    "extends": "../tsconfig.build.json",
+    "extends": "../../tsconfig.build.json",
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
@@ -7,16 +7,19 @@
         "target": "esnext"
     },
     "include": [
-        "./src/**/*.ts"
-        //    "./tests/**/*.ts"
+        "./src/**/*",
+        "./src/**/*.json",
     ],
 
     "references": [
         {
-            "path": "../packages/common"
+            "path": "../../../packages/common"
         },
         {
-            "path": "../packages/env"
+            "path": "../../../packages/env"
+        },
+        {
+            "path": "../config"
         }
     ]
 }

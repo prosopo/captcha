@@ -24,6 +24,7 @@
     "@polkadot/keyring": "10.3.1",
     "@polkadot/util": "10.3.1",
     "@polkadot/util-crypto": "10.3.1",
+    "@prosopo/dev": "^0.1.11",
     "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.7.18",

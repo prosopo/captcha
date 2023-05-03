@@ -1,0 +1,19 @@
+{
+  "extends" : "./tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "module": "commonjs",
+    "target": "esnext",
+    "lib": [
+      "esnext",
+      "dom"
+    ]
+  },
+  "include" : [
+    "src/index.ts",
+    "src/.eslintrc.js",
+    "src/.prettierrc.js",
+    "src/tsconfig.base.json"
+  ]
+}

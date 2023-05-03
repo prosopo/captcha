@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
-    "lint": "npx eslint .",
+    "lint": "npx eslint . ",
     "lint:fix": "npx eslint . --fix"
   },
   "repository": {
@@ -23,5 +23,8 @@
   "dependencies": {
     "@prosopo/datasets": "^0.1.11",
     "axios": "^0.27.2"
+  },
+  "devDependencies": {
+    "@prosopo/dev": "^0.1.11"
   }
 }

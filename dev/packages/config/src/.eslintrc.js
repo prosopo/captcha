@@ -3,6 +3,19 @@ module.exports = {
         browser: true,
         es2021: true,
     },
+    ignorePatterns: [
+      '**/artifacts/*',
+      '**/dist/*',
+      '**/node_modules/*',
+      '**/.eslintrc.js',
+      '/.eslintrc.cjs',
+      '/.eslintrc.js',
+      '/.eslintrc.mjs',
+      '/.github/**',
+      '/.prettierrc.cjs',
+      '/.vscode/**',
+      '/.yarn/**',
+    ],
     extends: [
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
@@ -14,7 +27,7 @@ module.exports = {
         ecmaVersion: 'latest',
         sourceType: 'module',
     },
-    plugins: ['unused-imports', '@typescript-eslint', 'prettier'],
+    plugins: ['unused-imports', '@typescript-eslint', 'prettier', 'simple-import-sort'],
     rules: {
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',

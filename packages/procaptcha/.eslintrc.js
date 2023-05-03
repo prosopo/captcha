@@ -1,36 +1,21 @@
+const base = require('@prosopo/dev/config/.eslintrc.js');
 module.exports = {
-    env: {
-        browser: true,
-        es2021: true,
-    },
-    extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier', 'plugin:prettier/recommended'],
-    parser: '@typescript-eslint/parser',
+    ...base,
+    ignorePatterns: [
+        ...base.ignorePatterns,
+        '/scripts'
+    ],
     parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
+        ...base.parserOptions,
+        project: [
+            './tsconfig.eslint.json'
+        ]
     },
-    plugins: ['unused-imports', '@typescript-eslint', 'prettier'],
     rules: {
-        'no-unused-vars': 'off',
-        'unused-imports/no-unused-imports': 'error',
-        'unused-imports/no-unused-vars': [
-            'warn',
-            {
-                vars: 'all',
-                varsIgnorePattern: '^_',
-                args: 'after-used',
-                argsIgnorePattern: '^_',
-            },
-        ],
-        //"indent": ["error", 4],
-        //"indent": "off",
-        'sort-imports': [
-            'error',
-            {
-                ignoreDeclarationSort: true,
-                allowSeparatedGroups: false,
-            },
-        ],
-        'prettier/prettier': ['error'],
-    },
-}
+        ...base.rules,
+        // add override for any (a metric ton of them, initial conversion)
+        '@typescript-eslint/no-explicit-any': 'off',
+        // this seems very broken atm, false positives
+        '@typescript-eslint/unbound-method': 'off'
+    }
+};

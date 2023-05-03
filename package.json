@@ -87,10 +87,11 @@
   "workspaces": [
     "packages/*",
     "demos/*",
-    "dev"
+    "dev/packages/*"
   ],
   "devDependencies": {
     "depcheck": "^1.4.3",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
     "nodemon": "^2.0.20",
     "npm-check-updates": "^15.3.4",
     "tslib": "^2.4.0",

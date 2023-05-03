@@ -1,0 +1,19 @@
+{
+  "name": "@prosopo/dev-config",
+  "version": "0.1.11",
+  "description": "Dev config for eslint and prettier",
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build --verbose"
+  },
+  "include" : [
+    ".eslintrc.js",
+    ".pretterrc.js",
+    "tsconfig.json"
+  ],
+  "author": "Prosopo Limited",
+  "license": "Apache-2.0",
+  "exports": {
+    "./config/*": "./config/*"
+  }
+}

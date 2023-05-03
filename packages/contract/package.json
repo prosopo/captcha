@@ -45,6 +45,7 @@
     "bn.js": "^5.2.1"
   },
   "devDependencies": {
+    "@prosopo/dev": "^0.1.11",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
     "eslint": "^8.20.0",
