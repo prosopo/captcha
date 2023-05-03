@@ -5,10 +5,9 @@ authors = ["Chris Taylor chris@prosopo.io, George Oastler george@prosopo.io, Vin
 edition = "2021"
 
 [dependencies]
-ink = { git = "https://github.com/prosopo/ink", rev="bec5105fb79926377341179389336fcac620c50d", default-features = false }
+ink = { git = "https://github.com/prosopo/ink", rev="9ca19c462d5f5d1572ddce595d2698207241fd4a", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
-schnorrkel = { version = "0.9.1", default-features = false, features = ["u64_backend"] }
 hex = "0.4.3"
 
 # custom prosopo storage
