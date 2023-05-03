@@ -1847,8 +1847,9 @@ pub mod prosopo {
 
         const STAKE_DEFAULT: u128 = 1000000000000;
 
-        const set_caller: fn(AccountId) =
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
+        const set_caller: fn(AccountId) = ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
+        const get_account_balance: fn(AccountId) -> Result<u128, ink::env::Error> = ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>;
+        const set_account_balance: fn(AccountId, u128) = ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
 
         pub struct DefaultAccounts {
             unused_account: AccountId,
@@ -1926,6 +1927,53 @@ pub mod prosopo {
                 contract
             }
 
+            // #[ink::test]
+            // fn test_withdraw() {
+
+            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            //     set_caller(default_unused_account());
+            //     let accounts = default_accounts();
+
+            //     let mut contract = default_contract();
+
+            //     // give the contract funds
+            //     set_account_balance(contract.env().account_id(), 10000000000);
+            //     set_caller(accounts.admins[0]); // use the admin acc
+            //     let bal = get_account_balance(accounts.admins[0]).unwrap();
+            //     assert!(contract.withdraw(accounts.admins[0], 1).is_ok());
+            //     let new_bal = get_account_balance(accounts.admins[0]).unwrap();
+            //     assert_eq!(new_bal, bal + 1);
+            // }
+
+            #[ink::test]
+            #[should_panic]
+            fn test_withdraw_insufficient_funds() {
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(default_unused_account());
+                let accounts = default_accounts();
+
+                let mut contract = default_contract();
+
+                set_caller(accounts.admins[0]); // use the admin acc
+                let bal = get_account_balance(accounts.admins[0]);
+                contract.withdraw(accounts.admins[0], 10000000000); // panics as bal would go below existential deposit
+            }
+
+
+            #[ink::test]
+            fn test_withdraw_unauthorised() {
+
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(default_unused_account());
+                let accounts = default_accounts();
+
+                let mut contract = default_contract();
+
+                // give the contract funds
+                set_caller(accounts.users[0]); // use the admin acc
+                assert_eq!(contract.withdraw(accounts.admins[0], 1), Err(Error::IsNotAdmin));
+            }
+
             #[ink::test]
             fn test_check_admin() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
@@ -1970,7 +2018,7 @@ pub mod prosopo {
             }
 
             #[ink::test]
-            fn test_set_admin_not_admin() {
+            fn test_set_admin_unauthorised() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
