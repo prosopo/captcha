@@ -18,7 +18,7 @@ import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, Verificati
 import { ProsopoRandomProvider } from '@prosopo/contract'
 import { CaptchaSolution } from '@prosopo/types'
 
-export class ProviderApi extends HttpClientBase {
+export default class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
 
     constructor(network: ProsopoNetwork, providerUrl: string) {
@@ -39,8 +39,7 @@ export class ProviderApi extends HttpClientBase {
         const { blockNumber } = randomProvider
 
         return this.axios.get(
-            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
-                this.network.dappContract.address
+            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.network.dappContract.address
             }/${blockNumber.toString().replace(/,/g, '')}`
         )
     }
@@ -76,5 +75,3 @@ export class ProviderApi extends HttpClientBase {
         return this.axios.post(`/v1/prosopo/provider/verify`, payload)
     }
 }
-
-export default ProviderApi
