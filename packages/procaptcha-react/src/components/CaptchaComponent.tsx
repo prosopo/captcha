@@ -17,11 +17,11 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import ThemeProvider from '@mui/material/styles/ThemeProvider'
-import useTranslation from '@prosopo/common/dist/react/useTranslation'
 import { GetCaptchaResponse } from '@prosopo/procaptcha'
 import addDataAttr from '../util'
 import CaptchaWidget from './CaptchaWidget'
 import theme from './theme'
+import { useTranslation } from '@prosopo/common'
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse

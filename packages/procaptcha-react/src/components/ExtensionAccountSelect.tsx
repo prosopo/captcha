@@ -17,7 +17,7 @@ import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-import useTranslation from '@prosopo/common/dist/react/useTranslation'
+import { useTranslation } from '@prosopo/common'
 import { SyntheticEvent, useEffect, useState } from 'react'
 
 export const ExtensionAccountSelect = ({
