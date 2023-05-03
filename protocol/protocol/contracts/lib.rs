@@ -24,9 +24,7 @@ pub use self::prosopo::{Prosopo, ProsopoRef};
 /// Print and return an error in ink
 macro_rules! err {
     ($err:expr) => {{
-        function_name!();
-        Err($err)
-        // Err(get_self!().print_err($err, function_name!()))
+        Err(get_self!().print_err($err, function_name!()))
     }};
 }
 
@@ -36,11 +34,7 @@ macro_rules! err {
 
 macro_rules! err_fn {
     ($err:expr) => {
-        || {
-            function_name!();
-            Err($err)
-        }
-        // || get_self!().print_err($err, function_name!())
+        || get_self!().print_err($err, function_name!())
     };
 }
 
