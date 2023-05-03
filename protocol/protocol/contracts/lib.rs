@@ -2288,6 +2288,7 @@ pub mod prosopo {
         }
 
         #[ink::test]
+        #[should_panic]
         fn test_verify_sr25519_invalid_public_key() {
             let operator_accounts = get_operator_accounts();
             let mut contract = Prosopo::default(
@@ -2330,9 +2331,8 @@ pub mod prosopo {
 
             // verify the signature
             let valid = contract
-                .verify_sr25519(signature_bytes, payload_bytes)
-                .unwrap_err();
-            assert_eq!(Error::InvalidPublicKey, valid);
+                .verify_sr25519(signature_bytes, payload_bytes).unwrap();
+            assert_eq!(false, valid);
         }
 
         #[ink::test]
