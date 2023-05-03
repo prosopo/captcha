@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
-import { AbiMetadata, ContractAbi } from '@prosopo/types'
+import { AbiMetaDataSpec, AbiMetadata, AbiStorageEntry, ContractAbi } from '@prosopo/types'
 import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
@@ -24,7 +24,7 @@ import { ApiBase, ApiDecoration } from '@polkadot/api/types'
 import { firstValueFrom, map } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
 import { BN, BN_ZERO } from '@polkadot/util'
-import { EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
+import { EventRecord, StorageDeposit, StorageEntryMetadataLatest, WeightV2 } from '@polkadot/types/interfaces'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { useWeightImpl } from './useWeight'
 import { IKeyringPair, ISubmittableResult } from '@polkadot/types/types'
@@ -32,7 +32,6 @@ import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { applyOnEvent } from '@polkadot/api-contract/util'
 import { Bytes } from '@polkadot/types-codec'
 import { LogLevel, Logger, logger } from '@prosopo/common'
-import { StorageEntry } from '@polkadot/types/primitive/types'
 
 export class ProsopoContractApi extends ContractPromise {
     contractName: string
@@ -40,6 +39,7 @@ export class ProsopoContractApi extends ContractPromise {
     options: ContractOptions
     nonce: number
     logger: Logger
+    json: AbiMetadata
 
     constructor(
         api: ApiPromise,
@@ -55,6 +55,17 @@ export class ProsopoContractApi extends ContractPromise {
         this.contractName = contractName
         this.nonce = currentNonce
         this.logger = logger(logLevel || LogLevel.Info, `ProsopoContractApi: ${contractName}`)
+        this.json = AbiMetaDataSpec.parse(this.abi.json)
+        this.createStorageGetters()
+    }
+
+    private createStorageGetters(): void {
+        for (const storageField of this.json.storage.root.layout.struct.fields) {
+            const functionName = `${snakeToCamelCase(storageField.name)}`
+            ProsopoContractApi.prototype[functionName] = () => {
+                return this.getStorage(storageField.name)
+            }
+        }
     }
 
     public getContract(): ProsopoContractApi {
@@ -244,43 +255,48 @@ export class ProsopoContractApi extends ContractPromise {
     /** Get the storage entry from the ABI given a storage name
      * @return the storage entry object
      */
-    getStorageKey(storageName: string): `0x${string}` {
-        let storage = this.getStorageEntry(storageName)
-        if (storage) {
+    getStorageKeyAndType(storageName: string): { storageKey: `0x${string}`; storageTypeIndex: number } {
+        const { storageEntry } = this.getStorageEntry(storageName)
+        if (storageEntry) {
+            let storage = storageEntry
             while ('root' in storage.layout) {
                 storage = storage.layout.root
             }
             const rootKey = storage.root_key
             const rootKeyReversed = reverseHexString(rootKey.slice(2))
-            console.log('rootKeyReversed', rootKeyReversed)
-            const encodedAddress = this.address.toHex()
-            console.log('encodedAddress', encodedAddress)
-            return `0x${rootKeyReversed}`
+            return { storageKey: `0x${rootKeyReversed}`, storageTypeIndex: storage.layout.leaf.ty }
         }
-        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', this.getStorageKey.name)
+        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', this.getStorageKeyAndType.name)
     }
 
-    getStorageEntry(storageName: string): StorageEntry | undefined {
-        const json: AbiMetadata = this.abi.json as AbiMetadata
-        return json.storage.root.layout.struct.fields.filter((obj: { name: string }) => obj.name === storageName)[0]
+    getStorageEntry(storageName: string): {
+        storageEntry?: StorageEntryMetadataLatest & AbiStorageEntry
+        index?: number
+    } {
+        const index = this.json.storage.root.layout.struct.fields.findIndex(
+            (obj: { name: string }) => obj.name === storageName
+        )
+        if (index) {
+            return { storageEntry: this.json.storage.root.layout.struct.fields[index], index }
+        }
+
+        return { storageEntry: undefined, index: undefined }
     }
 
     /**
      * Get the data at specified storage key
      * @return {any} data
      */
-    async getStorage<T>(name: string, type: string): Promise<T> {
-        const storageKey = this.getStorageKey(name)
-        const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageKey)
-        const result = await firstValueFrom(promiseResult)
-        console.log(result.toHex())
-        const optionBytes = this.abi.registry.createType('Option<Bytes>', result)
-        console.log(optionBytes.unwrap().toHex())
-
-        if (result) {
-            return this.abi.registry.createType(type, [optionBytes.unwrap().toU8a(true)]) as T
+    async getStorage<T>(name: string): Promise<T> {
+        const { storageKey, storageTypeIndex } = this.getStorageKeyAndType(name)
+        if (storageTypeIndex) {
+            const typeDef = this.abi.registry.lookup.getTypeDef(`Lookup${storageTypeIndex}`)
+            const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageKey)
+            const result = await firstValueFrom(promiseResult)
+            const optionBytes = this.abi.registry.createType('Option<Bytes>', result)
+            return this.abi.registry.createType(typeDef.type, [optionBytes.unwrap().toU8a(true)]) as T
         }
-        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', 'getStorage')
+        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', this.getStorage.name)
     }
 }
 
@@ -293,25 +309,6 @@ function reverseHexString(str: string): string {
     )
 }
 
-class YourClass extends ContractPromise {
-    async getStorageKey(storageName: string): Promise<`0x${string}`> {
-        // Get the storage entry from the JSON which is the abi in ContractPromise
-        // Assuming here that you're in a class that extends ContractPromise
-        const json = this.abi.json
-
-        // Returns the object above
-        let storage = json.storage.root.layout.struct.fields.filter(
-            (obj: { name: string }) => obj.name === storageName
-        )[0]
-
-        if (storage) {
-            while ('root' in storage.layout) {
-                storage = storage.layout.root
-            }
-            const rootKey = storage.root_key
-            const rootKeyReversed = reverseHexString(rootKey.slice(2))
-            return `0x${rootKeyReversed}`
-        }
-        throw new Error('Storage entry not found')
-    }
+function snakeToCamelCase(str: string): string {
+    return str.replace(/([-_][a-z])/g, (group) => group.toUpperCase().replace('-', '').replace('_', ''))
 }
