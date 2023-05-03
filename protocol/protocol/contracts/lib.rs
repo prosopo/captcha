@@ -1857,6 +1857,7 @@ pub mod prosopo {
             dapps: Vec<AccountId>,
             providers: Vec<AccountId>,
             users: Vec<AccountId>,
+            code_hashes: Vec<AccountId>,
         }
 
         mod tests_inner {
@@ -1869,6 +1870,7 @@ pub mod prosopo {
             // dapp accounts should be in range 0x11 - 0x20
             // provider accounts should be in range 0x21 - 0x30
             // user accounts should be in range 0x31 - 0x40
+            // code hashes should be in range 0x41 - 0x50
 
             fn default_unused_account() -> AccountId {
                 AccountId::from([0x00; 32])
@@ -1906,6 +1908,14 @@ pub mod prosopo {
                 list
             }
 
+            fn default_code_hashes() -> Vec<AccountId> {
+                let mut list = Vec::new();
+                for i in 41..=50 {
+                    list.push(AccountId::from([i; 32]));
+                }
+                list
+            }
+
             fn default_accounts() -> DefaultAccounts {
                 DefaultAccounts {
                     unused_account: default_unused_account(),
@@ -1913,6 +1923,7 @@ pub mod prosopo {
                     dapps: default_dapps(),
                     providers: default_providers(),
                     users: default_users(),
+                    code_hashes: default_code_hashes(),
                 }
             }
 
@@ -1925,6 +1936,18 @@ pub mod prosopo {
                 // set the caller back to the unused acc
                 set_caller(accounts.unused_account);
                 contract
+            }
+
+            #[ink::test]
+            fn test_terminate_unauthorised() {
+
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(default_unused_account());
+                let accounts = default_accounts();
+
+                let mut contract = default_contract();
+                set_caller(accounts.users[0]); // an account which does not have permission to call terminate
+                assert_eq!(contract.terminate(accounts.users[0]).unwrap_err(), Error::IsNotAdmin);
             }
 
             // #[ink::test]
