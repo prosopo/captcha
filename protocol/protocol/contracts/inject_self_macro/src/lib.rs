@@ -31,12 +31,13 @@ fn handle(input: TokenStream) -> TokenStream {
     let input = input.into_iter().peekable();
     let mut output = Vec::<TokenTree>::new();
     let mut found_fn = false;
+    let mut found_fn_name = false;
     for tt in input {
         match tt {
             TokenTree::Group(mut g) => {
                 let span = g.span();
                 let mut sub_ts = handle(g.stream());
-                if found_fn && g.delimiter() == Delimiter::Brace {
+                if !found_fn && found_fn_name && g.delimiter() == Delimiter::Brace {
                     let mut inject = quote!(
                         macro_rules! get_self {
                             () => {
@@ -46,15 +47,20 @@ fn handle(input: TokenStream) -> TokenStream {
                     );
                     inject.extend(sub_ts);
                     sub_ts = inject;
-                    found_fn = false;
                 }
                 g = Group::new(g.delimiter(), sub_ts);
                 g.set_span(span);
                 output.push(g.into());
+                found_fn_name = false;
+                found_fn = false;
             }
             TokenTree::Ident(i) => {
-                if i == "fn" {
+                if found_fn {
+                    found_fn_name = true;
+                    found_fn = false;
+                } else if i == "fn" {
                     found_fn = true;
+                    found_fn_name = false;
                 }
                 output.push(i.into());
             }
