@@ -1938,6 +1938,62 @@ pub mod prosopo {
                 contract
             }
 
+            // #[ink::test]
+            // fn test_set_code_hash() {
+
+            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            //     set_caller(default_unused_account());
+            //     let accounts = default_accounts();
+
+            //     let mut contract = default_contract();
+
+            //     let new_code_hash = accounts.code_hashes[1];
+            //     let old_code_hash = contract.env().own_code_hash();
+            //     assert_ne!(new_code_hash, old_code_hash);
+
+            //     set_caller(accounts.admins[0]); // an account which does have permission to call set code hash
+
+            //     assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
+
+            //     assert_eq!(contract.env().own_code_hash(), new_code_hash);
+            // }
+
+            // #[ink::test]
+            // fn test_set_code_hash_unauthorised() {
+
+            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            //     set_caller(default_unused_account());
+            //     let accounts = default_accounts();
+
+            //     let mut contract = default_contract();
+
+            //     let new_code_hash = accounts.code_hashes[1];
+            //     let old_code_hash = contract.env().own_code_hash();
+            //     assert_ne!(new_code_hash, old_code_hash);
+
+            //     set_caller(accounts.users[0]); // an account which does not have permission to call set code hash
+
+            //     assert_eq!(contract.set_code_hash(new_code_hash), Err(NotAuthorised));
+            // }
+
+            // #[ink::test]
+            // fn test_terminate() {
+
+            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            //     set_caller(default_unused_account());
+            //     let accounts = default_accounts();
+
+            //     let mut contract = default_contract();
+            //     set_caller(accounts.admins[0]); // an account which does have permission to call terminate
+
+            //     let contract_account = ink::env::account_id::<ink::env::DefaultEnvironment>();
+            //     let bal = get_account_balance(contract_account).unwrap();
+            //     let admin = accounts.admins[0].clone();
+            //     let should_terminate = move || contract.terminate(admin).unwrap();
+            //     ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(should_terminate, accounts.admins[0].clone(), bal);
+
+            // }
+
             #[ink::test]
             fn test_terminate_unauthorised() {
 
@@ -1947,6 +2003,7 @@ pub mod prosopo {
 
                 let mut contract = default_contract();
                 set_caller(accounts.users[0]); // an account which does not have permission to call terminate
+
                 assert_eq!(contract.terminate(accounts.users[0]).unwrap_err(), Error::IsNotAdmin);
             }
 
