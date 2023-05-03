@@ -38,7 +38,7 @@ fn handle(input: TokenStream) -> TokenStream {
             TokenTree::Group(mut g) => {
                 let span = g.span();
                 let mut sub_ts = handle(g.stream());
-                if found_fn_name && g.delimiter() == Delimiter::Brace {
+                if !found_fn && found_fn_name && g.delimiter() == Delimiter::Brace {
                     let mut inject = quote!(
                         macro_rules! function_name {() => (
                             #fname
@@ -46,21 +46,21 @@ fn handle(input: TokenStream) -> TokenStream {
                     );
                     inject.extend(sub_ts);
                     sub_ts = inject;
-                    found_fn_name = false;
-                    found_fn = false;
                 }
                 g = Group::new(g.delimiter(), sub_ts);
                 g.set_span(span);
                 output.push(g.into());
+                found_fn_name = false;
+                found_fn = false;
             }
             TokenTree::Ident(i) => {
-                if i == "fn" {
-                    found_fn = true;
-                }
                 if found_fn {
                     fname = i.to_string();
                     found_fn = false;
                     found_fn_name = true;
+                } else if i == "fn" {
+                    found_fn = true;
+                    found_fn_name = false;
                 }
                 output.push(i.into());
             }
