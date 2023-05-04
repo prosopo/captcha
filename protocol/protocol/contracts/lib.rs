@@ -2335,7 +2335,7 @@ pub mod prosopo {
             let valid = contract
                 .verify_sr25519(signature_bytes, payload_bytes)
                 .unwrap();
-            assert_eq!(false, valid);
+            assert!(!valid);
         }
 
         #[ink::test]
