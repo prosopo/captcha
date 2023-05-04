@@ -715,6 +715,7 @@ dependencies = [
  "parity-scale-codec",
  "prosopo_storage_derive",
  "scale-info",
+ "thiserror",
 ]
 
 [[package]]
