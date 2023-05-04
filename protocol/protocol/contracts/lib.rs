@@ -447,7 +447,9 @@ pub mod prosopo {
             // let res = pub_key.verify_simple(crate::CTX, &payload, &sig);
             // Ok(res.is_ok())
 
-            let res = self.env().sr25519_verify(&signature, &payload, &caller_bytes);
+            let res = self
+                .env()
+                .sr25519_verify(&signature, &payload, &caller_bytes);
             Ok(res.is_ok())
         }
 
@@ -2331,7 +2333,8 @@ pub mod prosopo {
 
             // verify the signature
             let valid = contract
-                .verify_sr25519(signature_bytes, payload_bytes).unwrap();
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap();
             assert_eq!(false, valid);
         }
 
