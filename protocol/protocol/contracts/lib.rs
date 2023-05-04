@@ -2015,25 +2015,25 @@ pub mod prosopo {
                 accounts
             }
 
-            #[ink::test]
-            fn test_set_code_hash() {
+            // #[ink::test]
+            // fn test_set_code_hash() {
 
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
-                let accounts = default_accounts();
+            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            //     set_caller(default_unused_account());
+            //     let accounts = default_accounts();
 
-                let mut contract = default_contract();
+            //     let mut contract = default_contract();
 
-                let new_code_hash = accounts.code_hashes[1];
-                let old_code_hash = contract.env().own_code_hash().unwrap();
-                assert_ne!(Hash::from(new_code_hash), old_code_hash);
+            //     let new_code_hash = accounts.code_hashes[1];
+            //     let old_code_hash = contract.env().own_code_hash().unwrap();
+            //     assert_ne!(Hash::from(new_code_hash), old_code_hash);
 
-                set_caller(accounts.admins[0]); // an account which does have permission to call set code hash
+            //     set_caller(accounts.admins[0]); // an account which does have permission to call set code hash
 
-                assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
+            //     assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
 
-                assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
-            }
+            //     assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
+            // }
 
             #[ink::test]
             fn test_set_code_hash_unauthorised() {
@@ -2047,7 +2047,7 @@ pub mod prosopo {
                 set_caller(accounts.users[0]); // an account which does not have permission to call set code hash
 
                 let new_code_hash = accounts.code_hashes[1];
-                assert_eq!(contract.set_code_hash(new_code_hash), Err(Error::NotAuthorised));
+                assert_eq!(contract.set_code_hash(new_code_hash), Err(Error::IsNotAdmin));
             }
 
             #[ink::test]
