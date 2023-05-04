@@ -926,7 +926,7 @@ pub mod prosopo {
             Ok(())
         }
 
-        /// Trim the user history to the max length and age. 
+        /// Trim the user history to the max length and age.
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             // note that the age is based on the block timestamp, so calling this method as blocks roll over will result in different outcomes as the age threshold will change but the history will not (assuming no new results are added)
