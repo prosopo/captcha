@@ -3146,636 +3146,649 @@ pub mod prosopo {
                     .is_some());
             }
 
-            /// Test provider approve
-            #[ink::test]
-            fn test_provider_approve() {
+        /// Test provider approve
+        #[ink::test]
+        fn test_provider_approve() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
 
-                // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
-                    .unwrap();
+            // Register the provider
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                .unwrap();
 
-                // Call from the provider account to add data and stake tokens
-                let balance = 2000000000000;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+            // Call from the provider account to add data and stake tokens
+            let balance = 2000000000000;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Provider);
 
-                let provider = contract.providers.get(provider_account).unwrap();
-                // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+            let provider = contract.providers.get(provider_account).unwrap();
+            // can only add data set after staking
+            contract.provider_add_dataset(root1, root2).ok();
 
-                // Register the dapp
-                let dapp_caller_account = AccountId::from([0x3; 32]);
-                let dapp_contract_account = AccountId::from([0x4; 32]);
-                // Mark the the dapp account as being a contract on-chain
-                ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+            // Register the dapp
+            let dapp_caller_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
-                // Call from the dapp account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
-                // Give the dap a balance
-                let balance = 2000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+            // Call from the dapp account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
+            // Give the dap a balance
+            let balance = 2000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
-                //Dapp User commit
-                let dapp_user_account = AccountId::from([0x5; 32]);
-                let user_root = str_to_hash("user merkle tree root".to_string());
-                contract
-                    .dapp_user_commit(
-                        dapp_contract_account,
-                        root1,
-                        user_root,
-                        provider_account,
-                        dapp_user_account,
-                        None,
-                    )
-                    .ok();
+            //Dapp User commit
+            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_root = str_to_hash("user merkle tree root".to_string());
 
-                // Call from the provider account to mark the solution as approved
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let solution_id = user_root;
-                contract.provider_approve(solution_id, 0);
-                let commitment = contract
-                    .captcha_solution_commitments
-                    .get(solution_id)
-                    .unwrap();
-                assert_eq!(commitment.status, CaptchaStatus::Approved);
-                let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account).unwrap();
-                let new_provider_balance = contract.get_provider_balance(provider_account).unwrap();
-                assert_eq!(balance - Balance::from(fee), new_dapp_balance);
-                assert_eq!(balance + Balance::from(fee), new_provider_balance);
+            // Call from the provider account to mark the solution as approved
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let solution_id = user_root;
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
+            let commitment = contract
+                .captcha_solution_commitments
+                .get(solution_id)
+                .unwrap();
+            assert_eq!(commitment.status, CaptchaStatus::Approved);
+            let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account).unwrap();
+            let new_provider_balance = contract.get_provider_balance(provider_account).unwrap();
+            assert_eq!(balance - Balance::from(fee), new_dapp_balance);
+            assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
-                // Now make sure that the provider cannot later set the solution to disapproved and make
-                // sure that the dapp balance is unchanged
-                contract.provider_disapprove(solution_id);
-                let commitment = contract
-                    .captcha_solution_commitments
-                    .get(solution_id)
-                    .unwrap();
-                assert_eq!(commitment.status, CaptchaStatus::Approved);
-                assert_eq!(
-                    balance - Balance::from(fee),
-                    contract.get_dapp_balance(dapp_contract_account).unwrap()
-                );
-                assert_eq!(
-                    balance + Balance::from(fee),
-                    contract.get_provider_balance(provider_account).unwrap()
-                );
-            }
+            // Now make sure that the provider cannot later set the solution to disapproved and make
+            // sure that the dapp balance is unchanged
 
-            /// Test provider cannot approve invalid solution id
-            #[ink::test]
-            fn test_provider_approve_invalid_id() {
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
+            let commitment = contract
+                .captcha_solution_commitments
+                .get(solution_id)
+                .unwrap();
+            assert_eq!(commitment.status, CaptchaStatus::Approved);
+            assert_eq!(
+                balance - Balance::from(fee),
+                contract.get_dapp_balance(dapp_contract_account).unwrap()
+            );
+            assert_eq!(
+                balance + Balance::from(fee),
+                contract.get_provider_balance(provider_account).unwrap()
+            );
+        }
+
+        /// Test provider cannot approve invalid solution id
+        #[ink::test]
+        fn test_provider_approve_invalid_id() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
 
-                // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
-                    .unwrap();
+            // Register the provider
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                .unwrap();
 
-                // Call from the provider account to add data and stake tokens
-                let balance = 2000000000000;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
-                // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+            // Call from the provider account to add data and stake tokens
+            let balance = 2000000000000;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Provider);
+            // can only add data set after staking
+            contract.provider_add_dataset(root1, root2).ok();
 
-                // Register the dapp
-                let dapp_caller_account = AccountId::from([0x3; 32]);
-                let dapp_contract_account = AccountId::from([0x4; 32]);
-                // Mark the the dapp account as being a contract on-chain
-                ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+            // Register the dapp
+            let dapp_caller_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
-                // Call from the dapp account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
-                // Give the dap a balance
-                let balance = 2000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+            // Call from the dapp account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
+            // Give the dap a balance
+            let balance = 2000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
-                //Dapp User commit
-                let dapp_user_account = AccountId::from([0x5; 32]);
-                let user_root = str_to_hash("user merkle tree root".to_string());
-                contract
-                    .dapp_user_commit(
-                        dapp_contract_account,
-                        root1,
-                        user_root,
-                        provider_account,
-                        dapp_user_account,
-                        None,
-                    )
-                    .ok();
+            //Dapp User commit
+            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_root = str_to_hash("user merkle tree root".to_string());
 
-                // Call from the provider account to mark the wrong solution as approved
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let solution_id = str_to_hash("id that does not exist".to_string());
-                let result = contract.provider_approve(solution_id, 0);
-                assert_eq!(
-                    Error::CaptchaSolutionCommitmentDoesNotExist,
-                    result.unwrap_err()
-                );
-            }
+            // Call from the provider account to mark the wrong solution as approved
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let solution_id = str_to_hash("id that does not exist".to_string());
 
-            /// Test provider disapprove
-            #[ink::test]
-            fn test_provider_disapprove() {
+            let result = contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
+        }
+
+        /// Test provider disapprove
+        #[ink::test]
+        fn test_provider_disapprove() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
 
-                // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
-                    .unwrap();
+            // Register the provider
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                .unwrap();
 
-                // Call from the provider account to add data and stake tokens
-                let balance = 2000000000000;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
-                // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+            // Call from the provider account to add data and stake tokens
+            let balance = 2000000000000;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Provider);
+            // can only add data set after staking
+            contract.provider_add_dataset(root1, root2).ok();
 
-                // Register the dapp
-                let dapp_caller_account = AccountId::from([0x3; 32]);
-                let dapp_contract_account = AccountId::from([0x4; 32]);
-                // Mark the the dapp account as being a contract on-chain
-                ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+            // Register the dapp
+            let dapp_caller_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
-                // Call from the dapp account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
-                // Give the dap a balance
-                let balance = 2000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+            // Call from the dapp account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
+            // Give the dap a balance
+            let balance = 2000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
-                //Dapp User commit
-                let dapp_user_account = AccountId::from([0x5; 32]);
-                let user_root = str_to_hash("user merkle tree root".to_string());
-                contract
-                    .dapp_user_commit(
-                        dapp_contract_account,
-                        root1,
-                        user_root,
-                        provider_account,
-                        dapp_user_account,
-                        None,
-                    )
-                    .ok();
+            //Dapp User commit
+            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_root = str_to_hash("user merkle tree root".to_string());
 
-                // Call from the provider account to mark the solution as disapproved
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let solution_id = user_root;
-                contract.provider_disapprove(solution_id);
-                let commitment = contract
-                    .captcha_solution_commitments
-                    .get(solution_id)
-                    .unwrap();
-                assert_eq!(commitment.status, CaptchaStatus::Disapproved);
-                let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account).unwrap();
-                let new_provider_balance = contract.get_provider_balance(provider_account).unwrap();
-                assert_eq!(balance - Balance::from(fee), new_dapp_balance);
-                assert_eq!(balance + Balance::from(fee), new_provider_balance);
+            // Call from the provider account to mark the solution as disapproved
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let solution_id = user_root;
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
+            let commitment = contract
+                .captcha_solution_commitments
+                .get(solution_id)
+                .unwrap();
+            assert_eq!(commitment.status, CaptchaStatus::Disapproved);
+            let new_dapp_balance = contract.get_dapp_balance(dapp_contract_account).unwrap();
+            let new_provider_balance = contract.get_provider_balance(provider_account).unwrap();
+            assert_eq!(balance - Balance::from(fee), new_dapp_balance);
+            assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
-                // Now make sure that the provider cannot later set the solution to approved
-                contract.provider_approve(solution_id, 0);
-                let commitment = contract
-                    .captcha_solution_commitments
-                    .get(solution_id)
-                    .unwrap();
-                assert_eq!(commitment.status, CaptchaStatus::Disapproved);
-                assert_eq!(
-                    balance - Balance::from(fee),
-                    contract.get_dapp_balance(dapp_contract_account).unwrap()
-                );
-                assert_eq!(
-                    balance + Balance::from(fee),
-                    contract.get_provider_balance(provider_account).unwrap()
-                );
-            }
+            // Now make sure that the provider cannot later set the solution to approved
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
+            let commitment = contract
+                .captcha_solution_commitments
+                .get(solution_id)
+                .unwrap();
+            assert_eq!(commitment.status, CaptchaStatus::Disapproved);
+            assert_eq!(
+                balance - Balance::from(fee),
+                contract.get_dapp_balance(dapp_contract_account).unwrap()
+            );
+            assert_eq!(
+                balance + Balance::from(fee),
+                contract.get_provider_balance(provider_account).unwrap()
+            );
+        }
 
-            /// Test dapp user is human
-            #[ink::test]
-            fn test_dapp_operator_is_human_user() {
+        /// Test dapp user is human
+        #[ink::test]
+        fn test_dapp_operator_is_human_user() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
 
-                // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
-                    .unwrap();
+            // Register the provider
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                .unwrap();
 
-                // Call from the provider account to add data and stake tokens
-                let balance = 2000000000000;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
-                // can only add data set after staking
-                contract.provider_add_dataset(root1, root2);
+            // Call from the provider account to add data and stake tokens
+            let balance = 2000000000000;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Provider);
+            // can only add data set after staking
+            contract.provider_add_dataset(root1, root2);
 
-                // Register the dapp
-                let dapp_caller_account = AccountId::from([0x3; 32]);
-                let dapp_contract_account = AccountId::from([0x4; 32]);
-                // Mark the the dapp account as being a contract on-chain
-                ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+            // Register the dapp
+            let dapp_caller_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
-                // Call from the dapp account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
-                // Give the dap a balance
-                let balance = 2000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+            // Call from the dapp account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
+            // Give the dap a balance
+            let balance = 2000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
-                //Dapp User commit
-                let dapp_user_account = AccountId::from([0x5; 32]);
-                // Call from the Dapp User Account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
-                let user_root = str_to_hash("user merkle tree root".to_string());
-                contract
-                    .dapp_user_commit(
-                        dapp_contract_account,
-                        root1,
-                        user_root,
-                        provider_account,
-                        dapp_user_account,
-                        None,
-                    )
-                    .ok();
+            //Dapp User commit
+            let dapp_user_account = AccountId::from([0x5; 32]);
+            // Call from the Dapp User Account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
+            let user_root = str_to_hash("user merkle tree root".to_string());
 
-                // Call from the provider account to mark the solution as disapproved
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let solution_id = user_root;
-                contract.provider_disapprove(solution_id);
-                let commitment = contract
-                    .captcha_solution_commitments
-                    .get(solution_id)
-                    .unwrap();
-                assert_eq!(commitment.status, CaptchaStatus::Disapproved);
+            // Call from the provider account to mark the solution as disapproved
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let solution_id = user_root;
+            contract.provider_commit(
+                solution_id,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
+            let commitment = contract
+                .captcha_solution_commitments
+                .get(solution_id)
+                .unwrap();
+            assert_eq!(commitment.status, CaptchaStatus::Disapproved);
 
-                // Now make sure that the dapp user does not pass the human test
-                let result = contract.dapp_operator_is_human_user(dapp_user_account, 80);
-                assert!(!result.unwrap());
-            }
+            // Now make sure that the dapp user does not pass the human test
+            let result = contract.dapp_operator_is_human_user(dapp_user_account, 80);
+            assert!(!result.unwrap());
+        }
 
-            /// Test non-existent dapp account has zero balance
-            #[ink::test]
-            fn test_non_existent_dapp_account_has_zero_balance() {
-                let dapp_account = AccountId::from([0x2; 32]);
+        /// Test non-existent dapp account has zero balance
+        #[ink::test]
+        fn test_non_existent_dapp_account_has_zero_balance() {
+            let dapp_account = AccountId::from([0x2; 32]);
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
-                contract.get_dapp_balance(dapp_account).unwrap_err();
-            }
+            contract.get_dapp_balance(dapp_account).unwrap_err();
+        }
 
-            /// Test non-existent provider account has zero balance
-            #[ink::test]
-            fn test_non_existent_provider_account_has_zero_balance() {
-                let provider_account = AccountId::from([0x2; 32]);
+        /// Test non-existent provider account has zero balance
+        #[ink::test]
+        fn test_non_existent_provider_account_has_zero_balance() {
+            let provider_account = AccountId::from([0x2; 32]);
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
-                contract.get_provider_balance(provider_account).unwrap_err();
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
-                let accounts = default_accounts();
+            contract.get_provider_balance(provider_account).unwrap_err();
+            let mut contract = Prosopo::default(
+                operator_accounts,
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                0,
+                1000,
+            );
+            contract.get_provider_balance(provider_account).unwrap_err();
+        }
 
-                let mut contract = default_contract();
-                contract.get_provider_balance(provider_account).unwrap_err();
-            }
+        // // Test get random provider
+        #[ink::test]
+        fn test_get_random_active_provider() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(default_unused_account());
+            let accounts = default_accounts();
 
-            // // Test get random provider
-            #[ink::test]
-            fn test_get_random_active_provider() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
-                let accounts = default_accounts();
+            let mut contract = default_contract();
+            let provider_account = AccountId::from([0x2; 32]);
+            let service_origin: Vec<u8> = vec![1, 2, 3];
+            let fee: u32 = 100;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract.provider_register(service_origin.clone(), fee, Payee::Dapp);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let balance = 20000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Dapp);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            contract.provider_add_dataset(root1, root2);
+            let registered_provider_account = contract.providers.get(provider_account);
+            // Register the dapp
+            let dapp_caller_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
-                let mut contract = default_contract();
-                let provider_account = AccountId::from([0x2; 32]);
-                let service_origin: Vec<u8> = vec![1, 2, 3];
-                let fee: u32 = 100;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract.provider_register(service_origin.clone(), fee, Payee::Dapp);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let balance = 20000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Dapp);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                contract.provider_add_dataset(root1, root2);
-                let registered_provider_account = contract.providers.get(provider_account);
-                // Register the dapp
-                let dapp_caller_account = AccountId::from([0x3; 32]);
-                let dapp_contract_account = AccountId::from([0x4; 32]);
-                // Mark the the dapp account as being a contract on-chain
-                ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+            // Call from the dapp account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
+            // Give the dap a balance
+            let balance = 2000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+            let selected_provider =
+                contract.get_random_active_provider(provider_account, dapp_contract_account);
+            assert!(selected_provider.unwrap().provider == registered_provider_account.unwrap());
+        }
 
-                // Call from the dapp account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
-                // Give the dap a balance
-                let balance = 2000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
-                let selected_provider =
-                    contract.get_random_active_provider(provider_account, dapp_contract_account);
-                assert!(
-                    selected_provider.unwrap().provider == registered_provider_account.unwrap()
-                );
-            }
+        // // Test get random provider
+        #[ink::test]
+        fn test_get_random_active_provider_dapp_any() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(default_unused_account());
+            let accounts = default_accounts();
 
-            // // Test get random provider
-            #[ink::test]
-            fn test_get_random_active_provider_dapp_any() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
-                let accounts = default_accounts();
+            let mut contract = default_contract();
+            let provider_account = AccountId::from([0x2; 32]);
+            let dapp_user_account = AccountId::from([0x30; 32]);
+            let service_origin: Vec<u8> = vec![1, 2, 3];
+            let fee: u32 = 100;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract.provider_register(service_origin.clone(), fee, Payee::Provider);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let balance = 20000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            contract.provider_add_dataset(root1, root2);
 
-                let mut contract = default_contract();
-                let provider_account = AccountId::from([0x2; 32]);
-                let dapp_user_account = AccountId::from([0x30; 32]);
-                let service_origin: Vec<u8> = vec![1, 2, 3];
-                let fee: u32 = 100;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract.provider_register(service_origin.clone(), fee, Payee::Provider);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let balance = 20000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin.clone(), fee, Payee::Provider);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                contract.provider_add_dataset(root1, root2);
+            // Register the dapp
+            let dapp_caller_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
-                // Register the dapp
-                let dapp_caller_account = AccountId::from([0x3; 32]);
-                let dapp_contract_account = AccountId::from([0x4; 32]);
-                // Mark the the dapp account as being a contract on-chain
-                ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+            // Call from the dapp account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
+            // Give the dapp a balance
+            let balance = 2000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.dapp_register(dapp_contract_account, DappPayee::Any);
 
-                // Call from the dapp account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
-                // Give the dapp a balance
-                let balance = 2000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Any);
+            // Call from the dapp_user_account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
 
-                // Call from the dapp_user_account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
+            // Call as dapp user and get a random provider
+            let selected_provider =
+                contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
+            assert_eq!(selected_provider.unwrap().provider_id, provider_account);
 
-                // Call as dapp user and get a random provider
-                let selected_provider =
-                    contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
-                assert_eq!(selected_provider.unwrap().provider_id, provider_account);
+            // Switch the provider payee to Dapp
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract.provider_update(service_origin, fee, Payee::Dapp);
 
-                // Switch the provider payee to Dapp
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract.provider_update(service_origin, fee, Payee::Dapp);
+            // Call from the dapp_user_account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
 
-                // Call from the dapp_user_account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
+            // Call as dapp user and get a random provider. Ensure that the provider is still
+            // selected despite the payee change
+            let selected_provider =
+                contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
+            assert_eq!(selected_provider.unwrap().provider_id, provider_account);
+        }
 
-                // Call as dapp user and get a random provider. Ensure that the provider is still
-                // selected despite the payee change
-                let selected_provider =
-                    contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
-                assert_eq!(selected_provider.unwrap().provider_id, provider_account);
-            }
+        /// Test provider can supply a dapp user commit for themselves and approve or disapprove it
+        #[ink::test]
+        fn test_provider_commit_and_approve_and_disapprove() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(default_unused_account());
+            let accounts = default_accounts();
 
-            /// Test provider can supply a dapp user commit for themselves and approve or disapprove it
-            #[ink::test]
-            fn test_provider_commit_and_approve_and_disapprove() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
-                let accounts = default_accounts();
+            let mut contract = default_contract();
 
-                let mut contract = default_contract();
+            // Register the provider
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                .unwrap();
 
-                // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
-                    .unwrap();
+            // Call from the provider account to add data and stake tokens
+            let balance = 2000000000000;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Provider);
+            // can only add data set after staking
+            contract.provider_add_dataset(root1, root2).ok();
 
-                // Call from the provider account to add data and stake tokens
-                let balance = 2000000000000;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
-                // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+            // Register the dapp
+            let dapp_caller_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
-                // Register the dapp
-                let dapp_caller_account = AccountId::from([0x3; 32]);
-                let dapp_contract_account = AccountId::from([0x4; 32]);
-                // Mark the the dapp account as being a contract on-chain
-                ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+            // Call from the dapp account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
+            // Give the dap a balance
+            let balance = 2000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
-                // Call from the dapp account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_caller_account);
-                // Give the dap a balance
-                let balance = 2000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+            // Call from the provider account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
 
-                // Call from the provider account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            //Dapp User commit and approve
+            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_root1 = str_to_hash("user merkle tree root to approve".to_string());
+            contract.provider_commit(
+                user_root1,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: root1,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
 
-                //Dapp User commit and approve
-                let dapp_user_account = AccountId::from([0x5; 32]);
-                let user_root1 = str_to_hash("user merkle tree root to approve".to_string());
-                contract
-                    .dapp_user_commit(
-                        dapp_contract_account,
-                        root1,
-                        user_root1,
-                        provider_account,
-                        dapp_user_account,
-                        Some(CaptchaStatus::Approved),
-                    )
-                    .ok();
+            // Get the commitment and make sure it is approved
+            let commitment = contract
+                .get_captcha_solution_commitment(user_root1)
+                .unwrap();
+            assert_eq!(commitment.status, CaptchaStatus::Approved);
 
-                // Get the commitment and make sure it is approved
-                let commitment = contract
-                    .get_captcha_solution_commitment(user_root1)
-                    .unwrap();
-                assert_eq!(commitment.status, CaptchaStatus::Approved);
+            //Dapp User commit and disapprove
+            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_root2 = str_to_hash("user merkle tree root to disapprove".to_string());
+            contract.provider_commit(
+                user_root2,
+                CaptchaSolutionCommitment {
+                    contract: dapp_contract_account,
+                    dataset_id: root2,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    account: dapp_user_account,
+                    completed_at: 0,
+                },
+            );
 
-                //Dapp User commit and disapprove
-                let dapp_user_account = AccountId::from([0x5; 32]);
-                let user_root2 = str_to_hash("user merkle tree root to disapprove".to_string());
-                contract
-                    .dapp_user_commit(
-                        dapp_contract_account,
-                        root1,
-                        user_root2,
-                        provider_account,
-                        dapp_user_account,
-                        Some(CaptchaStatus::Disapproved),
-                    )
-                    .ok();
+            // Get the commitment and make sure it is disapproved
+            let commitment = contract
+                .get_captcha_solution_commitment(user_root2)
+                .unwrap();
+            assert_eq!(commitment.status, CaptchaStatus::Disapproved);
+        }
 
-                // Get the commitment and make sure it is disapproved
-                let commitment = contract
-                    .get_captcha_solution_commitment(user_root2)
-                    .unwrap();
-                assert_eq!(commitment.status, CaptchaStatus::Disapproved);
-            }
+        /// Test provider cannot supply a dapp user commit for a different Provider
+        #[ink::test]
+        fn test_provider_cannot_supply_commit_for_a_different_provider() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(default_unused_account());
+            let accounts = default_accounts();
 
-            /// Test provider cannot supply a dapp user commit for a different Provider
-            #[ink::test]
-            fn test_provider_cannot_supply_commit_for_a_different_provider() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
-                let accounts = default_accounts();
+            let mut contract = default_contract();
 
-                let mut contract = default_contract();
+            // Register the provider
+            let (provider_account, service_origin, fee) = generate_provider_data(0x2, "4242", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            contract
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                .unwrap();
 
-                // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
-                    .unwrap();
+            // Call from the provider account to add data and stake tokens
+            let balance = 2000000000000;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Provider);
+            // can only add data set after staking
+            contract.provider_add_dataset(root1, root2).ok();
 
-                // Call from the provider account to add data and stake tokens
-                let balance = 2000000000000;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
-                // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+            // Register the dapp
+            let dapp_user_account = AccountId::from([0x3; 32]);
+            let dapp_contract_account = AccountId::from([0x4; 32]);
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
 
-                // Register the dapp
-                let dapp_user_account = AccountId::from([0x3; 32]);
-                let dapp_contract_account = AccountId::from([0x4; 32]);
-                // Mark the the dapp account as being a contract on-chain
-                ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
+            // Call from the dapp_contract_account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_contract_account);
+            // Give the dap a balance
+            let balance = 2000000000000;
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
-                // Call from the dapp_contract_account
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_contract_account);
-                // Give the dap a balance
-                let balance = 2000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+            // Register a second provider
+            let (provider_account2, service_origin, fee) = generate_provider_data(0x5, "2424", 0);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account2);
+            contract
+                .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                .unwrap();
 
-                // Register a second provider
-                let (provider_account2, service_origin, fee) =
-                    generate_provider_data(0x5, "2424", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account2);
-                contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
-                    .unwrap();
+            // Call from the provider account to add data and stake tokens
+            let balance = 2000000000000;
+            let root1 = str_to_hash("merkle tree1".to_string());
+            let root2 = str_to_hash("merkle tree2".to_string());
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
+            contract.provider_update(service_origin, fee, Payee::Provider);
+            // can only add data set after staking
+            contract.provider_add_dataset(root1, root2).ok();
 
-                // Call from the provider account to add data and stake tokens
-                let balance = 2000000000000;
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
-                // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+            // Call from dapp_user_commit from provider_account2 to supply a commit for provider_account
+            // Should not be authorised
+            let dapp_user_account = AccountId::from([0x6; 32]);
+            let user_root = str_to_hash("user merkle tree root".to_string());
+        }
 
-                // Call from dapp_user_commit from provider_account2 to supply a commit for provider_account
-                // Should not be authorised
-                let dapp_user_account = AccountId::from([0x6; 32]);
-                let user_root = str_to_hash("user merkle tree root".to_string());
-                let dapp_user_commit_result = contract
-                    .dapp_user_commit(
-                        dapp_contract_account,
-                        root1,
-                        user_root,
-                        provider_account,
-                        dapp_user_account,
-                        Some(CaptchaStatus::Approved),
-                    )
-                    .err();
-                assert_eq!(Error::NotAuthorised, dapp_user_commit_result.unwrap());
-            }
+        /// Get some operator accounts as a vector
+        fn get_operator_accounts() -> Vec<AccountId> {
+            let operator_account1 = AccountId::from([0x1; 32]);
+            let operator_account2 = AccountId::from([0x10; 32]);
+            let mut operator_accounts = vec![operator_account1, operator_account2];
+            operator_accounts
+        }
 
-            /// Get some operator accounts as a vector
-            fn get_operator_accounts() -> Vec<AccountId> {
-                let operator_account1 = AccountId::from([0x1; 32]);
-                let operator_account2 = AccountId::from([0x10; 32]);
-                let mut operator_accounts = vec![operator_account1, operator_account2];
-                operator_accounts
-            }
+        fn setup_contract() -> (AccountId, AccountId, Vec<AccountId>, Prosopo) {
+            let op1 = AccountId::from([0x1; 32]);
+            let op2 = AccountId::from([0x2; 32]);
+            let ops = vec![op1, op2];
+            // initialise the contract
+            let contract = Prosopo::default(
+                ops.clone(),
+                STAKE_DEFAULT,
+                STAKE_DEFAULT,
+                10,
+                1000000,
+                0,
+                1000,
+            );
+            (op1, op2, ops, contract)
+        }
 
-            /// Test dapp cannot register if existing dapp in place
-            #[ink::test]
-            fn test_dapp_register_existing() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
-                let accounts = default_accounts();
+        /// Test dapp cannot register if existing dapp in place
+        #[ink::test]
+        fn test_dapp_register_existing() {
+            let (op1, op2, ops, mut contract) = setup_contract();
+            let dapp_contract = AccountId::from([0x4; 32]);
 
-                let mut contract = default_contract();
+            // Mark the the dapp account as being a contract on-chain
+            ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
 
-                let dapp_contract = AccountId::from([0x4; 32]);
+            // the caller should be someone who isn't an operator
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from([0x3; 32]));
 
-                // Mark the the dapp account as being a contract on-chain
-                ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract);
-
-                // the caller should be someone who isn't an operator
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(
-                    [0x3; 32],
-                ));
-
+            contract
+                .dapp_register(dapp_contract, DappPayee::Dapp)
+                .unwrap();
+            assert_eq!(
+                Error::DappExists,
                 contract
                     .dapp_register(dapp_contract, DappPayee::Dapp)
-                    .unwrap();
-                assert_eq!(
-                    Error::DappExists,
-                    contract
-                        .dapp_register(dapp_contract, DappPayee::Dapp)
-                        .unwrap_err()
-                );
-            }
+                    .unwrap_err()
+            );
         }
     }
 }
