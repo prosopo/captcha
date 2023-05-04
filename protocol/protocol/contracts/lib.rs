@@ -1173,7 +1173,7 @@ pub mod prosopo {
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
-            if dapp.balance <= self.dapp_stake_default {
+            if dapp.balance < self.dapp_stake_default {
                 return err!(Error::DappInsufficientFunds);
             }
             Ok(dapp)
