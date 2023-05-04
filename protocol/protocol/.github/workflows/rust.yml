@@ -35,7 +35,7 @@ jobs:
       # Check if rust is formatted correctly
       - name: Rust formatting check
         run: |
-          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:production cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
