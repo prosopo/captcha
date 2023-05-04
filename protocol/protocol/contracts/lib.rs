@@ -65,6 +65,7 @@ pub mod prosopo {
     use ink::prelude::collections::btree_set::BTreeSet;
 
     use ink::prelude::vec::Vec;
+    use ink::prelude::vec;
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
@@ -154,13 +155,6 @@ pub mod prosopo {
         provider: Provider,
         block_number: u32,
         dataset_id_content: Hash,
-    }
-
-    /// Enum for various types of captcha
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum CaptchaType {
-        ImageGrid,
     }
 
     /// Enum for various types of captcha
@@ -894,99 +888,6 @@ pub mod prosopo {
             self.dapps.insert(contract, &dapp);
 
             Ok(())
-        }
-
-        /// Trim the user history to the max length and age.
-        /// Returns the history and expired hashes.
-        fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
-            // note that the age is based on the block timestamp, so calling this method as blocks roll over will result in different outcomes as the age threshold will change but the history will not (assuming no new results are added)
-            let block_timestamp = self.env().block_timestamp();
-            let max_age = if block_timestamp < self.max_user_history_age {
-                block_timestamp
-            } else {
-                self.max_user_history_age
-            };
-            let age_threshold = block_timestamp - max_age;
-            let mut expired = Vec::new();
-            // trim the history down to max length
-            while history.len() > self.max_user_history_len.into() {
-                let hash = history.pop().unwrap();
-                expired.push(hash);
-            }
-            // trim the history down to max age
-            while !history.is_empty()
-                && self
-                    .captcha_solution_commitments
-                    .get(history.last().unwrap())
-                    .unwrap()
-                    .completed_at
-                    < age_threshold
-            {
-                let hash = history.pop().unwrap();
-                expired.push(hash);
-            }
-            (history, expired)
-        }
-
-        /// Record a captcha result against a user, clearing out old captcha results as necessary.
-        /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_commitment(
-            &mut self,
-            account: AccountId,
-            hash: Hash,
-            result: CaptchaSolutionCommitment,
-        ) {
-            let mut user = self
-                .dapp_users
-                .get(account)
-                .unwrap_or_else(|| self.create_new_dapp_user(account));
-            // add the new commitment
-            self.captcha_solution_commitments.insert(hash, &result);
-            user.history.insert(0, hash);
-
-            // trim the user history by len and age, removing any expired commitments
-            let (history, expired) = self.trim_user_history(user.history);
-            // update the user history to the in age / length window set of commitment hashes
-            user.history = history;
-            // remove the expired commitments
-            for hash in expired.iter() {
-                self.captcha_solution_commitments.remove(hash);
-            }
-
-            self.dapp_users.insert(account, &user);
-        }
-
-        fn get_user_history_summary(
-            &self,
-            account: AccountId,
-        ) -> Result<UserHistorySummary, Error> {
-            let user = self.get_dapp_user(account)?;
-            let (history, _expired) = self.trim_user_history(user.history);
-
-            let mut summary = UserHistorySummary {
-                correct: 0,
-                incorrect: 0,
-                score: 0,
-            };
-            for hash in history.iter() {
-                let result = self.captcha_solution_commitments.get(hash).unwrap();
-                if result.status == CaptchaStatus::Approved {
-                    summary.correct += 1;
-                } else if result.status == CaptchaStatus::Disapproved {
-                    summary.incorrect += 1;
-                } else {
-                    return Err(Error::InvalidCaptchaStatus);
-                }
-            }
-
-            if summary.correct + summary.incorrect == 0 {
-                summary.score = 0;
-            } else {
-                summary.score =
-                    ((summary.correct * 100) / (summary.correct + summary.incorrect)) as u8;
-            }
-
-            Ok(summary)
         }
 
         /// Trim the user history to the max length and age.
@@ -1989,7 +1890,13 @@ pub mod prosopo {
                 assert_eq!(contract.admin, accounts.admins[0]);
             }
 
+            /// Assert contract provider minimum stake default set from constructor.
+            #[ink::test]
+            pub fn test_provider_stake_default() {
 
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(default_unused_account());
+                let accounts = default_accounts();
                 let mut contract = default_contract();
 
                 let provider_stake_default: u128 = contract.get_provider_stake_default();
@@ -3544,4 +3451,5 @@ pub mod prosopo {
             );
         }
     }
+}
 }
