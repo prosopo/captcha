@@ -1,12 +1,11 @@
+import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
-import { Box, Button, Typography, FormControl, FormGroup, Stack, TextField, Alert } from '@mui/material'
 
-import { ProcaptchaOutput, TCaptchaSubmitResult } from '@prosopo/procaptcha'
+import { ProcaptchaOutput } from '@prosopo/procaptcha'
 
-import { Procaptcha, ExtensionAccountSelect } from '@prosopo/procaptcha-react'
+import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 
 import './App.css'
-import { VerificationResponse } from '@prosopo/api'
 
 function App() {
     const [email, setEmail] = useState<string>('')
@@ -115,6 +114,10 @@ function App() {
         alert(`Account ${address} not found`)
     }
 
+    const onExpired = () => {
+        alert('Challenge has expired')
+    }
+
     const config = {
         userAccountAddress: account,
         web2: process.env.REACT_APP_WEB2 === 'true',
@@ -179,7 +182,10 @@ function App() {
                                 />
                             </FormControl>
 
-                            <Procaptcha config={config} callbacks={{ onAccountNotFound, onError, onHuman }} />
+                            <Procaptcha
+                                config={config}
+                                callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
+                            />
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>

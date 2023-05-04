@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { CaptchaSolutionResponse } from '../types/api'
-import { TransactionResponse } from '../types/contract'
-import { CaptchaSolutionCommitment } from '@prosopo/datasets'
+import { ProsopoCaptchaSolutionCommitment } from '@prosopo/contract'
 import { CaptchaSolutionCommitmentId } from '@prosopo/api'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 
 export type TCaptchaSubmitResult = [
     CaptchaSolutionResponse,
     CaptchaSolutionCommitmentId,
-    TransactionResponse?,
-    CaptchaSolutionCommitment?
+    ContractSubmittableResult?,
+    ProsopoCaptchaSolutionCommitment?
 ]

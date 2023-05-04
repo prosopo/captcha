@@ -11,32 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import express from 'express'
+import { getPair, i18nMiddleware } from '@prosopo/common'
+import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
+import { ProsopoEnvironment } from '@prosopo/types'
 import cors from 'cors'
-
-// import { mnemonicValidate } from '@polkadot/util-crypto';
-
+import express from 'express'
+import { Server } from 'http'
 import { prosopoRouter } from '../api'
 import { LocalAssetsResolver } from '../assets'
-import { Environment, loadEnv } from '../env'
-// import { MockEnvironment } from "../tests/mocks/mockenv";
+import { Environment } from '../env'
 import { handleErrors } from '../errors'
-// import { processArgs } from './argv';
-
-// import yargs from 'yargs';
-// import { hideBin } from 'yargs/helpers';
-
-// import dotenv from 'dotenv';
-import { ProsopoEnvironment } from '../types/env'
-
-import { Server } from 'http'
-import { ProsopoEnvError } from '@prosopo/datasets'
-import { i18nMiddleware } from '@prosopo/i18n'
-
-// loadEnv();
 
 let apiAppSrv: Server
-// let imgAppSrv: Server;
 
 function startApi(env: ProsopoEnvironment) {
     const apiApp = express()
@@ -57,22 +43,21 @@ function startApi(env: ProsopoEnvironment) {
     })
 }
 
-// function startImg() {
-//   const imgApp = express();
-//   const imgPort = process.env.IMG_SRV_PORT || 4000;
+function startFileSrv(port: number | string, locations: string[]) {
+    const app = express()
 
-//   imgApp.use('/img', express.static('./data/img'));
+    locations.forEach((loc) => {
+        // allow local filesystem lookup at each location
+        app.use('/', express.static(loc))
+    })
 
-//   imgApp.get('/', (req, res) => {
-//     res.send('Image server');
-//   });
-
-//   imgAppSrv = imgApp.listen(imgPort, () => {
-//     console.log(`Image server running on port ${imgPort} serving images from /data/img`);
-//   });
-// }
-
-// const argv = yargs(hideBin(process.argv)).argv;
+    // only run server if locations have been specified
+    if (locations.length > 0) {
+        app.listen(port, () => {
+            console.log(`File server running on port ${port} serving [${locations}]`)
+        })
+    }
+}
 
 async function start(nodeEnv: string) {
     loadEnv()
@@ -80,10 +65,12 @@ async function start(nodeEnv: string) {
     let env: ProsopoEnvironment
 
     if (nodeEnv !== 'test') {
-        if (!process.env.PROVIDER_MNEMONIC) {
-            throw new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED')
-        }
-        env = new Environment(process.env.PROVIDER_MNEMONIC)
+        const ss58Format = getSs58Format()
+        const pairType = getPairType()
+        const secret = getSecret()
+        const pair = await getPair(pairType, ss58Format, secret)
+
+        env = new Environment(pair)
     } else {
         // env = new MockEnvironment();
         return
@@ -92,13 +79,17 @@ async function start(nodeEnv: string) {
     await env.isReady()
     startApi(env)
 
-    // if (argv['img'])
-    // startImg();
+    // set up the file server
+    const port = process.env.FILE_SRV_PORT || 4000
+    // accept multiple paths for locations of files
+    const paths = JSON.parse(process.env.FILE_SRV_PATHS || '[]')
+    // if single path given convert to array
+    const locations = Array.isArray(paths) ? paths : [paths]
+    startFileSrv(port, locations)
 }
 
 function stop() {
     apiAppSrv.close()
-    // imgAppSrv.close();
 }
 
 start(process.env.NODE_ENV || 'development').catch((error) => {

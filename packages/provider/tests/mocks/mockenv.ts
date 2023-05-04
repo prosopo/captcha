@@ -11,14 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ContractAbi, ContractApiInterface, ProsopoContractApi, abiJson } from '@prosopo/contract'
-import { AssetsResolver, ProsopoEnvError } from '@prosopo/datasets'
-import consola, { LogLevel } from 'consola'
+import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
+import { LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { loadEnv } from '@prosopo/env'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import path from 'path'
 import { LocalAssetsResolver } from '../../src/assets'
-import { loadEnv } from '../../src/env'
-import { Database, ProsopoConfig, ProsopoEnvironment } from '../../src/types'
+import {
+    AssetsResolver,
+    ContractAbi,
+    Database,
+    DatabaseTypes,
+    EnvironmentTypes,
+    IProsopoContractMethods,
+    ProsopoConfig,
+    ProsopoEnvironment,
+} from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
@@ -28,35 +36,39 @@ import { mnemonicGenerate } from '@polkadot/util-crypto'
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: ContractApiInterface
-    mnemonic: string
+    contractInterface: IProsopoContractMethods
     contractAddress: string
     defaultEnvironment: string
     contractName: string
     abi: ContractAbi
-    logger: typeof consola
+    logger: Logger
     assetsResolver: AssetsResolver | undefined
     wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair
     api: ApiPromise
 
-    constructor(mnemonic?: string) {
-        loadEnv()
+    constructor(pair: KeyringPair) {
+        loadEnv('../..')
+        this.pair = pair
         this.config = {
-            logLevel: 'info',
+            logLevel: LogLevel.Debug,
             contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.
-            defaultEnvironment: 'development',
+            defaultEnvironment: EnvironmentTypes.development,
+            account: {
+                password: '',
+            },
             networks: {
                 development: {
                     endpoint: process.env.SUBSTRATE_NODE_URL!,
                     contract: {
-                        address: process.env.CONTRACT_ADDRESS!,
+                        address: process.env.PROTOCOL_CONTRACT_ADDRESS!,
                         name: 'prosopo',
                     },
                     accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
                 },
             },
+
             captchas: {
                 solved: {
                     count: 1,
@@ -72,7 +84,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 captchaBlockRecency: 10,
             },
             database: {
-                development: { type: 'mongo', endpoint: '', dbname: 'prosopo' },
+                development: { type: DatabaseTypes.mongo, endpoint: '', dbname: 'prosopo', authSource: '' },
             },
             assets: {
                 absolutePath: '',
@@ -81,9 +93,10 @@ export class MockEnvironment implements ProsopoEnvironment {
             server: {
                 baseURL: '',
             },
-        }
-        if (!mnemonic) {
-            this.mnemonic = '//Alice'
+            batchCommit: {
+                interval: 1000000,
+                maxBatchExtrinsicPercentage: 59,
+            },
         }
 
         if (
@@ -93,7 +106,7 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.logger = consola.create({ level: LogLevel.Info })
+            this.logger = logger(this.config.logLevel, 'MockEnvironment')
             this.abi = MockEnvironment.getContractAbi(this.config.contract.abi, this.logger)
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
@@ -125,28 +138,30 @@ export class MockEnvironment implements ProsopoEnvironment {
             this.api = await ApiPromise.create({ provider: this.wsProvider })
         }
         await this.api.isReadyOrError
-        const { mnemonic } = this
-        if (!mnemonic) {
-            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED')
+        try {
+            this.pair = this.keyring.addPair(this.pair)
+        } catch (err) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
         }
-        this.pair = this.keyring.addFromMnemonic(mnemonic)
     }
 
-    async changeSigner(mnemonic: string): Promise<void> {
+    async changeSigner(pair): Promise<void> {
         await this.api.isReadyOrError
-        this.mnemonic = mnemonic
+        this.pair = pair
         await this.getSigner()
         await this.getContractApi()
     }
 
-    async getContractApi(): Promise<ProsopoContractApi> {
-        this.contractInterface = await ProsopoContractApi.create(
+    async getContractApi(): Promise<IProsopoContractMethods> {
+        this.contractInterface = new ProsopoContractMethods(
+            this.api,
+            this.abi,
             this.contractAddress,
             this.pair,
             this.contractName,
-            this.abi,
-            this.api
+            0
         )
+
         return this.contractInterface
     }
 

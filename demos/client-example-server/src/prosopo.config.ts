@@ -18,9 +18,12 @@ import { ProsopoServerConfig } from '@prosopo/api'
 export default () =>
     ({
         logLevel: 'debug',
-        defaultEnvironment: 'development',
+        defaultEnvironment: 'development', // enviromental variables - TODO: check through other repos
         web2: process.env.REACT_APP_WEB2 || true,
-        serverUrl: process.env.REACT_APP_SERVER_URL || 'http://localhost:5000',
+        serverUrl:
+            process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_PORT
+                ? `${process.env.REACT_APP_SERVER_URL}:${process.env.REACT_APP_SERVER_PORT}`
+                : 'http://localhost:5000',
         solutionThreshold: process.env.REACT_APP_SOLUTION_THRESHOLD || 0.5,
         dappName: process.env.REACT_APP_DAPP_NAME || 'client-example-server',
         networks: {
@@ -32,9 +35,20 @@ export default () =>
                 },
                 dappContract: {
                     address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
-                    name: 'prosopo',
+                    name: 'dapp',
                 },
                 accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
+            },
+            shiden: {
+                endpoint: 'wss://shiden.public.blastapi.io',
+                prosopoContract: {
+                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+                    name: 'prosopo',
+                },
+                dappContract: {
+                    address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
+                    name: 'dapp',
+                },
             },
         },
     } as ProsopoServerConfig)

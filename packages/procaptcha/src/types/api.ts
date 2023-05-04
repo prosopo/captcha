@@ -18,8 +18,8 @@
 //   export default value;
 // }
 
-import { Captcha, MerkleProof } from '@prosopo/datasets'
 import { ProsopoServerConfig } from '@prosopo/api'
+import { Captcha, MerkleProof } from '@prosopo/types'
 
 export interface ProsopoRandomProviderResponse {
     providerId: string
@@ -39,6 +39,7 @@ export interface ProposoProvider {
     status: string
 }
 
+// TODO de-duplicate. This is a duplicate of CaptchaWithProof from @prosopo/provider
 export interface CaptchaResponseCaptcha {
     captcha: Omit<Captcha, 'solution'>
     proof: MerkleProof

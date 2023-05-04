@@ -25,7 +25,7 @@ import {
     HashedSolution,
     Item,
     RawSolution,
-} from '../types/index'
+} from '@prosopo/types'
 import { downloadImage, hexHash, hexHashArray } from './util'
 import { ProsopoEnvError } from '@prosopo/common'
 import { isHex } from '@polkadot/util'
@@ -50,7 +50,7 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
  * @param {JSON} captchaJSON captcha solutions received from the api
  * @return {CaptchaSolution[]} an array of parsed and sorted captcha solutions
  */
-export function parseAndSortCaptchaSolutions(captchaJSON: JSON): CaptchaSolution[] {
+export function parseAndSortCaptchaSolutions(captchaJSON: CaptchaSolution[]): CaptchaSolution[] {
     try {
         const parsed = CaptchaSolutionArraySchema.parse(captchaJSON)
         parsed.map((captcha) => ({ ...captcha, solution: captcha.solution.sort() }))
@@ -188,6 +188,7 @@ export function matchItemsToSolutions(
  * @return {string} the hex string hash
  */
 export function computeCaptchaSolutionHash(captcha: CaptchaSolution) {
+    // TODO: should the captchaContentId be validated?
     return hexHashArray([captcha.captchaId, captcha.captchaContentId, [...captcha.solution].sort(), captcha.salt])
 }
 

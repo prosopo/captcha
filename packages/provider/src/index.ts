@@ -11,14 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-// export * from './api'
-// export * from './env'
-// export * from './errors'
-// export * from './scheduler'
-// export * from './cli'
-// export * from './codec'
-// export * from './db'
+import '@polkadot/api-augment'
+export { Environment } from './env'
 export * from './tasks'
-export * from './types'
 export * from './util'
+export * from './batch'

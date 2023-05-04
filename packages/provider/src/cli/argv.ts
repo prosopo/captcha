@@ -15,16 +15,16 @@
 import parser from 'cron-parser'
 import pm2 from 'pm2'
 import { cwd } from 'process'
-import { ProsopoEnvError } from '@prosopo/datasets'
+import { ProsopoEnvError } from '@prosopo/common'
 const yargs = require('yargs')
 
 import { Compact, u128 } from '@polkadot/types'
 
 import { Tasks } from '../tasks/tasks'
-import { ProsopoEnvironment } from '../types/env'
+import { PayeeSchema, ProsopoEnvironment } from '@prosopo/types'
 import { encodeStringAddress } from '../util'
-import { Payee, PayeeSchema } from '@prosopo/contract'
 import consola from 'consola'
+import { BatchCommitments } from '../batch/index'
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)
@@ -91,14 +91,9 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         type: 'string',
                         demand: true,
                         desc: 'The person who receives the fee (`Provider` or `Dapp`)',
-                    })
-                    .option('address', {
-                        type: 'string',
-                        demand: true,
-                        desc: 'The AccountId of the Provider',
                     }),
             async (argv) => {
-                const result = await tasks.providerRegister(argv.origin, argv.fee, argv.payee as Payee, argv.address)
+                const result = await tasks.contractApi.providerRegister(argv.origin, argv.fee, argv.payee)
 
                 logger.info(JSON.stringify(result, null, 2))
             },
@@ -124,24 +119,18 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         demand: false,
                         desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                     })
-                    .option('address', {
-                        type: 'string',
-                        demand: true,
-                        desc: 'The AccountId of the Provider',
-                    })
                     .option('value', {
                         type: 'number',
                         demand: false,
                         desc: 'The value to stake in the contract',
                     }),
             async (argv) => {
-                const provider = await tasks.getProviderDetails(argv.address)
-                if ((provider && argv.origin) || argv.fee || argv.payee || argv.value) {
-                    const result = await tasks.providerUpdate(
-                        argv.origin || provider.service_origin,
+                const provider = await tasks.contractApi.getProviderDetails(argv.address)
+                if (provider && (argv.origin || argv.fee || argv.payee || argv.value)) {
+                    const result = await tasks.contractApi.providerUpdate(
+                        argv.origin || provider.serviceOrigin,
                         argv.fee || provider.fee,
                         argv.payee || provider.payee,
-                        argv.address,
                         argv.value || 0
                     )
 
@@ -161,7 +150,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.providerDeregister(argv.address)
+                    const result = await tasks.contractApi.providerDeregister(argv.address)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -181,7 +170,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.providerUnstake(argv.value)
+                    const result = await tasks.contractApi.providerUnstake(argv.value)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -216,7 +205,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             (yargs) => yargs,
             async () => {
                 try {
-                    const result = await tasks.getProviderAccounts()
+                    const result = await tasks.contractApi.getProviderAccounts()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -231,7 +220,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             (yargs) => yargs,
             async () => {
                 try {
-                    const result = await tasks.getDappAccounts()
+                    const result = await tasks.contractApi.getDappAccounts()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -251,7 +240,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.getProviderDetails(argv.address)
+                    const result = await tasks.contractApi.getProviderDetails(argv.address)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -271,7 +260,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.getDappDetails(argv.address)
+                    const result = await tasks.contractApi.getDappDetails(argv.address)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -301,7 +290,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                             {
                                 script: `ts-node scheduler.js ${JSON.stringify(argv.schedule)}`,
                                 name: 'scheduler',
-                                cwd: cwd() + '/build/src',
+                                cwd: cwd() + '/dist/src',
                             },
                             (err, apps) => {
                                 if (err) {
@@ -318,6 +307,60 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 } else {
                     const result = await tasks.calculateCaptchaSolutions()
                     consola.info(`Updated ${result} captcha solutions`)
+                }
+            },
+            [validateScheduleExpression]
+        )
+        .command(
+            'batch_commit',
+            'Batch commit user solutions to contract',
+            (yargs) =>
+                yargs.option('schedule', {
+                    type: 'string',
+                    demand: false,
+                    desc: 'A Recurring schedule expression',
+                }),
+            async (argv) => {
+                if (argv.schedule) {
+                    pm2.connect((err) => {
+                        if (err) {
+                            console.error(err)
+                            process.exit(2)
+                        }
+
+                        pm2.start(
+                            {
+                                script: `ts-node scheduler.js ${JSON.stringify(argv.schedule)}`,
+                                name: 'scheduler',
+                                cwd: cwd() + '/dist/src',
+                            },
+                            (err, apps) => {
+                                if (err) {
+                                    console.error(err)
+
+                                    return pm2.disconnect()
+                                }
+
+                                logger.info(apps)
+                                process.exit()
+                            }
+                        )
+                    })
+                } else {
+                    if (env.db) {
+                        const batchCommitter = new BatchCommitments(
+                            env.config.batchCommit,
+                            env.contractInterface,
+                            env.db,
+                            2,
+                            0n,
+                            env.logger
+                        )
+                        const result = await batchCommitter.runBatch()
+                        logger.info(`Batch commit complete: ${result}`)
+                    } else {
+                        logger.error('No database configured')
+                    }
                 }
             },
             [validateScheduleExpression]

@@ -22,6 +22,8 @@
     "rebuild+deps": "f() { npm run rebuild $(npm run --silent deps $@) ;}; f",
     "rd": "npm run --silent rebuild+deps",
     "rebuild:npm": "npm run clean:npm && npm i",
+    "deploy_protocol": "npm run -w @prosopo/dev cli deploy_protocol -- --logLevel=Debug --update_env",
+    "deploy_dapp": "npm run -w @prosopo/dev cli deploy_dapp -- --logLevel=Debug --update_env",
     "deps": "f() { for arg in $@; do deps=$(npm run --silent deps:$arg); (f $deps); echo -n \" $arg\"; done ;}; g() { pkgs=$(f $@); pkgs=$(echo $pkgs | tr ' ' '\n' | awk '!a[$0]++' | tr '\n' ' '); echo $pkgs ;}; g",
     "deps:contract": "echo common datasets",
     "deps:datasets": "echo common",
@@ -68,7 +70,7 @@
     "stash:clear": "npm run --silent gitmod -- git stash clear",
     "version": "npm --no-git-tag-version --allow-same-version --workspaces --workspaces-update version",
     "ls:ws": "npm run --workspaces env | grep npm_package_name | cut -d '=' -f 2",
-    "setup": "npm -w @prosopo/provider run setup",
+    "setup": "npm -w @prosopo/dev run setup",
     "start": "npm -w @prosopo/provider run start",
     "server": "npm -w @prosopo/client-example-server run start",
     "demo": "npm -w @prosopo/client-example run start",
@@ -85,7 +87,6 @@
   "workspaces": [
     "packages/*",
     "demos/*",
-    "env",
     "dev"
   ],
   "devDependencies": {

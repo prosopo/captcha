@@ -15,19 +15,27 @@ import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { TypeDefInfo } from '@polkadot/types-create'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { hexToU8a } from '@polkadot/util'
-import { encodeStringArgs, unwrap } from '@prosopo/contract'
+import { encodeStringArgs } from '@prosopo/contract'
+import { describe } from 'mocha'
 import chai from 'chai'
+import { MockEnvironment } from '../mocks/mockenv'
+import { getPair } from '@prosopo/common'
+import { getSs58Format } from '@prosopo/env'
+import { KeypairType } from '@polkadot/util-crypto/types'
 
 const expect = chai.expect
 
 describe('CONTRACT HELPERS', () => {
-    it('Unwrap function properly unwraps JSON', () => {
-        const data = { Ok: { some: { other: 'data' } } }
-
-        expect(unwrap(data)).to.deep.equal({ some: { other: 'data' } })
-    })
-
-    it('Properly encodes `Hash` arguments when passed unhashed', () => {
+    it('Properly encodes `Hash` arguments when passed unhashed', async () => {
+        const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
+        const ss58Format = getSs58Format()
+        const pair = await getPair(
+            (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
+            ss58Format,
+            mnemonic
+        )
+        const env = new MockEnvironment(pair)
+        await env.isReady()
         const args = ['https://localhost:8282']
         const methodObj = {
             args: [{ type: { type: 'Hash', info: TypeDefInfo.UInt }, name: '' }],
@@ -38,15 +46,14 @@ describe('CONTRACT HELPERS', () => {
             identifier: '',
             index: 0,
             method: '',
+            path: [''],
             selector: hexToU8a('0x42b45efa') as ContractSelector,
-            toU8a: function (): AbiMessage {
+            toU8a: function (): any {
                 return {} as AbiMessage
             },
         }
-
-        // @ts-ignore
-        expect(encodeStringArgs(methodObj, args)).to.deep.equal([
-            '0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a38323832',
-        ])
+        expect(encodeStringArgs(env.contractInterface.abi, methodObj, args)[0].toString()).to.equal(
+            hexToU8a('0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a38323832').toString()
+        )
     })
 })

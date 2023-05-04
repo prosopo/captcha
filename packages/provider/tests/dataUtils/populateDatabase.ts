@@ -15,13 +15,33 @@ import { promiseQueue } from '../../src/util'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator'
 import { Environment } from '../../src/env'
-import { ProsopoEnvironment } from '../../src/types'
+import { ProsopoEnvironment } from '@prosopo/types'
 import consola from 'consola'
+import { ProsopoEnvError } from '@prosopo/common'
+import { getPair } from '@prosopo/common'
+import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
+import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles'
+import { Abi } from '@polkadot/api-contract'
+
+loadEnv()
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
 export type UserCount = {
     [key in AccountKey]: number
+}
+
+export type UserFund = {
+    [key in AccountKey]: boolean
+}
+
+export const userFundMapDefault: UserFund = {
+    [AccountKey.providers]: true,
+    [AccountKey.providersWithStake]: true,
+    [AccountKey.providersWithStakeAndDataset]: true,
+    [AccountKey.dapps]: true,
+    [AccountKey.dappsWithStake]: true,
+    [AccountKey.dappUsers]: true,
 }
 
 const userPopulatorMethodMap: {
@@ -47,6 +67,7 @@ const DEFAULT_USER_COUNT: UserCount = {
 async function populateStep(
     databasePopulator: DatabasePopulator,
     key: IDatabasePopulatorMethodNames,
+    fund: boolean,
     text: string,
     userCount: number,
     logger: typeof consola
@@ -55,49 +76,83 @@ async function populateStep(
     logger.debug(text)
 
     const dummyArray = new Array(userCount).fill(userCount)
-    const promise = await promiseQueue(dummyArray.map(() => () => databasePopulator[key]()))
+    const promise = await promiseQueue(dummyArray.map(() => () => databasePopulator[key](fund)))
     const time = Date.now() - startDate
 
     logger.debug(` [ ${msToSecString(time)} ]\n`)
 
-    promise.filter(({ error }) => error).forEach(({ error }) => logger.error(['ERROR', error]))
+    ///console.log('promiseQueue:', promise)
+    promise
+        .filter(({ error }) => error)
+        .forEach(({ error }) => {
+            if (error) {
+                throw new ProsopoEnvError(error)
+            }
+        })
 }
 
 export async function populateDatabase(
     env: ProsopoEnvironment,
     userCounts: UserCount,
-    exportData: boolean
+    fundMap: UserFund,
+    exportData: boolean,
+    dappAbi: Abi,
+    dappWasm: Uint8Array
 ): Promise<IDatabaseAccounts> {
     env.logger.debug('Starting database populator...')
-    const databasePopulator = new DatabasePopulator(env)
+    const databasePopulator = new DatabasePopulator(env, dappAbi, dappWasm)
     await databasePopulator.isReady()
 
     const userPromises = Object.entries(userCounts).map(async ([userType, userCount]) => {
         if (userCount > 0) {
+            env.logger.debug(`Fund ${userType}`, fundMap[userType])
             await populateStep(
                 databasePopulator,
                 userPopulatorMethodMap[userType],
+                fundMap[userType],
                 `Running ${userType}...`,
                 userCount,
                 env.logger
             )
         }
     })
-
-    await Promise.all(userPromises)
+    try {
+        const promiseResult = await Promise.all(userPromises)
+    } catch (e) {
+        throw new Error(e)
+    }
 
     if (exportData) {
         env.logger.info('Exporting accounts...')
         await exportDatabaseAccounts(databasePopulator)
     }
-
     return databasePopulator
+}
+
+async function run() {
+    const ss58Format = getSs58Format()
+    const pairType = getPairType()
+    const secret = getSecret()
+    const pair = await getPair(pairType, ss58Format, secret)
+    const dappAbiMetadata = await DappAbiJSON()
+    const dappWasm = await DappWasm()
+
+    await populateDatabase(
+        new Environment(pair),
+        DEFAULT_USER_COUNT,
+        userFundMapDefault,
+        true,
+        dappAbiMetadata,
+        dappWasm
+    )
 }
 
 if (require.main === module) {
     const startDate = Date.now()
-    populateDatabase(new Environment(process.env.PROVIDER_MNEMONIC || ''), DEFAULT_USER_COUNT, true)
+    if (!process.env.PROVIDER_MNEMONIC && !process.env.PROVIDER_SEED) {
+        throw new Error('Please set PROVIDER_MNEMONIC or PROVIDER_SEED in your environment')
+    }
+    run()
         .then(() => console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`))
-        .catch(console.error)
         .finally(() => process.exit())
 }

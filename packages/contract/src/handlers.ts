@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
 import { DispatchError } from '@polkadot/types/interfaces'
-import { ProsopoBaseError, TOptions, translateOrFallback } from '@prosopo/datasets'
-import { TranslationKey, i18n, translationKeys } from '@prosopo/i18n'
+import { ProsopoBaseError, TOptions, translateOrFallback } from '@prosopo/common'
+import { TranslationKey, i18n, translationKeys } from '@prosopo/common'
 
 export class ProsopoContractError extends ProsopoBaseError {
     constructor(error: DispatchError, context?: string, options?: TOptions, ...params: any[])

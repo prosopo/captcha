@@ -13,66 +13,72 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { CaptchaMerkleTree, CaptchaSolution, CaptchaSolutionCommitment, verifyProof } from '@prosopo/datasets'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Signer } from '@polkadot/api/types'
-
-import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoRandomProviderResponse } from '../types/api'
-import { TransactionResponse } from '../types/contract'
-
+import { stringToHex } from '@polkadot/util'
 import { ProviderApi } from '@prosopo/api'
-import ProsopoContract from '../api/ProsopoContract'
-import { TCaptchaSubmitResult } from '../types/client'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoCaptchaSolutionCommitment, ProsopoContractMethods, ProsopoRandomProvider } from '@prosopo/contract'
+import {
+    CaptchaMerkleTree,
+    computeCaptchaHash,
+    computeCaptchaSolutionHash,
+    computeItemHash,
+    verifyProof,
+} from '@prosopo/datasets'
+import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { ProsopoApiError } from '../api/handlers'
-import { ProsopoEnvError } from '@prosopo/datasets'
-import { computeCaptchaSolutionHash } from '@prosopo/datasets'
+import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
+import { TCaptchaSubmitResult } from '../types/client'
 
 export class ProsopoCaptchaApi {
     userAccount: string
-    contract: ProsopoContract
-    provider: ProsopoRandomProviderResponse
+    contract: ProsopoContractMethods
+    provider: ProsopoRandomProvider
     providerApi: ProviderApi
+    dappAccount: string
     private web2: boolean
 
     constructor(
         userAccount: string,
-        contract: ProsopoContract,
-        provider: ProsopoRandomProviderResponse,
+        contract: ProsopoContractMethods,
+        provider: ProsopoRandomProvider,
         providerApi: ProviderApi,
-        web2: boolean
+        web2: boolean,
+        dappAccount: string
     ) {
         this.userAccount = userAccount
         this.contract = contract
         this.provider = provider
         this.providerApi = providerApi
         this.web2 = web2
+        this.dappAccount = dappAccount
     }
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
-        const captchaChallenge: GetCaptchaResponse = await this.providerApi.getCaptchaChallenge(
-            this.userAccount,
-            this.provider
-        )
-        this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
-        return captchaChallenge
+        try {
+            const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
+            this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
+            return captchaChallenge
+        } catch (e) {
+            throw new ProsopoEnvError(e)
+        }
     }
 
-    public verifyCaptchaChallengeContent(
-        provider: ProsopoRandomProviderResponse,
-        captchaChallenge: GetCaptchaResponse
-    ): void {
+    public verifyCaptchaChallengeContent(provider: ProsopoRandomProvider, captchaChallenge: GetCaptchaResponse): void {
         // TODO make sure root is equal to root on the provider
         const proofLength = captchaChallenge.captchas[0].proof.length
         console.log(provider.provider)
-        console.log(provider.provider.datasetIdContent, captchaChallenge.captchas[0].proof[proofLength - 1][0])
-        if (provider.provider.datasetIdContent !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
+        console.log(provider.datasetIdContent, captchaChallenge.captchas[0].proof[proofLength - 1][0])
+        if (provider.datasetIdContent.toString() !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_DATASET_CONTENT_ID')
         }
 
         for (const captchaWithProof of captchaChallenge.captchas) {
             //TODO calculate the captchaId from the captcha content
-            // if (!verifyCaptchaData(captchaWithProof.captcha, captchaWithProof.proof)) {
-            //     throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
-            // }
+            if (!verifyCaptchaData(captchaWithProof)) {
+                throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
+            }
 
             if (!verifyProof(captchaWithProof.captcha.captchaContentId, captchaWithProof.proof)) {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
@@ -100,19 +106,35 @@ export class ProsopoCaptchaApi {
         // console.log("solveCaptchaChallenge USER ACCOUNT", this.contract.getAccount().address);
         // console.log("solveCaptchaChallenge DAPP ACCOUNT", this.contract.getDappAddress());
         // console.log("solveCaptchaChallenge CONTRACT ADDRESS", this.contract.getContract().address.toString());
-        let tx: TransactionResponse | undefined = undefined
+        let tx: ContractSubmittableResult | undefined = undefined
 
         if (!this.web2) {
             try {
                 tx = await this.contract.dappUserCommit(
-                    signer,
+                    this.dappAccount,
                     datasetId as string,
                     commitmentId,
-                    this.provider.providerId
+                    this.provider.providerId.toString(),
+                    this.userAccount
                 )
             } catch (err) {
                 throw new ProsopoEnvError(err)
             }
+        }
+
+        let signature: string | undefined = undefined
+
+        if (this.web2) {
+            if (!signer || !signer.signRaw) {
+                throw new Error('Signer is not defined, cannot sign message to prove account ownership')
+            }
+            // sign the request hash to prove account ownership
+            const signed = await signer.signRaw({
+                address: this.userAccount,
+                data: stringToHex(requestHash),
+                type: 'bytes',
+            })
+            signature = signed.signature
         }
 
         let result: CaptchaSolutionResponse
@@ -121,17 +143,18 @@ export class ProsopoCaptchaApi {
             result = await this.providerApi.submitCaptchaSolution(
                 solutions,
                 requestHash,
-                this.contract.userAccountAddress,
+                this.contract.pair.address,
                 salt,
-                tx ? tx?.blockHash : undefined,
-                tx ? tx?.txHash.toString() : undefined,
-                this.web2
+                tx && tx.blockNumber ? tx.blockNumber.hash.toHex() : undefined,
+                tx ? (tx.txHash ? tx.txHash.toString() : undefined) : undefined,
+                this.web2,
+                signature
             )
         } catch (err) {
             throw new ProsopoApiError(err)
         }
 
-        let commitment: CaptchaSolutionCommitment | undefined = undefined
+        let commitment: ProsopoCaptchaSolutionCommitment | undefined = undefined
 
         if (!this.web2) {
             try {
@@ -143,6 +166,32 @@ export class ProsopoCaptchaApi {
 
         return [result, commitmentId, tx, commitment]
     }
+}
+
+/**
+ * Verify the captcha data by hashing the images and checking the hashes correspond to the hashes passed in the captcha
+ * Verify the captcha content id is present in the first layer of the proof
+ * @param {CaptchaWithProof} captchaWithProof
+ * @returns {boolean}
+ */
+async function verifyCaptchaData(captchaWithProof: CaptchaWithProof): Promise<boolean> {
+    const captcha = captchaWithProof.captcha
+    const proof = captchaWithProof.proof
+    // Check that all the item hashes are equal to the provided item hashes in the captcha
+    if (
+        !(await Promise.all(captcha.items.map(async (item) => (await computeItemHash(item)).hash === item.hash))).every(
+            (hash) => hash === true
+        )
+    ) {
+        return false
+    }
+    // Check that the computed captcha content id is equal to the provided captcha content id
+    const captchaHash = computeCaptchaHash(captcha, false, false, false)
+    if (captchaHash !== captcha.captchaContentId) {
+        return false
+    }
+    // Check that the captcha content id is present in the first layer of the proof
+    return proof[0].indexOf(captchaHash) !== -1
 }
 
 export default ProsopoCaptchaApi

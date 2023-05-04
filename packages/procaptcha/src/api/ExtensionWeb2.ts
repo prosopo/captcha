@@ -1,17 +1,20 @@
 import { ApiPromise, Keyring } from '@polkadot/api'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
 import { WsProvider } from '@polkadot/rpc-provider'
-import { stringToU8a } from '@polkadot/util'
+import { stringToU8a, u8aToHex } from '@polkadot/util'
 import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
 import { hexHash } from '@prosopo/datasets'
 import Extension from './Extension'
 import FingerprintJS, { hashComponents } from '@fingerprintjs/fingerprintjs'
-import { MessageTypesWithNullRequest } from '@polkadot/extension-base/background/types'
 import Signer from '@polkadot/extension-base/page/Signer'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
 import { Account, ProcaptchaConfig } from '../types'
 import { picassoCanvas } from '../modules/canvas'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { KeyringPair } from '@polkadot/keyring/types'
+
+type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
 
 /**
  * Class for interfacing with web3 accounts.
@@ -20,7 +23,7 @@ export default class ExtWeb2 extends Extension {
     public async getAccount(config: ProcaptchaConfig): Promise<Account> {
         const wsProvider = new WsProvider(config.network.endpoint)
 
-        const account: InjectedAccount = await this.createAccount(wsProvider)
+        const account = await this.createAccount(wsProvider)
         const extension: InjectedExtension = await this.createExtension(account)
 
         return {
@@ -29,17 +32,19 @@ export default class ExtWeb2 extends Extension {
         }
     }
 
-    private async createExtension(account: InjectedAccount): Promise<InjectedExtension> {
-        const sendMessage = async <TMessageType extends MessageTypesWithNullRequest>(
-            message: TMessageType
-        ): Promise<void> => {
-            return new Promise<void>((resolve, reject) => {
-                resolve()
-            })
-        }
+    private async createExtension(account: AccountWithKeyPair): Promise<InjectedExtension> {
+        const signer = new Signer(async () => {
+            return
+        })
 
-        await sendMessage('pub(authorize.tab)' as MessageTypesWithNullRequest)
-        const signer = new Signer(sendMessage)
+        // signing carried out by the keypair. Signs the data with the private key, creating a signature. Other people can verify this signature given the message and the public key, proving that the message was indeed signed by account and proving ownership of the account.
+        signer.signRaw = async (payload) => {
+            const signature = account.keypair.sign(payload.data)
+            return {
+                id: 1, // the id of the request to sign. This should be incremented each time and adjust the signature, but we're hacking around this. Hence the signature will always be the same given the same payload.
+                signature: u8aToHex(signature),
+            }
+        }
 
         return {
             accounts: {
@@ -55,12 +60,12 @@ export default class ExtWeb2 extends Extension {
                 },
             },
             name: 'procaptcha-web2',
-            version: '0.1.10',
+            version: '0.1.11',
             signer,
         }
     }
 
-    private async createAccount(wsProvider: WsProvider): Promise<InjectedAccount> {
+    private async createAccount(wsProvider: WsProvider): Promise<AccountWithKeyPair> {
         const params = {
             area: { width: 300, height: 300 },
             offsetParameter: 2001000001,
@@ -81,16 +86,20 @@ export default class ExtWeb2 extends Extension {
         const mnemonic = entropyToMnemonic(u8Entropy)
 
         const api = await ApiPromise.create({ provider: wsProvider })
-        const type = 'sr25519'
+        const type: KeypairType = 'sr25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
 
         await cryptoWaitReady()
-        const account = keyring.addFromMnemonic(mnemonic)
-        const address = account.address.length === 42 ? account.address : encodeAddress(decodeAddress(account.address))
+        const keypair = keyring.addFromMnemonic(mnemonic)
+        const address =
+            keypair.address.length === 42
+                ? keypair.address
+                : encodeAddress(decodeAddress(keypair.address), api.registry.chainSS58)
         return {
             address,
             type,
             name: address,
+            keypair,
         }
     }
 
