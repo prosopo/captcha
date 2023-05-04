@@ -270,31 +270,15 @@ export class ProsopoContractApi extends ContractPromise {
         const { storageEntry } = this.getStorageEntry(storageName)
         if (storageEntry) {
             let storage = storageEntry
-            let storageType: PortableType | undefined = undefined
-
+            //const storageType = definitions.types[storageNameCamelCase]
             while ('root' in storage.layout) {
-                // loop through struct, enum, etc. to find the storage type
-                const innerStorage = storage.layout.root.layout
-                for (const key of Object.keys(innerStorage)) {
-                    console.log(`key ${key} storage ${JSON.stringify(innerStorage, null, 4)}`)
-                    if ('name' in innerStorage[key]) {
-                        storageType = this.abi.registry.lookup.types.find(
-                            (t) => t.type.path.join('.') === `prosopo.prosopo.${innerStorage[key].name}`
-                        )
-                        console.log(`prosopo.prosopo.${innerStorage[key].name}`)
-                        if (storageType) {
-                            break
-                        }
-                    }
-                }
                 storage = storage.layout.root
             }
-            console.log(storage)
             const rootKey = storage.root_key
             const rootKeyReversed = reverseHexString(rootKey.slice(2))
             return {
                 storageKey: `0x${rootKeyReversed}`,
-                storageType: storageType || this.abi.registry.lookup.types[storage.layout.leaf.ty],
+                storageType: this.abi.registry.lookup.types[storage.layout.leaf.ty],
             }
         }
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', this.getStorageKeyAndType.name)
@@ -325,7 +309,6 @@ export class ProsopoContractApi extends ContractPromise {
     async getStorage<T>(name: string): Promise<T> {
         const { storageKey, storageType } = this.getStorageKeyAndType(name)
         if (storageType) {
-            //const typeDef = this.abi.registry.lookup.getTypeDef(`Lookup${storageTypeIndex}`)
             const typeDef = this.abi.registry.lookup.getTypeDef(`Lookup${storageType.id.toNumber()}`)
             const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageKey)
             const result = await firstValueFrom(promiseResult)
@@ -334,17 +317,4 @@ export class ProsopoContractApi extends ContractPromise {
         }
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', this.getStorage.name)
     }
-}
-
-function reverseHexString(str: string): string {
-    return (
-        str
-            .match(/.{1,2}/g)
-            ?.reverse()
-            .join('') || ''
-    )
-}
-
-function snakeToCamelCase(str: string): string {
-    return str.replace(/([-_][a-z])/g, (group) => group.toUpperCase().replace('-', '').replace('_', ''))
 }
