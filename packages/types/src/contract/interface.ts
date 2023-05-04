@@ -5,7 +5,7 @@ import { Logger } from '@prosopo/common'
 import { BN } from '@polkadot/util'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { StorageDeposit } from '@polkadot/types/interfaces'
+import { PortableType, StorageDeposit } from '@polkadot/types/interfaces'
 
 export interface IProsopoContractApi extends ContractPromise {
     contractName: string
@@ -37,7 +37,7 @@ export interface IProsopoContractApi extends ContractPromise {
         atBlock?: string | Uint8Array
     ): Promise<ContractCallOutcome>
 
-    getStorageKeyAndType(storageName: string): { storageKey: `0x${string}`; typeIndex: number }
+    getStorageKeyAndType(storageName: string): { storageKey: `0x${string}`; storageType: PortableType }
 
     getStorage<T>(name: string, type: string): Promise<T>
 }

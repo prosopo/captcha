@@ -25,8 +25,22 @@ async function main() {
     await env.isReady()
     const tasks = new Tasks(env)
 
-    const accounts = await tasks.contractApi['dappAccounts']()
-    console.log(accounts.toHuman())
+    //console.log(tasks.contractApi.abi.registry.lookup.types.toHuman())
+    const providerType = tasks.contractApi.abi.registry.lookup.types.find(
+        (t) => t.type.path.join('.') === 'prosopo.prosopo.Provider'
+    )
+    if (providerType) {
+        console.log(providerType.toHuman())
+        console.log(JSON.stringify(providerType.type.def.toJSON(), null, 4))
+    }
+    // process.exit()
+    // console.log(tasks.contractApi.abi.registry.lookup.types.map((t) => t.type.def.toHuman()))
+    // console.log(tasks.contractApi.abi.registry.lookup.types.map((t) => t.type.path.toHuman()))
+    // process.exit()
+    const dappAccounts = await tasks.contractApi['dappAccounts']()
+    console.log(dappAccounts.toHuman())
+    const dapps = await tasks.contractApi['dapps']()
+    console.log(dapps.toHuman())
     // await tasks.getDappAccounts()
     process.exit()
 }

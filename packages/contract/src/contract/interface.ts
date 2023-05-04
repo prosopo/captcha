@@ -24,7 +24,13 @@ import { ApiBase, ApiDecoration } from '@polkadot/api/types'
 import { firstValueFrom, map } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
 import { BN, BN_ZERO } from '@polkadot/util'
-import { EventRecord, StorageDeposit, StorageEntryMetadataLatest, WeightV2 } from '@polkadot/types/interfaces'
+import {
+    EventRecord,
+    PortableType,
+    StorageDeposit,
+    StorageEntryMetadataLatest,
+    WeightV2,
+} from '@polkadot/types/interfaces'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { useWeightImpl } from './useWeight'
 import { IKeyringPair, ISubmittableResult } from '@polkadot/types/types'
@@ -59,11 +65,16 @@ export class ProsopoContractApi extends ContractPromise {
         this.createStorageGetters()
     }
 
+    /**
+     * Create getter functions for contract storage entries
+     */
     private createStorageGetters(): void {
-        for (const storageField of this.json.storage.root.layout.struct.fields) {
-            const functionName = `${snakeToCamelCase(storageField.name)}`
-            ProsopoContractApi.prototype[functionName] = () => {
-                return this.getStorage(storageField.name)
+        if (this.json.storage.root.layout.struct) {
+            for (const storageField of this.json.storage.root.layout.struct.fields) {
+                const functionName = `${snakeToCamelCase(storageField.name)}`
+                ProsopoContractApi.prototype[functionName] = () => {
+                    return this.getStorage(storageField.name)
+                }
             }
         }
     }
@@ -255,29 +266,53 @@ export class ProsopoContractApi extends ContractPromise {
     /** Get the storage entry from the ABI given a storage name
      * @return the storage entry object
      */
-    getStorageKeyAndType(storageName: string): { storageKey: `0x${string}`; storageTypeIndex: number } {
+    getStorageKeyAndType(storageName: string): { storageKey: `0x${string}`; storageType: PortableType } {
         const { storageEntry } = this.getStorageEntry(storageName)
         if (storageEntry) {
             let storage = storageEntry
+            let storageType: PortableType | undefined = undefined
+
             while ('root' in storage.layout) {
+                // loop through struct, enum, etc. to find the storage type
+                const innerStorage = storage.layout.root.layout
+                for (const key of Object.keys(innerStorage)) {
+                    console.log(`key ${key} storage ${JSON.stringify(innerStorage, null, 4)}`)
+                    if ('name' in innerStorage[key]) {
+                        storageType = this.abi.registry.lookup.types.find(
+                            (t) => t.type.path.join('.') === `prosopo.prosopo.${innerStorage[key].name}`
+                        )
+                        console.log(`prosopo.prosopo.${innerStorage[key].name}`)
+                        if (storageType) {
+                            break
+                        }
+                    }
+                }
                 storage = storage.layout.root
             }
+            console.log(storage)
             const rootKey = storage.root_key
             const rootKeyReversed = reverseHexString(rootKey.slice(2))
-            return { storageKey: `0x${rootKeyReversed}`, storageTypeIndex: storage.layout.leaf.ty }
+            return {
+                storageKey: `0x${rootKeyReversed}`,
+                storageType: storageType || this.abi.registry.lookup.types[storage.layout.leaf.ty],
+            }
         }
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', this.getStorageKeyAndType.name)
     }
 
+    /** Get the storage entry from the ABI given a storage name
+     * @return the storage entry object
+     * @param storageName
+     */
     getStorageEntry(storageName: string): {
         storageEntry?: StorageEntryMetadataLatest & AbiStorageEntry
         index?: number
     } {
-        const index = this.json.storage.root.layout.struct.fields.findIndex(
+        const index = this.json.storage.root.layout.struct?.fields.findIndex(
             (obj: { name: string }) => obj.name === storageName
         )
         if (index) {
-            return { storageEntry: this.json.storage.root.layout.struct.fields[index], index }
+            return { storageEntry: this.json.storage.root.layout.struct?.fields[index], index }
         }
 
         return { storageEntry: undefined, index: undefined }
@@ -288,9 +323,10 @@ export class ProsopoContractApi extends ContractPromise {
      * @return {any} data
      */
     async getStorage<T>(name: string): Promise<T> {
-        const { storageKey, storageTypeIndex } = this.getStorageKeyAndType(name)
-        if (storageTypeIndex) {
-            const typeDef = this.abi.registry.lookup.getTypeDef(`Lookup${storageTypeIndex}`)
+        const { storageKey, storageType } = this.getStorageKeyAndType(name)
+        if (storageType) {
+            //const typeDef = this.abi.registry.lookup.getTypeDef(`Lookup${storageTypeIndex}`)
+            const typeDef = this.abi.registry.lookup.getTypeDef(`Lookup${storageType.id.toNumber()}`)
             const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageKey)
             const result = await firstValueFrom(promiseResult)
             const optionBytes = this.abi.registry.createType('Option<Bytes>', result)
