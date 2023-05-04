@@ -64,6 +64,7 @@ pub mod prosopo {
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec::Vec;
+    use ink::prelude::vec;
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
