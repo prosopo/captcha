@@ -63,8 +63,8 @@ pub mod prosopo {
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
-    use ink::prelude::vec::Vec;
     use ink::prelude::vec;
+    use ink::prelude::vec::Vec;
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
@@ -555,20 +555,12 @@ pub mod prosopo {
 
         #[ink(message)]
         pub fn get_payees(&self) -> Vec<Payee> {
-            vec![
-                Payee::Dapp,
-                Payee::Provider,
-            ]
+            vec![Payee::Dapp, Payee::Provider]
         }
-
 
         #[ink(message)]
         pub fn get_dapp_payees(&self) -> Vec<DappPayee> {
-            vec![
-                DappPayee::Dapp,
-                DappPayee::Provider,
-                DappPayee::Any,
-            ]
+            vec![DappPayee::Dapp, DappPayee::Provider, DappPayee::Any]
         }
 
         #[ink(message)]
@@ -1876,9 +1868,12 @@ pub mod prosopo {
 
         const STAKE_DEFAULT: u128 = 1000000000000;
 
-        const set_caller: fn(AccountId) = ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
-        const get_account_balance: fn(AccountId) -> Result<u128, ink::env::Error> = ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>;
-        const set_account_balance: fn(AccountId, u128) = ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
+        const set_caller: fn(AccountId) =
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
+        const get_account_balance: fn(AccountId) -> Result<u128, ink::env::Error> =
+            ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>;
+        const set_account_balance: fn(AccountId, u128) =
+            ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
 
         pub struct DefaultAccounts {
             unused_account: AccountId,
@@ -1969,7 +1964,6 @@ pub mod prosopo {
 
             #[ink::test]
             fn test_ctor() {
-
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
@@ -1988,10 +1982,13 @@ pub mod prosopo {
                 // default state should be set
                 for payee in contract.get_payees().iter() {
                     for status in contract.get_statuses().iter() {
-                        assert_eq!(contract.provider_accounts.get(ProviderState {
-                            payee: *payee,
-                            status: *status
-                        }), None);
+                        assert_eq!(
+                            contract.provider_accounts.get(ProviderState {
+                                payee: *payee,
+                                status: *status
+                            }),
+                            None
+                        );
                     }
                 }
                 assert_eq!(contract.dapp_accounts.get(), None);
@@ -2001,15 +1998,29 @@ pub mod prosopo {
             #[ink::test]
             fn test_default_accounts_unique() {
                 let accounts = default_accounts();
-                let mut set: std::collections::HashSet<&[u8; 32]> = std::collections::HashSet::new();
-                for group in vec![&accounts.admins, &accounts.dapps, &accounts.providers, &accounts.users] {
+                let mut set: std::collections::HashSet<&[u8; 32]> =
+                    std::collections::HashSet::new();
+                for group in vec![
+                    &accounts.admins,
+                    &accounts.dapps,
+                    &accounts.providers,
+                    &accounts.users,
+                ] {
                     for account in group {
-                        assert!(set.insert(AsRef::<[u8; 32]>::as_ref(account)), "Duplicate account ID found: {:?}", account);
+                        assert!(
+                            set.insert(AsRef::<[u8; 32]>::as_ref(account)),
+                            "Duplicate account ID found: {:?}",
+                            account
+                        );
                     }
                 }
                 for group in vec![&accounts.code_hashes] {
                     for account in group {
-                        assert!(set.insert(account), "Duplicate account ID found: {:?}", account);
+                        assert!(
+                            set.insert(account),
+                            "Duplicate account ID found: {:?}",
+                            account
+                        );
                     }
                 }
                 accounts
@@ -2037,7 +2048,6 @@ pub mod prosopo {
 
             #[ink::test]
             fn test_set_code_hash_unauthorised() {
-
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
@@ -2047,12 +2057,14 @@ pub mod prosopo {
                 set_caller(accounts.users[0]); // an account which does not have permission to call set code hash
 
                 let new_code_hash = accounts.code_hashes[1];
-                assert_eq!(contract.set_code_hash(new_code_hash), Err(Error::IsNotAdmin));
+                assert_eq!(
+                    contract.set_code_hash(new_code_hash),
+                    Err(Error::IsNotAdmin)
+                );
             }
 
             #[ink::test]
             fn test_terminate() {
-
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
@@ -2064,13 +2076,15 @@ pub mod prosopo {
                 let bal = get_account_balance(contract_account).unwrap();
                 let admin = accounts.admins[0].clone();
                 let should_terminate = move || contract.terminate(admin).unwrap();
-                ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(should_terminate, accounts.admins[0].clone(), bal);
-
+                ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
+                    should_terminate,
+                    accounts.admins[0].clone(),
+                    bal,
+                );
             }
 
             #[ink::test]
             fn test_terminate_unauthorised() {
-
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
@@ -2078,7 +2092,10 @@ pub mod prosopo {
                 let mut contract = default_contract();
                 set_caller(accounts.users[0]); // an account which does not have permission to call terminate
 
-                assert_eq!(contract.terminate(accounts.users[0]).unwrap_err(), Error::IsNotAdmin);
+                assert_eq!(
+                    contract.terminate(accounts.users[0]).unwrap_err(),
+                    Error::IsNotAdmin
+                );
             }
 
             // #[ink::test]
@@ -2123,10 +2140,8 @@ pub mod prosopo {
                 contract.withdraw(accounts.admins[0], contract_bal + 1); // panics as bal would go below existential deposit
             }
 
-
             #[ink::test]
             fn test_withdraw_unauthorised() {
-
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
                 let accounts = default_accounts();
@@ -2135,7 +2150,10 @@ pub mod prosopo {
 
                 // give the contract funds
                 set_caller(accounts.users[0]); // use the admin acc
-                assert_eq!(contract.withdraw(accounts.admins[0], 1), Err(Error::IsNotAdmin));
+                assert_eq!(
+                    contract.withdraw(accounts.admins[0], 1),
+                    Err(Error::IsNotAdmin)
+                );
             }
 
             #[ink::test]
