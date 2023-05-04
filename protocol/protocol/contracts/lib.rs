@@ -2006,7 +2006,7 @@ pub mod prosopo {
                     &accounts.providers,
                     &accounts.users,
                 ] {
-                    for account in group {
+                    for account in group.iter() {
                         assert!(
                             set.insert(AsRef::<[u8; 32]>::as_ref(account)),
                             "Duplicate account ID found: {:?}",
@@ -2014,8 +2014,8 @@ pub mod prosopo {
                         );
                     }
                 }
-                for group in vec![&accounts.code_hashes] {
-                    for account in group {
+                for group in vec![&accounts.code_hashes].iter() {
+                    for account in group.iter() {
                         assert!(
                             set.insert(account),
                             "Duplicate account ID found: {:?}",
