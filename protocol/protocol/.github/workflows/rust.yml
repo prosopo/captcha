@@ -75,6 +75,9 @@ jobs:
       - name: Build
         id: build
         run: | 
+          mkdir -p contracts/target/ink/.target
+          ls -la contracts/target
+          ls -la contracts/target/ink
           docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
           # parity's docker image runs using root, so need to chown the output
           sudo chown -cR $(whoami) contracts
