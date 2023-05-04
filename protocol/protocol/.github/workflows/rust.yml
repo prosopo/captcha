@@ -106,7 +106,7 @@ jobs:
       - run: ls -la contracts || true
       - run: ls -la contracts/target || true
       - run: ls -la contracts/target/ink || true
-      - run: ls -la contracts/target/ink/.target || true
+      - run: mkdir -p contracts/target/ink/.target
 
       # Check for clippy advice
       - name: Clippy advice
