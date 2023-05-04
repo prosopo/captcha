@@ -9,7 +9,6 @@ ink = { git = "https://github.com/prosopo/ink", rev="9ca19c462d5f5d1572ddce595d2
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 hex = "0.4.3"
-thiserror = "1.0.39"
 
 # custom prosopo storage
 prosopo_storage_derive = { version = "3.3.0", path = "crates/storage/derive", default-features = false }
