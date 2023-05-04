@@ -85,7 +85,9 @@ jobs:
           set +e; gh extension install actions/gh-actions-cache; set -e
           REPO=${{ github.repository }}
           echo "Fetching list of cache key"
-          cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1)
+          # remove all except the most recent cached build
+          # we leave the latest cached build to be used by other workflows which may be running in parallel (i.e. there is always at least one cached build at any given time)
+          cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +3)
           echo caches to be removed:
           echo ${cacheKeys}
           # delete the stale caches
