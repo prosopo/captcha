@@ -11,24 +11,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { mnemonicValidate } from '@polkadot/util-crypto'
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
-import { Environment, loadEnv } from '../env'
+import { getPair } from '@prosopo/common'
+import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
+import { Environment } from '../env'
 import { processArgs } from './argv'
-import { ProsopoEnvError } from '@prosopo/datasets'
 
 loadEnv()
 
 async function main() {
-    if (!process.env.PROVIDER_MNEMONIC) {
-        throw new ProsopoEnvError('GENERAL.MNEMONIC_UNDEFINED')
-    }
+    const secret = getSecret()
+    const ss58Format = getSs58Format()
+    const pairType = getPairType()
 
-    mnemonicValidate(process.env.PROVIDER_MNEMONIC)
-    const env = new Environment(process.env.PROVIDER_MNEMONIC)
+    const pair = await getPair(pairType, ss58Format, secret)
+
+    console.log(`Pair address: ${pair.address}`)
+
+    const env = new Environment(pair)
 
     await env.isReady()
+
     await processArgs(process.argv.slice(2), env)
 
     process.exit()

@@ -18,7 +18,7 @@ import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
 import CheckIcon from '@mui/icons-material/Check'
 import { Box, Fade, Theme } from '@mui/material'
 import useTheme from '@mui/styles/useTheme'
-import { Item } from '@prosopo/datasets'
+import { Item } from '@prosopo/types'
 
 export interface CaptchaWidgetProps {
     challenge: CaptchaResponseCaptcha
@@ -71,7 +71,6 @@ export const CaptchaWidget = (props: CaptchaWidgetProps) => {
                             key={index}
                         >
                             <Box
-
                                 sx={{ cursor: 'pointer', height: '100%', width: '100%' }}
                                 onClick={() => onClick(hash)}
                             >

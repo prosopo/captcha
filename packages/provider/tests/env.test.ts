@@ -15,16 +15,21 @@
 import { Environment } from '../src/env'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
+import { getPair } from '@prosopo/common'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { getSs58Format } from '@prosopo/env'
 
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
 describe('ENV TESTS', () => {
-    it('Initiliases an environment', () => {
+    it('Initiliases an environment', async () => {
         const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
-        const env = new Environment(mnemonic)
-        expect(env.mnemonic).to.equal(mnemonic)
+        const ss58Format = getSs58Format()
+        const pair = await getPair(process.env.PAIR_TYPE as KeypairType, ss58Format, mnemonic)
+
+        const env = new Environment(pair)
         expect(env.config).to.not.be.null
         expect(env.defaultEnvironment).to.be.a.string
         expect(env.contractAddress).to.be.a.string

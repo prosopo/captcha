@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 
 import { UserInterface } from '../models/user'
 import { Connection } from 'mongoose'
-import { ProsopoServer } from '../utils/Prosopo'
+import { ProsopoServer } from '@prosopo/server'
 
 const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, res, next) => {
     try {
@@ -16,13 +16,20 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
         await prosopoServer.isReady()
         if (dbUser) {
             return res.status(409).json({ message: 'email already exists' })
-        } else if (req.body.email && req.body.password && req.body.prosopo && req.body.prosopo.userAccountAddress) {
+        } else if (
+            req.body.email &&
+            req.body.password &&
+            req.body.prosopo &&
+            req.body.prosopo.userAccountAddress &&
+            req.body.prosopo.blockNumber
+        ) {
             console.log(req.body)
             if (
                 await prosopoServer.isVerified(
                     req.body.prosopo.userAccountAddress,
                     req.body.prosopo.providerUrl,
-                    req.body.prosopo.commitmentId
+                    req.body.prosopo.commitmentId,
+                    req.body.prosopo.blockNumber
                 )
             ) {
                 // password hash
@@ -67,24 +74,42 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
     await User.findOne({
         email: req.body.email,
     })
-        .then((dbUser) => {
+        .then(async (dbUser) => {
             if (!dbUser) {
                 return res.status(404).json({ message: 'user not found' })
             } else {
-                // password hash
-                bcrypt.compare(req.body.password, dbUser.password, (err, compareRes) => {
-                    if (err) {
-                        // error while comparing
-                        res.status(502).json({ message: 'error while checking user password' })
-                    } else if (compareRes) {
-                        // password match
-                        const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' })
-                        res.status(200).json({ message: 'user logged in', token: token })
-                    } else {
-                        // password doesnt match
-                        res.status(401).json({ message: 'invalid credentials' })
+                if (
+                    req.body.email &&
+                    req.body.password &&
+                    req.body.prosopo &&
+                    req.body.prosopo.userAccountAddress &&
+                    req.body.prosopo.blockNumber
+                ) {
+                    console.log(req.body)
+                    if (
+                        await prosopoServer.isVerified(
+                            req.body.prosopo.userAccountAddress,
+                            req.body.prosopo.providerUrl,
+                            req.body.prosopo.commitmentId,
+                            req.body.prosopo.blockNumber
+                        )
+                    ) {
+                        // password hash
+                        bcrypt.compare(req.body.password, dbUser.password, (err, compareRes) => {
+                            if (err) {
+                                // error while comparing
+                                res.status(502).json({ message: 'error while checking user password' })
+                            } else if (compareRes) {
+                                // password match
+                                const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' })
+                                res.status(200).json({ message: 'user logged in', token: token })
+                            } else {
+                                // password doesnt match
+                                res.status(401).json({ message: 'invalid credentials' })
+                            }
+                        })
                     }
-                })
+                }
             }
         })
         .catch((err) => {

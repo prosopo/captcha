@@ -15,37 +15,45 @@
 import { Hash } from '@polkadot/types/interfaces'
 import { isHex } from '@polkadot/util'
 import {
+    Captcha,
     CaptchaRecordSchema,
+    CaptchaSolution,
+    CaptchaStates,
     Database,
+    DatasetBase,
     DatasetRecordSchema,
+    DatasetWithIds,
+    DatasetWithIdsAndTree,
+    DatasetWithIdsAndTreeSchema,
     PendingCaptchaRequest,
     PendingRecordSchema,
+    ScheduledTaskRecord,
+    ScheduledTaskRecordSchema,
+    ScheduledTaskSchema,
     SolutionRecordSchema,
     Tables,
     UserCommitmentRecord,
     UserCommitmentRecordSchema,
+    UserCommitmentSchema,
     UserSolutionRecord,
     UserSolutionRecordSchema,
-} from '../types'
-import {
-    Captcha,
-    CaptchaSolution,
-    CaptchaStates,
-    DatasetBase,
-    DatasetWithIds,
-    DatasetWithIdsAndTree,
-    DatasetWithIdsAndTreeSchema,
-    ProsopoEnvError,
-} from '@prosopo/datasets'
+    UserSolutionSchema,
+} from '@prosopo/types'
+
+import { Logger, ProsopoEnvError } from '@prosopo/common'
 import consola from 'consola'
 import mongoose, { Connection } from 'mongoose'
+import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
+import { DeleteResult } from 'mongodb'
+
+mongoose.set('strictQuery', false)
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
 
 const callbackFn = function (err, result) {
     if (err) throw err
-    consola.debug(result)
+    consola.debug('consola debug', result)
 }
 
 /**
@@ -61,11 +69,11 @@ export class ProsopoDatabase implements Database {
 
     dbname: string
 
-    logger: typeof consola
+    logger: Logger
 
     connection?: Connection
 
-    constructor(url: string, dbname: string, logger: typeof consola, authSource?: string) {
+    constructor(url: string, dbname: string, logger: Logger, authSource?: string) {
         const authSourceString = authSource ? `?authSource=${authSource}` : ''
         const separator = url.slice(-1) === '/' ? '' : '/'
         this.url = `${url || DEFAULT_ENDPOINT}${separator}${dbname}${authSourceString}`
@@ -91,6 +99,7 @@ export class ProsopoDatabase implements Database {
                 commitment: this.connection.model('UserCommitment', UserCommitmentRecordSchema),
                 usersolution: this.connection.model('UserSolution', UserSolutionRecordSchema),
                 pending: this.connection.model('Pending', PendingRecordSchema),
+                scheduler: this.connection.model('Scheduler', ScheduledTaskRecordSchema),
             }
             this.connection.once('open', resolve).on('error', (e) => {
                 this.logger.info(`mongoose connection  error`)
@@ -169,6 +178,7 @@ export class ProsopoDatabase implements Database {
                             upsert: true,
                         },
                     })),
+                    // @ts-ignore
                     callbackFn
                 )
             }
@@ -306,7 +316,7 @@ export class ProsopoDatabase implements Database {
     }
 
     /**
-     * @description Get a captcha that is solved or not solved
+     * @description Get a dataset by Id
      */
     async getDatasetDetails(datasetId: Hash | string): Promise<DatasetBase> {
         if (!isHex(datasetId)) {
@@ -325,22 +335,33 @@ export class ProsopoDatabase implements Database {
     /**
      * @description Store a Dapp User's captcha solution commitment
      */
-    async storeDappUserSolution(captchas: CaptchaSolution[], commitmentId: string, userAccount: string): Promise<void> {
+    async storeDappUserSolution(
+        captchas: CaptchaSolution[],
+        commitmentId: string,
+        userAccount: string,
+        dappAccount: string,
+        datasetId: string
+    ): Promise<void> {
         if (!isHex(commitmentId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.storeDappUserSolution.name, {}, commitmentId)
         }
+
+        const commitmentRecord = UserCommitmentSchema.parse({
+            userAccount,
+            dappAccount,
+            datasetId,
+            commitmentId: commitmentId,
+            approved: false,
+            datetime: new Date(),
+            processed: false,
+        })
 
         if (captchas.length) {
             await this.tables?.commitment.updateOne(
                 {
                     commitmentId,
                 },
-                {
-                    userAccount,
-                    commitmentId: commitmentId,
-                    approved: false,
-                    datetime: new Date().toISOString(),
-                },
+                commitmentRecord,
                 { upsert: true }
             )
 
@@ -360,29 +381,53 @@ export class ProsopoDatabase implements Database {
                     upsert: true,
                 },
             }))
-
+            // @ts-ignore
             await this.tables?.usersolution.bulkWrite(ops, callbackFn)
         }
     }
 
-    /** @description Remove Dapp User captcha solutions from the usersolution table by captchaId
-     * @param {[string]} captchaIds
+    /** @description Get processed Dapp User captcha solutions from the user solution table
      */
-    async removeDappUserSolutions(captchaIds: string[]): Promise<void> {
-        await this.tables?.usersolution.deleteMany({ 'captchas.captchaId': { $in: captchaIds } })
+    async getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]> {
+        const docs = await this.tables?.usersolution.find({ processed: true }).lean()
+        return docs ? docs.map((doc) => UserSolutionSchema.parse(doc)) : []
+    }
+
+    /** @description Get processed Dapp User captcha commitments from the commitments table
+     */
+    async getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+        const docs = await this.tables?.commitment.find({ processed: true }).lean()
+        return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
+    }
+
+    /** @description Remove processed Dapp User captcha solutions from the user solution table
+     */
+    async removeProcessedDappUserSolutions(commitmentIds: string[]): Promise<DeleteResult | undefined> {
+        return await this.tables?.usersolution.deleteMany({ processed: true, commitmentId: { $in: commitmentIds } })
+    }
+
+    /** @description Remove processed Dapp User captcha commitments from the user commitments table
+     */
+    async removeProcessedDappUserCommitments(commitmentIds: string[]): Promise<DeleteResult | undefined> {
+        return await this.tables?.commitment.deleteMany({ processed: true, commitmentId: { $in: commitmentIds } })
     }
 
     /**
      * @description Store a Dapp User's pending record
      */
-    async storeDappUserPending(userAccount: string, requestHash: string, salt: string): Promise<void> {
+    async storeDappUserPending(
+        userAccount: string,
+        requestHash: string,
+        salt: string,
+        deadline: number
+    ): Promise<void> {
         if (!isHex(requestHash)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.storeDappUserPending.name, {}, requestHash)
         }
 
         await this.tables?.pending.updateOne(
             { requestHash: requestHash },
-            { $set: { accountId: userAccount, pending: true, salt, requestHash } },
+            { $set: { accountId: userAccount, pending: true, salt, requestHash, deadline } },
             { upsert: true }
         )
     }
@@ -547,14 +592,14 @@ export class ProsopoDatabase implements Database {
 
     /**
      * @description Get dapp user commitment by user account
-     * @param {string[]} userAccount
+     * @param commitmentId
      */
     async getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord | undefined> {
         const commitmentCursor = this.tables?.commitment?.findOne({ commitmentId: commitmentId }).lean()
 
         const doc = await commitmentCursor
 
-        return doc ? (doc as UserCommitmentRecord) : undefined
+        return doc ? UserCommitmentSchema.parse(doc) : undefined
     }
 
     /**
@@ -593,7 +638,71 @@ export class ProsopoDatabase implements Database {
                 ?.updateMany({ captchaId: { $in: captchaIds } }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, captchaIds)
+            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_FLAG_FAILED', {}, captchaIds)
         }
+    }
+
+    /**
+     * @description Flag dapp users' commitments as used by calculated solution
+     * @param {string[]} commitmentIds
+     */
+    async flagUsedDappUserCommitments(commitmentIds: string[]): Promise<void> {
+        try {
+            const distinctCommitmentIds = [...new Set(commitmentIds)]
+            await this.tables?.commitment
+                ?.updateMany(
+                    { commitmentId: { $in: distinctCommitmentIds } },
+                    { $set: { processed: true } },
+                    { upsert: false }
+                )
+                .lean()
+        } catch (err) {
+            throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
+        }
+    }
+
+    /**
+     * @description Get the last batch commit time or return 0 if none
+     */
+    async getLastBatchCommitTime(): Promise<number> {
+        const cursor = this.tables?.scheduler
+            ?.findOne({ processName: ScheduledTaskNames.BatchCommitment, status: ScheduledTaskStatus.Completed })
+            .sort({ timestamp: -1 })
+            .lean()
+        const doc = await cursor
+
+        if (doc) {
+            return doc.timestamp
+        }
+
+        return 0
+    }
+
+    /**
+     * @description Get the last batch commit time or return 0 if none
+     */
+    async getLastScheduledTask(task: ScheduledTaskNames): Promise<ScheduledTaskRecord | undefined> {
+        const cursor = this.tables?.scheduler?.findOne({ processName: task }).sort({ datetime: -1 }).lean()
+        return await cursor
+    }
+
+    /**
+     * @description Store the status of a scheduled task and an optional result
+     */
+    async storeScheduledTaskStatus(
+        taskId: `0x${string}`,
+        task: ScheduledTaskNames,
+        status: ScheduledTaskStatus,
+        result?: ScheduledTaskResult
+    ): Promise<void> {
+        const now = new Date()
+        const doc = ScheduledTaskSchema.parse({
+            taskId,
+            processName: task,
+            datetime: now,
+            status,
+            ...(result && { result }),
+        })
+        await this.tables?.scheduler.create(doc)
     }
 }

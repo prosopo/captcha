@@ -14,10 +14,10 @@
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import fs, { WriteStream, createWriteStream } from 'fs'
-import { Captcha, ProsopoEnvError } from '@prosopo/datasets'
-import { CaptchaSolution, arrayJoin } from '@prosopo/datasets'
+import { arrayJoin } from '@prosopo/datasets'
+import { Logger, ProsopoEnvError } from '@prosopo/common'
+import { Captcha, CaptchaSolution } from '@prosopo/types'
 import pl from 'nodejs-polars'
-import consola from 'consola'
 
 export function encodeStringAddress(address: string) {
     try {
@@ -26,18 +26,6 @@ export function encodeStringAddress(address: string) {
         throw new ProsopoEnvError(error, 'CONTRACT.INVALID_ADDRESS', {}, address)
     }
 }
-
-// export function handleFileProtocol(filePath: string, logger?): string {
-//     let parsedFilePath = filePath;
-//     try {
-//         parsedFilePath = node_url.fileURLToPath(filePath);
-//     } catch (err) {
-//         if (logger) {
-//             logger.debug(err, filePath);
-//         }
-//     }
-//     return parsedFilePath
-// }
 
 export function loadJSONFile(filePath: string, logger?: any) {
     // const parsedFilePath = handleFileProtocol(filePath, logger)
@@ -126,14 +114,6 @@ export function parseBlockNumber(blockNumberString: string) {
     return parseInt(blockNumberString.replace(/,/g, ''))
 }
 
-// export function loadEnvFile() {
-//     const envPath =
-//       process.env.NODE_ENV !== undefined
-//         ? { override: true, path: `.env.${process.env.NODE_ENV.toLowerCase()}` }
-//         : undefined;
-//     config(envPath);
-// }
-
 export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumberOfSolutions: number) {
     if (solutions.length === 0) {
         return pl.DataFrame([])
@@ -148,7 +128,7 @@ export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumbe
     return filtered.withColumn(filtered['solutionKey'].str.split(',').rename('solution'))
 }
 
-export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], logger: typeof consola): Captcha[] {
+export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], logger: Logger): Captcha[] {
     // Note - loading the dataset in nodejs-polars doesn't work because of nested objects, which is why this is done in
     // a map instead of a join
     return captchas.map((captcha: Captcha) => {

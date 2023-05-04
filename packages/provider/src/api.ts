@@ -11,16 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { AnyJson } from '@polkadot/types/types'
 import { validateAddress } from '@polkadot/util-crypto'
-import { ProsopoEnvError } from '@prosopo/datasets'
-import { CaptchaWithProof, parseCaptchaAssets } from '@prosopo/datasets'
+import { ProsopoApiError } from '@prosopo/common'
+import { parseCaptchaAssets } from '@prosopo/datasets'
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'
-import { DappUserSolutionResult, VerifySolutionBody } from './types/api'
-import { ProsopoEnvironment } from './types/env'
-import { AccountsResponse, CaptchaSolutionBody } from './types/api'
+import {
+    CaptchaSolutionBody,
+    CaptchaWithProof,
+    DappUserSolutionResult,
+    DappsAccountsResponse,
+    ProsopoEnvironment,
+    ProvidersAccountsResponse,
+    VerifySolutionBody,
+} from '@prosopo/types'
+
 import { parseBlockNumber } from './util'
+import { DappAccounts } from '@prosopo/contract'
+import { AccountId } from '@polkadot/types/interfaces'
+import { Vec } from '@polkadot/types-codec'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -51,11 +60,11 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         const { userAccount, dappContractAccount } = req.params
 
         try {
-            const provider = await tasks.getRandomProvider(userAccount, dappContractAccount)
+            const provider = await tasks.contractApi.getRandomProvider(userAccount, dappContractAccount)
 
             return res.json(provider)
         } catch (err) {
-            return next(new ProsopoEnvError(err))
+            return next(new ProsopoApiError(err, undefined, 500))
         }
     })
 
@@ -67,13 +76,13 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     router.get('/v1/prosopo/providers/', async (req, res, next) => {
         try {
             await env.isReady()
-            const providers: AnyJson = await tasks.getProviderAccounts()
+            const providers: Vec<AccountId> = await tasks.contractApi.getProviderAccounts()
 
             return res.json({
                 accounts: providers,
-            } as AccountsResponse)
+            } as ProvidersAccountsResponse)
         } catch (err) {
-            return next(new ProsopoEnvError(err))
+            return next(new ProsopoApiError(err, undefined, 500))
         }
     })
 
@@ -85,13 +94,13 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
     router.get('/v1/prosopo/dapps/', async (req, res, next) => {
         try {
             await env.isReady()
-            const dapps: AnyJson = await tasks.getDappAccounts()
+            const dapps: DappAccounts = await tasks.contractApi.getDappAccounts()
 
             return res.json({
                 accounts: dapps,
-            } as AccountsResponse)
+            } as DappsAccountsResponse)
         } catch (err) {
-            return next(new ProsopoEnvError(err))
+            return next(new ProsopoApiError(err, undefined, 500))
         }
     })
 
@@ -106,17 +115,16 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         const { providerAccount } = req.params
 
         if (!providerAccount) {
-            return next(new ProsopoEnvError('API.BAD_REQUEST'))
+            return next(new ProsopoApiError('API.BAD_REQUEST', undefined, 400))
         }
 
         try {
             validateAddress(providerAccount)
-            const contract = contractApi.getContract()
-            const result = await contract.query.getProviderDetails(providerAccount, {})
+            const result = await contractApi.getProviderDetails(providerAccount)
 
-            return res.json(result.output)
+            return res.json(result)
         } catch (err) {
-            return next(new ProsopoEnvError(err))
+            return next(new ProsopoApiError(err, undefined, 500))
         }
     })
 
@@ -133,7 +141,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
             const { blockNumber, datasetId, userAccount, dappContractAccount } = req.params
 
             if (!datasetId || !userAccount || !blockNumber || !dappContractAccount) {
-                return next(new ProsopoEnvError('API.PARAMETER_UNDEFINED'))
+                return next(new ProsopoApiError('API.PARAMETER_UNDEFINED', undefined, 400))
             }
 
             try {
@@ -157,7 +165,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
                 }))
                 return res.json(taskData)
             } catch (err) {
-                return next(new ProsopoEnvError(err))
+                return next(new ProsopoApiError(err, undefined, 400))
             }
         }
     )
@@ -175,7 +183,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
         } catch (err) {
-            return next(new ProsopoEnvError(err))
+            return next(new ProsopoApiError(err, undefined, 400))
         }
 
         try {
@@ -186,7 +194,8 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
                     parsed.userAccount,
                     parsed.dappAccount,
                     parsed.requestHash,
-                    parsed.captchas
+                    parsed.captchas,
+                    parsed.signature
                 )
                 return res.json({
                     status: req.i18n.t(result.solutionApproved ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
@@ -207,7 +216,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
                 })
             }
         } catch (err) {
-            return next(new ProsopoEnvError(err))
+            return next(new ProsopoApiError(err, undefined, 400))
         }
     })
 
@@ -216,7 +225,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
-            return next(new ProsopoEnvError(err))
+            return next(new ProsopoApiError(err, undefined, 400))
         }
         try {
             let solution
@@ -241,7 +250,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
                 solutionApproved: false,
             })
         } catch (err) {
-            return next(new ProsopoEnvError(err))
+            return next(new ProsopoApiError(err, undefined, 400))
         }
     })
 

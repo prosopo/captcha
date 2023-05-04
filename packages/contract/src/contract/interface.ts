@@ -13,47 +13,96 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import type { AbiMessage } from '@polkadot/api-contract/types'
-import { AnyJson } from '@polkadot/types/types/codec'
-import { Observable, Registry } from '@polkadot/types/types'
-import { AbiMetadata, ContractAbi, ContractApiInterface, TransactionResponse } from '../types'
-import { encodeStringArgs, handleContractCallOutcomeErrors, unwrap } from './helpers'
-import { contractDefinitions } from './definitions'
-import { buildCall, buildSend } from './contract'
+import type { ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
+import { AbiMetadata, ContractAbi } from '@prosopo/types'
+import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
-import AsyncFactory from './AsyncFactory'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { Bytes, Option } from '@polkadot/types-codec'
+import { ContractExecResult } from '@polkadot/types/interfaces/contracts'
+import { createType } from '@polkadot/types'
+import { ApiBase, ApiDecoration } from '@polkadot/api/types'
+import { firstValueFrom, map } from 'rxjs'
+import { convertWeight } from '@polkadot/api-contract/base/util'
+import { BN, BN_ZERO } from '@polkadot/util'
+import { EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
+import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
+import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
+import { useWeightImpl } from './useWeight'
+import { IKeyringPair, ISubmittableResult } from '@polkadot/types/types'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { applyOnEvent } from '@polkadot/api-contract/util'
+import { Bytes } from '@polkadot/types-codec'
+import { LogLevel, Logger, logger } from '@prosopo/common'
 
-export class ProsopoContractApi extends AsyncFactory implements ContractApiInterface {
-    contract: ContractPromise
-    contractAddress: string
+export class ProsopoContractApi extends ContractPromise {
     contractName: string
-    abi: ContractAbi
-    pair: KeyringPair
-    api: ApiPromise
+    pair: IKeyringPair
+    options: ContractOptions
+    nonce: number
+    logger: Logger
 
-    public async init(
-        contractAddress: string,
-        pair: KeyringPair,
-        contractName: string,
+    constructor(
+        api: ApiPromise,
         abi: ContractAbi,
-        api: ApiPromise
-    ): Promise<this> {
-        this.api = api
+        address: string,
+        pair: IKeyringPair,
+        contractName: string,
+        currentNonce: number,
+        logLevel?: LogLevel
+    ) {
+        super(api, abi, address)
         this.pair = pair
-        this.contractAddress = contractAddress
-        this.abi = abi
-        await this.api.isReadyOrError
-        await this.api.registry.register(contractDefinitions)
-        this.contract = new ContractPromise(this.api, this.abi, this.contractAddress)
+        this.contractName = contractName
+        this.nonce = currentNonce
+        this.logger = logger(logLevel || LogLevel.Info, `ProsopoContractApi: ${contractName}`)
+    }
+
+    public getContract(): ProsopoContractApi {
         return this
     }
 
-    public getContract(): ContractPromise {
-        return this.contract
+    /**
+     * Get the extrinsic for submitting in a transaction
+     * @return {SubmittableExtrinsic} extrinsic
+     */
+    async buildExtrinsic<T>(
+        contractMethodName: string,
+        args: T[],
+        value?: number | BN | undefined
+    ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions; storageDeposit: StorageDeposit }> {
+        // Always query first as errors are passed back from a dry run but not from a transaction
+        const message = this.abi.findMessage(contractMethodName)
+        const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
+        const expectedBlockTime = new BN(this.api.consts.babe?.expectedBlockTime)
+        const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(1))
+        const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
+        this.logger.debug('Sending address: ', this.pair.address)
+        const initialOptions = {
+            value,
+            gasLimit,
+            storageDepositLimit: null,
+        }
+        const extrinsic = this.query[message.method](this.pair.address, initialOptions, ...encodedArgs)
+
+        const response = await extrinsic
+        if (response.result.isOk) {
+            let options = getOptions(this.api, message.isMutating, value, response.gasRequired, response.storageDeposit)
+            const extrinsicTx = this.tx[contractMethodName](options, ...encodedArgs)
+            // paymentInfo is larger than gasRequired returned by query so use paymentInfo
+            const paymentInfo = await extrinsicTx.paymentInfo(this.pair.address)
+            this.logger.debug('Payment info: ', paymentInfo.partialFee.toHuman())
+            // increase the gas limit to make sure the tx succeeds
+            options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit, true)
+            handleContractCallOutcomeErrors(response, contractMethodName)
+            return {
+                extrinsic: this.tx[contractMethodName](options, ...encodedArgs),
+                options,
+                storageDeposit: response.storageDeposit,
+            }
+        } else {
+            throw new ProsopoContractError(response.result.asErr, this.buildExtrinsic.name)
+        }
     }
 
     /**
@@ -63,81 +112,150 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
      * @param {number | undefined} value   The value of token that is sent with the transaction
      * @return JSON result containing the contract event
      */
-    async contractTx<T>(contractMethodName: string, args: T[], value?: number | string): Promise<TransactionResponse> {
-        // Always query first as errors are passed back from a dry run but not from a transaction
-        await this.contractQuery(contractMethodName, args)
-        const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: T[] = encodeStringArgs(methodObj, args)
-        const send = buildSend(this.contract, methodObj, this.pair)
-        const response = value ? await send(...encodedArgs, { value: value }) : await send(...encodedArgs)
+    async contractTx<T>(
+        contractMethodName: string,
+        args: T[],
+        value?: number | BN | undefined
+    ): Promise<ContractSubmittableResult> {
+        const { extrinsic } = await this.buildExtrinsic(contractMethodName, args, value)
+        const nextNonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+        this.nonce = nextNonce ? nextNonce.toNumber() : this.nonce
+        this.logger.debug(`Sending ${contractMethodName} tx`)
+        const paymentInfo = await extrinsic.paymentInfo(this.pair)
+        this.logger.debug(`${contractMethodName} paymentInfo:`, paymentInfo.toHuman())
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            const unsub = await extrinsic.signAndSend(
+                this.pair,
+                { nonce: this.nonce },
+                (result: ISubmittableResult) => {
+                    if (result.status.isFinalized || result.status.isInBlock) {
+                        // ContractEmitted is the current generation, ContractExecution is the previous generation
+                        const contractResult = new ContractSubmittableResult(
+                            result,
+                            applyOnEvent(result, ['ContractEmitted', 'ContractExecution'], (records: EventRecord[]) =>
+                                records
+                                    .map(
+                                        ({
+                                            event: {
+                                                data: [, data],
+                                            },
+                                        }): DecodedEvent | null => {
+                                            try {
+                                                return this.abi.decodeEvent(data as Bytes)
+                                            } catch (error) {
+                                                this.logger.error(
+                                                    `Unable to decode contract event: ${(error as Error).message}`
+                                                )
 
-        if (response.result.status.isRetracted || response.result.status.isInvalid) {
-            throw new ProsopoContractError(response.result.status.type, contractMethodName)
-        }
-
-        return response
+                                                return null
+                                            }
+                                        }
+                                    )
+                                    .filter((decoded): decoded is DecodedEvent => !!decoded)
+                            )
+                        )
+                        unsub()
+                        resolve(contractResult)
+                    } else if (result.isError) {
+                        unsub()
+                        reject(new ProsopoContractError(result.status.type))
+                    }
+                }
+            )
+        })
     }
 
     /**
      * Perform a contract query (non-mutating) calling the specified method
      * @param {string} contractMethodName
      * @param args
-     * @param atBlock
+     * @param value
+     * @param atBlock?
      * @return JSON result containing the contract event
      */
-    async contractQuery<T>(contractMethodName: string, args: T[], atBlock?: string | Uint8Array): Promise<AnyJson> {
-        const methodObj = this.getContractMethod(contractMethodName)
-        const encodedArgs: T[] = encodeStringArgs(methodObj, args)
-        const call = !atBlock
-            ? buildCall(this.contract, methodObj, this.pair)
-            : buildCall(this.contract, methodObj, this.pair, false, atBlock)
-        const response = await call(...encodedArgs)
-        handleContractCallOutcomeErrors(response, contractMethodName, encodedArgs)
+    async contractQuery(
+        contractMethodName: string,
+        args: any[],
+        value?: number | BN | undefined,
+        atBlock?: string | Uint8Array
+    ): Promise<ContractCallOutcome> {
+        const message = this.abi.findMessage(contractMethodName)
+        const origin = this.pair.address
+
+        const params: Uint8Array[] = encodeStringArgs(this.abi, message, args)
+        let api: ApiBase<'promise'> | ApiDecoration<'promise'> = this.api
+        if (atBlock) {
+            api = atBlock ? await this.api.at(atBlock) : this.api
+        }
+        const { gasRequired, result } = await this.query[message.method](
+            this.address,
+            { gasLimit: -1, storageDepositLimit: null, value: message.isPayable ? value : 0 },
+            ...params
+        )
+        const weight = result.isOk ? (api.registry.createType('WeightV2', gasRequired) as WeightV2) : undefined
+        const options = getOptions(this.api, message.isMutating, value, weight)
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const responseObservable = api.rx.call.contractsApi
+            .call<ContractExecResult>(
+                origin,
+                this.address,
+                options.value ? options.value : BN_ZERO,
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore jiggle v1 weights, metadata points to latest
+                weight ? weight.weightV2 : options.gasLimit,
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                options.storageDepositLimit,
+                message.toU8a(params)
+            )
+            .pipe(
+                map(
+                    ({ debugMessage, gasConsumed, gasRequired, result, storageDeposit }): ContractCallOutcome => ({
+                        debugMessage,
+                        gasConsumed,
+                        gasRequired:
+                            gasRequired && !convertWeight(gasRequired).v1Weight.isZero() ? gasRequired : gasConsumed,
+                        output:
+                            result.isOk && message.returnType
+                                ? this.abi.registry.createTypeUnsafe(
+                                      message.returnType.lookupName || message.returnType.type,
+                                      [result.asOk.data.toU8a(true)],
+                                      { isPedantic: true }
+                                  )
+                                : null,
+                        result,
+                        storageDeposit,
+                    })
+                )
+            )
+        const response = await firstValueFrom(responseObservable)
+        handleContractCallOutcomeErrors(response, contractMethodName)
         if (response.result.isOk) {
-            if (response.output) {
-                return unwrap(response.output.toHuman())
-            } else {
-                return []
-            }
+            return response
         }
-        throw new ProsopoContractError(response.result.asErr, 'contractQuery')
+        throw new ProsopoContractError(response.result.asErr, 'contractQuery', undefined, {
+            contractMethodName,
+            gasLimit: options.gasLimit?.toString(),
+            ...(value && { value: value.toString() }),
+        })
     }
 
-    /** Get the contract method from the ABI
-     * @return the contract method object
+    /** Get the storage entry from the ABI given a storage name
+     * @return the storage entry object
      */
-    getContractMethod(contractMethodName: string): AbiMessage {
-        const methodObj = this.contract?.abi.messages.filter((obj) => obj.method === contractMethodName)[0]
-        if (methodObj !== undefined) {
-            return methodObj as unknown as AbiMessage
-        }
-        throw new ProsopoContractError('CONTRACT.INVALID_METHOD', 'contractMethodName')
-    }
+    getStorageEntry(storageName: string): ContractLayoutStructField {
+        const json: AbiMetadata = this.abi.json as AbiMetadata
 
-    /** Get the storage key from the ABI given a storage name
-     * @return the storage key
-     */
-    getStorageKey(storageName: string): string {
-        if (!this.contract) {
-            throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
-        }
-        const json: AbiMetadata = this.contract.abi.json as AbiMetadata
-
-        // Find the different metadata version key, V1, V2, V3, etc.
-        const storageKey = Object.keys(json).filter((key) => key.search(/V\d/) > -1)
-
-        let data
-        if (storageKey.length) {
-            data = json[storageKey[0]]
-        } else {
-            // The metadata version is not present, and it's the old AbiMetadata
-            data = json
-        }
-
-        const storageEntry = data.storage.struct.fields.filter((obj: { name: string }) => obj.name === storageName)[0]
-
+        let storageEntry = json.storage.root.layout.struct.fields.filter(
+            (obj: { name: string }) => obj.name === storageName
+        )[0]
         if (storageEntry) {
-            return storageEntry.layout.cell.key
+            while ('root' in storageEntry.layout) {
+                storageEntry = storageEntry.layout.root
+            }
+            return this.abi.registry.createType('ContractLayoutStructField ', storageEntry)
         }
         throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', 'getStorageKey')
     }
@@ -146,14 +264,21 @@ export class ProsopoContractApi extends AsyncFactory implements ContractApiInter
      * Get the data at specified storage key
      * @return {any} data
      */
-    async getStorage<T>(name: string, decodingFn: (registry: Registry, data: Uint8Array) => T): Promise<T> {
-        await this.getContract()
-        const storageKey = this.getStorageKey(name)
-        if (!this.contract) {
-            throw new ProsopoContractError('CONTRACT.CONTRACT_UNDEFINED')
+    async getStorage<T>(name: string, type: string): Promise<T> {
+        const storageEntry = this.getStorageEntry(name)
+        if (storageEntry.layout.isCell) {
+            const storageCell = storageEntry.layout.asCell
+            const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageCell.key.toHex())
+            const result = await firstValueFrom(promiseResult)
+            // const result = await promiseResult
+            //     .pipe(map((values) => this.api.registry.createType(`Option<${type}>`, values.value)))
+            //     .toPromise()
+            //values.map(v => this.api.registry.createType('Option<StorageData>', v)).map(o => o.isSome ? this.api.registry.createType('Balance', o.unwrap())
+            if (result) {
+                return createType(result.registry, type, [result.toU8a(true)]) as T
+            }
         }
-        const promiseResult: any = await this.api.rpc.contracts.getStorage(this.contract.address, storageKey)
-        const data = promiseResult.unwrapOrDefault()
-        return decodingFn(this.api.registry, data)
+
+        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', 'getStorage')
     }
 }

@@ -11,29 +11,49 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Payee } from '@prosopo/contract'
-import { IDappAccount, IProviderAccount } from '../../src/types/accounts'
+import { IDappAccount, IProviderAccount } from '@prosopo/types'
+import { BN } from '@polkadot/util'
+import { Tasks } from '../../src/index'
+import { ProsopoEnvironment } from '@prosopo/types'
+import { getPair } from '@prosopo/common'
+import { getSs58Format } from '@prosopo/env'
+import { KeypairType } from '@polkadot/util-crypto/types'
+
+export const accountMnemonic = (account: Account) => account[0]
+export const accountAddress = (account: Account) => account[1]
+export const accountContract = function (account: Account): string {
+    if (account[2]) {
+        return account[2]
+    }
+    throw new Error(`Account ${account[1]} does not have a contract`)
+}
+export type Account = [mnemonic: string, address: string, contractAddress?: string]
 
 export const PROVIDER: IProviderAccount = {
     serviceOrigin: 'http://localhost:8282',
     fee: 10,
-    payee: Payee.Provider,
-    stake: 1000000000000000n,
+    payee: 'Provider',
+    stake: new BN(1000000000000000),
     datasetFile: './data/captchas.json',
     captchaDatasetId: '',
-    mnemonic: '',
+    secret: '',
     address: '',
 }
 
 export const DAPP: IDappAccount = {
-    serviceOrigin: 'http://localhost:9393',
-    mnemonic: '//Ferdie',
+    secret: '//Ferdie',
     contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '', // Must be deployed
-    optionalOwner: '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL', // Ferdie's address
-    fundAmount: 1000000000000000n,
+    fundAmount: new BN(1000000000000000),
 }
 
-export const DAPP_USER = {
-    mnemonic: '//Charlie',
-    address: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y',
+export async function getSignedTasks(env: ProsopoEnvironment, account: Account): Promise<Tasks> {
+    const ss58Format = getSs58Format()
+    const pair = await getPair(
+        (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
+        ss58Format,
+        accountMnemonic(account)
+    )
+
+    await env.changeSigner(pair)
+    return new Tasks(env)
 }

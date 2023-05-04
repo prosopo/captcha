@@ -7,20 +7,28 @@
     "target": "esnext"
   },
   "include": [
-    "./src/**/*.ts"
+    "./src/**/*.ts",
+//    "./tests/**/*.ts"
   ],
   "files": [
-    "./src/prosopo.config.js"
+    "./src/prosopo.config.ts",
+    "./src/db/mongo.ts"
   ],
   "references": [
     {
-      "path": "../datasets"
+      "path": "../common"
     },
     {
       "path": "../contract"
     },
     {
-      "path": "../i18n"
+      "path": "../datasets"
+    },
+    {
+      "path": "../env"
+    },
+    {
+      "path": "../types"
     }
   ]
 }
