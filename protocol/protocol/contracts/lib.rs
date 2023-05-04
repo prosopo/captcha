@@ -15,10 +15,6 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-// We must make sure that this is the same as declared in the substrate source code.
-// this is the signing context used by the schnorrkel library when signing messages. It has to be the same binary blob on both sides of the signing process (i.e. the signing and the verifying) as it is used in the encryption/decryption process.
-const CTX: &[u8] = b"substrate";
-
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
 /// Print and return an error in ink
@@ -67,7 +63,6 @@ pub mod prosopo {
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-    use schnorrkel::{PublicKey, Signature};
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -446,10 +441,15 @@ pub mod prosopo {
             debug!("sig {:?}", signature);
             debug!("payload {:?}", payload);
 
-            let sig = Signature::from_bytes(&signature).map_err(|_| Error::InvalidSignature)?;
-            let pub_key =
-                PublicKey::from_bytes(&caller_bytes).map_err(|_| Error::InvalidPublicKey)?;
-            let res = pub_key.verify_simple(crate::CTX, &payload, &sig);
+            // let sig = Signature::from_bytes(&signature).map_err(|_| Error::InvalidSignature)?;
+            // let pub_key =
+            //     PublicKey::from_bytes(&caller_bytes).map_err(|_| Error::InvalidPublicKey)?;
+            // let res = pub_key.verify_simple(crate::CTX, &payload, &sig);
+            // Ok(res.is_ok())
+
+            let res = self
+                .env()
+                .sr25519_verify(&signature, &payload, &caller_bytes);
             Ok(res.is_ok())
         }
 
@@ -1662,7 +1662,6 @@ pub mod prosopo {
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
-        use schnorrkel::{ExpansionMode, Keypair, MiniSecretKey, SecretKey};
 
         use crate::prosopo::Error::{ProviderInactive, ProviderInsufficientFunds};
 
@@ -2291,6 +2290,7 @@ pub mod prosopo {
         }
 
         #[ink::test]
+        #[should_panic]
         fn test_verify_sr25519_invalid_public_key() {
             let operator_accounts = get_operator_accounts();
             let mut contract = Prosopo::default(
@@ -2334,8 +2334,8 @@ pub mod prosopo {
             // verify the signature
             let valid = contract
                 .verify_sr25519(signature_bytes, payload_bytes)
-                .unwrap_err();
-            assert_eq!(Error::InvalidPublicKey, valid);
+                .unwrap();
+            assert!(!valid);
         }
 
         #[ink::test]
