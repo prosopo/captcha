@@ -1,8 +1,8 @@
 {
   "source": {
-    "hash": "0x09f0a33ce0947833eccc910582028ba13cd22e04a96b8bf11db3506facd816ee",
-    "language": "ink! 4.2.0",
-    "compiler": "rustc 1.68.0",
+    "hash": "0x6e84490f1a24cbea49390ab53cc296fadd5cae621f48276690376ea39775c6e2",
+    "language": "ink! 4.0.0",
+    "compiler": "rustc 1.67.0",
     "build_info": {
       "build_mode": "Release",
       "cargo_contract_version": "2.0.1",
@@ -88,7 +88,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           "Constructor"
         ],
@@ -105,46 +104,416 @@
       }
     ],
     "docs": [],
-    "environment": {
-      "accountId": {
-        "displayName": [
-          "AccountId"
+    "events": [
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          }
         ],
-        "type": 7
+        "docs": [],
+        "label": "ProviderRegister"
       },
-      "balance": {
-        "displayName": [
-          "Balance"
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          }
         ],
-        "type": 0
+        "docs": [],
+        "label": "ProviderDeregister"
       },
-      "blockNumber": {
-        "displayName": [
-          "BlockNumber"
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          }
         ],
-        "type": 1
+        "docs": [],
+        "label": "ProviderUpdate"
       },
-      "chainExtension": {
-        "displayName": [
-          "ChainExtension"
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "value",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 0
+            }
+          }
         ],
-        "type": 69
+        "docs": [],
+        "label": "ProviderStake"
       },
-      "hash": {
-        "displayName": [
-          "Hash"
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "dataset_id",
+            "type": {
+              "displayName": [
+                "Hash"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "dataset_id_content",
+            "type": {
+              "displayName": [
+                "Hash"
+              ],
+              "type": 4
+            }
+          }
         ],
-        "type": 4
+        "docs": [],
+        "label": "ProviderAddDataset"
       },
-      "maxEventTopics": 4,
-      "timestamp": {
-        "displayName": [
-          "Timestamp"
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "value",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 0
+            }
+          }
         ],
-        "type": 11
+        "docs": [],
+        "label": "ProviderUnstake"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "captcha_solution_commitment_id",
+            "type": {
+              "displayName": [
+                "Hash"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "docs": [],
+        "label": "ProviderApprove"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "captcha_solution_commitment_id",
+            "type": {
+              "displayName": [
+                "Hash"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "docs": [],
+        "label": "ProviderDisapprove"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "contract",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "owner",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "value",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "payee",
+            "type": {
+              "displayName": [
+                "DappPayee"
+              ],
+              "type": 26
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "status",
+            "type": {
+              "displayName": [
+                "GovernanceStatus"
+              ],
+              "type": 42
+            }
+          }
+        ],
+        "docs": [],
+        "label": "DappRegister"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "contract",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "owner",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "value",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 0
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "payee",
+            "type": {
+              "displayName": [
+                "DappPayee"
+              ],
+              "type": 26
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "status",
+            "type": {
+              "displayName": [
+                "GovernanceStatus"
+              ],
+              "type": 42
+            }
+          }
+        ],
+        "docs": [],
+        "label": "DappUpdate"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "contract",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "value",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "docs": [],
+        "label": "DappFund"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "contract",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "value",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "docs": [],
+        "label": "DappCancel"
+      },
+      {
+        "args": [
+          {
+            "docs": [],
+            "indexed": true,
+            "label": "account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "merkle_tree_root",
+            "type": {
+              "displayName": [
+                "Hash"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "contract",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "docs": [],
+            "indexed": false,
+            "label": "dataset_id",
+            "type": {
+              "displayName": [
+                "Hash"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "docs": [],
+        "label": "DappUserCommit"
       }
-    },
-    "events": [],
+    ],
     "lang_error": {
       "displayName": [
         "ink",
@@ -170,7 +539,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Verify a signature. The payload is a blake128 hash of the payload wrapped in the Byte tag. E.g.",
           "     message=\"hello\"",
@@ -195,7 +563,6 @@
       },
       {
         "args": [],
-        "default": false,
         "docs": [],
         "label": "get_caller",
         "mutates": false,
@@ -211,7 +578,6 @@
       },
       {
         "args": [],
-        "default": false,
         "docs": [
           " Get contract provider minimum stake default."
         ],
@@ -229,7 +595,6 @@
       },
       {
         "args": [],
-        "default": false,
         "docs": [
           " Get contract dapp minimum stake default."
         ],
@@ -275,7 +640,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Register a provider, their service origin and fee"
         ],
@@ -321,7 +685,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Update an existing provider, their service origin, fee and deposit funds"
         ],
@@ -349,7 +712,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " De-Register a provider by setting their status to Deactivated"
         ],
@@ -367,7 +729,6 @@
       },
       {
         "args": [],
-        "default": false,
         "docs": [
           " Unstake and deactivate the provider's service, returning stake"
         ],
@@ -404,7 +765,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Add a new data set"
         ],
@@ -441,7 +801,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Register a dapp"
         ],
@@ -469,7 +828,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps"
         ],
@@ -497,7 +855,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Cancel services as a dapp, returning remaining tokens"
         ],
@@ -516,7 +873,16 @@
       {
         "args": [
           {
-            "label": "captcha_solution_commitment_id",
+            "label": "contract",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "label": "dataset_id",
             "type": {
               "displayName": [
                 "Hash"
@@ -525,20 +891,46 @@
             }
           },
           {
-            "label": "commitment",
+            "label": "user_merkle_tree_root",
             "type": {
               "displayName": [
-                "CaptchaSolutionCommitment"
+                "Hash"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "provider",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "label": "dapp_user",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          },
+          {
+            "label": "status_option",
+            "type": {
+              "displayName": [
+                "Option"
               ],
               "type": 27
             }
           }
         ],
-        "default": false,
         "docs": [
-          " Provider submits a captcha solution commitment"
+          " Submit a captcha solution commit"
         ],
-        "label": "provider_commit",
+        "label": "dapp_user_commit",
         "mutates": true,
         "payable": false,
         "returnType": {
@@ -548,7 +940,70 @@
           ],
           "type": 24
         },
-        "selector": "0x57876316"
+        "selector": "0x5b965eab"
+      },
+      {
+        "args": [
+          {
+            "label": "captcha_solution_commitment_id",
+            "type": {
+              "displayName": [
+                "Hash"
+              ],
+              "type": 4
+            }
+          },
+          {
+            "label": "transaction_fee",
+            "type": {
+              "displayName": [
+                "Balance"
+              ],
+              "type": 0
+            }
+          }
+        ],
+        "docs": [
+          " Approve a solution commitment, increment correct captchas, and refund the users tx fee"
+        ],
+        "label": "provider_approve",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 24
+        },
+        "selector": "0xd33625c0"
+      },
+      {
+        "args": [
+          {
+            "label": "captcha_solution_commitment_id",
+            "type": {
+              "displayName": [
+                "Hash"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "docs": [
+          " Disapprove a solution commitment and increment incorrect captchas"
+        ],
+        "label": "provider_disapprove",
+        "mutates": true,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 24
+        },
+        "selector": "0xb04fd5fb"
       },
       {
         "args": [
@@ -571,7 +1026,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)",
           " Threshold is decided by the calling user"
@@ -600,7 +1054,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [],
         "label": "dapp_operator_last_correct_captcha",
         "mutates": false,
@@ -626,7 +1079,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Get a single captcha dataset",
           "",
@@ -656,7 +1108,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Get a dapp user",
           "",
@@ -686,7 +1137,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Get a single provider's details",
           "",
@@ -716,7 +1166,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Get a single dapps details",
           "",
@@ -746,7 +1195,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Get a solution commitment",
           "",
@@ -776,7 +1224,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Returns the account balance for the specified `dapp`.",
           ""
@@ -789,7 +1236,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 48
+          "type": 49
         },
         "selector": "0xf8fd5066"
       },
@@ -805,7 +1252,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Returns the account balance for the specified `provider`.",
           ""
@@ -818,13 +1264,12 @@
             "ink",
             "MessageResult"
           ],
-          "type": 48
+          "type": 49
         },
         "selector": "0x998d522c"
       },
       {
         "args": [],
-        "default": false,
         "docs": [
           " Returns the operator votes for code hashes"
         ],
@@ -836,7 +1281,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 50
+          "type": 51
         },
         "selector": "0x018b8a65"
       },
@@ -852,7 +1297,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " List providers given an array of account id",
           "",
@@ -866,7 +1310,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 55
+          "type": 56
         },
         "selector": "0xd542160b"
       },
@@ -878,11 +1322,10 @@
               "displayName": [
                 "Vec"
               ],
-              "type": 58
+              "type": 59
             }
           }
         ],
-        "default": false,
         "docs": [
           " List providers given an array of status",
           "",
@@ -896,7 +1339,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 55
+          "type": 56
         },
         "selector": "0x54b28ab4"
       },
@@ -921,7 +1364,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Get a random active provider",
           "",
@@ -935,13 +1377,12 @@
             "ink",
             "MessageResult"
           ],
-          "type": 59
+          "type": 60
         },
         "selector": "0x4aee5bad"
       },
       {
         "args": [],
-        "default": false,
         "docs": [
           " Get the AccountIds of all Providers ever registered",
           "",
@@ -955,7 +1396,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 62
+          "type": 63
         },
         "selector": "0xd2ed90d7"
       },
@@ -989,7 +1430,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy."
         ],
@@ -1007,7 +1447,6 @@
       },
       {
         "args": [],
-        "default": false,
         "docs": [
           " Remove a vote from an operator"
         ],
@@ -1019,7 +1458,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 64
+          "type": 65
         },
         "selector": "0xf33f4d02"
       },
@@ -1031,11 +1470,10 @@
               "displayName": [
                 "Vote"
               ],
-              "type": 54
+              "type": 55
             }
           }
         ],
-        "default": false,
         "docs": [
           " Carries out a vote from the set of operators"
         ],
@@ -1047,7 +1485,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 66
+          "type": 67
         },
         "selector": "0xde280c52"
       },
@@ -1061,7 +1499,6 @@
             }
           }
         ],
-        "default": false,
         "docs": [
           " Modifies the code which is used to execute calls to this contract address (`AccountId`).",
           " We use this to upgrade the contract logic. The caller must be an operator.",
@@ -2157,14 +2594,6 @@
               {
                 "index": 34,
                 "name": "InvalidPublicKey"
-              },
-              {
-                "index": 35,
-                "name": "CaptchaSolutionCommitmentNotPending"
-              },
-              {
-                "index": 36,
-                "name": "CaptchaSolutionCommitmentAlreadyExists"
               }
             ]
           }
@@ -2400,45 +2829,32 @@
       "id": 27,
       "type": {
         "def": {
-          "composite": {
-            "fields": [
+          "variant": {
+            "variants": [
               {
-                "name": "account",
-                "type": 7,
-                "typeName": "AccountId"
+                "index": 0,
+                "name": "None"
               },
               {
-                "name": "dataset_id",
-                "type": 4,
-                "typeName": "Hash"
-              },
-              {
-                "name": "status",
-                "type": 28,
-                "typeName": "CaptchaStatus"
-              },
-              {
-                "name": "contract",
-                "type": 7,
-                "typeName": "AccountId"
-              },
-              {
-                "name": "provider",
-                "type": 7,
-                "typeName": "AccountId"
-              },
-              {
-                "name": "completed_at",
-                "type": 11,
-                "typeName": "Timestamp"
+                "fields": [
+                  {
+                    "type": 28
+                  }
+                ],
+                "index": 1,
+                "name": "Some"
               }
             ]
           }
         },
+        "params": [
+          {
+            "name": "T",
+            "type": 28
+          }
+        ],
         "path": [
-          "prosopo",
-          "prosopo",
-          "CaptchaSolutionCommitment"
+          "Option"
         ]
       }
     },
@@ -3159,7 +3575,7 @@
               {
                 "fields": [
                   {
-                    "type": 27
+                    "type": 48
                   }
                 ],
                 "index": 0,
@@ -3180,7 +3596,7 @@
         "params": [
           {
             "name": "T",
-            "type": 27
+            "type": 48
           },
           {
             "name": "E",
@@ -3196,12 +3612,58 @@
       "id": 48,
       "type": {
         "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "account",
+                "type": 7,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "dataset_id",
+                "type": 4,
+                "typeName": "Hash"
+              },
+              {
+                "name": "status",
+                "type": 28,
+                "typeName": "CaptchaStatus"
+              },
+              {
+                "name": "contract",
+                "type": 7,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "provider",
+                "type": 7,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "completed_at",
+                "type": 11,
+                "typeName": "Timestamp"
+              }
+            ]
+          }
+        },
+        "path": [
+          "prosopo",
+          "prosopo",
+          "CaptchaSolutionCommitment"
+        ]
+      }
+    },
+    {
+      "id": 49,
+      "type": {
+        "def": {
           "variant": {
             "variants": [
               {
                 "fields": [
                   {
-                    "type": 49
+                    "type": 50
                   }
                 ],
                 "index": 0,
@@ -3222,7 +3684,7 @@
         "params": [
           {
             "name": "T",
-            "type": 49
+            "type": 50
           },
           {
             "name": "E",
@@ -3235,7 +3697,7 @@
       }
     },
     {
-      "id": 49,
+      "id": 50,
       "type": {
         "def": {
           "variant": {
@@ -3277,7 +3739,7 @@
       }
     },
     {
-      "id": 50,
+      "id": 51,
       "type": {
         "def": {
           "variant": {
@@ -3285,7 +3747,7 @@
               {
                 "fields": [
                   {
-                    "type": 51
+                    "type": 52
                   }
                 ],
                 "index": 0,
@@ -3306,7 +3768,7 @@
         "params": [
           {
             "name": "T",
-            "type": 51
+            "type": 52
           },
           {
             "name": "E",
@@ -3319,17 +3781,17 @@
       }
     },
     {
-      "id": 51,
+      "id": 52,
       "type": {
         "def": {
           "sequence": {
-            "type": 52
+            "type": 53
           }
         }
       }
     },
     {
-      "id": 52,
+      "id": 53,
       "type": {
         "def": {
           "composite": {
@@ -3341,7 +3803,7 @@
               },
               {
                 "name": "vote",
-                "type": 53,
+                "type": 54,
                 "typeName": "Option<Vote>"
               }
             ]
@@ -3355,7 +3817,7 @@
       }
     },
     {
-      "id": 53,
+      "id": 54,
       "type": {
         "def": {
           "variant": {
@@ -3367,7 +3829,7 @@
               {
                 "fields": [
                   {
-                    "type": 54
+                    "type": 55
                   }
                 ],
                 "index": 1,
@@ -3379,7 +3841,7 @@
         "params": [
           {
             "name": "T",
-            "type": 54
+            "type": 55
           }
         ],
         "path": [
@@ -3388,7 +3850,7 @@
       }
     },
     {
-      "id": 54,
+      "id": 55,
       "type": {
         "def": {
           "variant": {
@@ -3438,7 +3900,7 @@
       }
     },
     {
-      "id": 55,
+      "id": 56,
       "type": {
         "def": {
           "variant": {
@@ -3446,7 +3908,7 @@
               {
                 "fields": [
                   {
-                    "type": 56
+                    "type": 57
                   }
                 ],
                 "index": 0,
@@ -3467,7 +3929,7 @@
         "params": [
           {
             "name": "T",
-            "type": 56
+            "type": 57
           },
           {
             "name": "E",
@@ -3480,7 +3942,7 @@
       }
     },
     {
-      "id": 56,
+      "id": 57,
       "type": {
         "def": {
           "variant": {
@@ -3488,7 +3950,7 @@
               {
                 "fields": [
                   {
-                    "type": 57
+                    "type": 58
                   }
                 ],
                 "index": 0,
@@ -3509,7 +3971,7 @@
         "params": [
           {
             "name": "T",
-            "type": 57
+            "type": 58
           },
           {
             "name": "E",
@@ -3522,7 +3984,7 @@
       }
     },
     {
-      "id": 57,
+      "id": 58,
       "type": {
         "def": {
           "sequence": {
@@ -3532,55 +3994,13 @@
       }
     },
     {
-      "id": 58,
+      "id": 59,
       "type": {
         "def": {
           "sequence": {
             "type": 42
           }
         }
-      }
-    },
-    {
-      "id": 59,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 60
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 14
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 60
-          },
-          {
-            "name": "E",
-            "type": 14
-          }
-        ],
-        "path": [
-          "Result"
-        ]
       }
     },
     {
@@ -3601,7 +4021,7 @@
               {
                 "fields": [
                   {
-                    "type": 20
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -3617,7 +4037,7 @@
           },
           {
             "name": "E",
-            "type": 20
+            "type": 14
           }
         ],
         "path": [
@@ -3627,6 +4047,48 @@
     },
     {
       "id": 61,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 62
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 62
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 62,
       "type": {
         "def": {
           "composite": {
@@ -3662,7 +4124,7 @@
       }
     },
     {
-      "id": 62,
+      "id": 63,
       "type": {
         "def": {
           "variant": {
@@ -3670,7 +4132,7 @@
               {
                 "fields": [
                   {
-                    "type": 63
+                    "type": 64
                   }
                 ],
                 "index": 0,
@@ -3691,7 +4153,7 @@
         "params": [
           {
             "name": "T",
-            "type": 63
+            "type": 64
           },
           {
             "name": "E",
@@ -3704,7 +4166,7 @@
       }
     },
     {
-      "id": 63,
+      "id": 64,
       "type": {
         "def": {
           "variant": {
@@ -3746,7 +4208,7 @@
       }
     },
     {
-      "id": 64,
+      "id": 65,
       "type": {
         "def": {
           "variant": {
@@ -3754,7 +4216,7 @@
               {
                 "fields": [
                   {
-                    "type": 65
+                    "type": 66
                   }
                 ],
                 "index": 0,
@@ -3775,7 +4237,7 @@
         "params": [
           {
             "name": "T",
-            "type": 65
+            "type": 66
           },
           {
             "name": "E",
@@ -3788,7 +4250,7 @@
       }
     },
     {
-      "id": 65,
+      "id": 66,
       "type": {
         "def": {
           "variant": {
@@ -3796,7 +4258,7 @@
               {
                 "fields": [
                   {
-                    "type": 53
+                    "type": 54
                   }
                 ],
                 "index": 0,
@@ -3817,53 +4279,11 @@
         "params": [
           {
             "name": "T",
-            "type": 53
+            "type": 54
           },
           {
             "name": "E",
             "type": 20
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 66,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 67
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 14
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 67
-          },
-          {
-            "name": "E",
-            "type": 14
           }
         ],
         "path": [
@@ -3889,7 +4309,7 @@
               {
                 "fields": [
                   {
-                    "type": 20
+                    "type": 14
                   }
                 ],
                 "index": 1,
@@ -3905,7 +4325,7 @@
           },
           {
             "name": "E",
-            "type": 20
+            "type": 14
           }
         ],
         "path": [
@@ -3915,6 +4335,48 @@
     },
     {
       "id": 68,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 69
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 20
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 69
+          },
+          {
+            "name": "E",
+            "type": 20
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 69,
       "type": {
         "def": {
           "variant": {
@@ -3938,19 +4400,6 @@
           "prosopo",
           "prosopo",
           "VoteStatus"
-        ]
-      }
-    },
-    {
-      "id": 69,
-      "type": {
-        "def": {
-          "variant": {}
-        },
-        "path": [
-          "ink_env",
-          "types",
-          "NoChainExtension"
         ]
       }
     }
