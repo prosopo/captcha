@@ -19,8 +19,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - run: ls -la
-      - run: ls -la ~
-
+      
       - name: Restore rust_env_cache
         uses: actions/cache/restore@v3
         with:
@@ -30,17 +29,61 @@ jobs:
             rust-env-cache-${{ runner.os }}-${{ runner.arch }}-
 
       - run: ls -la
-      - run: ls -la ~
 
       # load imgs from cache
-      - name: Load contracts-ci docker image
+      - name: Load docker image for contracts-ci
+        id: load_images
+        run: |
+          ls rust_env_cache || true
+          docker load -i rust_env_cache/contracts-ci-linux.tar || true
+
+      # update the img
+      - name: Update docker image for contracts-ci
+        id: docker_pull
+        run: |
+          before=$(docker image list -q)
+          docker pull paritytech/contracts-ci-linux:latest
+          after=$(docker image list -q)
+          if [[ "$before" == "$after" ]]; then
+            echo "change=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "change=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # save the cache
+      - name: Export docker image for contracts-ci
+        if: steps.docker_pull.outputs.change == 'true'
         run: |
           mkdir -p rust_env_cache
-          ls rust_env_cache
-          docker load -i rust_env_cache/contracts-ci-linux.tar || true
-      
-      - run: ls -la
-      - run: ls -la ~
+          docker save -o rust_env_cache/contracts-ci-linux.tar paritytech/contracts-ci-linux:latest
+
+      - name: Cleanup rust_env_cache
+        if: steps.docker_pull.outputs.change == 'true'
+        run: |
+          set +e; gh extension install actions/gh-actions-cache; set -e
+          REPO=${{ github.repository }}
+          gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust-env-cache-${{ runner.os }}-${{ runner.arch }}
+          exit 1
+          echo "Fetching list of cache key"
+          # get all but the most recent cache
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust-env-cache-${{ runner.os }}-${{ runner.arch }} | cut -f 1 | tail -n +2 )
+          echo caches to be removed:
+          echo ${cacheKeysForPR}
+          # delete the stale caches
+          ## Setting this to not fail the workflow while deleting cache keys. 
+          set +e
+          for cacheKey in $cacheKeysForPR
+          do
+              gh actions-cache delete $cacheKey -R $REPO --confirm || true
+          done
+          exit 1
+
+      - name: Save rust_env_cache
+        if: steps.docker_pull.outputs.change == 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: rust_env_cache
+          key: rust-env-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       # Check if rust is formatted correctly
       - name: Rust formatting check
@@ -63,8 +106,11 @@ jobs:
           restore-keys: |
             key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
       
-      - run: ls -la
-      - run: ls -la ~
+      - run: ls -la || true
+      - run: ls -la contracts || true
+      - run: ls -la contracts/target || true
+      - run: ls -la contracts/target/ink || true
+      - run: ls -la contracts/target/ink/.target || true
 
       # Check for clippy advice
       - name: Clippy advice
@@ -72,36 +118,22 @@ jobs:
           docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly clippy --manifest-path=/contracts/Cargo.toml -- -D warnings
 
       # Do the build
-      - name: Build
+      - name: Build contract
         id: build
         run: | 
-          mkdir -p contracts/target/ink/.target
-          ls -la contracts/target
-          ls -la contracts/target/ink
           docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
           # parity's docker image runs using root, so need to chown the output
           sudo chown -cR $(whoami) contracts
           
       # Do unit testing
-      - name: Test
+      - name: Test contract
         run: |
           RUST_BACKTRACE=1 docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly test  --no-default-features --features std --manifest-path=/contracts/Cargo.toml -- --nocapture
           result=$?
           sudo chown -cR $(whoami) contracts
           exit $result
-          
-      # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
-      - name: Save cargo build to cache
-        uses: actions/cache/save@v3
-        # save cache if build work has been done, independent of whether it failed/succeeded
-        if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
-        with:
-          path: |
-            contracts/target
-          # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
-          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Cleanup stale cargo build caches
+      - name: Cleanup cargo build caches
         if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
         run: |
           set +e; gh extension install actions/gh-actions-cache; set -e
@@ -116,5 +148,16 @@ jobs:
           set +e
           for cacheKey in $cacheKeysForPR
           do
-              gh actions-cache delete $cacheKey -R $REPO --confirm
+              gh actions-cache delete $cacheKey -R $REPO --confirm || true
           done
+          
+      # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
+      - name: Save cargo build to cache
+        uses: actions/cache/save@v3
+        # save cache if build work has been done, independent of whether it failed/succeeded
+        if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
+        with:
+          path: |
+            contracts/target
+          # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
+          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
