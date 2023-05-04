@@ -2078,23 +2078,27 @@ pub mod prosopo {
                 assert_eq!(contract.terminate(accounts.users[0]).unwrap_err(), Error::IsNotAdmin);
             }
 
-            // #[ink::test]
-            // fn test_withdraw() {
+            #[ink::test]
+            fn test_withdraw() {
 
-            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            //     set_caller(default_unused_account());
-            //     let accounts = default_accounts();
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(default_unused_account());
+                let accounts = default_accounts();
 
-            //     let mut contract = default_contract();
+                let mut contract = default_contract();
 
-            //     // give the contract funds
-            //     set_account_balance(contract.env().account_id(), 10000000000);
-            //     set_caller(accounts.admins[0]); // use the admin acc
-            //     let bal = get_account_balance(accounts.admins[0]).unwrap();
-            //     assert!(contract.withdraw(accounts.admins[0], 1).is_ok());
-            //     let new_bal = get_account_balance(accounts.admins[0]).unwrap();
-            //     assert_eq!(new_bal, bal + 1);
-            // }
+                // give the contract funds
+                set_account_balance(contract.env().account_id(), 10000000000);
+                set_caller(accounts.admins[0]); // use the admin acc
+                let admin_bal = get_account_balance(accounts.admins[0]).unwrap();
+                let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
+                let withdraw_amount = 1;
+                assert!(contract.withdraw(accounts.admins[0], withdraw_amount).is_ok());
+                let admin_new_bal = get_account_balance(accounts.admins[0]).unwrap();
+                assert_eq!(admin_new_bal, admin_bal + withdraw_amount);
+                let contract_new_bal = get_account_balance(contract.env().account_id()).unwrap();
+                assert_eq!(contract_new_bal, contract_bal - withdraw_amount);
+            }
 
             #[ink::test]
             #[should_panic]
@@ -2106,8 +2110,9 @@ pub mod prosopo {
                 let mut contract = default_contract();
 
                 set_caller(accounts.admins[0]); // use the admin acc
-                let bal = get_account_balance(accounts.admins[0]);
-                contract.withdraw(accounts.admins[0], 10000000000); // panics as bal would go below existential deposit
+                let admin_bal = get_account_balance(accounts.admins[0]).unwrap();
+                let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
+                contract.withdraw(accounts.admins[0], contract_bal + 1); // panics as bal would go below existential deposit
             }
 
 
