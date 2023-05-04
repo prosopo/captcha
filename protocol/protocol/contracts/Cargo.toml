@@ -1,7 +1,7 @@
 [package]
 name = "prosopo"
 version = "4.0.0"
-authors = ["Chris Taylor chris@prosopo.io, George Oastler george@prosopo.io, Vincenzo Ferrara, Siniša Čanak"]
+authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
 edition = "2021"
 
 [dependencies]
