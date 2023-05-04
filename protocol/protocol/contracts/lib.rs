@@ -2000,12 +2000,10 @@ pub mod prosopo {
                 let accounts = default_accounts();
                 let mut set: std::collections::HashSet<&[u8; 32]> =
                     std::collections::HashSet::new();
-                for group in vec![
-                    &accounts.admins,
+                for group in &[&accounts.admins,
                     &accounts.dapps,
                     &accounts.providers,
-                    &accounts.users,
-                ] {
+                    &accounts.users] {
                     for account in group.iter() {
                         assert!(
                             set.insert(AsRef::<[u8; 32]>::as_ref(account)),
@@ -2074,11 +2072,11 @@ pub mod prosopo {
 
                 let contract_account = ink::env::account_id::<ink::env::DefaultEnvironment>();
                 let bal = get_account_balance(contract_account).unwrap();
-                let admin = accounts.admins[0].clone();
+                let admin = accounts.admins[0];
                 let should_terminate = move || contract.terminate(admin).unwrap();
                 ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
                     should_terminate,
-                    accounts.admins[0].clone(),
+                    accounts.admins[0],
                     bal,
                 );
             }
