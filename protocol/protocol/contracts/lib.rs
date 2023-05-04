@@ -2402,6 +2402,7 @@ pub mod prosopo {
             }
 
             #[ink::test]
+            #[should_panic]
             fn test_verify_sr25519_invalid_public_key() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(default_unused_account());
