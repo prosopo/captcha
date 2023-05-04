@@ -15,10 +15,6 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-// We must make sure that this is the same as declared in the substrate source code.
-// this is the signing context used by the schnorrkel library when signing messages. It has to be the same binary blob on both sides of the signing process (i.e. the signing and the verifying) as it is used in the encryption/decryption process.
-const CTX: &[u8] = b"substrate";
-
 pub use self::prosopo::{Prosopo, ProsopoRef};
 
 /// Print and return an error in ink
