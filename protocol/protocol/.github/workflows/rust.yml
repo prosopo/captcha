@@ -73,7 +73,6 @@ jobs:
           do
               gh actions-cache delete $cacheKey -R $REPO --confirm
           done
-          exit 1
 
       - name: Save rust_env_cache
         if: steps.docker_pull.outputs.change == 'true'
