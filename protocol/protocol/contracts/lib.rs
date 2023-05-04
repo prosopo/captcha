@@ -2000,10 +2000,12 @@ pub mod prosopo {
                 let accounts = default_accounts();
                 let mut set: std::collections::HashSet<&[u8; 32]> =
                     std::collections::HashSet::new();
-                for group in &[&accounts.admins,
+                for group in &[
+                    &accounts.admins,
                     &accounts.dapps,
                     &accounts.providers,
-                    &accounts.users] {
+                    &accounts.users,
+                ] {
                     for account in group.iter() {
                         assert!(
                             set.insert(AsRef::<[u8; 32]>::as_ref(account)),
