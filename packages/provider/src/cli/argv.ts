@@ -11,20 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 import parser from 'cron-parser'
 import pm2 from 'pm2'
 import { cwd } from 'process'
 import { ProsopoEnvError } from '@prosopo/common'
-const yargs = require('yargs')
-
 import { Compact, u128 } from '@polkadot/types'
-
 import { Tasks } from '../tasks/tasks'
 import { PayeeSchema, ProsopoEnvironment } from '@prosopo/types'
 import { encodeStringAddress } from '../util'
 import consola from 'consola'
 import { BatchCommitments } from '../batch/index'
+const yargs = require('yargs')
 
 const validateAddress = (argv) => {
     const address = encodeStringAddress(argv.address as string)
@@ -220,7 +217,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             (yargs) => yargs,
             async () => {
                 try {
-                    const result = await tasks.contractApi.getDappAccounts()
+                    const result = await tasks.contractApi['dappAccounts']
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
