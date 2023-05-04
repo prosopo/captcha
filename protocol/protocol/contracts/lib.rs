@@ -1886,7 +1886,7 @@ pub mod prosopo {
             dapps: Vec<AccountId>,
             providers: Vec<AccountId>,
             users: Vec<AccountId>,
-            code_hashes: Vec<AccountId>,
+            code_hashes: Vec<[u8; 32]>,
         }
 
         mod tests_inner {
@@ -1937,10 +1937,10 @@ pub mod prosopo {
                 list
             }
 
-            fn default_code_hashes() -> Vec<AccountId> {
+            fn default_code_hashes() -> Vec<[u8; 32]> {
                 let mut list = Vec::new();
                 for i in 41..=50 {
-                    list.push(AccountId::from([i; 32]));
+                    list.push([i; 32]);
                 }
                 list
             }
@@ -2000,53 +2000,55 @@ pub mod prosopo {
 
             #[ink::test]
             fn test_default_accounts_unique() {
-                let accs = default_accounts();
-                let mut set = std::collections::HashSet::new();
-                for group in vec![&accs.admins, &accs.dapps, &accs.providers, &accs.users, &accs.code_hashes] {
-                    for acc in group {
-                        assert!(set.insert(acc), "Duplicate account ID found: {:?}", acc);
+                let accounts = default_accounts();
+                let mut set: std::collections::HashSet<&[u8; 32]> = std::collections::HashSet::new();
+                for group in vec![&accounts.admins, &accounts.dapps, &accounts.providers, &accounts.users] {
+                    for account in group {
+                        assert!(set.insert(AsRef::<[u8; 32]>::as_ref(account)), "Duplicate account ID found: {:?}", account);
                     }
                 }
-                accs
+                for group in vec![&accounts.code_hashes] {
+                    for account in group {
+                        assert!(set.insert(account), "Duplicate account ID found: {:?}", account);
+                    }
+                }
+                accounts
             }
 
-            // #[ink::test]
-            // fn test_set_code_hash() {
+            #[ink::test]
+            fn test_set_code_hash() {
 
-            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            //     set_caller(default_unused_account());
-            //     let accounts = default_accounts();
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(default_unused_account());
+                let accounts = default_accounts();
 
-            //     let mut contract = default_contract();
+                let mut contract = default_contract();
 
-            //     let new_code_hash = accounts.code_hashes[1];
-            //     let old_code_hash = contract.env().own_code_hash();
-            //     assert_ne!(new_code_hash, old_code_hash);
+                let new_code_hash = accounts.code_hashes[1];
+                let old_code_hash = contract.env().own_code_hash().unwrap();
+                assert_ne!(Hash::from(new_code_hash), old_code_hash);
 
-            //     set_caller(accounts.admins[0]); // an account which does have permission to call set code hash
+                set_caller(accounts.admins[0]); // an account which does have permission to call set code hash
 
-            //     assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
+                assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
 
-            //     assert_eq!(contract.env().own_code_hash(), new_code_hash);
-            // }
+                assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
+            }
 
-            // #[ink::test]
-            // fn test_set_code_hash_unauthorised() {
+            #[ink::test]
+            fn test_set_code_hash_unauthorised() {
 
-            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            //     set_caller(default_unused_account());
-            //     let accounts = default_accounts();
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(default_unused_account());
+                let accounts = default_accounts();
 
-            //     let mut contract = default_contract();
+                let mut contract = default_contract();
 
-            //     let new_code_hash = accounts.code_hashes[1];
-            //     let old_code_hash = contract.env().own_code_hash();
-            //     assert_ne!(new_code_hash, old_code_hash);
+                set_caller(accounts.users[0]); // an account which does not have permission to call set code hash
 
-            //     set_caller(accounts.users[0]); // an account which does not have permission to call set code hash
-
-            //     assert_eq!(contract.set_code_hash(new_code_hash), Err(NotAuthorised));
-            // }
+                let new_code_hash = accounts.code_hashes[1];
+                assert_eq!(contract.set_code_hash(new_code_hash), Err(Error::NotAuthorised));
+            }
 
             #[ink::test]
             fn test_terminate() {
