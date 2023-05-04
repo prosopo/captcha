@@ -259,8 +259,16 @@ export const Manager = (
             const challenge: GetCaptchaResponse = state.challenge
             const salt = randomAsHex()
 
-            
-            const captchaSolution: CaptchaSolution[] = getCaptchaSolution(salt)
+            // append solution to each captcha in the challenge
+            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
+                const solution = state.solutions[index]
+                return {
+                    captchaId: captcha.captcha.captchaId,
+                    captchaContentId: captcha.captcha.captchaContentId,
+                    salt,
+                    solution,
+                }
+            })
 
             const account = getAccount()
             const blockNumber = getBlockNumber()
@@ -308,19 +316,6 @@ export const Manager = (
             event(err)
             // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
-        }
-
-        function getCaptchaSolution(salt: string): CaptchaSolution[] {
-            // append solution to each captcha in the challenge
-            return state.challenge.captchas.map((captcha, index) => {
-                const solution = state.solutions[index]
-                return {
-                    captchaId: captcha.captcha.captchaId,
-                    captchaContentId: captcha.captcha.captchaContentId,
-                    salt,
-                    solution,
-                }
-            })
         }
     }
 
