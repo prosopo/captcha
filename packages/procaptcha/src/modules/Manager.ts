@@ -71,7 +71,7 @@ export const Manager = (
                 alert(`Account ${address} not found`)
             },
             onError: (error) => {
-                alert(error ? error.message : 'An error occurred')
+                alert(error ? `${error.message}, please try again` : 'An unexpected error occurred, please try again')
             },
             onHuman: (output) => {
                 console.log('onHuman event triggered', output)
@@ -80,7 +80,7 @@ export const Manager = (
                 alert('No extension found')
             },
             onExpired: () => {
-                alert('Challenge has expired')
+                alert('Challenge has expired, please try again')
             },
         },
         callbacks
@@ -259,16 +259,8 @@ export const Manager = (
             const challenge: GetCaptchaResponse = state.challenge
             const salt = randomAsHex()
 
-            // append solution to each captcha in the challenge
-            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
-                const solution = state.solutions[index]
-                return {
-                    captchaId: captcha.captcha.captchaId,
-                    captchaContentId: captcha.captcha.captchaContentId,
-                    salt,
-                    solution,
-                }
-            })
+            
+            const captchaSolution: CaptchaSolution[] = getCaptchaSolution(salt)
 
             const account = getAccount()
             const blockNumber = getBlockNumber()
@@ -316,6 +308,19 @@ export const Manager = (
             event(err)
             // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
+        }
+
+        function getCaptchaSolution(salt: string): CaptchaSolution[] {
+            // append solution to each captcha in the challenge
+            return state.challenge.captchas.map((captcha, index) => {
+                const solution = state.solutions[index]
+                return {
+                    captchaId: captcha.captcha.captchaId,
+                    captchaContentId: captcha.captcha.captchaContentId,
+                    salt,
+                    solution,
+                }
+            })
         }
     }
 
