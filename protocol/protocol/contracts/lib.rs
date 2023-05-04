@@ -2048,23 +2048,23 @@ pub mod prosopo {
             //     assert_eq!(contract.set_code_hash(new_code_hash), Err(NotAuthorised));
             // }
 
-            // #[ink::test]
-            // fn test_terminate() {
+            #[ink::test]
+            fn test_terminate() {
 
-            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            //     set_caller(default_unused_account());
-            //     let accounts = default_accounts();
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(default_unused_account());
+                let accounts = default_accounts();
 
-            //     let mut contract = default_contract();
-            //     set_caller(accounts.admins[0]); // an account which does have permission to call terminate
+                let mut contract = default_contract();
+                set_caller(accounts.admins[0]); // an account which does have permission to call terminate
 
-            //     let contract_account = ink::env::account_id::<ink::env::DefaultEnvironment>();
-            //     let bal = get_account_balance(contract_account).unwrap();
-            //     let admin = accounts.admins[0].clone();
-            //     let should_terminate = move || contract.terminate(admin).unwrap();
-            //     ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(should_terminate, accounts.admins[0].clone(), bal);
+                let contract_account = ink::env::account_id::<ink::env::DefaultEnvironment>();
+                let bal = get_account_balance(contract_account).unwrap();
+                let admin = accounts.admins[0].clone();
+                let should_terminate = move || contract.terminate(admin).unwrap();
+                ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(should_terminate, accounts.admins[0].clone(), bal);
 
-            // }
+            }
 
             #[ink::test]
             fn test_terminate_unauthorised() {
