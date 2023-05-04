@@ -62,12 +62,9 @@ jobs:
         run: |
           set +e; gh extension install actions/gh-actions-cache; set -e
           REPO=${{ github.repository }}
-          a=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust-env-cache-${{ runner.os }}-${{ runner.arch }})
-          echo caches: $a
-          exit 1
           echo "Fetching list of cache key"
           # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust-env-cache-${{ runner.os }}-${{ runner.arch }} | cut -f 1 | tail -n +2 )
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust-env-cache-${{ runner.os }}-${{ runner.arch }} | cut -f 1)
           echo caches to be removed:
           echo ${cacheKeysForPR}
           # delete the stale caches
@@ -141,7 +138,7 @@ jobs:
           REPO=${{ github.repository }}
           echo "Fetching list of cache key"
           # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +2 )
+          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1)
           echo caches to be removed:
           echo ${cacheKeysForPR}
           # delete the stale caches
