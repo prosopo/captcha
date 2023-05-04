@@ -63,16 +63,15 @@ jobs:
           set +e; gh extension install actions/gh-actions-cache; set -e
           REPO=${{ github.repository }}
           echo "Fetching list of cache key"
-          # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust-env-cache-${{ runner.os }}-${{ runner.arch }} | cut -f 1)
+          cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust-env-cache-${{ runner.os }}-${{ runner.arch }} | cut -f 1)
           echo caches to be removed:
-          echo ${cacheKeysForPR}
+          echo ${cacheKeys}
           # delete the stale caches
           ## Setting this to not fail the workflow while deleting cache keys. 
           set +e
-          for cacheKey in $cacheKeysForPR
+          for cacheKey in $cacheKeys
           do
-              gh actions-cache delete $cacheKey -R $REPO --confirm || true
+              gh actions-cache delete $cacheKey -R $REPO --confirm
           done
           exit 1
 
@@ -137,16 +136,15 @@ jobs:
           set +e; gh extension install actions/gh-actions-cache; set -e
           REPO=${{ github.repository }}
           echo "Fetching list of cache key"
-          # get all but the most recent cache
-          cacheKeysForPR=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1)
+          cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1)
           echo caches to be removed:
-          echo ${cacheKeysForPR}
+          echo ${cacheKeys}
           # delete the stale caches
           ## Setting this to not fail the workflow while deleting cache keys. 
           set +e
-          for cacheKey in $cacheKeysForPR
+          for cacheKey in $cacheKeys
           do
-              gh actions-cache delete $cacheKey -R $REPO --confirm || true
+              gh actions-cache delete $cacheKey -R $REPO --confirm
           done
           
       # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
