@@ -1860,6 +1860,7 @@ pub mod prosopo {
     )]
     mod tests {
         use ink;
+        use ink::codegen::Env;
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
