@@ -24,7 +24,7 @@ jobs:
         id: docker_pull
         run: |
           before=$(docker image list -q)
-          docker pull paritytech/contracts-ci-linux:latest
+          docker pull paritytech/contracts-ci-linux:41abf440-20230503
           after=$(docker image list -q)
           if [[ "$before" == "$after" ]]; then
             echo "change=false" >> "$GITHUB_OUTPUT"
@@ -35,7 +35,7 @@ jobs:
       # Check if rust is formatted correctly
       - name: Rust formatting check
         run: |
-          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:production cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
@@ -61,20 +61,20 @@ jobs:
       # Check for clippy advice
       - name: Clippy advice
         run: |
-          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly clippy --manifest-path=/contracts/Cargo.toml -- -D warnings
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly clippy --manifest-path=/contracts/Cargo.toml -- -D warnings
 
       # Do the build
       - name: Build contract
         id: build
         run: | 
-          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
           # parity's docker image runs using root, so need to chown the output
           sudo chown -cR $(whoami) contracts
           
       # Do unit testing
       - name: Test contract
         run: |
-          RUST_BACKTRACE=1 docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo +nightly test  --no-default-features --features std --manifest-path=/contracts/Cargo.toml -- --nocapture
+          RUST_BACKTRACE=1 docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly test  --no-default-features --features std --manifest-path=/contracts/Cargo.toml -- --nocapture
           result=$?
           sudo chown -cR $(whoami) contracts
           exit $result
