@@ -1,33 +1,108 @@
 name: Rust
 
 on:
-  push:
-    branches: [ main, workflow ]
   pull_request:
-    branches: [ main ]
+    branches:
+      - 'develop'
+      - 'main'
 
 env:
   CARGO_TERM_COLOR: always
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest ]
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup Environment
+
+      # Checkout the repo
+      - uses: actions/checkout@v3
+
+      - run: ls -la
+
+      - name: Get docker image for contracts-ci
+        id: docker_pull
         run: |
-          cd contracts
-          rustup update stable
-          rustup update nightly
-          rustup target add wasm32-unknown-unknown --toolchain nightly
-          cargo install cargo-tarpaulin
-      - name: Run the unit tests
+          before=$(docker image list -q)
+          docker pull paritytech/contracts-ci-linux:41abf440-20230503
+          after=$(docker image list -q)
+          if [[ "$before" == "$after" ]]; then
+            echo "change=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "change=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Check if rust is formatted correctly
+      - name: Rust formatting check
         run: |
-          cd contracts
-          SUMMARY="$(cargo +nightly test --no-default-features --features std --verbose -- --nocapture | tail -7 | head -1)"
-          if [[ ${SUMMARY:0:16} == "test result: ok." ]]; then exit 0; else exit 1; fi
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose
+
+      # Restore the cargo build from cache, if available
+      - name: Restore cached cargo build
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            contracts/target
+          # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
+          # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
+          # "abcdef123" could be anything, it is a random string to differentiate cache usages
+          # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
+          # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
+          # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
+          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+          restore-keys: |
+            key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
+      
+      - run: ls -la
+      - run: ls -la contracts || true
+      - run: ls -la contracts/target || true
+      - run: ls -la contracts/target/ink || true
+
+      # Check for clippy advice
+      - name: Clippy advice
+        run: |
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly clippy --manifest-path=/contracts/Cargo.toml -- -D warnings
+
+      # Do the build
+      - name: Build contract
+        id: build
+        run: | 
+          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
+          # parity's docker image runs using root, so need to chown the output
+          sudo chown -cR $(whoami) contracts
+          
+      # Do unit testing
+      - name: Test contract
+        run: |
+          RUST_BACKTRACE=1 docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly test  --no-default-features --features std --manifest-path=/contracts/Cargo.toml -- --nocapture
+          result=$?
+          sudo chown -cR $(whoami) contracts
+          exit $result
+
+      - name: Cleanup cargo build caches
+        if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
+        run: |
+          set +e; gh extension install actions/gh-actions-cache; set -e
+          REPO=${{ github.repository }}
+          echo "Fetching list of cache key"
+          cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1)
+          echo caches to be removed:
+          echo ${cacheKeys}
+          # delete the stale caches
+          ## Setting this to not fail the workflow while deleting cache keys. 
+          set +e
+          for cacheKey in $cacheKeys
+          do
+              gh actions-cache delete $cacheKey -R $REPO --confirm
+          done
+          
+      # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
+      - name: Save cargo build to cache
+        uses: actions/cache/save@v3
+        # save cache if build work has been done, independent of whether it failed/succeeded
+        if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
+        with:
+          path: |
+            contracts/target
+          # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
+          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}

@@ -1,22 +1,30 @@
 [package]
 name = "prosopo"
-version = "3.3.0"
-authors = ["Chris Taylor chris@prosopo.io"]
+version = "4.0.0"
+authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
 edition = "2021"
 
 [dependencies]
-ink_primitives = {  version = "3.3.0", default-features = false }
-ink_metadata = {  version = "3.3.0", default-features = false, features = ["derive"], optional = true }
-ink_env = {  version = "3.3.0", default-features = false }
-ink_storage = {  version = "3.3.0", default-features = false }
-ink_lang = {  version = "3.3.0", default-features = false }
-ink_prelude = {  version = "3.3.0", default-features = false }
+ink = { git = "https://github.com/prosopo/ink", rev="bec5105fb79926377341179389336fcac620c50d", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
-scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
-rand_chacha = { version = "0.3.1", default-features = false }
+scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
+schnorrkel = { version = "0.9.1", default-features = false, features = ["u64_backend"] }
+hex = "0.4.3"
 
 # custom prosopo storage
-prosopo_storage_derive = { version = "3.3.0", path = "../crates/storage/derive", default-features = false }
+prosopo_storage_derive = { version = "3.3.0", path = "crates/storage/derive", default-features = false }
+
+[dependencies.inject_self_macro]
+version = "0.3.0"
+path = "inject_self_macro"
+
+[dependencies.named_functions_macro]
+version = "0.3.0"
+path = "named_functions_macro"
+
+[dependencies.disable_macro]
+version = "0.3.0"
+path = "disable_macro"
 
 [lib]
 name = "prosopo"
@@ -24,7 +32,6 @@ path = "lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.
     "cdylib",
-    "rlib"
 ]
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.
 [profile.release]
@@ -32,13 +39,5 @@ overflow-checks = false
 
 [features]
 default = ["std"]
-std = [
-    "ink_metadata/std",
-    "ink_env/std",
-    "ink_storage/std",
-    "ink_prelude/std",
-    "ink_primitives/std",
-    "scale/std",
-    "scale-info/std",
-]
+std = ["ink/std", "scale/std", "scale-info/std"]
 ink-as-dependency = []

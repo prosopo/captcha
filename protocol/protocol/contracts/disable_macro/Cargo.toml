@@ -1,0 +1,15 @@
+[lib]
+proc-macro = true
+name = "disable_macro"
+
+[package]
+name = "disable_macro"
+version = "0.3.0"
+authors = ["George Oastler <goastler4@gmail.com>"]
+edition = "2021"
+
+description = "macro that disables all functions"
+
+[dependencies]
+quote = "1.0"
+proc-macro2 = "1.0.51"

@@ -5,7 +5,7 @@ authors = ["Chris Taylor <chris@prosopo.io>", "Vincenzo Ferrara <vince@gimly.io>
 edition = "2021"
 
 license = "Apache-2.0"
-repository = "https://github.com/prosopo-io/protocol"
+repository = "https://github.com/prosopo/protocol"
 categories = ["no-std", "embedded"]
 include = ["Cargo.toml", "src/**/*.rs", "LICENSE"]
 
