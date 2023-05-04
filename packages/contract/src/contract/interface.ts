@@ -37,7 +37,7 @@ import { IKeyringPair, ISubmittableResult } from '@polkadot/types/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { applyOnEvent } from '@polkadot/api-contract/util'
 import { Bytes } from '@polkadot/types-codec'
-import { LogLevel, Logger, logger } from '@prosopo/common'
+import { LogLevel, Logger, logger, reverseHexString, snakeToCamelCase } from '@prosopo/common'
 
 export class ProsopoContractApi extends ContractPromise {
     contractName: string
