@@ -19,26 +19,8 @@ jobs:
       - uses: actions/checkout@v3
 
       - run: ls -la
-      
-      - name: Restore rust_env_cache
-        uses: actions/cache/restore@v3
-        with:
-          path: rust_env_cache
-          key: rust-env-cache-${{ runner.os }}-${{ runner.arch }}
-          restore-keys: |
-            rust-env-cache-${{ runner.os }}-${{ runner.arch }}-
 
-      - run: ls -la
-
-      # load imgs from cache
-      - name: Load docker image for contracts-ci
-        id: load_images
-        run: |
-          ls rust_env_cache || true
-          docker load -i rust_env_cache/contracts-ci-linux.tar || true
-
-      # update the img
-      - name: Update docker image for contracts-ci
+      - name: Get docker image for contracts-ci
         id: docker_pull
         run: |
           before=$(docker image list -q)
@@ -49,37 +31,6 @@ jobs:
           else
             echo "change=true" >> "$GITHUB_OUTPUT"
           fi
-
-      # save the cache
-      - name: Export docker image for contracts-ci
-        if: steps.docker_pull.outputs.change == 'true'
-        run: |
-          mkdir -p rust_env_cache
-          docker save -o rust_env_cache/contracts-ci-linux.tar paritytech/contracts-ci-linux:latest
-
-      - name: Cleanup rust_env_cache
-        if: steps.docker_pull.outputs.change == 'true'
-        run: |
-          set +e; gh extension install actions/gh-actions-cache; set -e
-          REPO=${{ github.repository }}
-          echo "Fetching list of cache key"
-          cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key rust-env-cache-${{ runner.os }}-${{ runner.arch }} | cut -f 1)
-          echo caches to be removed:
-          echo ${cacheKeys}
-          # delete the stale caches
-          ## Setting this to not fail the workflow while deleting cache keys. 
-          set +e
-          for cacheKey in $cacheKeys
-          do
-              gh actions-cache delete $cacheKey -R $REPO --confirm
-          done
-
-      - name: Save rust_env_cache
-        if: steps.docker_pull.outputs.change == 'true'
-        uses: actions/cache/save@v3
-        with:
-          path: rust_env_cache
-          key: rust-env-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       # Check if rust is formatted correctly
       - name: Rust formatting check
@@ -102,11 +53,10 @@ jobs:
           restore-keys: |
             key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
       
-      - run: ls -la || true
+      - run: ls -la
       - run: ls -la contracts || true
       - run: ls -la contracts/target || true
       - run: ls -la contracts/target/ink || true
-      - run: mkdir -p contracts/target/ink/.target
 
       # Check for clippy advice
       - name: Clippy advice
