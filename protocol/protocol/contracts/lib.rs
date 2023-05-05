@@ -548,7 +548,7 @@ pub mod prosopo {
                 block: block_number,
             };
             self.seed_log.set(&seed_log);
-            
+
             Ok(true)
         }
 
@@ -1744,6 +1744,55 @@ pub mod prosopo {
             }
 
             #[ink::test]
+            fn test_update_seed_active_provider() {
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(get_unused_account());
+
+                let mut contract = get_contract(0);
+
+                assert!(false); // todo
+            }
+
+            #[ink::test]
+            fn test_update_seed_admin() {
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(get_unused_account());
+
+                let mut contract = get_contract(0);
+
+                assert!(false); // todo
+            }
+
+            #[ink::test]
+            fn test_update_seed_unauthorised_user() {
+
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(get_unused_account());
+
+                let mut contract = get_contract(0);
+
+                set_caller(get_user_account(0));
+                assert_eq!(contract.update_seed().unwrap_err(), Error::NotAuthorised);
+            }
+
+            #[ink::test]
+            fn test_update_seed_unauthorised_inactive_provider() {
+
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(get_unused_account());
+
+                let mut contract = get_contract(0);
+
+                
+
+                set_caller(get_user_account(0));
+
+                assert_eq!(contract.update_seed().unwrap_err(), Error::NotAuthorised);
+
+                assert!(false); // todo
+            }
+
+            #[ink::test]
             fn test_ctor() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
@@ -1773,6 +1822,8 @@ pub mod prosopo {
                 }
                 assert_eq!(contract.dapp_accounts.get(), None);
                 assert_eq!(contract.dapp_user_accounts.get(), None);
+                assert_eq!(0, contract.get_seed());
+                assert_eq!(0, contract.seed.block);
             }
 
             /// Test accounts are funded with existential deposit
