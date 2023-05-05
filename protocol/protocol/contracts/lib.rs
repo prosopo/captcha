@@ -1535,16 +1535,6 @@ pub mod prosopo {
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
         const set_callee: fn(AccountId) = ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
 
-        pub struct DefaultAccounts {
-            unused_account: AccountId,
-            admins: Vec<AccountId>,
-            dapps: Vec<AccountId>,
-            providers: Vec<AccountId>,
-            users: Vec<AccountId>,
-            code_hashes: Vec<[u8; 32]>,
-            contracts: Vec<AccountId>, // the accounts of contracts
-        }
-
         const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
         const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
         const PROVIDER_ACCOUNT_PREFIX: u8 = 0x03;
