@@ -1533,6 +1533,7 @@ pub mod prosopo {
             ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>;
         const set_account_balance: fn(AccountId, u128) =
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
+        const set_callee: fn(AccountId) = ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
 
         pub struct DefaultAccounts {
             unused_account: AccountId,
@@ -1568,7 +1569,7 @@ pub mod prosopo {
                 bytes[1..17].copy_from_slice(&index.to_le_bytes());
                 bytes
             }
-`
+            
             fn get_account(account_type: u8, index: u128) -> AccountId {
                 AccountId::from(get_account_bytes(account_type, index))
             }
@@ -1603,18 +1604,19 @@ pub mod prosopo {
                 get_account_bytes(CODE_HASH_PREFIX, index)
             }
 
-            /// get the default accounts for different roles
-            /// note that these are not all used in every test for every role, e.g. the 10 admin accounts are not all set as admins in the contract. BUT in tests where an admin account is needed, one of these will be used. Same with provider / dapp / user accounts, etc.
-            fn default_accounts() -> DefaultAccounts {
-                DefaultAccounts {
-                    unused_account: get_unused_account(), // the unused account should always be used for nothing, i.e. takes no role in the contract, is not a provider, is not a user, is not a contract, etc.
-                    admins: default_admins(),
-                    dapps: default_dapps(),
-                    providers: default_providers(),
-                    users: default_users(),
-                    code_hashes: default_code_hashes(),
-                    contracts: default_contracts(),
-                }
+            /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+            fn get_contract(index: u128) -> (Prosopo, AccountId) {
+                let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
+                // make sure the contract gets allocated the above account
+                set_callee(account);
+                // set the caller to the first admin
+                set_caller(get_admin_account(0));
+                // now construct the contract instance
+                let mut contract =
+                    Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                // set the caller back to the unused acc
+                set_caller(get_unused_account());
+                (contract, account)
             }
 
             fn default_contract() -> Prosopo {
