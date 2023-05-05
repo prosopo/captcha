@@ -323,8 +323,8 @@ pub mod prosopo {
         NotEnoughActiveProviders,
         /// Returned if provider fee is too high
         ProviderFeeTooHigh,
-        /// Returned if the account is an operator, hence the operation is not allowed due to conflict of interest
-        AccountIsOperator,
+        /// Returned if the account is an admin, hence the operation is not allowed due to conflict of interest
+        AccountIsAdmin,
         /// Returned if the signature is invalid during signing
         InvalidSignature,
         /// Returned if the public key is invalid during signing
@@ -542,7 +542,7 @@ pub mod prosopo {
 
             self.check_provider_fee(fee)?;
 
-            // provider cannot be an operator
+            // provider cannot be an admin
             self.check_not_admin(provider_account)?;
 
             let existing = self.get_provider_details(provider_account)?;
