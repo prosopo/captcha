@@ -260,8 +260,6 @@ pub mod prosopo {
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Error {
-        /// Returned if minimum number of operators is not supplied
-        MinimumTwoOperatorsRequired,
         /// Returned if calling account is not authorised to perform action
         NotAuthorised,
         /// Returned if not enough contract balance to fulfill a request is available.
