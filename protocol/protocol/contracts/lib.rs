@@ -317,8 +317,6 @@ pub mod prosopo {
         InvalidCaptchaStatus,
         /// No correct captchas in history (either history is empty or all captchas are incorrect)
         NoCorrectCaptcha,
-        /// Returned if the function has been disabled in the contract
-        FunctionDisabled,
         /// Returned if not enough providers are active
         NotEnoughActiveProviders,
         /// Returned if provider fee is too high
