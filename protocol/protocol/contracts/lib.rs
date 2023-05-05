@@ -261,6 +261,8 @@ pub mod prosopo {
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
         seed: Seed,                // the current seed for rng
+        seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
+        rewind_window: u16, // the number of blocks in the past to support replaying, e.g. replay rng active provider selection
     }
 
     /// The Prosopo error types
@@ -356,6 +358,7 @@ pub mod prosopo {
             max_user_history_age: u64,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
+            rewind_window: u16,
         ) -> Self {
             Self {
                 admin: Self::env().caller(),
@@ -377,7 +380,9 @@ pub mod prosopo {
                 seed: Seed {
                     value: 0, // default to 0, will be overwritten on first use
                     block: 0, // default to block 0, will be overwritten on first use
-                }
+                },
+                seed_log: Default::default(),
+                rewind_window,
             }
         }
 
@@ -428,10 +433,123 @@ pub mod prosopo {
             err
         }
 
+        /// Prune a desc ordered list
+        fn prune<T, U: PartialOrd>(&self, list: &mut Vec<T>, threshold: &U, f: fn(&T) -> &U) {
+            // iter from end to start
+            for i in (0..list.len()).rev() {
+                // if element is less than threshold, remove it
+                let value: &U = f(&list[i]);
+                if value < threshold {
+                    // we're always looking at the last element, so we can just pop it
+                    list.pop();
+                } else {
+                    // hit an element that is greater than threshold, so we can stop
+                    // all elements from this element to the start of the list are also greater than threshold, because list is in desc order
+                    break;
+                }
+            }
+        }
+
+        /// Get a provider
+        #[ink(message)]
+        pub fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
+            self
+                .providers
+                .get(account)
+                .ok_or(Error::ProviderDoesNotExist)
+        }
+
+        /// Get a dapp
+        #[ink(message)]
+        pub fn get_dapp(&self, account: AccountId) -> Result<Dapp, Error> {
+            self.dapps.get(account).ok_or(Error::DappDoesNotExist)
+        }
+
+        /// Get the admin
+        #[ink(message)]
+        pub fn get_admin(&self) -> AccountId {
+            self.admin
+        }
+
         /// Get the seed
         #[ink(message)]
         pub fn get_seed(&self) -> Seed {
             self.seed
+        }
+
+        /// Update the seed
+        #[ink(message)]
+        pub fn update_seed(&mut self) -> Result<bool, Error> {
+            let block_number = self.env().block_number();
+
+            let seed = self.seed;
+            if seed.block == block_number {
+                // seed already updated for this block
+                // disallow updating the seed for the same block twice to avoid spamming
+                return Ok(false);
+            }
+            // else seed has not been updated for the current block
+
+            let caller = self.env().caller();
+            // only active providers or admin can call this function
+            let provider_lookup = self.get_provider(caller);
+            if provider_lookup.is_ok() {
+                let provider = provider_lookup.unwrap();
+                // only active providers can call this method
+                if provider.status != GovernanceStatus::Active {
+                    return err!(Error::NotAuthorised);
+                }
+                // else continue, provider is active and has been active from the previous block or before
+            } else {
+                // caller is not a provider
+                // allow if they are an admin
+                self.check_admin(caller)?;
+                // else continue, caller is an admin
+            }
+
+            // put the old seed into the log
+            let mut seed_log = self.seed_log.get_or_default();
+            // prune the seed log as old entries may have become too old and land outside the rewind_window window
+            let rewind_window = self.rewind_window as BlockNumber;
+            let oldest_seed_block: BlockNumber = if block_number > rewind_window {
+                block_number - rewind_window
+            } else {
+                0
+            };
+            self.prune(&mut seed_log, &oldest_seed_block, |seed| &seed.block);
+
+            // add the current seed to the log
+            seed_log.insert(0, seed);
+
+            // then compute new seed value
+            let block_timestamp = self.env().block_timestamp();
+
+            // what to use in the seed?
+            // block number - different value for each block
+            // block timestamp - unpredictable until the block is mined (but can be predicted by miners)
+            // caller - unpredictable, we don't know who's going to update the seed and when
+            // old seed - build upon the old seed
+
+            // hash all of these together to get the new seed value
+            let mut input = [0u8; 60];
+            let caller_bytes: &[u8; 32] = AsRef::<[u8; 32]>::as_ref(&caller);
+            input[0..32].copy_from_slice(&caller_bytes[..]);
+            input[32..36].copy_from_slice(&block_number.to_le_bytes()[..]);
+            input[36..44].copy_from_slice(&block_timestamp.to_le_bytes()[..]);
+            input[44..60].copy_from_slice(&seed.value.to_le_bytes()[..]);
+
+            let hash = self.env().hash_bytes::<Blake2x128>(&input);
+            // convert hash to u128 for the new seed value
+            let new_seed_value = u128::from_le_bytes(hash);
+
+            // update seed and history
+            self.seed = Seed {
+                value: new_seed_value,
+                block: block_number,
+            };
+            self.seed_log.set(&seed_log);
+            
+            Ok(true)
         }
 
         #[ink(message)]
@@ -742,13 +860,6 @@ pub mod prosopo {
             }
 
             Ok(())
-        }
-
-        /// Get an existing dapp
-        fn get_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
-            self.dapps
-                .get(contract)
-                .ok_or_else(err_fn!(Error::DappDoesNotExist))
         }
 
         /// Check a dapp is missing / non-existent
