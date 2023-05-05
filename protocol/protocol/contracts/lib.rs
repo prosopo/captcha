@@ -2220,6 +2220,8 @@ pub mod prosopo {
                 
 
                 let mut contract = get_contract(0);
+                // give the contract some funds
+                set_account_balance(contract.env().account_id(), 1000000000);
                 let (provider_account, service_origin, fee) =
                     generate_provider_data(0x2, "4242", 0);
                 let balance: u128 = 10;
@@ -2679,6 +2681,8 @@ pub mod prosopo {
                 
 
                 let mut contract = get_contract(0);
+                // give the contract some funds
+                set_account_balance(contract.env().account_id(), 1000000000);
                 let caller = AccountId::from([0x2; 32]);
                 let contract_account = AccountId::from([0x3; 32]);
                 let callers_initial_balance =
