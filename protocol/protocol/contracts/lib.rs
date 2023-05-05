@@ -1666,6 +1666,7 @@ pub mod prosopo {
                 assert_eq!(contract.dapp_user_accounts.get(), None);
             }
 
+            /// Are the template accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
             #[ink::test]
             fn test_default_accounts_unique() {
                 let accounts = default_accounts();
@@ -1676,6 +1677,7 @@ pub mod prosopo {
                     &accounts.dapps,
                     &accounts.providers,
                     &accounts.users,
+                    &accounts.contracts,
                 ] {
                     for account in group.iter() {
                         assert!(
