@@ -1544,75 +1544,70 @@ pub mod prosopo {
             contracts: Vec<AccountId>, // the accounts of contracts
         }
 
+        const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
+        const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
+        const PROVIDER_ACCOUNT_PREFIX: u8 = 0x03;
+        const USER_ACCOUNT_PREFIX: u8 = 0x04;
+        const CONTRACT_ACCOUNT_PREFIX: u8 = 0x05;
+        const CODE_HASH_PREFIX: u8 = 0x06;
+
         mod tests_inner {
 
             /// Imports all the definitions from the outer scope so we can use them here.
             use super::*;
 
             // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
-            fn default_unused_account() -> AccountId {
+            fn get_unused_account() -> AccountId {
                 AccountId::from([0x00; 32])
             }
 
-            // admin accounts should be in range 0x01 - 0x10
-            fn default_admins() -> Vec<AccountId> {
-                let mut list = Vec::new();
-                for i in 1..=10 {
-                    list.push(AccountId::from([i; 32]));
-                }
-                list
+            // build an account. Accounts have the first byte set to the type of account and the next 16 bytes are the index of the account
+            fn get_account_bytes(account_type: u8, index: u128) -> [u8; 32] {
+                let mut bytes = [0x00; 32];
+                bytes[0] = account_type;
+                bytes[1..17].copy_from_slice(&index.to_le_bytes());
+                bytes
+            }
+`
+            fn get_account(account_type: u8, index: u128) -> AccountId {
+                AccountId::from(get_account_bytes(account_type, index))
             }
 
-            // dapp accounts should be in range 0x11 - 0x20
-            fn default_dapps() -> Vec<AccountId> {
-                let mut list = Vec::new();
-                for i in 11..=20 {
-                    list.push(AccountId::from([i; 32]));
-                }
-                list
+            /// get the nth admin account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+            fn get_admin_account(index: u128) -> AccountId {
+                get_account(ADMIN_ACCOUNT_PREFIX, index)
             }
 
-            // provider accounts should be in range 0x21 - 0x30
-            fn default_providers() -> Vec<AccountId> {
-                let mut list = Vec::new();
-                for i in 21..=30 {
-                    list.push(AccountId::from([i; 32]));
-                }
-                list
+            /// get the nth provider account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+            fn get_provider_account(index: u128) -> AccountId {
+                get_account(PROVIDER_ACCOUNT_PREFIX, index)
+            }
+            
+            /// get the nth dapp account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+            fn get_dapp_account(index: u128) -> AccountId {
+                get_account(DAPP_ACCOUNT_PREFIX, index)
             }
 
-            // user accounts should be in range 0x31 - 0x40
-            fn default_users() -> Vec<AccountId> {
-                let mut list = Vec::new();
-                for i in 31..=40 {
-                    list.push(AccountId::from([i; 32]));
-                }
-                list
+            /// get the nth user account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+            fn get_user_account(index: u128) -> AccountId {
+                get_account(USER_ACCOUNT_PREFIX, index)
             }
 
-            // code hashes should be in range 0x41 - 0x50            
-            fn default_code_hashes() -> Vec<[u8; 32]> {
-                let mut list = Vec::new();
-                for i in 41..=50 {
-                    list.push([i; 32]);
-                }
-                list
+            /// get the nth contract account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+            fn get_contract_account(index: u128) -> AccountId {
+                get_account(CONTRACT_ACCOUNT_PREFIX, index)
             }
 
-            // contract accounts should be in range 0x51 - 0x60
-            fn default_contracts() -> Vec<AccountId> {
-                let mut list = Vec::new();
-                for i in 51..=60 {
-                    list.push(AccountId::from([i; 32]));
-                }
-                list
+            /// get the nth code hash. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+            fn get_code_hash(index: u128) -> [u8; 32] {
+                get_account_bytes(CODE_HASH_PREFIX, index)
             }
 
             /// get the default accounts for different roles
             /// note that these are not all used in every test for every role, e.g. the 10 admin accounts are not all set as admins in the contract. BUT in tests where an admin account is needed, one of these will be used. Same with provider / dapp / user accounts, etc.
             fn default_accounts() -> DefaultAccounts {
                 DefaultAccounts {
-                    unused_account: default_unused_account(), // the unused account should always be used for nothing, i.e. takes no role in the contract, is not a provider, is not a user, is not a contract, etc.
+                    unused_account: get_unused_account(), // the unused account should always be used for nothing, i.e. takes no role in the contract, is not a provider, is not a user, is not a contract, etc.
                     admins: default_admins(),
                     dapps: default_dapps(),
                     providers: default_providers(),
@@ -1636,7 +1631,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_ctor() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1703,7 +1698,7 @@ pub mod prosopo {
             // fn test_set_code_hash() {
 
             //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            //     set_caller(default_unused_account());
+            //     set_caller(get_unused_account());
             //     let accounts = default_accounts();
 
             //     let mut contract = default_contract();
@@ -1722,7 +1717,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_set_code_hash_unauthorised() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1739,7 +1734,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_terminate() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1759,7 +1754,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_terminate_unauthorised() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1775,7 +1770,7 @@ pub mod prosopo {
             // fn test_withdraw() {
 
             //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            //     set_caller(default_unused_account());
+            //     set_caller(get_unused_account());
             //     let accounts = default_accounts();
 
             //     let mut contract = default_contract();
@@ -1802,7 +1797,7 @@ pub mod prosopo {
             #[should_panic]
             fn test_withdraw_insufficient_funds() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1816,7 +1811,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_withdraw_unauthorised() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1832,7 +1827,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_check_admin() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1854,7 +1849,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_set_admin() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1875,7 +1870,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_set_admin_unauthorised() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1894,7 +1889,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_ctor_caller_admin() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1907,7 +1902,7 @@ pub mod prosopo {
             #[ink::test]
             pub fn test_provider_stake_default() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
                 let mut contract = default_contract();
 
@@ -1919,7 +1914,7 @@ pub mod prosopo {
             #[ink::test]
             pub fn test_dapp_stake_default() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1931,7 +1926,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_register() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1955,7 +1950,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_deregister() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1974,7 +1969,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_list_providers_by_ids() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -1996,18 +1991,18 @@ pub mod prosopo {
             #[should_panic]
             fn test_get_random_number_zero_len() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
-                contract.get_random_number(0, default_unused_account(), default_unused_account());
+                contract.get_random_number(0, get_unused_account(), get_unused_account());
             }
 
             // Test get random number
             #[ink::test]
             fn test_get_random_number() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2054,7 +2049,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_register_and_update() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2100,7 +2095,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_register_with_service_origin_error() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2136,7 +2131,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_update_with_service_origin_error() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2180,7 +2175,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_unstake() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2205,7 +2200,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_add_dataset() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2232,7 +2227,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_cannot_add_dataset_if_inactive() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2259,7 +2254,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_dapp_register_zero_balance_transfer() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2293,7 +2288,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_dapp_register_positive_balance_transfer() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2332,7 +2327,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_verify_sr25519_valid() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2375,7 +2370,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_verify_sr25519_invalid_signature() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2419,7 +2414,7 @@ pub mod prosopo {
             #[should_panic]
             fn test_verify_sr25519_invalid_public_key() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2462,7 +2457,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_verify_sr25519_invalid_data() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2505,7 +2500,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_verify_sr25519_invalid_payload() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2549,7 +2544,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_dapp_register_and_update() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2605,7 +2600,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_dapp_fund() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2639,7 +2634,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_dapp_cancel() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2686,7 +2681,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_approve() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2785,7 +2780,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_approve_invalid_id() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2846,7 +2841,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_disapprove() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -2941,7 +2936,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_dapp_operator_is_human_user() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -3013,7 +3008,7 @@ pub mod prosopo {
             fn test_non_existent_dapp_account_has_zero_balance() {
                 let dapp_account = AccountId::from([0x2; 32]);
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -3025,7 +3020,7 @@ pub mod prosopo {
             fn test_non_existent_provider_account_has_zero_balance() {
                 let provider_account = AccountId::from([0x2; 32]);
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -3036,7 +3031,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_get_random_active_provider() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -3076,7 +3071,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_get_random_active_provider_dapp_any() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -3133,7 +3128,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_commit_and_approve_and_disapprove() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -3219,7 +3214,7 @@ pub mod prosopo {
             #[ink::test]
             fn test_provider_cannot_supply_commit_for_a_different_provider() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
@@ -3292,7 +3287,7 @@ pub mod prosopo {
                 let ops = vec![op1, op2];
                 // initialise the contract
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(default_unused_account());
+                set_caller(get_unused_account());
                 let accounts = default_accounts();
 
                 let mut contract = default_contract();
