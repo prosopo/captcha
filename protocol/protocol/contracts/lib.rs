@@ -322,9 +322,6 @@ pub mod prosopo {
         /// Returned if provider fee is too high
         ProviderFeeTooHigh,
         /// Returned if the account is an admin, hence the operation is not allowed due to conflict of interest
-        AccountIsAdmin,
-        /// Returned if the account is not an admin
-        IsNotAdmin,
         IsAdmin,
         /// Returned if the captcha solution commitment is not pending, i.e. has already been dealt with
         CaptchaSolutionCommitmentNotPending,
@@ -1459,7 +1456,7 @@ pub mod prosopo {
         /// Is the specified account the admin for this contract?
         fn check_admin(&self, acc: AccountId) -> Result<(), Error> {
             if self.admin != acc {
-                return err!(Error::IsNotAdmin);
+                return err!(Error::NotAuthorised);
             }
             Ok(())
         }
