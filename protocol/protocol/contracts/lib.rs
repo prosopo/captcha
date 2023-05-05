@@ -1550,17 +1550,11 @@ pub mod prosopo {
             use super::*;
 
             // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
-            // admin accounts should be in range 0x01 - 0x10
-            // dapp accounts should be in range 0x11 - 0x20
-            // provider accounts should be in range 0x21 - 0x30
-            // user accounts should be in range 0x31 - 0x40
-            // code hashes should be in range 0x41 - 0x50
-            // contract accounts should be in range 0x51 - 0x60
-
             fn default_unused_account() -> AccountId {
                 AccountId::from([0x00; 32])
             }
 
+            // admin accounts should be in range 0x01 - 0x10
             fn default_admins() -> Vec<AccountId> {
                 let mut list = Vec::new();
                 for i in 1..=10 {
@@ -1569,6 +1563,7 @@ pub mod prosopo {
                 list
             }
 
+            // dapp accounts should be in range 0x11 - 0x20
             fn default_dapps() -> Vec<AccountId> {
                 let mut list = Vec::new();
                 for i in 11..=20 {
@@ -1577,6 +1572,7 @@ pub mod prosopo {
                 list
             }
 
+            // provider accounts should be in range 0x21 - 0x30
             fn default_providers() -> Vec<AccountId> {
                 let mut list = Vec::new();
                 for i in 21..=30 {
@@ -1585,6 +1581,7 @@ pub mod prosopo {
                 list
             }
 
+            // user accounts should be in range 0x31 - 0x40
             fn default_users() -> Vec<AccountId> {
                 let mut list = Vec::new();
                 for i in 31..=40 {
@@ -1593,6 +1590,7 @@ pub mod prosopo {
                 list
             }
 
+            // code hashes should be in range 0x41 - 0x50            
             fn default_code_hashes() -> Vec<[u8; 32]> {
                 let mut list = Vec::new();
                 for i in 41..=50 {
@@ -1601,6 +1599,7 @@ pub mod prosopo {
                 list
             }
 
+            // contract accounts should be in range 0x51 - 0x60
             fn default_contracts() -> Vec<AccountId> {
                 let mut list = Vec::new();
                 for i in 51..=60 {
@@ -1609,9 +1608,11 @@ pub mod prosopo {
                 list
             }
 
+            /// get the default accounts for different roles
+            /// note that these are not all used in every test for every role, e.g. the 10 admin accounts are not all set as admins in the contract. BUT in tests where an admin account is needed, one of these will be used. Same with provider / dapp / user accounts, etc.
             fn default_accounts() -> DefaultAccounts {
                 DefaultAccounts {
-                    unused_account: default_unused_account(),
+                    unused_account: default_unused_account(), // the unused account should always be used for nothing, i.e. takes no role in the contract, is not a provider, is not a user, is not a contract, etc.
                     admins: default_admins(),
                     dapps: default_dapps(),
                     providers: default_providers(),
