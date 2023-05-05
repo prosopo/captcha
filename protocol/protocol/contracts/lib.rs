@@ -241,6 +241,29 @@ pub mod prosopo {
         pub value: u128,
         pub block: BlockNumber,
     }
+
+    /// Record when providers config changes and at what block
+    /// We don't track all fields in order to save space
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct ProviderConfigRecord {
+        pub payee: Payee,             // the payee setting of the provider at this block
+        pub status: GovernanceStatus, // the status of the provider at this block
+        pub block: BlockNumber,       // the block number at which the provider status changed
+        pub account: AccountId,       // the provider account
+    }
+
+    /// Record when providers config changes and at what block
+    /// We don't track all fields in order to save space
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct DappConfigRecord {
+        pub payee: DappPayee,             // the payee setting of the dapp at this block
+        pub status: GovernanceStatus, // the status of the dapp at this block
+        pub block: BlockNumber,       // the block number at which the provider dapp changed
+        pub account: AccountId,       // the dapp account
+    }
+
     // Contract storage
     #[ink(storage)]
     pub struct Prosopo {
@@ -263,6 +286,8 @@ pub mod prosopo {
         seed: Seed,                // the current seed for rng
         seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u16, // the number of blocks in the past to support replaying, e.g. replay rng active provider selection
+        provider_config_log: Lazy<Vec<ProviderConfigRecord>>, // a log of changes to providers stored newest first
+        dapp_config_log: Lazy<Vec<DappConfigRecord>>, // a log of changes to dapps stored newest first
     }
 
     /// The Prosopo error types
@@ -385,6 +410,8 @@ pub mod prosopo {
                 },
                 seed_log: Default::default(),
                 rewind_window,
+                provider_config_log: Default::default(),
+                dapp_config_log: Default::default(),
             }
         }
 
