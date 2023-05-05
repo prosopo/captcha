@@ -1715,7 +1715,6 @@ pub mod prosopo {
                         account
                     );
                 }
-                assert!(false);
             }
 
             // #[ink::test]
