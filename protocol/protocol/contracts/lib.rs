@@ -1562,8 +1562,13 @@ pub mod prosopo {
 
             fn get_account(account_type: u8, index: u128) -> AccountId {
                 let account = AccountId::from(get_account_bytes(account_type, index));
-                // fund the account so it exists
-                set_account_balance(account, 1);
+                // fund the account so it exists if not already
+                let balance = get_account_balance(account);
+                if balance.is_err() {
+                    // account doesn't have the existential deposit so doesn't exist
+                    // give it funds to create it
+                    set_account_balance(account, 1);
+                }
                 account
             }
 
