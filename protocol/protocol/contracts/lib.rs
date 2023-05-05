@@ -403,13 +403,7 @@ pub mod prosopo {
                 .sr25519_verify(&signature, &payload, &caller_bytes);
             Ok(res.is_ok())
         }
-
-        #[ink(message)]
-        pub fn get_caller(&self) -> AccountId {
-            debug!("caller: {:?}", self.env().caller());
-            self.env().caller()
-        }
-
+        
         /// Print and return an error
         fn print_err(&self, err: Error, fn_name: &str) -> Error {
             debug!(
