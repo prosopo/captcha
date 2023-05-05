@@ -1561,7 +1561,10 @@ pub mod prosopo {
             }
 
             fn get_account(account_type: u8, index: u128) -> AccountId {
-                AccountId::from(get_account_bytes(account_type, index))
+                let account = AccountId::from(get_account_bytes(account_type, index));
+                // fund the account so it exists
+                set_account_balance(account, 1);
+                account
             }
 
             /// get the nth admin account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
@@ -1599,6 +1602,8 @@ pub mod prosopo {
                 let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
                 // make sure the contract gets allocated the above account
                 set_callee(account);
+                // give the contract account some funds
+                set_account_balance(account, 1);
                 // set the caller to the first admin
                 set_caller(get_admin_account(0));
                 // now construct the contract instance
@@ -1642,6 +1647,31 @@ pub mod prosopo {
                 }
                 assert_eq!(contract.dapp_accounts.get(), None);
                 assert_eq!(contract.dapp_user_accounts.get(), None);
+            }
+
+            /// Test accounts are funded with existential deposit
+            #[ink::test]
+            fn test_accounts_funded() {
+                for func in vec![
+                    get_admin_account,
+                    get_provider_account,
+                    get_dapp_account,
+                    get_user_account,
+                    get_contract_account,
+                ].iter() {
+                    for i in 0..10 {
+                        let account = func(i);
+                        // check the account has funds. Will panic if not as no existential deposit == account not found
+                        get_account_balance(account).unwrap();
+                    }
+                }
+
+                // same for contracts
+                for i in 0..10 {
+                    let contract = get_contract(i);
+                    // check the account has funds. Will panic if not as no existential deposit == account not found
+                    get_account_balance(contract.env().account_id()).unwrap();
+                }
             }
 
             /// Are the unit test accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
