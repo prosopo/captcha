@@ -1786,7 +1786,7 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
                 set_caller(get_admin_account(0)); // an account which does have permission to call terminate
 
-                let contract_account = ink::env::account_id::<ink::env::DefaultEnvironment>();
+                let contract_account = contract.env().account_id();
                 let bal = get_account_balance(contract_account).unwrap();
                 let admin = get_admin_account(0);
                 let should_terminate = move || contract.terminate(admin).unwrap();
@@ -1824,13 +1824,10 @@ pub mod prosopo {
                 // give the contract funds
                 set_account_balance(contract.env().account_id(), 10000000000);
                 set_caller(get_admin_account(0)); // use the admin acc
-                println!("bal {}", get_account_balance(contract.env().account_id()).unwrap());
-                set_caller(get_admin_account(1)); // use the admin acc
-                println!("bal {}", get_account_balance(contract.env().account_id()).unwrap());
                 let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
                 let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
                 let withdraw_amount: u128 = 1;
-                assert!(contract.withdraw(get_admin_account(0), withdraw_amount).is_ok());
+                contract.withdraw(get_admin_account(0), withdraw_amount).unwrap();
                 assert_eq!(get_account_balance(get_admin_account(0)).unwrap(), admin_bal + withdraw_amount);
                 assert_eq!(get_account_balance(contract.env().account_id()).unwrap(), contract_bal - withdraw_amount);
             }
