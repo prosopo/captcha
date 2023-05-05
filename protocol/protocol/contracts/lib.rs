@@ -1697,6 +1697,27 @@ pub mod prosopo {
                 }
             }
 
+            /// Are the unit test contracts unique, i.e. make sure there's no collisions in contract accounts as two contracts with the same account could work around funding tests as utilising the same account
+            #[ink::test]
+            fn test_contracts_unique() {
+                
+                let mut set: std::collections::HashSet<[u8; 32]> =
+                    std::collections::HashSet::new();
+
+                // for the first 10 contracts
+                for i in 0..9 {
+                    let (contract, account) = get_contract(i);
+                    // check the contract is at the account stated
+                    assert_eq!(contract.env().account_id(), account);
+                    assert!(
+                        set.insert(AsRef::<[u8; 32]>::as_ref(&account).clone()),
+                        "Duplicate account ID found: {:?}",
+                        account
+                    );
+                }
+                assert!(false);
+            }
+
             // #[ink::test]
             // fn test_set_code_hash() {
 
