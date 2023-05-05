@@ -234,6 +234,13 @@ pub mod prosopo {
         pub payee: Payee,
     }
 
+    /// A seed for rng.
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct Seed {
+        pub value: u128,
+        pub block: BlockNumber,
+    }
     // Contract storage
     #[ink(storage)]
     pub struct Prosopo {
@@ -253,6 +260,7 @@ pub mod prosopo {
         max_user_history_age: u64, // the max age of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
+        seed: Seed,                // the current seed for rng
     }
 
     /// The Prosopo error types
@@ -366,6 +374,10 @@ pub mod prosopo {
                 captcha_solution_commitments: Default::default(),
                 min_num_active_providers,
                 max_provider_fee,
+                seed: Seed {
+                    value: 0, // default to 0, will be overwritten on first use
+                    block: 0, // default to block 0, will be overwritten on first use
+                }
             }
         }
 
@@ -403,7 +415,7 @@ pub mod prosopo {
                 .sr25519_verify(&signature, &payload, &caller_bytes);
             Ok(res.is_ok())
         }
-        
+
         /// Print and return an error
         fn print_err(&self, err: Error, fn_name: &str) -> Error {
             debug!(
@@ -414,6 +426,12 @@ pub mod prosopo {
                 err
             );
             err
+        }
+
+        /// Get the seed
+        #[ink(message)]
+        pub fn get_seed(&self) -> Seed {
+            self.seed
         }
 
         #[ink(message)]
