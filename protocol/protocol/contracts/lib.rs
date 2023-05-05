@@ -323,10 +323,6 @@ pub mod prosopo {
         ProviderFeeTooHigh,
         /// Returned if the account is an admin, hence the operation is not allowed due to conflict of interest
         AccountIsAdmin,
-        /// Returned if the signature is invalid during signing
-        InvalidSignature,
-        /// Returned if the public key is invalid during signing
-        InvalidPublicKey,
         /// Returned if the account is not an admin
         IsNotAdmin,
         IsAdmin,
@@ -385,16 +381,6 @@ pub mod prosopo {
             let mut caller_bytes = [0u8; 32];
             let caller_ref: &[u8] = caller.as_ref();
             caller_bytes.copy_from_slice(&caller_ref[..32]);
-
-            debug!("caller {:?}", caller);
-            debug!("sig {:?}", signature);
-            debug!("payload {:?}", payload);
-
-            // let sig = Signature::from_bytes(&signature).map_err(|_| Error::InvalidSignature)?;
-            // let pub_key =
-            //     PublicKey::from_bytes(&caller_bytes).map_err(|_| Error::InvalidPublicKey)?;
-            // let res = pub_key.verify_simple(crate::CTX, &payload, &sig);
-            // Ok(res.is_ok())
 
             let res = self
                 .env()
