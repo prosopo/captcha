@@ -799,7 +799,7 @@ pub mod prosopo {
             dapp.payee = payee; // update the dapp payee
             dapp.owner = owner; // update the owner
 
-            // owner of the dapp cannot be an operator
+            // owner of the dapp cannot be an admin
             self.check_not_admin(owner)?;
 
             self.dapp_configure_funding(&mut dapp);
