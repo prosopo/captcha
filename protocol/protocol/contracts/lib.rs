@@ -1606,6 +1606,8 @@ pub mod prosopo {
                     Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
+                // check the contract was created with the correct account
+                assert_eq!(contract.env().account_id(), account);
                 (contract, account)
             }
 
