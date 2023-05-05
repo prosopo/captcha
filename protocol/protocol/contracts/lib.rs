@@ -346,6 +346,8 @@ pub mod prosopo {
         CaptchaSolutionCommitmentNotPending,
         /// Returned if the commitment already exists
         CaptchaSolutionCommitmentAlreadyExists,
+        /// Rewind window has been exceeded, don't have enough data to do the rewind
+        RewindWindowExceeded,
     }
 
     impl Prosopo {
@@ -471,10 +473,38 @@ pub mod prosopo {
             self.admin
         }
 
+        fn check_rewind_window(&self, block: BlockNumber) -> Result<(), Error> {
+            if block < self.env().block_number() - self.rewind_window as BlockNumber {
+                return Ok(());
+            }
+            err!(Error::RewindWindowExceeded)
+        }
+
         /// Get the seed
         #[ink(message)]
         pub fn get_seed(&self) -> Seed {
             self.seed
+        }
+
+        #[ink(message)]
+        pub fn get_seed_at(&self, block: BlockNumber) -> Result<Seed, Error> {
+            // check if the block is within the rewind window
+            self.check_rewind_window(block)?;
+            // rewind the seed
+            // default to the current seed
+            let mut seed: Seed = self.seed;
+            for entry in self.seed_log.get_or_default().iter() {
+                // loop through seed log, i.e. newest to oldest
+                if entry.block < block {
+                    // entry is older than block so can stop here, all further entries will also be older
+                    // whatever the seed is set to currently is the seed for the block
+                    break;
+                }
+                // else entry is newer than the block, then use it
+                seed = *entry;
+            }
+
+            Ok(seed)
         }
 
         /// Update the seed
