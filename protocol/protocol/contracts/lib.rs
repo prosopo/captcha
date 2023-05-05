@@ -1700,7 +1700,7 @@ pub mod prosopo {
                     for i in 0..10 {
                         let account = func(i);
                         assert!(
-                            set.insert(AsRef::<[u8; 32]>::as_ref(&account).clone()),
+                            set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
                             "Duplicate account ID found: {:?}",
                             account
                         );
@@ -1731,7 +1731,7 @@ pub mod prosopo {
                     let contract = get_contract(i);
                     let account = contract.env().account_id();
                     assert!(
-                        set.insert(AsRef::<[u8; 32]>::as_ref(&account).clone()),
+                        set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
                         "Duplicate account ID found: {:?}",
                         account
                     );
