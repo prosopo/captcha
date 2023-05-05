@@ -1595,7 +1595,7 @@ pub mod prosopo {
             }
 
             /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-            fn get_contract(index: u128) -> (Prosopo, AccountId) {
+            fn get_contract(index: u128) -> Prosopo {
                 let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
                 // make sure the contract gets allocated the above account
                 set_callee(account);
@@ -1608,17 +1608,6 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 // check the contract was created with the correct account
                 assert_eq!(contract.env().account_id(), account);
-                (contract, account)
-            }
-
-            fn default_contract() -> Prosopo {
-                
-                // use the first admin acc as the caller
-                set_caller(get_admin_account(0));
-                let mut contract =
-                    Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
-                // set the caller back to the unused acc
-                set_caller(get_unused_account());
                 contract
             }
 
@@ -1628,7 +1617,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 // ctor params should be set
                 assert_eq!(contract.provider_stake_default, STAKE_DEFAULT);
@@ -1706,9 +1695,8 @@ pub mod prosopo {
 
                 // for the first 10 contracts
                 for i in 0..9 {
-                    let (contract, account) = get_contract(i);
-                    // check the contract is at the account stated
-                    assert_eq!(contract.env().account_id(), account);
+                    let contract = get_contract(i);
+                    let account = contract.env().account_id();
                     assert!(
                         set.insert(AsRef::<[u8; 32]>::as_ref(&account).clone()),
                         "Duplicate account ID found: {:?}",
@@ -1724,7 +1712,7 @@ pub mod prosopo {
             //     set_caller(get_unused_account());
             //     
 
-            //     let mut contract = default_contract();
+            //     let mut contract = get_contract(0);
 
             //     let new_code_hash = get_code_hash(1);
             //     let old_code_hash = contract.env().own_code_hash().unwrap();
@@ -1743,7 +1731,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
 
@@ -1760,7 +1748,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 set_caller(get_admin_account(0)); // an account which does have permission to call terminate
 
                 let contract_account = ink::env::account_id::<ink::env::DefaultEnvironment>();
@@ -1780,7 +1768,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 set_caller(get_user_account(0)); // an account which does not have permission to call terminate
 
                 assert_eq!(
@@ -1789,32 +1777,28 @@ pub mod prosopo {
                 );
             }
 
-            // #[ink::test]
-            // fn test_withdraw() {
+            #[ink::test]
+            fn test_withdraw() {
 
-            //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            //     set_caller(get_unused_account());
-            //     
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(get_unused_account());
 
-            //     let mut contract = default_contract();
-            //     println!("contract {:?}", contract.env().account_id());
+                let mut contract = get_contract(0);
+                println!("contract {:?}", contract.env().account_id());
 
-            //     let mut contract = default_contract();
-            //     println!("contract {:?}", contract.env().account_id());
-
-            //     // give the contract funds
-            //     set_account_balance(contract.env().account_id(), 10000000000);
-            //     set_caller(get_admin_account(0)); // use the admin acc
-            //     println!("bal {}", get_account_balance(contract.env().account_id()).unwrap());
-            //     set_caller(get_admin_account(1)); // use the admin acc
-            //     println!("bal {}", get_account_balance(contract.env().account_id()).unwrap());
-            //     let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
-            //     let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
-            //     let withdraw_amount: u128 = 1;
-            //     assert!(contract.withdraw(get_admin_account(0), withdraw_amount).is_ok());
-            //     assert_eq!(get_account_balance(get_admin_account(0)).unwrap(), admin_bal + withdraw_amount);
-            //     assert_eq!(get_account_balance(contract.env().account_id()).unwrap(), contract_bal - withdraw_amount);
-            // }
+                // give the contract funds
+                set_account_balance(contract.env().account_id(), 10000000000);
+                set_caller(get_admin_account(0)); // use the admin acc
+                println!("bal {}", get_account_balance(contract.env().account_id()).unwrap());
+                set_caller(get_admin_account(1)); // use the admin acc
+                println!("bal {}", get_account_balance(contract.env().account_id()).unwrap());
+                let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
+                let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
+                let withdraw_amount: u128 = 1;
+                assert!(contract.withdraw(get_admin_account(0), withdraw_amount).is_ok());
+                assert_eq!(get_account_balance(get_admin_account(0)).unwrap(), admin_bal + withdraw_amount);
+                assert_eq!(get_account_balance(contract.env().account_id()).unwrap(), contract_bal - withdraw_amount);
+            }
 
             #[ink::test]
             #[should_panic]
@@ -1823,7 +1807,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 set_caller(get_admin_account(0)); // use the admin acc
                 let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
@@ -1837,7 +1821,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 // give the contract funds
                 set_caller(get_user_account(0)); // use the admin acc
@@ -1853,7 +1837,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 // try the first 10 accounts
                 for i in 0..9 {
                     let acc = get_admin_account(i);
@@ -1877,7 +1861,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let old_admin = contract.admin;
                 let new_admin = get_admin_account(1);
                 assert_ne!(old_admin, new_admin);
@@ -1898,7 +1882,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let old_admin = contract.admin;
                 let new_admin = get_admin_account(1);
                 assert_ne!(old_admin, new_admin);
@@ -1917,7 +1901,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 // check the caller is admin
                 assert_eq!(contract.admin, get_admin_account(0));
@@ -1929,7 +1913,7 @@ pub mod prosopo {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
                 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 let provider_stake_default: u128 = contract.get_provider_stake_default();
                 assert!(STAKE_DEFAULT.eq(&provider_stake_default));
@@ -1942,7 +1926,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let dapp_stake_default: u128 = contract.get_dapp_stake_default();
                 assert!(STAKE_DEFAULT.eq(&dapp_stake_default));
             }
@@ -1954,7 +1938,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let service_origin: Vec<u8> = vec![1, 2, 3];
@@ -1978,7 +1962,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let service_origin: Vec<u8> = vec![1, 2, 3];
@@ -1997,7 +1981,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
                 let service_origin: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
@@ -2019,7 +2003,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 contract.get_random_number(0, get_unused_account(), get_unused_account());
             }
 
@@ -2030,7 +2014,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let acc1 = AccountId::from([0x1; 32]);
                 let acc2 = AccountId::from([0x2; 32]);
                 const len: usize = 10;
@@ -2077,7 +2061,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let (provider_account, service_origin, fee) =
                     generate_provider_data(0x2, "2424", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2123,7 +2107,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 let (provider_account, service_origin, fee) =
                     generate_provider_data(0x2, "4242", 0);
@@ -2159,7 +2143,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 let (provider_account, service_origin, fee) =
                     generate_provider_data(0x2, "4242", 0);
@@ -2203,7 +2187,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let (provider_account, service_origin, fee) =
                     generate_provider_data(0x2, "4242", 0);
                 let balance: u128 = 10;
@@ -2228,7 +2212,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let (provider_account, service_origin, fee) =
                     generate_provider_data(0x2, "4242", 0);
                 let balance: u128 = 2000000000000;
@@ -2255,7 +2239,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let (provider_account, service_origin, fee) =
                     generate_provider_data(0x2, "4242", 0);
                 let balance: u128 = 10;
@@ -2282,7 +2266,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let caller = AccountId::from([0x2; 32]);
                 let dapp_contract = AccountId::from([0x3; 32]);
                 // Call from the dapp account
@@ -2316,7 +2300,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let caller = AccountId::from([0x2; 32]);
                 let dapp_contract = AccountId::from([0x3; 32]);
 
@@ -2355,7 +2339,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 let data = "hello";
                 let mut data_hash = [0u8; 16];
@@ -2398,7 +2382,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 let data = "hello";
                 let mut data_hash = [0u8; 16];
@@ -2442,7 +2426,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 let data = "hello";
                 let mut data_hash = [0u8; 16];
@@ -2485,7 +2469,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 let data = "hello2";
                 let mut data_hash = [0u8; 16];
@@ -2528,7 +2512,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 let data = "hello";
                 let mut data_hash = [0u8; 16];
@@ -2572,7 +2556,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let caller = AccountId::from([0x2; 32]);
                 let dapp_contract_account = AccountId::from([0x3; 32]);
 
@@ -2628,7 +2612,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let caller = AccountId::from([0x2; 32]);
                 let dapp_contract = AccountId::from([0x3; 32]);
 
@@ -2662,7 +2646,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let caller = AccountId::from([0x2; 32]);
                 let contract_account = AccountId::from([0x3; 32]);
                 let callers_initial_balance =
@@ -2709,7 +2693,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
@@ -2808,7 +2792,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
@@ -2869,7 +2853,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
@@ -2964,7 +2948,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
@@ -3036,7 +3020,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 contract.get_dapp_balance(dapp_account).unwrap_err();
             }
 
@@ -3048,7 +3032,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 contract.get_provider_balance(provider_account).unwrap_err();
             }
 
@@ -3059,7 +3043,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
                 let service_origin: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
@@ -3099,7 +3083,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
                 let dapp_user_account = AccountId::from([0x30; 32]);
                 let service_origin: Vec<u8> = vec![1, 2, 3];
@@ -3156,7 +3140,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
@@ -3242,7 +3226,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
@@ -3315,7 +3299,7 @@ pub mod prosopo {
                 set_caller(get_unused_account());
                 
 
-                let mut contract = default_contract();
+                let mut contract = get_contract(0);
                 (op1, op2, ops, contract)
             }
 
