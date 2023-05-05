@@ -1541,6 +1541,7 @@ pub mod prosopo {
             providers: Vec<AccountId>,
             users: Vec<AccountId>,
             code_hashes: Vec<[u8; 32]>,
+            contracts: Vec<AccountId>, // the accounts of contracts
         }
 
         mod tests_inner {
@@ -1554,6 +1555,7 @@ pub mod prosopo {
             // provider accounts should be in range 0x21 - 0x30
             // user accounts should be in range 0x31 - 0x40
             // code hashes should be in range 0x41 - 0x50
+            // contract accounts should be in range 0x51 - 0x60
 
             fn default_unused_account() -> AccountId {
                 AccountId::from([0x00; 32])
@@ -1599,6 +1601,14 @@ pub mod prosopo {
                 list
             }
 
+            fn default_contracts() -> Vec<AccountId> {
+                let mut list = Vec::new();
+                for i in 51..=60 {
+                    list.push(AccountId::from([i; 32]));
+                }
+                list
+            }
+
             fn default_accounts() -> DefaultAccounts {
                 DefaultAccounts {
                     unused_account: default_unused_account(),
@@ -1607,6 +1617,7 @@ pub mod prosopo {
                     providers: default_providers(),
                     users: default_users(),
                     code_hashes: default_code_hashes(),
+                    contracts: default_contracts(),
                 }
             }
 
