@@ -82,6 +82,9 @@ export const Manager = (
             onExpired: () => {
                 alert('Challenge has expired, please try again')
             },
+            onFailed: () => {
+                alert('Captcha challenge failed. Please try again')
+            },
         },
         callbacks
     )
