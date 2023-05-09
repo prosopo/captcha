@@ -20,8 +20,8 @@ import ThemeProvider from '@mui/material/styles/ThemeProvider'
 import addDataAttr from '../util'
 import CaptchaWidget from './CaptchaWidget'
 import theme from './theme'
+import { GetCaptchaResponse } from '@prosopo/api/src/types/api'
 import { useTranslation } from '@prosopo/common'
-import { GetCaptchaResponse } from '@prosopo/procaptcha'
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse
