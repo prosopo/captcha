@@ -4,7 +4,7 @@ import { u32 } from '@polkadot/types'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { stringToU8a } from '@polkadot/util'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
+import { GetCaptchaResponse } from '@prosopo/api'
 import { trimProviderUrl } from '@prosopo/common'
 import { ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
 import { CaptchaSolution, ContractAbi } from '@prosopo/types'
@@ -23,6 +23,7 @@ import {
 import { sleep } from '../utils/utils'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
 import storage from './storage'
+import ProviderApi from '@prosopo/api/src/api/ProviderApi'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
