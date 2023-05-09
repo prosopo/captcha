@@ -637,42 +637,6 @@ pub mod prosopo {
                 false, None, None)
         }
 
-        /// Switch the `provider_account` between indexes in `self.provider_accounts`
-        fn provider_change_status(
-            &mut self,
-            provider_account: AccountId,
-            current_provider_status: GovernanceStatus,
-            new_status: GovernanceStatus,
-            payee: Payee,
-        ) {
-            if current_provider_status != new_status {
-                let current_key = ProviderState {
-                    status: current_provider_status,
-                    payee,
-                };
-                let new_key = ProviderState {
-                    status: new_status,
-                    payee,
-                };
-                // Retrieve indexes from storage mapping
-                let mut current_status_provider_accounts =
-                    self.provider_accounts.get(current_key).unwrap_or_default();
-
-                let mut new_status_provider_accounts =
-                    self.provider_accounts.get(new_key).unwrap_or_default();
-
-                // Move provider to the correct index
-                current_status_provider_accounts.remove(&provider_account);
-                new_status_provider_accounts.insert(provider_account);
-
-                // Store mapping
-                self.provider_accounts
-                    .insert(current_key, &current_status_provider_accounts);
-                self.provider_accounts
-                    .insert(new_key, &new_status_provider_accounts);
-            }
-        }
-
         /// De-Register a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deregister(&mut self) -> Result<(), Error> {
