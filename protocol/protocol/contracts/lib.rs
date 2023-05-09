@@ -654,7 +654,7 @@ pub mod prosopo {
         /// Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
         #[ink(payable)]
-        pub fn provider_unstake(&mut self) -> Result<(), Error> {
+        pub fn provider_deregister(&mut self) -> Result<(), Error> {
             let provider_account = self.env().caller();
             
             let provider = self.get_provider(provider_account)?;
@@ -2193,7 +2193,7 @@ pub mod prosopo {
 
             /// Test provider unstake
             #[ink::test]
-            fn test_provider_unstake() {
+            fn test_provider_deregister() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
@@ -2214,7 +2214,7 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
-                contract.provider_unstake().ok();
+                contract.provider_deregister().ok();
             }
 
             /// Test provider add data set
