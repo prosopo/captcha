@@ -269,6 +269,7 @@ export class ProsopoContractApi extends ContractPromise {
         if (storageEntry.layout.isCell) {
             const storageCell = storageEntry.layout.asCell
             const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageCell.key.toHex())
+            this.api.rx.query.f
             const result = await firstValueFrom(promiseResult)
             // const result = await promiseResult
             //     .pipe(map((values) => this.api.registry.createType(`Option<${type}>`, values.value)))

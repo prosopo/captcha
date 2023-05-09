@@ -1,17 +1,10 @@
-<<<<<<< HEAD
-import { ProsopoContractApi, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
-=======
 import { batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
->>>>>>> main
 import { BN } from '@polkadot/util'
 import {
     BatchCommitConfig,
     Database,
     ExtrinsicBatch,
-<<<<<<< HEAD
-=======
     IProsopoContractMethods,
->>>>>>> main
     ScheduledTaskNames,
     ScheduledTaskStatus,
     UserCommitmentRecord,
@@ -26,22 +19,14 @@ const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'dappUserCommit'
 
 export class BatchCommitments {
-<<<<<<< HEAD
-    contract: ProsopoContractApi
-=======
     contract: IProsopoContractMethods
->>>>>>> main
     db: Database
     batchCommitConfig: BatchCommitConfig
     logger: Logger
     private nonce: bigint
     constructor(
         batchCommitConfig: BatchCommitConfig,
-<<<<<<< HEAD
-        contractApi: ProsopoContractApi,
-=======
         contractApi: IProsopoContractMethods,
->>>>>>> main
         db: Database,
         concurrent: number,
         startNonce: bigint,
@@ -127,13 +112,7 @@ export class BatchCommitments {
             this.logger.debug('Provider Address', this.contract.pair.address)
             const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.abi, fragment, args)
             this.logger.debug(`Commitment:`, args)
-<<<<<<< HEAD
-            const { extrinsic, options } = await this.contract.buildExtrinsic('dappUserCommit', encodedArgs)
 
-            const paymentInfo = await extrinsic.paymentInfo(this.contract.pair)
-
-            console.log(JSON.stringify(this.contract.api.consts.transactionPayment))
-=======
             const { extrinsic, options, storageDeposit } = await this.contract.buildExtrinsic(
                 'dappUserCommit',
                 encodedArgs
@@ -142,7 +121,6 @@ export class BatchCommitments {
             const paymentInfo = await extrinsic.paymentInfo(this.contract.pair)
 
             //console.log(JSON.stringify(this.contract.api.consts.transactionPayment))
->>>>>>> main
 
             this.logger.debug(`${CONTRACT_METHOD_NAME} paymentInfo:`, paymentInfo.toHuman())
             //totalEncodedLength += extrinsic.encodedLength
@@ -152,18 +130,7 @@ export class BatchCommitments {
             totalProofSize = totalProofSize.add(
                 this.contract.api.registry.createType('WeightV2', options.gasLimit).proofSize.toBn()
             )
-<<<<<<< HEAD
-            totalFee = totalFee.add(paymentInfo.partialFee.toBn())
-            const extrinsicTooHigh = this.extrinsicTooHigh(totalRefTime, totalProofSize, maxBlockWeight)
-            console.log(
-                'Free balance',
-                (await this.contract.api.query.system.account(this.contract.pair.address)).data.free
-                    .toBn()
-                    .div(oneUnit(this.contract.api as ApiPromise))
-                    .toString()
-            )
-            console.log('Total Fee', totalFee.div(oneUnit(this.contract.api as ApiPromise)).toString())
-=======
+
             totalFee = totalFee.add(paymentInfo.partialFee.toBn().add(storageDeposit.asCharge.toBn()))
             const extrinsicTooHigh = this.extrinsicTooHigh(totalRefTime, totalProofSize, maxBlockWeight)
             console.log(
@@ -177,7 +144,6 @@ export class BatchCommitments {
                 'UNIT'
             )
             console.log('Total Fee `', totalFee.div(oneUnit(this.contract.api as ApiPromise)).toString(), '`', 'UNIT')
->>>>>>> main
             const feeTooHigh = totalFee.gt(
                 (await this.contract.api.query.system.account(this.contract.pair.address)).data.free.toBn()
             )

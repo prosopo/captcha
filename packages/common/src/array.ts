@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// Copyright (C) 2021-2023 Prosopo (UK) Ltd.
 // This file is part of provider <https://github.com/prosopo/provider>.
 //
 // provider is free software: you can redistribute it and/or modify
@@ -13,15 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import client from 'axios'
-import { ProsopoEnvError } from '@prosopo/common'
+export const ARRAY_JOINER = ''
 
-export async function downloadImage(url: string): Promise<Uint8Array> {
-    try {
-        return new Uint8Array(
-            (await client.get<ArrayBuffer>(url, { url, method: 'GET', responseType: 'arraybuffer' })).data
-        )
-    } catch (error) {
-        throw new ProsopoEnvError(error, downloadImage.name)
-    }
+export function arrayJoin<T>(arr: T[], joiner?: string): string {
+    return arr.join(joiner ? joiner : ARRAY_JOINER)
 }
