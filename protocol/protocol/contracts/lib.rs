@@ -746,6 +746,37 @@ pub mod prosopo {
             Ok(())
         }
 
+        fn check_dapp_owner(&self, dapp: &Dapp, account: AccountId) -> Result<(), Error> {
+            if dapp.owner != account {
+                return err!(Error::NotAuthorised);
+            }
+            Ok(())
+        }
+
+        #[ink(message)]
+        pub fn dapp_withdraw(&mut self, contract_account: AccountId, amount: Balance) -> Result<(), Error> {
+            let account = self.env().caller();
+            let mut dapp = self.get_dapp(contract_account)?;
+
+            // only the owner of the dapp can use this method
+            self.check_dapp_owner(&dapp, account)?;
+
+            // withdraw from the balance
+            dapp.balance -= amount;
+
+            // error if below stake, can only withdraw and maintain stake
+            if dapp.balance < self.dapp_stake_default {
+                return err!(Error::DappInsufficientFunds);
+            }
+
+            // save the dapp with new balance
+            self.dapps.insert(contract_account, &dapp);
+
+            self.env()
+                    .transfer(account, amount)
+                    .map_err(|_| Error::ContractTransferFailed)
+        }
+
         /// Configure a dapp's funds and status, handling transferred value
         fn dapp_configure_funding(&self, dapp: &mut Dapp) {
             // update the dapp funds
