@@ -682,18 +682,22 @@ pub mod prosopo {
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_unstake(&mut self) -> Result<(), Error> {
-            let caller = self.env().caller();
-            if self.providers.get(caller).is_none() {
-                return err!(Error::ProviderDoesNotExist);
-            }
+            let provider_account = self.env().caller();
+            
+            let provider = self.get_provider(provider_account)?;
 
-            let provider = self.get_provider_details(caller)?;
+            // remove the provider 
+            self.providers.remove(provider_account);
+
+            // remove the provider from their category
+            self.provider_state_remove(&provider)?;
+            
+            // return the stake
             let balance = provider.balance;
             if balance > 0 {
                 self.env()
-                    .transfer(caller, balance)
+                    .transfer(provider_account, balance)
                     .map_err(|_| Error::ContractTransferFailed)?;
-                self.provider_deregister()?;
             }
 
             Ok(())
