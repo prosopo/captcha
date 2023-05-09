@@ -692,6 +692,27 @@ pub mod prosopo {
             )
         }
 
+        #[ink(message)]
+        pub fn provider_withdraw(&mut self, amount: Balance) -> Result<(), Error> {
+            let provider_account = self.env().caller();
+            let mut provider = self.get_provider(provider_account)?;
+
+            // withdraw from the balance
+            provider.balance -= amount;
+
+            // error if below stake, can only withdraw and maintain stake
+            if provider.balance < self.provider_stake_default {
+                return err!(Error::ProviderInsufficientFunds);
+            }
+
+            // save the provider with new balance
+            self.providers.insert(provider_account, &provider);
+
+            self.env()
+                    .transfer(provider_account, amount)
+                    .map_err(|_| Error::ContractTransferFailed)
+        }
+
         /// Add a new data set
         #[ink(message)]
         pub fn provider_set_dataset(
