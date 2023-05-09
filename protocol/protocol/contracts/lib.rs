@@ -639,7 +639,7 @@ pub mod prosopo {
 
         /// De-Register a provider by setting their status to Deactivated
         #[ink(message)]
-        pub fn provider_deregister(&mut self) -> Result<(), Error> {
+        pub fn provider_deactivate(&mut self) -> Result<(), Error> {
             // Change status to deactivated
             self.provider_configure(
                 None,
@@ -1973,7 +1973,7 @@ pub mod prosopo {
 
             /// Test provider deregister
             #[ink::test]
-            fn test_provider_deregister() {
+            fn test_provider_deactivate() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
@@ -1984,7 +1984,7 @@ pub mod prosopo {
                 let fee: u32 = 100;
                 contract.provider_register(service_origin, fee, Payee::Dapp);
                 assert!(contract.providers.get(provider_account).is_some());
-                contract.provider_deregister();
+                contract.provider_deactivate();
                 let provider_record = contract.providers.get(provider_account).unwrap();
                 assert!(provider_record.status == GovernanceStatus::Deactivated);
             }
