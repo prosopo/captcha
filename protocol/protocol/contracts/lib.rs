@@ -477,6 +477,7 @@ pub mod prosopo {
                 self.check_provider_fee(fee.unwrap())?;
             }
 
+            let default_dataset_id = Hash::default();
             let provider_account = self.env().caller();
             let old_provider;
             let lookup = self.get_provider(provider_account);
@@ -486,9 +487,9 @@ pub mod prosopo {
                     balance: 0,
                     fee: 0,
                     service_origin: Vec::new(),
-                    dataset_id: Hash::default(),
+                    dataset_id: default_dataset_id,
                     payee: Payee::Provider,
-                    dataset_id_content: Hash::default(),
+                    dataset_id_content: default_dataset_id,
                 };
                 self.provider_state_insert(&old_provider)?;
             } else {
@@ -505,8 +506,16 @@ pub mod prosopo {
             new_provider.dataset_id_content = dataset_id_content.unwrap_or(old_provider.dataset_id_content);
 
             // dataset content id cannot be equal to dataset id
-            if new_provider.dataset_id != Hash::default() && new_provider.dataset_id_content == new_provider.dataset_id {
+            if new_provider.dataset_id != default_dataset_id && new_provider.dataset_id_content == new_provider.dataset_id {
                 return err!(Error::DatasetIdSolutionsSame);
+            }
+
+            // update the dataset mapping to provider
+            // remove old mapping
+            self.datasets.remove(&old_provider.dataset_id);
+            if new_provider.dataset_id != default_dataset_id {
+                // insert new mapping if not the default hash, as this is used as a placeholder value
+                self.datasets.insert(new_provider.dataset_id, &provider_account);
             }
 
             // if the provider is
@@ -514,7 +523,7 @@ pub mod prosopo {
                 // has a balance >= provider_stake_default
                 // has a dataset_id
                 // has a dataset_id_content
-            new_provider.status = if new_provider.balance >= self.provider_stake_default && new_provider.dataset_id != Hash::default() && new_provider.dataset_id_content != Hash::default() && !deactivate {
+            new_provider.status = if new_provider.balance >= self.provider_stake_default && new_provider.dataset_id != default_dataset_id && new_provider.dataset_id_content != default_dataset_id && !deactivate {
                 // then set the status to active
                 GovernanceStatus::Active
             } else {
@@ -533,7 +542,7 @@ pub mod prosopo {
             
             self.service_origins.remove(&old_service_origin_hash);
             // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
-            if new_service_origin_hash != Hash::default() {
+            if new_service_origin_hash != default_dataset_id {
                 self.service_origins.insert(&new_service_origin_hash, &());
             }
 
@@ -714,48 +723,14 @@ pub mod prosopo {
             dataset_id: Hash,
             dataset_id_content: Hash,
         ) -> Result<(), Error> {
-            // dataset_id and dataset_id_content must be different
-            if dataset_id == dataset_id_content {
-                return err!(Error::DatasetIdSolutionsSame);
-            }
-
-            let provider_id = self.env().caller();
-            let mut provider = self.get_provider(provider_id)?;
-
-            // only proceed if no other provider has the dataset_id
-            if self.datasets.get(dataset_id).is_some() {
-                return err!(Error::DuplicateCaptchaDataId);
-            } // else no one has the dataset_id
-
-            // remove old dataset_id from the mapping
-            self.datasets.remove(provider.dataset_id);
-            self.datasets.insert(dataset_id, &provider_id);
-
-            // update the provider with the new dataset id
-            provider.dataset_id = dataset_id;
-            provider.dataset_id_content = dataset_id_content;
-
-            // set the captcha data id on the provider
-            provider.dataset_id = dataset_id;
-            let old_status = provider.status;
-
-            // change the provider status to active if it was not active
-            if provider.status != GovernanceStatus::Active
-                && provider.balance >= self.provider_stake_default
-                && dataset_id != Hash::default()
-            {
-                provider.status = GovernanceStatus::Active;
-                self.provider_change_status(
-                    provider_id,
-                    old_status,
-                    provider.status,
-                    provider.payee,
-                );
-            }
-
-            self.providers.insert(provider_id, &provider);
-
-            Ok(())
+            self.provider_configure(
+                None,
+                None,
+                None,
+                false,
+                Some(dataset_id),
+                Some(dataset_id_content),
+            )
         }
 
         /// Check the contract is a contract
