@@ -140,6 +140,7 @@ pub mod prosopo {
         payee: Payee,
         service_origin: Vec<u8>,
         dataset_id: Hash,
+        dataset_id_content: Hash,
     }
 
     /// RandomProvider is selected randomly by the contract for the client side application
@@ -152,13 +153,6 @@ pub mod prosopo {
         dataset_id_content: Hash,
     }
 
-    /// Enum for various types of captcha
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum CaptchaType {
-        ImageGrid,
-    }
-
     /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
     /// the captchas received by a DappUser did belong to the Provider's original dataset
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -167,7 +161,6 @@ pub mod prosopo {
         provider: AccountId,
         dataset_id: Hash,
         dataset_id_content: Hash,
-        captcha_type: CaptchaType,
     }
 
     /// CaptchaSolutionCommitments are submitted by DAppUsers upon completion of one or more
@@ -241,7 +234,7 @@ pub mod prosopo {
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
         service_origins: Mapping<Hash, ()>,
-        captcha_data: Mapping<Hash, CaptchaData>,
+        datasets: Mapping<Hash, AccountId>,
         provider_stake_default: Balance,
         dapp_stake_default: Balance,
         dapps: Mapping<AccountId, Dapp>,
@@ -354,7 +347,7 @@ pub mod prosopo {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 service_origins: Default::default(),
-                captcha_data: Default::default(),
+                datasets: Default::default(),
                 dapp_users: Default::default(),
                 provider_stake_default,
                 dapp_stake_default,
@@ -502,6 +495,7 @@ pub mod prosopo {
                 fee,
                 service_origin,
                 dataset_id: Hash::default(),
+                dataset_id_content: Hash::default(),
                 payee,
             };
             self.providers.insert(provider_account, &provider);
@@ -574,6 +568,7 @@ pub mod prosopo {
                 fee,
                 service_origin,
                 dataset_id: existing.dataset_id,
+                dataset_id_content: existing.dataset_id_content,
                 payee,
             };
 
@@ -667,6 +662,10 @@ pub mod prosopo {
             Ok(())
         }
 
+        fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
+            self.providers.get(&account).ok_or_else(err_fn!(Error::ProviderDoesNotExist))
+        }
+
         /// Add a new data set
         #[ink(message)]
         pub fn provider_add_dataset(
@@ -674,31 +673,26 @@ pub mod prosopo {
             dataset_id: Hash,
             dataset_id_content: Hash,
         ) -> Result<(), Error> {
+            // dataset_id and dataset_id_content must be different
             if dataset_id == dataset_id_content {
                 return err!(Error::DatasetIdSolutionsSame);
             }
+
             let provider_id = self.env().caller();
-            // the calling account must belong to the provider
-            self.validate_provider_exists_and_has_funds(provider_id)?;
-            let dataset = CaptchaData {
-                provider: provider_id,
-                dataset_id,
-                dataset_id_content,
-                captcha_type: CaptchaType::ImageGrid,
-            };
+            let mut provider = self.get_provider(provider_id)?;
 
-            let mut provider = self
-                .providers
-                .get(provider_id)
-                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
-            let dataset_id_old = provider.dataset_id;
+            // only proceed if no other provider has the dataset_id
+            if self.datasets.get(dataset_id).is_some() {
+                return err!(Error::DuplicateCaptchaDataId);
+            } // else no one has the dataset_id
 
-            // create a new id and insert details of the new captcha data set if it doesn't exist
-            if self.captcha_data.get(dataset_id).is_none() {
-                self.captcha_data.insert(dataset_id, &dataset);
-                // remove the old dataset_id from the Mapping
-                self.captcha_data.remove(dataset_id_old);
-            }
+            // remove old dataset_id from the mapping
+            self.datasets.remove(provider.dataset_id);
+            self.datasets.insert(dataset_id, &provider_id);
+
+            // update the provider with the new dataset id
+            provider.dataset_id = dataset_id;
+            provider.dataset_id_content = dataset_id_content;
 
             // set the captcha data id on the provider
             provider.dataset_id = dataset_id;
@@ -1146,9 +1140,15 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
-            self.captcha_data
+            let provider_account = self.datasets
                 .get(dataset_id)
-                .ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))
+                .ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))?;
+            let provider = self.get_provider(provider_account)?;
+            Ok(CaptchaData {
+                dataset_id,
+                provider: provider_account,
+                dataset_id_content: provider.dataset_id_content,
+            })
         }
 
         /// Get a dapp user
@@ -2247,32 +2247,6 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 contract.provider_add_dataset(root1, root2).ok();
-            }
-
-            /// Test provider cannot add data set if inactive
-            #[ink::test]
-            fn test_provider_cannot_add_dataset_if_inactive() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
-
-                let mut contract = get_contract(0);
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                let balance: u128 = 10;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin, fee, Payee::Dapp)
-                    .ok();
-                ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
-                    provider_account,
-                    balance,
-                );
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                let result = contract.provider_add_dataset(root1, root2).unwrap_err();
-                assert_eq!(ProviderInsufficientFunds, result)
             }
 
             /// Test dapp register with zero balance transfer
