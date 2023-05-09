@@ -682,7 +682,7 @@ pub mod prosopo {
 
         /// Add a new data set
         #[ink(message)]
-        pub fn provider_add_dataset(
+        pub fn provider_set_dataset(
             &mut self,
             dataset_id: Hash,
             dataset_id_content: Hash,
@@ -2219,7 +2219,7 @@ pub mod prosopo {
 
             /// Test provider add data set
             #[ink::test]
-            fn test_provider_add_dataset() {
+            fn test_provider_set_dataset() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
@@ -2240,7 +2240,7 @@ pub mod prosopo {
                 contract.provider_update(service_origin, fee, Payee::Provider);
                 let root1 = str_to_hash("merkle tree".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
             }
 
             /// Test dapp register with zero balance transfer
@@ -2689,7 +2689,7 @@ pub mod prosopo {
 
                 let provider = contract.providers.get(provider_account).unwrap();
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2787,7 +2787,7 @@ pub mod prosopo {
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2851,7 +2851,7 @@ pub mod prosopo {
             
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).unwrap();
+                contract.provider_set_dataset(root1, root2).unwrap();
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
             
                 // Register the dapp
@@ -2946,7 +2946,7 @@ pub mod prosopo {
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider).unwrap();
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2);
+                contract.provider_set_dataset(root1, root2);
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -3032,7 +3032,7 @@ pub mod prosopo {
                 contract.provider_update(service_origin, fee, Payee::Dapp);
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
-                contract.provider_add_dataset(root1, root2);
+                contract.provider_set_dataset(root1, root2);
                 let registered_provider_account = contract.providers.get(provider_account);
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -3072,7 +3072,7 @@ pub mod prosopo {
                 contract.provider_update(service_origin.clone(), fee, Payee::Provider);
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
-                contract.provider_add_dataset(root1, root2);
+                contract.provider_set_dataset(root1, root2);
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -3133,7 +3133,7 @@ pub mod prosopo {
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -3218,7 +3218,7 @@ pub mod prosopo {
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Register the dapp
                 let dapp_user_account = AccountId::from([0x3; 32]);
@@ -3248,7 +3248,7 @@ pub mod prosopo {
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Call from dapp_user_commit from provider_account2 to supply a commit for provider_account
                 // Should not be authorised
