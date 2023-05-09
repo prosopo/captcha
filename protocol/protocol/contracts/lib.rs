@@ -666,7 +666,9 @@ pub mod prosopo {
 
         /// De-Register a provider by setting their status to Deactivated
         #[ink(message)]
-        pub fn provider_deregister(&mut self, provider_account: AccountId) -> Result<(), Error> {
+        pub fn provider_deregister(&mut self) -> Result<(), Error> {
+            let provider_account = self.env().caller();
+
             let caller = self.env().caller();
             if caller != provider_account {
                 return err!(Error::NotAuthorised);
@@ -706,7 +708,7 @@ pub mod prosopo {
                 self.env()
                     .transfer(caller, balance)
                     .map_err(|_| Error::ContractTransferFailed)?;
-                self.provider_deregister(caller)?;
+                self.provider_deregister()?;
             }
 
             Ok(())
@@ -2053,7 +2055,7 @@ pub mod prosopo {
                 let fee: u32 = 100;
                 contract.provider_register(service_origin, fee, Payee::Dapp);
                 assert!(contract.providers.get(provider_account).is_some());
-                contract.provider_deregister(provider_account);
+                contract.provider_deregister();
                 let provider_record = contract.providers.get(provider_account).unwrap();
                 assert!(provider_record.status == GovernanceStatus::Deactivated);
             }
