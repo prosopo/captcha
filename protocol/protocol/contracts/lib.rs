@@ -687,6 +687,7 @@ pub mod prosopo {
             dataset_id: Hash,
             dataset_id_content: Hash,
         ) -> Result<(), Error> {
+
             self.provider_configure(
                 None,
                 None,
@@ -2671,7 +2672,7 @@ pub mod prosopo {
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                    generate_provider_data(0x2, "4242", 1);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
                     .provider_register(service_origin.clone(), fee, Payee::Dapp)
@@ -2684,6 +2685,7 @@ pub mod prosopo {
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
                 let provider = contract.providers.get(provider_account).unwrap();
                 // can only add data set after staking
@@ -2782,6 +2784,8 @@ pub mod prosopo {
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
+
                 // can only add data set after staking
                 contract.provider_add_dataset(root1, root2).ok();
 
@@ -2797,6 +2801,7 @@ pub mod prosopo {
                 let balance = 2000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
                 //Dapp User commit
                 let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2829,7 +2834,7 @@ pub mod prosopo {
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                    generate_provider_data(0x2, "4242", 1);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
                     .provider_register(service_origin.clone(), fee, Payee::Dapp)
@@ -2841,10 +2846,14 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract.provider_update(service_origin, fee, Payee::Provider).unwrap();
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
+            
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
-
+                contract.provider_add_dataset(root1, root2).unwrap();
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
+            
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
                 let dapp_contract_account = AccountId::from([0x4; 32]);
@@ -2856,7 +2865,7 @@ pub mod prosopo {
                 // Give the dap a balance
                 let balance = 2000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+                contract.dapp_register(dapp_contract_account, DappPayee::Dapp).unwrap();
 
                 //Dapp User commit
                 let dapp_user_account = AccountId::from([0x5; 32]);
