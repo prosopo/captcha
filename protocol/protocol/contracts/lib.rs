@@ -680,6 +680,18 @@ pub mod prosopo {
             self.providers.get(&account).ok_or_else(err_fn!(Error::ProviderDoesNotExist))
         }
 
+        #[ink(message)]
+        pub fn provider_fund(&mut self) -> Result<(), Error> {
+            self.provider_configure(
+                None,
+                None,
+                None,
+                false,
+                None,
+                None
+            )
+        }
+
         /// Add a new data set
         #[ink(message)]
         pub fn provider_set_dataset(
