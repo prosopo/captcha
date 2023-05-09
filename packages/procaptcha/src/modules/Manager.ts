@@ -71,7 +71,7 @@ export const Manager = (
                 alert(`Account ${address} not found`)
             },
             onError: (error) => {
-                alert(error ? `${error.message}, please try again` : 'An unexpected error occurred, please try again')
+                alert(`${error?.message ?? 'An unexpected error occurred'}, please try again`)
             },
             onHuman: (output) => {
                 console.log('onHuman event triggered', output)
@@ -273,13 +273,17 @@ export const Manager = (
                 }
             })
 
-            const account = getAccount()
-            const blockNumber = getBlockNumber()
-            const signer = account.extension.signer
+            const {
+                account,
+                extension: { signer },
+            } = getAccount()
+
+            const { datasetId } = challenge.captchas[0].captcha
+            const captchaApi = getCaptchaApi()
+
             if (!challenge.captchas[0].captcha.datasetId) {
                 throw new Error('No datasetId set for challenge')
             }
-            const captchaApi = getCaptchaApi()
 
             // send the commitment to the provider
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
