@@ -39,12 +39,8 @@ export default class ProviderApi extends HttpClientBase {
         const { blockNumber } = randomProvider
 
         return this.axios.get(
-<<<<<<< HEAD
-            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${this.network.dappContract.address
-=======
             `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
                 this.network.dappContract.address
->>>>>>> main
             }/${blockNumber.toString().replace(/,/g, '')}`
         )
     }

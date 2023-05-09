@@ -18,11 +18,7 @@ import { Theme } from '@mui/material'
 import Box from '@mui/material/Box'
 import Fade from '@mui/material/Fade'
 import useTheme from '@mui/styles/useTheme'
-<<<<<<< HEAD
 import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
-=======
-import { Item } from '@prosopo/types'
->>>>>>> main
 
 export interface CaptchaWidgetProps {
     challenge: CaptchaResponseCaptcha
