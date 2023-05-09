@@ -478,8 +478,22 @@ pub mod prosopo {
             }
 
             let provider_account = self.env().caller();
-
-            let old_provider = self.get_provider(provider_account)?;
+            let old_provider;
+            let lookup = self.get_provider(provider_account);
+            if lookup.is_err() {
+                old_provider = Provider {
+                    status: GovernanceStatus::Deactivated,
+                    balance: 0,
+                    fee: 0,
+                    service_origin: Vec::new(),
+                    dataset_id: Hash::default(),
+                    payee: Payee::Provider,
+                    dataset_id_content: Hash::default(),
+                };
+                self.provider_state_insert(&old_provider)?;
+            } else {
+                old_provider = lookup.unwrap();
+            }
             let mut new_provider = old_provider.clone();
             
             // update the config
@@ -509,11 +523,11 @@ pub mod prosopo {
             };
 
             let old_service_origin_hash = self.hash_vec_u8(&old_provider.service_origin);
-            self.service_origins.remove(&old_service_origin_hash);
             let new_service_origin_hash = self.hash_vec_u8(&new_provider.service_origin);
             if self.service_origins.contains(&new_service_origin_hash) {
                 return err!(Error::ProviderServiceOriginUsed);
             }
+            self.service_origins.remove(&old_service_origin_hash);
             self.service_origins.insert(&new_service_origin_hash, &());
 
             self.providers.insert(provider_account, &new_provider);
@@ -576,52 +590,15 @@ pub mod prosopo {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            let provider_account = self.env().caller();
             // this function is for registration only
-            if self.providers.get(provider_account).is_some() {
+            if self.get_provider(self.env().caller()).is_ok() {
                 return err!(Error::ProviderExists);
             }
 
-            self.check_provider_fee(fee)?;
-
-            // provider cannot be the admin
-            self.check_not_admin(provider_account)?;
-
-            let service_origin_hash = self.hash_vec_u8(&service_origin);
-
-            // prevent duplicate service origins
-            if self.service_origins.get(service_origin_hash).is_some() {
-                return err!(Error::ProviderServiceOriginUsed);
-            }
-            let balance: Balance = 0;
-            // add a new provider
-            let provider = Provider {
-                status: GovernanceStatus::Deactivated,
-                balance,
-                fee,
-                service_origin,
-                dataset_id: Hash::default(),
-                dataset_id_content: Hash::default(),
-                payee,
-            };
-            self.providers.insert(provider_account, &provider);
-            self.service_origins.insert(service_origin_hash, &());
-            let mut provider_accounts_map = self
-                .provider_accounts
-                .get(ProviderState {
-                    status: GovernanceStatus::Deactivated,
-                    payee,
-                })
-                .unwrap_or_default();
-            provider_accounts_map.insert(provider_account);
-            self.provider_accounts.insert(
-                ProviderState {
-                    status: GovernanceStatus::Deactivated,
-                    payee,
-                },
-                &provider_accounts_map,
-            );
-            Ok(())
+            self.provider_configure(Some(service_origin), 
+                Some(fee), 
+                Some(payee), 
+                true, None, None)
         }
 
         /// Update an existing provider, their service origin, fee and deposit funds
@@ -2071,10 +2048,21 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+                // give provider some funds, but not enough to be above the minimum stake
+                set_account_balance(provider_account, 1);
                 let service_origin: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
                 contract.provider_register(service_origin, fee, Payee::Dapp);
                 assert!(contract.providers.get(provider_account).is_some());
+                println!("{}", contract
+                .provider_accounts
+                .get(ProviderState {
+                    status: GovernanceStatus::Deactivated,
+                    payee: Payee::Provider
+                })
+                .unwrap_or_default()
+                .contains(&provider_account));
+            
                 assert!(contract
                     .provider_accounts
                     .get(ProviderState {
@@ -2243,12 +2231,14 @@ pub mod prosopo {
                 // try creating the second provider and make sure the error is correct and that it doesn't exist
                 let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+                println!("{:?}", contract.providers.get(provider_account));
                 match contract.provider_register(service_origin, fee, Payee::Dapp) {
                     Result::Err(Error::ProviderServiceOriginUsed) => {}
                     _ => {
                         unreachable!();
                     }
                 }
+                println!("{:?}", contract.providers.get(provider_account));
                 assert!(contract.providers.get(provider_account).is_none());
                 assert!(!contract
                     .provider_accounts
