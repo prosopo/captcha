@@ -16,6 +16,14 @@
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
+<<<<<<< HEAD
+=======
+import { GetCaptchaResponse } from '@prosopo/procaptcha'
+
+import { CaptchaWidget } from './CaptchaWidget'
+import { useTranslation } from '@prosopo/common'
+import { addDataAttr } from '../util'
+>>>>>>> main
 import ThemeProvider from '@mui/material/styles/ThemeProvider'
 import { GetCaptchaResponse } from '@prosopo/procaptcha'
 import addDataAttr from '../util'
