@@ -462,6 +462,112 @@ pub mod prosopo {
             Ok(())
         }
 
+        /// Configure a provider
+        #[ink(message)]
+        pub fn provider_configure(
+            &mut self,
+            service_origin: Option<Vec<u8>>,
+            fee: Option<u32>,
+            payee: Option<Payee>,
+            deactivate: bool,
+            dataset_id: Option<Hash>,
+            dataset_id_content: Option<Hash>,
+        ) -> Result<(), Error> {
+            if fee.is_some() {
+                self.check_provider_fee(fee.unwrap())?;
+            }
+
+            let provider_account = self.env().caller();
+
+            let old_provider = self.get_provider(provider_account)?;
+            let mut new_provider = old_provider.clone();
+            
+            // update the config
+            new_provider.service_origin = service_origin.unwrap_or(old_provider.service_origin.clone());
+            new_provider.fee = fee.unwrap_or(old_provider.fee);
+            new_provider.payee = payee.unwrap_or(old_provider.payee);
+            new_provider.balance += self.env().transferred_value();
+            new_provider.dataset_id = dataset_id.unwrap_or(old_provider.dataset_id);
+            new_provider.dataset_id_content = dataset_id_content.unwrap_or(old_provider.dataset_id_content);
+
+            // dataset content id cannot be equal to dataset id
+            if new_provider.dataset_id != Hash::default() && new_provider.dataset_id_content == new_provider.dataset_id {
+                return err!(Error::DatasetIdSolutionsSame);
+            }
+
+            // if the provider is
+                // not deactivating
+                // has a balance >= provider_stake_default
+                // has a dataset_id
+                // has a dataset_id_content
+            new_provider.status = if new_provider.balance >= self.provider_stake_default && new_provider.dataset_id != Hash::default() && new_provider.dataset_id_content != Hash::default() && !deactivate {
+                // then set the status to active
+                GovernanceStatus::Active
+            } else {
+                // else set the status to deactivated
+                GovernanceStatus::Deactivated
+            };
+
+            let old_service_origin_hash = self.hash_vec_u8(&old_provider.service_origin);
+            self.service_origins.remove(&old_service_origin_hash);
+            let new_service_origin_hash = self.hash_vec_u8(&new_provider.service_origin);
+            if self.service_origins.contains(&new_service_origin_hash) {
+                return err!(Error::ProviderServiceOriginUsed);
+            }
+            self.service_origins.insert(&new_service_origin_hash, &());
+
+            self.providers.insert(provider_account, &new_provider);
+
+            // update the category if status or payee has changed
+            if old_provider.status != new_provider.status || old_provider.payee != new_provider.payee {
+                self.provider_state_remove(&old_provider)?;
+                self.provider_state_insert(&new_provider)?;
+            }
+
+            Ok(())
+
+        }
+
+        /// Remove the provider from their state
+        fn provider_state_remove(&mut self, provider: &Provider) -> Result<(), Error> {
+
+            let provider_account = self.env().caller();
+
+            let cat = ProviderState {
+                status: provider.status,
+                payee: provider.payee,
+            };
+            let mut set = self.provider_accounts.get(cat).unwrap_or_default();
+            let removed = set.remove(&provider_account);
+            if !removed {
+                // expected provider to be in set
+                return err!(Error::ProviderDoesNotExist);
+            }
+            self.provider_accounts.insert(cat, &set);
+
+            Ok(())
+        }
+
+        /// Add a provider to their state
+        fn provider_state_insert(&mut self, provider: &Provider) -> Result<(), Error> {
+
+            let provider_account = self.env().caller();
+
+            let cat = ProviderState {
+                status: provider.status,
+                payee: provider.payee,
+            };
+            let mut set = self.provider_accounts.get(cat).unwrap_or_default();
+            let inserted = set.insert(provider_account);
+            if !inserted {
+                // expected provider to not already be in set
+                return err!(Error::ProviderExists);
+            }
+            self.provider_accounts.insert(cat, &set);
+
+            Ok(())
+        }
+
         /// Register a provider, their service origin and fee
         #[ink(message)]
         pub fn provider_register(
