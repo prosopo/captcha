@@ -524,11 +524,18 @@ pub mod prosopo {
 
             let old_service_origin_hash = self.hash_vec_u8(&old_provider.service_origin);
             let new_service_origin_hash = self.hash_vec_u8(&new_provider.service_origin);
-            if self.service_origins.contains(&new_service_origin_hash) {
-                return err!(Error::ProviderServiceOriginUsed);
+            if old_service_origin_hash != new_service_origin_hash {
+                // updating the service origin, so check whether the new origin is available
+                if self.service_origins.contains(&new_service_origin_hash) {
+                    return err!(Error::ProviderServiceOriginUsed);
+                } // else available
             }
+            
             self.service_origins.remove(&old_service_origin_hash);
-            self.service_origins.insert(&new_service_origin_hash, &());
+            // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
+            if new_service_origin_hash != Hash::default() {
+                self.service_origins.insert(&new_service_origin_hash, &());
+            }
 
             self.providers.insert(provider_account, &new_provider);
 
@@ -610,55 +617,15 @@ pub mod prosopo {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            let provider_account = self.env().caller();
-
             // this function is for updating only, not registering
-            if self.providers.get(provider_account).is_none() {
+            if self.providers.get(self.env().caller()).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
 
-            self.check_provider_fee(fee)?;
-
-            // provider cannot be an admin
-            self.check_not_admin(provider_account)?;
-
-            let existing = self.get_provider_details(provider_account)?;
-
-            if existing.service_origin != service_origin {
-                let service_origin_hash = self.hash_vec_u8(&service_origin);
-                // prevent duplicate service origins
-                if self.service_origins.get(service_origin_hash).is_some() {
-                    return err!(Error::ProviderServiceOriginUsed);
-                } else {
-                    let existing_service_origin_hash = self.hash_vec_u8(&existing.service_origin);
-                    self.service_origins.remove(existing_service_origin_hash);
-                    self.service_origins.insert(service_origin_hash, &());
-                }
-            }
-
-            let old_status = existing.status;
-            let mut new_status = existing.status;
-            let balance = existing.balance + self.env().transferred_value();
-
-            if balance >= self.provider_stake_default && existing.dataset_id != Hash::default() {
-                new_status = GovernanceStatus::Active;
-            }
-
-            // update an existing provider
-            let provider = Provider {
-                status: new_status,
-                balance,
-                fee,
-                service_origin,
-                dataset_id: existing.dataset_id,
-                dataset_id_content: existing.dataset_id_content,
-                payee,
-            };
-
-            self.provider_change_status(provider_account, old_status, new_status, payee);
-            self.providers.insert(provider_account, &provider);
-
-            Ok(())
+            self.provider_configure(Some(service_origin), 
+                Some(fee), 
+                Some(payee), 
+                false, None, None)
         }
 
         /// Switch the `provider_account` between indexes in `self.provider_accounts`
@@ -2978,7 +2945,7 @@ pub mod prosopo {
                         account: dapp_user_account,
                         completed_at: 0,
                     },
-                );
+                ).unwrap();
                 let commitment = contract
                     .captcha_solution_commitments
                     .get(solution_id)
@@ -3038,7 +3005,7 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract.provider_update(service_origin, fee, Payee::Provider).unwrap();
                 // can only add data set after staking
                 contract.provider_add_dataset(root1, root2);
 
@@ -3053,7 +3020,7 @@ pub mod prosopo {
                 // Give the dap a balance
                 let balance = 2000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+                contract.dapp_register(dapp_contract_account, DappPayee::Dapp).unwrap();
 
                 //Dapp User commit
                 let dapp_user_account = AccountId::from([0x5; 32]);
