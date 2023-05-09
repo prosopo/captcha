@@ -667,30 +667,15 @@ pub mod prosopo {
         /// De-Register a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deregister(&mut self) -> Result<(), Error> {
-            let provider_account = self.env().caller();
-
-            let caller = self.env().caller();
-            if caller != provider_account {
-                return err!(Error::NotAuthorised);
-            }
-
-            // Get provider
-            let mut provider = self
-                .providers
-                .get(provider_account)
-                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
-
-            // Update provider status
-            self.provider_change_status(
-                provider_account,
-                provider.status,
-                GovernanceStatus::Deactivated,
-                provider.payee,
-            );
-            provider.status = GovernanceStatus::Deactivated;
-            self.providers.insert(provider_account, &provider);
-
-            Ok(())
+            // Change status to deactivated
+            self.provider_configure(
+                None,
+                None,
+                None,
+                true,
+                None,
+                None,
+            )
         }
 
         /// Unstake and deactivate the provider's service, returning stake
