@@ -21,7 +21,12 @@ import path from 'path'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash, hexHash } from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
+<<<<<<< HEAD
 import { ProsopoEnvError, getPair, getSs58Format } from '@prosopo/common'
+=======
+import { ProsopoEnvError, getPair } from '@prosopo/common'
+import { getSs58Format } from '@prosopo/env'
+>>>>>>> main
 import { ContractDeployer, ProsopoCaptchaStatus, getEventsFromMethodName } from '@prosopo/contract'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import { PROVIDER, accountContract, getSignedTasks } from '../mocks/accounts'

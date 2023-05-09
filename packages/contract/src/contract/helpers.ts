@@ -157,13 +157,18 @@ const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE)
 // The values returned by the dry run transactions are sometimes not large enough
 // to guarantee that the transaction will succeed. This is a safety margin to ensure
 // that the transaction will succeed.
+<<<<<<< HEAD
 export const GAS_INCREASE_FACTOR = 1.01
+=======
+export const GAS_INCREASE_FACTOR = 1.1
+>>>>>>> main
 
 export function getOptions(
     api: ApiBase<'promise'>,
     isMutating?: boolean,
     value?: number | BN,
     gasLimit?: Weight | WeightV2,
+<<<<<<< HEAD
     storageDeposit?: StorageDeposit
 ): ContractOptions {
     const _gasLimit: Weight | WeightV2 | undefined = gasLimit
@@ -174,11 +179,33 @@ export function getOptions(
               refTime: MAX_CALL_WEIGHT,
           }) as WeightV2)
         : undefined
+=======
+    storageDeposit?: StorageDeposit,
+    increaseGas?: boolean
+): ContractOptions {
+    const gasIncreaseFactor = increaseGas ? GAS_INCREASE_FACTOR : 1
+    const _gasLimit: Weight | WeightV2 | undefined = gasLimit
+        ? api.registry.createType('WeightV2', {
+              refTime: gasLimit.refTime.toBn().muln(gasIncreaseFactor),
+              proofSize: gasLimit.proofSize.toBn().muln(gasIncreaseFactor),
+          })
+        : isMutating
+        ? (api.registry.createType('WeightV2', {
+              proofSize: new BN(1_000_000),
+              refTime: MAX_CALL_WEIGHT,
+          }) as WeightV2)
+        : undefined
+
+>>>>>>> main
     return {
         gasLimit: _gasLimit,
         storageDepositLimit: storageDeposit
             ? storageDeposit.isCharge
+<<<<<<< HEAD
                 ? storageDeposit.asCharge.muln(GAS_INCREASE_FACTOR)
+=======
+                ? storageDeposit.asCharge.toBn().muln(gasIncreaseFactor)
+>>>>>>> main
                 : storageDeposit.isRefund
                 ? storageDeposit.asRefund
                 : null

@@ -1,0 +1,126 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [ develop, main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  ENVIRONMENT: development
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check github refname
+        run: |
+          echo ${{ github.ref }}
+          echo ${{ github.ref_name }}
+          echo ${{ github.head_ref }}
+          echo ${{ github.base_ref }}
+
+      - name: Remove stopped containers
+        run: docker rm $(docker ps -a -q) || true
+
+      - name: Clone captcha
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          repository: prosopo/captcha
+          path: captcha
+          submodules: recursive
+
+      - name: Clone scripts repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.base_ref }}
+          repository: prosopo/scripts
+          path: scripts
+          #ssh-key: ${{ secrets.SSH_KEY }}
+          #ssh-strict: false
+
+      - name: Checkout correct scripts branch
+        run: |
+          cd scripts
+          git fetch
+          git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
+          git pull
+
+      - run: mkdir -p ~/image-cache
+
+      - id: image-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/image-cache
+          key: image-cache-docker-${{ runner.os }}
+
+      - if: steps.image-cache.outputs.cache-hit != 'true'
+        run: |
+          docker pull prosopo/substrate:dev-aura-bd39450fa8794ef385be198d239372a469a73b39
+          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:dev-aura-bd39450fa8794ef385be198d239372a469a73b39
+          docker pull mongo:5.0.4
+          docker save -o ~/image-cache/mongo.tar mongo:5.0.4
+
+      - if: steps.image-cache.outputs.cache-hit == 'true'
+        run: |
+          ls ~/image-cache
+          docker load -i ~/image-cache/prosopo.tar
+          docker load -i ~/image-cache/mongo.tar
+
+      - name: Start the docker images
+        run: |
+          cd scripts
+          docker compose --file ./docker/docker-compose.development.yml up -d
+
+      - id: node-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-cache-${{ runner.os }}-
+
+      - if: ${{ steps.node-cache.outputs.cache-hit == 'true' }}
+        run: |
+          cd ~/.npm
+          ls
+
+      - name: Install dependencies
+        run: |
+          cd captcha
+          ls .
+          npm install
+
+      - name: Build provider and dependencies
+        run: |
+          cd captcha
+          echo $(npx tsc --version)
+          cd packages/common && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../types && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../env && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../datasets && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../contract && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../provider && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+
+      - name: Setup the environment and run the unit tests
+        run: |
+          cd captcha
+          git status | head -n 1
+          cd packages/provider
+          cp env.development .env.development
+          git status | head -n 1
+          docker container ls
+          cat .env.development
+          NODE_ENV=$ENVIRONMENT npm run test
+
+      - name: Remove the docker containers
+        run: |
+          cd scripts
+          docker compose --file ./docker/docker-compose.development.yml down
+

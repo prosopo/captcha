@@ -17,7 +17,13 @@ import {
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
+<<<<<<< HEAD
 import { useRef, useState } from 'react'
+=======
+import { u32 } from '@polkadot/types'
+import { Manager, ProcaptchaConfigOptional, ProcaptchaState, ProcaptchaStateUpdateFn } from '@prosopo/procaptcha'
+import { Alert, Backdrop, CircularProgress } from '@mui/material'
+>>>>>>> main
 import CaptchaComponent from './CaptchaComponent'
 
 /**

@@ -19,12 +19,17 @@
     "@mui/icons-material": "^5.10.9",
     "@mui/material": "^5.10.11",
     "@mui/styles": "^5.8.3",
+<<<<<<< HEAD
     "@polkadot/extension-dapp": "0.44.8",
     "@polkadot/extension-inject": "0.44.8",
     "@polkadot/types": "9.13.6",
     "@prosopo/common": "^0.1.11",
     "@prosopo/procaptcha": "^0.1.11",
     "@prosopo/types": "^0.1.11",
+=======
+    "@prosopo/common": "^0.1.11",
+    "@prosopo/procaptcha": "^0.1.11",
+>>>>>>> main
     "react": "^17.0.0",
     "react-dom": "^17.0.0"
   },

@@ -3,7 +3,11 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
+<<<<<<< HEAD
 import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api' //dunno what's going on with providerapi import
+=======
+import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
+>>>>>>> main
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { ContractAbi } from '@prosopo/types'
