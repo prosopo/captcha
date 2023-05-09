@@ -13,12 +13,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
+
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
-<<<<<<< HEAD
-=======
-import { useTranslation } from '@prosopo/common'
->>>>>>> main
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { useTranslation } from '@prosopo/common'
