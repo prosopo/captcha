@@ -763,34 +763,39 @@ pub mod prosopo {
 
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
-            let mut dapp = dapp_lookup.unwrap_or(Dapp {
+            let old_dapp = dapp_lookup.unwrap_or(Dapp {
                 owner: owner.unwrap_or(self.env().caller()),
                 balance: 0,
                 status: GovernanceStatus::Suspended,
                 payee: payee.unwrap_or(DappPayee::Provider),
                 min_difficulty: 1,
             });
+            let mut new_dapp = old_dapp.clone();
 
             // check current contract for ownership
             if !new {
                 self.check_dapp_owner_is_caller(contract)?;
             }
 
-            dapp.payee = payee.unwrap_or(dapp.payee); // update the dapp payee
-            dapp.owner = owner.unwrap_or(dapp.owner); // update the owner
+            if payee.is_some() {
+                new_dapp.payee = payee.unwrap();
+            }
+            if owner.is_some() {
+                new_dapp.owner = owner.unwrap();
+            }
 
             // update the dapp funds
-            dapp.balance += self.env().transferred_value();
+            new_dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            dapp.status = if dapp.balance >= self.dapp_stake_default && !deactivate {
+            new_dapp.status = if new_dapp.balance >= self.dapp_stake_default && !deactivate {
                 GovernanceStatus::Active
             } else {
                 GovernanceStatus::Deactivated
             };
 
             // owner of the dapp cannot be an admin
-            self.check_not_admin(dapp.owner)?;
+            self.check_not_admin(new_dapp.owner)?;
 
             // if the dapp is new then add it to the list of dapps
             if new {
@@ -798,7 +803,7 @@ pub mod prosopo {
             }
 
             // update the dapp in the mapping
-            self.dapps.insert(contract, &dapp);
+            self.dapps.insert(contract, &new_dapp);
 
             Ok(())
         }
