@@ -657,7 +657,7 @@ pub mod prosopo {
             )
         }
 
-        /// De-Register a provider by setting their status to Deactivated
+        /// De-activate a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deactivate(&mut self) -> Result<(), Error> {
             // Change status to deactivated
