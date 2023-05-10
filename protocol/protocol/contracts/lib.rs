@@ -479,10 +479,10 @@ pub mod prosopo {
 
             let default_dataset_id = Hash::default();
             let provider_account = self.env().caller();
-            let old_provider;
             let lookup = self.get_provider(provider_account);
-            if lookup.is_err() {
-                old_provider = Provider {
+            let new = lookup.is_err();
+            let old_provider = if new {
+                Provider {
                     status: GovernanceStatus::Deactivated,
                     balance: 0,
                     fee: 0,
@@ -490,10 +490,12 @@ pub mod prosopo {
                     dataset_id: default_dataset_id,
                     payee: Payee::Provider,
                     dataset_id_content: default_dataset_id,
-                };
-                self.provider_state_insert(&old_provider)?;
+                }
             } else {
-                old_provider = lookup.unwrap();
+                lookup.unwrap()
+            };
+            if new {
+                self.provider_state_insert(&old_provider)?;
             }
             let mut new_provider = old_provider.clone();
 
