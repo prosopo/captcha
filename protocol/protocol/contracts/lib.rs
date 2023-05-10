@@ -57,7 +57,7 @@ fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u
 pub mod prosopo {
 
     use ink::env::debug_println as debug;
-    use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
+    use ink::env::hash::{Blake2x128, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
 
     use ink::prelude::vec;
