@@ -746,26 +746,13 @@ pub mod prosopo {
             Ok(())
         }
 
-        /// Configure a dapp's funds and status, handling transferred value
-        fn dapp_configure_funding(&self, dapp: &mut Dapp) {
-            // update the dapp funds
-            dapp.balance += self.env().transferred_value();
-
-            // update the dapp status
-            dapp.status = if dapp.balance >= self.dapp_stake_default {
-                GovernanceStatus::Active
-            } else {
-                GovernanceStatus::Suspended
-            };
-        }
-
         /// Configure a dapp (existing or new)
         fn dapp_configure(
             &mut self,
             contract: AccountId,
             payee: Option<DappPayee>,
             owner: Option<AccountId>,
-        ) -> Result<Dapp, Error> {
+        ) -> Result<(), Error> {
             self.check_is_contract(contract)?;
 
             let dapp_lookup = self.dapps.get(contract);
@@ -785,11 +772,19 @@ pub mod prosopo {
 
             dapp.payee = payee.unwrap_or(dapp.payee); // update the dapp payee
             dapp.owner = owner.unwrap_or(dapp.owner); // update the owner
+            
+            // update the dapp funds
+            dapp.balance += self.env().transferred_value();
+
+            // update the dapp status
+            dapp.status = if dapp.balance >= self.dapp_stake_default {
+                GovernanceStatus::Active
+            } else {
+                GovernanceStatus::Suspended
+            };
 
             // owner of the dapp cannot be an admin
             self.check_not_admin(dapp.owner)?;
-
-            self.dapp_configure_funding(&mut dapp);
 
             // if the dapp is new then add it to the list of dapps
             if new {
@@ -799,7 +794,7 @@ pub mod prosopo {
             // update the dapp in the mapping
             self.dapps.insert(contract, &dapp);
 
-            Ok(dapp)
+            Ok(())
         }
 
         /// Register a dapp
@@ -842,15 +837,9 @@ pub mod prosopo {
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            let mut dapp = self.get_dapp(contract)?;
+            self.get_dapp(contract)?; // only existing dapps can be used
 
-            // configure funds and status of the dapp
-            self.dapp_configure_funding(&mut dapp);
-
-            // update the dapp in the mapping
-            self.dapps.insert(contract, &dapp);
-
-            Ok(())
+            self.dapp_configure(contract, None, None)
         }
 
         /// Cancel services as a dapp, returning remaining tokens
