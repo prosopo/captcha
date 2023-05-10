@@ -149,7 +149,7 @@ export const Manager = (
             // first, ask the smart contract
             const contract = await loadContract()
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-            const contractIsHuman = await contract.getDappOperatorIsHumanUser(
+            const contractIsHuman = await contract.getDappOperator!User(
                 account.account.address,
                 config.solutionThreshold
             )
@@ -299,8 +299,7 @@ export const Manager = (
 
             if (!isHuman) {
                 // user failed the captcha for some reason according to the provider
-                // let the user know
-                alert('Captcha challenge failed. Please try again.')
+                events.onFailed()
             }
 
             // update the state with the result of the submission
