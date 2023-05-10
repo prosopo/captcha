@@ -619,6 +619,7 @@ pub mod prosopo {
 
         /// Register a provider, their service origin and fee
         #[ink(message)]
+        #[ink(payable)]
         pub fn provider_register(
             &mut self,
             service_origin: Vec<u8>,
@@ -673,7 +674,6 @@ pub mod prosopo {
 
         /// Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
-        #[ink(payable)]
         pub fn provider_deregister(&mut self) -> Result<(), Error> {
             let provider_account = self.env().caller();
 
@@ -703,6 +703,7 @@ pub mod prosopo {
         }
 
         #[ink(message)]
+        #[ink(payable)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
             if self.env().transferred_value() > 0 {
                 return self.provider_configure(None, None, None, false, None, None);
