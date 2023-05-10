@@ -794,6 +794,11 @@ pub mod prosopo {
                 GovernanceStatus::Deactivated
             };
 
+            if old_dapp == new_dapp {
+                // nothing to do as no change
+                return Ok(());
+            }
+
             // owner of the dapp cannot be an admin
             self.check_not_admin(new_dapp.owner)?;
 
