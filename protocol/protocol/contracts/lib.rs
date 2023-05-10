@@ -752,6 +752,7 @@ pub mod prosopo {
             contract: AccountId,
             payee: Option<DappPayee>,
             owner: Option<AccountId>,
+            deactivate: bool,
         ) -> Result<(), Error> {
             self.check_is_contract(contract)?;
 
@@ -777,10 +778,10 @@ pub mod prosopo {
             dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            dapp.status = if dapp.balance >= self.dapp_stake_default {
+            dapp.status = if dapp.balance >= self.dapp_stake_default && !deactivate {
                 GovernanceStatus::Active
             } else {
-                GovernanceStatus::Suspended
+                GovernanceStatus::Deactivated
             };
 
             // owner of the dapp cannot be an admin
@@ -812,6 +813,7 @@ pub mod prosopo {
                 contract,
                 Some(payee),
                 None, // the caller is made the owner of the contract
+                false,
             )
         }
 
@@ -826,7 +828,7 @@ pub mod prosopo {
             self.get_dapp(contract)?;
 
             // configure the dapp
-            self.dapp_configure(contract, Some(payee), Some(owner))
+            self.dapp_configure(contract, Some(payee), Some(owner), false)
         }
 
         /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
@@ -835,7 +837,7 @@ pub mod prosopo {
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
             self.get_dapp(contract)?; // only existing dapps can be used
 
-            self.dapp_configure(contract, None, None)
+            self.dapp_configure(contract, None, None, false)
         }
 
         /// Cancel services as a dapp, returning remaining tokens
@@ -858,6 +860,19 @@ pub mod prosopo {
             lazy!(self.dapp_accounts, remove, &contract);
 
             Ok(())
+        }
+
+        /// Deactivate a dapp, leaving stake intact
+        #[ink(message)]
+        pub fn dapp_deactivate(&mut self, contract: AccountId) -> Result<(), Error> {
+            self.get_dapp(contract)?;
+
+            self.dapp_configure(
+                contract,
+                None,
+                None,
+                true,
+            )
         }
 
         /// Trim the user history to the max length and age.
@@ -2264,7 +2279,7 @@ pub mod prosopo {
                 assert_eq!(dapp.owner, caller);
 
                 // account is marked as suspended as zero tokens have been paid
-                assert_eq!(dapp.status, GovernanceStatus::Suspended);
+                assert_eq!(dapp.status, GovernanceStatus::Deactivated);
                 assert_eq!(dapp.balance, balance);
                 assert!(contract
                     .dapp_accounts
