@@ -770,18 +770,18 @@ pub mod prosopo {
                 payee: payee.unwrap_or(DappPayee::Provider),
                 min_difficulty: 1,
             });
-            let mut new_dapp = old_dapp.clone();
+            let mut new_dapp = old_dapp;
 
             // check current contract for ownership
             if !new {
                 self.check_dapp_owner_is_caller(contract)?;
             }
 
-            if payee.is_some() {
-                new_dapp.payee = payee.unwrap();
+            if let Some(payee) = payee {
+                new_dapp.payee = payee;
             }
-            if owner.is_some() {
-                new_dapp.owner = owner.unwrap();
+            if let Some(owner) = owner {
+                new_dapp.owner = owner;
             }
 
             // update the dapp funds
@@ -853,7 +853,7 @@ pub mod prosopo {
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            if self.env().transferred_value() <= 0 {
+            if self.env().transferred_value() == 0 {
                 return Ok(());
             }
 
