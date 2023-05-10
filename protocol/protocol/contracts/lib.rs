@@ -509,6 +509,12 @@ pub mod prosopo {
             new_provider.dataset_id_content =
                 dataset_id_content.unwrap_or(old_provider.dataset_id_content);
 
+            // proceed only if there has been a change
+            if old_provider == new_provider {
+                // no need to update anything
+                return Ok(());
+            }
+
             // dataset content id cannot be equal to dataset id
             if new_provider.dataset_id != default_dataset_id
                 && new_provider.dataset_id_content == new_provider.dataset_id
