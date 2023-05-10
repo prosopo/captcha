@@ -808,13 +808,11 @@ pub mod prosopo {
             self.check_dapp_does_not_exist(contract)?;
 
             // configure the new dapp
-            let _dapp = self.dapp_configure(
+            self.dapp_configure(
                 contract,
                 Some(payee),
                 None, // the caller is made the owner of the contract
-            )?;
-
-            Ok(())
+            )
         }
 
         /// Update a dapp with new funds, setting status as appropriate
@@ -827,10 +825,8 @@ pub mod prosopo {
             // expect dapp to exist
             self.get_dapp(contract)?;
 
-            // configure the new dapp
-            let _dapp = self.dapp_configure(contract, Some(payee), Some(owner))?;
-
-            Ok(())
+            // configure the dapp
+            self.dapp_configure(contract, Some(payee), Some(owner))
         }
 
         /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
