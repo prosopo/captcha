@@ -140,6 +140,7 @@ pub mod prosopo {
         payee: Payee,
         service_origin: Vec<u8>,
         dataset_id: Hash,
+        dataset_id_content: Hash,
     }
 
     /// RandomProvider is selected randomly by the contract for the client side application
@@ -152,13 +153,6 @@ pub mod prosopo {
         dataset_id_content: Hash,
     }
 
-    /// Enum for various types of captcha
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum CaptchaType {
-        ImageGrid,
-    }
-
     /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
     /// the captchas received by a DappUser did belong to the Provider's original dataset
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -167,7 +161,6 @@ pub mod prosopo {
         provider: AccountId,
         dataset_id: Hash,
         dataset_id_content: Hash,
-        captcha_type: CaptchaType,
     }
 
     /// CaptchaSolutionCommitments are submitted by DAppUsers upon completion of one or more
@@ -241,7 +234,7 @@ pub mod prosopo {
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
         service_origins: Mapping<Hash, ()>,
-        captcha_data: Mapping<Hash, CaptchaData>,
+        datasets: Mapping<Hash, AccountId>,
         provider_stake_default: Balance,
         dapp_stake_default: Balance,
         dapps: Mapping<AccountId, Dapp>,
@@ -354,7 +347,7 @@ pub mod prosopo {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 service_origins: Default::default(),
-                captcha_data: Default::default(),
+                datasets: Default::default(),
                 dapp_users: Default::default(),
                 provider_stake_default,
                 dapp_stake_default,
@@ -469,59 +462,183 @@ pub mod prosopo {
             Ok(())
         }
 
+        /// Configure a provider
+        fn provider_configure(
+            &mut self,
+            service_origin: Option<Vec<u8>>,
+            fee: Option<u32>,
+            payee: Option<Payee>,
+            deactivate: bool,
+            dataset_id: Option<Hash>,
+            dataset_id_content: Option<Hash>,
+        ) -> Result<(), Error> {
+            if fee.is_some() {
+                self.check_provider_fee(fee.unwrap())?;
+            }
+
+            let default_dataset_id = Hash::default();
+            let provider_account = self.env().caller();
+            let lookup = self.get_provider(provider_account);
+            let new = lookup.is_err();
+            let old_provider = if new {
+                Provider {
+                    status: GovernanceStatus::Deactivated,
+                    balance: 0,
+                    fee: 0,
+                    service_origin: Vec::new(),
+                    dataset_id: default_dataset_id,
+                    payee: Payee::Provider,
+                    dataset_id_content: default_dataset_id,
+                }
+            } else {
+                lookup.unwrap()
+            };
+            if new {
+                self.provider_state_insert(&old_provider, &provider_account)?;
+            }
+            let mut new_provider = old_provider.clone();
+
+            // update the config
+            new_provider.service_origin =
+                service_origin.unwrap_or(old_provider.service_origin.clone());
+            new_provider.fee = fee.unwrap_or(old_provider.fee);
+            new_provider.payee = payee.unwrap_or(old_provider.payee);
+            new_provider.balance += self.env().transferred_value();
+            new_provider.dataset_id = dataset_id.unwrap_or(old_provider.dataset_id);
+            new_provider.dataset_id_content =
+                dataset_id_content.unwrap_or(old_provider.dataset_id_content);
+
+            // proceed only if there has been a change
+            if old_provider == new_provider {
+                // no need to update anything
+                return Ok(());
+            }
+
+            // dataset content id cannot be equal to dataset id
+            if new_provider.dataset_id != default_dataset_id
+                && new_provider.dataset_id_content == new_provider.dataset_id
+            {
+                return err!(Error::DatasetIdSolutionsSame);
+            }
+
+            // update the dataset mapping to provider
+            // remove old mapping
+            self.datasets.remove(old_provider.dataset_id);
+            if new_provider.dataset_id != default_dataset_id {
+                // insert new mapping if not the default hash, as this is used as a placeholder value
+                self.datasets
+                    .insert(new_provider.dataset_id, &provider_account);
+            }
+
+            // if the provider is
+            // not deactivating
+            // has a balance >= provider_stake_default
+            // has a dataset_id
+            // has a dataset_id_content
+            new_provider.status = if new_provider.balance >= self.provider_stake_default
+                && new_provider.dataset_id != default_dataset_id
+                && new_provider.dataset_id_content != default_dataset_id
+                && !deactivate
+            {
+                // then set the status to active
+                GovernanceStatus::Active
+            } else {
+                // else set the status to deactivated
+                GovernanceStatus::Deactivated
+            };
+
+            let old_service_origin_hash = self.hash_vec_u8(&old_provider.service_origin);
+            let new_service_origin_hash = self.hash_vec_u8(&new_provider.service_origin);
+            if old_service_origin_hash != new_service_origin_hash {
+                // updating the service origin, so check whether the new origin is available
+                if self.service_origins.contains(new_service_origin_hash) {
+                    return err!(Error::ProviderServiceOriginUsed);
+                } // else available
+
+                self.service_origins.remove(old_service_origin_hash);
+                // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
+                if new_service_origin_hash != default_dataset_id {
+                    self.service_origins.insert(new_service_origin_hash, &());
+                }
+            }
+
+            self.providers.insert(provider_account, &new_provider);
+
+            // update the category if status or payee has changed
+            if old_provider.status != new_provider.status
+                || old_provider.payee != new_provider.payee
+            {
+                self.provider_state_remove(&old_provider, &provider_account)?;
+                self.provider_state_insert(&new_provider, &provider_account)?;
+            }
+
+            Ok(())
+        }
+
+        /// Remove the provider from their state
+        fn provider_state_remove(
+            &mut self,
+            provider: &Provider,
+            provider_account: &AccountId,
+        ) -> Result<(), Error> {
+            let category = ProviderState {
+                status: provider.status,
+                payee: provider.payee,
+            };
+            let mut set = self.provider_accounts.get(category).unwrap_or_default();
+            let removed = set.remove(provider_account);
+            if !removed {
+                // expected provider to be in set
+                return err!(Error::ProviderDoesNotExist);
+            }
+            self.provider_accounts.insert(category, &set);
+
+            Ok(())
+        }
+
+        /// Add a provider to their state
+        fn provider_state_insert(
+            &mut self,
+            provider: &Provider,
+            provider_account: &AccountId,
+        ) -> Result<(), Error> {
+            let category = ProviderState {
+                status: provider.status,
+                payee: provider.payee,
+            };
+            let mut set = self.provider_accounts.get(category).unwrap_or_default();
+            let inserted = set.insert(*provider_account);
+            if !inserted {
+                // expected provider to not already be in set
+                return err!(Error::ProviderExists);
+            }
+            self.provider_accounts.insert(category, &set);
+
+            Ok(())
+        }
+
         /// Register a provider, their service origin and fee
         #[ink(message)]
+        #[ink(payable)]
         pub fn provider_register(
             &mut self,
             service_origin: Vec<u8>,
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            let provider_account = self.env().caller();
             // this function is for registration only
-            if self.providers.get(provider_account).is_some() {
+            if self.get_provider(self.env().caller()).is_ok() {
                 return err!(Error::ProviderExists);
             }
 
-            self.check_provider_fee(fee)?;
-
-            // provider cannot be the admin
-            self.check_not_admin(provider_account)?;
-
-            let service_origin_hash = self.hash_vec_u8(&service_origin);
-
-            // prevent duplicate service origins
-            if self.service_origins.get(service_origin_hash).is_some() {
-                return err!(Error::ProviderServiceOriginUsed);
-            }
-            let balance: Balance = 0;
-            // add a new provider
-            let provider = Provider {
-                status: GovernanceStatus::Deactivated,
-                balance,
-                fee,
-                service_origin,
-                dataset_id: Hash::default(),
-                payee,
-            };
-            self.providers.insert(provider_account, &provider);
-            self.service_origins.insert(service_origin_hash, &());
-            let mut provider_accounts_map = self
-                .provider_accounts
-                .get(ProviderState {
-                    status: GovernanceStatus::Deactivated,
-                    payee,
-                })
-                .unwrap_or_default();
-            provider_accounts_map.insert(provider_account);
-            self.provider_accounts.insert(
-                ProviderState {
-                    status: GovernanceStatus::Deactivated,
-                    payee,
-                },
-                &provider_accounts_map,
-            );
-            Ok(())
+            self.provider_configure(
+                Some(service_origin),
+                Some(fee),
+                Some(payee),
+                true,
+                None,
+                None,
+            )
         }
 
         /// Update an existing provider, their service origin, fee and deposit funds
@@ -533,194 +650,82 @@ pub mod prosopo {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            let provider_account = self.env().caller();
-
             // this function is for updating only, not registering
-            if self.providers.get(provider_account).is_none() {
+            if self.providers.get(self.env().caller()).is_none() {
                 return err!(Error::ProviderDoesNotExist);
             }
 
-            self.check_provider_fee(fee)?;
-
-            // provider cannot be an admin
-            self.check_not_admin(provider_account)?;
-
-            let existing = self.get_provider_details(provider_account)?;
-
-            if existing.service_origin != service_origin {
-                let service_origin_hash = self.hash_vec_u8(&service_origin);
-                // prevent duplicate service origins
-                if self.service_origins.get(service_origin_hash).is_some() {
-                    return err!(Error::ProviderServiceOriginUsed);
-                } else {
-                    let existing_service_origin_hash = self.hash_vec_u8(&existing.service_origin);
-                    self.service_origins.remove(existing_service_origin_hash);
-                    self.service_origins.insert(service_origin_hash, &());
-                }
-            }
-
-            let old_status = existing.status;
-            let mut new_status = existing.status;
-            let balance = existing.balance + self.env().transferred_value();
-
-            if balance >= self.provider_stake_default && existing.dataset_id != Hash::default() {
-                new_status = GovernanceStatus::Active;
-            }
-
-            // update an existing provider
-            let provider = Provider {
-                status: new_status,
-                balance,
-                fee,
-                service_origin,
-                dataset_id: existing.dataset_id,
-                payee,
-            };
-
-            self.provider_change_status(provider_account, old_status, new_status, payee);
-            self.providers.insert(provider_account, &provider);
-
-            Ok(())
+            self.provider_configure(
+                Some(service_origin),
+                Some(fee),
+                Some(payee),
+                false,
+                None,
+                None,
+            )
         }
 
-        /// Switch the `provider_account` between indexes in `self.provider_accounts`
-        fn provider_change_status(
-            &mut self,
-            provider_account: AccountId,
-            current_provider_status: GovernanceStatus,
-            new_status: GovernanceStatus,
-            payee: Payee,
-        ) {
-            if current_provider_status != new_status {
-                let current_key = ProviderState {
-                    status: current_provider_status,
-                    payee,
-                };
-                let new_key = ProviderState {
-                    status: new_status,
-                    payee,
-                };
-                // Retrieve indexes from storage mapping
-                let mut current_status_provider_accounts =
-                    self.provider_accounts.get(current_key).unwrap_or_default();
-
-                let mut new_status_provider_accounts =
-                    self.provider_accounts.get(new_key).unwrap_or_default();
-
-                // Move provider to the correct index
-                current_status_provider_accounts.remove(&provider_account);
-                new_status_provider_accounts.insert(provider_account);
-
-                // Store mapping
-                self.provider_accounts
-                    .insert(current_key, &current_status_provider_accounts);
-                self.provider_accounts
-                    .insert(new_key, &new_status_provider_accounts);
-            }
-        }
-
-        /// De-Register a provider by setting their status to Deactivated
+        /// De-activate a provider by setting their status to Deactivated
         #[ink(message)]
-        pub fn provider_deregister(&mut self, provider_account: AccountId) -> Result<(), Error> {
-            let caller = self.env().caller();
-            if caller != provider_account {
-                return err!(Error::NotAuthorised);
-            }
-
-            // Get provider
-            let mut provider = self
-                .providers
-                .get(provider_account)
-                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
-
-            // Update provider status
-            self.provider_change_status(
-                provider_account,
-                provider.status,
-                GovernanceStatus::Deactivated,
-                provider.payee,
-            );
-            provider.status = GovernanceStatus::Deactivated;
-            self.providers.insert(provider_account, &provider);
-
-            Ok(())
+        pub fn provider_deactivate(&mut self) -> Result<(), Error> {
+            // Change status to deactivated
+            self.provider_configure(None, None, None, true, None, None)
         }
 
         /// Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
-        #[ink(payable)]
-        pub fn provider_unstake(&mut self) -> Result<(), Error> {
-            let caller = self.env().caller();
-            if self.providers.get(caller).is_none() {
-                return err!(Error::ProviderDoesNotExist);
-            }
+        pub fn provider_deregister(&mut self) -> Result<(), Error> {
+            let provider_account = self.env().caller();
 
-            let provider = self.get_provider_details(caller)?;
+            let provider = self.get_provider(provider_account)?;
+
+            // remove the provider
+            self.providers.remove(provider_account);
+
+            // remove the provider from their category
+            self.provider_state_remove(&provider, &provider_account)?;
+
+            // return the stake
             let balance = provider.balance;
             if balance > 0 {
                 self.env()
-                    .transfer(caller, balance)
+                    .transfer(provider_account, balance)
                     .map_err(|_| Error::ContractTransferFailed)?;
-                self.provider_deregister(caller)?;
             }
 
+            Ok(())
+        }
+
+        fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
+            self.providers
+                .get(account)
+                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))
+        }
+
+        #[ink(message)]
+        #[ink(payable)]
+        pub fn provider_fund(&mut self) -> Result<(), Error> {
+            if self.env().transferred_value() > 0 {
+                return self.provider_configure(None, None, None, false, None, None);
+            }
             Ok(())
         }
 
         /// Add a new data set
         #[ink(message)]
-        pub fn provider_add_dataset(
+        pub fn provider_set_dataset(
             &mut self,
             dataset_id: Hash,
             dataset_id_content: Hash,
         ) -> Result<(), Error> {
-            if dataset_id == dataset_id_content {
-                return err!(Error::DatasetIdSolutionsSame);
-            }
-            let provider_id = self.env().caller();
-            // the calling account must belong to the provider
-            self.validate_provider_exists_and_has_funds(provider_id)?;
-            let dataset = CaptchaData {
-                provider: provider_id,
-                dataset_id,
-                dataset_id_content,
-                captcha_type: CaptchaType::ImageGrid,
-            };
-
-            let mut provider = self
-                .providers
-                .get(provider_id)
-                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
-            let dataset_id_old = provider.dataset_id;
-
-            // create a new id and insert details of the new captcha data set if it doesn't exist
-            if self.captcha_data.get(dataset_id).is_none() {
-                self.captcha_data.insert(dataset_id, &dataset);
-                // remove the old dataset_id from the Mapping
-                self.captcha_data.remove(dataset_id_old);
-            }
-
-            // set the captcha data id on the provider
-            provider.dataset_id = dataset_id;
-            let old_status = provider.status;
-
-            // change the provider status to active if it was not active
-            if provider.status != GovernanceStatus::Active
-                && provider.balance >= self.provider_stake_default
-                && dataset_id != Hash::default()
-            {
-                provider.status = GovernanceStatus::Active;
-                self.provider_change_status(
-                    provider_id,
-                    old_status,
-                    provider.status,
-                    provider.payee,
-                );
-            }
-
-            self.providers.insert(provider_id, &provider);
-
-            Ok(())
+            self.provider_configure(
+                None,
+                None,
+                None,
+                false,
+                Some(dataset_id),
+                Some(dataset_id_content),
+            )
         }
 
         /// Check the contract is a contract
@@ -1146,9 +1151,16 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
-            self.captcha_data
+            let provider_account = self
+                .datasets
                 .get(dataset_id)
-                .ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))
+                .ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))?;
+            let provider = self.get_provider(provider_account)?;
+            Ok(CaptchaData {
+                dataset_id,
+                provider: provider_account,
+                dataset_id_content: provider.dataset_id_content,
+            })
         }
 
         /// Get a dapp user
@@ -1965,10 +1977,24 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+                // give provider some funds, but not enough to be above the minimum stake
+                set_account_balance(provider_account, 1);
                 let service_origin: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
                 contract.provider_register(service_origin, fee, Payee::Dapp);
                 assert!(contract.providers.get(provider_account).is_some());
+                println!(
+                    "{}",
+                    contract
+                        .provider_accounts
+                        .get(ProviderState {
+                            status: GovernanceStatus::Deactivated,
+                            payee: Payee::Provider
+                        })
+                        .unwrap_or_default()
+                        .contains(&provider_account)
+                );
+
                 assert!(contract
                     .provider_accounts
                     .get(ProviderState {
@@ -1981,7 +2007,7 @@ pub mod prosopo {
 
             /// Test provider deregister
             #[ink::test]
-            fn test_provider_deregister() {
+            fn test_provider_deactivate() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
@@ -1992,7 +2018,7 @@ pub mod prosopo {
                 let fee: u32 = 100;
                 contract.provider_register(service_origin, fee, Payee::Dapp);
                 assert!(contract.providers.get(provider_account).is_some());
-                contract.provider_deregister(provider_account);
+                contract.provider_deactivate();
                 let provider_record = contract.providers.get(provider_account).unwrap();
                 assert!(provider_record.status == GovernanceStatus::Deactivated);
             }
@@ -2137,12 +2163,14 @@ pub mod prosopo {
                 // try creating the second provider and make sure the error is correct and that it doesn't exist
                 let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
+                println!("{:?}", contract.providers.get(provider_account));
                 match contract.provider_register(service_origin, fee, Payee::Dapp) {
                     Result::Err(Error::ProviderServiceOriginUsed) => {}
                     _ => {
                         unreachable!();
                     }
                 }
+                println!("{:?}", contract.providers.get(provider_account));
                 assert!(contract.providers.get(provider_account).is_none());
                 assert!(!contract
                     .provider_accounts
@@ -2199,7 +2227,7 @@ pub mod prosopo {
 
             /// Test provider unstake
             #[ink::test]
-            fn test_provider_unstake() {
+            fn test_provider_deregister() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
@@ -2220,12 +2248,12 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
-                contract.provider_unstake().ok();
+                contract.provider_deregister().ok();
             }
 
             /// Test provider add data set
             #[ink::test]
-            fn test_provider_add_dataset() {
+            fn test_provider_set_dataset() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
@@ -2246,33 +2274,7 @@ pub mod prosopo {
                 contract.provider_update(service_origin, fee, Payee::Provider);
                 let root1 = str_to_hash("merkle tree".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
-                contract.provider_add_dataset(root1, root2).ok();
-            }
-
-            /// Test provider cannot add data set if inactive
-            #[ink::test]
-            fn test_provider_cannot_add_dataset_if_inactive() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
-
-                let mut contract = get_contract(0);
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                let balance: u128 = 10;
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin, fee, Payee::Dapp)
-                    .ok();
-                ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
-                    provider_account,
-                    balance,
-                );
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                let root1 = str_to_hash("merkle tree1".to_string());
-                let root2 = str_to_hash("merkle tree2".to_string());
-                let result = contract.provider_add_dataset(root1, root2).unwrap_err();
-                assert_eq!(ProviderInsufficientFunds, result)
+                contract.provider_set_dataset(root1, root2).ok();
             }
 
             /// Test dapp register with zero balance transfer
@@ -2704,7 +2706,7 @@ pub mod prosopo {
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                    generate_provider_data(0x2, "4242", 1);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
                     .provider_register(service_origin.clone(), fee, Payee::Dapp)
@@ -2717,10 +2719,11 @@ pub mod prosopo {
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
                 let provider = contract.providers.get(provider_account).unwrap();
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2815,8 +2818,10 @@ pub mod prosopo {
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
+
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2830,6 +2835,7 @@ pub mod prosopo {
                 let balance = 2000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
                 //Dapp User commit
                 let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2862,7 +2868,7 @@ pub mod prosopo {
 
                 // Register the provider
                 let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                    generate_provider_data(0x2, "4242", 1);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
                     .provider_register(service_origin.clone(), fee, Payee::Dapp)
@@ -2874,9 +2880,15 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract
+                    .provider_update(service_origin, fee, Payee::Provider)
+                    .unwrap();
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
+
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).unwrap();
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2889,7 +2901,9 @@ pub mod prosopo {
                 // Give the dap a balance
                 let balance = 2000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+                contract
+                    .dapp_register(dapp_contract_account, DappPayee::Dapp)
+                    .unwrap();
 
                 //Dapp User commit
                 let dapp_user_account = AccountId::from([0x5; 32]);
@@ -2898,17 +2912,19 @@ pub mod prosopo {
                 // Call from the provider account to mark the solution as disapproved
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let solution_id = user_root;
-                contract.provider_commit(
-                    solution_id,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: user_root,
-                        status: CaptchaStatus::Disapproved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
-                );
+                contract
+                    .provider_commit(
+                        solution_id,
+                        CaptchaSolutionCommitment {
+                            contract: dapp_contract_account,
+                            dataset_id: user_root,
+                            status: CaptchaStatus::Disapproved,
+                            provider: provider_account,
+                            account: dapp_user_account,
+                            completed_at: 0,
+                        },
+                    )
+                    .unwrap();
                 let commitment = contract
                     .captcha_solution_commitments
                     .get(solution_id)
@@ -2968,9 +2984,11 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract
+                    .provider_update(service_origin, fee, Payee::Provider)
+                    .unwrap();
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2);
+                contract.provider_set_dataset(root1, root2);
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -2983,7 +3001,9 @@ pub mod prosopo {
                 // Give the dap a balance
                 let balance = 2000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
+                contract
+                    .dapp_register(dapp_contract_account, DappPayee::Dapp)
+                    .unwrap();
 
                 //Dapp User commit
                 let dapp_user_account = AccountId::from([0x5; 32]);
@@ -3056,7 +3076,7 @@ pub mod prosopo {
                 contract.provider_update(service_origin, fee, Payee::Dapp);
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
-                contract.provider_add_dataset(root1, root2);
+                contract.provider_set_dataset(root1, root2);
                 let registered_provider_account = contract.providers.get(provider_account);
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -3096,7 +3116,7 @@ pub mod prosopo {
                 contract.provider_update(service_origin.clone(), fee, Payee::Provider);
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
-                contract.provider_add_dataset(root1, root2);
+                contract.provider_set_dataset(root1, root2);
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -3157,7 +3177,7 @@ pub mod prosopo {
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
@@ -3242,7 +3262,7 @@ pub mod prosopo {
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Register the dapp
                 let dapp_user_account = AccountId::from([0x3; 32]);
@@ -3272,7 +3292,7 @@ pub mod prosopo {
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
                 contract.provider_update(service_origin, fee, Payee::Provider);
                 // can only add data set after staking
-                contract.provider_add_dataset(root1, root2).ok();
+                contract.provider_set_dataset(root1, root2).ok();
 
                 // Call from dapp_user_commit from provider_account2 to supply a commit for provider_account
                 // Should not be authorised
