@@ -576,7 +576,11 @@ pub mod prosopo {
         }
 
         /// Remove the provider from their state
-        fn provider_state_remove(&mut self, provider: &Provider, provider_account: &AccountId) -> Result<(), Error> {
+        fn provider_state_remove(
+            &mut self,
+            provider: &Provider,
+            provider_account: &AccountId,
+        ) -> Result<(), Error> {
             let category = ProviderState {
                 status: provider.status,
                 payee: provider.payee,
@@ -593,7 +597,11 @@ pub mod prosopo {
         }
 
         /// Add a provider to their state
-        fn provider_state_insert(&mut self, provider: &Provider, provider_account: &AccountId) -> Result<(), Error> {
+        fn provider_state_insert(
+            &mut self,
+            provider: &Provider,
+            provider_account: &AccountId,
+        ) -> Result<(), Error> {
             let category = ProviderState {
                 status: provider.status,
                 payee: provider.payee,
