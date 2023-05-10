@@ -463,8 +463,7 @@ pub mod prosopo {
         }
 
         /// Configure a provider
-        #[ink(message)]
-        pub fn provider_configure(
+        fn provider_configure(
             &mut self,
             service_origin: Option<Vec<u8>>,
             fee: Option<u32>,
@@ -495,7 +494,7 @@ pub mod prosopo {
                 lookup.unwrap()
             };
             if new {
-                self.provider_state_insert(&old_provider)?;
+                self.provider_state_insert(&old_provider, &provider_account)?;
             }
             let mut new_provider = old_provider.clone();
 
@@ -508,6 +507,12 @@ pub mod prosopo {
             new_provider.dataset_id = dataset_id.unwrap_or(old_provider.dataset_id);
             new_provider.dataset_id_content =
                 dataset_id_content.unwrap_or(old_provider.dataset_id_content);
+
+            // proceed only if there has been a change
+            if old_provider == new_provider {
+                // no need to update anything
+                return Ok(());
+            }
 
             // dataset content id cannot be equal to dataset id
             if new_provider.dataset_id != default_dataset_id
@@ -549,12 +554,12 @@ pub mod prosopo {
                 if self.service_origins.contains(new_service_origin_hash) {
                     return err!(Error::ProviderServiceOriginUsed);
                 } // else available
-            }
 
-            self.service_origins.remove(old_service_origin_hash);
-            // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
-            if new_service_origin_hash != default_dataset_id {
-                self.service_origins.insert(new_service_origin_hash, &());
+                self.service_origins.remove(old_service_origin_hash);
+                // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
+                if new_service_origin_hash != default_dataset_id {
+                    self.service_origins.insert(new_service_origin_hash, &());
+                }
             }
 
             self.providers.insert(provider_account, &new_provider);
@@ -563,53 +568,58 @@ pub mod prosopo {
             if old_provider.status != new_provider.status
                 || old_provider.payee != new_provider.payee
             {
-                self.provider_state_remove(&old_provider)?;
-                self.provider_state_insert(&new_provider)?;
+                self.provider_state_remove(&old_provider, &provider_account)?;
+                self.provider_state_insert(&new_provider, &provider_account)?;
             }
 
             Ok(())
         }
 
         /// Remove the provider from their state
-        fn provider_state_remove(&mut self, provider: &Provider) -> Result<(), Error> {
-            let provider_account = self.env().caller();
-
-            let cat = ProviderState {
+        fn provider_state_remove(
+            &mut self,
+            provider: &Provider,
+            provider_account: &AccountId,
+        ) -> Result<(), Error> {
+            let category = ProviderState {
                 status: provider.status,
                 payee: provider.payee,
             };
-            let mut set = self.provider_accounts.get(cat).unwrap_or_default();
-            let removed = set.remove(&provider_account);
+            let mut set = self.provider_accounts.get(category).unwrap_or_default();
+            let removed = set.remove(provider_account);
             if !removed {
                 // expected provider to be in set
                 return err!(Error::ProviderDoesNotExist);
             }
-            self.provider_accounts.insert(cat, &set);
+            self.provider_accounts.insert(category, &set);
 
             Ok(())
         }
 
         /// Add a provider to their state
-        fn provider_state_insert(&mut self, provider: &Provider) -> Result<(), Error> {
-            let provider_account = self.env().caller();
-
-            let cat = ProviderState {
+        fn provider_state_insert(
+            &mut self,
+            provider: &Provider,
+            provider_account: &AccountId,
+        ) -> Result<(), Error> {
+            let category = ProviderState {
                 status: provider.status,
                 payee: provider.payee,
             };
-            let mut set = self.provider_accounts.get(cat).unwrap_or_default();
-            let inserted = set.insert(provider_account);
+            let mut set = self.provider_accounts.get(category).unwrap_or_default();
+            let inserted = set.insert(*provider_account);
             if !inserted {
                 // expected provider to not already be in set
                 return err!(Error::ProviderExists);
             }
-            self.provider_accounts.insert(cat, &set);
+            self.provider_accounts.insert(category, &set);
 
             Ok(())
         }
 
         /// Register a provider, their service origin and fee
         #[ink(message)]
+        #[ink(payable)]
         pub fn provider_register(
             &mut self,
             service_origin: Vec<u8>,
@@ -655,7 +665,7 @@ pub mod prosopo {
             )
         }
 
-        /// De-Register a provider by setting their status to Deactivated
+        /// De-activate a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deactivate(&mut self) -> Result<(), Error> {
             // Change status to deactivated
@@ -664,7 +674,6 @@ pub mod prosopo {
 
         /// Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
-        #[ink(payable)]
         pub fn provider_deregister(&mut self) -> Result<(), Error> {
             let provider_account = self.env().caller();
 
@@ -674,7 +683,7 @@ pub mod prosopo {
             self.providers.remove(provider_account);
 
             // remove the provider from their category
-            self.provider_state_remove(&provider)?;
+            self.provider_state_remove(&provider, &provider_account)?;
 
             // return the stake
             let balance = provider.balance;
@@ -694,8 +703,12 @@ pub mod prosopo {
         }
 
         #[ink(message)]
+        #[ink(payable)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
-            self.provider_configure(None, None, None, false, None, None)
+            if self.env().transferred_value() > 0 {
+                return self.provider_configure(None, None, None, false, None, None);
+            }
+            Ok(())
         }
 
         /// Add a new data set
