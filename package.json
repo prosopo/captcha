@@ -90,6 +90,7 @@
     "dev"
   ],
   "devDependencies": {
+    "babel-plugin-import": "^1.13.6",
     "depcheck": "^1.4.3",
     "eslint-plugin-absolute-imports-only": "^1.0.1",
     "nodemon": "^2.0.20",

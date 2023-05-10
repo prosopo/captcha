@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { hexHashArray } from './util'
+import { hexHashArray } from '@prosopo/common'
 import { MerkleLayer, MerkleLeaf, MerkleNodeInterface, MerkleProof, MerkleProofLayer } from '@prosopo/types'
 
 class MerkleNode implements MerkleNodeInterface {

@@ -45,11 +45,10 @@ export async function batch(
     const paymentInfo = await batchExtrinsic.paymentInfo(pair)
     logger.info('Sender balance Before', balance.data.free.div(oneUnit(contract.api as ApiPromise)).toString(), 'UNIT')
     logger.info('Payment Info', paymentInfo.toHuman())
-    console.log(JSON.stringify(batchExtrinsic.toHuman(), null, 2))
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
         const unsub = await batchExtrinsic.signAndSend(pair, options, async (result: SubmittableResult) => {
-            logger.debug('DispatchInfo', result.dispatchInfo?.toHuman())
+            //logger.debug('DispatchInfo', result.dispatchInfo?.toHuman())
 
             const batchInterruptedEvent = result.events.filter((e) => e.event.method === 'BatchInterrupted')
             const tooManyCallsEvent = result.events.filter((e) => e.event.method === 'TooManyCalls')
