@@ -704,7 +704,9 @@ pub mod prosopo {
 
         #[ink(message)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
-            self.provider_configure(None, None, None, false, None, None)
+            if self.env().transferred_value() > 0 {
+                self.provider_configure(None, None, None, false, None, None)
+            }
         }
 
         /// Add a new data set
