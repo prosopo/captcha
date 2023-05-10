@@ -664,7 +664,7 @@ pub mod prosopo {
 
         fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
             self.providers
-                .get(&account)
+                .get(account)
                 .ok_or_else(err_fn!(Error::ProviderDoesNotExist))
         }
 
