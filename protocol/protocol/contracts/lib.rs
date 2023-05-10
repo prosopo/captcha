@@ -763,18 +763,18 @@ pub mod prosopo {
         fn dapp_configure(
             &mut self,
             contract: AccountId,
-            payee: DappPayee,
-            owner: AccountId,
+            payee: Option<DappPayee>,
+            owner: Option<AccountId>,
         ) -> Result<Dapp, Error> {
             self.check_is_contract(contract)?;
 
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
             let mut dapp = dapp_lookup.unwrap_or(Dapp {
-                owner,
+                owner: owner.unwrap_or(self.env().caller()),
                 balance: 0,
                 status: GovernanceStatus::Suspended,
-                payee,
+                payee: payee.unwrap_or(DappPayee::Provider),
                 min_difficulty: 1,
             });
 
@@ -783,11 +783,11 @@ pub mod prosopo {
                 self.check_dapp_owner_is_caller(contract)?;
             }
 
-            dapp.payee = payee; // update the dapp payee
-            dapp.owner = owner; // update the owner
+            dapp.payee = payee.unwrap_or(dapp.payee); // update the dapp payee
+            dapp.owner = owner.unwrap_or(dapp.owner); // update the owner
 
             // owner of the dapp cannot be an admin
-            self.check_not_admin(owner)?;
+            self.check_not_admin(dapp.owner)?;
 
             self.dapp_configure_funding(&mut dapp);
 
@@ -815,8 +815,8 @@ pub mod prosopo {
             // configure the new dapp
             let _dapp = self.dapp_configure(
                 contract,
-                payee,
-                self.env().caller(), // the caller is made the owner of the contract
+                Some(payee),
+                None, // the caller is made the owner of the contract
             )?;
 
             Ok(())
@@ -833,7 +833,7 @@ pub mod prosopo {
             self.get_dapp(contract)?;
 
             // configure the new dapp
-            let _dapp = self.dapp_configure(contract, payee, owner)?;
+            let _dapp = self.dapp_configure(contract, Some(payee), Some(owner))?;
 
             Ok(())
         }
