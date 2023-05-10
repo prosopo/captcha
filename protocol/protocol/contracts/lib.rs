@@ -586,7 +586,7 @@ pub mod prosopo {
                 payee: provider.payee,
             };
             let mut set = self.provider_accounts.get(category).unwrap_or_default();
-            let removed = set.remove(&provider_account);
+            let removed = set.remove(provider_account);
             if !removed {
                 // expected provider to be in set
                 return err!(Error::ProviderDoesNotExist);
