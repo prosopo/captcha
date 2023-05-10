@@ -1557,6 +1557,10 @@ pub mod prosopo {
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
         const set_callee: fn(AccountId) =
             ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
+        const set_contract: fn(AccountId) =
+        ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
+        const set_value_transferred: fn(Balance) = ink::env::test::set_value_transferred::<
+            ink::env::DefaultEnvironment>;
 
         const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
         const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
@@ -1564,6 +1568,7 @@ pub mod prosopo {
         const USER_ACCOUNT_PREFIX: u8 = 0x04;
         const CONTRACT_ACCOUNT_PREFIX: u8 = 0x05;
         const CODE_HASH_PREFIX: u8 = 0x06;
+        const DAPP_OWNER_ACCOUNT_PREFIX: u8 = 0x07;
 
         mod tests_inner {
 
@@ -1610,6 +1615,11 @@ pub mod prosopo {
                 get_account(DAPP_ACCOUNT_PREFIX, index)
             }
 
+            /// get the nth dapp owner account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+            fn get_dapp_owner_account(index: u128) -> AccountId {
+                get_account(DAPP_OWNER_ACCOUNT_PREFIX, index)
+            }
+
             /// get the nth user account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
             fn get_user_account(index: u128) -> AccountId {
                 get_account(USER_ACCOUNT_PREFIX, index)
@@ -1617,7 +1627,10 @@ pub mod prosopo {
 
             /// get the nth contract account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
             fn get_contract_account(index: u128) -> AccountId {
-                get_account(CONTRACT_ACCOUNT_PREFIX, index)
+                let account = get_account(CONTRACT_ACCOUNT_PREFIX, index);
+                // mark the account as a contract
+                set_contract(account);
+                account
             }
 
             /// get the nth code hash. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
@@ -1628,7 +1641,7 @@ pub mod prosopo {
             /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
             fn get_contract(index: u128) -> Prosopo {
                 let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
-                                                                           // make sure the contract gets allocated the above account
+                // make sure the contract gets allocated the above account
                 set_callee(account);
                 // give the contract account some funds
                 set_account_balance(account, 1);
@@ -1685,6 +1698,7 @@ pub mod prosopo {
                     get_dapp_account,
                     get_user_account,
                     get_contract_account,
+                    get_dapp_owner_account,
                 ]
                 .iter()
                 {
@@ -1715,6 +1729,7 @@ pub mod prosopo {
                     get_dapp_account,
                     get_user_account,
                     get_contract_account,
+                    get_dapp_owner_account,
                 ]
                 .iter()
                 {
@@ -1883,6 +1898,32 @@ pub mod prosopo {
                     contract.withdraw(get_admin_account(0), 1),
                     Err(Error::IsNotAdmin)
                 );
+            }
+
+            #[ink::test]
+            fn test_dapp_withdraw() {
+
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(get_unused_account());
+
+                let mut contract = get_contract(0);
+                let dapp_account = get_dapp_account(0);
+
+                set_caller(get_dapp_owner_account(0));
+
+                let diff = 1;
+                let value = STAKE_DEFAULT + diff;
+                set_value_transferred(value);
+                contract.dapp_register(
+                    dapp_account,
+                    DappPayee::Provider
+                );
+                set_value_transferred(0);
+                assert_eq!(get_account_balance(dapp_account).unwrap(), value);
+
+                let dapp_balance = get_account_balance(dapp_account).unwrap();
+                contract.dapp_withdraw(dapp_account, diff).unwrap();
+                assert_eq!(get_account_balance(dapp_account).unwrap(), dapp_balance - diff);
             }
 
             #[ink::test]
