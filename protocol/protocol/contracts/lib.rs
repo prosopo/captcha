@@ -805,6 +805,7 @@ pub mod prosopo {
 
         /// Register a dapp
         #[ink(message)]
+        #[ink(payable)]
         pub fn dapp_register(
             &mut self,
             contract: AccountId,
@@ -823,6 +824,8 @@ pub mod prosopo {
         }
 
         /// Update a dapp with new funds, setting status as appropriate
+        #[ink(message)]
+        #[ink(payable)]
         pub fn dapp_update(
             &mut self,
             contract: AccountId,
