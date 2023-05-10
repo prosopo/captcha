@@ -4,7 +4,6 @@ import { AccountId, Balance } from '@polkadot/types/interfaces'
 import { BN, hexToU8a } from '@polkadot/util'
 import {
     CaptchaData,
-    DappAccounts,
     IProsopoContractMethods,
     ProsopoCaptchaSolutionCommitment,
     ProsopoCaptchaStatus,
@@ -170,13 +169,5 @@ export class ProsopoContractMethods extends ProsopoContractApi implements IProso
         const fragment = this.abi.findMessage('getAllProviderIds')
         // @ts-ignore
         return result.asOk.data.registry.createType(fragment.returnType?.type, result.asOk.data).asOk.asOk.toPrimitive()
-    }
-
-    public async getDappAccounts(): Promise<DappAccounts> {
-        return await this.getStorage<DappAccounts>('dapp_accounts', 'DappAccounts')
-    }
-
-    public getProviderMaxFee(): Promise<u128> {
-        return this.getStorage<u128>('max_provider_fee', 'u128')
     }
 }
