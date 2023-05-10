@@ -495,7 +495,7 @@ pub mod prosopo {
                 lookup.unwrap()
             };
             if new {
-                self.provider_state_insert(&old_provider)?;
+                self.provider_state_insert(&old_provider, &provider_account)?;
             }
             let mut new_provider = old_provider.clone();
 
@@ -569,17 +569,15 @@ pub mod prosopo {
             if old_provider.status != new_provider.status
                 || old_provider.payee != new_provider.payee
             {
-                self.provider_state_remove(&old_provider)?;
-                self.provider_state_insert(&new_provider)?;
+                self.provider_state_remove(&old_provider, &provider_account)?;
+                self.provider_state_insert(&new_provider, &provider_account)?;
             }
 
             Ok(())
         }
 
         /// Remove the provider from their state
-        fn provider_state_remove(&mut self, provider: &Provider) -> Result<(), Error> {
-            let provider_account = self.env().caller();
-
+        fn provider_state_remove(&mut self, provider: &Provider, provider_account: &AccountId) -> Result<(), Error> {
             let cat = ProviderState {
                 status: provider.status,
                 payee: provider.payee,
@@ -596,15 +594,13 @@ pub mod prosopo {
         }
 
         /// Add a provider to their state
-        fn provider_state_insert(&mut self, provider: &Provider) -> Result<(), Error> {
-            let provider_account = self.env().caller();
-
+        fn provider_state_insert(&mut self, provider: &Provider, provider_account: &AccountId) -> Result<(), Error> {
             let cat = ProviderState {
                 status: provider.status,
                 payee: provider.payee,
             };
             let mut set = self.provider_accounts.get(cat).unwrap_or_default();
-            let inserted = set.insert(provider_account);
+            let inserted = set.insert(*provider_account);
             if !inserted {
                 // expected provider to not already be in set
                 return err!(Error::ProviderExists);
@@ -680,7 +676,7 @@ pub mod prosopo {
             self.providers.remove(provider_account);
 
             // remove the provider from their category
-            self.provider_state_remove(&provider)?;
+            self.provider_state_remove(&provider, &provider_account)?;
 
             // return the stake
             let balance = provider.balance;
