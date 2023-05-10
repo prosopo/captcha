@@ -463,8 +463,7 @@ pub mod prosopo {
         }
 
         /// Configure a provider
-        #[ink(message)]
-        pub fn provider_configure(
+        fn provider_configure(
             &mut self,
             service_origin: Option<Vec<u8>>,
             fee: Option<u32>,
