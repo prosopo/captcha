@@ -663,7 +663,9 @@ pub mod prosopo {
         }
 
         fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
-            self.providers.get(&account).ok_or_else(err_fn!(Error::ProviderDoesNotExist))
+            self.providers
+                .get(&account)
+                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))
         }
 
         /// Add a new data set
@@ -1140,7 +1142,8 @@ pub mod prosopo {
         /// Returns an error if the dapp does not exist
         #[ink(message)]
         pub fn get_captcha_data(&self, dataset_id: Hash) -> Result<CaptchaData, Error> {
-            let provider_account = self.datasets
+            let provider_account = self
+                .datasets
                 .get(dataset_id)
                 .ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))?;
             let provider = self.get_provider(provider_account)?;
