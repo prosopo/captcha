@@ -8,6 +8,8 @@ const path = require('path')
 const { JsonAccessOptimizer } = require('webpack-json-access-optimizer')
 const { ProvidePlugin } = require('webpack')
 
+console.log(path.resolve(__dirname, 'dist'))
+
 module.exports = (env, argv) => {
     const isProduction = argv.mode === 'production'
 
@@ -19,26 +21,26 @@ module.exports = (env, argv) => {
         },
         module: {
             rules: [
-                // {
-                //     test: /\.(ts|tsx)$/,
-                //     exclude: /node_modules/,
-                //     use: {
-                //         loader: 'babel-loader',
-                //         options: {
-                //             presets: [
-                //                 [
-                //                     '@babel/preset-env',
-                //                     {
-                //                         targets: '> 0.25%, not dead',
-                //                         modules: false,
-                //                     },
-                //                 ],
-                //                 '@babel/preset-react',
-                //                 '@babel/preset-typescript',
-                //             ],
-                //         },
-                //     },
-                // },
+                {
+                    test: /\.(ts|tsx)$/,
+                    exclude: /node_modules/,
+                    use: {
+                        loader: 'babel-loader',
+                        options: {
+                            presets: [
+                                [
+                                    '@babel/preset-env',
+                                    {
+                                        targets: '> 0.25%, not dead',
+                                        modules: false,
+                                    },
+                                ],
+                                '@babel/preset-react',
+                                '@babel/preset-typescript',
+                            ],
+                        },
+                    },
+                },
                 {
                     include: /node_modules/,
                     test: /\.css$/,
@@ -53,19 +55,19 @@ module.exports = (env, argv) => {
                         },
                     ],
                 },
-                {
-                    exclude: /(node_modules)/,
-                    test: /\.(ts|tsx)$/,
-                    use: [
-                        {
-                            loader: require.resolve('ts-loader'),
-                            options: {
-                                configFile: 'tsconfig.webpack.json',
-                                transpileOnly: true,
-                            },
-                        },
-                    ],
-                },
+                // {
+                //     exclude: /(node_modules)/,
+                //     test: /\.(ts|tsx)$/,
+                //     use: [
+                //         {
+                //             loader: require.resolve('ts-loader'),
+                //             options: {
+                //                 configFile: 'tsconfig.webpack.json',
+                //                 transpileOnly: true,
+                //             },
+                //         },
+                //     ],
+                // },
                 {
                     test: /locale\.json$/, // match JSON files to optimize
                     loader: 'webpack-json-access-optimizer',
