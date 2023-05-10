@@ -759,7 +759,11 @@ pub mod prosopo {
         }
 
         #[ink(message)]
-        pub fn dapp_withdraw(&mut self, contract_account: AccountId, amount: Balance) -> Result<(), Error> {
+        pub fn dapp_withdraw(
+            &mut self,
+            contract_account: AccountId,
+            amount: Balance,
+        ) -> Result<(), Error> {
             let account = self.env().caller();
             let mut dapp = self.get_dapp(contract_account)?;
 
@@ -778,8 +782,8 @@ pub mod prosopo {
             self.dapps.insert(contract_account, &dapp);
 
             self.env()
-                    .transfer(account, amount)
-                    .map_err(|_| Error::ContractTransferFailed)
+                .transfer(account, amount)
+                .map_err(|_| Error::ContractTransferFailed)
         }
 
         /// Configure a dapp's funds and status, handling transferred value
@@ -1564,9 +1568,9 @@ pub mod prosopo {
         const set_callee: fn(AccountId) =
             ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
         const set_contract: fn(AccountId) =
-        ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
-        const set_value_transferred: fn(Balance) = ink::env::test::set_value_transferred::<
-            ink::env::DefaultEnvironment>;
+            ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
+        const set_value_transferred: fn(Balance) =
+            ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>;
 
         const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
         const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
@@ -1647,7 +1651,7 @@ pub mod prosopo {
             /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
             fn get_contract(index: u128) -> Prosopo {
                 let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
-                // make sure the contract gets allocated the above account
+                                                                           // make sure the contract gets allocated the above account
                 set_callee(account);
                 // give the contract account some funds
                 set_account_balance(account, 1);
@@ -1908,7 +1912,6 @@ pub mod prosopo {
 
             #[ink::test]
             fn test_dapp_withdraw() {
-
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
@@ -1920,16 +1923,16 @@ pub mod prosopo {
                 let diff = 1;
                 let value = STAKE_DEFAULT + diff;
                 set_value_transferred(value);
-                contract.dapp_register(
-                    dapp_account,
-                    DappPayee::Provider
-                );
+                contract.dapp_register(dapp_account, DappPayee::Provider);
                 set_value_transferred(0);
                 assert_eq!(get_account_balance(dapp_account).unwrap(), value);
 
                 let dapp_balance = get_account_balance(dapp_account).unwrap();
                 contract.dapp_withdraw(dapp_account, diff).unwrap();
-                assert_eq!(get_account_balance(dapp_account).unwrap(), dapp_balance - diff);
+                assert_eq!(
+                    get_account_balance(dapp_account).unwrap(),
+                    dapp_balance - diff
+                );
             }
 
             #[ink::test]
