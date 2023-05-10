@@ -707,6 +707,7 @@ pub mod prosopo {
             if self.env().transferred_value() > 0 {
                 self.provider_configure(None, None, None, false, None, None)
             }
+            Ok(())
         }
 
         /// Add a new data set
