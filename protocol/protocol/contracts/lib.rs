@@ -233,7 +233,6 @@ pub mod prosopo {
         admin: AccountId, // the admin in control of this contract
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
-        service_origins: Mapping<Hash, ()>,
         datasets: Mapping<Hash, AccountId>,
         provider_stake_default: Balance,
         dapp_stake_default: Balance,
@@ -267,8 +266,6 @@ pub mod prosopo {
         ProviderInsufficientFunds,
         /// Returned if provider is inactive and trying to use the service
         ProviderInactive,
-        /// Returned if service_origin is already used by another provider
-        ProviderServiceOriginUsed,
         /// Returned if requested captcha data id is unavailable
         DuplicateCaptchaDataId,
         /// Returned if dapp exists when it shouldn't
@@ -346,7 +343,6 @@ pub mod prosopo {
                 admin: Self::env().caller(),
                 providers: Default::default(),
                 provider_accounts: Default::default(),
-                service_origins: Default::default(),
                 datasets: Default::default(),
                 dapp_users: Default::default(),
                 provider_stake_default,
@@ -446,15 +442,6 @@ pub mod prosopo {
             self.dapp_stake_default
         }
 
-        /// Convert a vec of u8 into a Hash
-        fn hash_vec_u8(&self, data: &Vec<u8>) -> Hash {
-            let slice = data.as_slice();
-            let mut hash_output = <Blake2x256 as HashOutput>::Type::default();
-            <Blake2x256 as CryptoHash>::hash(slice, &mut hash_output);
-
-            Hash::from(hash_output)
-        }
-
         fn check_provider_fee(&self, fee: u32) -> Result<(), Error> {
             if fee as u128 > self.max_provider_fee {
                 return err!(Error::ProviderFeeTooHigh);
@@ -546,21 +533,6 @@ pub mod prosopo {
                 // else set the status to deactivated
                 GovernanceStatus::Deactivated
             };
-
-            let old_service_origin_hash = self.hash_vec_u8(&old_provider.service_origin);
-            let new_service_origin_hash = self.hash_vec_u8(&new_provider.service_origin);
-            if old_service_origin_hash != new_service_origin_hash {
-                // updating the service origin, so check whether the new origin is available
-                if self.service_origins.contains(new_service_origin_hash) {
-                    return err!(Error::ProviderServiceOriginUsed);
-                } // else available
-
-                self.service_origins.remove(old_service_origin_hash);
-                // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
-                if new_service_origin_hash != default_dataset_id {
-                    self.service_origins.insert(new_service_origin_hash, &());
-                }
-            }
 
             self.providers.insert(provider_account, &new_provider);
 
@@ -2143,86 +2115,6 @@ pub mod prosopo {
                 assert_eq!(provider.payee, Payee::Dapp);
                 assert_eq!(provider.balance, balance);
                 assert_eq!(provider.status, GovernanceStatus::Deactivated);
-            }
-
-            /// Test provider register with service_origin error
-            #[ink::test]
-            fn test_provider_register_with_service_origin_error() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
-
-                let mut contract = get_contract(0);
-
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
-                    .unwrap();
-
-                // try creating the second provider and make sure the error is correct and that it doesn't exist
-                let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                println!("{:?}", contract.providers.get(provider_account));
-                match contract.provider_register(service_origin, fee, Payee::Dapp) {
-                    Result::Err(Error::ProviderServiceOriginUsed) => {}
-                    _ => {
-                        unreachable!();
-                    }
-                }
-                println!("{:?}", contract.providers.get(provider_account));
-                assert!(contract.providers.get(provider_account).is_none());
-                assert!(!contract
-                    .provider_accounts
-                    .get(ProviderState {
-                        status: GovernanceStatus::Deactivated,
-                        payee: Payee::Dapp
-                    })
-                    .unwrap()
-                    .contains(&provider_account));
-            }
-
-            /// Test provider update with service_origin error
-            #[ink::test]
-            fn test_provider_update_with_service_origin_error() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
-
-                let mut contract = get_contract(0);
-
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin, fee, Payee::Dapp)
-                    .unwrap();
-
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x3, "2424", 0);
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin, fee, Payee::Dapp)
-                    .unwrap();
-
-                let (_, service_origin, fee) = generate_provider_data(0x3, "4242", 100);
-
-                ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let balance = 20000000000000;
-                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-
-                // try updating the second provider and make sure the error is correct and that it didn't change
-                match contract.provider_update(service_origin.clone(), fee, Payee::Dapp) {
-                    Result::Err(Error::ProviderServiceOriginUsed) => {}
-                    _ => {
-                        unreachable!();
-                    }
-                }
-
-                let provider = contract.providers.get(provider_account).unwrap();
-                assert_ne!(provider.service_origin, service_origin);
-                assert_ne!(provider.fee, fee);
-                assert_ne!(provider.balance, balance);
-                assert_ne!(provider.status, GovernanceStatus::Active);
             }
 
             /// Test provider unstake
