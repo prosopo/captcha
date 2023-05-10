@@ -3,11 +3,11 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
-import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api' //dunno what's going on with providerapi import
+import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { ContractAbi } from '@prosopo/types'
-import consola, { LogLevel } from 'consola'
+import { LogLevel, Logger, logger } from '@prosopo/common'
 
 export class ProsopoServer {
     config: ProsopoServerConfig
@@ -18,7 +18,7 @@ export class ProsopoServer {
     defaultEnvironment: string
     contractName: string
     abi: ContractAbi
-    logger: typeof consola
+    logger: Logger
     wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair
@@ -38,9 +38,7 @@ export class ProsopoServer {
             this.prosopoContractAddress = this.config.networks[this.defaultEnvironment].prosopoContract.address
             this.dappContractAddress = this.config.networks[this.defaultEnvironment].dappContract.address
             this.contractName = this.config.networks[this.defaultEnvironment].prosopoContract.name
-            this.logger = consola.create({
-                level: this.config.logLevel as unknown as LogLevel,
-            })
+            this.logger = logger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
             })

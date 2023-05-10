@@ -15,17 +15,17 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
 import { AbiMetadata, ContractAbi } from '@prosopo/types'
-import { GAS_INCREASE_FACTOR, encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
+import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import { ContractExecResult } from '@polkadot/types/interfaces/contracts'
 import { createType } from '@polkadot/types'
 import { ApiBase, ApiDecoration } from '@polkadot/api/types'
-import { firstValueFrom, map } from 'rxjs'
+import { firstValueFrom, map, tap } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
 import { BN, BN_ZERO } from '@polkadot/util'
-import { EventRecord, WeightV2 } from '@polkadot/types/interfaces'
+import { EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
 import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { useWeightImpl } from './useWeight'
@@ -70,12 +70,12 @@ export class ProsopoContractApi extends ContractPromise {
         contractMethodName: string,
         args: T[],
         value?: number | BN | undefined
-    ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions }> {
+    ): Promise<{ extrinsic: SubmittableExtrinsic; options: ContractOptions; storageDeposit: StorageDeposit }> {
         // Always query first as errors are passed back from a dry run but not from a transaction
         const message = this.abi.findMessage(contractMethodName)
         const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
         const expectedBlockTime = new BN(this.api.consts.babe?.expectedBlockTime)
-        const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(10))
+        const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(1))
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
         this.logger.debug('Sending address: ', this.pair.address)
         const initialOptions = {
@@ -92,14 +92,14 @@ export class ProsopoContractApi extends ContractPromise {
             // paymentInfo is larger than gasRequired returned by query so use paymentInfo
             const paymentInfo = await extrinsicTx.paymentInfo(this.pair.address)
             this.logger.debug('Payment info: ', paymentInfo.partialFee.toHuman())
-            // increase the gas limit again to make sure the tx succeeds
-            const increasedWeight = createType(this.api.registry, 'WeightV2', {
-                refTime: Math.floor(paymentInfo.weight.refTime.toNumber() * GAS_INCREASE_FACTOR),
-                proofSize: Math.floor(paymentInfo.weight.proofSize.toNumber() * GAS_INCREASE_FACTOR),
-            })
-            options = getOptions(this.api, message.isMutating, value, increasedWeight, response.storageDeposit)
+            // increase the gas limit to make sure the tx succeeds
+            options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit, true)
             handleContractCallOutcomeErrors(response, contractMethodName)
-            return { extrinsic: this.tx[contractMethodName](options, ...encodedArgs), options }
+            return {
+                extrinsic: this.tx[contractMethodName](options, ...encodedArgs),
+                options,
+                storageDeposit: response.storageDeposit,
+            }
         } else {
             throw new ProsopoContractError(response.result.asErr, this.buildExtrinsic.name)
         }
@@ -228,7 +228,8 @@ export class ProsopoContractApi extends ContractPromise {
                         result,
                         storageDeposit,
                     })
-                )
+                ),
+                tap((event) => console.log(event))
             )
         const response = await firstValueFrom(responseObservable)
         handleContractCallOutcomeErrors(response, contractMethodName)
@@ -269,6 +270,7 @@ export class ProsopoContractApi extends ContractPromise {
         if (storageEntry.layout.isCell) {
             const storageCell = storageEntry.layout.asCell
             const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageCell.key.toHex())
+            this.api.rx.query.f
             const result = await firstValueFrom(promiseResult)
             // const result = await promiseResult
             //     .pipe(map((values) => this.api.registry.createType(`Option<${type}>`, values.value)))

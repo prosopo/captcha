@@ -42,5 +42,6 @@
   "homepage": "https://github.com/prosopo/common#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
-  }
+  },
+  "sideEffects": false
 }

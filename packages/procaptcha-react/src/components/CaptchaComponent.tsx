@@ -17,10 +17,10 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import ThemeProvider from '@mui/material/styles/ThemeProvider'
-import { GetCaptchaResponse } from '@prosopo/procaptcha'
 import addDataAttr from '../util'
 import CaptchaWidget from './CaptchaWidget'
 import theme from './theme'
+import { GetCaptchaResponse } from '@prosopo/api/src/types/api'
 import { useTranslation } from '@prosopo/common'
 
 export interface CaptchaComponentProps {

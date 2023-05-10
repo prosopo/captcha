@@ -19,9 +19,6 @@
 //  },
   "references": [
     {
-      "path": "../datasets"
-    },
-    {
       "path": "../common"
     },
     {

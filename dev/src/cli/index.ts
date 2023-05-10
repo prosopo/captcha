@@ -30,7 +30,17 @@ export async function processArgs(args) {
                     default: false,
                 }),
             async (argv) => {
+<<<<<<< HEAD
                 const protocolContractAddress = await deployProtocol()
+=======
+                if (!process.env.PROTOCOL_WASM_PATH || !process.env.PROTOCOL_ABI_PATH) {
+                    throw new Error('Missing protocol wasm or json path')
+                }
+                const protocolContractAddress = await deployProtocol(
+                    process.env.PROTOCOL_WASM_PATH,
+                    process.env.PROTOCOL_ABI_PATH
+                )
+>>>>>>> main
                 logger.info('contract address', protocolContractAddress)
                 if (argv.update_env) {
                     await updateEnvFiles(
