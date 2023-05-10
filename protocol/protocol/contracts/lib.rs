@@ -843,6 +843,10 @@ pub mod prosopo {
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
+            if self.env().transferred_value() <= 0 {
+                return Ok(());
+            }
+
             self.get_dapp(contract)?; // only existing dapps can be used
 
             self.dapp_configure(contract, None, None, false)
