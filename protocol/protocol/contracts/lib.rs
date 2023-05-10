@@ -705,7 +705,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
             if self.env().transferred_value() > 0 {
-                self.provider_configure(None, None, None, false, None, None)
+                return self.provider_configure(None, None, None, false, None, None);
             }
             Ok(())
         }
