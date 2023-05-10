@@ -578,34 +578,34 @@ pub mod prosopo {
 
         /// Remove the provider from their state
         fn provider_state_remove(&mut self, provider: &Provider, provider_account: &AccountId) -> Result<(), Error> {
-            let cat = ProviderState {
+            let category = ProviderState {
                 status: provider.status,
                 payee: provider.payee,
             };
-            let mut set = self.provider_accounts.get(cat).unwrap_or_default();
+            let mut set = self.provider_accounts.get(category).unwrap_or_default();
             let removed = set.remove(&provider_account);
             if !removed {
                 // expected provider to be in set
                 return err!(Error::ProviderDoesNotExist);
             }
-            self.provider_accounts.insert(cat, &set);
+            self.provider_accounts.insert(category, &set);
 
             Ok(())
         }
 
         /// Add a provider to their state
         fn provider_state_insert(&mut self, provider: &Provider, provider_account: &AccountId) -> Result<(), Error> {
-            let cat = ProviderState {
+            let category = ProviderState {
                 status: provider.status,
                 payee: provider.payee,
             };
-            let mut set = self.provider_accounts.get(cat).unwrap_or_default();
+            let mut set = self.provider_accounts.get(category).unwrap_or_default();
             let inserted = set.insert(*provider_account);
             if !inserted {
                 // expected provider to not already be in set
                 return err!(Error::ProviderExists);
             }
-            self.provider_accounts.insert(cat, &set);
+            self.provider_accounts.insert(category, &set);
 
             Ok(())
         }
