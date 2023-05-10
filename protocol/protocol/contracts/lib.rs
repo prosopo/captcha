@@ -549,12 +549,12 @@ pub mod prosopo {
                 if self.service_origins.contains(new_service_origin_hash) {
                     return err!(Error::ProviderServiceOriginUsed);
                 } // else available
-            }
 
-            self.service_origins.remove(old_service_origin_hash);
-            // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
-            if new_service_origin_hash != default_dataset_id {
-                self.service_origins.insert(new_service_origin_hash, &());
+                self.service_origins.remove(old_service_origin_hash);
+                // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
+                if new_service_origin_hash != default_dataset_id {
+                    self.service_origins.insert(new_service_origin_hash, &());
+                }
             }
 
             self.providers.insert(provider_account, &new_provider);
