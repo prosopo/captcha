@@ -516,7 +516,7 @@ pub mod prosopo {
 
             // update the dataset mapping to provider
             // remove old mapping
-            self.datasets.remove(&old_provider.dataset_id);
+            self.datasets.remove(old_provider.dataset_id);
             if new_provider.dataset_id != default_dataset_id {
                 // insert new mapping if not the default hash, as this is used as a placeholder value
                 self.datasets
@@ -544,15 +544,15 @@ pub mod prosopo {
             let new_service_origin_hash = self.hash_vec_u8(&new_provider.service_origin);
             if old_service_origin_hash != new_service_origin_hash {
                 // updating the service origin, so check whether the new origin is available
-                if self.service_origins.contains(&new_service_origin_hash) {
+                if self.service_origins.contains(new_service_origin_hash) {
                     return err!(Error::ProviderServiceOriginUsed);
                 } // else available
             }
 
-            self.service_origins.remove(&old_service_origin_hash);
+            self.service_origins.remove(old_service_origin_hash);
             // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
             if new_service_origin_hash != default_dataset_id {
-                self.service_origins.insert(&new_service_origin_hash, &());
+                self.service_origins.insert(new_service_origin_hash, &());
             }
 
             self.providers.insert(provider_account, &new_provider);
@@ -687,7 +687,7 @@ pub mod prosopo {
 
         fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
             self.providers
-                .get(&account)
+                .get(account)
                 .ok_or_else(err_fn!(Error::ProviderDoesNotExist))
         }
 
