@@ -767,9 +767,7 @@ pub mod prosopo {
             });
 
             // check current contract for ownership
-            if !new {
-                self.check_dapp_owner_is_caller(contract)?;
-            }
+            self.check_dapp_owner_is_caller(contract)?;
 
             dapp.payee = payee.unwrap_or(dapp.payee); // update the dapp payee
             dapp.owner = owner.unwrap_or(dapp.owner); // update the owner
