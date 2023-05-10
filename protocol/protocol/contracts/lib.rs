@@ -342,6 +342,28 @@ pub mod prosopo {
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
+            let instantiator = AccountId::from([0x1; 32]); // alice
+            if Self::env().caller() != instantiator {
+                panic!("Not authorised to instantiate this contract");
+            }
+            Self::new_unguarded(
+                provider_stake_default,
+                dapp_stake_default,
+                max_user_history_len,
+                max_user_history_age,
+                min_num_active_providers,
+                max_provider_fee,
+            )
+        }
+
+        fn new_unguarded(
+            provider_stake_default: Balance,
+            dapp_stake_default: Balance,
+            max_user_history_len: u16,
+            max_user_history_age: u64,
+            min_num_active_providers: u16,
+            max_provider_fee: Balance,
+        ) -> Self {
             Self {
                 admin: Self::env().caller(),
                 providers: Default::default(),
@@ -1545,6 +1567,9 @@ pub mod prosopo {
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
         const set_callee: fn(AccountId) =
             ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
+        const default_accounts: fn() -> ink::env::test::DefaultAccounts<
+            ink::env::DefaultEnvironment,
+        > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
 
         const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
         const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
@@ -1624,12 +1649,35 @@ pub mod prosopo {
                 set_caller(get_admin_account(0));
                 // now construct the contract instance
                 let mut contract =
-                    Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                    Prosopo::new_unguarded(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
                 // check the contract was created with the correct account
                 assert_eq!(contract.env().account_id(), account);
                 contract
+            }
+
+            #[ink::test]
+            fn test_ctor_guard_pass() {
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(get_unused_account());
+
+                // only able to instantiate from the alice account
+                set_caller(default_accounts().alice);
+                let contract = Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                // should construct successfully
+            }
+
+            #[ink::test]
+            #[should_panic]
+            fn test_ctor_guard_fail() {
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(get_unused_account());
+
+                // only able to instantiate from the alice account
+                set_caller(default_accounts().bob);
+                let contract = Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                // should fail to construct and panic
             }
 
             #[ink::test]
