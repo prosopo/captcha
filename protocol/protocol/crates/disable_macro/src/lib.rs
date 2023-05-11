@@ -45,9 +45,7 @@ fn handle(input: TokenStream) -> TokenStream {
                     if fname.to_string() != "default" {
                         let inject = if return_type_result {
                             // return an error from the function instead of panicking
-                            quote!(
-                                Err(Error::FunctionDisabled)
-                            )
+                            quote!(Err(Error::FunctionDisabled))
                         } else {
                             // function does not return a result type, so we panic
                             quote!(
