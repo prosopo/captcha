@@ -156,12 +156,12 @@ export async function processArgs(args: string[]) {
                 const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
 
                 for(const contract of argv.contract as string[]) {
-                    const cmd = `cd ${contractsDir}/${contract} && cargo ${toolchain} fmt`;
+                    const cmd = `cd ${contractsDir}/${contract} && cargo ${toolchain} fmt --check --verbose`;
                     await exec(cmd)
                 }
 
                 for(const crate of argv.crate as string[]) {
-                    const cmd = `cd ${cratesDir}/${crate} && cargo ${toolchain} fmt`;
+                    const cmd = `cd ${cratesDir}/${crate} && cargo ${toolchain} fmt --check --verbose`;
                     await exec(cmd)
                 }
             },
