@@ -23,7 +23,7 @@ path = "../disable_macro"
 
 [lib]
 name = "proxy"
-path = "lib.rs"
+path = "src/lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.
     "cdylib",

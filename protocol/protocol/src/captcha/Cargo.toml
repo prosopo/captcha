@@ -27,7 +27,7 @@ path = "../disable_macro"
 
 [lib]
 name = "captcha"
-path = "lib.rs"
+path = "src/lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.
     "cdylib",
