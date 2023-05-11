@@ -7,40 +7,53 @@ const TerserPlugin = require('terser-webpack-plugin')
 const path = require('path')
 const { JsonAccessOptimizer } = require('webpack-json-access-optimizer')
 const { ProvidePlugin } = require('webpack')
+var nodeExternals = require('webpack-node-externals')
 
 console.log(path.resolve(__dirname, 'dist'))
 
+console.log(path.resolve(__dirname, '../../node_modules'))
+
 module.exports = (env, argv) => {
     const isProduction = argv.mode === 'production'
-
+    const libraryName = 'procaptcha_react'
     return {
         entry: './src/index.tsx',
         output: {
             filename: '[name].bundle.js',
             path: path.resolve(__dirname, 'dist'),
+            library: libraryName,
+            //libraryTarget: 'umd',
+            //umdNamedDefine: true,
         },
         module: {
             rules: [
-                {
-                    test: /\.(ts|tsx)$/,
-                    exclude: /node_modules/,
-                    use: {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: [
-                                [
-                                    '@babel/preset-env',
-                                    {
-                                        targets: '> 0.25%, not dead',
-                                        modules: false,
-                                    },
-                                ],
-                                '@babel/preset-react',
-                                '@babel/preset-typescript',
-                            ],
-                        },
-                    },
-                },
+                // {
+                //     test: /\.(ts|tsx)$/,
+                //     exclude: /node_modules/,
+                //     use: {
+                //         loader: 'babel-loader',
+                //         options: {
+                //             presets: [
+                //                 [
+                //                     '@babel/preset-env',
+                //                     {
+                //                         targets: {
+                //                             browsers: '> 0.25%, not dead',
+                //                         },
+                //                         debug: true,
+                //                         modules: 'commonjs',
+                //                     },
+                //                 ],
+                //                 '@babel/preset-react',
+                //                 '@babel/preset-typescript',
+                //             ],
+                //             // plugins: [
+                //             //     '@babel/plugin-proposal-class-properties',
+                //             //     '@babel/plugin-proposal-object-rest-spread',
+                //             // ],
+                //         },
+                //     },
+                // },
                 {
                     include: /node_modules/,
                     test: /\.css$/,
@@ -55,19 +68,19 @@ module.exports = (env, argv) => {
                         },
                     ],
                 },
-                // {
-                //     exclude: /(node_modules)/,
-                //     test: /\.(ts|tsx)$/,
-                //     use: [
-                //         {
-                //             loader: require.resolve('ts-loader'),
-                //             options: {
-                //                 configFile: 'tsconfig.webpack.json',
-                //                 transpileOnly: true,
-                //             },
-                //         },
-                //     ],
-                // },
+                {
+                    //exclude: /(node_modules)/,
+                    test: /\.(ts|tsx)$/,
+                    use: [
+                        {
+                            loader: require.resolve('ts-loader'),
+                            options: {
+                                configFile: 'tsconfig.webpack.json',
+                                transpileOnly: true,
+                            },
+                        },
+                    ],
+                },
                 {
                     test: /locale\.json$/, // match JSON files to optimize
                     loader: 'webpack-json-access-optimizer',
@@ -104,7 +117,6 @@ module.exports = (env, argv) => {
             compress: true,
             port: 9000,
         },
-        externals: 'datasets',
         optimization: {
             // chunkIds: 'deterministic',
             // runtimeChunk: 'single',
@@ -128,17 +140,101 @@ module.exports = (env, argv) => {
             //         {}
             //     ),
             // },
+
             minimize: isProduction,
-            minimizer: [
-                new TerserPlugin({
-                    terserOptions: {
-                        compress: {
-                            drop_console: true,
-                        },
-                    },
-                }),
-            ],
+            // minimizer: [
+            //     new TerserPlugin({
+            //         terserOptions: {
+            //             compress: {
+            //                 drop_console: true,
+            //             },
+            //         },
+            //     }),
+            // ],
             usedExports: true,
         },
+        externals: [
+            // nodeExternals({
+            //     importType: 'umd',
+            //     modulesDir: path.resolve(__dirname, '../../node_modules'),
+            //     // this WILL include polkadot and prosopo packages to be bundled
+            //     allowlist: [
+            //         '@babel/runtime/helpers/classPrivateFieldLooseBase',
+            //         '@babel/runtime/helpers/classPrivateFieldLooseKey',
+            //         '@babel/runtime/helpers/interopRequireDefault',
+            //         '@fingerprintjs/fingerprintjs',
+            //         '@mui/icons-material/Check',
+            //         '@mui/material',
+            //         '@mui/material/Box',
+            //         '@mui/material/Button',
+            //         '@mui/material/Checkbox',
+            //         '@mui/material/Fade',
+            //         '@mui/material/Link',
+            //         '@mui/material/styles/createTheme',
+            //         '@mui/material/styles/ThemeProvider',
+            //         '@mui/material/Typography',
+            //         '@mui/private-theming/useTheme',
+            //         '@mui/styles/useTheme',
+            //         '@noble/hashes/blake2b',
+            //         '@noble/hashes/hmac',
+            //         '@noble/hashes/pbkdf2',
+            //         '@noble/hashes/scrypt',
+            //         '@noble/hashes/sha256',
+            //         '@noble/hashes/sha3',
+            //         '@noble/hashes/sha512',
+            //         '@noble/secp256k1',
+            //         '@polkadot/api',
+            //         '@polkadot/api-derive',
+            //         '@polkadot/api-derive/cjs/packageInfo',
+            //         '@polkadot/extension-base/page/Signer',
+            //         '@polkadot/extension-dapp',
+            //         '@polkadot/keyring',
+            //         '@polkadot/networks',
+            //         '@polkadot/networks/cjs/packageInfo',
+            //         '@polkadot/rpc-augment',
+            //         '@polkadot/rpc-core',
+            //         '@polkadot/rpc-core/cjs/packageInfo',
+            //         '@polkadot/rpc-provider',
+            //         '@polkadot/rpc-provider/cjs/packageInfo',
+            //         '@polkadot/rpc-provider/ws',
+            //         '@polkadot/types',
+            //         '@polkadot/types/cjs/packageInfo',
+            //         '@polkadot/types-known',
+            //         '@polkadot/types-known/cjs/packageInfo',
+            //         '@polkadot/util',
+            //         '@polkadot/util/cjs/packageInfo',
+            //         '@polkadot/util-crypto',
+            //         '@polkadot/util-crypto/cjs/packageInfo',
+            //         '@polkadot/util-crypto/mnemonic/bip39',
+            //         '@polkadot/wasm-crypto',
+            //         '@polkadot/x-bigint',
+            //         '@polkadot/x-bigint/cjs/shim',
+            //         '@polkadot/x-global',
+            //         '@polkadot/x-randomvalues',
+            //         '@polkadot/x-textdecoder',
+            //         '@polkadot/x-textencoder',
+            //         '@prosopo/api/src/api/ProviderApi',
+            //         '@prosopo/common',
+            //         '@prosopo/contract',
+            //         '@prosopo/procaptcha',
+            //         '@scure/base',
+            //         'axios',
+            //         'bn.js',
+            //         'consola',
+            //         'ed2curve',
+            //         'eventemitter3',
+            //         'i18next',
+            //         'i18next-browser-languagedetector',
+            //         'i18next-http-backend',
+            //         'i18next-http-middleware',
+            //         'react',
+            //         'react-dom',
+            //         'react-i18next',
+            //         'rxjs',
+            //         'tslib',
+            //         'tweetnacl',
+            //     ],
+            // }),
+        ],
     }
 }

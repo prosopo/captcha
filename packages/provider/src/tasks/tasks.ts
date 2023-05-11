@@ -36,15 +36,13 @@ import {
     CaptchaWithProof,
     CaptchaWithoutId,
     DappUserSolutionResult,
-    Database,
     DatasetBase,
     DatasetRaw,
     IProsopoContractMethods,
-    ProsopoEnvironment,
-    UserCommitmentRecord,
 } from '@prosopo/types'
+import { Database, UserCommitmentRecord } from '@prosopo/types-database'
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
-
 import { i18n } from '@prosopo/common'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'

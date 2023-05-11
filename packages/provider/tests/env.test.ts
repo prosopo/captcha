@@ -15,14 +15,9 @@
 import { Environment } from '../src/env'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-<<<<<<< HEAD
-import { getPair, getSs58Format } from '@prosopo/common'
-import { KeypairType } from '@polkadot/util-crypto/types'
-=======
 import { getPair } from '@prosopo/common'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { getSs58Format } from '@prosopo/env'
->>>>>>> main
 
 chai.should()
 chai.use(chaiAsPromised)

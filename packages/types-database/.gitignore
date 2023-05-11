@@ -1,15 +1,3 @@
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-
-# Swap the comments on the following lines if you don't wish to use zero-installs
-# Documentation here: https://yarnpkg.com/features/zero-installs
-# !.yarn/cache
-.pnp.*
-
 node_modules
 **/node_modules**/
 /.idea
@@ -18,8 +6,6 @@ node_modules
 *.tsbuildinfo
 .DS_Store
 mongodb
-dist
-**/dist/**
 
 # Below is Github's node gitignore template,
 # ignoring the node_modules part, as it'd ignore every node_modules, and we have some for testing
@@ -105,7 +91,7 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
-build/
+dist/
 
 /.yarn/cache
 # This is the Yarn build state; it's local to each clone
@@ -120,14 +106,9 @@ secrets.json
 # Ingnore build target
 contracts/target/
 
-/db/
-/data/
+/artifacts/
 
-
-/.chain-test/
-/.db-test/
-
-/database_accounts.json
-/.database_accounts.json
-
-chain-data
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
