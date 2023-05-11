@@ -93,6 +93,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
+name = "captcha"
+version = "4.0.0"
+dependencies = [
+ "disable_macro",
+ "hex",
+ "inject_self_macro",
+ "ink",
+ "named_functions_macro",
+ "parity-scale-codec",
+ "scale-info",
+ "storage_derive",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -704,30 +718,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prosopo"
-version = "4.0.0"
-dependencies = [
- "disable_macro",
- "hex",
- "inject_self_macro",
- "ink",
- "named_functions_macro",
- "parity-scale-codec",
- "prosopo_storage_derive",
- "scale-info",
-]
-
-[[package]]
-name = "prosopo_storage_derive"
-version = "3.3.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
- "synstructure 0.12.6",
-]
-
-[[package]]
 name = "quote"
 version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -995,6 +985,16 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "storage_derive"
+version = "3.3.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+ "synstructure 0.12.6",
+]
 
 [[package]]
 name = "strsim"
