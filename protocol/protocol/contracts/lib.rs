@@ -233,7 +233,7 @@ pub mod prosopo {
         admin: AccountId, // the admin in control of this contract
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
-        service_origins: Mapping<Hash, ()>,
+        service_origins: Mapping<Hash, AccountId>, // service origin hash mapped to provider account
         datasets: Mapping<Hash, AccountId>,
         provider_stake_default: Balance,
         dapp_stake_default: Balance,
@@ -580,7 +580,8 @@ pub mod prosopo {
                 self.service_origins.remove(old_service_origin_hash);
                 // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
                 if new_service_origin_hash != default_dataset_id {
-                    self.service_origins.insert(new_service_origin_hash, &());
+                    self.service_origins
+                        .insert(new_service_origin_hash, &provider_account);
                 }
             }
 
