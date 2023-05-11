@@ -20,6 +20,11 @@ jobs:
 
       - run: ls -la
 
+      - name: Npm install
+        run: |
+          cd dev
+          npm install
+
       - name: Get docker image for contracts-ci
         id: docker_pull
         run: |
