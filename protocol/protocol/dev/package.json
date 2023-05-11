@@ -4,11 +4,11 @@
     "description": "Dev tools for working with prosopo contracts",
     "main": "dist/index.js",
     "scripts": {
-      "clean": "rm -rf src/*/target",
       "build": "ts-node src/cli.ts build",
       "test": "ts-node src/cli.ts test",
       "fmt": "ts-node src/cli.ts fmt",
       "clippy": "ts-node src/cli.ts clippy",
+      "clean": "rm -rf src/*/target"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
