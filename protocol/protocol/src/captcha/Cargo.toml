@@ -1,5 +1,5 @@
 [package]
-name = "prosopo"
+name = "captcha"
 version = "4.0.0"
 authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
 edition = "2021"

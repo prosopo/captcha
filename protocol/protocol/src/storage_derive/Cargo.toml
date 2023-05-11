@@ -1,5 +1,5 @@
 [package]
-name = "prosopo_storage_derive"
+name = "storage_derive"
 version = "3.3.0"
 authors = ["Chris Taylor <chris@prosopo.io>", "Vincenzo Ferrara <vince@gimly.io>"]
 edition = "2021"
