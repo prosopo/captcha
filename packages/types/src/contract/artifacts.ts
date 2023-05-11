@@ -127,7 +127,7 @@ export const AbiText = z.union([z.instanceof(Text), z.string()])
 
 export const AbiCellSpec = z.object({
     key: AbiText,
-    ty: z.number(),
+    ty: z.union([z.number(), z.string()]),
 })
 export const AbiTypesSpec = z.array(AbiTypeSpec)
 
@@ -138,16 +138,21 @@ export const AbiStorageEntrySpec = z.lazy(() =>
             leaf: AbiCellSpec.optional(),
             enum: AbiEnumSpec.optional(),
             root: AbiStorageEntrySpec.optional(),
+            struct: AbiStructSpec.optional(),
         }),
+        root_key: AbiText.optional(),
     })
 )
+
+export const AbiStructSpec = z.object({
+    fields: z.array(AbiStorageEntrySpec),
+    name: z.string(),
+})
 
 export const AbiStorageSpec = z.object({
     root: z.object({
         layout: z.object({
-            struct: z.object({
-                fields: z.array(AbiStorageEntrySpec),
-            }),
+            struct: AbiStructSpec.optional(),
         }),
     }),
 })

@@ -14,26 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import type { ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
-import { AbiMetadata, ContractAbi } from '@prosopo/types'
+import { AbiMetaDataSpec, AbiMetadata, AbiStorageEntry, ContractAbi } from '@prosopo/types'
 import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { ProsopoContractError } from '../handlers'
 import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import { ContractExecResult } from '@polkadot/types/interfaces/contracts'
-import { createType } from '@polkadot/types'
 import { ApiBase, ApiDecoration } from '@polkadot/api/types'
 import { firstValueFrom, map, tap } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
 import { BN, BN_ZERO } from '@polkadot/util'
-import { EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
-import { ContractLayoutStructField } from '@polkadot/types/interfaces/contractsAbi'
+import {
+    EventRecord,
+    StorageDeposit,
+    WeightV2,
+} from '@polkadot/types/interfaces'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { useWeightImpl } from './useWeight'
 import { IKeyringPair, ISubmittableResult } from '@polkadot/types/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { applyOnEvent } from '@polkadot/api-contract/util'
 import { Bytes } from '@polkadot/types-codec'
-import { LogLevel, Logger, logger } from '@prosopo/common'
+import { LogLevel, Logger, logger, reverseHexString, snakeToCamelCase } from '@prosopo/common'
 
 export class ProsopoContractApi extends ContractPromise {
     contractName: string
@@ -41,6 +43,7 @@ export class ProsopoContractApi extends ContractPromise {
     options: ContractOptions
     nonce: number
     logger: Logger
+    json: AbiMetadata
 
     constructor(
         api: ApiPromise,
@@ -56,6 +59,22 @@ export class ProsopoContractApi extends ContractPromise {
         this.contractName = contractName
         this.nonce = currentNonce
         this.logger = logger(logLevel || LogLevel.Info, `ProsopoContractApi: ${contractName}`)
+        this.json = AbiMetaDataSpec.parse(this.abi.json)
+        this.createStorageGetters()
+    }
+
+    /**
+     * Create getter functions for contract storage entries
+     */
+    private createStorageGetters(): void {
+        if (this.json.storage.root.layout.struct) {
+            for (const storageField of this.json.storage.root.layout.struct.fields) {
+                const functionName = `${snakeToCamelCase(storageField.name)}`
+                ProsopoContractApi.prototype[functionName] = () => {
+                    return this.getStorage(storageField.name)
+                }
+            }
+        }
     }
 
     public getContract(): ProsopoContractApi {
@@ -228,8 +247,7 @@ export class ProsopoContractApi extends ContractPromise {
                         result,
                         storageDeposit,
                     })
-                ),
-                tap((event) => console.log(event))
+                )
             )
         const response = await firstValueFrom(responseObservable)
         handleContractCallOutcomeErrors(response, contractMethodName)
@@ -246,41 +264,55 @@ export class ProsopoContractApi extends ContractPromise {
     /** Get the storage entry from the ABI given a storage name
      * @return the storage entry object
      */
-    getStorageEntry(storageName: string): ContractLayoutStructField {
-        const json: AbiMetadata = this.abi.json as AbiMetadata
-
-        let storageEntry = json.storage.root.layout.struct.fields.filter(
-            (obj: { name: string }) => obj.name === storageName
-        )[0]
+    getStorageKeyAndType(storageName: string): { storageKey: `0x${string}`; storageType: PortableType } {
+        const { storageEntry } = this.getStorageEntry(storageName)
         if (storageEntry) {
-            while ('root' in storageEntry.layout) {
-                storageEntry = storageEntry.layout.root
+            let storage = storageEntry
+            //const storageType = definitions.types[storageNameCamelCase]
+            while ('root' in storage.layout) {
+                storage = storage.layout.root
             }
-            return this.abi.registry.createType('ContractLayoutStructField ', storageEntry)
+            const rootKey = storage.root_key
+            const rootKeyReversed = reverseHexString(rootKey.slice(2))
+            return {
+                storageKey: `0x${rootKeyReversed}`,
+                storageType: this.abi.registry.lookup.types[storage.layout.leaf.ty],
+            }
         }
-        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', 'getStorageKey')
+        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_NAME', this.getStorageKeyAndType.name)
+    }
+
+    /** Get the storage entry from the ABI given a storage name
+     * @return the storage entry object
+     * @param storageName
+     */
+    getStorageEntry(storageName: string): {
+        storageEntry?: StorageEntryMetadataLatest & AbiStorageEntry
+        index?: number
+    } {
+        const index = this.json.storage.root.layout.struct?.fields.findIndex(
+            (obj: { name: string }) => obj.name === storageName
+        )
+        if (index) {
+            return { storageEntry: this.json.storage.root.layout.struct?.fields[index], index }
+        }
+
+        return { storageEntry: undefined, index: undefined }
     }
 
     /**
      * Get the data at specified storage key
      * @return {any} data
      */
-    async getStorage<T>(name: string, type: string): Promise<T> {
-        const storageEntry = this.getStorageEntry(name)
-        if (storageEntry.layout.isCell) {
-            const storageCell = storageEntry.layout.asCell
-            const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageCell.key.toHex())
-            this.api.rx.query.f
+    async getStorage<T>(name: string): Promise<T> {
+        const { storageKey, storageType } = this.getStorageKeyAndType(name)
+        if (storageType) {
+            const typeDef = this.abi.registry.lookup.getTypeDef(`Lookup${storageType.id.toNumber()}`)
+            const promiseResult = this.api.rx.call.contractsApi.getStorage(this.address, storageKey)
             const result = await firstValueFrom(promiseResult)
-            // const result = await promiseResult
-            //     .pipe(map((values) => this.api.registry.createType(`Option<${type}>`, values.value)))
-            //     .toPromise()
-            //values.map(v => this.api.registry.createType('Option<StorageData>', v)).map(o => o.isSome ? this.api.registry.createType('Balance', o.unwrap())
-            if (result) {
-                return createType(result.registry, type, [result.toU8a(true)]) as T
-            }
+            const optionBytes = this.abi.registry.createType('Option<Bytes>', result)
+            return this.abi.registry.createType(typeDef.type, [optionBytes.unwrap().toU8a(true)]) as T
         }
-
-        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', 'getStorage')
+        throw new ProsopoContractError('CONTRACT.INVALID_STORAGE_TYPE', this.getStorage.name)
     }
 }
