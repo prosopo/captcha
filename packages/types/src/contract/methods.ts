@@ -2,7 +2,6 @@ import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { AccountId, Balance } from '@polkadot/types/interfaces'
 import {
     CaptchaData,
-    DappAccounts,
     ProsopoCaptchaSolutionCommitment,
     ProsopoCaptchaStatus,
     ProsopoDapp,
@@ -58,5 +57,4 @@ export interface IProsopoContractMethods extends IProsopoContractApi {
     getProviderStakeDefault(): Promise<u128>
     getDappStakeDefault(): Promise<u128>
     getProviderAccounts(): Promise<Vec<AccountId>>
-    getDappAccounts(): Promise<DappAccounts>
 }

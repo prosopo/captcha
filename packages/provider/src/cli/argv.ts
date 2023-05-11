@@ -219,7 +219,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             (yargs) => yargs,
             async () => {
                 try {
-                    const result = await tasks.contractApi.getDappAccounts()
+                    const result = await tasks.contractApi['dappAccounts']()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {

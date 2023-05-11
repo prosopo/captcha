@@ -32,9 +32,24 @@ function getLeafFieldPath(obj: Object | string): string[] {
     }, [] as string[])
 }
 
+export type TranslationKey = NestedKeyOf<typeof translationEn>
+export const translationKeys = getLeafFieldPath(translationEn) as TranslationKey[]
+
+// String utils
+
 export const trimProviderUrl = (url: string) => {
     return hexToString(url).replace(/\0/g, '')
 }
 
-export type TranslationKey = NestedKeyOf<typeof translationEn>
-export const translationKeys = getLeafFieldPath(translationEn) as TranslationKey[]
+export function snakeToCamelCase(str: string): string {
+    return str.replace(/([-_][a-z])/g, (group) => group.toUpperCase().replace('-', '').replace('_', ''))
+}
+
+export function reverseHexString(str: string): string {
+    return (
+        str
+            .match(/.{1,2}/g)
+            ?.reverse()
+            .join('') || ''
+    )
+}
