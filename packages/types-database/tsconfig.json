@@ -15,7 +15,7 @@
       "path": "../common"
     },
     {
-      "path": "../types-database"
+      "path": "../types"
     }
   ]
 }

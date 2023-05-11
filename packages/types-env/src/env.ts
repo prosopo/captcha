@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ContractAbi, IProsopoContractMethods } from '@prosopo/types' // contract
 import { AssetsResolver } from '@prosopo/types' // datasets
-import { Database } from '@prosopo/types-db'
+import { Database } from '@prosopo/types-database'
 import { ProsopoConfig } from '@prosopo/types' // config
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'

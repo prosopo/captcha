@@ -8,11 +8,9 @@
   },
   "include": [
     "./src/**/*.ts",
-//    "./tests/**/*.ts"
   ],
   "files": [
     "./src/prosopo.config.ts",
-    "./src/db/mongo.ts"
   ],
   "references": [
     {
@@ -29,6 +27,12 @@
     },
     {
       "path": "../types"
+    },
+    {
+      "path": "../types-database"
+    },
+    {
+      "path": "../types-env"
     }
   ]
 }

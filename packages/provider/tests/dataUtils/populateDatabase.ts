@@ -15,16 +15,11 @@ import { promiseQueue } from '../../src/util'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator'
 import { Environment } from '../../src/env'
-import { ProsopoEnvironment } from '@prosopo/types'
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import consola from 'consola'
-<<<<<<< HEAD
-import { ProsopoEnvError, loadEnv } from '@prosopo/common'
-import { getPair, getPairType, getSecret, getSs58Format } from '@prosopo/common'
-=======
 import { ProsopoEnvError } from '@prosopo/common'
 import { getPair } from '@prosopo/common'
 import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
->>>>>>> main
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles'
 import { Abi } from '@polkadot/api-contract'
 

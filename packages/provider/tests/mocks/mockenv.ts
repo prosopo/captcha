@@ -20,18 +20,19 @@ import { LocalAssetsResolver } from '../../src/assets'
 import {
     AssetsResolver,
     ContractAbi,
-    Database,
     DatabaseTypes,
     EnvironmentTypes,
     IProsopoContractMethods,
     ProsopoConfig,
-    ProsopoEnvironment,
 } from '@prosopo/types'
+import { Database } from '@prosopo/types-database'
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import { ApiPromise } from '@polkadot/api'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
+import { Databases } from '@prosopo/database'
 
 export class MockEnvironment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -193,8 +194,7 @@ export class MockEnvironment implements ProsopoEnvironment {
 
     async importDatabase(): Promise<void> {
         try {
-            const dbPath = path.join(`../../src/db/${this.config.database[this.defaultEnvironment].type}`)
-            const { ProsopoDatabase } = await import(dbPath)
+            const ProsopoDatabase = Databases[this.config.database[this.defaultEnvironment].type]
             const mongod = await MongoMemoryServer.create()
             const databaseUrl = mongod.getUri()
             this.db = new ProsopoDatabase(

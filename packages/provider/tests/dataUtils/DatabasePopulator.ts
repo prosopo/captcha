@@ -14,19 +14,13 @@
 import { stringToHexPadded } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import path from 'path'
-
 import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
-
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds'
 import { Tasks } from '../../src/tasks'
 import { IDatabaseAccounts } from './DatabaseAccounts'
 import { Environment } from '../../src/env'
-<<<<<<< HEAD
-import { TranslationKey, getPair, getPairType, getSs58Format } from '@prosopo/common'
-=======
 import { TranslationKey, getPair } from '@prosopo/common'
 import { getPairType, getSs58Format } from '@prosopo/env'
->>>>>>> main
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
 import { AnyNumber } from '@polkadot/types-codec/types'

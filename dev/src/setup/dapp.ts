@@ -1,5 +1,6 @@
 import { Tasks } from '@prosopo/provider'
-import { IDappAccount, ProsopoEnvironment } from '@prosopo/types'
+import { IDappAccount } from '@prosopo/types'
+import { ProsopoEnvironment } from '@prosopo/types-env'
 
 export async function setupDapp(env: ProsopoEnvironment, dapp: IDappAccount): Promise<void> {
     const logger = env.logger

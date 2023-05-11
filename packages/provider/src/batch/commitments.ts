@@ -2,13 +2,12 @@ import { batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { BN } from '@polkadot/util'
 import {
     BatchCommitConfig,
-    Database,
     ExtrinsicBatch,
     IProsopoContractMethods,
     ScheduledTaskNames,
     ScheduledTaskStatus,
-    UserCommitmentRecord,
 } from '@prosopo/types'
+import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { ApiPromise } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { Logger } from '@prosopo/common'

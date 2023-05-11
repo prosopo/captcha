@@ -14,25 +14,20 @@
 // You should have received a copy of the GNU General Public License
 import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds'
 import { Tasks } from '../../src/tasks'
-
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import path from 'path'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash, hexHash } from '@prosopo/datasets'
+import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
 import { CaptchaSolution, DappUserSolutionResult } from '@prosopo/types'
-<<<<<<< HEAD
-import { ProsopoEnvError, getPair, getSs58Format } from '@prosopo/common'
-=======
 import { ProsopoEnvError, getPair } from '@prosopo/common'
 import { getSs58Format } from '@prosopo/env'
->>>>>>> main
 import { ContractDeployer, ProsopoCaptchaStatus, getEventsFromMethodName } from '@prosopo/contract'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import { PROVIDER, accountContract, getSignedTasks } from '../mocks/accounts'
 import { getUser } from '../mocks/getUser'
 import { MockEnvironment } from '../mocks/mockenv'
-import { i18n } from '@prosopo/common'
+import { hexHash, i18n } from '@prosopo/common'
 import { before } from 'mocha'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'

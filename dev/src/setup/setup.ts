@@ -21,6 +21,7 @@ import fse from 'fs-extra'
 import path from 'path'
 import { setupDapp } from './dapp'
 import { registerProvider } from './provider'
+import { ProsopoEnvironment } from '@prosopo/types-env'
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
@@ -76,7 +77,7 @@ async function updateEnvFile(vars: Record<string, string>) {
     await fse.writeFile(envFile, readEnvFile)
 }
 
-async function registerDapp(env: Environment, dapp: IDappAccount) {
+async function registerDapp(env: ProsopoEnvironment, dapp: IDappAccount) {
     await setupDapp(env, dapp)
 }
 

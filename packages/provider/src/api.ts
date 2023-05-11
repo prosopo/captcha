@@ -21,11 +21,10 @@ import {
     CaptchaWithProof,
     DappUserSolutionResult,
     DappsAccountsResponse,
-    ProsopoEnvironment,
     ProvidersAccountsResponse,
     VerifySolutionBody,
 } from '@prosopo/types'
-
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import { parseBlockNumber } from './util'
 import { DappAccounts } from '@prosopo/contract'
 import { AccountId } from '@polkadot/types/interfaces'
