@@ -21,12 +21,14 @@ import { ApiPromise } from '@polkadot/api'
 import { ContractPromise } from '@polkadot/api-contract'
 import { ContractExecResult } from '@polkadot/types/interfaces/contracts'
 import { ApiBase, ApiDecoration } from '@polkadot/api/types'
-import { firstValueFrom, map, tap } from 'rxjs'
+import { firstValueFrom, map } from 'rxjs'
 import { convertWeight } from '@polkadot/api-contract/base/util'
 import { BN, BN_ZERO } from '@polkadot/util'
 import {
     EventRecord,
+    PortableType,
     StorageDeposit,
+    StorageEntryMetadataLatest,
     WeightV2,
 } from '@polkadot/types/interfaces'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
