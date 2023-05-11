@@ -120,6 +120,5 @@ secrets.json
 .env
 
 # Ingnore build target
-contracts/target/
-
-**/target/
+crates/*/target/
+contracts/*/target/
