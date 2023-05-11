@@ -180,11 +180,17 @@ export async function processArgs(args: string[]) {
                 yargs = addToolchainOption(yargs)
                 yargs = addContractOption(yargs)
                 yargs = addDockerOption(yargs)
+                yargs = yargs.option('check', {
+                    type: 'boolean',
+                    demand: false,
+                    desc: 'Check the code instead of making changes',
+                    default: false,
+                })
                 return yargs
             },
             async (argv) => {
                 const cmd = 'fmt'
-                const cmdArgs = '--check --verbose'
+                const cmdArgs = '--all --verbose ${check}'
 
                 for(const contract of argv.contract as string[]) {
                     await execCargo(argv, `${contractsDir}/${contract}`, cmd, cmdArgs)
