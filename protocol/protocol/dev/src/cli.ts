@@ -4,6 +4,7 @@ import yargs from 'yargs'
 import process from 'process';
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
+import { stdout, stderr } from 'process';
 
 const exec = (command: string) => {
 
@@ -13,18 +14,8 @@ const exec = (command: string) => {
         shell: true,
     });
 
-    prc.stdout.setEncoding('utf8');
-    prc.stdout.on('data', function (data) {
-        const str = data.toString()
-        const lines = str.split(/(\r?\n)/g);
-        console.log(lines.join(""));
-    });
-    prc.stderr.setEncoding('utf8');
-    prc.stderr.on('data', function (data) {
-        const str = data.toString()
-        const lines = str.split(/(\r?\n)/g);
-        console.error(lines.join(""));
-    });
+    prc.stdout.pipe(process.stdout);
+    prc.stderr.pipe(process.stderr);
     
     return new Promise((resolve, reject) => {
         prc.on('close', function (code) {
