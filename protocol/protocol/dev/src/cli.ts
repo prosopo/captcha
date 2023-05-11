@@ -216,7 +216,7 @@ export async function processArgs(args: string[]) {
                 const fix = argv.fix ? '--fix --allow-dirty --allow-staged' : ''
                 
                 const cmd = 'clippy'
-                const cmdArgs = `${fix}`
+                const cmdArgs = `${fix} -- -D warnings `
 
                 for(const contract of argv.contract as string[]) {
                     await execCargo(argv, `${contractsDir}/${contract}`, cmd, cmdArgs)
