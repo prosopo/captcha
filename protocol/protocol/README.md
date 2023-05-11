@@ -6,9 +6,10 @@ Created with `ink!` and the official [Substrate Contracts Workshop](https://subs
 
 ## Prerequisites
 
-Follow the [Substrate Contracts Workshop](https://substrate.dev/substrate-contracts-workshop) guide to install pre-requisites.
+Follow the [Substrate Develop a smart contract guide](https://docs.substrate.io/tutorials/smart-contracts/develop-a-smart-contract/) guide to install pre-requisites.
 
 These are the steps for Ubuntu:
+
 1. Install [Substrate dependencies](https://substrate.dev/docs/en/knowledgebase/getting-started)
 
 2. Add Rust packages and dependencies
@@ -19,8 +20,8 @@ rustup update
 rustup update nightly
 rustup target add wasm32-unknown-unknown --toolchain nightly
 ```
-3. Setup a contracts compatible node. For example, [install the Substrate Contracts Node](https://github.com/paritytech/substrate-contracts-node/#installation).
 
+3. Setup a contracts compatible node. For example, [install the Substrate Contracts Node](https://github.com/paritytech/substrate-contracts-node/#installation).
 
 4. [Install cargo-contract](https://github.com/paritytech/cargo-contract#installation)
 
@@ -75,5 +76,3 @@ ARGS_OWNER=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY # Alice's account
 ARGS_PROVIDER_STAKE_DEFAULT=2000000000000
 ENDOWMENT=1000000000000
 ```
-
-
