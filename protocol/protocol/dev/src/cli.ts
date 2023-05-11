@@ -37,6 +37,7 @@ export async function processArgs(args: string[]) {
 
     // const logger = consola.create({ level: LogLevel[parsed.logLevel || 'Info'] })
 
+    const repoDir = path.join(__dirname, '../..')
     const contractsDir = path.join(__dirname, '../../contracts')
     const cratesDir = path.join(__dirname, '../../crates')
     const crates = readdirSync(cratesDir, { withFileTypes: true })
@@ -98,6 +99,30 @@ export async function processArgs(args: string[]) {
         })
     }
 
+    const addDockerOption = (yargs: yargs.Argv) => {
+        return yargs
+        .option('docker', {
+            type: 'boolean',
+            demand: false,
+            desc: 'Use docker contracts-ci image to build instead of local toolchain',
+            default: false,
+        })
+    }
+
+    const execCargo = async (argv: yargs.Arguments<{}>, dir: string, cmd: string, cmdArgs: string) => {
+        const relDir = path.relative(repoDir, dir)
+        const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
+        const script = argv.docker ? 
+            `docker run --rm -v ${repoDir}:/repo paritytech/contracts-ci-linux:41abf440-20230503 cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${cmdArgs}`
+            : 
+            `cd ${dir} && cargo ${toolchain} ${cmd} ${cmdArgs}`;
+        // console.log(script)
+        await exec(script)
+        if(argv.docker) {
+            await exec(`sudo chown -cR $(whoami):$(whoami) ${dir}/target || true`)
+        }
+    }
+
     await yargs
         // .usage('Usage: $0 [global options] <command> [options]')
         .command(
@@ -108,15 +133,17 @@ export async function processArgs(args: string[]) {
                 yargs = addContractOption(yargs)
                 yargs = addToolchainOption(yargs)
                 yargs = addReleaseOption(yargs)
+                yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
                 const mode = argv.release ? '--release' : ''
-                const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
+
+                const cmd = 'test'
+                const cmdArgs = `${mode}`
 
                 for(const contract of argv.contract as string[]) {
-                    const cmd = `cd ${contractsDir}/${contract} && cargo ${toolchain} contract build ${mode}`;
-                    await exec(cmd)
+                    await execCargo(argv, `${contractsDir}/${contract}`, 'contract build', mode)
                 }
             },
             []
@@ -127,20 +154,22 @@ export async function processArgs(args: string[]) {
                 yargs = addCrateOption(yargs)
                 yargs = addContractOption(yargs)
                 yargs = addToolchainOption(yargs)
+                yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
-                const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
+
+                const cmd = 'test'
+                const cmdArgs = ''
 
                 for(const contract of argv.contract as string[]) {
-                    const cmd = `cd ${contractsDir}/${contract} && cargo ${toolchain} test`;
-                    await exec(cmd)
+                    await execCargo(argv, `${contractsDir}/${contract}`, cmd, cmdArgs)
                 }
 
                 for(const crate of argv.crate as string[]) {
-                    const cmd = `cd ${cratesDir}/${crate} && cargo ${toolchain} test`;
-                    await exec(cmd)
+                    await execCargo(argv, `${cratesDir}/${crate}`, cmd, cmdArgs)
                 }
+
             },
             []
         ).command(
@@ -150,19 +179,19 @@ export async function processArgs(args: string[]) {
                 yargs = addCrateOption(yargs)
                 yargs = addToolchainOption(yargs)
                 yargs = addContractOption(yargs)
+                yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
-                const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
+                const cmd = 'fmt'
+                const cmdArgs = '--check --verbose'
 
                 for(const contract of argv.contract as string[]) {
-                    const cmd = `cd ${contractsDir}/${contract} && cargo ${toolchain} fmt --check --verbose`;
-                    await exec(cmd)
+                    await execCargo(argv, `${contractsDir}/${contract}`, cmd, cmdArgs)
                 }
 
                 for(const crate of argv.crate as string[]) {
-                    const cmd = `cd ${cratesDir}/${crate} && cargo ${toolchain} fmt --check --verbose`;
-                    await exec(cmd)
+                    await execCargo(argv, `${cratesDir}/${crate}`, cmd, cmdArgs)
                 }
             },
             []
@@ -174,20 +203,21 @@ export async function processArgs(args: string[]) {
                 yargs = addToolchainOption(yargs)
                 yargs = addContractOption(yargs)
                 yargs = addFixOption(yargs)
+                yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
-                const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
                 const fix = argv.fix ? '--fix' : ''
+                
+                const cmd = 'clippy'
+                const cmdArgs = `${fix}`
 
                 for(const contract of argv.contract as string[]) {
-                    const cmd = `cd ${contractsDir}/${contract} && cargo ${toolchain} clippy ${fix}`;
-                    await exec(cmd)
+                    await execCargo(argv, `${contractsDir}/${contract}`, cmd, cmdArgs)
                 }
 
                 for(const crate of argv.crate as string[]) {
-                    const cmd = `cd ${cratesDir}/${crate} && cargo ${toolchain} clippy ${fix}`;
-                    await exec(cmd)
+                    await execCargo(argv, `${cratesDir}/${crate}`, cmd, cmdArgs)
                 }
             },
             []
