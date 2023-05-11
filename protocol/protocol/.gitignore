@@ -121,3 +121,5 @@ secrets.json
 
 # Ingnore build target
 contracts/target/
+
+src/*/target/
