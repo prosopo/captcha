@@ -9,6 +9,7 @@
         "test": "ts-node src/cli.ts test",
         "fmt": "ts-node src/cli.ts fmt",
         "clippy": "ts-node src/cli.ts clippy --fix",
+        "clippy-check": "ts-node src/cli.ts clippy",
         "clean": "rm -rf src/*/target"
     },
     "author": "Prosopo Limited",

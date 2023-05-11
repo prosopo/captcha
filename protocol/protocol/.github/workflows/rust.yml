@@ -65,10 +65,10 @@ jobs:
       - run: ls -la contracts/target/ink || true
 
       # Check for clippy advice
-      - name: Clippy advice
+      - name: Clippy
         run: |
           cd dev
-          npm run clippy -- --fix --docker --toolchain nightly
+          npm run clippy-check -- --docker --toolchain nightly
 
       # Do the build
       - name: Build contract
