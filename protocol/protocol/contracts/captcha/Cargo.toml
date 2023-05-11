@@ -11,19 +11,19 @@ scale-info = { version = "2.3", default-features = false, features = ["derive"],
 hex = "0.4.3"
 
 # custom storage for enums
-storage_derive = { version = "3.3.0", path = "../storage_derive", default-features = false }
+storage_derive = { version = "3.3.0", path = "../../crates/storage_derive", default-features = false }
 
 [dependencies.inject_self_macro]
 version = "0.3.0"
-path = "../inject_self_macro"
+path = "../../crates/inject_self_macro"
 
 [dependencies.named_functions_macro]
 version = "0.3.0"
-path = "../named_functions_macro"
+path = "../../crates/named_functions_macro"
 
 [dependencies.disable_macro]
 version = "0.3.0"
-path = "../disable_macro"
+path = "../../crates/disable_macro"
 
 [lib]
 name = "captcha"

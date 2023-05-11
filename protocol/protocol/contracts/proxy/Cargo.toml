@@ -11,15 +11,15 @@ scale-info = { version = "2.3", default-features = false, features = ["derive"],
 
 [dependencies.inject_self_macro]
 version = "0.3.0"
-path = "../inject_self_macro"
+path = "../../crates/inject_self_macro"
 
 [dependencies.named_functions_macro]
 version = "0.3.0"
-path = "../named_functions_macro"
+path = "../../crates/named_functions_macro"
 
 [dependencies.disable_macro]
 version = "0.3.0"
-path = "../disable_macro"
+path = "../../crates/disable_macro"
 
 [lib]
 name = "proxy"
