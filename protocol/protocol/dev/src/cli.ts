@@ -213,7 +213,7 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                const fix = argv.fix ? '--fix' : ''
+                const fix = argv.fix ? '--fix --allow-dirty --allow-staged' : ''
                 
                 const cmd = 'clippy'
                 const cmdArgs = `${fix}`
