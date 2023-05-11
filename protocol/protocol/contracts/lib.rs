@@ -235,8 +235,8 @@ pub mod prosopo {
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
         service_origins: Mapping<Hash, AccountId>, // service origin hash mapped to provider account
         datasets: Mapping<Hash, AccountId>,
-        provider_stake_default: Balance,
-        dapp_stake_default: Balance,
+        provider_stake_threshold: Balance,
+        dapp_stake_threshold: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Lazy<BTreeSet<AccountId>>,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
@@ -335,8 +335,8 @@ pub mod prosopo {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn default(
-            provider_stake_default: Balance,
-            dapp_stake_default: Balance,
+            provider_stake_threshold: Balance,
+            dapp_stake_threshold: Balance,
             max_user_history_len: u16,
             max_user_history_age: u64,
             min_num_active_providers: u16,
@@ -347,8 +347,8 @@ pub mod prosopo {
                 panic!("Not authorised to instantiate this contract");
             }
             Self::new_unguarded(
-                provider_stake_default,
-                dapp_stake_default,
+                provider_stake_threshold,
+                dapp_stake_threshold,
                 max_user_history_len,
                 max_user_history_age,
                 min_num_active_providers,
@@ -357,8 +357,8 @@ pub mod prosopo {
         }
 
         fn new_unguarded(
-            provider_stake_default: Balance,
-            dapp_stake_default: Balance,
+            provider_stake_threshold: Balance,
+            dapp_stake_threshold: Balance,
             max_user_history_len: u16,
             max_user_history_age: u64,
             min_num_active_providers: u16,
@@ -371,8 +371,8 @@ pub mod prosopo {
                 service_origins: Default::default(),
                 datasets: Default::default(),
                 dapp_users: Default::default(),
-                provider_stake_default,
-                dapp_stake_default,
+                provider_stake_threshold,
+                dapp_stake_threshold,
                 dapps: Default::default(),
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
@@ -458,14 +458,14 @@ pub mod prosopo {
 
         /// Get contract provider minimum stake default.
         #[ink(message)]
-        pub fn get_provider_stake_default(&self) -> Balance {
-            self.provider_stake_default
+        pub fn get_provider_stake_threshold(&self) -> Balance {
+            self.provider_stake_threshold
         }
 
         /// Get contract dapp minimum stake default.
         #[ink(message)]
-        pub fn get_dapp_stake_default(&self) -> Balance {
-            self.dapp_stake_default
+        pub fn get_dapp_stake_threshold(&self) -> Balance {
+            self.dapp_stake_threshold
         }
 
         /// Convert a vec of u8 into a Hash
@@ -554,10 +554,10 @@ pub mod prosopo {
 
             // if the provider is
             // not deactivating
-            // has a balance >= provider_stake_default
+            // has a balance >= provider_stake_threshold
             // has a dataset_id
             // has a dataset_id_content
-            new_provider.status = if new_provider.balance >= self.provider_stake_default
+            new_provider.status = if new_provider.balance >= self.provider_stake_threshold
                 && new_provider.dataset_id != default_dataset_id
                 && new_provider.dataset_id_content != default_dataset_id
                 && !deactivate
@@ -824,7 +824,7 @@ pub mod prosopo {
             new_dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            new_dapp.status = if new_dapp.balance >= self.dapp_stake_default && !deactivate {
+            new_dapp.status = if new_dapp.balance >= self.dapp_stake_threshold && !deactivate {
                 GovernanceStatus::Active
             } else {
                 GovernanceStatus::Deactivated
@@ -1149,7 +1149,7 @@ pub mod prosopo {
                 return err!(Error::ProviderDoesNotExist);
             }
             let provider = self.get_provider_details(provider_id)?;
-            if provider.balance < self.provider_stake_default {
+            if provider.balance < self.provider_stake_threshold {
                 return err!(Error::ProviderInsufficientFunds);
             }
             Ok(provider)
@@ -1175,7 +1175,7 @@ pub mod prosopo {
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
-            if dapp.balance < self.dapp_stake_default {
+            if dapp.balance < self.dapp_stake_threshold {
                 return err!(Error::DappInsufficientFunds);
             }
             Ok(dapp)
@@ -1570,7 +1570,7 @@ pub mod prosopo {
 
         type Event = <Prosopo as ::ink::reflect::ContractEventBase>::Type;
 
-        const STAKE_DEFAULT: u128 = 1000000000000;
+        const STAKE_THRESHOLD: u128 = 1000000000000;
 
         const set_caller: fn(AccountId) =
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
@@ -1662,7 +1662,7 @@ pub mod prosopo {
                 set_caller(get_admin_account(0));
                 // now construct the contract instance
                 let mut contract =
-                    Prosopo::new_unguarded(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                    Prosopo::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
                 // check the contract was created with the correct account
@@ -1677,7 +1677,8 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().alice);
-                let contract = Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                let contract =
+                    Prosopo::default(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should construct successfully
             }
 
@@ -1689,7 +1690,8 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
-                let contract = Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                let contract =
+                    Prosopo::default(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should fail to construct and panic
             }
 
@@ -1701,8 +1703,8 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
 
                 // ctor params should be set
-                assert_eq!(contract.provider_stake_default, STAKE_DEFAULT);
-                assert_eq!(contract.dapp_stake_default, STAKE_DEFAULT);
+                assert_eq!(contract.provider_stake_threshold, STAKE_THRESHOLD);
+                assert_eq!(contract.dapp_stake_threshold, STAKE_THRESHOLD);
                 assert_eq!(contract.admin, get_admin_account(0));
                 assert_eq!(contract.max_user_history_len, 10);
                 assert_eq!(contract.max_user_history_age, 1000000);
@@ -2008,25 +2010,25 @@ pub mod prosopo {
 
             /// Assert contract provider minimum stake default set from constructor.
             #[ink::test]
-            pub fn test_provider_stake_default() {
+            pub fn test_provider_stake_threshold() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
                 let mut contract = get_contract(0);
 
-                let provider_stake_default: u128 = contract.get_provider_stake_default();
-                assert!(STAKE_DEFAULT.eq(&provider_stake_default));
+                let provider_stake_threshold: u128 = contract.get_provider_stake_threshold();
+                assert!(STAKE_THRESHOLD.eq(&provider_stake_threshold));
             }
 
             /// Assert contract dapp minimum stake default set from constructor.
             #[ink::test]
-            pub fn test_dapp_stake_default() {
+            pub fn test_dapp_stake_threshold() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
                 let mut contract = get_contract(0);
-                let dapp_stake_default: u128 = contract.get_dapp_stake_default();
-                assert!(STAKE_DEFAULT.eq(&dapp_stake_default));
+                let dapp_stake_threshold: u128 = contract.get_dapp_stake_threshold();
+                assert!(STAKE_THRESHOLD.eq(&dapp_stake_threshold));
             }
 
             /// Test provider register
@@ -2385,7 +2387,7 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
                 // Transfer tokens with the call
-                let balance = STAKE_DEFAULT;
+                let balance = STAKE_THRESHOLD;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
                 // Mark the the dapp account as being a contract on-chain
@@ -2635,7 +2637,7 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
                 // Transfer tokens with the call
-                let balance_1 = STAKE_DEFAULT;
+                let balance_1 = STAKE_THRESHOLD;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
                 // Mark the the dapp account as being a contract on-chain
@@ -2656,7 +2658,7 @@ pub mod prosopo {
                 assert_eq!(dapp.balance, balance_1);
 
                 // Transfer tokens with the call
-                let balance_2 = STAKE_DEFAULT;
+                let balance_2 = STAKE_THRESHOLD;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_2);
 
                 // run the register function again for the same (caller, contract) pair, adding more
