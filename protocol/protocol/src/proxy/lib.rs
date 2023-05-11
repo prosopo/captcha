@@ -47,6 +47,14 @@ pub mod proxy {
         /// later changed the `forward_to` address.
         #[ink(constructor)]
         pub fn new(destination: AccountId) -> Self {
+            let instantiator = AccountId::from([0x1; 32]); // alice
+            if Self::env().caller() != instantiator {
+                panic!("Not authorised to instantiate this contract");
+            }
+            Self::new_unguarded(destination)
+        }
+
+        fn new_unguarded(destination: AccountId) -> Self {
             Self {
                 destination,
                 admin: Self::env().caller(), // set the admin to the caller
@@ -209,6 +217,9 @@ pub mod proxy {
             ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
         const set_contract: fn(AccountId) =
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>;
+        const default_accounts: fn() -> ink::env::test::DefaultAccounts<
+            ink::env::DefaultEnvironment,
+        > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
 
         // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
         fn get_unused_account() -> AccountId {
@@ -277,12 +288,35 @@ pub mod proxy {
             // set the caller to the first admin
             set_caller(get_admin_account(0));
             // now construct the contract instance
-            let mut contract = Proxy::new(get_admin_account(index));
+            let mut contract = Proxy::new_unguarded(get_admin_account(index));
             // set the caller back to the unused acc
             set_caller(get_unused_account());
             // check the contract was created with the correct account
             assert_eq!(contract.env().account_id(), account);
             contract
+        }
+
+        #[ink::test]
+        fn test_ctor_guard_pass() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(get_unused_account());
+
+            // only able to instantiate from the alice account
+            set_caller(default_accounts().alice);
+            let contract = Proxy::new(get_contract_account(0));
+            // should construct successfully
+        }
+
+        #[ink::test]
+        #[should_panic]
+        fn test_ctor_guard_fail() {
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(get_unused_account());
+
+            // only able to instantiate from the alice account
+            set_caller(default_accounts().bob);
+            let contract = Proxy::new(get_contract_account(0));
+            // should fail to construct and panic
         }
 
         /// Test accounts are funded with existential deposit
