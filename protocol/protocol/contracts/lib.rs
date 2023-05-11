@@ -34,11 +34,11 @@ macro_rules! err_fn {
     };
 }
 
-macro_rules! lazy_push {
-    ($lazy:expr, $value:expr) => {
-        let mut vec = $lazy.get_or_default();
-        vec.push($value);
-        $lazy.set(&vec);
+macro_rules! lazy {
+    ($lazy:expr, $func:ident, $value:expr) => {
+        let mut contents = $lazy.get_or_default();
+        contents.$func($value);
+        $lazy.set(&contents);
     };
 }
 
@@ -238,7 +238,7 @@ pub mod prosopo {
         provider_stake_default: Balance,
         dapp_stake_default: Balance,
         dapps: Mapping<AccountId, Dapp>,
-        dapp_accounts: Lazy<Vec<AccountId>>,
+        dapp_accounts: Lazy<BTreeSet<AccountId>>,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         dapp_user_accounts: Lazy<Vec<AccountId>>,
@@ -786,64 +786,71 @@ pub mod prosopo {
             Ok(())
         }
 
-        /// Configure a dapp's funds and status, handling transferred value
-        fn dapp_configure_funding(&self, dapp: &mut Dapp) {
-            // update the dapp funds
-            dapp.balance += self.env().transferred_value();
-
-            // update the dapp status
-            dapp.status = if dapp.balance >= self.dapp_stake_default {
-                GovernanceStatus::Active
-            } else {
-                GovernanceStatus::Suspended
-            };
-        }
-
         /// Configure a dapp (existing or new)
         fn dapp_configure(
             &mut self,
             contract: AccountId,
-            payee: DappPayee,
-            owner: AccountId,
-        ) -> Result<Dapp, Error> {
+            payee: Option<DappPayee>,
+            owner: Option<AccountId>,
+            deactivate: bool,
+        ) -> Result<(), Error> {
             self.check_is_contract(contract)?;
 
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
-            let mut dapp = dapp_lookup.unwrap_or(Dapp {
-                owner,
+            let old_dapp = dapp_lookup.unwrap_or(Dapp {
+                owner: owner.unwrap_or(self.env().caller()),
                 balance: 0,
                 status: GovernanceStatus::Suspended,
-                payee,
+                payee: payee.unwrap_or(DappPayee::Provider),
                 min_difficulty: 1,
             });
+            let mut new_dapp = old_dapp;
 
             // check current contract for ownership
             if !new {
                 self.check_dapp_owner_is_caller(contract)?;
             }
 
-            dapp.payee = payee; // update the dapp payee
-            dapp.owner = owner; // update the owner
+            if let Some(payee) = payee {
+                new_dapp.payee = payee;
+            }
+            if let Some(owner) = owner {
+                new_dapp.owner = owner;
+            }
+
+            // update the dapp funds
+            new_dapp.balance += self.env().transferred_value();
+
+            // update the dapp status
+            new_dapp.status = if new_dapp.balance >= self.dapp_stake_default && !deactivate {
+                GovernanceStatus::Active
+            } else {
+                GovernanceStatus::Deactivated
+            };
+
+            if old_dapp == new_dapp {
+                // nothing to do as no change
+                return Ok(());
+            }
 
             // owner of the dapp cannot be an admin
-            self.check_not_admin(owner)?;
-
-            self.dapp_configure_funding(&mut dapp);
+            self.check_not_admin(new_dapp.owner)?;
 
             // if the dapp is new then add it to the list of dapps
             if new {
-                lazy_push!(self.dapp_accounts, contract);
+                lazy!(self.dapp_accounts, insert, contract);
             }
 
             // update the dapp in the mapping
-            self.dapps.insert(contract, &dapp);
+            self.dapps.insert(contract, &new_dapp);
 
-            Ok(dapp)
+            Ok(())
         }
 
         /// Register a dapp
         #[ink(message)]
+        #[ink(payable)]
         pub fn dapp_register(
             &mut self,
             contract: AccountId,
@@ -853,16 +860,17 @@ pub mod prosopo {
             self.check_dapp_does_not_exist(contract)?;
 
             // configure the new dapp
-            let _dapp = self.dapp_configure(
+            self.dapp_configure(
                 contract,
-                payee,
-                self.env().caller(), // the caller is made the owner of the contract
-            )?;
-
-            Ok(())
+                Some(payee),
+                None, // the caller is made the owner of the contract
+                false,
+            )
         }
 
         /// Update a dapp with new funds, setting status as appropriate
+        #[ink(message)]
+        #[ink(payable)]
         pub fn dapp_update(
             &mut self,
             contract: AccountId,
@@ -872,31 +880,27 @@ pub mod prosopo {
             // expect dapp to exist
             self.get_dapp(contract)?;
 
-            // configure the new dapp
-            let _dapp = self.dapp_configure(contract, payee, owner)?;
-
-            Ok(())
+            // configure the dapp
+            self.dapp_configure(contract, Some(payee), Some(owner), false)
         }
 
         /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            let mut dapp = self.get_dapp(contract)?;
+            if self.env().transferred_value() == 0 {
+                return Ok(());
+            }
 
-            // configure funds and status of the dapp
-            self.dapp_configure_funding(&mut dapp);
+            self.get_dapp(contract)?; // only existing dapps can be used
 
-            // update the dapp in the mapping
-            self.dapps.insert(contract, &dapp);
-
-            Ok(())
+            self.dapp_configure(contract, None, None, false)
         }
 
         /// Cancel services as a dapp, returning remaining tokens
         #[ink(message)]
-        pub fn dapp_cancel(&mut self, contract: AccountId) -> Result<(), Error> {
-            let mut dapp = self.get_dapp(contract)?;
+        pub fn dapp_deregister(&mut self, contract: AccountId) -> Result<(), Error> {
+            let dapp = self.get_dapp(contract)?;
 
             // check current contract for ownership
             self.check_dapp_owner_is_caller(contract)?;
@@ -908,11 +912,19 @@ pub mod prosopo {
                     .map_err(|_| Error::ContractTransferFailed)?;
             }
 
-            dapp.status = GovernanceStatus::Deactivated;
-            dapp.balance = 0;
-            self.dapps.insert(contract, &dapp);
+            // remove the dapp
+            self.dapps.remove(contract);
+            lazy!(self.dapp_accounts, remove, &contract);
 
             Ok(())
+        }
+
+        /// Deactivate a dapp, leaving stake intact
+        #[ink(message)]
+        pub fn dapp_deactivate(&mut self, contract: AccountId) -> Result<(), Error> {
+            self.get_dapp(contract)?;
+
+            self.dapp_configure(contract, None, None, true)
         }
 
         /// Trim the user history to the max length and age.
@@ -2349,7 +2361,7 @@ pub mod prosopo {
                 assert_eq!(dapp.owner, caller);
 
                 // account is marked as suspended as zero tokens have been paid
-                assert_eq!(dapp.status, GovernanceStatus::Suspended);
+                assert_eq!(dapp.status, GovernanceStatus::Deactivated);
                 assert_eq!(dapp.balance, balance);
                 assert!(contract
                     .dapp_accounts
@@ -2729,15 +2741,15 @@ pub mod prosopo {
                 // register the dapp
                 contract.dapp_register(contract_account, DappPayee::Dapp);
 
-                // Transfer tokens with the fund call
-                contract.dapp_cancel(contract_account).ok();
+                ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
-                // check the funds are returned and the dapp's status is Deactivated
-                let dapp = contract.dapps.get(contract_account).unwrap();
-                assert_eq!(dapp.status, GovernanceStatus::Deactivated);
+                // Transfer tokens with the fund call
+                contract.dapp_deregister(contract_account).ok();
+
+                // check the dapp has been removed
+                assert!(contract.dapps.get(contract_account).is_none());
 
                 // Make sure the funds are returned to the caller
-                assert_eq!(dapp.balance, 0);
                 let callers_balance =
                     ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>(caller)
                         .unwrap();
