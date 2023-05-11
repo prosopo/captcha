@@ -70,10 +70,9 @@ pub mod prosopo {
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
-        Active,    // active and available for use
-        Suspended, // a state that should be used for dapps/providers whose stake drops below the minimum required or who are being investigated as part of a slashing event etc.
+        Active, // active and available for use
         #[default]
-        Deactivated, // temporarily inactive
+        Inactive, // inactive and unavailable for use
     }
 
     /// CaptchaStatus is the status of a CaptchaSolutionCommitment, submitted by a DappUser
@@ -235,8 +234,8 @@ pub mod prosopo {
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
         service_origins: Mapping<Hash, AccountId>, // service origin hash mapped to provider account
         datasets: Mapping<Hash, AccountId>,
-        provider_stake_default: Balance,
-        dapp_stake_default: Balance,
+        provider_stake_threshold: Balance,
+        dapp_stake_threshold: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Lazy<BTreeSet<AccountId>>,
         captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
@@ -255,8 +254,6 @@ pub mod prosopo {
     pub enum Error {
         /// Returned if calling account is not authorised to perform action
         NotAuthorised,
-        /// Returned if not enough contract balance to fulfill a request is available.
-        ContractInsufficientFunds,
         /// Returned when the contract to address transfer fails
         ContractTransferFailed,
         /// Returned if provider exists when it shouldn't
@@ -269,8 +266,6 @@ pub mod prosopo {
         ProviderInactive,
         /// Returned if service_origin is already used by another provider
         ProviderServiceOriginUsed,
-        /// Returned if requested captcha data id is unavailable
-        DuplicateCaptchaDataId,
         /// Returned if dapp exists when it shouldn't
         DappExists,
         /// Returned if dapp does not exist when it should
@@ -283,20 +278,12 @@ pub mod prosopo {
         CaptchaDataDoesNotExist,
         /// Returned if solution commitment does not exist when it should
         CaptchaSolutionCommitmentDoesNotExist,
-        /// Returned if solution commitment already exists when it should not
-        CaptchaSolutionCommitmentExists,
         /// Returned if dapp user does not exist when it should
         DappUserDoesNotExist,
         /// Returned if there are no active providers
         NoActiveProviders,
         /// Returned if the dataset ID and dataset ID with solutions are identical
         DatasetIdSolutionsSame,
-        /// Returned if the captcha solution commitment has already been approved
-        CaptchaSolutionCommitmentAlreadyApproved,
-        /// Returned if the captcha solution commitment has already been approved
-        CaptchaSolutionCommitmentAlreadyDisapproved,
-        /// Returned if the caller has set their own AccountId as the code hash
-        InvalidCodeHash,
         /// CodeNotFound ink env error
         CodeNotFound,
         /// An unknown ink env error has occurred
@@ -310,23 +297,10 @@ pub mod prosopo {
         InvalidCaptchaStatus,
         /// No correct captchas in history (either history is empty or all captchas are incorrect)
         NoCorrectCaptcha,
-        /// Returned if the function has been disabled in the contract
-        FunctionDisabled,
         /// Returned if not enough providers are active
         NotEnoughActiveProviders,
         /// Returned if provider fee is too high
         ProviderFeeTooHigh,
-        /// Returned if the account is an admin, hence the operation is not allowed due to conflict of interest
-        AccountIsAdmin,
-        /// Returned if the signature is invalid during signing
-        InvalidSignature,
-        /// Returned if the public key is invalid during signing
-        InvalidPublicKey,
-        /// Returned if the account is not an admin
-        IsNotAdmin,
-        IsAdmin,
-        /// Returned if the captcha solution commitment is not pending, i.e. has already been dealt with
-        CaptchaSolutionCommitmentNotPending,
         /// Returned if the commitment already exists
         CaptchaSolutionCommitmentAlreadyExists,
     }
@@ -335,8 +309,8 @@ pub mod prosopo {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn default(
-            provider_stake_default: Balance,
-            dapp_stake_default: Balance,
+            provider_stake_threshold: Balance,
+            dapp_stake_threshold: Balance,
             max_user_history_len: u16,
             max_user_history_age: u64,
             min_num_active_providers: u16,
@@ -347,8 +321,8 @@ pub mod prosopo {
                 panic!("Not authorised to instantiate this contract");
             }
             Self::new_unguarded(
-                provider_stake_default,
-                dapp_stake_default,
+                provider_stake_threshold,
+                dapp_stake_threshold,
                 max_user_history_len,
                 max_user_history_age,
                 min_num_active_providers,
@@ -357,8 +331,8 @@ pub mod prosopo {
         }
 
         fn new_unguarded(
-            provider_stake_default: Balance,
-            dapp_stake_default: Balance,
+            provider_stake_threshold: Balance,
+            dapp_stake_threshold: Balance,
             max_user_history_len: u16,
             max_user_history_age: u64,
             min_num_active_providers: u16,
@@ -371,8 +345,8 @@ pub mod prosopo {
                 service_origins: Default::default(),
                 datasets: Default::default(),
                 dapp_users: Default::default(),
-                provider_stake_default,
-                dapp_stake_default,
+                provider_stake_threshold,
+                dapp_stake_threshold,
                 dapps: Default::default(),
                 dapp_accounts: Default::default(),
                 dapp_user_accounts: Default::default(),
@@ -449,23 +423,19 @@ pub mod prosopo {
 
         #[ink(message)]
         pub fn get_statuses(&self) -> Vec<GovernanceStatus> {
-            vec![
-                GovernanceStatus::Active,
-                GovernanceStatus::Suspended,
-                GovernanceStatus::Deactivated,
-            ]
+            vec![GovernanceStatus::Active, GovernanceStatus::Inactive]
         }
 
         /// Get contract provider minimum stake default.
         #[ink(message)]
-        pub fn get_provider_stake_default(&self) -> Balance {
-            self.provider_stake_default
+        pub fn get_provider_stake_threshold(&self) -> Balance {
+            self.provider_stake_threshold
         }
 
         /// Get contract dapp minimum stake default.
         #[ink(message)]
-        pub fn get_dapp_stake_default(&self) -> Balance {
-            self.dapp_stake_default
+        pub fn get_dapp_stake_threshold(&self) -> Balance {
+            self.dapp_stake_threshold
         }
 
         /// Convert a vec of u8 into a Hash
@@ -504,7 +474,7 @@ pub mod prosopo {
             let new = lookup.is_err();
             let old_provider = if new {
                 Provider {
-                    status: GovernanceStatus::Deactivated,
+                    status: GovernanceStatus::Inactive,
                     balance: 0,
                     fee: 0,
                     service_origin: Vec::new(),
@@ -554,10 +524,10 @@ pub mod prosopo {
 
             // if the provider is
             // not deactivating
-            // has a balance >= provider_stake_default
+            // has a balance >= provider_stake_threshold
             // has a dataset_id
             // has a dataset_id_content
-            new_provider.status = if new_provider.balance >= self.provider_stake_default
+            new_provider.status = if new_provider.balance >= self.provider_stake_threshold
                 && new_provider.dataset_id != default_dataset_id
                 && new_provider.dataset_id_content != default_dataset_id
                 && !deactivate
@@ -566,7 +536,7 @@ pub mod prosopo {
                 GovernanceStatus::Active
             } else {
                 // else set the status to deactivated
-                GovernanceStatus::Deactivated
+                GovernanceStatus::Inactive
             };
 
             let old_service_origin_hash = self.hash_vec_u8(&old_provider.service_origin);
@@ -802,7 +772,7 @@ pub mod prosopo {
             let old_dapp = dapp_lookup.unwrap_or(Dapp {
                 owner: owner.unwrap_or(self.env().caller()),
                 balance: 0,
-                status: GovernanceStatus::Suspended,
+                status: GovernanceStatus::Inactive,
                 payee: payee.unwrap_or(DappPayee::Provider),
                 min_difficulty: 1,
             });
@@ -824,13 +794,13 @@ pub mod prosopo {
             new_dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            new_dapp.status = if new_dapp.balance >= self.dapp_stake_default && !deactivate {
+            new_dapp.status = if new_dapp.balance >= self.dapp_stake_threshold && !deactivate {
                 GovernanceStatus::Active
             } else {
-                GovernanceStatus::Deactivated
+                GovernanceStatus::Inactive
             };
 
-            if old_dapp == new_dapp {
+            if !new && old_dapp == new_dapp {
                 // nothing to do as no change
                 return Ok(());
             }
@@ -1149,7 +1119,7 @@ pub mod prosopo {
                 return err!(Error::ProviderDoesNotExist);
             }
             let provider = self.get_provider_details(provider_id)?;
-            if provider.balance < self.provider_stake_default {
+            if provider.balance < self.provider_stake_threshold {
                 return err!(Error::ProviderInsufficientFunds);
             }
             Ok(provider)
@@ -1175,7 +1145,7 @@ pub mod prosopo {
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
-            if dapp.balance < self.dapp_stake_default {
+            if dapp.balance < self.dapp_stake_threshold {
                 return err!(Error::DappInsufficientFunds);
             }
             Ok(dapp)
@@ -1413,11 +1383,7 @@ pub mod prosopo {
         #[ink(message)]
         pub fn get_all_provider_ids(&self) -> Result<Vec<AccountId>, Error> {
             let mut provider_ids = Vec::<AccountId>::new();
-            for status in [
-                GovernanceStatus::Active,
-                GovernanceStatus::Suspended,
-                GovernanceStatus::Deactivated,
-            ] {
+            for status in [GovernanceStatus::Active, GovernanceStatus::Inactive] {
                 for payee in [Payee::Provider, Payee::Dapp] {
                     let providers_set = self.provider_accounts.get(ProviderState { status, payee });
                     if providers_set.is_none() {
@@ -1522,14 +1488,14 @@ pub mod prosopo {
         /// Is the specified account the admin for this contract?
         fn check_admin(&self, acc: AccountId) -> Result<(), Error> {
             if self.admin != acc {
-                return err!(Error::IsNotAdmin);
+                return err!(Error::NotAuthorised);
             }
             Ok(())
         }
 
         fn check_not_admin(&self, acc: AccountId) -> Result<(), Error> {
-            if self.check_admin(acc).is_ok() {
-                err!(Error::IsAdmin)
+            if self.admin == acc {
+                err!(Error::NotAuthorised)
             } else {
                 Ok(())
             }
@@ -1570,7 +1536,7 @@ pub mod prosopo {
 
         type Event = <Prosopo as ::ink::reflect::ContractEventBase>::Type;
 
-        const STAKE_DEFAULT: u128 = 1000000000000;
+        const STAKE_THRESHOLD: u128 = 1000000000000;
 
         const set_caller: fn(AccountId) =
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
@@ -1662,7 +1628,7 @@ pub mod prosopo {
                 set_caller(get_admin_account(0));
                 // now construct the contract instance
                 let mut contract =
-                    Prosopo::new_unguarded(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                    Prosopo::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
                 // check the contract was created with the correct account
@@ -1677,7 +1643,8 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().alice);
-                let contract = Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                let contract =
+                    Prosopo::default(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should construct successfully
             }
 
@@ -1689,7 +1656,8 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
-                let contract = Prosopo::default(STAKE_DEFAULT, STAKE_DEFAULT, 10, 1000000, 0, 1000);
+                let contract =
+                    Prosopo::default(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should fail to construct and panic
             }
 
@@ -1701,8 +1669,8 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
 
                 // ctor params should be set
-                assert_eq!(contract.provider_stake_default, STAKE_DEFAULT);
-                assert_eq!(contract.dapp_stake_default, STAKE_DEFAULT);
+                assert_eq!(contract.provider_stake_threshold, STAKE_THRESHOLD);
+                assert_eq!(contract.dapp_stake_threshold, STAKE_THRESHOLD);
                 assert_eq!(contract.admin, get_admin_account(0));
                 assert_eq!(contract.max_user_history_len, 10);
                 assert_eq!(contract.max_user_history_age, 1000000);
@@ -1841,7 +1809,7 @@ pub mod prosopo {
                 let new_code_hash = get_code_hash(1);
                 assert_eq!(
                     contract.set_code_hash(new_code_hash),
-                    Err(Error::IsNotAdmin)
+                    Err(Error::NotAuthorised)
                 );
             }
 
@@ -1874,7 +1842,7 @@ pub mod prosopo {
 
                 assert_eq!(
                     contract.terminate(get_user_account(0)).unwrap_err(),
-                    Error::IsNotAdmin
+                    Error::NotAuthorised
                 );
             }
 
@@ -1930,7 +1898,7 @@ pub mod prosopo {
                 set_caller(get_user_account(0)); // use the admin acc
                 assert_eq!(
                     contract.withdraw(get_admin_account(0), 1),
-                    Err(Error::IsNotAdmin)
+                    Err(Error::NotAuthorised)
                 );
             }
 
@@ -2008,25 +1976,25 @@ pub mod prosopo {
 
             /// Assert contract provider minimum stake default set from constructor.
             #[ink::test]
-            pub fn test_provider_stake_default() {
+            pub fn test_provider_stake_threshold() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
                 let mut contract = get_contract(0);
 
-                let provider_stake_default: u128 = contract.get_provider_stake_default();
-                assert!(STAKE_DEFAULT.eq(&provider_stake_default));
+                let provider_stake_threshold: u128 = contract.get_provider_stake_threshold();
+                assert!(STAKE_THRESHOLD.eq(&provider_stake_threshold));
             }
 
             /// Assert contract dapp minimum stake default set from constructor.
             #[ink::test]
-            pub fn test_dapp_stake_default() {
+            pub fn test_dapp_stake_threshold() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
                 let mut contract = get_contract(0);
-                let dapp_stake_default: u128 = contract.get_dapp_stake_default();
-                assert!(STAKE_DEFAULT.eq(&dapp_stake_default));
+                let dapp_stake_threshold: u128 = contract.get_dapp_stake_threshold();
+                assert!(STAKE_THRESHOLD.eq(&dapp_stake_threshold));
             }
 
             /// Test provider register
@@ -2049,7 +2017,7 @@ pub mod prosopo {
                     contract
                         .provider_accounts
                         .get(ProviderState {
-                            status: GovernanceStatus::Deactivated,
+                            status: GovernanceStatus::Inactive,
                             payee: Payee::Provider
                         })
                         .unwrap_or_default()
@@ -2059,7 +2027,7 @@ pub mod prosopo {
                 assert!(contract
                     .provider_accounts
                     .get(ProviderState {
-                        status: GovernanceStatus::Deactivated,
+                        status: GovernanceStatus::Inactive,
                         payee: Payee::Dapp
                     })
                     .unwrap_or_default()
@@ -2081,7 +2049,7 @@ pub mod prosopo {
                 assert!(contract.providers.get(provider_account).is_some());
                 contract.provider_deactivate();
                 let provider_record = contract.providers.get(provider_account).unwrap();
-                assert!(provider_record.status == GovernanceStatus::Deactivated);
+                assert!(provider_record.status == GovernanceStatus::Inactive);
             }
 
             /// Test list providers
@@ -2178,7 +2146,7 @@ pub mod prosopo {
                 assert!(contract
                     .provider_accounts
                     .get(ProviderState {
-                        status: GovernanceStatus::Deactivated,
+                        status: GovernanceStatus::Inactive,
                         payee: Payee::Dapp
                     })
                     .unwrap()
@@ -2193,7 +2161,7 @@ pub mod prosopo {
                 assert!(contract
                     .provider_accounts
                     .get(ProviderState {
-                        status: GovernanceStatus::Deactivated,
+                        status: GovernanceStatus::Inactive,
                         payee: Payee::Dapp
                     })
                     .unwrap()
@@ -2203,7 +2171,7 @@ pub mod prosopo {
                 assert_eq!(provider.fee, fee);
                 assert_eq!(provider.payee, Payee::Dapp);
                 assert_eq!(provider.balance, balance);
-                assert_eq!(provider.status, GovernanceStatus::Deactivated);
+                assert_eq!(provider.status, GovernanceStatus::Inactive);
             }
 
             /// Test provider register with service_origin error
@@ -2236,7 +2204,7 @@ pub mod prosopo {
                 assert!(!contract
                     .provider_accounts
                     .get(ProviderState {
-                        status: GovernanceStatus::Deactivated,
+                        status: GovernanceStatus::Inactive,
                         payee: Payee::Dapp
                     })
                     .unwrap()
@@ -2362,7 +2330,7 @@ pub mod prosopo {
                 assert_eq!(dapp.owner, caller);
 
                 // account is marked as suspended as zero tokens have been paid
-                assert_eq!(dapp.status, GovernanceStatus::Deactivated);
+                assert_eq!(dapp.status, GovernanceStatus::Inactive);
                 assert_eq!(dapp.balance, balance);
                 assert!(contract
                     .dapp_accounts
@@ -2385,7 +2353,7 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
                 // Transfer tokens with the call
-                let balance = STAKE_DEFAULT;
+                let balance = STAKE_THRESHOLD;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
                 // Mark the the dapp account as being a contract on-chain
@@ -2531,10 +2499,7 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
-                let valid = contract
-                    .verify_sr25519(signature_bytes, payload_bytes)
-                    .unwrap_err();
-                assert_eq!(Error::InvalidPublicKey, valid);
+                let valid = contract.verify_sr25519(signature_bytes, payload_bytes);
             }
 
             #[ink::test]
@@ -2635,7 +2600,7 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
 
                 // Transfer tokens with the call
-                let balance_1 = STAKE_DEFAULT;
+                let balance_1 = STAKE_THRESHOLD;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_1);
 
                 // Mark the the dapp account as being a contract on-chain
@@ -2656,7 +2621,7 @@ pub mod prosopo {
                 assert_eq!(dapp.balance, balance_1);
 
                 // Transfer tokens with the call
-                let balance_2 = STAKE_DEFAULT;
+                let balance_2 = STAKE_THRESHOLD;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance_2);
 
                 // run the register function again for the same (caller, contract) pair, adding more
