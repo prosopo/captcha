@@ -41,7 +41,7 @@ jobs:
       - name: Rust formatting check
         run: |
           cd dev
-          npm run fmt -- --check --docker
+          npm run fmt -- --check --docker --toolchain nightly
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
@@ -68,20 +68,20 @@ jobs:
       - name: Clippy advice
         run: |
           cd dev
-          npm run clippy -- --fix --docker
+          npm run clippy -- --fix --docker --toolchain nightly
 
       # Do the build
       - name: Build contract
         id: build
         run: | 
           cd dev
-          npm run build -- --release --docker
+          npm run build -- --release --docker --toolchain nightly
           
       # Do unit testing
       - name: Test contract
         run: |
           cd dev
-          RUST_BACKTRACE=1 npm run test -- --docker
+          RUST_BACKTRACE=1 npm run test -- --docker --toolchain nightly
           result=$?
           exit $result
 
