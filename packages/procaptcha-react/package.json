@@ -12,11 +12,11 @@
     "build": "tsc --build --verbose",
     "start": "webpack serve --mode development",
     "build:webpack:prod": "webpack --mode production",
+    "build:webpack:prod:copy": "webpack --mode production && cp dist/procaptcha_react.main.bundle.js ../../demos/client-bundle-example/src",
     "build:webpack:dev": "webpack --mode development",
+    "build:webpack:dev:copy": "webpack --mode development && cp dist/procaptcha_react.main.bundle.js ../../demos/client-bundle-example/src",
     "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix",
-    "build:parcel": "parcel build src/index.ts --reporter @parcel/reporter-bundle-analyzer",
-    "build:rollup": "rollup rollup.config.js"
+    "lint:fix": "npx eslint . --fix"
   },
   "browserslist": [
     "> 0.5%, last 2 versions, not dead"
@@ -73,6 +73,7 @@
     "babel-plugin-lodash": "^3.3.4",
     "compression-webpack-plugin": "^10.0.0",
     "css-loader": "^6.7.3",
+    "dotenv-webpack": "^8.0.1",
     "eslint": "^8.40.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",

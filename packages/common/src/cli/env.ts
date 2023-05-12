@@ -4,9 +4,6 @@ import { hexToU8a, isHex } from '@polkadot/util'
 import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoEnvError } from '../error'
-import { LogLevel, logger } from '../logger'
-
-const log = logger(LogLevel.Info, 'Env setup')
 
 export async function getPair(pairType: KeypairType, ss58Format: number, secret: string): Promise<KeyringPair> {
     await cryptoWaitReady()
