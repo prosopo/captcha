@@ -7,53 +7,38 @@ const TerserPlugin = require('terser-webpack-plugin')
 const path = require('path')
 const { JsonAccessOptimizer } = require('webpack-json-access-optimizer')
 const { ProvidePlugin } = require('webpack')
-var nodeExternals = require('webpack-node-externals')
+const { loadEnv } = require('@prosopo/env')
+const nodeExternals = require('webpack-node-externals')
 
-console.log(path.resolve(__dirname, 'dist'))
+console.log([
+    path.resolve(__dirname, 'node_modules'),
+    path.resolve(__dirname, '../../node_modules'),
+    path.resolve(__dirname, '../common/node_modules'),
+])
 
-console.log(path.resolve(__dirname, '../../node_modules'))
+loadEnv()
 
 module.exports = (env, argv) => {
     const isProduction = argv.mode === 'production'
     const libraryName = 'procaptcha_react'
     return {
+        resolve: {
+            extensions: ['.js', '.jsx', '.ts', '.tsx'],
+            modules: [
+                path.resolve(__dirname, 'node_modules'),
+                path.resolve(__dirname, '../../node_modules'),
+                path.resolve(__dirname, '../common/node_modules'),
+            ],
+        },
         entry: './src/index.tsx',
         output: {
-            filename: '[name].bundle.js',
+            filename: `${libraryName}.[name].bundle.js`,
             path: path.resolve(__dirname, 'dist'),
             library: libraryName,
-            //libraryTarget: 'umd',
-            //umdNamedDefine: true,
+            chunkFilename: `${libraryName}.[name].bundle.js`,
         },
         module: {
             rules: [
-                // {
-                //     test: /\.(ts|tsx)$/,
-                //     exclude: /node_modules/,
-                //     use: {
-                //         loader: 'babel-loader',
-                //         options: {
-                //             presets: [
-                //                 [
-                //                     '@babel/preset-env',
-                //                     {
-                //                         targets: {
-                //                             browsers: '> 0.25%, not dead',
-                //                         },
-                //                         debug: true,
-                //                         modules: 'commonjs',
-                //                     },
-                //                 ],
-                //                 '@babel/preset-react',
-                //                 '@babel/preset-typescript',
-                //             ],
-                //             // plugins: [
-                //             //     '@babel/plugin-proposal-class-properties',
-                //             //     '@babel/plugin-proposal-object-rest-spread',
-                //             // ],
-                //         },
-                //     },
-                // },
                 {
                     include: /node_modules/,
                     test: /\.css$/,
@@ -87,16 +72,15 @@ module.exports = (env, argv) => {
                 },
             ],
         },
-        resolve: {
-            extensions: ['.js', '.jsx', '.ts', '.tsx'],
-        },
+
         plugins: [
             new HtmlWebpackPlugin({
                 template: './src/index.html',
             }),
-            new BundleAnalyzerPlugin(),
+            //new BundleAnalyzerPlugin(),
             new webpack.DefinePlugin({
                 'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
+                'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
             }),
             // new webpack.optimize.SplitChunksPlugin(),
             new CompressionPlugin(),
@@ -109,14 +93,17 @@ module.exports = (env, argv) => {
             new JsonAccessOptimizer({
                 accessorFunctionName: '$t', // i18n function name
             }),
-        ],
-        devServer: {
-            static: {
-                directory: __dirname + '/dist',
+            {
+                apply: (compiler) => {
+                    compiler.hooks.done.tap('DonePlugin', (stats) => {
+                        console.log('Compile is done !')
+                        setTimeout(() => {
+                            process.exit(0)
+                        })
+                    })
+                },
             },
-            compress: true,
-            port: 9000,
-        },
+        ],
         optimization: {
             // chunkIds: 'deterministic',
             // runtimeChunk: 'single',
@@ -142,15 +129,17 @@ module.exports = (env, argv) => {
             // },
 
             minimize: isProduction,
-            // minimizer: [
-            //     new TerserPlugin({
-            //         terserOptions: {
-            //             compress: {
-            //                 drop_console: true,
-            //             },
-            //         },
-            //     }),
-            // ],
+            minimizer: isProduction
+                ? [
+                      new TerserPlugin({
+                          terserOptions: {
+                              compress: {
+                                  drop_console: true,
+                              },
+                          },
+                      }),
+                  ]
+                : undefined,
             usedExports: true,
         },
         externals: [
@@ -230,6 +219,7 @@ module.exports = (env, argv) => {
             //         'react',
             //         'react-dom',
             //         'react-i18next',
+            //         'react-jsx',
             //         'rxjs',
             //         'tslib',
             //         'tweetnacl',

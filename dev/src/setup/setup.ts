@@ -108,7 +108,7 @@ export async function setup() {
         const env = new Environment(pair)
         await env.isReady()
 
-        const dappStakeDefault = await env.contractInterface.getDappStakeDefault()
+        const dappStakeDefault = (await env.contractInterface.getDappStakeDefault()).muln(2)
         defaultDapp.fundAmount = BN.max(dappStakeDefault, new BN(defaultDapp.fundAmount))
         defaultProvider.secret = mnemonic
 

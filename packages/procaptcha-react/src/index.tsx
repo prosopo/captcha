@@ -1,6 +1,14 @@
 import ReactDOM from 'react-dom'
 import { Procaptcha } from './components/Procaptcha'
 
+let siteKey
+if (document) {
+    const src = document.currentScript.src
+    siteKey = decodeURI(src).split('render=')[1].split('&')[0]
+} else {
+    siteKey = process.env.DAPP_CONTRACT_ADDRESS
+}
+
 const config = {
     userAccountAddress: '',
     web2: true,
@@ -8,11 +16,11 @@ const config = {
     network: {
         endpoint: 'ws://127.0.0.1:9944',
         prosopoContract: {
-            address: '5FBqsaMfATm4sjJ4x3VLrejg6XHk9aE6pi93hxHDgUrNT6uS',
+            address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
             name: 'prosopo',
         },
         dappContract: {
-            address: '5CXBPMtA9FYKjTcGF1ZBHjEks5n1C14e2XbQeNGqSQ5Kgngm', //change to reCAPTCHA_site_key
+            address: siteKey, //prosopo site key
             name: 'dapp',
         },
     },
@@ -20,7 +28,7 @@ const config = {
 }
 
 export function render() {
-    ReactDOM.render(<Procaptcha config={config} />, document.getElementById('root')) //wrap in fn and give user access to func
+    ReactDOM.render(<Procaptcha config={config} />, document.getElementById('procaptcha')) //wrap in fn and give user access to func
 }
 
 //https://stackoverflow.com/questions/41174095/do-i-need-to-use-onload-to-start-my-webpack-bundled-code
@@ -37,18 +45,3 @@ export function ready(fn) {
 }
 
 ready(render)
-
-{
-    /* <script>
-function onClick(e) {
-  e.preventDefault();
-  grecaptcha.ready(function() {
-    grecaptcha.execute('reCAPTCHA_site_key', {action: 'submit'}).then(function(token) {
-        // Add your logic to submit to your backend server here.
-    });
-  });
-}
-</script> */
-}
-// we want to just export our own ready and execute funcs, just use reCAPTCHA_site_key
-// prosopo.exewcute/props/whatever
