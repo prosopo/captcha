@@ -20,6 +20,9 @@
       "path": "../contract"
     },
     {
+      "path": "../database"
+    },
+    {
       "path": "../datasets"
     },
     {
