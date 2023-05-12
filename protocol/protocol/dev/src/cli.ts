@@ -119,7 +119,7 @@ export async function processArgs(args: string[]) {
         // console.log(script)
         await exec(script)
         if(argv.docker) {
-            await exec(`sudo chown -cR $(whoami):$(whoami) ${dir}/target || true`)
+            await exec(`sudo chown -R $(whoami):$(whoami) ${dir}/target || true`)
         }
     }
 
