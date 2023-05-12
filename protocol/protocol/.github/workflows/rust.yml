@@ -68,7 +68,7 @@ jobs:
       - name: Clippy
         run: |
           cd dev
-          npm run clippy-check -- --docker --toolchain nightly
+          npm run clippy -- --docker --toolchain nightly
 
       # Do the build
       - name: Build contract
