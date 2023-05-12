@@ -103,7 +103,6 @@ export class Tasks {
             hexToU8a(dataset.datasetId),
             hexToU8a(dataset.datasetContentId),
         ])
-        console.log('tx done')
     }
 
     // Other tasks
