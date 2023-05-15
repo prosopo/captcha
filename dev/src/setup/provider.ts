@@ -47,7 +47,6 @@ export async function registerProvider(env: Environment, account: IProviderAccou
         await sendFunds(env, account.address, 'Provider', sendAmount)
 
         await setupProvider(env, account)
-        console.log('here!')
     } else {
         throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
     }
