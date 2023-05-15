@@ -29,7 +29,7 @@ rustup target add wasm32-unknown-unknown --toolchain nightly
 
 Note: Use the `--release` flag to minimise contract size if the contract is too large to put on-chain.
 
-Build the contract from within the `contracts` folder.
+Build the contract from within the `contracts/<contract_name>` folder.
 
 ```bash
 
@@ -38,7 +38,7 @@ cargo +nightly contract build
 
 ## Test
 
-Run the tests using the following command from within the `contracts` folder.
+Run the tests using the following command from within the `contracts/<contract_name>` folder.
 
 ```bash
 cargo +nightly test --no-default-features --features std --verbose -- --nocapture

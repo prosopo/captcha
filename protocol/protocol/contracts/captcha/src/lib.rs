@@ -67,7 +67,9 @@ pub mod prosopo {
     use ink::storage::{traits::StorageLayout, Mapping};
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
-    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(
+        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
+    )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum GovernanceStatus {
         Active, // active and available for use
@@ -76,7 +78,9 @@ pub mod prosopo {
     }
 
     /// CaptchaStatus is the status of a CaptchaSolutionCommitment, submitted by a DappUser
-    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(
+        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
+    )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum CaptchaStatus {
         Pending,
@@ -86,7 +90,9 @@ pub mod prosopo {
     }
 
     /// Payee is the recipient of any fees that are paid when a CaptchaSolutionCommitment is approved
-    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(
+        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
+    )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Payee {
         Provider,
@@ -95,7 +101,9 @@ pub mod prosopo {
     }
 
     /// Dapps must be able to filter Providers by their Payee when they are searching for a Provider
-    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(
+        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
+    )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum DappPayee {
         Provider,
@@ -249,7 +257,9 @@ pub mod prosopo {
 
     /// The Prosopo error types
     ///
-    #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(
+        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
+    )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Error {
         /// Returned if calling account is not authorised to perform action
