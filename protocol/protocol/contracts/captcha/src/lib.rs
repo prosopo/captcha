@@ -320,7 +320,7 @@ pub mod prosopo {
     impl Prosopo {
         /// Constructor
         #[ink(constructor, payable)]
-        pub fn default(
+        pub fn new(
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
@@ -1647,8 +1647,7 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().alice);
-                let contract =
-                    Prosopo::default(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should construct successfully
             }
 
@@ -1660,8 +1659,7 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
-                let contract =
-                    Prosopo::default(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should fail to construct and panic
             }
 
