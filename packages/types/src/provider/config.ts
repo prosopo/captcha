@@ -17,6 +17,7 @@ import { LogLevel } from 'consola'
 
 export enum DatabaseTypes {
     mongo = 'mongo',
+    mongoMemory = 'mongoMemory',
 }
 
 export enum EnvironmentTypes {

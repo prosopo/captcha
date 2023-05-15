@@ -133,7 +133,7 @@ export class Environment implements ProsopoEnvironment {
         try {
             if (this.config.database) {
                 const ProsopoDatabase = Databases[this.config.database[this.defaultEnvironment].type]
-                this.db = new ProsopoDatabase(
+                this.db = await ProsopoDatabase.create(
                     this.config.database[this.defaultEnvironment].endpoint,
                     this.config.database[this.defaultEnvironment].dbname,
                     this.logger,

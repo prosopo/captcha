@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// Copyright (C) 2021-2023 Prosopo (UK) Ltd.
 // This file is part of procaptcha <https://github.com/prosopo/procaptcha>.
 //
 // procaptcha is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoEnvError } from './error'
 
 export abstract class AsyncFactory {
     constructor() {
