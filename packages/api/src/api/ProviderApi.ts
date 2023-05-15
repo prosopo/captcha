@@ -17,8 +17,6 @@ import { CaptchaSolution, ProsopoRandomProvider } from '@prosopo/types'
 import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
 import HttpClientBase from './HttpClientBase'
 
-const RETRY_LIMIT = 3
-
 export default class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
 
@@ -35,27 +33,31 @@ export default class ProviderApi extends HttpClientBase {
     public async getCaptchaChallenge(
         userAccount: string,
         randomProvider: ProsopoRandomProvider,
-        dappAccount: string,
-        retryAttempt = 0
+        dappAccount: string
     ): Promise<GetCaptchaResponse> {
-        const { provider } = randomProvider
-        const { blockNumber } = randomProvider
+        let currentProvider = randomProvider
 
-        if (retryAttempt > RETRY_LIMIT) {
-            throw new Error('Failed to get captcha challenge after maximum retry attempts')
+        // 40 attempts to garuntee attempts across at least 3 blocks.
+        for (let attempt = 0; attempt < 40; attempt++) {
+            const { provider } = currentProvider
+            const { blockNumber } = currentProvider
+
+            try {
+                return await this.axios.get(
+                    `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
+                        this.network.dappContract.address
+                    }/${blockNumber.toString().replace(/,/g, '')}`
+                )
+            } catch (e) {
+                console.log(e)
+                currentProvider = await this.axios.get(`/v1/prosopo/random_provider/${userAccount}/${dappAccount}`)
+            }
+
+            // Wait for 0.5 seconds before retrying.
+            await new Promise((resolve) => setTimeout(resolve, 500))
         }
 
-        try {
-            return this.axios.get(
-                `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
-                    this.network.dappContract.address
-                }/${blockNumber.toString().replace(/,/g, '')}`
-            )
-        } catch (e) {
-            console.log(e)
-            const newRandomProvider = await this.getNewRandomProvider(userAccount)
-            return this.getCaptchaChallenge(userAccount, newRandomProvider, dappAccount, retryAttempt + 1)
-        }
+        throw new Error('Failed to get captcha challenge after maximum retry attempts')
     }
 
     public submitCaptchaSolution(
@@ -87,9 +89,5 @@ export default class ProviderApi extends HttpClientBase {
             payload['commitmentId'] = commitmentId
         }
         return this.axios.post(`/v1/prosopo/provider/verify`, payload)
-    }
-
-    private getNewRandomProvider(userAccount: string): Promise<ProsopoRandomProvider> {
-        return this.axios.get(`/v1/prosopo/random_provider/${userAccount}/:dappContractAccount`)
     }
 }
