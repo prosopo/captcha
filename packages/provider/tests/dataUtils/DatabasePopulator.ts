@@ -14,9 +14,7 @@
 import { stringToHexPadded } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import path from 'path'
-
 import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
-
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds'
 import { Tasks } from '../../src/tasks'
 import { IDatabaseAccounts } from './DatabaseAccounts'

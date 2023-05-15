@@ -16,16 +16,18 @@ import { Hash } from '@polkadot/types/interfaces'
 import { isHex } from '@polkadot/util'
 import {
     Captcha,
-    CaptchaRecordSchema,
     CaptchaSolution,
     CaptchaStates,
-    Database,
     DatasetBase,
-    DatasetRecordSchema,
     DatasetWithIds,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
     PendingCaptchaRequest,
+} from '@prosopo/types'
+import {
+    CaptchaRecordSchema,
+    Database,
+    DatasetRecordSchema,
     PendingRecordSchema,
     ScheduledTaskRecord,
     ScheduledTaskRecordSchema,
@@ -38,10 +40,9 @@ import {
     UserSolutionRecord,
     UserSolutionRecordSchema,
     UserSolutionSchema,
-} from '@prosopo/types'
+} from '@prosopo/types-database'
 
-import { Logger, ProsopoEnvError } from '@prosopo/common'
-import consola from 'consola'
+import { LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import mongoose, { Connection } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import { DeleteResult } from 'mongodb'
@@ -53,7 +54,8 @@ const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
 
 const callbackFn = function (err, result) {
     if (err) throw err
-    consola.debug('consola debug', result)
+    // TODO bind a logger to the callback
+    logger(LogLevel.Info, result).info(result)
 }
 
 /**

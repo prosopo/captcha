@@ -15,10 +15,9 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import HttpClientBase from './HttpClientBase'
 import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
-import { ProsopoRandomProvider } from '@prosopo/contract'
-import { CaptchaSolution } from '@prosopo/types'
+import { CaptchaSolution, ProsopoRandomProvider } from '@prosopo/types'
 
-export class ProviderApi extends HttpClientBase {
+export default class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
 
     constructor(network: ProsopoNetwork, providerUrl: string) {
@@ -76,5 +75,3 @@ export class ProviderApi extends HttpClientBase {
         return this.axios.post(`/v1/prosopo/provider/verify`, payload)
     }
 }
-
-export default ProviderApi

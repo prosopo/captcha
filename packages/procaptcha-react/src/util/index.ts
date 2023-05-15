@@ -7,7 +7,7 @@ function renameKeysForDataAttr(data: { [key: string]: string } = {}) {
  *
  * dev - only in development mode
  */
-export function addDataAttr({
+export default function addDataAttr({
     general,
     dev,
 }: {

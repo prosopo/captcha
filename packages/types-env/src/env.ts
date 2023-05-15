@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ContractAbi, IProsopoContractMethods } from '../contract'
-import { AssetsResolver } from '../datasets'
-import { Database } from './db'
-import { ProsopoConfig } from './config'
+import { ContractAbi, IProsopoContractMethods } from '@prosopo/types' // contract
+import { AssetsResolver } from '@prosopo/types' // datasets
+import { Database } from '@prosopo/types-database'
+import { ProsopoConfig } from '@prosopo/types' // config
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
 import { ApiPromise } from '@polkadot/api'

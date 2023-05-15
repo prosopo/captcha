@@ -13,25 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { blake2AsHex } from '@polkadot/util-crypto'
 import client from 'axios'
 import { ProsopoEnvError } from '@prosopo/common'
-
-export const HEX_HASH_BIT_LENGTH = 256
-export const ARRAY_JOINER = ''
-
-export function hexHash(data: string | Uint8Array, bitLength?: 256 | 512 | 64 | 128 | 384 | undefined): string {
-    // default bit length is 256
-    return blake2AsHex(data, bitLength)
-}
-
-export function hexHashArray<T>(arr: T[]): string {
-    return hexHash(arrayJoin(arr))
-}
-
-export function arrayJoin<T>(arr: T[], joiner?: string): string {
-    return arr.join(joiner ? joiner : ARRAY_JOINER)
-}
 
 export async function downloadImage(url: string): Promise<Uint8Array> {
     try {
