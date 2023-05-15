@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoDatabase as MongoDatabase } from './mongo'
+import { MongoMemoryDatabase } from './mongoMemory'
 export const Databases = {
     mongo: MongoDatabase,
+    mongoMemory: MongoMemoryDatabase,
 }

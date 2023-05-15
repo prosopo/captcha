@@ -42,7 +42,7 @@ import {
     UserSolutionSchema,
 } from '@prosopo/types-database'
 
-import { LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { AsyncFactory, LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import mongoose, { Connection } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import { DeleteResult } from 'mongodb'
@@ -64,23 +64,20 @@ const callbackFn = function (err, result) {
  * @param {string} dbname       The database name
  * @return {ProsopoDatabase}    Database layer
  */
-export class ProsopoDatabase implements Database {
-    readonly url: string
-
+export class ProsopoDatabase extends AsyncFactory implements Database {
+    url: string
     tables?: Tables
-
     dbname: string
-
+    connection?: Connection
     logger: Logger
 
-    connection?: Connection
-
-    constructor(url: string, dbname: string, logger: Logger, authSource?: string) {
+    public async init(url: string, dbname: string, logger: Logger, authSource?: string) {
         const authSourceString = authSource ? `?authSource=${authSource}` : ''
         const separator = url.slice(-1) === '/' ? '' : '/'
         this.url = `${url || DEFAULT_ENDPOINT}${separator}${dbname}${authSourceString}`
         this.dbname = dbname
         this.logger = logger
+        return this
     }
 
     /**
