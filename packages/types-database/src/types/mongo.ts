@@ -171,13 +171,6 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
     },
 })
 
-export interface DatabaseArgs {
-    url: string
-    dbname: string
-    logger: Logger
-    authSource?: string
-}
-
 export interface Database {
     url: string
     tables?: Tables
