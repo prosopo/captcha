@@ -1448,16 +1448,17 @@ pub mod prosopo {
 
         /// Terminate this contract and return any/all funds in this contract to the destination
         #[ink(message)]
-        pub fn terminate(&mut self, dest: AccountId) -> Result<(), Error> {
+        pub fn terminate(&mut self) -> Result<(), Error> {
             self.check_caller_admin()?;
-            self.env().terminate_contract(dest);
+            self.env().terminate_contract(self.env().caller());
         }
 
         /// Withdraw some funds from the contract to the specified destination
         #[ink(message)]
-        pub fn withdraw(&mut self, dest: AccountId, amount: Balance) -> Result<(), Error> {
+        pub fn withdraw(&mut self, amount: Balance) -> Result<(), Error> {
             self.check_caller_admin()?;
-            let transfer_result = ink::env::transfer::<ink::env::DefaultEnvironment>(dest, amount);
+            let transfer_result =
+                ink::env::transfer::<ink::env::DefaultEnvironment>(self.env().caller(), amount);
             if transfer_result.is_err() {
                 return err!(Error::ContractTransferFailed);
             }
@@ -1834,7 +1835,7 @@ pub mod prosopo {
                 let contract_account = contract.env().account_id();
                 let bal = get_account_balance(contract_account).unwrap();
                 let admin = get_admin_account(0);
-                let should_terminate = move || contract.terminate(admin).unwrap();
+                let should_terminate = move || contract.terminate().unwrap();
                 ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
                     should_terminate,
                     get_admin_account(0),
@@ -1850,10 +1851,7 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
                 set_caller(get_user_account(0)); // an account which does not have permission to call terminate
 
-                assert_eq!(
-                    contract.terminate(get_user_account(0)).unwrap_err(),
-                    Error::NotAuthorised
-                );
+                assert_eq!(contract.terminate().unwrap_err(), Error::NotAuthorised);
             }
 
             #[ink::test]
@@ -1870,9 +1868,7 @@ pub mod prosopo {
                 let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
                 let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
                 let withdraw_amount: u128 = 1;
-                contract
-                    .withdraw(get_admin_account(0), withdraw_amount)
-                    .unwrap();
+                contract.withdraw(withdraw_amount).unwrap();
                 assert_eq!(
                     get_account_balance(get_admin_account(0)).unwrap(),
                     admin_bal + withdraw_amount
@@ -1894,7 +1890,7 @@ pub mod prosopo {
                 set_caller(get_admin_account(0)); // use the admin acc
                 let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
                 let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
-                contract.withdraw(get_admin_account(0), contract_bal + 1); // panics as bal would go below existential deposit
+                contract.withdraw(contract_bal + 1); // panics as bal would go below existential deposit
             }
 
             #[ink::test]
@@ -1906,10 +1902,7 @@ pub mod prosopo {
 
                 // give the contract funds
                 set_caller(get_user_account(0)); // use the admin acc
-                assert_eq!(
-                    contract.withdraw(get_admin_account(0), 1),
-                    Err(Error::NotAuthorised)
-                );
+                assert_eq!(contract.withdraw(1), Err(Error::NotAuthorised));
             }
 
             #[ink::test]
