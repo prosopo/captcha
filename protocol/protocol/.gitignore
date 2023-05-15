@@ -119,7 +119,7 @@ build/
 secrets.json
 .env
 
-# Ingnore build target
-contracts/target/
-
-src/*/target/
+# Ignore build target
+crates/*/target/
+contracts/*/target/
+target/

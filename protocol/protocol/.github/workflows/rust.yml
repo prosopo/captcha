@@ -14,69 +14,66 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-
       # Checkout the repo
       - uses: actions/checkout@v3
 
-      - run: ls -la
-
-      - name: Get docker image for contracts-ci
-        id: docker_pull
+      - name: Npm install
         run: |
-          before=$(docker image list -q)
-          docker pull paritytech/contracts-ci-linux:41abf440-20230503
-          after=$(docker image list -q)
-          if [[ "$before" == "$after" ]]; then
-            echo "change=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "change=true" >> "$GITHUB_OUTPUT"
-          fi
+          cd dev
+          npm install
 
       # Check if rust is formatted correctly
       - name: Rust formatting check
         run: |
-          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly fmt --manifest-path=/contracts/Cargo.toml -- --check --verbose
+          cd dev
+          npm run fmt -- --check --toolchain nightly --docker
+          # take ownership of the build files so they can be cached
+          npm run chown
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
         uses: actions/cache/restore@v3
         with:
           path: |
-            contracts/target
+            target
           # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
           # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
           # "abcdef123" could be anything, it is a random string to differentiate cache usages
           # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
           # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
           # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+          key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
-      
-      - run: ls -la
-      - run: ls -la contracts || true
-      - run: ls -la contracts/target || true
-      - run: ls -la contracts/target/ink || true
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
+            cargo-build-${{ runner.os }}-${{ runner.arch }}-
+            cargo-build-${{ runner.os }}-
+            cargo-build-
 
       # Check for clippy advice
-      - name: Clippy advice
+      - name: Clippy
         run: |
-          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly clippy --manifest-path=/contracts/Cargo.toml -- -D warnings
+          cd dev
+          npm run clippy -- --toolchain nightly --docker
+          # take ownership of the build files so they can be cached
+          npm run chown
 
       # Do the build
       - name: Build contract
         id: build
         run: | 
-          docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly contract build --release --manifest-path=/contracts/Cargo.toml
-          # parity's docker image runs using root, so need to chown the output
-          sudo chown -cR $(whoami) contracts
+          cd dev
+          npm run build -- --release --toolchain nightly --docker
+          # take ownership of the build files so they can be cached
+          npm run chown
           
       # Do unit testing
       - name: Test contract
         run: |
-          RUST_BACKTRACE=1 docker run --rm -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:41abf440-20230503 cargo +nightly test  --no-default-features --features std --manifest-path=/contracts/Cargo.toml -- --nocapture
+          cd dev
+          RUST_BACKTRACE=1 npm run test -- --toolchain nightly --docker
           result=$?
-          sudo chown -cR $(whoami) contracts
+          # take ownership of the build files so they can be cached
+          npm run chown
           exit $result
 
       - name: Cleanup cargo build caches
@@ -105,6 +102,6 @@ jobs:
         if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
         with:
           path: |
-            contracts/target
+            target
           # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
           key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}

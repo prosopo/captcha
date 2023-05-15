@@ -1,0 +1,33 @@
+{
+    "name": "@prosopo/protocol-dev",
+    "version": "0.1.11",
+    "description": "Dev tools for working with prosopo contracts",
+    "main": "dist/index.js",
+    "scripts": {
+        "cli": "ts-node src/cli.ts",
+        "build": "ts-node src/cli.ts build",
+        "test": "ts-node src/cli.ts test",
+        "fmt": "ts-node src/cli.ts fmt",
+        "clippy": "ts-node src/cli.ts clippy",
+        "clean": "npm run chown && rm -rf ../target",
+        "chown": "sudo chown -R $(whoami):$(whoami) ../target || true"
+    },
+    "author": "Prosopo Limited",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "child_process": "^1.0.2",
+        "consola": "^2.15.3",
+        "dotenv": "^16.0.3",
+        "fs": "^0.0.1-security",
+        "glob": "^10.0.0",
+        "path": "^0.12.7",
+        "process": "^0.11.10",
+        "ts-node": "^10.9.1",
+        "yargs": "^17.5.1",
+        "yargs-parser": "^21.0.1"
+    },
+    "devDependencies": {
+        "@types/node": "^20.1.2",
+        "@types/yargs": "^17.0.24"
+    }
+}

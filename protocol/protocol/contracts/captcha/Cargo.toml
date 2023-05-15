@@ -1,5 +1,5 @@
 [package]
-name = "prosopo"
+name = "captcha"
 version = "4.0.0"
 authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
 edition = "2021"
@@ -10,28 +10,26 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 hex = "0.4.3"
 
-# custom prosopo storage
-prosopo_storage_derive = { version = "3.3.0", path = "crates/storage/derive", default-features = false }
-
 [dependencies.inject_self_macro]
 version = "0.3.0"
-path = "inject_self_macro"
+path = "../../crates/inject_self_macro"
 
 [dependencies.named_functions_macro]
 version = "0.3.0"
-path = "named_functions_macro"
+path = "../../crates/named_functions_macro"
 
 [dependencies.disable_macro]
 version = "0.3.0"
-path = "disable_macro"
+path = "../../crates/disable_macro"
 
 [lib]
-name = "prosopo"
-path = "lib.rs"
+name = "captcha"
+path = "src/lib.rs"
 crate-type = [
     # Used for normal contract Wasm blobs.
     "cdylib",
 ]
+
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.
 [profile.release]
 overflow-checks = false

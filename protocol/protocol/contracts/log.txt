@@ -1,4 +1,0 @@
- [1/5] Building cargo project
- [2/5] Post processing wasm file
- [3/5] Optimizing wasm file
- [4/5] Generating metadata

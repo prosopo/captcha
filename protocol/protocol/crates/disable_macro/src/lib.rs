@@ -42,12 +42,10 @@ fn handle(input: TokenStream) -> TokenStream {
                 let span = g.span();
                 let mut sub_ts = handle(g.stream());
                 if inject_enable && g.delimiter() == Delimiter::Brace {
-                    if fname.to_string() != "default" {
+                    if fname != "default" {
                         let inject = if return_type_result {
                             // return an error from the function instead of panicking
-                            quote!(
-                                Err(Error::FunctionDisabled)
-                            )
+                            quote!(Err(Error::FunctionDisabled))
                         } else {
                             // function does not return a result type, so we panic
                             quote!(

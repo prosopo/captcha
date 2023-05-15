@@ -37,11 +37,11 @@ enum State {
 }
 
 fn handle(input: TokenStream) -> TokenStream {
-    let mut input = input.into_iter().peekable();
+    let input = input.into_iter().peekable();
     let mut output = Vec::<TokenTree>::new();
     let mut state = State::Fn;
     let mut _fname: String = "unknown".to_string();
-    while let Some(tt) = input.next() {
+    for tt in input {
         match tt {
             TokenTree::Group(mut g) => {
                 let span = g.span();
