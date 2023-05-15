@@ -13,9 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import HttpClientBase from './HttpClientBase'
-import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
 import { CaptchaSolution, ProsopoRandomProvider } from '@prosopo/types'
+import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
+import HttpClientBase from './HttpClientBase'
+
+const RETRY_LIMIT = 3
 
 export default class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
@@ -30,18 +32,30 @@ export default class ProviderApi extends HttpClientBase {
         return this.axios.get(`/v1/prosopo/providers`)
     }
 
-    public getCaptchaChallenge(
+    public async getCaptchaChallenge(
         userAccount: string,
-        randomProvider: ProsopoRandomProvider
+        randomProvider: ProsopoRandomProvider,
+        dappAccount: string,
+        retryAttempt = 0
     ): Promise<GetCaptchaResponse> {
         const { provider } = randomProvider
         const { blockNumber } = randomProvider
 
-        return this.axios.get(
-            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
-                this.network.dappContract.address
-            }/${blockNumber.toString().replace(/,/g, '')}`
-        )
+        if (retryAttempt > RETRY_LIMIT) {
+            throw new Error('Failed to get captcha challenge after maximum retry attempts')
+        }
+
+        try {
+            return this.axios.get(
+                `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
+                    this.network.dappContract.address
+                }/${blockNumber.toString().replace(/,/g, '')}`
+            )
+        } catch (e) {
+            console.log(e)
+            const newRandomProvider = await this.getNewRandomProvider(userAccount)
+            return this.getCaptchaChallenge(userAccount, newRandomProvider, dappAccount, retryAttempt + 1)
+        }
     }
 
     public submitCaptchaSolution(
@@ -73,5 +87,9 @@ export default class ProviderApi extends HttpClientBase {
             payload['commitmentId'] = commitmentId
         }
         return this.axios.post(`/v1/prosopo/provider/verify`, payload)
+    }
+
+    private getNewRandomProvider(userAccount: string): Promise<ProsopoRandomProvider> {
+        return this.axios.get(`/v1/prosopo/random_provider/${userAccount}/:dappContractAccount`)
     }
 }
