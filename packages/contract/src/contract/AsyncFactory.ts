@@ -15,16 +15,16 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import { ProsopoEnvError } from '@prosopo/common'
 
-export abstract class AsyncFactory {
+export abstract class AsyncFactory<T> {
     constructor() {
         throw new ProsopoEnvError('GENERAL.ASYNC_FACTORY_CREATE')
     }
 
-    public static async create(...args: any[]) {
-        return await Object.create(this.prototype).init(...args)
+    public static async create(args: T) {
+        return await Object.create(this.prototype).init(args)
     }
 
-    public abstract init(...args: any[]): Promise<this>
+    public abstract init(args: T): Promise<this>
 }
 
 export default AsyncFactory
