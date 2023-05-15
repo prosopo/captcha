@@ -14,7 +14,6 @@
 import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/env'
-import { MongoMemoryServer } from 'mongodb-memory-server'
 import path from 'path'
 import { LocalAssetsResolver } from '../../src/assets'
 import {
@@ -85,7 +84,7 @@ export class MockEnvironment implements ProsopoEnvironment {
                 captchaBlockRecency: 10,
             },
             database: {
-                development: { type: DatabaseTypes.mongo, endpoint: '', dbname: 'prosopo', authSource: '' },
+                development: { type: DatabaseTypes.mongoMemory, endpoint: '', dbname: 'prosopo', authSource: '' },
             },
             assets: {
                 absolutePath: '',
@@ -195,10 +194,8 @@ export class MockEnvironment implements ProsopoEnvironment {
     async importDatabase(): Promise<void> {
         try {
             const ProsopoDatabase = Databases[this.config.database[this.defaultEnvironment].type]
-            const mongod = await MongoMemoryServer.create()
-            const databaseUrl = mongod.getUri()
-            this.db = new ProsopoDatabase(
-                databaseUrl,
+            this.db = await ProsopoDatabase.create(
+                '',
                 this.config.database[this.defaultEnvironment].dbname,
                 this.logger
             )
