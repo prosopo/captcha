@@ -90,7 +90,11 @@
     "dev"
   ],
   "devDependencies": {
+    "@parcel/packager-ts": "^2.8.3",
+    "@parcel/transformer-typescript-types": "^2.8.3",
+    "babel-plugin-import": "^1.13.6",
     "depcheck": "^1.4.3",
+    "eslint-plugin-absolute-imports-only": "^1.0.1",
     "nodemon": "^2.0.20",
     "npm-check-updates": "^15.3.4",
     "tslib": "^2.4.0",

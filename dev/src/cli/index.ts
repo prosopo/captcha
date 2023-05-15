@@ -71,6 +71,7 @@ export async function processArgs(args) {
                             'DAPP_CONTRACT_ADDRESS',
                             'REACT_APP_DAPP_CONTRACT_ADDRESS',
                             'NEXT_PUBLIC_DAPP_CONTRACT_ADDRESS',
+                            'PROSOPO_SITE_KEY',
                         ],
                         dappContractAddress.toString(),
                         logger

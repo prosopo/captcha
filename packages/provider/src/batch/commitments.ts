@@ -2,13 +2,12 @@ import { batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { BN } from '@polkadot/util'
 import {
     BatchCommitConfig,
-    Database,
     ExtrinsicBatch,
     IProsopoContractMethods,
     ScheduledTaskNames,
     ScheduledTaskStatus,
-    UserCommitmentRecord,
 } from '@prosopo/types'
+import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { ApiPromise } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { Logger } from '@prosopo/common'
@@ -112,6 +111,7 @@ export class BatchCommitments {
             this.logger.debug('Provider Address', this.contract.pair.address)
             const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.abi, fragment, args)
             this.logger.debug(`Commitment:`, args)
+
             const { extrinsic, options, storageDeposit } = await this.contract.buildExtrinsic(
                 'dappUserCommit',
                 encodedArgs
@@ -129,6 +129,7 @@ export class BatchCommitments {
             totalProofSize = totalProofSize.add(
                 this.contract.api.registry.createType('WeightV2', options.gasLimit).proofSize.toBn()
             )
+
             totalFee = totalFee.add(paymentInfo.partialFee.toBn().add(storageDeposit.asCharge.toBn()))
             const extrinsicTooHigh = this.extrinsicTooHigh(totalRefTime, totalProofSize, maxBlockWeight)
             console.log(

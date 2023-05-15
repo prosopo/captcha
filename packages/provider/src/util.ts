@@ -14,7 +14,7 @@
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import fs, { WriteStream, createWriteStream } from 'fs'
-import { arrayJoin } from '@prosopo/datasets'
+import { arrayJoin } from '@prosopo/common'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import { Captcha, CaptchaSolution } from '@prosopo/types'
 import pl from 'nodejs-polars'

@@ -1,4 +1,4 @@
-import { ProsopoEnvironment } from '@prosopo/types'
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import { BN } from '@polkadot/util'
 import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
 import { AnyNumber } from '@polkadot/types-codec/types'

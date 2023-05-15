@@ -20,10 +20,9 @@ import {
     CaptchaSolutionBody,
     CaptchaWithProof,
     DappUserSolutionResult,
-    ProsopoEnvironment,
     VerifySolutionBody,
 } from '@prosopo/types'
-
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import { parseBlockNumber } from './util'
 
 /**

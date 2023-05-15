@@ -27,6 +27,7 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     const deployer = new ContractDeployer(env.api, abi, wasm, env.pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()
 }
+
 export async function run(wasmPath: string, abiPath: string): Promise<AccountId> {
     const wasm = await Wasm(path.resolve(wasmPath))
     const abi = await AbiJSON(path.resolve(abiPath))

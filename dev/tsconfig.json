@@ -17,6 +17,15 @@
         },
         {
             "path": "../packages/env"
+        },
+        {
+            "path": "../packages/provider"
+        },
+        {
+            "path": "../packages/types-database"
+        },
+        {
+            "path": "../packages/types-env"
         }
     ]
 }
