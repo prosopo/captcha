@@ -177,19 +177,18 @@ export async function processArgs(args: string[]) {
             'instantiate',
             'Instantiate the contract',
             (yargs) => {
-                return yargs.option('contract', {
+                return yargs.option('package', {
                     type: 'string',
                     demand: true,
-                    desc: 'Target a specific contract',
+                    desc: 'Target a specific package',
                     choices: contracts,
                 })
             },
             async (argv) => {
-                const cmd = 'contract instantiate'
-                const [, ...cmdArgsArray] = argv._
-                const cmdArgs = cmdArgsArray.join(' ')
+                const [, ...cmdArgsArray] = argv._ // strip the command name
+                let cmdArgs = cmdArgsArray.join(' ')
 
-                const contract = argv.contract;
+                const contract = argv.package;
 
                 await exec(`cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${cmdArgs}`)
             },
