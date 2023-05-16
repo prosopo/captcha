@@ -1420,7 +1420,8 @@ pub mod prosopo {
             bytes[0..BLOCK_NUMBER_SIZE].copy_from_slice(&block_number_arr);
             bytes[BLOCK_NUMBER_SIZE..BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE]
                 .copy_from_slice(&block_timestamp_arr);
-            bytes[BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE..].copy_from_slice(user_account_bytes);
+            bytes[BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE..BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE + ACCOUNT_SIZE]
+                .copy_from_slice(user_account_bytes);
             bytes[BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE..]
                 .copy_from_slice(dapp_account_bytes);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
