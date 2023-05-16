@@ -4,7 +4,7 @@ import yargs from 'yargs'
 import process from 'process';
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
-import { stdout, stderr } from 'process';
+import { stdout, stderr, stdin } from 'process';
 
 const exec = (command: string, pipe?: boolean) => {
 
@@ -18,6 +18,7 @@ const exec = (command: string, pipe?: boolean) => {
         prc.stdout.pipe(process.stdout);
         prc.stderr.pipe(process.stderr);
     }
+    stdin.pipe(prc.stdin);
 
     const stdoutData: string[] = [];
     const stderrData: string[] = [];
