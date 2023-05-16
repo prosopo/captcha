@@ -174,6 +174,28 @@ export async function processArgs(args: string[]) {
     await yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .command(
+            'instantiate',
+            'Instantiate the contract',
+            (yargs) => {
+                return yargs.option('contract', {
+                    type: 'string',
+                    demand: true,
+                    desc: 'Target a specific contract',
+                    choices: contracts,
+                })
+            },
+            async (argv) => {
+                const cmd = 'contract instantiate'
+                const [, ...cmdArgsArray] = argv._
+                const cmdArgs = cmdArgsArray.join(' ')
+
+                const contract = argv.contract;
+
+                await exec(`cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${cmdArgs}`)
+            },
+            []
+        )
+        .command(
             'build',
             'Build the contracts',
             (yargs) => {
@@ -256,6 +278,7 @@ export async function processArgs(args: string[]) {
             },
             []
         )
+        .parserConfiguration({'unknown-options-as-args': true})
         .parse();
 }
 
