@@ -4,7 +4,7 @@ import yargs from 'yargs'
 import process from 'process';
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
-import { stdout, stderr } from 'process';
+import { stdout, stderr, stdin } from 'process';
 
 const exec = (command: string, pipe?: boolean) => {
 
@@ -18,6 +18,7 @@ const exec = (command: string, pipe?: boolean) => {
         prc.stdout.pipe(process.stdout);
         prc.stderr.pipe(process.stderr);
     }
+    stdin.pipe(prc.stdin);
 
     const stdoutData: string[] = [];
     const stderrData: string[] = [];
@@ -173,6 +174,27 @@ export async function processArgs(args: string[]) {
     await yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .command(
+            'instantiate',
+            'Instantiate the contract',
+            (yargs) => {
+                return yargs.option('package', {
+                    type: 'string',
+                    demand: true,
+                    desc: 'Target a specific package',
+                    choices: contracts,
+                })
+            },
+            async (argv) => {
+                const [, ...cmdArgsArray] = argv._ // strip the command name
+                let cmdArgs = cmdArgsArray.join(' ')
+
+                const contract = argv.package;
+
+                await exec(`cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${cmdArgs}`)
+            },
+            []
+        )
+        .command(
             'build',
             'Build the contracts',
             (yargs) => {
@@ -255,6 +277,7 @@ export async function processArgs(args: string[]) {
             },
             []
         )
+        .parserConfiguration({'unknown-options-as-args': true})
         .parse();
 }
 
