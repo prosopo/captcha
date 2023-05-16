@@ -1412,12 +1412,17 @@ pub mod prosopo {
             // pack all the data into a single byte array
             let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
-            let mut bytes: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE + ACCOUNT_SIZE] = [0x0; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE + ACCOUNT_SIZE];
+            let mut bytes: [u8; BLOCK_TIMESTAMP_SIZE
+                + BLOCK_NUMBER_SIZE
+                + ACCOUNT_SIZE
+                + ACCOUNT_SIZE] =
+                [0x0; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE + ACCOUNT_SIZE];
             bytes[0..BLOCK_NUMBER_SIZE].copy_from_slice(&block_number_arr);
             bytes[BLOCK_NUMBER_SIZE..BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE]
                 .copy_from_slice(&block_timestamp_arr);
             bytes[BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE..].copy_from_slice(user_account_bytes);
-            bytes[BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE..].copy_from_slice(dapp_account_bytes);
+            bytes[BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE..]
+                .copy_from_slice(dapp_account_bytes);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
