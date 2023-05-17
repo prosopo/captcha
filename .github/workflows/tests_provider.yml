@@ -111,6 +111,9 @@ jobs:
           cd ../datasets && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cd ../contract && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cd ../provider && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../cli && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../../dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          
 
       - name: Setup the environment and run the unit tests
         run: |
@@ -121,9 +124,7 @@ jobs:
           git status | head -n 1
           docker container ls
           cat .env.development
-          cd ../packages/cli && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
-          cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
-          cd .. && NODE_ENV=$ENVIRONMENT npm run test
+          npm run test
 
       - name: Remove the docker containers
         run: |
