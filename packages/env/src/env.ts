@@ -116,21 +116,16 @@ export class Environment implements ProsopoEnvironment {
         try {
             if (this.config.account.password) {
                 this.pair.unlock(this.config.account.password)
-                this.logger.log('pair unlocked')
             }
             if (!this.api) {
                 this.api = await ApiPromise.create({ provider: this.wsProvider })
-                this.logger.log('api promise created')
             }
             await this.getSigner()
-            this.logger.log('signer gotten')
             this.contractInterface = await this.getContractApi()
-            this.logger.log('contract interface created')
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
                     this.logger.error(err)
                 })
-                this.logger.log('db imported')
             } else if (this.db?.connection?.readyState !== 1) {
                 this.db
                     .connect()
@@ -140,7 +135,6 @@ export class Environment implements ProsopoEnvironment {
                     .catch((err) => {
                         this.logger.error(err)
                     })
-                this.logger.log('db connected')
             }
         } catch (err) {
             throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
