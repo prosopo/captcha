@@ -116,7 +116,7 @@ jobs:
         run: |
           cd captcha
           git status | head -n 1
-          cd packages/provider
+          cd dev
           cp env.development .env.development
           git status | head -n 1
           docker container ls
