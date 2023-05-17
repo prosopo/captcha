@@ -10,5 +10,24 @@
         "./src/**/*.ts"
         //    "./tests/**/*.ts"
     ],
-    "references": []
+    "references": [
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../contract"
+        },
+        {
+            "path": "../database"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../types-database"
+        },
+        {
+            "path": "../types-env"
+        }
+    ]
 }
