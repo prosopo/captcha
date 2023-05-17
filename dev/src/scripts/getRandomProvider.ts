@@ -13,15 +13,16 @@
 // limitations under the License.
 import { getPair } from '@prosopo/common'
 import { generateMnemonic } from '@prosopo/contract'
-import { getPairType, getSs58Format } from '@prosopo/env'
-import { Environment, Tasks } from '@prosopo/provider'
+import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
+import { Tasks } from '@prosopo/provider'
+import { Environment } from '@prosopo/env'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
 async function main() {
     const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
-    const env = new Environment(pair)
+    const env = new Environment(pair, defaultConfig())
     await env.isReady()
     const tasks = new Tasks(env)
     const [mnemonic, address] = (await generateMnemonic(env.keyring)) || ['', '']

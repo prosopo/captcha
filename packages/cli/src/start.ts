@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Prosopo (UK) Ltd.
+// Copyright 2021-2023 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,29 +11,42 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { getPair, i18nMiddleware } from '@prosopo/common'
-import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
+import { ProsopoApiError, getPair, i18nMiddleware } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import cors from 'cors'
 import express from 'express'
 import { Server } from 'http'
-import { prosopoRouter } from '../api'
-import { LocalAssetsResolver } from '../assets'
-import { Environment } from '../env'
-import { handleErrors } from '../errors'
+import { prosopoRouter } from '@prosopo/provider/dist/api'
+import { LocalAssetsResolver } from '@prosopo/provider/dist/assets'
+import { Environment } from '@prosopo/env'
+import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
+import { loadEnv } from './env'
 
 let apiAppSrv: Server
 
+export const handleErrors = (err: ProsopoApiError, req, res, next) => {
+    let message = err.message
+    try {
+        message = JSON.parse(err.message)
+    } catch {
+        console.debug('Invalid JSON error message')
+    }
+    return res.status(err.code).json({
+        message,
+        name: err.name,
+    })
+}
+
 function startApi(env: ProsopoEnvironment) {
     const apiApp = express()
-    const apiPort = process.env.API_PORT || 3000
+    const apiPort = env.config.server.port
 
     apiApp.use(cors())
     apiApp.use(express.json())
     apiApp.use(i18nMiddleware({}))
     apiApp.use(prosopoRouter(env))
 
-    if (env.assetsResolver instanceof LocalAssetsResolver) {
+    if (env.assetsResolver && env.assetsResolver instanceof LocalAssetsResolver) {
         env.assetsResolver.injectMiddleware(apiApp) //
     }
 
@@ -68,9 +81,10 @@ async function start(nodeEnv: string) {
         const ss58Format = getSs58Format()
         const pairType = getPairType()
         const secret = getSecret()
+        const config = getConfig()
         const pair = await getPair(pairType, ss58Format, secret)
 
-        env = new Environment(pair)
+        env = new Environment(pair, config)
     } else {
         // env = new MockEnvironment();
         return
@@ -80,9 +94,9 @@ async function start(nodeEnv: string) {
     startApi(env)
 
     // set up the file server
-    const port = process.env.FILE_SRV_PORT || 4000
+    const port = env.config.server.port
     // accept multiple paths for locations of files
-    const paths = JSON.parse(process.env.FILE_SRV_PATHS || '[]')
+    const paths = env.config.server.fileServePaths
     // if single path given convert to array
     const locations = Array.isArray(paths) ? paths : [paths]
     startFileSrv(port, locations)

@@ -81,6 +81,8 @@ export const ProsopoConfigSchema = z.object({
     }),
     server: z.object({
         baseURL: z.string().url(),
+        port: z.number().optional().default(8282),
+        fileServePaths: z.array(z.string()),
     }),
 })
 

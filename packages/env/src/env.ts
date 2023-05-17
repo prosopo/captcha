@@ -11,34 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import { LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { loadEnv } from '@prosopo/env'
-import path from 'path'
-import { LocalAssetsResolver } from '../../src/assets'
-import {
-    AssetsResolver,
-    ContractAbi,
-    DatabaseTypes,
-    EnvironmentTypes,
-    IProsopoContractMethods,
-    ProsopoConfig,
-} from '@prosopo/types'
-import { Database } from '@prosopo/types-database'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+
 import { ApiPromise } from '@polkadot/api'
-import { WsProvider } from '@polkadot/rpc-provider'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { mnemonicGenerate } from '@polkadot/util-crypto'
+import { WsProvider } from '@polkadot/rpc-provider'
+import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
+import { AssetsResolver, ContractAbi, EnvironmentTypes, IProsopoContractMethods, ProsopoConfig } from '@prosopo/types'
+import { Database } from '@prosopo/types-database'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { LogLevel } from 'consola'
+import { LocalAssetsResolver } from './assets'
 import { Databases } from '@prosopo/database'
 
-export class MockEnvironment implements ProsopoEnvironment {
+export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
     contractInterface: IProsopoContractMethods
     contractAddress: string
-    defaultEnvironment: string
+    defaultEnvironment: EnvironmentTypes
     contractName: string
     abi: ContractAbi
     logger: Logger
@@ -48,68 +40,28 @@ export class MockEnvironment implements ProsopoEnvironment {
     pair: KeyringPair
     api: ApiPromise
 
-    constructor(pair: KeyringPair) {
-        loadEnv('../..')
+    constructor(pair: KeyringPair, config: ProsopoConfig) {
+        this.config = config
         this.pair = pair
-        this.config = {
-            logLevel: LogLevel.Debug,
-            contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.
-            defaultEnvironment: EnvironmentTypes.development,
-            account: {
-                password: '',
-            },
-            networks: {
-                development: {
-                    endpoint: process.env.SUBSTRATE_NODE_URL!,
-                    contract: {
-                        address: process.env.PROTOCOL_CONTRACT_ADDRESS!,
-                        name: 'prosopo',
-                    },
-                    accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
-                },
-            },
-
-            captchas: {
-                solved: {
-                    count: 1,
-                },
-                unsolved: {
-                    count: 1,
-                },
-            },
-            captchaSolutions: {
-                requiredNumberOfSolutions: 3,
-                solutionWinningPercentage: 80,
-                captchaFilePath: path.join(process.cwd(), './tests/mocks/data/captchas.json'),
-                captchaBlockRecency: 10,
-            },
-            database: {
-                development: { type: DatabaseTypes.mongoMemory, endpoint: '', dbname: 'prosopo', authSource: '' },
-            },
-            assets: {
-                absolutePath: '',
-                basePath: '',
-            },
-            server: {
-                baseURL: '',
-            },
-            batchCommit: {
-                interval: 1000000,
-                maxBatchExtrinsicPercentage: 59,
-            },
-        }
-
+        this.logger = logger(this.config.logLevel, `ProsopoEnvironment`)
         if (
             this.config.defaultEnvironment &&
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
         ) {
             this.defaultEnvironment = this.config.defaultEnvironment
+            this.logger.info(`Endpoint: ${this.config.networks[this.defaultEnvironment].endpoint}`)
+            this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment].endpoint)
             this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.logger = logger(this.config.logLevel, 'MockEnvironment')
-            this.abi = MockEnvironment.getContractAbi(this.config.contract.abi, this.logger)
+
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
+            })
+            this.keyring.addPair(this.pair)
+
+            this.abi = abiJson as ContractAbi
+            this.importDatabase().catch((err) => {
+                this.logger.error(err)
             })
             this.assetsResolver = new LocalAssetsResolver({
                 absolutePath: this.config.assets.absolutePath,
@@ -126,13 +78,6 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
     }
 
-    public createAccountAndAddToKeyring(): [string, string] {
-        const mnemonic: string = mnemonicGenerate()
-        const account = this.keyring.addFromMnemonic(mnemonic)
-        const { address } = account
-        return [mnemonic, address]
-    }
-
     async getSigner(): Promise<void> {
         if (!this.api) {
             this.api = await ApiPromise.create({ provider: this.wsProvider })
@@ -145,46 +90,57 @@ export class MockEnvironment implements ProsopoEnvironment {
         }
     }
 
-    async changeSigner(pair): Promise<void> {
+    async changeSigner(pair: KeyringPair): Promise<void> {
         await this.api.isReadyOrError
         this.pair = pair
         await this.getSigner()
-        await this.getContractApi()
+        this.contractInterface = await this.getContractApi()
     }
 
     async getContractApi(): Promise<IProsopoContractMethods> {
+        const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+        this.logger.debug('Getting new contract instance with pair', this.pair.address, 'nonce', nonce.toString())
         this.contractInterface = new ProsopoContractMethods(
             this.api,
             this.abi,
             this.contractAddress,
             this.pair,
             this.contractName,
-            0
+            nonce.toNumber(),
+            this.config.logLevel as unknown as LogLevel
         )
-
         return this.contractInterface
     }
 
-    async isReady(): Promise<void> {
+    async isReady() {
         try {
+            if (this.config.account.password) {
+                this.pair.unlock(this.config.account.password)
+                this.logger.log('pair unlocked')
+            }
             if (!this.api) {
                 this.api = await ApiPromise.create({ provider: this.wsProvider })
+                this.logger.log('api promise created')
             }
             await this.getSigner()
-            await this.getContractApi()
+            this.logger.log('signer gotten')
+            this.contractInterface = await this.getContractApi()
+            this.logger.log('contract interface created')
             if (!this.db) {
                 await this.importDatabase().catch((err) => {
                     this.logger.error(err)
                 })
+                this.logger.log('db imported')
             } else if (this.db?.connection?.readyState !== 1) {
                 this.db
                     .connect()
                     .then(() => {
-                        this.logger.info(`connected to db`)
+                        this.logger.info(`Connected to db`)
                     })
                     .catch((err) => {
                         this.logger.error(err)
                     })
+                this.logger.log('db connected')
             }
         } catch (err) {
             throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
@@ -193,12 +149,15 @@ export class MockEnvironment implements ProsopoEnvironment {
 
     async importDatabase(): Promise<void> {
         try {
-            const ProsopoDatabase = Databases[this.config.database[this.defaultEnvironment].type]
-            this.db = await ProsopoDatabase.create(
-                '',
-                this.config.database[this.defaultEnvironment].dbname,
-                this.logger
-            )
+            if (this.config.database) {
+                const ProsopoDatabase = Databases[this.config.database[this.defaultEnvironment].type]
+                this.db = await ProsopoDatabase.create(
+                    this.config.database[this.defaultEnvironment].endpoint,
+                    this.config.database[this.defaultEnvironment].dbname,
+                    this.logger,
+                    this.config.database[this.defaultEnvironment].authSource
+                )
+            }
         } catch (err) {
             throw new ProsopoEnvError(
                 err,
@@ -207,9 +166,5 @@ export class MockEnvironment implements ProsopoEnvironment {
                 this.config.database[this.defaultEnvironment].type
             )
         }
-    }
-
-    private static getContractAbi(path, logger): ContractAbi {
-        return abiJson
     }
 }

@@ -14,8 +14,8 @@
 import { BN } from '@polkadot/util'
 import { ProsopoEnvError, getPair } from '@prosopo/common'
 import { generateMnemonic } from '@prosopo/contract'
-import { getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/env'
-import { Environment } from '@prosopo/provider'
+import { defaultConfig, getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
+import { Environment } from '@prosopo/env'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import fse from 'fs-extra'
 import path from 'path'
@@ -105,7 +105,7 @@ export async function setup() {
         const ss58Format = getSs58Format()
         const secret = '//Alice'
         const pair = await getPair(pairType, ss58Format, secret)
-        const env = new Environment(pair)
+        const env = new Environment(pair, defaultConfig())
         await env.isReady()
 
         const dappStakeDefault = (await env.contractInterface.getDappStakeDefault()).muln(2)

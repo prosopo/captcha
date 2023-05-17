@@ -13,14 +13,6 @@
 // limitations under the License.
 import { expect } from 'chai'
 import {
-    Captcha,
-    CaptchaItemTypes,
-    CaptchaSolution,
-    CaptchaTypes,
-    CaptchaWithoutId,
-    Dataset,
-    HashedItem,
-    Item,
     compareCaptchaSolutions,
     computeCaptchaHash,
     computeCaptchaSolutionHash,
@@ -34,8 +26,20 @@ import {
 } from '@prosopo/datasets'
 import path from 'path'
 import { it } from 'mocha'
+import {
+    Captcha,
+    CaptchaItemTypes,
+    CaptchaSolution,
+    CaptchaTypes,
+    CaptchaWithoutId,
+    Dataset,
+    HashedItem,
+    Item,
+    MerkleProof,
+} from '@prosopo/types'
 
-describe('CAPTCHA FUNCTIONS', () => {
+describe('CAPTCHA FUNCTIONS', async function () {
+    this.timeout(parseInt(process.env.testTimeout || '120000000'))
     let MOCK_ITEMS: Item[]
     let DATASET: Dataset
     let RECEIVED: CaptchaSolution[]
@@ -181,7 +185,7 @@ describe('CAPTCHA FUNCTIONS', () => {
     it('Captcha solutions are successfully parsed', () => {
         const captchaSolutions = JSON.parse(
             '[{ "captchaId": "1", "captchaContentId": "1", "solution": ["0x1", "0x2", "0x3"], "salt" : "salt" }, { "captchaId": "2", "captchaContentId": "2", "solution": ["0x1", "0x2", "0x3"], "salt" : "salt" }]'
-        ) as JSON
+        ) as CaptchaSolution[]
 
         expect(parseAndSortCaptchaSolutions(captchaSolutions).length).to.equal(2)
     })
@@ -189,7 +193,7 @@ describe('CAPTCHA FUNCTIONS', () => {
     it('Invalid Captcha solutions are not successfully parsed', () => {
         const captchaSolutions = JSON.parse(
             '[{ "captchaId": "1", "salt" : "salt" }, { "captchaId": "2", "solution": ["1", "2", "3"], "salt" : "salt" }]'
-        ) as JSON
+        ) as CaptchaSolution[]
 
         expect(function () {
             parseAndSortCaptchaSolutions(captchaSolutions)
@@ -340,7 +344,7 @@ describe('CAPTCHA FUNCTIONS', () => {
             ['0xeee6c87e8ad5cd1fc05ea0d8874067d87918f1b141fdabd12352ad59b779cc80'],
         ]
         const leaf = '0xb2b33ccc7d240ab8ed24b8f77a32fd2825e78972c8a8cea359f11edc9ac26734'
-        const verification = verifyProof(leaf, proof)
+        const verification = verifyProof(leaf, proof as MerkleProof)
         expect(verification).to.be.true
     })
     it('Fails to verify an invalid merkle proof', () => {
@@ -368,7 +372,7 @@ describe('CAPTCHA FUNCTIONS', () => {
             ['INVALID'],
         ]
         const leaf = '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16'
-        const verification = verifyProof(leaf, proof)
+        const verification = verifyProof(leaf, proof as MerkleProof)
         expect(verification).to.be.false
     })
     it('Fails to verify junk data', () => {

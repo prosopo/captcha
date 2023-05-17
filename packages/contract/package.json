@@ -55,12 +55,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo/contract.git"
+    "url": "git+https://github.com/prosopo/captcha.git"
   },
   "bugs": {
-    "url": "https://github.com/prosopo/contract/issues"
+    "url": "https://github.com/prosopo/captcha/issues"
   },
-  "homepage": "https://github.com/prosopo/contract#readme",
+  "homepage": "https://github.com/prosopo/captcha#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },

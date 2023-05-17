@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo/server.git"
+    "url": "git+https://github.com/prosopo/captcha.git"
   },
   "author": "PROSOPO LIMITED",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/prosopo/server/issues"
+    "url": "https://github.com/prosopo/captcha/issues"
   },
-  "homepage": "https://github.com/prosopo/server#readme",
+  "homepage": "https://github.com/prosopo/captcha#readme",
   "sideEffects": false,
   "dependencies": {
     "@polkadot/api": "9.13.6",

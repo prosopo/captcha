@@ -31,10 +31,8 @@ import {
     CaptchaConfig,
     CaptchaSolution,
     CaptchaSolutionConfig,
-    CaptchaSolutionToUpdate,
     CaptchaStates,
     CaptchaWithProof,
-    CaptchaWithoutId,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
@@ -42,8 +40,7 @@ import {
 } from '@prosopo/types'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import { calculateNewSolutions, loadJSONFile, shuffleArray, updateSolutions, writeJSONFile } from '../util'
-import { i18n } from '@prosopo/common'
+import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
@@ -80,24 +77,17 @@ export class Tasks {
         this.logger = logger(env.config.logLevel, 'Tasks')
     }
 
-    async providerAddDatasetFromFile(file: string): Promise<ContractSubmittableResult> {
-        const datasetRaw = parseCaptchaDataset(loadJSONFile(file, this.logger) as JSON)
-        return await this.providerAddDataset(datasetRaw, file)
+    async providerAddDatasetFromFile(file: JSON): Promise<ContractSubmittableResult> {
+        const datasetRaw = parseCaptchaDataset(file)
+        return await this.providerAddDataset(datasetRaw)
     }
 
-    async providerAddDataset(datasetRaw: DatasetRaw, file?: string): Promise<ContractSubmittableResult> {
+    async providerAddDataset(datasetRaw: DatasetRaw): Promise<ContractSubmittableResult> {
         const dataset = await buildDataset(datasetRaw)
         if (!dataset.datasetId) {
             throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerAddDataset.name)
         }
-        if (file) {
-            await writeJSONFile(file, {
-                ...datasetRaw,
-                datasetId: dataset.datasetId,
-            }).catch((err) => {
-                console.error(`${i18n.t('GENERAL.CREATE_JSON_FILE_FAILED')}:${err}`)
-            })
-        }
+
         await this.db?.storeDataset(dataset)
         return await this.contractApi.contractTx('providerAddDataset', [
             hexToU8a(dataset.datasetId),
@@ -484,7 +474,6 @@ export class Tasks {
                         const dataset = await this.db.getDataset(providerDetails.datasetId.toString())
                         dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
                         // store new solutions in database
-                        //console.log(JSON.stringify(dataset.captchas, null, 4))
                         await this.providerAddDataset(dataset)
                         // mark user solutions as used to calculate new solutions
                         await this.db.flagUsedDappUserSolutions(captchaIdsToUpdate)
@@ -504,41 +493,6 @@ export class Tasks {
             }
         } catch (error) {
             throw new ProsopoEnvError(error, 'GENERAL.CALCULATE_CAPTCHA_SOLUTION')
-        }
-    }
-
-    /**
-     * Update captchas json file with new solutions
-     */
-    async updateCaptchasJSON(filePath: string, solutionsToUpdate: CaptchaSolutionToUpdate[]) {
-        try {
-            const solutionObj = {}
-
-            for (let i = 0; i < solutionsToUpdate.length; i++) {
-                solutionObj[solutionsToUpdate[i].salt] = solutionsToUpdate[i]
-            }
-
-            const prevDataset = parseCaptchaDataset(loadJSONFile(filePath, this.logger) as JSON)
-
-            const jsonData = {
-                ...prevDataset,
-                captchas: prevDataset.captchas.map((item) => {
-                    const captcha: CaptchaWithoutId = {
-                        salt: item.salt,
-                        target: item.target,
-                        items: item.items,
-                    }
-                    if (item.salt in solutionObj && 'solution' in solutionObj[item.salt]) {
-                        captcha.solution = solutionObj[item.salt].solution
-                    }
-                    return captcha
-                }),
-            }
-
-            await writeJSONFile(filePath, jsonData)
-            return true
-        } catch (error) {
-            throw new ProsopoEnvError(error, 'GENERAL.GENERATE_CPATCHAS_JSON_FAILED', {}, filePath)
         }
     }
 

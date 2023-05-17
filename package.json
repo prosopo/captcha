@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/captcha",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "stableVersion": "0.0.0",
   "author": "Prosopo",
   "repository": {
@@ -71,12 +71,12 @@
     "version": "npm --no-git-tag-version --allow-same-version --workspaces --workspaces-update version",
     "ls:ws": "npm run --workspaces env | grep npm_package_name | cut -d '=' -f 2",
     "setup": "npm -w @prosopo/dev run setup",
-    "start": "npm -w @prosopo/provider run start",
+    "start:provider": "npm -w @prosopo/cli run start",
     "server": "npm -w @prosopo/client-example-server run start",
     "demo": "npm -w @prosopo/client-example run start",
     "provider": "npm -w @prosopo/provider run cli",
     "populate-data": "npm -w @prosopo/provider run populate-data",
-    "test": "npm -w @prosopo/provider run test",
+    "test": "npm -w @prosopo/dev run test",
     "lint": "npm run lint --workspaces --if-present",
     "lint:fix": "npm run lint:fix --workspaces --if-present"
   },

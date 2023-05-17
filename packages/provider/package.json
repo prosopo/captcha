@@ -11,8 +11,6 @@
     "build:test": "tsc --build --verbose tsconfig.test.json",
     "build:scripts": "tsc --build --verbose tsconfig.scripts.json",
     "build:config": "tsc --project",
-    "cli": "node ./dist/cli/cli.js",
-    "start": "node ./dist/cli/start.js",
     "serve": "npm run setup && npm run start",
     "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
     "test": "ts-mocha tests/**/*.test.ts --timeout 12000000 --recursive --exit",
@@ -34,10 +32,10 @@
     "@prosopo/contract": "^0.1.11",
     "@prosopo/database": "^0.1.11",
     "@prosopo/datasets": "^0.1.11",
+    "@prosopo/env": "^0.1.11",
     "@prosopo/types": "^0.1.11",
     "@prosopo/types-database": "^0.1.11",
     "@prosopo/types-env": "^0.1.11",
-    "@prosopo/env": "^0.1.11",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "cors": "^2.8.5",
@@ -61,7 +59,7 @@
     "eslint": "^8.20.0",
     "eslint-config-prettier": "^8.5.0",
     "fs-extra": "^10.1.0",
-    "mocha": "^10.0.0",
+    "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.4.0",
@@ -71,10 +69,10 @@
     "type": "git",
     "url": "git+ssh://git@github.com/prosopo/provider.git"
   },
-  "description": "> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo/integration/). The following instructions explain how to set up the repositories manually.",
+  "description": "> NOTE: The easiest way to deploy the Prosopo contract and run the Provider node is via the [integration repository](https://github.com/prosopo/captcha/). The following instructions explain how to set up the repositories manually.",
   "bugs": {
-    "url": "https://github.com/prosopo/provider/issues"
+    "url": "https://github.com/prosopo/captcha/issues"
   },
-  "homepage": "https://github.com/prosopo/provider#readme",
+  "homepage": "https://github.com/prosopo/captcha#readme",
   "sideEffects": false
 }

@@ -44,12 +44,12 @@
   "keywords": [],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo/procaptcha.git"
+    "url": "git+https://github.com/prosopo/captcha.git"
   },
   "bugs": {
-    "url": "https://github.com/prosopo/procaptcha/issues"
+    "url": "https://github.com/prosopo/captcha/issues"
   },
-  "homepage": "https://github.com/prosopo/procaptcha#readme",
+  "homepage": "https://github.com/prosopo/captcha#readme",
   "description": "",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"

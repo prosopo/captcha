@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import '@polkadot/api-augment'
-export { Environment } from './env'
 export * from './tasks'
 export * from './util'
 export * from './batch'
