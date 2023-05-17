@@ -121,7 +121,7 @@ jobs:
           git status | head -n 1
           docker container ls
           cat .env.development
-          cd ..
+          cd ../packages/cli && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           NODE_ENV=$ENVIRONMENT npm run test
 
