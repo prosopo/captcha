@@ -195,7 +195,6 @@ pub mod prosopo {
         status: GovernanceStatus,
         balance: Balance,
         owner: AccountId,
-        min_difficulty: u16,
         payee: DappPayee,
     }
 
@@ -762,7 +761,6 @@ pub mod prosopo {
                 balance: 0,
                 status: GovernanceStatus::Inactive,
                 payee: payee.unwrap_or(DappPayee::Provider),
-                min_difficulty: 1,
             });
             let mut new_dapp = old_dapp;
 
