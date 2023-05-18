@@ -27,7 +27,7 @@ pub mod proxy {
         /// The `AccountId` of a contract where any call that does not match a
         /// selector of this contract is forwarded to.
         destination: AccountId,
-        admin: AccountId, // the admin account to manage set_code_hash, proxy_withdraw, terminate, and set_forward_address
+        admin: AccountId, // the admin account to manage proxy_set_code_hash, proxy_withdraw, terminate, and set_forward_address
     }
 
     /// The errors that can be returned by the Proxy contract.
@@ -129,7 +129,7 @@ pub mod proxy {
         /// Errors are returned if the caller is not an admin, if the code hash is the callers
         /// account_id, if the code is not found, and for any other unknown ink errors
         #[ink(message)]
-        pub fn set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
+        pub fn proxy_set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
             if self.env().caller() != self.admin {
                 return err!(Error::NotAuthorised);
             }
@@ -560,7 +560,7 @@ pub mod proxy {
         }
 
         // #[ink::test]
-        // fn test_set_code_hash() {
+        // fn test_proxy_set_code_hash() {
 
         //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
         //     set_caller(get_unused_account());
@@ -573,13 +573,13 @@ pub mod proxy {
 
         //     set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
 
-        //     assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
+        //     assert_eq!(contract.proxy_set_code_hash(new_code_hash), Ok(()));
 
         //     assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
         // }
 
         #[ink::test]
-        fn test_set_code_hash_unauthorised() {
+        fn test_proxy_set_code_hash_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -589,7 +589,7 @@ pub mod proxy {
 
             let new_code_hash = get_code_hash(1);
             assert_eq!(
-                contract.set_code_hash(new_code_hash),
+                contract.proxy_set_code_hash(new_code_hash),
                 Err(Error::NotAuthorised)
             );
         }
