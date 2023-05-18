@@ -75,7 +75,7 @@ pub mod proxy {
 
         /// Set the destination to forward to for this contract
         #[ink(message)]
-        pub fn set_destination(&mut self, destination: AccountId) -> Result<(), Error> {
+        pub fn proxy_set_destination(&mut self, destination: AccountId) -> Result<(), Error> {
             if self.env().caller() != self.admin {
                 return err!(Error::NotAuthorised);
             }
@@ -515,7 +515,7 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_set_destination() {
+        fn test_proxy_set_destination() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -526,12 +526,12 @@ pub mod proxy {
             assert_ne!(old_dest, new_dest);
 
             set_caller(get_admin_account(0)); // use the admin acc
-            contract.set_destination(new_dest).unwrap();
+            contract.proxy_set_destination(new_dest).unwrap();
             assert_eq!(contract.destination, new_dest);
         }
 
         #[ink::test]
-        fn test_set_destination_unauthorised() {
+        fn test_proxy_set_destination_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -539,13 +539,13 @@ pub mod proxy {
 
             set_caller(get_user_account(1)); // use the admin acc
             assert_eq!(
-                contract.set_destination(get_contract_account(1)),
+                contract.proxy_set_destination(get_contract_account(1)),
                 Err(Error::NotAuthorised)
             );
         }
 
         #[ink::test]
-        fn test_set_destination_not_contract() {
+        fn test_proxy_set_destination_not_contract() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -554,7 +554,7 @@ pub mod proxy {
             set_caller(get_admin_account(0)); // use the admin acc
             assert_eq!(
                 // set dest to an account which is not a contract
-                contract.set_destination(get_admin_account(1)),
+                contract.proxy_set_destination(get_admin_account(1)),
                 Err(Error::InvalidDestination)
             );
         }
