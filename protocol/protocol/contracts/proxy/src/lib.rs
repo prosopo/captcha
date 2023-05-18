@@ -90,7 +90,7 @@ pub mod proxy {
 
         /// Set the admin for this contract
         #[ink(message)]
-        pub fn set_admin(&mut self, new_admin: AccountId) -> Result<(), Error> {
+        pub fn proxy_set_admin(&mut self, new_admin: AccountId) -> Result<(), Error> {
             if self.env().caller() != self.admin {
                 return err!(Error::NotAuthorised);
             }
@@ -395,7 +395,7 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_set_admin() {
+        fn test_proxy_set_admin() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -405,11 +405,11 @@ pub mod proxy {
             assert_ne!(old_admin, new_admin);
 
             set_caller(old_admin);
-            contract.set_admin(new_admin).unwrap();
+            contract.proxy_set_admin(new_admin).unwrap();
         }
 
         #[ink::test]
-        fn test_set_admin_unauthorised() {
+        fn test_proxy_set_admin_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -418,9 +418,9 @@ pub mod proxy {
             let new_admin = get_admin_account(1);
             assert_ne!(old_admin, new_admin);
 
-            // can only call set_admin from the current admin account (old admin)
+            // can only call proxy_set_admin from the current admin account (old admin)
             set_caller(new_admin);
-            contract.set_admin(new_admin).unwrap_err();
+            contract.proxy_set_admin(new_admin).unwrap_err();
         }
 
         #[ink::test]
