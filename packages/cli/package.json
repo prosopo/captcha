@@ -19,7 +19,7 @@
     "@prosopo/types": "^0.1.11"
   },
   "devDependencies": {
-    "typescript": "^4.8.3"
+    "typescript": "^5.0.4"
   },
   "author": "Prosopo",
   "license": "Apache-2.0",

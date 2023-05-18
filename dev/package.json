@@ -32,6 +32,7 @@
     "yargs-parser": "^21.0.1"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.1"
+    "@types/mocha": "^10.0.1",
+    "typescript": "^5.0.4"
   }
 }
