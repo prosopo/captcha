@@ -27,7 +27,7 @@ pub mod proxy {
         /// The `AccountId` of a contract where any call that does not match a
         /// selector of this contract is forwarded to.
         destination: AccountId,
-        admin: AccountId, // the admin account to manage proxy_set_code_hash, proxy_withdraw, terminate, and set_forward_address
+        admin: AccountId, // the admin account to manage proxy_set_code_hash, proxy_withdraw, proxy_terminate, and set_forward_address
     }
 
     /// The errors that can be returned by the Proxy contract.
@@ -113,7 +113,7 @@ pub mod proxy {
         }
 
         #[ink(message)]
-        pub fn terminate(&mut self) -> Result<(), Error> {
+        pub fn proxy_terminate(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
             if caller != self.admin {
                 return err!(Error::NotAuthorised);
@@ -435,33 +435,33 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_terminate() {
+        fn test_proxy_terminate() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
             let mut contract = get_contract(0);
-            set_caller(get_admin_account(0)); // an account which does have permission to call terminate
+            set_caller(get_admin_account(0)); // an account which does have permission to call proxy_terminate
 
             let contract_account = contract.env().account_id();
             let bal = get_account_balance(contract_account).unwrap();
             let admin = get_admin_account(0);
-            let should_terminate = move || contract.terminate().unwrap();
+            let should_proxy_terminate = move || contract.proxy_terminate().unwrap();
             ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
-                should_terminate,
+                should_proxy_terminate,
                 get_admin_account(0),
                 bal,
             );
         }
 
         #[ink::test]
-        fn test_terminate_unauthorised() {
+        fn test_proxy_terminate_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
             let mut contract = get_contract(0);
-            set_caller(get_user_account(0)); // an account which does not have permission to call terminate
+            set_caller(get_user_account(0)); // an account which does not have permission to call proxy_terminate
 
-            assert_eq!(contract.terminate().unwrap_err(), Error::NotAuthorised);
+            assert_eq!(contract.proxy_terminate().unwrap_err(), Error::NotAuthorised);
         }
 
         #[ink::test]
