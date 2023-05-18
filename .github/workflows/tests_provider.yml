@@ -98,26 +98,33 @@ jobs:
           npm install
 
       - name: Build provider and dependencies
+        # Next few lines should contain the number of packages that provider depends on (check tsconfig.json)
         run: |
           cd captcha
           echo $(npx tsc --version)
           cd packages/common && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cd ../types && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../types-database && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../types-env && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../database && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cd ../env && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cd ../datasets && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cd ../contract && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cd ../provider && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../cli && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd ../../dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          
 
       - name: Setup the environment and run the unit tests
         run: |
           cd captcha
           git status | head -n 1
-          cd packages/provider
+          cd dev
           cp env.development .env.development
           git status | head -n 1
           docker container ls
           cat .env.development
-          NODE_ENV=$ENVIRONMENT npm run test
+          npm run test
 
       - name: Remove the docker containers
         run: |

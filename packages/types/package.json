@@ -15,9 +15,9 @@
   "author": "Prosopo Limited",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/prosopo/types/issues"
+    "url": "https://github.com/prosopo/captcha/issues"
   },
-  "homepage": "https://github.com/prosopo/types#readme",
+  "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
     "consola": "^2.15.3",
     "@polkadot/api": "9.13.6",

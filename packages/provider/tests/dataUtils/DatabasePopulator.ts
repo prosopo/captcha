@@ -13,22 +13,21 @@
 // limitations under the License.
 import { stringToHexPadded } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
-import path from 'path'
 import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds'
 import { Tasks } from '../../src/tasks'
 import { IDatabaseAccounts } from './DatabaseAccounts'
-import { Environment } from '../../src/env'
+import { Environment } from '@prosopo/env'
 import { TranslationKey, getPair } from '@prosopo/common'
-import { getPairType, getSs58Format } from '@prosopo/env'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
 import { AnyNumber } from '@polkadot/types-codec/types'
-import { accountAddress, accountContract, accountMnemonic } from '../mocks/accounts'
-import { Account } from '../mocks/accounts'
+import { accountAddress, accountContract, accountMnemonic } from '../accounts'
+import { Account } from '../accounts'
 import { ContractDeployer } from '@prosopo/contract'
 import { Abi } from '@polkadot/api-contract'
 import { EventRecord } from '@polkadot/types/interfaces'
+import { captchaData } from '../data/captchas'
 
 const serviceOriginBase = 'http://localhost:'
 
@@ -183,8 +182,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         if (!this.mockEnv.contractInterface) {
             throw new ProsopoEnvError('DEVELOPER.NO_MOCK_ENV')
         }
-        const ss58Format = getSs58Format()
-        const pairType = getPairType()
+        const ss58Format = 42
+        const pairType = 'sr25519'
         const pair = await getPair(pairType, ss58Format, mnemonic)
 
         return this.mockEnv.changeSigner(pair)
@@ -274,15 +273,13 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    private async addDataset(account: Account) {
+    private async addDataset(account: Account, datasetJSON: JSON) {
         try {
             await this.changeSigner(account)
 
             const tasks = new Tasks(this.mockEnv)
 
-            const captchaFilePath = path.resolve(__dirname, '../../tests/mocks/data/captchas.json')
-
-            const result = await tasks.providerAddDatasetFromFile(captchaFilePath)
+            const result = await tasks.providerAddDatasetFromFile(datasetJSON)
             this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
@@ -298,8 +295,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const account = await this.registerProvider(fund, serviceOrigin, true)
             await this.updateProvider(account, serviceOrigin)
-
-            await this.addDataset(account)
+            const datasetJSON = JSON.parse(JSON.stringify(captchaData))
+            await this.addDataset(account, datasetJSON)
 
             this._registeredProvidersWithStakeAndDataset.push(account)
 

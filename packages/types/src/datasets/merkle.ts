@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// Copyright (C) 2021-2023 Prosopo (UK) Ltd.
 // This file is part of provider <https://github.com/prosopo/provider>.
 //
 // provider is free software: you can redistribute it and/or modify

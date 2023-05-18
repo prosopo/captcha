@@ -17,17 +17,17 @@ import { DatabaseTypes, EnvironmentTypes, ProsopoConfig } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 
 export default (): ProsopoConfig => ({
-    logLevel: LogLevel.Debug,
-    defaultEnvironment: EnvironmentTypes.development,
+    logLevel: LogLevel.Debug, //TODO change to LOG_LEVEL
+    defaultEnvironment: EnvironmentTypes.development, //TODO change to NODE_ENV
     contract: {
-        abi: '../contract/src/abi/prosopo.json',
+        abi: '../contract/src/abi/prosopo.json', //TODO is this needed?
     },
     account: {
         password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
     },
     networks: {
         development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944',
+            endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944', // TODO accept array of endpoints. Wsprovider takes array and has failover.
             contract: {
                 address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
                 name: 'prosopo',
@@ -37,17 +37,17 @@ export default (): ProsopoConfig => ({
     },
     captchas: {
         solved: {
-            count: 1,
+            count: 1, // TODO add env var
         },
         unsolved: {
-            count: 1,
+            count: 1, // TODO add env var
         },
     },
     captchaSolutions: {
-        captchaBlockRecency: 10,
-        requiredNumberOfSolutions: 3,
-        solutionWinningPercentage: 80,
-        captchaFilePath: '../../data/captchas.json',
+        captchaBlockRecency: 10, // TODO add env var
+        requiredNumberOfSolutions: 3, // TODO add env var
+        solutionWinningPercentage: 80, // TODO add env var
+        captchaFilePath: '../../data/captchas.json', // TODO add env var
     },
     database: {
         development: {
@@ -58,14 +58,16 @@ export default (): ProsopoConfig => ({
         },
     },
     batchCommit: {
-        interval: 300,
-        maxBatchExtrinsicPercentage: 59,
+        interval: 300, // TODO add env var
+        maxBatchExtrinsicPercentage: 59, // TODO add env var
     },
     assets: {
         absolutePath: '',
         basePath: '',
     },
     server: {
-        baseURL: process.env.API_BASE_URL || '',
+        baseURL: process.env.API_BASE_URL || '', // TODO add env var
+        port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 8282, // TODO add env var
+        fileServePaths: [], // TODO add env var
     },
 })

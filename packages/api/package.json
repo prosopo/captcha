@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/prosopo/api.git"
+    "url": "git+https://github.com/prosopo/captcha.git"
   },
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",

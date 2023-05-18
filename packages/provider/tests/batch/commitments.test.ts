@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { MockEnvironment } from '../mocks/mockenv'
+import { MockEnvironment } from '@prosopo/env'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { BatchCommitments } from '../../src/batch'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
-import { accountContract, getSignedTasks } from '../mocks/accounts'
-import { getUser } from '../mocks/getUser'
-import { CaptchaSolution, ScheduledTaskNames } from '@prosopo/types'
+import { accountContract, getSignedTasks } from '../accounts'
+import { getUser } from '../getUser'
+import { CaptchaSolution, ProsopoConfigSchema, ScheduledTaskNames } from '@prosopo/types'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../tasks/tasks.test'
-import { accountAddress, accountMnemonic } from '../mocks/accounts'
+import { accountAddress, accountMnemonic } from '../accounts'
 import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util'
 import { ApiPromise } from '@polkadot/api'
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { getPair } from '@prosopo/common'
-import { getPairType, getSs58Format } from '@prosopo/env'
+import { ESLint } from 'eslint'
+import Environment = ESLint.Environment
+import { KeyringPair } from '@polkadot/keyring/types'
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -59,18 +60,18 @@ function calcInterval(api: ApiPromise): BN {
     )
 }
 
-describe('BATCH TESTS', async () => {
+describe('BATCH TESTS', function () {
+    this.timeout(120000000)
     const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
-    const ss58Format = getSs58Format()
-    const pairType = getPairType()
-    const pair = await getPair(
-        (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
-        ss58Format,
-        mnemonic
-    )
-    const env = new MockEnvironment(pair)
+    const ss58Format = 42
+    const pairType = 'sr25519'
+    let env: MockEnvironment
+    let pair: KeyringPair
 
     before(async () => {
+        pair = await getPair(pairType, ss58Format, mnemonic)
+        const config = ProsopoConfigSchema.parse(JSON.parse(process.env.config ? process.env.config : '{}'))
+        env = new MockEnvironment(pair, config)
         await env.isReady()
     })
 

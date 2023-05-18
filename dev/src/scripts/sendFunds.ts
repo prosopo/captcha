@@ -13,15 +13,15 @@
 // limitations under the License.
 import { BN } from '@polkadot/util'
 import { getPair } from '@prosopo/common'
-import { getPairType, getSs58Format } from '@prosopo/env'
-import { Environment } from '@prosopo/provider'
+import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
+import { Environment } from '@prosopo/env'
 import { sendFunds } from '../setup'
 
 require('dotenv').config()
 
 async function main(account: string) {
     const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
-    const env = new Environment(pair)
+    const env = new Environment(pair, defaultConfig())
     await env.isReady()
     await sendFunds(env, account, 'Provider', new BN(100000000000000000))
     process.exit()

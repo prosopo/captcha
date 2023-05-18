@@ -14,22 +14,19 @@
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
 import { getPair } from '@prosopo/common'
-import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
-import { Environment } from '../env'
+import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { processArgs } from './argv'
-
-loadEnv()
-
+import { Environment } from '@prosopo/env'
 async function main() {
     const secret = getSecret()
     const ss58Format = getSs58Format()
     const pairType = getPairType()
-
+    const config = getConfig()
     const pair = await getPair(pairType, ss58Format, secret)
 
     console.log(`Pair address: ${pair.address}`)
 
-    const env = new Environment(pair)
+    const env = new Environment(pair, config)
 
     await env.isReady()
 
@@ -38,6 +35,9 @@ async function main() {
     process.exit()
 }
 
-main().catch((error) => {
-    console.error(error)
-})
+// if main node process
+if (typeof require !== 'undefined' && require.main === module) {
+    main().catch((error) => {
+        console.error(error)
+    })
+}

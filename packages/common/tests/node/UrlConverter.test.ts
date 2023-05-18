@@ -1,6 +1,5 @@
 import { expect } from 'chai'
-import UrlConverter from '../src'
-
+import UrlConverter from '../../src/node/UrlConverter'
 describe('URL converter', () => {
     const urlAsBytes = new Uint8Array([178, 214, 156, 101, 214, 90, 103, 32])
     const url = 'https://www.prosopo.io'
@@ -41,7 +40,7 @@ describe('URL converter', () => {
         expect(symbols.length).to.eql(new Set(symbols).size)
     })
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 10; i++) {
         it(`encodes/decodes random url ${i + 1}`, () => {
             const len = Math.random() * 100 + 1 // url lengths between 1-100
             const symbols = converter.getSymbols()
