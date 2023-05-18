@@ -19,14 +19,14 @@
   },
   "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
-    "@polkadot/keyring": "10.3.1",
-    "@polkadot/types": "9.13.6",
+    "@polkadot/keyring": "12.2.1",
+    "@polkadot/types": "10.7.1",
     "@prosopo/common": "^0.1.11",
     "@prosopo/types": "^0.1.11",
     "@prosopo/database": "^0.1.11"
   },
   "devDependencies": {
-    "typescript": "^4.7.4"
+    "typescript": "^5.0.4"
   },
   "sideEffects": false
 }

@@ -15,7 +15,6 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     const env = new Environment(pair, defaultConfig())
     await env.isReady()
     const params = [
-        ['5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY', '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty'], // Alice , Bob
         env.api.consts.balances.existentialDeposit, // providerStakeDefault
         env.api.consts.balances.existentialDeposit, // dappStakeDefault
         10, // commitments to store per user

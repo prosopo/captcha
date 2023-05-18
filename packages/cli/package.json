@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "dotenv": "^16.0.1",
-    "@polkadot/util-crypto": "10.3.1",
+    "@polkadot/util-crypto": "12.2.1",
     "@prosopo/common": "^0.1.11",
     "@prosopo/env": "^0.1.11",
     "@prosopo/provider": "^0.1.11",

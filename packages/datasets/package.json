@@ -29,7 +29,7 @@
     }
   },
   "dependencies": {
-    "@polkadot/util": "10.3.1",
+    "@polkadot/util": "12.2.1",
     "@prosopo/common": "^0.1.11",
     "@prosopo/types": "^0.1.11",
     "axios": "^0.27.2"
@@ -39,7 +39,7 @@
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
     "eslint": "^8.20.0",
-    "typescript": "^4.7.4"
+    "typescript": "^5.0.4"
   },
   "repository": {
     "type": "git",

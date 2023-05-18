@@ -7,25 +7,19 @@
     "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
-
     "composite": true,
-
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-
     "sourceMap": true,
-
     "declaration": true,
     "declarationMap": true,
-
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
+    "forceConsistentCasingInFileNames": true,
     "strictPropertyInitialization": false,
     "useUnknownInCatchVariables": false,
     "resolveJsonModule": true,
-
     "noImplicitAny": false,
     "noImplicitOverride": true,
     "noUnusedLocals": false,

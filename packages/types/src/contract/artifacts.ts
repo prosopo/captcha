@@ -85,6 +85,28 @@ export const AbiVariantSpec = z.object({
     name: z.string(),
 })
 
+//An enum in the storage section of the abi
+// {
+//                                 "0": {
+//                                   "fields": [],
+//                                   "name": "Pending"
+//                                 },
+//                                 "1": {
+//                                   "fields": [],
+//                                   "name": "Approved"
+//                                 },
+//                                 "2": {
+//                                   "fields": [],
+//                                   "name": "Disapproved"
+//                                 }
+
+const AbiStorageEnumFieldSpec = z.object({
+    name: z.string(),
+    fields: z.array(z.any()),
+})
+
+export const AbiStorageEnumSpec = z.record(z.number().min(0), AbiStorageEnumFieldSpec)
+
 export const AbiTypeSpec = z.object({
     id: z.number(),
     type: z.object({
@@ -96,7 +118,7 @@ export const AbiTypeSpec = z.object({
                 .optional(),
             variant: z
                 .object({
-                    variants: z.array(AbiVariantSpec),
+                    variants: z.union([z.array(AbiVariantSpec).optional(), AbiStorageEnumSpec]),
                 })
                 .optional(),
             sequence: z
