@@ -16,10 +16,12 @@ import { createType } from '@polkadot/types'
 import { Hash } from '@polkadot/types/interfaces'
 import { ProsopoEnvError } from '@prosopo/common'
 import { getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
-import { Environment, Tasks } from '@prosopo/provider'
+import { Tasks } from '@prosopo/provider'
+import { Environment } from '@prosopo/env'
 import { IProviderAccount } from '@prosopo/types'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds'
+import { loadJSONFile } from '@prosopo/cli/dist/files'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
@@ -78,7 +80,8 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
         provider.stake
     )
     logger.info('   - providerAddDataset')
-    const datasetResult = await tasks.providerAddDatasetFromFile(provider.datasetFile)
+    const datasetJSON = loadJSONFile(provider.datasetFile)
+    const datasetResult = await tasks.providerAddDatasetFromFile(datasetJSON)
     datasetResult.contractEvents!.map((event) => logger.debug(JSON.stringify(event, null, 4)))
     const events = getEventsFromMethodName(datasetResult, 'ProviderAddDataset')
     return events[0].event.args[1] as Hash

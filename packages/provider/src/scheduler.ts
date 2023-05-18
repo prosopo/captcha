@@ -16,17 +16,13 @@
 
 import { CronJob } from 'cron'
 
-import { getPair } from '@prosopo/common'
-import { getPairType, getSecret, getSs58Format } from '@prosopo/env'
-import { Environment } from './env'
+import { Environment } from '@prosopo/env'
 import { Tasks } from './tasks/tasks'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { ProsopoConfig } from '@prosopo/types'
 
-async function main() {
-    const ss58Format = getSs58Format()
-    const secret = getSecret()
-    const pairType = getPairType()
-    const pair = await getPair(pairType, ss58Format, secret)
-    const env = new Environment(pair)
+export default async function (pair: KeyringPair, config: ProsopoConfig) {
+    const env = new Environment(pair, config)
 
     await env.isReady()
 
@@ -40,7 +36,3 @@ async function main() {
 
     job.start()
 }
-
-main().catch((error) => {
-    console.error(error)
-})

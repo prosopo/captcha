@@ -11,19 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    CaptchaItemTypes,
-    CaptchaMerkleTree,
-    CaptchaTypes,
-    Dataset,
-    RawSolution,
-    computeCaptchaHash,
-    computeItemHash,
-    hexHashArray,
-    matchItemsToSolutions,
-} from '@prosopo/datasets'
+import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '@prosopo/datasets'
 import { expect } from 'chai'
 import { it } from 'mocha'
+import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
+import { hexHashArray } from '@prosopo/common'
 
 async function getDataset(): Promise<Dataset> {
     return {
@@ -63,7 +55,8 @@ async function getDataset(): Promise<Dataset> {
     }
 }
 
-describe('DATASETS MERKLE TREE', () => {
+describe('DATASETS MERKLE TREE', async function () {
+    this.timeout(parseInt(process.env.testTimeout || '120000000'))
     let DATASET: Dataset
     before(async () => {
         DATASET = await getDataset()

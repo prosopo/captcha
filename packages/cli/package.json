@@ -1,22 +1,22 @@
 {
-  "name": "@prosopo/env",
+  "name": "@prosopo/cli",
   "version": "0.1.11",
   "description": "Path env prosopo environment",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose"
+    "build": "tsc --build --verbose",
+    "cli": "node ./dist/cli/cli.js",
+    "start": "node ./dist/cli/start.js"
   },
   "dependencies": {
     "dotenv": "^16.0.1",
     "@polkadot/util-crypto": "10.3.1",
     "@prosopo/common": "^0.1.11",
-    "@prosopo/contract": "^0.1.11",
-    "@prosopo/database": "^0.1.11",
-    "@prosopo/types": "^0.1.11",
-    "@prosopo/types-database": "^0.1.11",
-    "@prosopo/types-env": "^0.1.11"
+    "@prosopo/env": "^0.1.11",
+    "@prosopo/provider": "^0.1.11",
+    "@prosopo/types": "^0.1.11"
   },
   "devDependencies": {
     "typescript": "^4.8.3"

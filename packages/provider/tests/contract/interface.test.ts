@@ -11,30 +11,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { MockEnvironment } from '../mocks/mockenv'
+import { MockEnvironment } from '@prosopo/env'
 import { before } from 'mocha'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { getPair } from '@prosopo/common'
-import { getSs58Format } from '@prosopo/env'
 import { KeypairType } from '@polkadot/util-crypto/types'
+import { ProsopoConfigSchema } from '@prosopo/types'
 
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
 
-describe('CONTRACT WRAPPER', () => {
+describe('CONTRACT WRAPPER', async function () {
+    this.timeout(parseInt(process.env.testTimeout || '120000000'))
     let contractApi
 
     before(async () => {
         // Register the dapp
-        const ss58Format = getSs58Format()
-        const pair = await getPair(
-            (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType),
-            ss58Format,
-            '//Alice'
-        )
-        const mockEnv = new MockEnvironment(pair)
+        const ss58Format = 42
+        const pair = await getPair('sr25519' as KeypairType, ss58Format, '//Alice')
+        const config = ProsopoConfigSchema.parse(process.env.config)
+        const mockEnv = new MockEnvironment(pair, config)
 
         await mockEnv.isReady()
         contractApi = mockEnv.contractInterface

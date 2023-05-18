@@ -14,16 +14,14 @@
 import { promiseQueue } from '../../src/util'
 import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts'
 import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator'
-import { Environment } from '../../src/env'
+import { Environment } from '@prosopo/env'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import consola from 'consola'
 import { ProsopoEnvError } from '@prosopo/common'
-import { getPair } from '@prosopo/common'
-import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles'
 import { Abi } from '@polkadot/api-contract'
-
-loadEnv()
+import { ProsopoConfig } from '@prosopo/types'
+import { KeyringPair } from '@polkadot/keyring/types'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 
@@ -129,30 +127,16 @@ export async function populateDatabase(
     return databasePopulator
 }
 
-async function run() {
-    const ss58Format = getSs58Format()
-    const pairType = getPairType()
-    const secret = getSecret()
-    const pair = await getPair(pairType, ss58Format, secret)
+export default async function run(pair: KeyringPair, config: ProsopoConfig) {
     const dappAbiMetadata = await DappAbiJSON()
     const dappWasm = await DappWasm()
 
     await populateDatabase(
-        new Environment(pair),
+        new Environment(pair, config),
         DEFAULT_USER_COUNT,
         userFundMapDefault,
         true,
         dappAbiMetadata,
         dappWasm
     )
-}
-
-if (require.main === module) {
-    const startDate = Date.now()
-    if (!process.env.PROVIDER_MNEMONIC && !process.env.PROVIDER_SEED) {
-        throw new Error('Please set PROVIDER_MNEMONIC or PROVIDER_SEED in your environment')
-    }
-    run()
-        .then(() => console.log(`Database population successful after ${msToSecString(Date.now() - startDate)}`))
-        .finally(() => process.exit())
 }

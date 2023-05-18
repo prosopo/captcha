@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom'
 import { Procaptcha } from './components/Procaptcha'
 
 let siteKey
-if (document) {
+if (document && document.currentScript && 'src' in document.currentScript) {
     const src = document.currentScript.src
     siteKey = decodeURI(src).split('render=')[1].split('&')[0]
 } else {

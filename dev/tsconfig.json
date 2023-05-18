@@ -4,7 +4,10 @@
         "rootDir": "./src",
         "outDir": "./dist",
         "module": "commonjs",
-        "target": "esnext"
+        "target": "esnext",
+        "types": [
+            "mocha"
+        ]
     },
     "include": [
         "./src/**/*.ts"
@@ -12,6 +15,9 @@
     ],
 
     "references": [
+        {
+            "path": "../packages/cli"
+        },
         {
             "path": "../packages/common"
         },

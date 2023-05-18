@@ -1,4 +1,4 @@
-import { getEnv } from '@prosopo/env'
+import { getEnv } from '@prosopo/cli'
 import consola from 'consola'
 import dotenv from 'dotenv'
 import fs from 'fs'

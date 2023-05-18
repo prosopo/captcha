@@ -7,27 +7,24 @@
         "target": "esnext"
     },
     "include": [
-        "./src/**/*.ts"
-        //    "./tests/**/*.ts"
+        "./src/**/*.ts",
+        "./src/*.ts"
+    ],
+    "files": [
+        "./src/prosopo.config.ts",
     ],
     "references": [
         {
             "path": "../common"
         },
         {
-            "path": "../contract"
+            "path": "../env"
         },
         {
-            "path": "../database"
+            "path": "../provider"
         },
         {
             "path": "../types"
         },
-        {
-            "path": "../types-database"
-        },
-        {
-            "path": "../types-env"
-        }
     ]
 }

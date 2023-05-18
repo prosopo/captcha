@@ -16,12 +16,7 @@ import { ProsopoApiError } from '@prosopo/common'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import express, { Router } from 'express'
 import { Tasks } from './tasks/tasks'
-import {
-    CaptchaSolutionBody,
-    CaptchaWithProof,
-    DappUserSolutionResult,
-    VerifySolutionBody,
-} from '@prosopo/types'
+import { CaptchaSolutionBody, CaptchaWithProof, DappUserSolutionResult, VerifySolutionBody } from '@prosopo/types'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { parseBlockNumber } from './util'
 

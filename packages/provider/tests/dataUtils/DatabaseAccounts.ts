@@ -13,7 +13,7 @@
 // limitations under the License.
 import { readFile, writeFile } from 'fs'
 import path from 'path'
-import { Account } from '../mocks/accounts'
+import { Account } from '../accounts'
 import { IDatabasePopulatorMethods } from './DatabasePopulator'
 
 export enum AccountKey {

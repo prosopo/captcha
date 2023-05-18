@@ -13,7 +13,6 @@
 // limitations under the License.
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
-import fs, { WriteStream, createWriteStream } from 'fs'
 import { arrayJoin } from '@prosopo/common'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import { Captcha, CaptchaSolution } from '@prosopo/types'
@@ -25,50 +24,6 @@ export function encodeStringAddress(address: string) {
     } catch (error) {
         throw new ProsopoEnvError(error, 'CONTRACT.INVALID_ADDRESS', {}, address)
     }
-}
-
-export function loadJSONFile(filePath: string, logger?: any) {
-    // const parsedFilePath = handleFileProtocol(filePath, logger)
-    try {
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'))
-    } catch (err) {
-        throw new ProsopoEnvError(err, 'GENERAL.JSON_LOAD_FAILED', {}, filePath)
-    }
-}
-
-export function writeJSONFile(filePath: string, jsonData) {
-    return new Promise((resolve, reject) => {
-        const writeStream: WriteStream = createWriteStream(filePath)
-
-        writeStream.setDefaultEncoding('utf-8')
-
-        writeStream.on('open', () => {
-            writeStream.write(JSON.stringify(jsonData), (err) => {
-                if (err) {
-                    reject(err)
-                }
-                writeStream.end()
-            })
-        })
-
-        writeStream.on('finish', () => {
-            resolve(true)
-        })
-
-        writeStream.on('error', (err) => {
-            reject(err)
-        })
-    })
-}
-
-export async function readFile(filePath): Promise<Buffer> {
-    // const parsedFilePath = handleFileProtocol(filePath, undefined)
-    return new Promise((resolve, reject) => {
-        fs.readFile(filePath, (err, data) => {
-            if (err) reject(err)
-            resolve(data as Buffer)
-        })
-    })
 }
 
 export function shuffleArray<T>(array: T[]): T[] {

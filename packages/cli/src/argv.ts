@@ -15,14 +15,14 @@
 import parser from 'cron-parser'
 import pm2 from 'pm2'
 import { cwd } from 'process'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoEnvError, logger as getLogger } from '@prosopo/common'
 import { Compact, u128 } from '@polkadot/types'
-import { Tasks } from '../tasks/tasks'
+import { Tasks } from '@prosopo/provider'
 import { PayeeSchema } from '@prosopo/types'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import { encodeStringAddress } from '../util'
-import consola from 'consola'
-import { BatchCommitments } from '../batch/index'
+import { encodeStringAddress } from '@prosopo/provider'
+import { BatchCommitments } from '@prosopo/provider'
+import { loadJSONFile } from './files'
 const yargs = require('yargs')
 
 const validateAddress = (argv) => {
@@ -67,7 +67,7 @@ const validateScheduleExpression = (argv) => {
 
 export function processArgs(args, env: ProsopoEnvironment) {
     const tasks = new Tasks(env)
-    const logger = env.logger
+    const logger = getLogger(env.config.logLevel, 'CLI')
     return yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .option('api', { demand: false, default: false, type: 'boolean' })
@@ -189,7 +189,8 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.providerAddDatasetFromFile(argv.file)
+                    const jsonFile = loadJSONFile(argv.file, logger) as JSON
+                    const result = await tasks.providerAddDatasetFromFile(jsonFile)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -305,7 +306,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                     })
                 } else {
                     const result = await tasks.calculateCaptchaSolutions()
-                    consola.info(`Updated ${result} captcha solutions`)
+                    logger.info(`Updated ${result} captcha solutions`)
                 }
             },
             [validateScheduleExpression]

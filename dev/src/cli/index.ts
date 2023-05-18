@@ -1,10 +1,11 @@
-import { loadEnv } from '@prosopo/env'
+import { loadEnv } from '@prosopo/cli'
 import consola, { LogLevel } from 'consola'
 import path from 'path'
 import yargs from 'yargs'
 import { deployDapp, deployProtocol } from '../deploy/index'
 import { setup } from '../setup/index'
 import { updateEnvFiles } from '../util/updateEnv'
+import { runTests } from '../test/index'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -87,6 +88,14 @@ export async function processArgs(args) {
             handler: async () => {
                 console.log('Running setup scripts')
                 await setup()
+            },
+        })
+        .command({
+            command: 'test',
+            describe: 'Run all of the tests in the workspace',
+            handler: async () => {
+                console.log('Running tests')
+                await runTests()
             },
         })
     await yargs.parse()

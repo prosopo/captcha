@@ -3,8 +3,8 @@ import { AccountId, EventRecord } from '@polkadot/types/interfaces'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { getPair } from '@prosopo/common'
 import { ContractDeployer, oneUnit } from '@prosopo/contract'
-import { getPairType, getSs58Format, loadEnv } from '@prosopo/env'
-import { Environment } from '@prosopo/provider'
+import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
+import { Environment } from '@prosopo/env'
 import path from 'path'
 import { AbiJSON, Wasm } from '../util'
 
@@ -12,7 +12,7 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
     const pair = await getPair(pairType, ss58Format, '//Alice')
-    const env = new Environment(pair)
+    const env = new Environment(pair, defaultConfig())
     await env.isReady()
     const params = [
         ['5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY', '5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty'], // Alice , Bob
