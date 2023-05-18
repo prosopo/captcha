@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { ProsopoRandomProviderResponse } from '../types/index' //unused magic?
 
 const CURRENT_ACCOUNT_KEY = '@prosopo/current_account'
 const PROVIDER_URL_KEY = '@prosopo/provider'

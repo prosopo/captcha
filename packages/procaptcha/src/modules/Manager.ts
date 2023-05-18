@@ -5,6 +5,7 @@ import { SignerPayloadRaw } from '@polkadot/types/types'
 import { stringToU8a } from '@polkadot/util'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { GetCaptchaResponse } from '@prosopo/api'
+import ProviderApi from '@prosopo/api/src/api/ProviderApi'
 import { trimProviderUrl } from '@prosopo/common'
 import { ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
 import { CaptchaSolution, ContractAbi } from '@prosopo/types'
@@ -23,7 +24,6 @@ import {
 import { sleep } from '../utils/utils'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
 import storage from './storage'
-import ProviderApi from '@prosopo/api/src/api/ProviderApi'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -150,7 +150,7 @@ export const Manager = (
             // first, ask the smart contract
             const contract = await loadContract()
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-            const contractIsHuman = await contract.getDappOperator!User(
+            const contractIsHuman = await contract.getDappOperatorIsHumanUser(
                 account.account.address,
                 config.solutionThreshold
             )
@@ -274,17 +274,15 @@ export const Manager = (
                 }
             })
 
-            const {
-                account,
-                extension: { signer },
-            } = getAccount()
-
-            const { datasetId } = challenge.captchas[0].captcha
-            const captchaApi = getCaptchaApi()
+            const account = getAccount()
+            const blockNumber = getBlockNumber()
+            const signer = account.extension.signer
 
             if (!challenge.captchas[0].captcha.datasetId) {
                 throw new Error('No datasetId set for challenge')
             }
+
+            const captchaApi = getCaptchaApi()
 
             // send the commitment to the provider
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
