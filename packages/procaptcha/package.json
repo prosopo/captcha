@@ -19,21 +19,23 @@
     "@polkadot/extension-base": "0.44.8",
     "@polkadot/extension-dapp": "0.44.8",
     "@polkadot/extension-inject": "0.44.8",
+    "@polkadot/keyring": "10.3.1",
     "@polkadot/rpc-provider": "9.13.6",
     "@polkadot/types": "9.13.6",
     "@polkadot/util": "10.3.1",
     "@polkadot/util-crypto": "10.3.1",
     "@prosopo/api": "^0.1.11",
     "@prosopo/contract": "^0.1.11",
-    "@prosopo/datasets": "^0.1.11",
+    "@prosopo/types": "^0.1.11",
+    "@prosopo/common": "^0.1.11",
     "axios": "^0.27.2"
   },
   "devDependencies": {
-    "@types/chai": "^4.3.1",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
-    "chai": "^4.3.6",
     "eslint": "^8.20.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-unused-imports": "^2.0.0",
     "mocha": "^10.0.0",
     "ts-mocha": "^10.0.0",
@@ -51,5 +53,6 @@
   "description": "",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
-  }
+  },
+  "sideEffects": false
 }

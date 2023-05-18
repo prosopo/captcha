@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "importHelpers": true,
+    "jsx": "react-jsx",
+    "module": "commonjs",
+    "skipLibCheck": true,
+    "target": "esnext"
+  }
+}

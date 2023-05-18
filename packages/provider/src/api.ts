@@ -20,16 +20,10 @@ import {
     CaptchaSolutionBody,
     CaptchaWithProof,
     DappUserSolutionResult,
-    DappsAccountsResponse,
-    ProsopoEnvironment,
-    ProvidersAccountsResponse,
     VerifySolutionBody,
 } from '@prosopo/types'
-
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import { parseBlockNumber } from './util'
-import { DappAccounts } from '@prosopo/contract'
-import { AccountId } from '@polkadot/types/interfaces'
-import { Vec } from '@polkadot/types-codec'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -40,93 +34,6 @@ import { Vec } from '@polkadot/types-codec'
 export function prosopoRouter(env: ProsopoEnvironment): Router {
     const router = express.Router()
     const tasks = new Tasks(env)
-    const contractApi = env.contractInterface
-
-    /**
-     * Get the contract address
-     * @return {contractAddress: string} - The contract address from environment
-     */
-    router.get('/v1/prosopo/contract_address', async (req, res, next) => {
-        const { contractAddress } = env
-        return res.json({ contractAddress })
-    })
-
-    /**
-     * Returns a random provider using the account that is currently the env signer
-     * @param {string} userAccount - Dapp User AccountId
-     * @return {Provider} - A Provider
-     */
-    router.get('/v1/prosopo/random_provider/:userAccount/:dappContractAccount', async (req, res, next) => {
-        const { userAccount, dappContractAccount } = req.params
-
-        try {
-            const provider = await tasks.contractApi.getRandomProvider(userAccount, dappContractAccount)
-
-            return res.json(provider)
-        } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 500))
-        }
-    })
-
-    /**
-     * Returns the list of provider accounts
-     *
-     * @return {Hash} - The Providers
-     */
-    router.get('/v1/prosopo/providers/', async (req, res, next) => {
-        try {
-            await env.isReady()
-            const providers: Vec<AccountId> = await tasks.contractApi.getProviderAccounts()
-
-            return res.json({
-                accounts: providers,
-            } as ProvidersAccountsResponse)
-        } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 500))
-        }
-    })
-
-    /**
-     * Returns the list of dapp accounts
-     *
-     * @return {Hash} - The Dapps
-     */
-    router.get('/v1/prosopo/dapps/', async (req, res, next) => {
-        try {
-            await env.isReady()
-            const dapps: DappAccounts = await tasks.contractApi.getDappAccounts()
-
-            return res.json({
-                accounts: dapps,
-            } as DappsAccountsResponse)
-        } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 500))
-        }
-    })
-
-    /**
-     * Returns details of the provider
-     *
-     * @param {string} provider_account - Provider's account
-     * @return {Hash} - The Captcha Provider object
-     */
-    router.get('/v1/prosopo/provider/:providerAccount', async (req, res, next) => {
-        await env.isReady()
-        const { providerAccount } = req.params
-
-        if (!providerAccount) {
-            return next(new ProsopoApiError('API.BAD_REQUEST', undefined, 400))
-        }
-
-        try {
-            validateAddress(providerAccount)
-            const result = await contractApi.getProviderDetails(providerAccount)
-
-            return res.json(result)
-        } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 500))
-        }
-    })
 
     /**
      * Provides a Captcha puzzle to a Dapp User
@@ -220,6 +127,12 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         }
     })
 
+    /**
+     * Verifies a user's solution as being approved or not
+     *
+     * @param {string} userAccount - Dapp User id
+     * @param {string} commitmentId - The captcha solution to look up
+     */
     router.post('/v1/prosopo/provider/verify', async (req, res, next) => {
         let parsed
         try {

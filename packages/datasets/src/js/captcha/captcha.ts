@@ -26,8 +26,8 @@ import {
     Item,
     RawSolution,
 } from '@prosopo/types'
-import { downloadImage, hexHash, hexHashArray } from './util'
-import { ProsopoEnvError } from '@prosopo/common'
+import { downloadImage } from './util'
+import { ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
 import { isHex } from '@polkadot/util'
 
 // import {encodeAddress} from "@polkadot/util-crypto";

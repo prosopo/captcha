@@ -1,19 +1,22 @@
-import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 import Checkbox from '@mui/material/Checkbox'
-import { useRef, useState } from 'react'
 import Link from '@mui/material/Link'
+import Typography from '@mui/material/Typography'
+import { u32 } from '@polkadot/types'
+import { Alert, Backdrop, CircularProgress } from '@mui/material'
+import CaptchaComponent from './CaptchaComponent'
+import { useRef, useState } from 'react'
 import {
     Account,
     GetCaptchaResponse,
+    Manager,
     ProcaptchaCallbacks,
+    ProcaptchaConfigOptional,
+    ProcaptchaState,
+    ProcaptchaStateUpdateFn,
     ProsopoCaptchaApi,
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
-import { u32 } from '@polkadot/types'
-import { Manager, ProcaptchaConfigOptional, ProcaptchaState, ProcaptchaStateUpdateFn } from '@prosopo/procaptcha'
-import { Alert, Backdrop, CircularProgress } from '@mui/material'
-import CaptchaComponent from './CaptchaComponent'
 
 /**
  * The props for the Procaptcha component.

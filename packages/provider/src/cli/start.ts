@@ -13,7 +13,7 @@
 // limitations under the License.
 import { getPair, i18nMiddleware } from '@prosopo/common'
 import { getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/env'
-import { ProsopoEnvironment } from '@prosopo/types'
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import cors from 'cors'
 import express from 'express'
 import { Server } from 'http'

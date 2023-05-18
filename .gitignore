@@ -18,6 +18,7 @@ node_modules
 *.tsbuildinfo
 .DS_Store
 mongodb
+dist
 **/dist/**
 
 # Below is Github's node gitignore template,

@@ -14,11 +14,10 @@
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { BN } from '@polkadot/util'
 import { Tasks } from '../../src/index'
-import { ProsopoEnvironment } from '@prosopo/types'
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import { getPair } from '@prosopo/common'
 import { getSs58Format } from '@prosopo/env'
 import { KeypairType } from '@polkadot/util-crypto/types'
-
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]
 export const accountContract = function (account: Account): string {

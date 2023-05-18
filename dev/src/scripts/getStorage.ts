@@ -21,12 +21,10 @@ dotenv.config()
 async function main() {
     const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
     const env = new Environment(pair)
-
     await env.isReady()
     const tasks = new Tasks(env)
-
-    // await tasks.getProviderAccounts()
-    // await tasks.getDappAccounts()
+    const dappAccounts = await tasks.contractApi['dappAccounts']()
+    console.log(dappAccounts.toHuman())
     process.exit()
 }
 

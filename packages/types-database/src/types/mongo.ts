@@ -21,11 +21,11 @@ import {
     DatasetBase,
     DatasetWithIds,
     Item,
-} from '../datasets'
-import { PendingCaptchaRequest } from './api'
+} from '@prosopo/types'
+import { PendingCaptchaRequest } from '@prosopo/types'
 import { z } from 'zod'
 import { Connection, Model, Schema } from 'mongoose'
-import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from './scheduler'
+import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import { DeleteResult } from 'mongodb'
 import { Logger } from '@prosopo/common'
 
@@ -172,7 +172,7 @@ export const ScheduledTaskRecordSchema = new Schema<ScheduledTaskRecord>({
 })
 
 export interface Database {
-    readonly url: string
+    url: string
     tables?: Tables
     dbname: string
     connection?: Connection

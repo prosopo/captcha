@@ -19,18 +19,13 @@ import { WsProvider } from '@polkadot/rpc-provider'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
 import { loadEnv } from '@prosopo/env'
-import {
-    AssetsResolver,
-    ContractAbi,
-    Database,
-    EnvironmentTypes,
-    IProsopoContractMethods,
-    ProsopoConfig,
-    ProsopoEnvironment,
-} from '@prosopo/types'
+import { AssetsResolver, ContractAbi, EnvironmentTypes, IProsopoContractMethods, ProsopoConfig } from '@prosopo/types'
+import { Database } from '@prosopo/types-database'
+import { ProsopoEnvironment } from '@prosopo/types-env'
 import { LogLevel } from 'consola'
 import { LocalAssetsResolver } from './assets'
 import prosopoConfig from './prosopo.config'
+import { Databases } from '@prosopo/database'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
@@ -137,8 +132,8 @@ export class Environment implements ProsopoEnvironment {
     async importDatabase(): Promise<void> {
         try {
             if (this.config.database) {
-                const { ProsopoDatabase } = await import(`./db/${this.config.database[this.defaultEnvironment].type}`)
-                this.db = new ProsopoDatabase(
+                const ProsopoDatabase = Databases[this.config.database[this.defaultEnvironment].type]
+                this.db = await ProsopoDatabase.create(
                     this.config.database[this.defaultEnvironment].endpoint,
                     this.config.database[this.defaultEnvironment].dbname,
                     this.logger,

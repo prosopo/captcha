@@ -95,6 +95,7 @@ class DatabaseAccounts implements IDatabaseAccounts {
     }
 
     public importDatabaseAccounts() {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this
         return new Promise((resolve) => {
             readFile(getPath('import'), { encoding: 'utf-8' }, function (err, stringData) {
