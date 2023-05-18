@@ -195,6 +195,27 @@ export async function processArgs(args: string[]) {
             []
         )
         .command(
+            'expand',
+            'Expand the contract (processing all macros, etc)',
+            (yargs) => {
+                return yargs.option('package', {
+                    type: 'string',
+                    demand: true,
+                    desc: 'Target a specific package',
+                    choices: contracts,
+                })
+            },
+            async (argv) => {
+                const [, ...cmdArgsArray] = argv._ // strip the command name
+                let cmdArgs = cmdArgsArray.join(' ')
+
+                const contract = argv.package;
+
+                await exec(`cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${cmdArgs} > ${repoDir}/expanded/${contract}.rs`)
+            },
+            []
+        )
+        .command(
             'instantiate',
             'Instantiate the contract',
             (yargs) => {
