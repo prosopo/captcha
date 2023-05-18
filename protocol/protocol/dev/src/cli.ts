@@ -130,7 +130,7 @@ export async function processArgs(args: string[]) {
     }
 
     const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, dir?: string) => {
-        const rest = argv._.slice(1); // remove the first arg (the command) to get the rest of the args
+        const rest = argv._.slice(1).join(' '); // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || "..")
 
