@@ -461,7 +461,10 @@ pub mod proxy {
             let mut contract = get_contract(0);
             set_caller(get_user_account(0)); // an account which does not have permission to call proxy_terminate
 
-            assert_eq!(contract.proxy_terminate().unwrap_err(), Error::NotAuthorised);
+            assert_eq!(
+                contract.proxy_terminate().unwrap_err(),
+                Error::NotAuthorised
+            );
         }
 
         #[ink::test]
