@@ -178,12 +178,11 @@ export async function processArgs(args: string[]) {
             'expand',
             'Expand the contract (processing all macros, etc)',
             (yargs) => {
-                return yargs.option('package', {
-                    type: 'string',
-                    demand: true,
-                    desc: 'Target a specific package',
-                    choices: contracts,
-                })
+                // cannot build crates
+                yargs = addPackageOption(yargs, contracts)
+                yargs = addToolchainOption(yargs)
+                yargs = addDockerOption(yargs)
+                return yargs
             },
             async (argv) => {
                 const rest = argv._.slice(1); // remove the first arg (the command) to get the rest of the args
@@ -196,12 +195,11 @@ export async function processArgs(args: string[]) {
             'metadata',
             'Build the metadata',
             (yargs) => {
-                return yargs.option('package', {
-                    type: 'string',
-                    demand: true,
-                    desc: 'Target a specific package',
-                    choices: contracts,
-                })
+                // cannot build crates
+                yargs = addPackageOption(yargs, contracts)
+                yargs = addToolchainOption(yargs)
+                yargs = addDockerOption(yargs)
+                return yargs
             },
             async (argv) => {
                 const rest = argv._.slice(1); // remove the first arg (the command) to get the rest of the args
@@ -214,12 +212,11 @@ export async function processArgs(args: string[]) {
             'instantiate',
             'Instantiate the contract',
             (yargs) => {
-                return yargs.option('package', {
-                    type: 'string',
-                    demand: true,
-                    desc: 'Target a specific package',
-                    choices: contracts,
-                })
+                // cannot build crates
+                yargs = addPackageOption(yargs, contracts)
+                yargs = addToolchainOption(yargs)
+                yargs = addDockerOption(yargs)
+                return yargs
             },
             async (argv) => {
                 const rest = argv._.slice(1); // remove the first arg (the command) to get the rest of the args
@@ -235,7 +232,6 @@ export async function processArgs(args: string[]) {
                 // cannot build crates
                 yargs = addPackageOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
-                yargs = addReleaseOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
@@ -251,7 +247,6 @@ export async function processArgs(args: string[]) {
             'test',
             'Test the crates and contracts',
             (yargs) => {
-                yargs = addPackageOption(yargs)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
@@ -264,7 +259,6 @@ export async function processArgs(args: string[]) {
             'fmt',
             'Format the crates and contracts',
             (yargs) => {
-                yargs = addPackageOption(yargs)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
                 yargs = yargs.option('check', {
@@ -290,9 +284,7 @@ export async function processArgs(args: string[]) {
             'clippy',
             'Clippy the crates and contracts',
             (yargs) => {
-                yargs = addPackageOption(yargs)
                 yargs = addToolchainOption(yargs)
-                yargs = addFixOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
