@@ -129,8 +129,7 @@ export async function processArgs(args: string[]) {
         }
     }
 
-    const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, dir?: string) => {
-        let rest = argv._.slice(1, argv._.length).join(' ') // strip the command name
+    const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, cmdArgs: string, dir?: string) => {
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || "..")
 
@@ -146,9 +145,9 @@ export async function processArgs(args: string[]) {
         let script: string = "";
         if(argv.docker) {
             pullDockerImage();
-            script = `docker run --rm -v ${repoDir}:/repo paritytech/contracts-ci-linux:${contractsCiVersion} cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${rest}`
+            script = `docker run --rm -v ${repoDir}:/repo paritytech/contracts-ci-linux:${contractsCiVersion} cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${cmdArgs}`
         } else {
-            script = `cargo ${toolchain} ${cmd}`
+            script = `cargo ${toolchain} ${cmd} ${cmdArgs}`
             if(dir) {
                 script = `cd ${dir} && ${script}`
             }
@@ -175,24 +174,6 @@ export async function processArgs(args: string[]) {
     await yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .command(
-            'metadata',
-            'Build the metadata',
-            (yargs) => {
-                return yargs.option('package', {
-                    type: 'string',
-                    demand: true,
-                    desc: 'Target a specific package',
-                    choices: contracts,
-                })
-            },
-            async (argv) => {
-                let rest = argv._.slice(1, argv._.length).join(' ') // strip the command name
-                const contract = argv.package;
-                await exec(`cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${rest}`)
-            },
-            []
-        )
-        .command(
             'expand',
             'Expand the contract (processing all macros, etc)',
             (yargs) => {
@@ -204,9 +185,33 @@ export async function processArgs(args: string[]) {
                 })
             },
             async (argv) => {
-                const rest = argv._.slice(1, argv._.length).join(' ') // strip the command name
+                const [, ...cmdArgsArray] = argv._ // strip the command name
+                let cmdArgs = cmdArgsArray.join(' ')
+
                 const contract = argv.package;
-                await exec(`cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${rest} > ${repoDir}/expanded/${contract}.rs`)
+
+                await exec(`cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${cmdArgs} > ${repoDir}/expanded/${contract}.rs`)
+            },
+            []
+        )
+        .command(
+            'metadata',
+            'Build the metadata',
+            (yargs) => {
+                return yargs.option('package', {
+                    type: 'string',
+                    demand: true,
+                    desc: 'Target a specific package',
+                    choices: contracts,
+                })
+            },
+            async (argv) => {
+                const [, ...cmdArgsArray] = argv._ // strip the command name
+                let cmdArgs = cmdArgsArray.join(' ')
+
+                const contract = argv.package;
+
+                await exec(`cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${cmdArgs}`)
             },
             []
         )
@@ -222,9 +227,12 @@ export async function processArgs(args: string[]) {
                 })
             },
             async (argv) => {
-                const rest = argv._.slice(1, argv._.length).join(' ') // strip the command name
+                const [, ...cmdArgsArray] = argv._ // strip the command name
+                let cmdArgs = cmdArgsArray.join(' ')
+
                 const contract = argv.package;
-                await exec(`cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${rest}`)
+
+                await exec(`cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${cmdArgs}`)
             },
             []
         )
@@ -235,16 +243,20 @@ export async function processArgs(args: string[]) {
                 // cannot build crates
                 yargs = addPackageOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
+                yargs = addReleaseOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
+                const mode = argv.release ? '--release' : ''
+
                 const cmd = 'contract build'
-                const rest = argv._.slice(1, argv._.length).join(' ') // strip the command name
+                const cmdArgs = `${mode}`
+
                 const contracts = argv.package as string[];
                 delete argv.package;
                 for(const contract of contracts) {
-                    await execCargo(argv, cmd, `${contractsDir}/${contract}`)
+                    await execCargo(argv, cmd, cmdArgs, `${contractsDir}/${contract}`)
                 }
             },
             []
@@ -252,43 +264,58 @@ export async function processArgs(args: string[]) {
             'test',
             'Test the crates and contracts',
             (yargs) => {
+                yargs = addPackageOption(yargs)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
                 const cmd = 'test'
-                await execCargo(argv, cmd)
+                const cmdArgs = ''
+
+                await execCargo(argv, cmd, cmdArgs)
             },
             []
         ).command(
             'fmt',
             'Format the crates and contracts',
             (yargs) => {
+                yargs = addPackageOption(yargs)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
+                yargs = yargs.option('check', {
+                    type: 'boolean',
+                    demand: false,
+                    desc: 'Check the code instead of making changes',
+                    default: false,
+                })
                 return yargs
             },
             async (argv) => {
+                const check = argv.check ? '--check' : ''
                 const cmd = 'fmt'
-                argv._.push(`--all`)
-                argv._.push(`--verbose`)
-                await execCargo(argv, cmd)
+                const cmdArgs = `--all --verbose ${check}`
+                
+                await execCargo(argv, cmd, cmdArgs)
             },
             []
         ).command(
             'clippy',
             'Clippy the crates and contracts',
             (yargs) => {
+                yargs = addPackageOption(yargs)
                 yargs = addToolchainOption(yargs)
+                yargs = addFixOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
+                const fix = argv.fix ? '--fix --allow-dirty --allow-staged' : ''
+                
                 const cmd = 'clippy'
-                argv._.push(`-- -D warnings`) // change clippy warnings into errors
+                const cmdArgs = `${fix} -- -D warnings `
 
-                await execCargo(argv, cmd)
+                await execCargo(argv, cmd, cmdArgs)
             },
             []
         )
