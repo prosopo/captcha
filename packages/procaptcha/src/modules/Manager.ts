@@ -120,12 +120,7 @@ export const Manager = (
      */
     const start = async () => {
         try {
-            if (state.loading) {
-                console.log('Procaptcha already loading')
-                return
-            }
-            if (state.isHuman) {
-                console.log('already human')
+            if (!canStartProcess()) {
                 return
             }
 
@@ -261,6 +256,18 @@ export const Manager = (
             // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
         }
+    }
+
+    const canStartProcess = () => {
+        if (state.loading) {
+            console.log('Procaptcha already loading')
+            return false;
+        }
+        if (state.isHuman) {
+            console.log('already human')
+            return false;
+        }
+        return true;
     }
 
     const generateChallenge = async (contract: ProsopoContractMethods, account: Account, config: ProcaptchaConfig) => {
