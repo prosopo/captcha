@@ -42,14 +42,6 @@ macro_rules! lazy {
     };
 }
 
-/// Concatenate two arrays (a and b) into a new array (c)
-fn concat_u8<const A: usize, const B: usize, const C: usize>(a: &[u8; A], b: &[u8; B]) -> [u8; C] {
-    let mut c = [0; C];
-    c[..A].copy_from_slice(a);
-    c[A..A + B].copy_from_slice(b);
-    c
-}
-
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
@@ -195,7 +187,6 @@ pub mod prosopo {
         status: GovernanceStatus,
         balance: Balance,
         owner: AccountId,
-        min_difficulty: u16,
         payee: DappPayee,
     }
 
@@ -326,7 +317,10 @@ pub mod prosopo {
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
-            let instantiator = AccountId::from([0x1; 32]); // alice
+            let instantiator = AccountId::from([
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ]); // alice
             if Self::env().caller() != instantiator {
                 panic!("Not authorised to instantiate this contract");
             }
@@ -759,7 +753,6 @@ pub mod prosopo {
                 balance: 0,
                 status: GovernanceStatus::Inactive,
                 payee: payee.unwrap_or(DappPayee::Provider),
-                min_difficulty: 1,
             });
             let mut new_dapp = old_dapp;
 
@@ -1401,14 +1394,19 @@ pub mod prosopo {
             // pack all the data into a single byte array
             let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
-            let tmp1: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE] =
-                crate::concat_u8(&block_number_arr, &block_timestamp_arr);
-            let tmp2: [u8; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE] =
-                crate::concat_u8(&tmp1, user_account_bytes);
-            let bytes: [u8; BLOCK_TIMESTAMP_SIZE
+            let mut bytes: [u8; BLOCK_TIMESTAMP_SIZE
                 + BLOCK_NUMBER_SIZE
                 + ACCOUNT_SIZE
-                + ACCOUNT_SIZE] = crate::concat_u8(&tmp2, dapp_account_bytes);
+                + ACCOUNT_SIZE] =
+                [0x0; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE + ACCOUNT_SIZE];
+            bytes[0..BLOCK_NUMBER_SIZE].copy_from_slice(&block_number_arr);
+            bytes[BLOCK_NUMBER_SIZE..BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE]
+                .copy_from_slice(&block_timestamp_arr);
+            bytes[BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE
+                ..BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE + ACCOUNT_SIZE]
+                .copy_from_slice(user_account_bytes);
+            bytes[BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE..]
+                .copy_from_slice(dapp_account_bytes);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
@@ -1627,7 +1625,10 @@ pub mod prosopo {
                 set_caller(get_unused_account());
 
                 // only able to instantiate from the alice account
-                set_caller(default_accounts().alice);
+                set_caller(AccountId::from([
+                    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
+                    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+                ]));
                 let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should construct successfully
             }

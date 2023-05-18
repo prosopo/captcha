@@ -123,3 +123,6 @@ secrets.json
 crates/*/target/
 contracts/*/target/
 target/
+
+# Ignore the expanded dir
+expanded/
