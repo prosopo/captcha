@@ -27,5 +27,8 @@
     "@prosopo/api": "^0.1.11",
     "@prosopo/contract": "^0.1.11",
     "@prosopo/types": "^0.1.11"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.4"
   }
 }
