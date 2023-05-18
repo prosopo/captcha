@@ -174,6 +174,27 @@ export async function processArgs(args: string[]) {
     await yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .command(
+            'metadata',
+            'Build the metadata',
+            (yargs) => {
+                return yargs.option('package', {
+                    type: 'string',
+                    demand: true,
+                    desc: 'Target a specific package',
+                    choices: contracts,
+                })
+            },
+            async (argv) => {
+                const [, ...cmdArgsArray] = argv._ // strip the command name
+                let cmdArgs = cmdArgsArray.join(' ')
+
+                const contract = argv.package;
+
+                await exec(`cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${cmdArgs}`)
+            },
+            []
+        )
+        .command(
             'instantiate',
             'Instantiate the contract',
             (yargs) => {
