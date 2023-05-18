@@ -137,7 +137,7 @@ pub mod prosopo {
         // an amount in the base unit of the default parachain token (e.g. Planck on chains using DOT)
         fee: u32,
         payee: Payee,
-        service_origin: Vec<u8>,
+        url: Vec<u8>,
         dataset_id: Hash,
         dataset_id_content: Hash,
     }
@@ -162,24 +162,21 @@ pub mod prosopo {
         dataset_id_content: Hash,
     }
 
-    /// CaptchaSolutionCommitments are submitted by DAppUsers upon completion of one or more
+    /// Commits are submitted by DAppUsers upon completion of one or more
     /// Captchas. They serve as proof of captcha completion to the outside world and can be used
     /// in dispute resolution.
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct CaptchaSolutionCommitment {
-        // the Dapp User Account
-        account: AccountId,
-        // The captcha dataset id (dataset_id in Provider / CaptchaData)
-        dataset_id: Hash,
-        // Status of this solution - correct / incorrect?
-        status: CaptchaStatus,
-        // The Dapp Contract AccountId that the Dapp User wants to interact with
-        contract: AccountId,
-        // The Provider AccountId that is permitted to approve or disapprove the commitment
-        provider: AccountId,
-        // Time of completion
-        completed_at: Timestamp,
+    pub struct Commit {
+        id: Hash,                  // the commitment id
+        user: AccountId,           // the user who submitted the commitment
+        dataset_id: Hash,          // the dataset id
+        status: CaptchaStatus,     // the status of the commitment
+        dapp: AccountId,           // the dapp which the user completed the captcha on
+        provider: AccountId,       // the provider who supplied the challenge
+        requested_at: BlockNumber, // the block number at which the captcha was requested
+        completed_at: BlockNumber, // the block number at which the captcha was completed
+        user_signature: Vec<u8>,   // the user's signature of the commitment
     }
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
@@ -215,7 +212,7 @@ pub mod prosopo {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct LastCorrectCaptcha {
-        pub before_ms: u64,
+        pub before: BlockNumber,
         pub dapp_id: AccountId,
     }
 
@@ -232,17 +229,17 @@ pub mod prosopo {
         admin: AccountId, // the admin in control of this contract
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
-        service_origins: Mapping<Hash, AccountId>, // service origin hash mapped to provider account
+        urls: Mapping<Hash, AccountId>, // url hash mapped to provider account
         datasets: Mapping<Hash, AccountId>,
         provider_stake_threshold: Balance,
         dapp_stake_threshold: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Lazy<BTreeSet<AccountId>>,
-        captcha_solution_commitments: Mapping<Hash, CaptchaSolutionCommitment>, // the commitments submitted by DappUsers
+        captcha_solution_commitments: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
-        max_user_history_age: u64, // the max age of captcha results to store in history for a user
+        max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
     }
@@ -266,8 +263,8 @@ pub mod prosopo {
         ProviderInsufficientFunds,
         /// Returned if provider is inactive and trying to use the service
         ProviderInactive,
-        /// Returned if service_origin is already used by another provider
-        ProviderServiceOriginUsed,
+        /// Returned if url is already used by another provider
+        ProviderUrlUsed,
         /// Returned if dapp exists when it shouldn't
         DappExists,
         /// Returned if dapp does not exist when it should
@@ -279,7 +276,7 @@ pub mod prosopo {
         /// Returned if captcha data does not exist
         CaptchaDataDoesNotExist,
         /// Returned if solution commitment does not exist when it should
-        CaptchaSolutionCommitmentDoesNotExist,
+        CommitDoesNotExist,
         /// Returned if dapp user does not exist when it should
         DappUserDoesNotExist,
         /// Returned if there are no active providers
@@ -304,6 +301,7 @@ pub mod prosopo {
         /// Returned if provider fee is too high
         ProviderFeeTooHigh,
         /// Returned if the commitment already exists
+        CommitAlreadyExists,
         CaptchaSolutionCommitmentAlreadyExists,
         /// Returned if verification of a signature fails (could be for many reasons, e.g. invalid public key, invalid payload, invalid signature)
         VerifyFailed,
@@ -316,11 +314,14 @@ pub mod prosopo {
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: u64,
+            max_user_history_age: BlockNumber,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
-            let instantiator = AccountId::from([0x1; 32]); // alice
+            let instantiator = AccountId::from([
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ]); // alice
             if Self::env().caller() != instantiator {
                 panic!("Not authorised to instantiate this contract");
             }
@@ -338,7 +339,7 @@ pub mod prosopo {
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: u64,
+            max_user_history_age: BlockNumber,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
@@ -346,7 +347,7 @@ pub mod prosopo {
                 admin: Self::env().caller(),
                 providers: Default::default(),
                 provider_accounts: Default::default(),
-                service_origins: Default::default(),
+                urls: Default::default(),
                 datasets: Default::default(),
                 dapp_users: Default::default(),
                 provider_stake_threshold,
@@ -452,7 +453,7 @@ pub mod prosopo {
         /// Configure a provider
         fn provider_configure(
             &mut self,
-            service_origin: Option<Vec<u8>>,
+            url: Option<Vec<u8>>,
             fee: Option<u32>,
             payee: Option<Payee>,
             deactivate: bool,
@@ -472,7 +473,7 @@ pub mod prosopo {
                     status: GovernanceStatus::Inactive,
                     balance: 0,
                     fee: 0,
-                    service_origin: Vec::new(),
+                    url: Vec::new(),
                     dataset_id: default_dataset_id,
                     payee: Payee::Provider,
                     dataset_id_content: default_dataset_id,
@@ -486,8 +487,7 @@ pub mod prosopo {
             let mut new_provider = old_provider.clone();
 
             // update the config
-            new_provider.service_origin =
-                service_origin.unwrap_or(old_provider.service_origin.clone());
+            new_provider.url = url.unwrap_or(old_provider.url.clone());
             new_provider.fee = fee.unwrap_or(old_provider.fee);
             new_provider.payee = payee.unwrap_or(old_provider.payee);
             new_provider.balance += self.env().transferred_value();
@@ -534,19 +534,18 @@ pub mod prosopo {
                 GovernanceStatus::Inactive
             };
 
-            let old_service_origin_hash = self.hash_vec_u8(&old_provider.service_origin);
-            let new_service_origin_hash = self.hash_vec_u8(&new_provider.service_origin);
-            if old_service_origin_hash != new_service_origin_hash {
-                // updating the service origin, so check whether the new origin is available
-                if self.service_origins.contains(new_service_origin_hash) {
-                    return err!(Error::ProviderServiceOriginUsed);
+            let old_url_hash = self.hash_vec_u8(&old_provider.url);
+            let new_url_hash = self.hash_vec_u8(&new_provider.url);
+            if old_url_hash != new_url_hash {
+                // updating the url, so check whether the new origin is available
+                if self.urls.contains(new_url_hash) {
+                    return err!(Error::ProviderUrlUsed);
                 } // else available
 
-                self.service_origins.remove(old_service_origin_hash);
-                // don't record the default hash of the service origin as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
-                if new_service_origin_hash != default_dataset_id {
-                    self.service_origins
-                        .insert(new_service_origin_hash, &provider_account);
+                self.urls.remove(old_url_hash);
+                // don't record the default hash of the url as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
+                if new_url_hash != default_dataset_id {
+                    self.urls.insert(new_url_hash, &provider_account);
                 }
             }
 
@@ -605,12 +604,12 @@ pub mod prosopo {
             Ok(())
         }
 
-        /// Register a provider, their service origin and fee
+        /// Register a provider, their url and fee
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_register(
             &mut self,
-            service_origin: Vec<u8>,
+            url: Vec<u8>,
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
@@ -619,22 +618,15 @@ pub mod prosopo {
                 return err!(Error::ProviderExists);
             }
 
-            self.provider_configure(
-                Some(service_origin),
-                Some(fee),
-                Some(payee),
-                true,
-                None,
-                None,
-            )
+            self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None)
         }
 
-        /// Update an existing provider, their service origin, fee and deposit funds
+        /// Update an existing provider, their url, fee and deposit funds
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_update(
             &mut self,
-            service_origin: Vec<u8>,
+            url: Vec<u8>,
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
@@ -643,14 +635,7 @@ pub mod prosopo {
                 return err!(Error::ProviderDoesNotExist);
             }
 
-            self.provider_configure(
-                Some(service_origin),
-                Some(fee),
-                Some(payee),
-                false,
-                None,
-                None,
-            )
+            self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None)
         }
 
         /// De-activate a provider by setting their status to Deactivated
@@ -896,14 +881,13 @@ pub mod prosopo {
         /// Trim the user history to the max length and age.
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
-            // note that the age is based on the block timestamp, so calling this method as blocks roll over will result in different outcomes as the age threshold will change but the history will not (assuming no new results are added)
-            let block_timestamp = self.env().block_timestamp();
-            let max_age = if block_timestamp < self.max_user_history_age {
-                block_timestamp
+            let block_number = self.env().block_number();
+            let max_age = if block_number < self.max_user_history_age {
+                block_number
             } else {
                 self.max_user_history_age
             };
-            let age_threshold = block_timestamp - max_age;
+            let age_threshold = block_number - max_age;
             let mut expired = Vec::new();
             // trim the history down to max length
             while history.len() > self.max_user_history_len.into() {
@@ -927,18 +911,13 @@ pub mod prosopo {
 
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_commitment(
-            &mut self,
-            account: AccountId,
-            hash: Hash,
-            result: CaptchaSolutionCommitment,
-        ) {
+        fn record_commitment(&mut self, account: AccountId, hash: Hash, result: &Commit) {
             let mut user = self
                 .dapp_users
                 .get(account)
                 .unwrap_or_else(|| self.create_new_dapp_user(account));
             // add the new commitment
-            self.captcha_solution_commitments.insert(hash, &result);
+            self.captcha_solution_commitments.insert(hash, result);
             user.history.insert(0, hash);
 
             // trim the user history by len and age, removing any expired commitments
@@ -1004,33 +983,37 @@ pub mod prosopo {
             user
         }
 
-        /// Provider submits a captcha solution commitment
-        #[ink(message)]
-        pub fn provider_commit(
-            &mut self,
-            captcha_solution_commitment_id: Hash,
-            commitment: CaptchaSolutionCommitment,
-        ) -> Result<(), Error> {
+        fn provider_record_commit(&mut self, commit: &Commit) -> Result<(), Error> {
             let caller = self.env().caller();
+
+            // ensure the provider is active
             self.validate_provider_active(caller)?;
-            self.validate_dapp(commitment.contract)?;
+            // ensure the dapp is active
+            self.validate_dapp(commit.dapp)?;
 
             // check commitment doesn't already exist
-            if self
-                .captcha_solution_commitments
-                .get(captcha_solution_commitment_id)
-                .is_some()
-            {
-                return err!(Error::CaptchaSolutionCommitmentAlreadyExists);
+            if self.captcha_solution_commitments.get(commit.id).is_some() {
+                return err!(Error::CommitAlreadyExists);
             }
 
-            self.record_commitment(
-                commitment.account,
-                captcha_solution_commitment_id,
-                commitment,
-            );
+            self.record_commitment(commit.user, commit.id, commit);
 
-            self.pay_fee(&caller, &commitment.contract)?;
+            self.pay_fee(&caller, &commit.dapp)?;
+
+            Ok(())
+        }
+
+        #[ink(message)]
+        pub fn provider_commit(&mut self, commit: Commit) -> Result<(), Error> {
+            self.provider_record_commit(&commit)
+        }
+
+        /// Provider submits 0-many captcha solution commitments
+        #[ink(message)]
+        pub fn provider_commit_many(&mut self, commits: Vec<Commit>) -> Result<(), Error> {
+            for commit in commits.iter() {
+                self.provider_record_commit(commit)?;
+            }
 
             Ok(())
         }
@@ -1097,10 +1080,11 @@ pub mod prosopo {
                 return Err(Error::NoCorrectCaptcha);
             }
 
+            let last_correct_captcha = last_correct_captcha.unwrap();
+
             Ok(LastCorrectCaptcha {
-                before_ms: self.env().block_timestamp()
-                    - last_correct_captcha.unwrap().completed_at,
-                dapp_id: last_correct_captcha.unwrap().contract,
+                before: self.env().block_number() - last_correct_captcha.completed_at,
+                dapp_id: last_correct_captcha.dapp,
             })
         }
 
@@ -1200,18 +1184,18 @@ pub mod prosopo {
         pub fn get_captcha_solution_commitment(
             &self,
             captcha_solution_commitment_id: Hash,
-        ) -> Result<CaptchaSolutionCommitment, Error> {
+        ) -> Result<Commit, Error> {
             if self
                 .captcha_solution_commitments
                 .get(captcha_solution_commitment_id)
                 .is_none()
             {
-                return err!(Error::CaptchaSolutionCommitmentDoesNotExist);
+                return err!(Error::CommitDoesNotExist);
             }
             let commitment = self
                 .captcha_solution_commitments
                 .get(captcha_solution_commitment_id)
-                .ok_or_else(err_fn!(Error::CaptchaSolutionCommitmentDoesNotExist))?;
+                .ok_or_else(err_fn!(Error::CommitDoesNotExist))?;
 
             Ok(commitment)
         }
@@ -1643,7 +1627,10 @@ pub mod prosopo {
                 set_caller(get_unused_account());
 
                 // only able to instantiate from the alice account
-                set_caller(default_accounts().alice);
+                set_caller(AccountId::from([
+                    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
+                    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+                ]));
                 let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should construct successfully
             }
@@ -1999,9 +1986,9 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 // give provider some funds, but not enough to be above the minimum stake
                 set_account_balance(provider_account, 1);
-                let service_origin: Vec<u8> = vec![1, 2, 3];
+                let url: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
-                contract.provider_register(service_origin, fee, Payee::Dapp);
+                contract.provider_register(url, fee, Payee::Dapp);
                 assert!(contract.providers.get(provider_account).is_some());
                 println!(
                     "{}",
@@ -2034,9 +2021,9 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                let service_origin: Vec<u8> = vec![1, 2, 3];
+                let url: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
-                contract.provider_register(service_origin, fee, Payee::Dapp);
+                contract.provider_register(url, fee, Payee::Dapp);
                 assert!(contract.providers.get(provider_account).is_some());
                 contract.provider_deactivate();
                 let provider_record = contract.providers.get(provider_account).unwrap();
@@ -2051,10 +2038,10 @@ pub mod prosopo {
 
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
-                let service_origin: Vec<u8> = vec![1, 2, 3];
+                let url: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract.provider_register(service_origin, fee, Payee::Dapp);
+                contract.provider_register(url, fee, Payee::Dapp);
                 let registered_provider_account = contract.providers.get(provider_account);
                 assert!(registered_provider_account.is_some());
                 let returned_list = contract
@@ -2115,9 +2102,9 @@ pub mod prosopo {
             /// Provider Register Helper
             fn generate_provider_data(id: u8, port: &str, fee: u32) -> (AccountId, Vec<u8>, u32) {
                 let provider_account = AccountId::from([id; 32]);
-                let service_origin = port.as_bytes().to_vec();
+                let url = port.as_bytes().to_vec();
 
-                (provider_account, service_origin, fee)
+                (provider_account, url, fee)
             }
 
             /// Test provider register and update
@@ -2127,12 +2114,9 @@ pub mod prosopo {
                 set_caller(get_unused_account());
 
                 let mut contract = get_contract(0);
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "2424", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "2424", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin, fee, Payee::Dapp)
-                    .unwrap();
+                contract.provider_register(url, fee, Payee::Dapp).unwrap();
                 assert!(contract.providers.get(provider_account).is_some());
                 assert!(contract
                     .provider_accounts
@@ -2143,12 +2127,12 @@ pub mod prosopo {
                     .unwrap()
                     .contains(&provider_account));
 
-                let service_origin: Vec<u8> = vec![1, 2, 3];
+                let url: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let balance = 20000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin.clone(), fee, Payee::Dapp);
+                contract.provider_update(url.clone(), fee, Payee::Dapp);
                 assert!(contract
                     .provider_accounts
                     .get(ProviderState {
@@ -2158,34 +2142,33 @@ pub mod prosopo {
                     .unwrap()
                     .contains(&provider_account));
                 let provider = contract.providers.get(provider_account).unwrap();
-                assert_eq!(provider.service_origin, service_origin);
+                assert_eq!(provider.url, url);
                 assert_eq!(provider.fee, fee);
                 assert_eq!(provider.payee, Payee::Dapp);
                 assert_eq!(provider.balance, balance);
                 assert_eq!(provider.status, GovernanceStatus::Inactive);
             }
 
-            /// Test provider register with service_origin error
+            /// Test provider register with url error
             #[ink::test]
-            fn test_provider_register_with_service_origin_error() {
+            fn test_provider_register_with_url_error() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
                 let mut contract = get_contract(0);
 
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .unwrap();
 
                 // try creating the second provider and make sure the error is correct and that it doesn't exist
                 let (provider_account, _, _) = generate_provider_data(0x3, "4242", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 println!("{:?}", contract.providers.get(provider_account));
-                match contract.provider_register(service_origin, fee, Payee::Dapp) {
-                    Result::Err(Error::ProviderServiceOriginUsed) => {}
+                match contract.provider_register(url, fee, Payee::Dapp) {
+                    Result::Err(Error::ProviderUrlUsed) => {}
                     _ => {
                         unreachable!();
                     }
@@ -2202,44 +2185,38 @@ pub mod prosopo {
                     .contains(&provider_account));
             }
 
-            /// Test provider update with service_origin error
+            /// Test provider update with url error
             #[ink::test]
-            fn test_provider_update_with_service_origin_error() {
+            fn test_provider_update_with_url_error() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
 
                 let mut contract = get_contract(0);
 
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin, fee, Payee::Dapp)
-                    .unwrap();
+                contract.provider_register(url, fee, Payee::Dapp).unwrap();
 
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x3, "2424", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x3, "2424", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract
-                    .provider_register(service_origin, fee, Payee::Dapp)
-                    .unwrap();
+                contract.provider_register(url, fee, Payee::Dapp).unwrap();
 
-                let (_, service_origin, fee) = generate_provider_data(0x3, "4242", 100);
+                let (_, url, fee) = generate_provider_data(0x3, "4242", 100);
 
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let balance = 20000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
 
                 // try updating the second provider and make sure the error is correct and that it didn't change
-                match contract.provider_update(service_origin.clone(), fee, Payee::Dapp) {
-                    Result::Err(Error::ProviderServiceOriginUsed) => {}
+                match contract.provider_update(url.clone(), fee, Payee::Dapp) {
+                    Result::Err(Error::ProviderUrlUsed) => {}
                     _ => {
                         unreachable!();
                     }
                 }
 
                 let provider = contract.providers.get(provider_account).unwrap();
-                assert_ne!(provider.service_origin, service_origin);
+                assert_ne!(provider.url, url);
                 assert_ne!(provider.fee, fee);
                 assert_ne!(provider.balance, balance);
                 assert_ne!(provider.status, GovernanceStatus::Active);
@@ -2254,12 +2231,11 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
                 // give the contract some funds
                 set_account_balance(contract.env().account_id(), 1000000000);
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
                 let balance: u128 = 10;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .ok();
                 ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                     provider_account,
@@ -2267,7 +2243,7 @@ pub mod prosopo {
                 );
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract.provider_update(url, fee, Payee::Provider);
                 contract.provider_deregister().ok();
             }
 
@@ -2278,12 +2254,11 @@ pub mod prosopo {
                 set_caller(get_unused_account());
 
                 let mut contract = get_contract(0);
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
                 let balance: u128 = 2000000000000;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .ok();
                 ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>(
                     provider_account,
@@ -2291,7 +2266,7 @@ pub mod prosopo {
                 );
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract.provider_update(url, fee, Payee::Provider);
                 let root1 = str_to_hash("merkle tree".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 contract.provider_set_dataset(root1, root2).ok();
@@ -2718,11 +2693,10 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
 
                 // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 1);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 1);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .unwrap();
 
                 // Call from the provider account to add data and stake tokens
@@ -2731,7 +2705,7 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract.provider_update(url, fee, Payee::Provider);
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
                 let provider = contract.providers.get(provider_account).unwrap();
@@ -2758,17 +2732,17 @@ pub mod prosopo {
                 // Call from the provider account to mark the solution as approved
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let solution_id = user_root;
-                contract.provider_commit(
-                    solution_id,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: user_root,
-                        status: CaptchaStatus::Approved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
-                );
+                contract.provider_commit(Commit {
+                    dapp: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    user: dapp_user_account,
+                    completed_at: 0,
+                    requested_at: 0,
+                    id: solution_id,
+                    user_signature: Vec::new(),
+                });
                 let commitment = contract
                     .captcha_solution_commitments
                     .get(solution_id)
@@ -2782,17 +2756,17 @@ pub mod prosopo {
                 // Now make sure that the provider cannot later set the solution to disapproved and make
                 // sure that the dapp balance is unchanged
 
-                contract.provider_commit(
-                    solution_id,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: user_root,
-                        status: CaptchaStatus::Disapproved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
-                );
+                contract.provider_commit(Commit {
+                    dapp: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    user: dapp_user_account,
+                    completed_at: 0,
+                    requested_at: 0,
+                    id: solution_id,
+                    user_signature: Vec::new(),
+                });
                 let commitment = contract
                     .captcha_solution_commitments
                     .get(solution_id)
@@ -2817,11 +2791,10 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
 
                 // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .unwrap();
 
                 // Call from the provider account to add data and stake tokens
@@ -2830,7 +2803,7 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract.provider_update(url, fee, Payee::Provider);
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
                 // can only add data set after staking
@@ -2858,17 +2831,17 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let solution_id = str_to_hash("id that does not exist".to_string());
 
-                let result = contract.provider_commit(
-                    solution_id,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: user_root,
-                        status: CaptchaStatus::Approved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
-                );
+                let result = contract.provider_commit(Commit {
+                    dapp: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    user: dapp_user_account,
+                    completed_at: 0,
+                    requested_at: 0,
+                    id: solution_id,
+                    user_signature: Vec::new(),
+                });
             }
 
             /// Test provider disapprove
@@ -2880,11 +2853,10 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
 
                 // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 1);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 1);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .unwrap();
 
                 // Call from the provider account to add data and stake tokens
@@ -2893,9 +2865,7 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract
-                    .provider_update(service_origin, fee, Payee::Provider)
-                    .unwrap();
+                contract.provider_update(url, fee, Payee::Provider).unwrap();
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
@@ -2926,17 +2896,17 @@ pub mod prosopo {
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let solution_id = user_root;
                 contract
-                    .provider_commit(
-                        solution_id,
-                        CaptchaSolutionCommitment {
-                            contract: dapp_contract_account,
-                            dataset_id: user_root,
-                            status: CaptchaStatus::Disapproved,
-                            provider: provider_account,
-                            account: dapp_user_account,
-                            completed_at: 0,
-                        },
-                    )
+                    .provider_commit(Commit {
+                        dapp: dapp_contract_account,
+                        dataset_id: user_root,
+                        status: CaptchaStatus::Disapproved,
+                        provider: provider_account,
+                        user: dapp_user_account,
+                        completed_at: 0,
+                        requested_at: 0,
+                        id: solution_id,
+                        user_signature: Vec::new(),
+                    })
                     .unwrap();
                 let commitment = contract
                     .captcha_solution_commitments
@@ -2949,17 +2919,17 @@ pub mod prosopo {
                 assert_eq!(balance + Balance::from(fee), new_provider_balance);
 
                 // Now make sure that the provider cannot later set the solution to approved
-                contract.provider_commit(
-                    solution_id,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: user_root,
-                        status: CaptchaStatus::Approved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
-                );
+                contract.provider_commit(Commit {
+                    dapp: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    user: dapp_user_account,
+                    completed_at: 0,
+                    requested_at: 0,
+                    id: solution_id,
+                    user_signature: Vec::new(),
+                });
                 let commitment = contract
                     .captcha_solution_commitments
                     .get(solution_id)
@@ -2984,11 +2954,10 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
 
                 // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .unwrap();
 
                 // Call from the provider account to add data and stake tokens
@@ -2997,9 +2966,7 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract
-                    .provider_update(service_origin, fee, Payee::Provider)
-                    .unwrap();
+                contract.provider_update(url, fee, Payee::Provider).unwrap();
                 // can only add data set after staking
                 contract.provider_set_dataset(root1, root2);
 
@@ -3027,17 +2994,17 @@ pub mod prosopo {
                 // Call from the provider account to mark the solution as disapproved
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let solution_id = user_root;
-                contract.provider_commit(
-                    solution_id,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: user_root,
-                        status: CaptchaStatus::Disapproved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
-                );
+                contract.provider_commit(Commit {
+                    dapp: dapp_contract_account,
+                    dataset_id: user_root,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    user: dapp_user_account,
+                    completed_at: 0,
+                    requested_at: 0,
+                    id: solution_id,
+                    user_signature: Vec::new(),
+                });
                 let commitment = contract
                     .captcha_solution_commitments
                     .get(solution_id)
@@ -3079,14 +3046,14 @@ pub mod prosopo {
 
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
-                let service_origin: Vec<u8> = vec![1, 2, 3];
+                let url: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract.provider_register(service_origin.clone(), fee, Payee::Dapp);
+                contract.provider_register(url.clone(), fee, Payee::Dapp);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let balance = 20000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Dapp);
+                contract.provider_update(url, fee, Payee::Dapp);
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 contract.provider_set_dataset(root1, root2);
@@ -3119,14 +3086,14 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
                 let dapp_user_account = AccountId::from([0x30; 32]);
-                let service_origin: Vec<u8> = vec![1, 2, 3];
+                let url: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract.provider_register(service_origin.clone(), fee, Payee::Provider);
+                contract.provider_register(url.clone(), fee, Payee::Provider);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let balance = 20000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin.clone(), fee, Payee::Provider);
+                contract.provider_update(url.clone(), fee, Payee::Provider);
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 contract.provider_set_dataset(root1, root2);
@@ -3154,7 +3121,7 @@ pub mod prosopo {
 
                 // Switch the provider payee to Dapp
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract.provider_update(service_origin, fee, Payee::Dapp);
+                contract.provider_update(url, fee, Payee::Dapp);
 
                 // Call from the dapp_user_account
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
@@ -3175,11 +3142,10 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
 
                 // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .unwrap();
 
                 // Call from the provider account to add data and stake tokens
@@ -3188,7 +3154,7 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract.provider_update(url, fee, Payee::Provider);
                 // can only add data set after staking
                 contract.provider_set_dataset(root1, root2).ok();
 
@@ -3211,17 +3177,17 @@ pub mod prosopo {
                 //Dapp User commit and approve
                 let dapp_user_account = AccountId::from([0x5; 32]);
                 let user_root1 = str_to_hash("user merkle tree root to approve".to_string());
-                contract.provider_commit(
-                    user_root1,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: root1,
-                        status: CaptchaStatus::Approved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
-                );
+                contract.provider_commit(Commit {
+                    dapp: dapp_contract_account,
+                    dataset_id: user_root1,
+                    status: CaptchaStatus::Approved,
+                    provider: provider_account,
+                    user: dapp_user_account,
+                    completed_at: 0,
+                    requested_at: 0,
+                    id: user_root1,
+                    user_signature: Vec::new(),
+                });
 
                 // Get the commitment and make sure it is approved
                 let commitment = contract
@@ -3232,17 +3198,17 @@ pub mod prosopo {
                 //Dapp User commit and disapprove
                 let dapp_user_account = AccountId::from([0x5; 32]);
                 let user_root2 = str_to_hash("user merkle tree root to disapprove".to_string());
-                contract.provider_commit(
-                    user_root2,
-                    CaptchaSolutionCommitment {
-                        contract: dapp_contract_account,
-                        dataset_id: root2,
-                        status: CaptchaStatus::Disapproved,
-                        provider: provider_account,
-                        account: dapp_user_account,
-                        completed_at: 0,
-                    },
-                );
+                contract.provider_commit(Commit {
+                    dapp: dapp_contract_account,
+                    dataset_id: root2,
+                    status: CaptchaStatus::Disapproved,
+                    provider: provider_account,
+                    user: dapp_user_account,
+                    completed_at: 0,
+                    requested_at: 0,
+                    id: user_root2,
+                    user_signature: Vec::new(),
+                });
 
                 // Get the commitment and make sure it is disapproved
                 let commitment = contract
@@ -3260,11 +3226,10 @@ pub mod prosopo {
                 let mut contract = get_contract(0);
 
                 // Register the provider
-                let (provider_account, service_origin, fee) =
-                    generate_provider_data(0x2, "4242", 0);
+                let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .unwrap();
 
                 // Call from the provider account to add data and stake tokens
@@ -3273,7 +3238,7 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract.provider_update(url, fee, Payee::Provider);
                 // can only add data set after staking
                 contract.provider_set_dataset(root1, root2).ok();
 
@@ -3291,11 +3256,10 @@ pub mod prosopo {
                 contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
                 // Register a second provider
-                let (provider_account2, service_origin, fee) =
-                    generate_provider_data(0x5, "2424", 0);
+                let (provider_account2, url, fee) = generate_provider_data(0x5, "2424", 0);
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account2);
                 contract
-                    .provider_register(service_origin.clone(), fee, Payee::Dapp)
+                    .provider_register(url.clone(), fee, Payee::Dapp)
                     .unwrap();
 
                 // Call from the provider account to add data and stake tokens
@@ -3303,7 +3267,7 @@ pub mod prosopo {
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(service_origin, fee, Payee::Provider);
+                contract.provider_update(url, fee, Payee::Provider);
                 // can only add data set after staking
                 contract.provider_set_dataset(root1, root2).ok();
 
