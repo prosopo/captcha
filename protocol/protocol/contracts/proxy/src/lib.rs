@@ -27,7 +27,7 @@ pub mod proxy {
         /// The `AccountId` of a contract where any call that does not match a
         /// selector of this contract is forwarded to.
         destination: AccountId,
-        admin: AccountId, // the admin account to manage set_code_hash, withdraw, terminate, and set_forward_address
+        admin: AccountId, // the admin account to manage set_code_hash, proxy_withdraw, terminate, and set_forward_address
     }
 
     /// The errors that can be returned by the Proxy contract.
@@ -100,7 +100,7 @@ pub mod proxy {
         }
 
         #[ink(message)]
-        pub fn withdraw(&mut self, amount: Balance) -> Result<(), Error> {
+        pub fn proxy_withdraw(&mut self, amount: Balance) -> Result<(), Error> {
             let caller = self.env().caller();
             if caller != self.admin {
                 return err!(Error::NotAuthorised);
@@ -465,7 +465,7 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_withdraw() {
+        fn test_proxy_withdraw() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -476,21 +476,21 @@ pub mod proxy {
             set_caller(get_admin_account(0)); // use the admin acc
             let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
             let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
-            let withdraw_amount: u128 = 1;
-            contract.withdraw(withdraw_amount).unwrap();
+            let proxy_withdraw_amount: u128 = 1;
+            contract.proxy_withdraw(proxy_withdraw_amount).unwrap();
             assert_eq!(
                 get_account_balance(get_admin_account(0)).unwrap(),
-                admin_bal + withdraw_amount
+                admin_bal + proxy_withdraw_amount
             );
             assert_eq!(
                 get_account_balance(contract.env().account_id()).unwrap(),
-                contract_bal - withdraw_amount
+                contract_bal - proxy_withdraw_amount
             );
         }
 
         #[ink::test]
         #[should_panic]
-        fn test_withdraw_insufficient_funds() {
+        fn test_proxy_withdraw_insufficient_funds() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -499,11 +499,11 @@ pub mod proxy {
             set_caller(get_admin_account(0)); // use the admin acc
             let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
             let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
-            contract.withdraw(contract_bal + 1); // panics as bal would go below existential deposit
+            contract.proxy_withdraw(contract_bal + 1); // panics as bal would go below existential deposit
         }
 
         #[ink::test]
-        fn test_withdraw_unauthorised() {
+        fn test_proxy_withdraw_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -511,7 +511,7 @@ pub mod proxy {
 
             // give the contract funds
             set_caller(get_user_account(1)); // use the admin acc
-            assert_eq!(contract.withdraw(1), Err(Error::NotAuthorised));
+            assert_eq!(contract.proxy_withdraw(1), Err(Error::NotAuthorised));
         }
 
         #[ink::test]
