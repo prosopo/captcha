@@ -880,10 +880,10 @@ pub mod prosopo {
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             let block_number = self.env().block_number();
-            let max_age = if block_number < self.max_user_history_age {
+            let max_age = if block_number < self.max_user_history_age as u32 {
                 block_number
             } else {
-                self.max_user_history_age
+                self.max_user_history_age as u32
             };
             let age_threshold = block_number - max_age;
             let mut expired = Vec::new();
