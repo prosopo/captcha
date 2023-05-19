@@ -229,6 +229,28 @@ pub mod captcha {
         pub value: u128,
         pub block: BlockNumber,
     }
+
+    /// Record of when a provider changes and at what block
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct ProviderRecord {
+        pub payee: Payee,             // the payee setting of the provider at this block
+        pub status: GovernanceStatus, // the status of the provider at this block
+        pub block: BlockNumber,       // the block number at which the provider status changed
+        pub account: AccountId,       // the provider account
+        pub dataset_id: Hash,         // the dataset id
+    }
+
+    /// Record of when a dapp changes and at what block
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct DappRecord {
+        pub payee: DappPayee,         // the payee setting for the dapp
+        pub status: GovernanceStatus, // the status of the dapp at this block
+        pub block: BlockNumber,       // the block number at which the provider status changed
+        pub account: AccountId,       // the provider account
+    }
+
     // Contract storage
     #[ink(storage)]
     pub struct Captcha {
@@ -251,6 +273,8 @@ pub mod captcha {
         seed: Seed,                // the current seed for rng
         seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
+        provider_log: Lazy<Vec<ProviderRecord>>, // a log of changes to providers over the last n blocks
+        dapp_log: Lazy<Vec<DappRecord>>, // a log of changes to dapps over the last n blocks
     }
 
     /// The error types
@@ -375,6 +399,8 @@ pub mod captcha {
                 seed_log: Default::default(),
                 seed: Seed { value: 0, block: 0 },
                 rewind_window,
+                provider_log: Default::default(),
+                dapp_log: Default::default(),
             }
         }
 
