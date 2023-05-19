@@ -26,9 +26,9 @@ jobs:
       - name: Rust formatting check
         run: |
           cd dev
-          npm run fmt -- --check --toolchain nightly --docker
+          npm run cli -- fmt -- --check --toolchain nightly --docker
           # take ownership of the build files so they can be cached
-          npm run chown
+          npm run cli -- chown
 
       # Restore the cargo build from cache, if available
       - name: Restore cached cargo build
@@ -53,27 +53,27 @@ jobs:
       - name: Clippy
         run: |
           cd dev
-          npm run clippy -- --toolchain nightly --docker
+          npm run cli -- clippy -- --toolchain nightly --docker
           # take ownership of the build files so they can be cached
-          npm run chown
+          npm run cli -- chown
 
       # Do the build
       - name: Build contract
         id: build
         run: | 
           cd dev
-          npm run build -- --release --toolchain nightly --docker
+          npm run cli -- build -- --release --toolchain nightly --docker
           # take ownership of the build files so they can be cached
-          npm run chown
+          npm run cli -- chown
           
       # Do unit testing
       - name: Test contract
         run: |
           cd dev
-          RUST_BACKTRACE=1 npm run test -- --toolchain nightly --docker
+          RUST_BACKTRACE=1 npm run cli -- test -- --toolchain nightly --docker
           result=$?
           # take ownership of the build files so they can be cached
-          npm run chown
+          npm run cli -- chown
           exit $result
 
       - name: Cleanup cargo build caches
