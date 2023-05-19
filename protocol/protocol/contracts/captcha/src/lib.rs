@@ -42,6 +42,15 @@ macro_rules! lazy {
     };
 }
 
+macro_rules! log_to_rewind_window {
+    ($log:expr, $record:expr) => {
+        let mut contents = $log.get_or_default();
+        contents.push($record);
+        self.prune_to_rewind_window(&mut contents);
+        $log.set(&contents);
+    };
+}
+
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
@@ -710,17 +719,17 @@ pub mod captcha {
             self.update_seed()?;
 
             // record the new provider details as a log record
-            let mut log = self.provider_log.get_or_default();
-            log.push(ProviderRecord {
+
+            // update the log
+            self.provider_log(ProviderRecord {
                 payee: new_provider.payee,
                 status: new_provider.status,
                 dataset_id: new_provider.dataset_id,
                 dataset_id_content: new_provider.dataset_id_content,
                 block: self.env().block_number(),
                 account: provider_account,
+                deleted: false,
             });
-            self.prune_to_rewind_window(&mut log, |record| &record.block);
-            self.provider_log.set(&log);
 
             Ok(())
         }
@@ -832,7 +841,26 @@ pub mod captcha {
             // update the seed
             self.update_seed()?;
 
+            // update the log
+            self.provider_log(ProviderRecord {
+                payee: provider.payee,
+                status: ProviderStatus::Deactivated,
+                dataset_id: provider.dataset_id,
+                dataset_id_content: provider.dataset_id_content,
+                block: self.env().block_number(),
+                account: provider_account,
+                deleted: true,
+            });
+
             Ok(())
+        }
+
+        fn provider_log(&self, record: ProviderRecord) {
+            log_to_rewind_window!(self.provider_log, record);
+        }
+
+        fn dapp_log(&self, record: DappRecord) {
+            log_to_rewind_window!(self.dapp_log, record);
         }
 
         fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
