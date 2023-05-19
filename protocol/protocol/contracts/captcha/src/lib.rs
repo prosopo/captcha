@@ -989,6 +989,15 @@ pub mod captcha {
             // update the dapp in the mapping
             self.dapps.insert(contract, &new_dapp);
 
+            // update the log
+            self.dapp_log(DappRecord {
+                payee: new_dapp.payee,
+                status: new_dapp.status,
+                block: self.env().block_number(),
+                account: contract,
+                deleted: false,
+            });
+
             Ok(())
         }
 
@@ -1059,6 +1068,15 @@ pub mod captcha {
             // remove the dapp
             self.dapps.remove(contract);
             lazy!(self.dapp_accounts, remove, &contract);
+
+            // update the log
+            self.dapp_log(DappRecord {
+                payee: dapp.payee,
+                status: GovernanceStatus::Inactive,
+                block: self.env().block_number(),
+                account: contract,
+                deleted: true,
+            });
 
             Ok(())
         }
