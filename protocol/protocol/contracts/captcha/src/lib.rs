@@ -224,6 +224,7 @@ pub mod captcha {
 
     pub trait BlockNumbered {
         fn get_block_number(&self) -> BlockNumber;
+        fn set_block_number(&mut self, block_number: BlockNumber);
     }
 
     impl Ord for dyn BlockNumbered {
@@ -259,6 +260,9 @@ pub mod captcha {
         fn get_block_number(&self) -> BlockNumber {
             self.block
         }
+        fn set_block_number(&mut self, block: BlockNumber) {
+            self.block = block;
+        }
     }
     /// Record of when a provider changes and at what block
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, Ord, PartialOrd)]
@@ -276,6 +280,9 @@ pub mod captcha {
     impl BlockNumbered for ProviderRecord {
         fn get_block_number(&self) -> BlockNumber {
             self.block
+        }
+        fn set_block_number(&mut self, block: BlockNumber) {
+            self.block = block;
         }
     }
 
@@ -295,7 +302,11 @@ pub mod captcha {
         fn get_block_number(&self) -> BlockNumber {
             self.block
         }
+        fn set_block_number(&mut self, block: BlockNumber) {
+            self.block = block;
+        }
     }
+
     // Contract storage
     #[ink(storage)]
     pub struct Captcha {
@@ -449,24 +460,11 @@ pub mod captcha {
             }
         }
 
-        /// Prune an desc ordered list
-        fn prune<T, U: PartialOrd>(&self, list: &mut Vec<T>, threshold: &U, f: fn(&T) -> &U) {
-            // iter from end to start
-            for i in (0..list.len()).rev() {
-                // if element is less than threshold, remove it
-                let value: &U = f(&list[i]);
-                if value < threshold {
-                    // we're always looking at the last element, so we can just pop it
-                    list.pop();
-                } else {
-                    // hit an element that is greater than threshold, so we can stop
-                    // all elements from this element to the start of the list are also greater than threshold, because list is in desc order
-                    break;
-                }
+        fn prune_to_rewind_window<T: BlockNumbered + Ord>(&self, list: &mut BTreeSet<T>) -> BTreeSet<T> {
+            if list.is_empty() {
+                return Default::default();
             }
-        }
 
-        fn prune_to_rewind_window<T>(&self, list: &mut Vec<T>, f: fn(&T) -> &BlockNumber) {
             let rewind_window = self.rewind_window as BlockNumber;
             let block_number = self.env().block_number();
             let threshold_block: BlockNumber = if block_number > rewind_window {
@@ -474,7 +472,18 @@ pub mod captcha {
             } else {
                 0
             };
-            self.prune(list, &threshold_block, f);
+
+            // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
+
+            // have to specify the threshold as an element of the list
+            // get the first element as a template
+            let mut threshold_element = list.first().unwrap();
+            // update the block number to be the threshold
+            threshold_element.set_block_number(threshold_block);
+            // and split using the threshold element (note other fields in the element are ignored when splitting, the impl only cares about the block number)
+            let within_threshold = list.split_off(&threshold_element);
+            // retain the newer elements
+            return within_threshold;
         }
 
         /// Update the seed
@@ -517,10 +526,10 @@ pub mod captcha {
             // put the old seed into the log
             let mut seed_log = self.seed_log.get_or_default();
             // prune the seed log as old entries may have become too old and land outside the rewind_window window
-            self.prune_to_rewind_window(&mut seed_log, |seed| &seed.block);
+            seed_log = self.prune_to_rewind_window(&mut seed_log);
 
             // add the current seed to the log
-            seed_log.insert(0, seed);
+            seed_log.insert(seed);
 
             // then compute new seed value
             // what to use in the seed?
@@ -890,15 +899,15 @@ pub mod captcha {
 
         fn provider_log(&mut self, record: ProviderRecord) {
             let mut log = self.provider_log.get_or_default();
-            log.insert(0, record);
-            self.prune_to_rewind_window(&mut log, |record| &record.block);
+            log.insert(record);
+            log = self.prune_to_rewind_window(&mut log);
             self.provider_log.set(&log);
         }
 
         fn dapp_log(&mut self, record: DappRecord) {
             let mut log = self.dapp_log.get_or_default();
-            log.insert(0, record);
-            self.prune_to_rewind_window(&mut log, |record| &record.block);
+            log.insert(record);
+            log = self.prune_to_rewind_window(&mut log);
             self.dapp_log.set(&log);
         }
 
