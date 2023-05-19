@@ -4,14 +4,7 @@
     "description": "Dev tools for working with prosopo contracts",
     "main": "dist/index.js",
     "scripts": {
-        "cli": "ts-node src/cli.ts",
-        "build": "ts-node src/cli.ts build",
-        "test": "ts-node src/cli.ts test",
-        "fmt": "ts-node src/cli.ts fmt",
-        "clippy": "ts-node src/cli.ts clippy",
-        "instantiate": "ts-node src/cli.ts instantiate",
-        "clean": "npm run chown && rm -rf ../target",
-        "chown": "sudo chown -R $(whoami):$(whoami) ../target || true"
+        "cli": "ts-node src/cli.ts"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
