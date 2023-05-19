@@ -51,6 +51,7 @@ pub mod captcha {
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
+    use ink::prelude::collections::btree_map::BTreeMap;
     use scale_info::prelude::cmp::Ordering;
     use ink::prelude::vec;
     use ink::prelude::vec::Vec;
@@ -224,7 +225,6 @@ pub mod captcha {
 
     pub trait BlockNumbered {
         fn get_block_number(&self) -> BlockNumber;
-        fn set_block_number(&mut self, block_number: BlockNumber);
     }
 
     impl Ord for dyn BlockNumbered {
@@ -260,9 +260,6 @@ pub mod captcha {
         fn get_block_number(&self) -> BlockNumber {
             self.block
         }
-        fn set_block_number(&mut self, block: BlockNumber) {
-            self.block = block;
-        }
     }
     /// Record of when a provider changes and at what block
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, Ord, PartialOrd)]
@@ -281,9 +278,6 @@ pub mod captcha {
         fn get_block_number(&self) -> BlockNumber {
             self.block
         }
-        fn set_block_number(&mut self, block: BlockNumber) {
-            self.block = block;
-        }
     }
 
     /// Record of when a dapp changes and at what block
@@ -301,9 +295,6 @@ pub mod captcha {
     impl BlockNumbered for DappRecord {
         fn get_block_number(&self) -> BlockNumber {
             self.block
-        }
-        fn set_block_number(&mut self, block: BlockNumber) {
-            self.block = block;
         }
     }
 
@@ -327,10 +318,10 @@ pub mod captcha {
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
         seed: Seed,                              // the current seed for rng
-        seed_log: Lazy<BTreeSet<Seed>>, // the history of seeds for rng, stored newest first
+        seed_log: Lazy<BTreeMap<BlockNumber, Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
-        provider_log: Lazy<BTreeSet<ProviderRecord>>, // a log of changes to providers over the last n blocks
-        dapp_log: Lazy<BTreeSet<DappRecord>>,         // a log of changes to dapps over the last n blocks
+        provider_log: Lazy<BTreeMap<BlockNumber, ProviderRecord>>, // a log of changes to providers over the last n blocks
+        dapp_log: Lazy<BTreeMap<BlockNumber, DappRecord>>,         // a log of changes to dapps over the last n blocks
     }
 
     /// The error types
