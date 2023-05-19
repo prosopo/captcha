@@ -443,13 +443,12 @@ pub mod captcha {
             result.copied()
         }
 
-        fn get_provider_at(&self, block_number: &BlockNumber, account: AccountId) -> Result<Option<Provider>, Error> {
-            let mut provider = self.get_provider(account)?;
+        fn provider_rewind(&self, block_number: &BlockNumber, account: AccountId, provider: &mut Provider) -> Result<(), ()> {
             let record = self.get_provider_record_at(block_number, account);
             if let Some(record) = record {
                 // if the provider has been deleted, return None
                 if record.deleted {
-                    return Ok(None);
+                    return Err(());
                 }
                 // else revert the provider to the state it was in at the given block
                 provider.status = record.status;
@@ -457,7 +456,7 @@ pub mod captcha {
                 provider.dataset_id_content = record.dataset_id_content;
                 provider.payee = record.payee;
             }
-            Ok(Some(provider))
+            Ok(())
         }
 
         fn get_dapp_record_at(&self, block_number: &BlockNumber, account: AccountId) -> Option<DappRecord> {
@@ -480,20 +479,19 @@ pub mod captcha {
             result.copied()
         }
 
-        fn get_dapp_at(&self, block_number: &BlockNumber, account: AccountId) -> Result<Option<Dapp>, Error> {
-            let mut dapp = self.get_dapp(account)?;
+        fn dapp_rewind(&self, block_number: &BlockNumber, account: AccountId, dapp: &mut Dapp) -> Result<(), ()> {
             let record = self.get_dapp_record_at(block_number, account);
             if let Some(record) = record {
                 // if the dapp has been deleted, return None
                 if record.deleted {
-                    return Ok(None);
+                    return Err(());
                 }
                 // else revert the dapp to the state it was in at the given block
                 dapp.status = record.status;
                 dapp.payee = record.payee;
                 dapp.owner = record.owner;
             }
-            Ok(Some(dapp))
+            Ok(())
         }
 
         fn prune_to_rewind_window<T>(
