@@ -845,7 +845,7 @@ pub mod captcha {
             // update the log
             self.provider_log(ProviderRecord {
                 payee: provider.payee,
-                status: ProviderStatus::Deactivated,
+                status: GovernanceStatus::Inactive,
                 dataset_id: provider.dataset_id,
                 dataset_id_content: provider.dataset_id_content,
                 block: self.env().block_number(),
