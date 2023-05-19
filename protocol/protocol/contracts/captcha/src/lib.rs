@@ -42,15 +42,6 @@ macro_rules! lazy {
     };
 }
 
-macro_rules! log_to_rewind_window {
-    ($log:expr, $record:expr) => {
-        let mut contents = $log.get_or_default();
-        contents.push($record);
-        self.prune_to_rewind_window(&mut contents);
-        $log.set(&contents);
-    };
-}
-
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
@@ -856,12 +847,18 @@ pub mod captcha {
             Ok(())
         }
 
-        fn provider_log(&self, record: ProviderRecord) {
-            log_to_rewind_window!(self.provider_log, record);
+        fn provider_log(&mut self, record: ProviderRecord) {
+            let mut log = self.provider_log.get_or_default();
+            log.insert(0, record);
+            self.prune_to_rewind_window(&mut log, |record| &record.block);
+            self.provider_log.set(&mut log);
         }
 
-        fn dapp_log(&self, record: DappRecord) {
-            log_to_rewind_window!(self.dapp_log, record);
+        fn dapp_log(&mut self, record: DappRecord) {
+            let mut log = self.dapp_log.get_or_default();
+            log.insert(0, record);
+            self.prune_to_rewind_window(&mut log, |record| &record.block);
+            self.dapp_log.set(&mut log);
         }
 
         fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
