@@ -50,8 +50,8 @@ pub mod captcha {
 
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
-    use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::collections::btree_map::BTreeMap;
+    use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
     use ink::prelude::vec::Vec;
     use ink::storage::Lazy;
@@ -273,11 +273,11 @@ pub mod captcha {
         max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
-        seed: Seed,                              // the current seed for rng
+        seed: Seed,                                  // the current seed for rng
         seed_log: Lazy<BTreeMap<BlockNumber, Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
         provider_log: Lazy<BTreeMap<BlockNumber, ProviderRecord>>, // a log of changes to providers over the last n blocks
-        dapp_log: Lazy<BTreeMap<BlockNumber, DappRecord>>,         // a log of changes to dapps over the last n blocks
+        dapp_log: Lazy<BTreeMap<BlockNumber, DappRecord>>, // a log of changes to dapps over the last n blocks
     }
 
     /// The error types
@@ -407,7 +407,10 @@ pub mod captcha {
             }
         }
 
-        fn prune_to_rewind_window<T>(&self, list: &mut BTreeMap<BlockNumber, T>) -> BTreeMap<BlockNumber, T> {
+        fn prune_to_rewind_window<T>(
+            &self,
+            list: &mut BTreeMap<BlockNumber, T>,
+        ) -> BTreeMap<BlockNumber, T> {
             if list.is_empty() {
                 return Default::default();
             }
