@@ -15,7 +15,7 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use self::prosopo::{Prosopo, ProsopoRef};
+pub use self::captcha::{Captcha, CaptchaRef};
 
 /// Print and return an error in ink
 macro_rules! err {
@@ -46,7 +46,7 @@ macro_rules! lazy {
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
-pub mod prosopo {
+pub mod captcha {
 
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
@@ -196,7 +196,7 @@ pub mod prosopo {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
         // the last n commitment hashes in chronological order (most recent first)
-        history: Vec<Hash>, // lookup the commitment in Prosopo.commitments
+        history: Vec<Hash>, // lookup the commitment in commitments
     }
 
     /// The summary of a user's captcha history using the n most recent captcha results limited by age and number of captcha results
@@ -224,7 +224,7 @@ pub mod prosopo {
 
     // Contract storage
     #[ink(storage)]
-    pub struct Prosopo {
+    pub struct Captcha {
         admin: AccountId, // the admin in control of this contract
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
@@ -243,7 +243,7 @@ pub mod prosopo {
         max_provider_fee: Balance,
     }
 
-    /// The Prosopo error types
+    /// The error types
     ///
     #[derive(
         Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
@@ -306,7 +306,7 @@ pub mod prosopo {
         VerifyFailed,
     }
 
-    impl Prosopo {
+    impl Captcha {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn new(
@@ -1512,12 +1512,12 @@ pub mod prosopo {
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
 
-        use crate::prosopo::Error::{ProviderInactive, ProviderInsufficientFunds};
+        use crate::captcha::Error::{ProviderInactive, ProviderInsufficientFunds};
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
 
-        type Event = <Prosopo as ::ink::reflect::ContractEventBase>::Type;
+        type Event = <Captcha as ::ink::reflect::ContractEventBase>::Type;
 
         const STAKE_THRESHOLD: u128 = 1000000000000;
 
@@ -1601,7 +1601,7 @@ pub mod prosopo {
             }
 
             /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-            fn get_contract(index: u128) -> Prosopo {
+            fn get_contract(index: u128) -> Captcha {
                 let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
                                                                            // make sure the contract gets allocated the above account
                 set_callee(account);
@@ -1611,7 +1611,7 @@ pub mod prosopo {
                 set_caller(get_admin_account(0));
                 // now construct the contract instance
                 let mut contract =
-                    Prosopo::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                    Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
                 // check the contract was created with the correct account
@@ -1629,7 +1629,7 @@ pub mod prosopo {
                     212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
                     44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
                 ]));
-                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should construct successfully
             }
 
@@ -1641,7 +1641,7 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
-                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
                 // should fail to construct and panic
             }
 
@@ -3283,7 +3283,7 @@ pub mod prosopo {
                 operator_accounts
             }
 
-            fn setup_contract() -> (AccountId, AccountId, Vec<AccountId>, Prosopo) {
+            fn setup_contract() -> (AccountId, AccountId, Vec<AccountId>, Captcha) {
                 let op1 = AccountId::from([0x1; 32]);
                 let op2 = AccountId::from([0x2; 32]);
                 let ops = vec![op1, op2];
