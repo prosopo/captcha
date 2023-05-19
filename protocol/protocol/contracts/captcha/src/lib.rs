@@ -707,6 +707,19 @@ pub mod captcha {
             // update the seed
             self.update_seed()?;
 
+            // record the new provider details as a log record
+            let mut log = self.provider_log.get_or_default();
+            log.push(ProviderRecord {
+                payee: new_provider.payee,
+                status: new_provider.status,
+                dataset_id: new_provider.dataset_id,
+                dataset_id_content: new_provider.dataset_id_content,
+                block: self.env().block_number(),
+                account: provider_account,
+            });
+            self.prune_to_rewind_window(&mut log, |record| &record.block);
+            self.provider_log.set(&log);
+
             Ok(())
         }
 
