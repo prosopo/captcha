@@ -52,7 +52,6 @@ pub mod captcha {
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::collections::btree_map::BTreeMap;
-    use scale_info::prelude::cmp::Ordering;
     use ink::prelude::vec;
     use ink::prelude::vec::Vec;
     use ink::storage::Lazy;
@@ -470,7 +469,7 @@ pub mod captcha {
             seed_log = self.prune_to_rewind_window(&mut seed_log);
 
             // add the current seed to the log
-            seed_log.insert(seed);
+            seed_log.insert(seed.block, seed);
 
             // then compute new seed value
             // what to use in the seed?
@@ -840,14 +839,14 @@ pub mod captcha {
 
         fn provider_log(&mut self, record: ProviderRecord) {
             let mut log = self.provider_log.get_or_default();
-            log.insert(record);
+            log.insert(record.block, record);
             log = self.prune_to_rewind_window(&mut log);
             self.provider_log.set(&log);
         }
 
         fn dapp_log(&mut self, record: DappRecord) {
             let mut log = self.dapp_log.get_or_default();
-            log.insert(record);
+            log.insert(record.block, record);
             log = self.prune_to_rewind_window(&mut log);
             self.dapp_log.set(&log);
         }
