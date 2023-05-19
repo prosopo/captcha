@@ -135,7 +135,7 @@ pub mod prosopo {
         status: GovernanceStatus,
         balance: Balance,
         // an amount in the base unit of the default parachain token (e.g. Planck on chains using DOT)
-        fee: Balance,
+        fee: u32,
         payee: Payee,
         url: Vec<u8>,
         dataset_id: Hash,
