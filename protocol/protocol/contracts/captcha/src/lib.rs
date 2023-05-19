@@ -423,7 +423,11 @@ pub mod captcha {
             *result
         }
 
-        fn get_provider_record_at(&self, block_number: &BlockNumber, account: AccountId) -> Option<ProviderRecord> {
+        fn get_provider_record_at(
+            &self,
+            block_number: &BlockNumber,
+            account: AccountId,
+        ) -> Option<ProviderRecord> {
             let provider_log = self.provider_log.get_or_default();
             // there may be no records for the given provider
             let mut result = None;
@@ -443,7 +447,12 @@ pub mod captcha {
             result.copied()
         }
 
-        fn provider_rewind(&self, block_number: &BlockNumber, account: AccountId, provider: &mut Provider) -> Result<(), ()> {
+        fn provider_rewind(
+            &self,
+            block_number: &BlockNumber,
+            account: AccountId,
+            provider: &mut Provider,
+        ) -> Result<(), ()> {
             let record = self.get_provider_record_at(block_number, account);
             if let Some(record) = record {
                 // if the provider has been deleted, return None
@@ -459,7 +468,11 @@ pub mod captcha {
             Ok(())
         }
 
-        fn get_dapp_record_at(&self, block_number: &BlockNumber, account: AccountId) -> Option<DappRecord> {
+        fn get_dapp_record_at(
+            &self,
+            block_number: &BlockNumber,
+            account: AccountId,
+        ) -> Option<DappRecord> {
             let dapp_log = self.dapp_log.get_or_default();
             // there may be no records for the given dapp
             let mut result = None;
@@ -479,7 +492,12 @@ pub mod captcha {
             result.copied()
         }
 
-        fn dapp_rewind(&self, block_number: &BlockNumber, account: AccountId, dapp: &mut Dapp) -> Result<(), ()> {
+        fn dapp_rewind(
+            &self,
+            block_number: &BlockNumber,
+            account: AccountId,
+            dapp: &mut Dapp,
+        ) -> Result<(), ()> {
             let record = self.get_dapp_record_at(block_number, account);
             if let Some(record) = record {
                 // if the dapp has been deleted, return None
@@ -511,7 +529,7 @@ pub mod captcha {
             };
 
             // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
-            
+
             // retain the newer elements
             list.split_off(&threshold_block)
         }
