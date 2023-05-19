@@ -1723,7 +1723,7 @@ pub mod captcha {
                 set_caller(get_admin_account(0));
                 // now construct the contract instance
                 let mut contract =
-                    Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                    Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
                 // check the contract was created with the correct account
@@ -1741,7 +1741,7 @@ pub mod captcha {
                     212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
                     44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
                 ]));
-                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
                 // should construct successfully
             }
 
@@ -1753,7 +1753,7 @@ pub mod captcha {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
-                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
                 // should fail to construct and panic
             }
 
