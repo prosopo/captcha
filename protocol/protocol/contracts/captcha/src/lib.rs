@@ -403,23 +403,26 @@ pub mod captcha {
 
             // only providers can call this function
             let provider_lookup = self.get_provider(self.env().caller());
-            if provider_lookup.is_ok() {
-                let provider = provider_lookup.unwrap();
-                // only active providers can call this method
-                if provider.status != GovernanceStatus::Active {
-                    return err!(Error::NotAuthorised);
+            match provider_lookup {
+                Ok(_) => {
+                    let provider = provider_lookup.unwrap();
+                    // only active providers can call this method
+                    if provider.status != GovernanceStatus::Active {
+                        return err!(Error::NotAuthorised);
+                    }
+                    // else continue, provider is active and has been active from the previous block or before
+                    }
+                Err(_) => {
+                    // caller is not a provider
+                    // allow if they are an admin
+                    if self.admin != caller {
+                        // caller is not an admin and not a provider
+                        return err!(Error::NotAuthorised);
+                    }
+                    // else continue, caller is an admin
                 }
-                // else continue, provider is active and has been active from the previous block or before
-            } else {
-                // caller is not a provider
-                // allow if they are an admin
-                if self.admin != caller {
-                    // caller is not an admin and not a provider
-                    return err!(Error::NotAuthorised);
-                }
-                // else continue, caller is an admin
             }
-
+            
             let seed = self.seed;
             if seed.block == block_number {
                 // seed already updated for this block
