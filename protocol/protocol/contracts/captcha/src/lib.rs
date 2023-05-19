@@ -261,6 +261,7 @@ pub mod captcha {
         pub block: BlockNumber,       // the block number at which the provider status changed
         pub account: AccountId,       // the provider account
         pub deleted: bool,            // whether the provider has been deleted (by deregistering)
+        pub owner: AccountId,         // the owner of the dapp
     }
 
     // Contract storage
@@ -996,6 +997,7 @@ pub mod captcha {
                 block: self.env().block_number(),
                 account: contract,
                 deleted: false,
+                owner: new_dapp.owner,
             });
 
             Ok(())
@@ -1076,6 +1078,7 @@ pub mod captcha {
                 block: self.env().block_number(),
                 account: contract,
                 deleted: true,
+                owner: dapp.owner,
             });
 
             Ok(())
