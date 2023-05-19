@@ -222,6 +222,13 @@ pub mod captcha {
         pub payee: Payee,
     }
 
+    /// A seed for rng.
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct Seed {
+        pub value: u128,
+        pub block: BlockNumber,
+    }
     // Contract storage
     #[ink(storage)]
     pub struct Captcha {
