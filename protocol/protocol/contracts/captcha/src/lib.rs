@@ -1611,7 +1611,7 @@ pub mod prosopo {
                 set_caller(get_admin_account(0));
                 // now construct the contract instance
                 let mut contract =
-                    Prosopo::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                    Prosopo::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 10, 0, 1000);
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
                 // check the contract was created with the correct account
@@ -1629,7 +1629,7 @@ pub mod prosopo {
                     212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
                     44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
                 ]));
-                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 10, 0, 1000);
                 // should construct successfully
             }
 
@@ -1641,7 +1641,7 @@ pub mod prosopo {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
-                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Prosopo::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 10, 0, 1000);
                 // should fail to construct and panic
             }
 
@@ -1657,7 +1657,7 @@ pub mod prosopo {
                 assert_eq!(contract.dapp_stake_threshold, STAKE_THRESHOLD);
                 assert_eq!(contract.admin, get_admin_account(0));
                 assert_eq!(contract.max_user_history_len, 10);
-                assert_eq!(contract.max_user_history_age, 1000000);
+                assert_eq!(contract.max_user_history_age, 10);
                 assert_eq!(contract.min_num_active_providers, 0);
                 assert_eq!(contract.max_provider_fee, 1000);
 
