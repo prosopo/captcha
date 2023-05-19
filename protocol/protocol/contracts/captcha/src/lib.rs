@@ -51,7 +51,7 @@ pub mod captcha {
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
-
+    use scale_info::prelude::cmp::Ordering;
     use ink::prelude::vec;
     use ink::prelude::vec::Vec;
     use ink::storage::Lazy;
@@ -222,16 +222,46 @@ pub mod captcha {
         pub payee: Payee,
     }
 
+    pub trait BlockNumbered {
+        fn get_block_number(&self) -> BlockNumber;
+    }
+
+    impl Ord for dyn BlockNumbered {
+        fn cmp(&self, other: &Self) -> Ordering {
+            self.get_block_number().cmp(&other.get_block_number())
+        }
+    }
+
+    impl PartialOrd for dyn BlockNumbered {
+        fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Eq for dyn BlockNumbered {
+    }
+
+    impl PartialEq for dyn BlockNumbered {
+        fn eq(&self, other: &Self) -> bool {
+            self.get_block_number() == other.get_block_number()
+        }
+    }
+
     /// A seed for rng.
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, Ord, PartialOrd)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Seed {
         pub value: u128,
         pub block: BlockNumber,
     }
 
+    impl BlockNumbered for Seed {
+        fn get_block_number(&self) -> BlockNumber {
+            self.block
+        }
+    }
     /// Record of when a provider changes and at what block
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, Ord, PartialOrd)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderRecord {
         pub payee: Payee,             // the payee setting of the provider at this block
@@ -243,8 +273,14 @@ pub mod captcha {
         pub deleted: bool,            // whether the provider has been deleted (by deregistering)
     }
 
+    impl BlockNumbered for ProviderRecord {
+        fn get_block_number(&self) -> BlockNumber {
+            self.block
+        }
+    }
+
     /// Record of when a dapp changes and at what block
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, Ord, PartialOrd)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct DappRecord {
         pub payee: DappPayee,         // the payee setting for the dapp
@@ -255,6 +291,11 @@ pub mod captcha {
         pub owner: AccountId,         // the owner of the dapp
     }
 
+    impl BlockNumbered for DappRecord {
+        fn get_block_number(&self) -> BlockNumber {
+            self.block
+        }
+    }
     // Contract storage
     #[ink(storage)]
     pub struct Captcha {
