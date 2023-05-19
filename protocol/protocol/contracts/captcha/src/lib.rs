@@ -248,6 +248,9 @@ pub mod captcha {
         max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
+        seed: Seed, // the current seed for rng
+        seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
+        rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
     }
 
     /// The error types
@@ -323,6 +326,7 @@ pub mod captcha {
             max_user_history_age: BlockNumber,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
+            rewind_window: u8,
         ) -> Self {
             let instantiator = AccountId::from([
                 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
@@ -338,6 +342,7 @@ pub mod captcha {
                 max_user_history_age,
                 min_num_active_providers,
                 max_provider_fee,
+                rewind_window,
             )
         }
 
@@ -348,6 +353,7 @@ pub mod captcha {
             max_user_history_age: BlockNumber,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
+            rewind_window: u8,
         ) -> Self {
             Self {
                 admin: Self::env().caller(),
@@ -366,8 +372,13 @@ pub mod captcha {
                 captcha_solution_commitments: Default::default(),
                 min_num_active_providers,
                 max_provider_fee,
+                seed_log: Default::default(),
+                seed: Seed { value: 0, block: 0 },
+                rewind_window,
             }
         }
+
+
 
         /// Verify a signature. The payload is a blake128 hash of the payload wrapped in the Byte tag. E.g.
         ///     message="hello"
