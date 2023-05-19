@@ -956,8 +956,9 @@ pub mod captcha {
             if summary.correct + summary.incorrect == 0 {
                 summary.score = 0;
             } else {
+                // score is between 0 - 200, i.e. 0% - 100% in 0.5% increments
                 summary.score =
-                    ((summary.correct * 100) / (summary.correct + summary.incorrect)) as u8;
+                    ((summary.correct * 200) / (summary.correct + summary.incorrect)) as u8;
             }
 
             Ok(summary)
@@ -1049,6 +1050,7 @@ pub mod captcha {
 
         /// Checks if the user is a human (true) as they have a solution rate higher than a % threshold or a bot (false)
         /// Threshold is decided by the calling user
+        /// Threshold is between 0-200, i.e. 0-100% in 0.5% increments. E.g. 100 = 50%, 200 = 100%, 0 = 0%, 50 = 25%, etc.
         #[ink(message)]
         pub fn dapp_operator_is_human_user(
             &self,
@@ -3010,7 +3012,7 @@ pub mod captcha {
                 assert_eq!(commitment.status, CaptchaStatus::Disapproved);
 
                 // Now make sure that the dapp user does not pass the human test
-                let result = contract.dapp_operator_is_human_user(dapp_user_account, 80);
+                let result = contract.dapp_operator_is_human_user(dapp_user_account, 80 * 2);
                 assert!(!result.unwrap());
             }
 
