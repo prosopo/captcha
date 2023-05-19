@@ -239,6 +239,7 @@ pub mod captcha {
         pub block: BlockNumber,       // the block number at which the provider status changed
         pub account: AccountId,       // the provider account
         pub dataset_id: Hash,         // the dataset id
+        pub dataset_id_content: Hash, // the dataset id content
     }
 
     /// Record of when a dapp changes and at what block
