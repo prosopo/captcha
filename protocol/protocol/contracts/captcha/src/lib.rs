@@ -851,14 +851,14 @@ pub mod captcha {
             let mut log = self.provider_log.get_or_default();
             log.insert(0, record);
             self.prune_to_rewind_window(&mut log, |record| &record.block);
-            self.provider_log.set(&mut log);
+            self.provider_log.set(&log);
         }
 
         fn dapp_log(&mut self, record: DappRecord) {
             let mut log = self.dapp_log.get_or_default();
             log.insert(0, record);
             self.prune_to_rewind_window(&mut log, |record| &record.block);
-            self.dapp_log.set(&mut log);
+            self.dapp_log.set(&log);
         }
 
         fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
