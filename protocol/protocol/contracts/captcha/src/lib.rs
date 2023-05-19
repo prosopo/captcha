@@ -274,11 +274,11 @@ pub mod captcha {
         max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
-        seed: Seed,                // the current seed for rng
+        seed: Seed,                              // the current seed for rng
         seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
         provider_log: Lazy<Vec<ProviderRecord>>, // a log of changes to providers over the last n blocks
-        dapp_log: Lazy<Vec<DappRecord>>, // a log of changes to dapps over the last n blocks
+        dapp_log: Lazy<Vec<DappRecord>>,         // a log of changes to dapps over the last n blocks
     }
 
     /// The error types
