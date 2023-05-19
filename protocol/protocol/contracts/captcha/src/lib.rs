@@ -957,7 +957,7 @@ pub mod prosopo {
                 summary.score = 0;
             } else {
                 summary.score =
-                    ((summary.correct * 100) / (summary.correct + summary.incorrect)) as u8;
+                    (summary.correct * 100) / (summary.correct + summary.incorrect);
             }
 
             Ok(summary)
