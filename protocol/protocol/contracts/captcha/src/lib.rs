@@ -240,6 +240,7 @@ pub mod captcha {
         pub account: AccountId,       // the provider account
         pub dataset_id: Hash,         // the dataset id
         pub dataset_id_content: Hash, // the dataset id content
+        pub deleted: bool,            // whether the provider has been deleted (by deregistering)
     }
 
     /// Record of when a dapp changes and at what block
@@ -250,6 +251,7 @@ pub mod captcha {
         pub status: GovernanceStatus, // the status of the dapp at this block
         pub block: BlockNumber,       // the block number at which the provider status changed
         pub account: AccountId,       // the provider account
+        pub deleted: bool,            // whether the provider has been deleted (by deregistering)
     }
 
     // Contract storage
