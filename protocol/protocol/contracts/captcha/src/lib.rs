@@ -421,6 +421,17 @@ pub mod captcha {
             }
         }
 
+        fn prune_to_rewind_window<T>(&self, list: &mut Vec<T>, f: fn(&T) -> &BlockNumber) {
+            let rewind_window = self.rewind_window as BlockNumber;
+            let block_number = self.env().block_number();
+            let threshold_block: BlockNumber = if block_number > rewind_window {
+                block_number - rewind_window
+            } else {
+                0
+            };
+            self.prune(list, &threshold_block, f);
+        }
+
         /// Update the seed
         #[ink(message)]
         pub fn update_seed(&mut self) -> Result<bool, Error> {
@@ -461,13 +472,7 @@ pub mod captcha {
             // put the old seed into the log
             let mut seed_log = self.seed_log.get_or_default();
             // prune the seed log as old entries may have become too old and land outside the rewind_window window
-            let rewind_window = self.rewind_window as BlockNumber;
-            let oldest_seed_block: BlockNumber = if block_number > rewind_window {
-                block_number - rewind_window
-            } else {
-                0
-            };
-            self.prune(&mut seed_log, &oldest_seed_block, |seed| &seed.block);
+            self.prune_to_rewind_window(&mut seed_log, |seed| &seed.block);
 
             // add the current seed to the log
             seed_log.insert(0, seed);
