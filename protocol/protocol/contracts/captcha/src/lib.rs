@@ -671,6 +671,9 @@ pub mod captcha {
                 self.provider_state_insert(&new_provider, &provider_account)?;
             }
 
+            // update the seed
+            self.update_seed()?;
+
             Ok(())
         }
 
@@ -777,6 +780,9 @@ pub mod captcha {
                     .transfer(provider_account, balance)
                     .map_err(|_| Error::ContractTransferFailed)?;
             }
+
+            // update the seed
+            self.update_seed()?;
 
             Ok(())
         }
