@@ -26,7 +26,7 @@ jobs:
       - name: Rust formatting check
         run: |
           cd dev
-          npm run cli -- fmt -- --check --toolchain nightly --docker
+          npm run cli -- fmt --check --toolchain nightly --docker
           # take ownership of the build files so they can be cached
           npm run cli -- chown
 
@@ -53,7 +53,7 @@ jobs:
       - name: Clippy
         run: |
           cd dev
-          npm run cli -- clippy -- --toolchain nightly --docker
+          npm run cli -- clippy --toolchain nightly --docker
           # take ownership of the build files so they can be cached
           npm run cli -- chown
 
@@ -62,7 +62,7 @@ jobs:
         id: build
         run: | 
           cd dev
-          npm run cli -- build -- --release --toolchain nightly --docker
+          npm run cli -- build --release --toolchain nightly --docker
           # take ownership of the build files so they can be cached
           npm run cli -- chown
           
@@ -70,7 +70,7 @@ jobs:
       - name: Test contract
         run: |
           cd dev
-          RUST_BACKTRACE=1 npm run cli -- test -- --toolchain nightly --docker
+          RUST_BACKTRACE=1 npm run cli -- test --toolchain nightly --docker
           result=$?
           # take ownership of the build files so they can be cached
           npm run cli -- chown
