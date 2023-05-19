@@ -412,7 +412,7 @@ pub mod captcha {
             let seed_log = self.seed_log.get_or_default();
             // loop through log from most recent to oldest
             for (block, seed) in seed_log.iter().rev() {
-                if block < block_number {
+                if block <= block_number {
                     // update result if within block threshold
                     result = seed;
                 } else {
@@ -429,7 +429,7 @@ pub mod captcha {
             let mut result = None;
             // loop through log from most recent to oldest
             for (block, record) in provider_log.iter().rev() {
-                if block < block_number {
+                if block <= block_number {
                     // block is within threshold, check if account matches
                     if record.account == account {
                         // found record for provider account within the block threshold
@@ -466,7 +466,7 @@ pub mod captcha {
             let mut result = None;
             // loop through log from most recent to oldest
             for (block, record) in dapp_log.iter().rev() {
-                if block < block_number {
+                if block <= block_number {
                     // block is within threshold, check if account matches
                     if record.account == account {
                         // found record for dapp account within the block threshold
