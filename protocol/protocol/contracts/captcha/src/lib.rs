@@ -451,7 +451,7 @@ pub mod captcha {
             }
         }
 
-        fn prune_to_rewind_window<T: BlockNumbered + Ord>(&self, list: &mut BTreeSet<T>) -> BTreeSet<T> {
+        fn prune_to_rewind_window<T>(&self, list: &mut BTreeMap<BlockNumber, T>) -> BTreeMap<BlockNumber, T> {
             if list.is_empty() {
                 return Default::default();
             }
@@ -465,14 +465,7 @@ pub mod captcha {
             };
 
             // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
-
-            // have to specify the threshold as an element of the list
-            // get the first element as a template
-            let mut threshold_element = list.first().unwrap();
-            // update the block number to be the threshold
-            threshold_element.set_block_number(threshold_block);
-            // and split using the threshold element (note other fields in the element are ignored when splitting, the impl only cares about the block number)
-            let within_threshold = list.split_off(&threshold_element);
+            let within_threshold = list.split_off(&threshold_block);
             // retain the newer elements
             return within_threshold;
         }
