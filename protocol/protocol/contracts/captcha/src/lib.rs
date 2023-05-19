@@ -1117,6 +1117,9 @@ pub mod captcha {
             self.record_commitment(commit.user, commit.id, commit);
 
             self.pay_fee(&caller, &commit.dapp)?;
+            
+            // update the seed
+            self.update_seed()?;
 
             Ok(())
         }
