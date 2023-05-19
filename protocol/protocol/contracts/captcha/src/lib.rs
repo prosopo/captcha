@@ -407,6 +407,95 @@ pub mod captcha {
             }
         }
 
+        fn get_seed_at(&self, block_number: &BlockNumber) -> Seed {
+            let mut result = &self.seed;
+            let seed_log = self.seed_log.get_or_default();
+            // loop through log from most recent to oldest
+            for (block, seed) in seed_log.iter().rev() {
+                if block < block_number {
+                    // update result if within block threshold
+                    result = seed;
+                } else {
+                    // hit block threshold, stop looping
+                    break;
+                }
+            }
+            *result
+        }
+
+        fn get_provider_record_at(&self, block_number: &BlockNumber, account: AccountId) -> Option<ProviderRecord> {
+            let provider_log = self.provider_log.get_or_default();
+            // there may be no records for the given provider
+            let mut result = None;
+            // loop through log from most recent to oldest
+            for (block, record) in provider_log.iter().rev() {
+                if block < block_number {
+                    // block is within threshold, check if account matches
+                    if record.account == account {
+                        // found record for provider account within the block threshold
+                        result = Some(record);
+                    }
+                } else {
+                    // hit block threshold, stop looping
+                    break;
+                }
+            }
+            result.copied()
+        }
+
+        fn get_provider_at(&self, block_number: &BlockNumber, account: AccountId) -> Result<Option<Provider>, Error> {
+            let mut provider = self.get_provider(account)?;
+            let record = self.get_provider_record_at(block_number, account);
+            if let Some(record) = record {
+                // if the provider has been deleted, return None
+                if record.deleted {
+                    return Ok(None);
+                }
+                // else revert the provider to the state it was in at the given block
+                provider.status = record.status;
+                provider.dataset_id = record.dataset_id;
+                provider.dataset_id_content = record.dataset_id_content;
+                provider.payee = record.payee;
+            }
+            Ok(Some(provider))
+        }
+
+        fn get_dapp_record_at(&self, block_number: &BlockNumber, account: AccountId) -> Option<DappRecord> {
+            let dapp_log = self.dapp_log.get_or_default();
+            // there may be no records for the given dapp
+            let mut result = None;
+            // loop through log from most recent to oldest
+            for (block, record) in dapp_log.iter().rev() {
+                if block < block_number {
+                    // block is within threshold, check if account matches
+                    if record.account == account {
+                        // found record for dapp account within the block threshold
+                        result = Some(record);
+                    }
+                } else {
+                    // hit block threshold, stop looping
+                    break;
+                }
+            }
+            result.copied()
+        }
+
+        fn get_dapp_at(&self, block_number: &BlockNumber, account: AccountId) -> Result<Option<Dapp>, Error> {
+            let mut dapp = self.get_dapp(account)?;
+            let record = self.get_dapp_record_at(block_number, account);
+            if let Some(record) = record {
+                // if the dapp has been deleted, return None
+                if record.deleted {
+                    return Ok(None);
+                }
+                // else revert the dapp to the state it was in at the given block
+                dapp.status = record.status;
+                dapp.payee = record.payee;
+                dapp.owner = record.owner;
+            }
+            Ok(Some(dapp))
+        }
+
         fn prune_to_rewind_window<T>(
             &self,
             list: &mut BTreeMap<BlockNumber, T>,
