@@ -398,8 +398,17 @@ pub mod captcha {
         /// Update the seed
         #[ink(message)]
         pub fn update_seed(&mut self) -> Result<bool, Error> {
-            let caller = self.env().caller();
             let block_number = self.env().block_number();
+
+            let seed = self.seed;
+            if seed.block == block_number {
+                // seed already updated for this block
+                // disallow updating the seed for the same block twice to avoid spamming
+                return Ok(false);
+            }
+            // else seed has not been updated for the current block
+
+            let caller = self.env().caller();
 
             // only providers can call this function
             let provider_lookup = self.get_provider(self.env().caller());
@@ -422,14 +431,6 @@ pub mod captcha {
                     // else continue, caller is an admin
                 }
             }
-
-            let seed = self.seed;
-            if seed.block == block_number {
-                // seed already updated for this block
-                // disallow updating the seed for the same block twice to avoid spamming
-                return Ok(false);
-            }
-            // else seed has not been updated for the current block
 
             // put the old seed into the log
             let mut seed_log = self.seed_log.get_or_default();
