@@ -316,10 +316,10 @@ pub mod captcha {
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
         seed: Seed,                              // the current seed for rng
-        seed_log: Lazy<Vec<Seed>>, // the history of seeds for rng, stored newest first
+        seed_log: Lazy<BTreeSet<Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
-        provider_log: Lazy<Vec<ProviderRecord>>, // a log of changes to providers over the last n blocks
-        dapp_log: Lazy<Vec<DappRecord>>,         // a log of changes to dapps over the last n blocks
+        provider_log: Lazy<BTreeSet<ProviderRecord>>, // a log of changes to providers over the last n blocks
+        dapp_log: Lazy<BTreeSet<DappRecord>>,         // a log of changes to dapps over the last n blocks
     }
 
     /// The error types
