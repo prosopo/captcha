@@ -424,9 +424,9 @@ pub mod captcha {
             };
 
             // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
-            let within_threshold = list.split_off(&threshold_block);
+            
             // retain the newer elements
-            return within_threshold;
+            list.split_off(&threshold_block)
         }
 
         /// Update the seed
