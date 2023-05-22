@@ -175,6 +175,28 @@ export async function processArgs(args: string[]) {
     await yargs
         .usage('Usage: $0 [global options] <command> [options]')
         .command(
+            'chown',
+            'Take ownership of any contract files/build artifacts post docker',
+            (yargs) => {
+                return yargs
+            },
+            async (argv) => {
+                await exec(`cd ${repoDir} sudo chown -R $(whoami):$(whoami) ../target || true`)
+            },
+            []
+        )
+        .command(
+            'clean',
+            'Clean build artifacts',
+            (yargs) => {
+                return yargs
+            },
+            async (argv) => {
+                await exec(`cd ${repoDir}/dev && npm run cli -- chown && rm -rf ../target`)
+            },
+            []
+        )
+        .command(
             'expand',
             'Expand the contract (processing all macros, etc)',
             (yargs) => {
