@@ -424,7 +424,7 @@ pub mod captcha {
             };
 
             // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
-            
+
             // retain the newer elements
             list.split_off(&threshold_block)
         }
