@@ -412,29 +412,60 @@ pub mod captcha {
         /// Rewind the providers to a given block
         /// 
         /// Returns the active providers mapped by their payee type. The values are housed in a set to ensure account ids are sorted. The account ids may become out of order when applying changes from a past block, hence the need to store them in a stored fashion.
-        fn get_active_providers_at(&self, block: &BlockNumber) -> Result<BTreeMap<Payee, BTreeSet<AccountId>>, Error> {
-            // take all of the current active providers and put them into a map by their payee
-            let mut active_providers: BTreeMap<Payee, BTreeSet<AccountId>> = BTreeMap::new();
-
+        fn get_active_providers_at(&self, block: BlockNumber) -> BTreeMap<Payee, BTreeSet<AccountId>> {
+            // make a mapping of payee to provider accounts
+            let mut result: BTreeMap<Payee, BTreeSet<AccountId>> = BTreeMap::new();
             for payee in self.get_payees().iter() {
-                let mut group = BTreeSet::new();
-                let providers = self.provider_accounts.get(ProviderState {
+                result.insert(*payee, BTreeSet::new());
+            }
+            // go through the rewind window from the target block to the current block looking for the version of provider closest to the target block
+            // we want to get the version of provider closest to the target block. E.g. if we have versions of provider for blocks 7, 11 and 19 and the target block is 9, we want the version at block 11. The version at block 7 is too early so we ignore it. The version at block 19 is too late so we ignore it. The version at block 11 is the version which was the state of the provider in block 9.
+            let current_block = self.env().block_number();
+            let mut found: BTreeSet<AccountId> = BTreeSet::new();
+            for at_block in block..=current_block {
+                // get the list of provider accounts that changed in this block
+                let mut accounts = self.provider_account_log.get(&at_block).unwrap_or_default();
+                // remove any accounts we've already found a version for
+                accounts.retain(|account| !found.contains(account));
+                // for each provider which changed
+                for account in accounts.iter() {
+                    // get the provider at this block
+                    let record = self.provider_log.get(&AccountBlockId {
+                        account: *account,
+                        block: at_block,
+                    }).unwrap();
+                    if let Some(provider) = record.provider {
+                        // use the provider status to put it into the right group by payee
+                        if provider.status == GovernanceStatus::Active {
+                            result.get_mut(&provider.payee).unwrap().insert(*account);
+                        }
+                    } // else provider was deleted, so do not add to a group
+                    // tick off that we've found a version of this provider for the block target
+                    found.insert(*account);
+                }
+            }
+
+            // any provider accounts which have not been found in the logs need to use the current version of the provider
+            for payee in self.get_payees().iter() {
+                let mut accounts = self.provider_accounts.get(ProviderState {
                     payee: *payee,
                     status: GovernanceStatus::Active,
                 }).unwrap_or_default();
-                group.extend(providers.iter());
-                active_providers.insert(*payee, group);
+                // remove any accounts we've already found a version for
+                accounts.retain(|account| !found.contains(account));
+                for account in accounts.iter() {
+                    // else use the current version of this provider
+                    let provider = self.providers.get(account).unwrap();
+                    if provider.status == GovernanceStatus::Active {
+                        // now we have found a version of the provider from the current block
+                        result.get_mut(&provider.payee).unwrap().insert(*account);
+                    }
+                }
             }
 
-            // go back through the provider change log and apply changes to the active providers up to the given block
-            let start = self.get_rewind_window_start();
-            for at_block in (start..=*block).rev() {
-                // get the list of providers which changed at this block
-                // let changes = self.provider_change_log.get(&at_block).unwrap_or_default();
-                
-            }
+            // at this point, all providers which we active between the target block and the current block have been found and added to the found map. Likewise, all providers which were active and have stayed active, thus having no log records, have also been added.
 
-            Ok(active_providers)
+            return result;
         }
 
         /// Get the block at which the rewind window begins
