@@ -3,6 +3,8 @@ import numpy as np
 import random
 import string
 import os
+from skimage import transform
+from skimage.util import img_as_ubyte
 
 
 class ImageProcessor:
@@ -42,7 +44,7 @@ class ImageProcessor:
             random.choices(string.ascii_uppercase + string.digits, k=5)
         )
 
-        # Estimate font size as 50% of the image height
+        # Estimate font size
         font_size = self.image.height // 3
         font = ImageFont.truetype(self.font_path, font_size)
 
@@ -57,7 +59,7 @@ class ImageProcessor:
             text_image.height - height
         ) / 3
 
-        text_draw.text((x_position, y_position), random_word, (0, 0, 0, 180), font=font)
+        text_draw.text((x_position, y_position), random_word, (0, 0, 0, 126), font=font)
 
         # Randomly rotate the text
         angle = random.randint(-45, 45)
@@ -104,6 +106,33 @@ class ImageProcessor:
         blurred_image = self.image.filter(ImageFilter.GaussianBlur(radius=2))
         self.image = ImageOps.autocontrast(blurred_image.convert("RGB"), cutoff=1)
 
+    def multiple_swirls(self):
+        # Convert the PIL image to a NumPy array
+        image_array = np.array(self.image)
+
+        # Number of swirls (customize as needed)
+        num_swirls = 5
+
+        # Loop through multiple centres
+        for _ in range(num_swirls):
+            # Randomly select a centre
+            y_center, x_center = np.random.randint(0, image_array.shape[0]), np.random.randint(0, image_array.shape[1])
+
+            # Swirl transformation parameters
+            rotation = np.random.rand() * np.pi
+            strength = 10 * np.random.rand()
+            radius = min(image_array.shape[0], image_array.shape[1]) / (2. * np.random.rand() + 2.)
+
+            # Apply the swirl transformation to the coordinates
+            image_array = transform.swirl(image_array, center=(y_center, x_center), rotation=rotation, strength=strength, radius=radius)
+
+        # Warp the image using these coordinates
+        swirled_image_array = Image.fromarray(img_as_ubyte(image_array))
+
+        # Convert the array back to a PIL image and assign it to self.image
+        self.image = Image.blend(self.image, swirled_image_array, alpha=0.2)
+
+
     def get_filename_without_extension(self, filepath):
         return os.path.splitext(os.path.basename(filepath))[0]
 
@@ -113,10 +142,13 @@ class ImageProcessor:
 
             self.add_noise()
             self.add_text()
+            self.multiple_swirls()
             self.distort_image()
             self.blur_and_contrast()
 
-            filename = f"{self.get_filename_without_extension(image_path)}_processed.png"
-            
+            filename = (
+                f"{self.get_filename_without_extension(image_path)}_processed.png"
+            )
+
             output_path = os.path.join(output_folder, filename)
             self.image.save(output_path)
