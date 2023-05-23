@@ -407,6 +407,34 @@ pub mod captcha {
             }
         }
 
+        /// Rewind the providers to a given block
+        /// 
+        /// Returns the active providers mapped by their payee type. The values are housed in a set to ensure account ids are sorted. The account ids may become out of order when applying changes from a past block, hence the need to store them in a stored fashion.
+        fn get_active_providers_at(&self, block: &BlockNumber) -> Result<BTreeMap<Payee, BTreeSet<AccountId>>, Error> {
+            // take all of the current active providers and put them into a map by their payee
+            let mut active_providers: BTreeMap<Payee, BTreeSet<AccountId>> = BTreeMap::new();
+
+            for payee in self.get_payees().iter() {
+                let mut group = BTreeSet::new();
+                let providers = self.provider_accounts.get(ProviderState {
+                    payee: *payee,
+                    status: GovernanceStatus::Active,
+                }).unwrap_or_default();
+                group.extend(providers.iter());
+                active_providers.insert(*payee, group);
+            }
+
+            // go back through the provider change log and apply changes to the active providers up to the given block
+            let start = self.get_rewind_window_start();
+            for at_block in (start..=*block).rev() {
+                // get the list of providers which changed at this block
+                let changes = self.provider_change_log.get(&at_block).unwrap_or_default();
+                
+            }
+
+            Ok(active_providers)
+        }
+
         /// Get the block at which the rewind window begins
         fn get_rewind_window_start(&self) -> BlockNumber {
             let block = self.env().block_number();
