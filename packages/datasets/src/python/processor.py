@@ -31,7 +31,6 @@ class ImageProcessor:
         return np.array(np.dot(np.linalg.inv(A.T * A) * A.T, B)).reshape(8)
 
     def add_noise(self):
-        # Add gaussian noise
         np_image = np.array(self.image)
         noisy_image = np_image + np.random.normal(0, 0.2, np_image.shape)
 
@@ -65,10 +64,7 @@ class ImageProcessor:
         angle = random.randint(-45, 45)
         rotated_text_image = text_image.rotate(angle, resample=Image.BICUBIC, expand=1)
 
-        # Create an RGBA version of the main image and paste the text
         self.image = self.image.convert("RGBA")
-
-        # Paste the rotated text onto the main image
         self.image.paste(rotated_text_image, (0, 0), rotated_text_image)
 
     def distort_image(self) -> None:
@@ -110,7 +106,6 @@ class ImageProcessor:
         # Convert the PIL image to a NumPy array
         image_array = np.array(self.image)
 
-        # Number of swirls (customize as needed)
         num_swirls = 5
 
         # Loop through multiple centres
@@ -122,14 +117,9 @@ class ImageProcessor:
             rotation = np.random.rand() * np.pi
             strength = 10 * np.random.rand()
             radius = min(image_array.shape[0], image_array.shape[1]) / (2. * np.random.rand() + 2.)
-
-            # Apply the swirl transformation to the coordinates
             image_array = transform.swirl(image_array, center=(y_center, x_center), rotation=rotation, strength=strength, radius=radius)
 
-        # Warp the image using these coordinates
         swirled_image_array = Image.fromarray(img_as_ubyte(image_array))
-
-        # Convert the array back to a PIL image and assign it to self.image
         self.image = Image.blend(self.image, swirled_image_array, alpha=0.2)
 
 
