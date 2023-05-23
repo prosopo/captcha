@@ -459,7 +459,7 @@ pub mod captcha {
                 }
             }
 
-            result.dapp.clone().ok_or(Error::DappDoesNotExist)
+            result.dapp.ok_or(Error::DappDoesNotExist)
         }
 
         fn get_seed_at(&self, block_number: &BlockNumber) -> Seed {
