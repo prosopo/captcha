@@ -272,11 +272,11 @@ pub mod captcha {
         seed: Seed,                                  // the current seed for rng
         seed_log: Lazy<BTreeMap<BlockNumber, Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
-        provider_change_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
-        provider_logs: Mapping<AccountBlockId, ProviderRecord>, // log of provider changes for a given account
-        provider_logs_last_prune_block: BlockNumber, // the last block that the provider logs were pruned
-        dapp_change_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
-        dapp_logs: Mapping<AccountId, BTreeMap<BlockNumber, DappRecord>>, // log of dapp changes for a given account
+        provider_account_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
+        provider_log: Mapping<AccountBlockId, ProviderRecord>, // log of provider changes for a given account
+        dapp_account_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
+        dapp_log: Mapping<AccountBlockId, DappRecord>, // log of dapp changes for a given account
+        logs_pruned_at: BlockNumber, // the last block that the provider logs were pruned
     }
 
     /// The error types
@@ -401,11 +401,11 @@ pub mod captcha {
                 seed_log: Default::default(),
                 seed: Seed { value: 0, block: 0 },
                 rewind_window,
-                provider_change_log: Default::default(),
-                provider_logs: Default::default(),
-                dapp_change_log: Default::default(),
-                dapp_logs: Default::default(),
-                provider_logs_last_prune_block: 0,
+                provider_account_log: Default::default(),
+                provider_log: Default::default(),
+                dapp_account_log: Default::default(),
+                dapp_log: Default::default(),
+                logs_pruned_at: 0,
             }
         }
 
@@ -430,7 +430,7 @@ pub mod captcha {
             let start = self.get_rewind_window_start();
             for at_block in (start..=*block).rev() {
                 // get the list of providers which changed at this block
-                let changes = self.provider_change_log.get(&at_block).unwrap_or_default();
+                // let changes = self.provider_change_log.get(&at_block).unwrap_or_default();
                 
             }
 
@@ -457,7 +457,7 @@ pub mod captcha {
 
             // go back through the records in newest to oldest order
             for at_block in (block..=current_block).rev() {
-                let record = self.provider_logs.get(AccountBlockId {
+                let record = self.provider_log.get(AccountBlockId {
                     account,
                     block: at_block,
                 });
@@ -470,22 +470,22 @@ pub mod captcha {
             result.provider.clone().ok_or(Error::ProviderDoesNotExist)
         }
 
-        fn get_dapp_at(&self, account: AccountId, block: &BlockNumber) -> Result<Dapp, Error> {
-            let log = self.dapp_logs.get(&account).unwrap_or_default();
+        fn get_dapp_at(&self, account: AccountId, block: BlockNumber) -> Result<Dapp, Error> {
             // start with the current state of the provider as the most recent record
-            let mut result: &DappRecord = &DappRecord {
+            let mut result: DappRecord = DappRecord {
                 dapp: self.dapps.get(&account)
             };
+            let current_block = self.env().block_number();
 
             // go back through the records in newest to oldest order
-            for (at_block, record) in log.iter().rev() {
-                // find the record nearest to the block we're looking for
-                if at_block <= block {
-                    // found a record of the provider
+            for at_block in (block..=current_block).rev() {
+                let record = self.dapp_log.get(AccountBlockId {
+                    account,
+                    block: at_block,
+                });
+                if let Some(record) = record {
+                    // found a record of the dapp
                     result = record;
-                } else {
-                    // stop once we reach a record older than the block we're looking for
-                    break;
                 }
             }
 
@@ -799,7 +799,7 @@ pub mod captcha {
             self.update_seed()?;
 
             // record the old provider in the log
-            self.log_provider(provider_account, Some(old_provider));
+            self.log_provider(provider_account, if new { None } else { Some(old_provider) });
 
             Ok(())
         }
@@ -918,35 +918,58 @@ pub mod captcha {
         }
 
         fn log_provider(&mut self, account: AccountId, provider: Option<Provider>) {
-            self.prune_provider_logs(account);
-            self.provider_logs.insert(AccountBlockId {
+            // prune the logs before adding to them
+            self.prune_logs();
+            // add the provider record
+            self.provider_log.insert(AccountBlockId {
                 account,
                 block: self.env().block_number(),
             }, &ProviderRecord {
                 provider,
             });
+            // record that this account has changed
+            let mut group = self.provider_account_log.get(self.env().block_number()).unwrap_or_default();
+            group.insert(account);
+            self.provider_account_log.insert(self.env().block_number(), &group);
         }
 
-        fn prune_provider_logs(&mut self, account: AccountId) {
-            let last = self.provider_logs_last_prune_block;
+        fn log_dapp(&mut self, account: AccountId, dapp: Option<Dapp>) {
+            // prune the logs before adding to them
+            self.prune_logs();
+            // add the dapp record
+            self.dapp_log.insert(AccountBlockId {
+                account,
+                block: self.env().block_number(),
+            }, &DappRecord {
+                dapp,
+            });
+            // record that this account has changed
+            let mut group = self.dapp_account_log.get(self.env().block_number()).unwrap_or_default();
+            group.insert(account);
+            self.dapp_account_log.insert(self.env().block_number(), &group);
+        }
+
+        fn prune_logs(&mut self) {
+            let last = self.logs_pruned_at;
             let start = self.get_rewind_window_start();
             // for all records which land outside the rewind window, remove them. E.g. between the last prune and the start of the rewind window
             for block in last..start {
-                self.provider_logs.remove(AccountBlockId {
-                    account,
-                    block,
-                });
+                let provider_accounts = self.provider_account_log.take(block).unwrap_or_default();
+                let dapp_accounts = self.dapp_account_log.take(block).unwrap_or_default();
+                for account in provider_accounts {
+                    self.provider_log.remove(AccountBlockId {
+                        account,
+                        block,
+                    });
+                }
+                for account in dapp_accounts {
+                    self.dapp_log.remove(AccountBlockId {
+                        account,
+                        block,
+                    });
+                }
             }
-            self.provider_logs_last_prune_block = self.env().block_number();
-        }
-
-        fn log_dapp(&mut self, account: &AccountId, dapp: Option<Dapp>) {
-            let mut log = self.dapp_logs.get(account).unwrap_or_default();
-            log.insert(self.env().block_number(), DappRecord {
-                dapp,
-            });
-            log = self.prune_to_rewind_window(&mut log);
-            self.dapp_logs.insert(account, &log);
+            self.logs_pruned_at = self.env().block_number();
         }
 
         fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
@@ -1075,8 +1098,8 @@ pub mod captcha {
             // update the dapp in the mapping
             self.dapps.insert(contract, &new_dapp);
 
-            // update the log
-            self.log_dapp(&contract, Some(new_dapp));
+            // update the log with the old dapp
+            self.log_dapp(contract, if new { None } else { Some(old_dapp) });
 
             Ok(())
         }
@@ -1150,7 +1173,7 @@ pub mod captcha {
             lazy!(self.dapp_accounts, remove, &contract);
 
             // update the log
-            self.log_dapp(&contract, None);
+            self.log_dapp(contract, None);
 
             Ok(())
         }
