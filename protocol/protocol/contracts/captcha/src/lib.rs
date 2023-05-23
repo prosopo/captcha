@@ -409,6 +409,28 @@ pub mod captcha {
             }
         }
 
+        /// Get a seed for a user and dapp at a block
+        fn get_seed_at_user_dapp(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> u128 {
+            let seed = self.get_seed_at(&block);
+            
+            // hash the account, block and seed
+            let seed_value_bytes: [u8; 16] = seed.to_le_bytes();
+            let block_number_bytes: [u8; 4] = block.to_le_bytes();
+            let user_account_bytes: &[u8; 32] = user_account.as_ref();
+            let dapp_account_bytes: &[u8; 32] = dapp_account.as_ref();
+            // pack all the data into a single byte array
+            let mut bytes: [u8; 16 + 4 + 32 + 32] = [0u8; 16 + 4 + 32 + 32];
+            bytes[0..16].copy_from_slice(&seed_value_bytes[..]);
+            bytes[16..20].copy_from_slice(&block_number_bytes[..]);
+            bytes[20..52].copy_from_slice(&user_account_bytes[..]);
+            bytes[52..74].copy_from_slice(&dapp_account_bytes[..]);
+            // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
+            let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
+            <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
+            // the random number can be derived from the hash
+            u128::from_le_bytes(hash_output)
+        }
+
         /// Rewind the providers to a given block
         /// 
         /// Returns the active providers mapped by their payee type. The values are housed in a set to ensure account ids are sorted. The account ids may become out of order when applying changes from a past block, hence the need to store them in a stored fashion.
@@ -523,20 +545,24 @@ pub mod captcha {
             result.dapp.ok_or(Error::DappDoesNotExist)
         }
 
-        fn get_seed_at(&self, block_number: &BlockNumber) -> Seed {
-            let mut result = &self.seed;
+        fn get_seed_at(&self, block_number: &BlockNumber) -> u128 {
+            let mut result = self.seed.value;
             let seed_log = self.seed_log.get_or_default();
             // loop through log from most recent to oldest
             for (block, seed) in seed_log.iter().rev() {
                 if block <= block_number {
                     // update result if within block threshold
-                    result = seed;
+                    result = seed.value;
                 } else {
                     // hit block threshold, stop looping
                     break;
                 }
             }
-            *result
+            result
+        }
+
+        fn get_seed(&self) -> u128 {
+            self.seed.value
         }
 
         fn prune_to_rewind_window<T>(
