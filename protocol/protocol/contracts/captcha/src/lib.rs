@@ -606,22 +606,6 @@ pub mod captcha {
             self.seed.value
         }
 
-        fn prune_to_rewind_window<T>(
-            &self,
-            list: &mut BTreeMap<BlockNumber, T>,
-        ) -> BTreeMap<BlockNumber, T> {
-            if list.is_empty() {
-                return Default::default();
-            }
-
-            let start: BlockNumber = self.get_rewind_window_start();
-
-            // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
-
-            // retain the newer elements
-            list.split_off(&start)
-        }
-
         /// Update the seed
         #[ink(message)]
         pub fn update_seed(&mut self) -> Result<bool, Error> {
@@ -662,7 +646,9 @@ pub mod captcha {
             // put the old seed into the log
             let mut seed_log = self.seed_log.get_or_default();
             // prune the seed log as old entries may have become too old and land outside the rewind_window window
-            seed_log = self.prune_to_rewind_window(&mut seed_log);
+            // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
+            // retain the newer elements
+            seed_log = seed_log.split_off(&self.get_rewind_window_start());
 
             // add the current seed to the log
             seed_log.insert(seed.block, seed);
