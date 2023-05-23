@@ -409,6 +409,35 @@ pub mod captcha {
             }
         }
 
+
+        /// Get a random active provider at a block given a user and dapp
+        fn get_random_active_provider_at(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> Result<AccountId, Error> {
+            // check if the dapp was active at the given block
+            let dapp = self.get_dapp_at(dapp_account, block)?;
+            if dapp.status != GovernanceStatus::Active {
+                return err!(Error::DappInactive);
+            }
+            // get the seed which is based on the user, block, dapp and seed at the block
+            let seed = self.get_seed_at_user_dapp(user_account, dapp_account, block);
+            // get the providers which were active at the block
+            let active_providers = self.get_active_providers_at(block);
+
+            // pick a random provider from the active providers
+            let mut active_provider_count = 0 as u128;
+            for (_, group) in active_providers.iter() {
+                active_provider_count += group.len() as u128;
+            }
+            let mut index = seed % active_provider_count;
+            for (_, group) in active_providers.iter() {
+                if index < group.len() as u128 {
+                    let account = group.iter().nth(index as usize).unwrap();
+                    return Ok(*account);
+                }
+                index -= group.len() as u128;
+            }
+            return err!(Error::NoActiveProviders);
+        }
+
         /// Get a seed for a user and dapp at a block
         fn get_seed_at_user_dapp(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> u128 {
             let seed = self.get_seed_at(&block);
