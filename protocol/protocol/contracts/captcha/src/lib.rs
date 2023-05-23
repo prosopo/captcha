@@ -231,23 +231,17 @@ pub mod captcha {
     }
 
     /// Record of when a provider changes and at what block
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderRecord {
-        pub block: BlockNumber, // the block number when the record was created
-        pub provider: Provider, // the provider at the block
-        pub deleted: bool, // whether the provider has been deleted (by deregistering)
+        pub provider: Option<Provider>, // the provider snapshot. None if deleted.
     }
-
     /// Record of when a dapp changes and at what block
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct DappRecord {
-        pub block: BlockNumber, // the block number when the record was created
-        pub dapp: Dapp, // the dapp at the block
-        pub deleted: bool, // whether the dapp has been deleted (by deregistering)
+        pub dapp: Option<Dapp>, // the dapp snapshot. None if deleted.
     }
-
     /// Record of when a dapp changes and at what block
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
@@ -279,7 +273,9 @@ pub mod captcha {
         seed_log: Lazy<BTreeMap<BlockNumber, Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
         provider_change_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
-        provider_logs: Mapping<AccountBlockId, Provider>, // log of changes to provider for a given account at a given block
+        provider_logs: Mapping<AccountId, BTreeMap<BlockNumber, ProviderRecord>>, // log of provider changes for a given account
+        dapp_change_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
+        dapp_logs: Mapping<AccountId, BTreeMap<BlockNumber, DappRecord>>, // log of dapp changes for a given account
     }
 
     /// The error types
@@ -406,22 +402,64 @@ pub mod captcha {
                 rewind_window,
                 provider_change_log: Default::default(),
                 provider_logs: Default::default(),
+                dapp_change_log: Default::default(),
+                dapp_logs: Default::default(),
             }
         }
 
-        /// Apply a dapp record to a dapp, reverting it to the state at the time of the record
-        fn apply_dapp_record(&self, record: &DappRecord, &mut dapp: Dapp) {
-            dapp.status = record.status;
-            dapp.payee = record.payee;
-            dapp.owner = record.owner;
+        /// Get the block at which the rewind window begins
+        fn get_rewind_window_start(&self) -> BlockNumber {
+            let block = self.env().block_number();
+            let window = self.rewind_window as BlockNumber;
+            if block > window {
+                block - window
+            } else {
+                0
+            }
         }
 
-        /// Apply a provider record to a provider, reverting it to the state at the time of the record
-        fn apply_provider_record(&self, record: &ProviderRecord, &mut provider: &Provider) {
-            provider.status = record.status;
-            provider.payee = record.payee;
-            provider.dataset_id = record.dataset_id;
-            provider.dataset_id_content = record.dataset_id_content;
+        fn get_provider_at(&self, account: AccountId, block: &BlockNumber) -> Result<Provider, Error> {
+            let log = self.provider_logs.get(&account).unwrap_or_default();
+            // start with the current state of the provider as the most recent record
+            let mut result: &ProviderRecord = &ProviderRecord {
+                provider: self.providers.get(&account)
+            };
+
+            // go back through the records in newest to oldest order
+            for (at, record) in log.iter().rev() {
+                // find the record nearest to the block we're looking for
+                if at <= block {
+                    // found a record of the provider
+                    result = record;
+                } else {
+                    // stop once we reach a record older than the block we're looking for
+                    break;
+                }
+            }
+
+            result.provider.clone().ok_or(Error::ProviderDoesNotExist)
+        }
+
+        fn get_dapp_at(&self, account: AccountId, block: &BlockNumber) -> Result<Dapp, Error> {
+            let log = self.dapp_logs.get(&account).unwrap_or_default();
+            // start with the current state of the provider as the most recent record
+            let mut result: &DappRecord = &DappRecord {
+                dapp: self.dapps.get(&account)
+            };
+
+            // go back through the records in newest to oldest order
+            for (at, record) in log.iter().rev() {
+                // find the record nearest to the block we're looking for
+                if at <= block {
+                    // found a record of the provider
+                    result = record;
+                } else {
+                    // stop once we reach a record older than the block we're looking for
+                    break;
+                }
+            }
+
+            result.dapp.clone().ok_or(Error::DappDoesNotExist)
         }
 
         fn get_seed_at(&self, block_number: &BlockNumber) -> Seed {
@@ -440,90 +478,6 @@ pub mod captcha {
             *result
         }
 
-        fn get_provider_record_at(
-            &self,
-            block_number: &BlockNumber,
-            account: AccountId,
-        ) -> Option<ProviderRecord> {
-            let provider_log = self.provider_log.get_or_default();
-            // there may be no records for the given provider
-            let mut result = None;
-            // loop through log from most recent to oldest
-            for (block, record) in provider_log.iter().rev() {
-                if block <= block_number {
-                    // block is within threshold, check if account matches
-                    if record.account == account {
-                        // found record for provider account within the block threshold
-                        result = Some(record);
-                    }
-                } else {
-                    // hit block threshold, stop looping
-                    break;
-                }
-            }
-            result.copied()
-        }
-
-        fn provider_rewind(
-            &self,
-            block_number: &BlockNumber,
-            account: AccountId,
-            provider: &mut Provider,
-        ) -> Result<(), ()> {
-            let record = self.get_provider_record_at(block_number, account);
-            if let Some(record) = record {
-                // if the provider has been deleted, return None
-                if record.deleted {
-                    return Err(());
-                }
-                // else revert the provider to the state it was in at the given block
-                self.apply_provider_record(&record, &provider);
-            }
-            Ok(())
-        }
-
-        fn get_dapp_record_at(
-            &self,
-            block_number: &BlockNumber,
-            account: AccountId,
-        ) -> Option<DappRecord> {
-            let dapp_log = self.dapp_log.get_or_default();
-            // there may be no records for the given dapp
-            let mut result = None;
-            // loop through log from most recent to oldest
-            for (block, record) in dapp_log.iter().rev() {
-                if block <= block_number {
-                    // block is within threshold, check if account matches
-                    if record.account == account {
-                        // found record for dapp account within the block threshold
-                        result = Some(record);
-                    }
-                } else {
-                    // hit block threshold, stop looping
-                    break;
-                }
-            }
-            result.copied()
-        }
-
-        fn dapp_rewind(
-            &self,
-            block_number: &BlockNumber,
-            account: AccountId,
-            dapp: &mut Dapp,
-        ) -> Result<(), ()> {
-            let record = self.get_dapp_record_at(block_number, account);
-            if let Some(record) = record {
-                // if the dapp has been deleted, return None
-                if record.deleted {
-                    return Err(());
-                }
-                // else revert the dapp to the state it was in at the given block
-                self.apply_dapp_record(&record, &dapp);
-            }
-            Ok(())
-        }
-
         fn prune_to_rewind_window<T>(
             &self,
             list: &mut BTreeMap<BlockNumber, T>,
@@ -532,18 +486,13 @@ pub mod captcha {
                 return Default::default();
             }
 
-            let rewind_window = self.rewind_window as BlockNumber;
             let block_number = self.env().block_number();
-            let threshold_block: BlockNumber = if block_number > rewind_window {
-                block_number - rewind_window
-            } else {
-                0
-            };
+            let start: BlockNumber = self.get_rewind_window_start();
 
             // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
 
             // retain the newer elements
-            list.split_off(&threshold_block)
+            list.split_off(&start)
         }
 
         /// Update the seed
@@ -820,18 +769,8 @@ pub mod captcha {
             // update the seed
             self.update_seed()?;
 
-            // record the new provider details as a log record
-
-            // update the log
-            self.provider_log(ProviderRecord {
-                payee: new_provider.payee,
-                status: new_provider.status,
-                dataset_id: new_provider.dataset_id,
-                dataset_id_content: new_provider.dataset_id_content,
-                block: self.env().block_number(),
-                account: provider_account,
-                deleted: false,
-            });
+            // record the old provider in the log
+            self.log_provider(&provider_account, Some(old_provider));
 
             Ok(())
         }
@@ -944,31 +883,27 @@ pub mod captcha {
             self.update_seed()?;
 
             // update the log
-            self.provider_log(ProviderRecord {
-                payee: provider.payee,
-                status: GovernanceStatus::Inactive,
-                dataset_id: provider.dataset_id,
-                dataset_id_content: provider.dataset_id_content,
-                block: self.env().block_number(),
-                account: provider_account,
-                deleted: true,
-            });
+            self.log_provider(&provider_account, None);
 
             Ok(())
         }
 
-        fn provider_log(&mut self, record: ProviderRecord) {
-            let mut log = self.provider_log.get_or_default();
-            log.insert(record.block, record);
+        fn log_provider(&mut self, account: &AccountId, provider: Option<Provider>) {
+            let mut log = self.provider_logs.get(account).unwrap_or_default();
+            log.insert(self.env().block_number(), ProviderRecord {
+                provider,
+            });
             log = self.prune_to_rewind_window(&mut log);
-            self.provider_log.set(&log);
+            self.provider_logs.insert(account, &log);
         }
 
-        fn dapp_log(&mut self, record: DappRecord) {
-            let mut log = self.dapp_log.get_or_default();
-            log.insert(record.block, record);
+        fn log_dapp(&mut self, account: &AccountId, dapp: Option<Dapp>) {
+            let mut log = self.dapp_logs.get(account).unwrap_or_default();
+            log.insert(self.env().block_number(), DappRecord {
+                dapp,
+            });
             log = self.prune_to_rewind_window(&mut log);
-            self.dapp_log.set(&log);
+            self.dapp_logs.insert(account, &log);
         }
 
         fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
@@ -1098,14 +1033,7 @@ pub mod captcha {
             self.dapps.insert(contract, &new_dapp);
 
             // update the log
-            self.dapp_log(DappRecord {
-                payee: new_dapp.payee,
-                status: new_dapp.status,
-                block: self.env().block_number(),
-                account: contract,
-                deleted: false,
-                owner: new_dapp.owner,
-            });
+            self.log_dapp(&contract, Some(new_dapp));
 
             Ok(())
         }
@@ -1179,14 +1107,7 @@ pub mod captcha {
             lazy!(self.dapp_accounts, remove, &contract);
 
             // update the log
-            self.dapp_log(DappRecord {
-                payee: dapp.payee,
-                status: GovernanceStatus::Inactive,
-                block: self.env().block_number(),
-                account: contract,
-                deleted: true,
-                owner: dapp.owner,
-            });
+            self.log_dapp(&contract, None);
 
             Ok(())
         }
