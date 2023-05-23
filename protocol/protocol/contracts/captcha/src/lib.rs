@@ -407,6 +407,21 @@ pub mod captcha {
             }
         }
 
+        /// Apply a dapp record to a dapp, reverting it to the state at the time of the record
+        fn apply_dapp_record(&self, record: &DappRecord, &mut dapp: Dapp) {
+            dapp.status = record.status;
+            dapp.payee = record.payee;
+            dapp.owner = record.owner;
+        }
+
+        /// Apply a provider record to a provider, reverting it to the state at the time of the record
+        fn apply_provider_record(&self, record: &ProviderRecord, &mut provider: &Provider) {
+            provider.status = record.status;
+            provider.payee = record.payee;
+            provider.dataset_id = record.dataset_id;
+            provider.dataset_id_content = record.dataset_id_content;
+        }
+
         fn get_seed_at(&self, block_number: &BlockNumber) -> Seed {
             let mut result = &self.seed;
             let seed_log = self.seed_log.get_or_default();
@@ -460,10 +475,7 @@ pub mod captcha {
                     return Err(());
                 }
                 // else revert the provider to the state it was in at the given block
-                provider.status = record.status;
-                provider.dataset_id = record.dataset_id;
-                provider.dataset_id_content = record.dataset_id_content;
-                provider.payee = record.payee;
+                self.apply_provider_record(&record, &provider);
             }
             Ok(())
         }
@@ -505,9 +517,7 @@ pub mod captcha {
                     return Err(());
                 }
                 // else revert the dapp to the state it was in at the given block
-                dapp.status = record.status;
-                dapp.payee = record.payee;
-                dapp.owner = record.owner;
+                self.apply_dapp_record(&record, &dapp);
             }
             Ok(())
         }
