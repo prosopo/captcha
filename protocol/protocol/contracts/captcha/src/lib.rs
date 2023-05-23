@@ -142,16 +142,14 @@ pub mod captcha {
         dataset_id_content: Hash,
     }
 
-    /// RandomProvider is selected randomly by the contract for the client side application
+    /// RandomActiveProvider is selected randomly by the contract for the client side application
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct RandomProvider {
-        provider_id: AccountId,
+    pub struct RandomActiveProvider {
+        provider_account: AccountId,
         provider: Provider,
         block_number: u32,
-        dataset_id_content: Hash,
     }
-
     /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
     /// the captchas received by a DappUser did belong to the Provider's original dataset
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -410,14 +408,18 @@ pub mod captcha {
         }
 
         #[ink(message)]
-        pub fn get_random_active_provider(&self, user_account: AccountId, dapp_account: AccountId) -> Result<RandomProvider, Error> {
+        pub fn get_random_active_provider(&self, user_account: AccountId, dapp_account: AccountId) -> Result<RandomActiveProvider, Error> {
             self.get_random_active_provider_at(user_account, dapp_account, self.env().block_number())
         }
 
-        pub fn get_random_active_provider_at(&self, user_account: AccountId, dapp_account: AccountId) -> Result<RandomProvider, Error> {
+        pub fn get_random_active_provider_at(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> Result<RandomActiveProvider, Error> {
             let account = self.get_random_active_provider_account_at(user_account, dapp_account, self.env().block_number())?;
             let provider = self.get_provider_at(account, self.env().block_number())?;
-            Ok()
+            Ok(RandomActiveProvider { 
+                provider_account: account,
+                provider,
+                block_number: block,
+            })
         }
 
         /// Get a random active provider at a block given a user and dapp
