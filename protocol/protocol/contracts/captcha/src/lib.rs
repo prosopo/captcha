@@ -426,9 +426,9 @@ pub mod captcha {
             };
 
             // go back through the records in newest to oldest order
-            for (at, record) in log.iter().rev() {
+            for (at_block, record) in log.iter().rev() {
                 // find the record nearest to the block we're looking for
-                if at <= block {
+                if at_block <= block {
                     // found a record of the provider
                     result = record;
                 } else {
@@ -448,9 +448,9 @@ pub mod captcha {
             };
 
             // go back through the records in newest to oldest order
-            for (at, record) in log.iter().rev() {
+            for (at_block, record) in log.iter().rev() {
                 // find the record nearest to the block we're looking for
-                if at <= block {
+                if at_block <= block {
                     // found a record of the provider
                     result = record;
                 } else {
@@ -486,7 +486,6 @@ pub mod captcha {
                 return Default::default();
             }
 
-            let block_number = self.env().block_number();
             let start: BlockNumber = self.get_rewind_window_start();
 
             // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
