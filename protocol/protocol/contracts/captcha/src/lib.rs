@@ -409,9 +409,19 @@ pub mod captcha {
             }
         }
 
+        #[ink(message)]
+        pub fn get_random_active_provider(&self, user_account: AccountId, dapp_account: AccountId) -> Result<RandomProvider, Error> {
+            self.get_random_active_provider_at(user_account, dapp_account, self.env().block_number())
+        }
+
+        pub fn get_random_active_provider_at(&self, user_account: AccountId, dapp_account: AccountId) -> Result<RandomProvider, Error> {
+            let account = self.get_random_active_provider_account_at(user_account, dapp_account, self.env().block_number())?;
+            let provider = self.get_provider_at(account, self.env().block_number())?;
+            Ok()
+        }
 
         /// Get a random active provider at a block given a user and dapp
-        fn get_random_active_provider_at(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> Result<AccountId, Error> {
+        fn get_random_active_provider_account_at(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> Result<AccountId, Error> {
             // check if the dapp was active at the given block
             let dapp = self.get_dapp_at(dapp_account, block)?;
             if dapp.status != GovernanceStatus::Active {
