@@ -247,6 +247,15 @@ pub mod captcha {
         pub dapp: Dapp, // the dapp at the block
         pub deleted: bool, // whether the dapp has been deleted (by deregistering)
     }
+
+    /// Record of when a dapp changes and at what block
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct AccountBlockId {
+        pub block: BlockNumber,
+        pub account: AccountId,
+    }
+
     // Contract storage
     #[ink(storage)]
     pub struct Captcha {
@@ -269,8 +278,8 @@ pub mod captcha {
         seed: Seed,                                  // the current seed for rng
         seed_log: Lazy<BTreeMap<BlockNumber, Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
-        provider_logs: Mapping<AccountId, Vec<ProviderRecord>>, // per provider, a log of changes to providers over the last n blocks
-        dapp_logs: Mapping<AccountId, Vec<DappRecord>>, // per dapp, a log of changes to dapps over the last n blocks
+        provider_change_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
+        provider_logs: Mapping<AccountBlockId, Provider>, // log of changes to provider for a given account at a given block
     }
 
     /// The error types
@@ -395,8 +404,8 @@ pub mod captcha {
                 seed_log: Default::default(),
                 seed: Seed { value: 0, block: 0 },
                 rewind_window,
+                provider_change_log: Default::default(),
                 provider_logs: Default::default(),
-                dapp_logs: Default::default(),
             }
         }
 
