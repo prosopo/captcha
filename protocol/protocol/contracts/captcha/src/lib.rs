@@ -234,25 +234,18 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct ProviderRecord {
-        pub payee: Payee,             // the payee setting of the provider at this block
-        pub status: GovernanceStatus, // the status of the provider at this block
-        pub block: BlockNumber,       // the block number at which the provider status changed
-        pub account: AccountId,       // the provider account
-        pub dataset_id: Hash,         // the dataset id
-        pub dataset_id_content: Hash, // the dataset id content
-        pub deleted: bool,            // whether the provider has been deleted (by deregistering)
+        pub block: BlockNumber, // the block number when the record was created
+        pub provider: Provider, // the provider at the block
+        pub deleted: bool, // whether the provider has been deleted (by deregistering)
     }
 
     /// Record of when a dapp changes and at what block
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct DappRecord {
-        pub payee: DappPayee,         // the payee setting for the dapp
-        pub status: GovernanceStatus, // the status of the dapp at this block
-        pub block: BlockNumber,       // the block number at which the provider status changed
-        pub account: AccountId,       // the provider account
-        pub deleted: bool,            // whether the provider has been deleted (by deregistering)
-        pub owner: AccountId,         // the owner of the dapp
+        pub block: BlockNumber, // the block number when the record was created
+        pub dapp: Dapp, // the dapp at the block
+        pub deleted: bool, // whether the dapp has been deleted (by deregistering)
     }
     // Contract storage
     #[ink(storage)]
@@ -276,8 +269,8 @@ pub mod captcha {
         seed: Seed,                                  // the current seed for rng
         seed_log: Lazy<BTreeMap<BlockNumber, Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
-        provider_log: Lazy<BTreeMap<BlockNumber, ProviderRecord>>, // a log of changes to providers over the last n blocks
-        dapp_log: Lazy<BTreeMap<BlockNumber, DappRecord>>, // a log of changes to dapps over the last n blocks
+        provider_logs: Mapping<AccountId, Vec<ProviderRecord>>, // per provider, a log of changes to providers over the last n blocks
+        dapp_logs: Mapping<AccountId, Vec<DappRecord>>, // per dapp, a log of changes to dapps over the last n blocks
     }
 
     /// The error types
@@ -402,8 +395,8 @@ pub mod captcha {
                 seed_log: Default::default(),
                 seed: Seed { value: 0, block: 0 },
                 rewind_window,
-                provider_log: Default::default(),
-                dapp_log: Default::default(),
+                provider_logs: Default::default(),
+                dapp_logs: Default::default(),
             }
         }
 
