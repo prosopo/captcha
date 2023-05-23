@@ -273,7 +273,8 @@ pub mod captcha {
         seed_log: Lazy<BTreeMap<BlockNumber, Seed>>, // the history of seeds for rng, stored newest first
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
         provider_change_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
-        provider_logs: Mapping<AccountId, BTreeMap<BlockNumber, ProviderRecord>>, // log of provider changes for a given account
+        provider_logs: Mapping<AccountBlockId, ProviderRecord>, // log of provider changes for a given account
+        provider_logs_last_prune_block: BlockNumber, // the last block that the provider logs were pruned
         dapp_change_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
         dapp_logs: Mapping<AccountId, BTreeMap<BlockNumber, DappRecord>>, // log of dapp changes for a given account
     }
@@ -404,6 +405,7 @@ pub mod captcha {
                 provider_logs: Default::default(),
                 dapp_change_log: Default::default(),
                 dapp_logs: Default::default(),
+                provider_logs_last_prune_block: 0,
             }
         }
 
@@ -446,22 +448,22 @@ pub mod captcha {
             }
         }
 
-        fn get_provider_at(&self, account: AccountId, block: &BlockNumber) -> Result<Provider, Error> {
-            let log = self.provider_logs.get(&account).unwrap_or_default();
+        fn get_provider_at(&self, account: AccountId, block: BlockNumber) -> Result<Provider, Error> {
             // start with the current state of the provider as the most recent record
-            let mut result: &ProviderRecord = &ProviderRecord {
+            let mut result: ProviderRecord = ProviderRecord {
                 provider: self.providers.get(&account)
             };
+            let current_block = self.env().block_number();
 
             // go back through the records in newest to oldest order
-            for (at_block, record) in log.iter().rev() {
-                // find the record nearest to the block we're looking for
-                if at_block <= block {
+            for at_block in (block..=current_block).rev() {
+                let record = self.provider_logs.get(AccountBlockId {
+                    account,
+                    block: at_block,
+                });
+                if let Some(record) = record {
                     // found a record of the provider
                     result = record;
-                } else {
-                    // stop once we reach a record older than the block we're looking for
-                    break;
                 }
             }
 
@@ -797,7 +799,7 @@ pub mod captcha {
             self.update_seed()?;
 
             // record the old provider in the log
-            self.log_provider(&provider_account, Some(old_provider));
+            self.log_provider(provider_account, Some(old_provider));
 
             Ok(())
         }
@@ -910,18 +912,32 @@ pub mod captcha {
             self.update_seed()?;
 
             // update the log
-            self.log_provider(&provider_account, None);
+            self.log_provider(provider_account, None);
 
             Ok(())
         }
 
-        fn log_provider(&mut self, account: &AccountId, provider: Option<Provider>) {
-            let mut log = self.provider_logs.get(account).unwrap_or_default();
-            log.insert(self.env().block_number(), ProviderRecord {
+        fn log_provider(&mut self, account: AccountId, provider: Option<Provider>) {
+            self.prune_provider_logs(account);
+            self.provider_logs.insert(AccountBlockId {
+                account,
+                block: self.env().block_number(),
+            }, &ProviderRecord {
                 provider,
             });
-            log = self.prune_to_rewind_window(&mut log);
-            self.provider_logs.insert(account, &log);
+        }
+
+        fn prune_provider_logs(&mut self, account: AccountId) {
+            let last = self.provider_logs_last_prune_block;
+            let start = self.get_rewind_window_start();
+            // for all records which land outside the rewind window, remove them. E.g. between the last prune and the start of the rewind window
+            for block in last..start {
+                self.provider_logs.remove(AccountBlockId {
+                    account,
+                    block,
+                });
+            }
+            self.provider_logs_last_prune_block = self.env().block_number();
         }
 
         fn log_dapp(&mut self, account: &AccountId, dapp: Option<Dapp>) {
