@@ -17,8 +17,7 @@ class ImageProcessor:
         self.image_paths = image_paths
         self.font_path = font_path
 
-    @staticmethod
-    def find_coeffs(pa, pb):
+    def find_coeffs(self, pa, pb):
         matrix = []
         for p1, p2 in zip(pa, pb):
             matrix.append([p1[0], p1[1], 1, 0, 0, 0, -p2[0] * p1[0], -p2[0] * p1[1]])
@@ -32,7 +31,7 @@ class ImageProcessor:
     def add_noise(self):
         # Add gaussian noise
         np_image = np.array(self.image)
-        noisy_image = np_image + np.random.normal(0, 0.1, np_image.shape)
+        noisy_image = np_image + np.random.normal(0, 0.2, np_image.shape)
 
         # Convert back to PIL Image
         self.image = Image.fromarray(np.uint8(np.clip(noisy_image, 0, 255)))
@@ -65,11 +64,12 @@ class ImageProcessor:
         rotated_text_image = text_image.rotate(angle, resample=Image.BICUBIC, expand=1)
 
         # Create an RGBA version of the main image and paste the text
-        self.image = self.image.convert("RGBA").paste(
-            rotated_text_image, (0, 0), rotated_text_image
-        )
+        self.image = self.image.convert("RGBA")
 
-    def distort_image(self, image: Image) -> None:
+        # Paste the rotated text onto the main image
+        self.image.paste(rotated_text_image, (0, 0), rotated_text_image)
+
+    def distort_image(self) -> None:
         # Apply distortion
         coeffs = self.find_coeffs(
             [
@@ -100,9 +100,12 @@ class ImageProcessor:
             Image.BICUBIC,
         )
 
-    def blur_and_contrast(self, image: Image) -> None:
-        blurred_image = self.image.filter(ImageFilter.GaussianBlur(radius=1))
+    def blur_and_contrast(self) -> None:
+        blurred_image = self.image.filter(ImageFilter.GaussianBlur(radius=2))
         self.image = ImageOps.autocontrast(blurred_image.convert("RGB"), cutoff=1)
+
+    def get_filename_without_extension(self, filepath):
+        return os.path.splitext(os.path.basename(filepath))[0]
 
     def process_image(self, output_folder: str) -> None:
         for i, image_path in enumerate(self.image_paths):
@@ -113,5 +116,7 @@ class ImageProcessor:
             self.distort_image()
             self.blur_and_contrast()
 
-            output_path = os.path.join(output_folder, f"processed_image_{i}.png")
+            filename = f"{self.get_filename_without_extension(image_path)}_processed.png"
+            
+            output_path = os.path.join(output_folder, filename)
             self.image.save(output_path)
