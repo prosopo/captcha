@@ -176,7 +176,8 @@ pub mod captcha {
         provider: AccountId,       // the provider who supplied the challenge
         requested_at: BlockNumber, // the block number at which the captcha was requested
         completed_at: BlockNumber, // the block number at which the captcha was completed
-        user_signature: Vec<u8>,   // the user's signature of the commitment
+        user_signature_part1: [u8; 32],   // the user's signature of the commitment
+        user_signature_part2: [u8; 32],
     }
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
