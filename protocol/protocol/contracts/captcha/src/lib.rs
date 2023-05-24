@@ -2742,7 +2742,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -2766,7 +2767,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -2841,7 +2843,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
             }
 
@@ -2906,7 +2909,8 @@ pub mod captcha {
                         completed_at: 0,
                         requested_at: 0,
                         id: solution_id,
-                        user_signature: Vec::new(),
+                        user_signature_part1: [0x0; 32],
+                        user_signature_part2: [0x0; 32],
                     })
                     .unwrap();
                 let commitment = contract
@@ -2929,7 +2933,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -3004,7 +3009,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -3187,7 +3193,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: user_root1,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
 
                 // Get the commitment and make sure it is approved
@@ -3208,7 +3215,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: user_root2,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
 
                 // Get the commitment and make sure it is disapproved
