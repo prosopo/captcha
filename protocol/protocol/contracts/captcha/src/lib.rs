@@ -166,15 +166,16 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Commit {
-        id: Hash,                  // the commitment id
-        user: AccountId,           // the user who submitted the commitment
-        dataset_id: Hash,          // the dataset id
-        status: CaptchaStatus,     // the status of the commitment
-        dapp: AccountId,           // the dapp which the user completed the captcha on
-        provider: AccountId,       // the provider who supplied the challenge
-        requested_at: BlockNumber, // the block number at which the captcha was requested
-        completed_at: BlockNumber, // the block number at which the captcha was completed
-        user_signature: Vec<u8>,   // the user's signature of the commitment
+        id: Hash,                       // the commitment id
+        user: AccountId,                // the user who submitted the commitment
+        dataset_id: Hash,               // the dataset id
+        status: CaptchaStatus,          // the status of the commitment
+        dapp: AccountId,                // the dapp which the user completed the captcha on
+        provider: AccountId,            // the provider who supplied the challenge
+        requested_at: BlockNumber,      // the block number at which the captcha was requested
+        completed_at: BlockNumber,      // the block number at which the captcha was completed
+        user_signature_part1: [u8; 32], // the user's signature of the commitment
+        user_signature_part2: [u8; 32],
     }
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
@@ -3049,7 +3050,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -3073,7 +3075,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -3148,7 +3151,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
             }
 
@@ -3213,7 +3217,8 @@ pub mod captcha {
                         completed_at: 0,
                         requested_at: 0,
                         id: solution_id,
-                        user_signature: Vec::new(),
+                        user_signature_part1: [0x0; 32],
+                        user_signature_part2: [0x0; 32],
                     })
                     .unwrap();
                 let commitment = contract
@@ -3236,7 +3241,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -3311,7 +3317,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: solution_id,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
                 let commitment = contract
                     .captcha_solution_commitments
@@ -3494,7 +3501,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: user_root1,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
 
                 // Get the commitment and make sure it is approved
@@ -3515,7 +3523,8 @@ pub mod captcha {
                     completed_at: 0,
                     requested_at: 0,
                     id: user_root2,
-                    user_signature: Vec::new(),
+                    user_signature_part1: [0x0; 32],
+                    user_signature_part2: [0x0; 32],
                 });
 
                 // Get the commitment and make sure it is disapproved
