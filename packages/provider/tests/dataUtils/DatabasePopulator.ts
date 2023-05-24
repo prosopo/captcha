@@ -84,7 +84,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             try {
                 const tasks = new Tasks(this.mockEnv)
 
-                return tasks.contractApi.getProviderStakeDefault().then((res) => {
+                return tasks.contract.getProviderStakeDefault().then((res) => {
                     this.providerStakeDefault = new BN(res)
                     this.stakeAmount = getStakeAmount(env, this.providerStakeDefault)
                     this.sendAmount = getSendAmount(env, this.stakeAmount)
@@ -213,7 +213,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             // console.log(providerMaxFee)
             // process.exit()
 
-            const result = await tasks.contractApi.providerRegister(
+            const result = await tasks.contract.providerRegister(
                 stringToHexPadded(_serviceOrigin),
                 createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
                 createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE)
@@ -222,7 +222,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
             )
-            const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
+            const provider = await tasks.contract.getProviderDetails(accountAddress(account))
             //console.log('Registered provider', provider)
             if (!noPush) {
                 this._registeredProviders.push(account)
@@ -239,7 +239,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const tasks = new Tasks(this.mockEnv)
 
-            const result = await tasks.contractApi.providerUpdate(
+            const result = await tasks.contract.providerUpdate(
                 stringToHexPadded(serviceOrigin),
                 createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
                 createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
@@ -279,7 +279,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const tasks = new Tasks(this.mockEnv)
 
-            const result = await tasks.providerAddDatasetFromFile(datasetJSON)
+            const result = await tasks.providerSetDatasetFromFile(datasetJSON)
             this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
@@ -343,7 +343,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             this.mockEnv.logger.debug('Dapp contract address', contractAddress)
 
-            const result = await tasks.contractApi.dappRegister(contractAddress, 'Dapp')
+            const result = await tasks.contract.dappRegister(contractAddress, 'Dapp')
             this.mockEnv.logger.debug(
                 'Event: ',
                 result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
@@ -364,7 +364,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const tasks = new Tasks(this.mockEnv)
 
-        const result = await tasks.contractApi.dappFund(accountContract(account), this.stakeAmount)
+        const result = await tasks.contract.dappFund(accountContract(account), this.stakeAmount)
 
         this.mockEnv.logger.debug(
             'Event: ',

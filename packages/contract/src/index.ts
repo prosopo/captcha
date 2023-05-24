@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import '@polkadot/api-augment'
-export * from './interfaces'
 export * from './abi'
-export * from './contract'
-//export * from '@prosopo/types'
-export * from './handlers'
-export * from './codec'
-export * from './balances'
 export * from './accounts'
+export * from './balances'
+export * from './contract'
+export * from './handlers'
+export * from './typechain/captcha'

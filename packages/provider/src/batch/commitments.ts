@@ -1,12 +1,7 @@
-import { batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import { ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { BN } from '@polkadot/util'
-import {
-    BatchCommitConfig,
-    ExtrinsicBatch,
-    IProsopoContractMethods,
-    ScheduledTaskNames,
-    ScheduledTaskStatus,
-} from '@prosopo/types'
+import { BatchCommitConfig, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
+import { ArgumentTypes } from '@prosopo/types/contract/typechain/captcha/types-arguments'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { ApiPromise } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
@@ -18,14 +13,14 @@ const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'dappUserCommit'
 
 export class BatchCommitments {
-    contract: IProsopoContractMethods
+    contract: ProsopoCaptchaContract
     db: Database
     batchCommitConfig: BatchCommitConfig
     logger: Logger
     private nonce: bigint
     constructor(
         batchCommitConfig: BatchCommitConfig,
-        contractApi: IProsopoContractMethods,
+        contractApi: ProsopoCaptchaContract,
         db: Database,
         concurrent: number,
         startNonce: bigint,
@@ -59,7 +54,7 @@ export class BatchCommitments {
                         extrinsics.map((e) => e.toHuman())
                     )
                     // commit and get the Ids of the commitments that were committed on-chain
-                    await batch(this.contract, this.contract.pair, extrinsics, this.logger)
+                    await batch(this.contract.contract, this.contract.pair, extrinsics, this.logger)
                     // remove commitments
                     await this.removeCommitmentsAndSolutions(commitmentIds)
                     // update last commit time and store the commitmentIds that were batched
@@ -70,8 +65,8 @@ export class BatchCommitments {
                         {
                             data: {
                                 commitmentIds: commitments
-                                    .filter((commitment) => commitmentIds.indexOf(commitment.commitmentId) > -1)
-                                    .map((c) => c.commitmentId),
+                                    .filter((commitment) => commitmentIds.indexOf(commitment.id) > -1)
+                                    .map((c) => c.id),
                             },
                         }
                     )
@@ -90,37 +85,28 @@ export class BatchCommitments {
         }
     }
 
-    async createExtrinsics(commitments): Promise<ExtrinsicBatch> {
+    async createExtrinsics(commitments: UserCommitmentRecord[]): Promise<ExtrinsicBatch> {
         const txs: SubmittableExtrinsic<any>[] = []
         const fragment = this.contract.abi.findMessage(CONTRACT_METHOD_NAME)
-        const batchedCommitmentIds: string[] = []
+        const batchedCommitmentIds: ArgumentTypes.Hash[] = []
         let totalRefTime = new BN(0)
         let totalProofSize = new BN(0)
         let totalFee = new BN(0)
         const maxBlockWeight = this.contract.api.consts.system.blockWeights.maxBlock
+        const commitmentArray: ArgumentTypes.Commit[] = []
+        for (const { processed: _processed, ...commitment } of commitments) {
+            commitmentArray.push(commitment)
+            this.logger.debug(`Commitment:`, commitment)
+            const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.abi, fragment, [commitmentArray])
 
-        for (const commitment of commitments) {
-            const args = [
-                commitment.dappAccount, // contract account
-                commitment.datasetId,
-                commitment.commitmentId,
-                this.contract.pair.address,
-                commitment.userAccount,
-                commitment.approved ? 'Approved' : 'Disapproved',
-            ]
-            this.logger.debug('Provider Address', this.contract.pair.address)
-            const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.abi, fragment, args)
-            this.logger.debug(`Commitment:`, args)
-
-            const { extrinsic, options, storageDeposit } = await this.contract.buildExtrinsic(
-                'dappUserCommit',
+            // TODO can we get storage deposit from the provided query method?
+            //  https://matrix.to/#/!utTuYglskDvqRRMQta:matrix.org/$tELySFxCORlHCHveOknGJBx-MdVe-SxFN8_BsYvcDmI?via=matrix.org&via=t2bot.io&via=cardinal.ems.host
+            //  const response = await this.contract.query.providerCommitMany(commitmentArray)
+            const { extrinsic, options, storageDeposit } = await this.contract.getExtrinsicAndGasEstimates(
+                'providerCommitMany',
                 encodedArgs
             )
-
             const paymentInfo = await extrinsic.paymentInfo(this.contract.pair)
-
-            //console.log(JSON.stringify(this.contract.api.consts.transactionPayment))
-
             this.logger.debug(`${CONTRACT_METHOD_NAME} paymentInfo:`, paymentInfo.toHuman())
             //totalEncodedLength += extrinsic.encodedLength
             totalRefTime = totalRefTime.add(
@@ -154,7 +140,7 @@ export class BatchCommitments {
                 this.logger.warn(msg)
                 break
             } else {
-                batchedCommitmentIds.push(commitment.commitmentId)
+                batchedCommitmentIds.push(commitment.id)
                 txs.push(extrinsic)
             }
         }
@@ -174,7 +160,7 @@ export class BatchCommitments {
     async batchIntervalExceeded(): Promise<boolean> {
         //if time since last commit > batchCommitInterval
         const lastTime = await this.db.getLastBatchCommitTime()
-        return Date.now() - lastTime > this.batchCommitConfig.interval
+        return Date.now() - lastTime.getSeconds() > this.batchCommitConfig.interval
     }
 
     async getCommitments(): Promise<UserCommitmentRecord[]> {
@@ -182,7 +168,7 @@ export class BatchCommitments {
         return await this.db.getProcessedDappUserCommitments()
     }
 
-    async removeCommitmentsAndSolutions(commitmentIds: string[]): Promise<void> {
+    async removeCommitmentsAndSolutions(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
         const removeSolutionsResult = await this.db.removeProcessedDappUserSolutions(commitmentIds)
         const removeCommitmentsResult = await this.db.removeProcessedDappUserCommitments(commitmentIds)
         this.logger.info('Deleted user solutions', removeSolutionsResult)

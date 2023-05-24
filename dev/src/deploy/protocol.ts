@@ -1,7 +1,7 @@
 import { Abi } from '@polkadot/api-contract'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { getPair } from '@prosopo/common'
+import { getPair, reverseHexString } from '@prosopo/common'
 import { ContractDeployer, oneUnit } from '@prosopo/contract'
 import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
 import { Environment } from '@prosopo/env'
@@ -14,13 +14,16 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     const pair = await getPair(pairType, ss58Format, '//Alice')
     const env = new Environment(pair, defaultConfig())
     await env.isReady()
+    console.log(reverseHexString(env.api.createType('u16', 10).toHex().toString()), 'max_user_history_len')
+    console.log(reverseHexString(env.api.createType('BlockNumber', 32).toHex().toString()), 'max_user_history_age')
+    console.log(reverseHexString(env.api.createType('u16', 1).toHex().toString()), 'min_num_active_providers')
     const params = [
-        env.api.consts.balances.existentialDeposit, // providerStakeDefault
-        env.api.consts.balances.existentialDeposit, // dappStakeDefault
-        10, // commitments to store per user
-        1000000000, // time limit
-        1, // minimum number of active providers
-        oneUnit(env.api).divn(1000), // max price per commitment
+        env.api.consts.balances.existentialDeposit, // provider_stake_threshold Balance
+        env.api.consts.balances.existentialDeposit, // dapp_stake_threshold Balance
+        env.api.createType('u16', 10), // max_user_history_len u16
+        env.api.createType('BlockNumber', 32), // max_user_history_age BlockNumber
+        env.api.createType('u16', 1), // min_num_active_providers u16
+        oneUnit(env.api).divn(1000), // max_provider_fee Balance
     ]
 
     const deployer = new ContractDeployer(env.api, abi, wasm, env.pair, params, 0, 0, randomAsHex())

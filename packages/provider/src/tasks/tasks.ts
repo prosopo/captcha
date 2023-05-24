@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Hash } from '@polkadot/types/interfaces'
-import { hexToU8a, stringToHex } from '@polkadot/util'
+import { stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import {
     CaptchaMerkleTree,
@@ -36,7 +36,6 @@ import {
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
-    IProsopoContractMethods,
 } from '@prosopo/types'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { ProsopoEnvironment } from '@prosopo/types-env'
@@ -44,13 +43,16 @@ import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { ProsopoCaptchaContract } from '@prosopo/contract/contract/interface'
+import { ReturnTypes } from '@prosopo/types/contract/typechain/captcha/types-returns'
+import { SubmittableResult } from '@polkadot/api'
+import { ArgumentTypes } from '@prosopo/types/contract/typechain/captcha/types-arguments'
 
 /**
  * @description Tasks that are shared by the API and CLI
  */
 export class Tasks {
-    contractApi: IProsopoContractMethods
+    contract: ProsopoCaptchaContract
 
     db: Database
 
@@ -70,29 +72,27 @@ export class Tasks {
             )
         }
 
-        this.contractApi = env.contractInterface
+        this.contract = env.contractInterface
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
         this.captchaSolutionConfig = env.config.captchaSolutions
         this.logger = logger(env.config.logLevel, 'Tasks')
     }
 
-    async providerAddDatasetFromFile(file: JSON): Promise<ContractSubmittableResult> {
+    async providerSetDatasetFromFile(file: JSON): Promise<SubmittableResult | undefined> {
         const datasetRaw = parseCaptchaDataset(file)
-        return await this.providerAddDataset(datasetRaw)
+        return await this.providerSetDataset(datasetRaw)
     }
 
-    async providerAddDataset(datasetRaw: DatasetRaw): Promise<ContractSubmittableResult> {
+    async providerSetDataset(datasetRaw: DatasetRaw): Promise<SubmittableResult | undefined> {
         const dataset = await buildDataset(datasetRaw)
-        if (!dataset.datasetId) {
-            throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerAddDataset.name)
+        if (!dataset.datasetId || !dataset.datasetContentId) {
+            throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerSetDataset.name)
         }
 
         await this.db?.storeDataset(dataset)
-        return await this.contractApi.contractTx('providerAddDataset', [
-            hexToU8a(dataset.datasetId),
-            hexToU8a(dataset.datasetContentId),
-        ])
+
+        return (await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {})).result
     }
 
     // Other tasks
@@ -103,7 +103,11 @@ export class Tasks {
      * @param {boolean}  solved    `true` when captcha is solved
      * @param {number}   size       the number of records to be returned
      */
-    async getCaptchaWithProof(datasetId: Hash | string, solved: boolean, size: number): Promise<CaptchaWithProof[]> {
+    async getCaptchaWithProof(
+        datasetId: ArgumentTypes.Hash,
+        solved: boolean,
+        size: number
+    ): Promise<CaptchaWithProof[]> {
         const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size)
         if (captchaDocs) {
             const captchas: CaptchaWithProof[] = []
@@ -177,8 +181,12 @@ export class Tasks {
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
         const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
-        const providerDetails = await this.contractApi.getProviderDetails(this.contractApi.pair.address)
-        const commitment = await this.contractApi.getCaptchaSolutionCommitment(commitmentId)
+        const providerDetails = (await this.contract.methods.getProviderDetails(this.contract.pair.address, {})).value
+            .unwrap()
+            .unwrap()
+        const commitment = (await this.contract.methods.getCaptchaSolutionCommitment(commitmentId, {})).value
+            .unwrap()
+            .unwrap()
         if (!commitment) {
             throw new ProsopoEnvError(
                 'CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST',
@@ -198,7 +206,7 @@ export class Tasks {
                 providerDetails.datasetId.toString()
             )
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-                await this.contractApi.providerApprove(commitmentId, partialFee)
+                //await this.contract.providerApprove(commitmentId, partialFee)
                 response = {
                     captchas: captchaIds.map((id) => ({
                         captchaId: id,
@@ -209,7 +217,7 @@ export class Tasks {
                 }
                 await this.db.approveDappUserCommitment(commitmentId)
             } else {
-                await this.contractApi.providerDisapprove(commitmentId)
+                //await this.contract.providerDisapprove(commitmentId)
                 response = {
                     captchas: captchaIds.map((id) => ({
                         captchaId: id,
@@ -258,7 +266,9 @@ export class Tasks {
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
         const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
-        const providerDetails = await this.contractApi.getProviderDetails(this.contractApi.pair.address)
+        const providerDetails = (await this.contract.methods.getProviderDetails(this.contract.pair.address, {})).value
+            .unwrap()
+            .unwrap()
         const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
         // Only do stuff if the request is in the local DB
         if (pendingRequest) {
@@ -296,7 +306,7 @@ export class Tasks {
      * Validate that the dapp is active in the contract
      */
     async dappIsActive(dappAccount: string): Promise<boolean> {
-        const dapp = await this.contractApi.getDappDetails(dappAccount)
+        const dapp = (await this.contract.methods.getDappDetails(dappAccount, {})).value.unwrap().unwrap()
         //dapp.status.isActive doesn't work: https://substrate.stackexchange.com/questions/6333/how-do-we-work-with-polkadot-js-enums-in-typescript
         return dapp.status.toString() === 'Active'
     }
@@ -305,8 +315,8 @@ export class Tasks {
      * Validate that the provider is active in the contract
      */
     async providerIsActive(providerAccount: string): Promise<boolean> {
-        const provider = await this.contractApi.getProviderDetails(providerAccount)
-        return provider.status.isActive
+        const provider = (await this.contract.methods.getProviderDetails(providerAccount, {})).value.unwrap().unwrap()
+        return provider.status.toString() === 'Active'
     }
 
     /**
@@ -437,7 +447,11 @@ export class Tasks {
     async calculateCaptchaSolutions(): Promise<number> {
         try {
             // Get the current datasetId from the contract
-            const providerDetails = await this.contractApi.getProviderDetails(this.contractApi.pair.address)
+            const providerDetails = (
+                await this.contract.methods.getProviderDetails(this.contract.pair.address, {})
+            ).value
+                .unwrap()
+                .unwrap()
 
             // Get any unsolved CAPTCHA challenges from the database for this datasetId
             const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(
@@ -474,7 +488,7 @@ export class Tasks {
                         const dataset = await this.db.getDataset(providerDetails.datasetId.toString())
                         dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
                         // store new solutions in database
-                        await this.providerAddDataset(dataset)
+                        await this.providerSetDataset(dataset)
                         // mark user solutions as used to calculate new solutions
                         await this.db.flagUsedDappUserSolutions(captchaIdsToUpdate)
                         // mark user commitments as used to calculate new solutions
@@ -527,7 +541,7 @@ export class Tasks {
         datasetId: string | Hash,
         blockNo: number
     ) {
-        const contract = await this.contractApi.getContract()
+        const contract = await this.contract.contract
         if (!contract) {
             throw new ProsopoEnvError('CONTRACT.CONTRACT_UNDEFINED', this.validateProviderWasRandomlyChosen.name)
         }
@@ -552,10 +566,10 @@ export class Tasks {
         }
 
         const block = (await contract.api.rpc.chain.getBlockHash(blockNo)) as BlockHash
-        const randomProviderAndBlockNo = await this.contractApi.getRandomProvider(
-            userAccount,
-            dappContractAccount,
-            block
+        const randomProviderAndBlockNo = await this.contract.queryAtBlock<ReturnTypes.RandomProvider>(
+            block,
+            'getRandomActiveProvider',
+            [userAccount, dappContractAccount]
         )
 
         if (datasetId.toString().localeCompare(randomProviderAndBlockNo.provider.datasetId.toString())) {
@@ -581,7 +595,7 @@ export class Tasks {
         txHash: string
     ): Promise<RuntimeDispatchInfoV1 | null> {
         // Validate block and transaction, checking that the signer matches the userAccount
-        const signedBlock: SignedBlock = (await this.contractApi.api.rpc.chain.getBlock(blockHash)) as SignedBlock
+        const signedBlock: SignedBlock = (await this.contract.api.rpc.chain.getBlock(blockHash)) as SignedBlock
         if (!signedBlock) {
             return null
         }
@@ -590,7 +604,7 @@ export class Tasks {
             return null
         }
         // Retrieve tx fee for extrinsic
-        const paymentInfo = (await this.contractApi.api.rpc.payment.queryInfo(
+        const paymentInfo = (await this.contract.api.rpc.payment.queryInfo(
             extrinsic.toHex(),
             blockHash
         )) as RuntimeDispatchInfoV1
@@ -621,7 +635,7 @@ export class Tasks {
         const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(userAccount)
         if (dappUserSolutions.length > 0) {
             for (const dappUserSolution of dappUserSolutions) {
-                if (dappUserSolution.approved) {
+                if (dappUserSolution.status === ArgumentTypes.CaptchaStatus.approved) {
                     return dappUserSolution
                 }
             }

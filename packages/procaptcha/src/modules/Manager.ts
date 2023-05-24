@@ -23,7 +23,7 @@ import {
 import { sleep } from '../utils/utils'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
 import storage from './storage'
-import ProviderApi from '@prosopo/api/src/api/ProviderApi'
+import ProviderApi from '@prosopo/api/api/ProviderApi'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {

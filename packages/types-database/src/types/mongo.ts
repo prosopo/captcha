@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Hash } from '@polkadot/types/interfaces'
 import {
     Captcha,
     CaptchaSolution,
@@ -28,18 +27,24 @@ import { Connection, Model, Schema } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import { DeleteResult } from 'mongodb'
 import { Logger } from '@prosopo/common'
+import { ArgumentTypes } from '@prosopo/types/contract/typechain/captcha/types-arguments'
+
+export interface UserCommitmentRecord extends ArgumentTypes.Commit {
+    processed: boolean
+}
 
 export const UserCommitmentSchema = z.object({
-    userAccount: z.string(),
-    dappAccount: z.string(),
+    user: z.string(),
+    dapp: z.string(),
     datasetId: z.string(),
-    commitmentId: z.string(),
-    approved: z.boolean(),
-    datetime: z.date(),
+    provider: z.string(),
+    id: z.string(),
+    status: z.nativeEnum(ArgumentTypes.CaptchaStatus),
+    userSignature: z.array(z.number()),
+    completedAt: z.number(),
+    requestedAt: z.number(),
     processed: z.boolean(),
-})
-
-export type UserCommitmentRecord = z.infer<typeof UserCommitmentSchema>
+}) satisfies z.ZodType<UserCommitmentRecord>
 
 export interface SolutionRecord extends CaptchaSolution {
     datasetId: string
@@ -47,13 +52,13 @@ export interface SolutionRecord extends CaptchaSolution {
 }
 
 export interface Tables {
-    captcha: typeof Model
-    dataset: typeof Model
-    solution: typeof Model
-    usersolution: typeof Model
-    commitment: typeof Model
-    pending: typeof Model
-    scheduler: typeof Model
+    captcha: typeof Model<Captcha>
+    dataset: typeof Model<DatasetWithIds>
+    solution: typeof Model<SolutionRecord>
+    usersolution: typeof Model<UserSolutionRecord>
+    commitment: typeof Model<UserCommitmentRecord>
+    pending: typeof Model<PendingCaptchaRequest>
+    scheduler: typeof Model<ScheduledTaskRecord>
 }
 
 export const CaptchaRecordSchema = new Schema<Captcha>({
@@ -81,16 +86,18 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 })
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
-    userAccount: { type: String, required: true },
-    dappAccount: { type: String, required: true },
+    user: { type: String, required: true },
+    dapp: { type: String, required: true },
     datasetId: { type: String, required: true },
-    commitmentId: { type: String, required: true },
-    approved: { type: Boolean, required: true },
-    datetime: { type: Date, required: true },
+    id: { type: String, required: true },
+    status: { type: String, required: true },
+    requestedAt: { type: Number, required: true },
+    completedAt: { type: Number, required: true },
+    userSignature: { type: String, required: true },
     processed: { type: Boolean, required: true },
 })
 
-export const DatasetRecordSchema = new Schema<DatasetBase>({
+export const DatasetRecordSchema = new Schema<DatasetWithIds>({
     contentTree: { type: [[String]], required: true },
     datasetContentId: { type: String, required: true },
     datasetId: { type: String, required: true },
@@ -184,7 +191,11 @@ export interface Database {
 
     getDataset(datasetId: string): Promise<DatasetWithIds>
 
-    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>
+    getRandomCaptcha(
+        solved: boolean,
+        datasetId: ArgumentTypes.Hash | string,
+        size?: number
+    ): Promise<Captcha[] | undefined>
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>
 
@@ -192,7 +203,7 @@ export interface Database {
 
     removeCaptchas(captchaIds: string[]): Promise<void>
 
-    getDatasetDetails(datasetId: Hash | string | Uint8Array): Promise<DatasetBase>
+    getDatasetDetails(datasetId: ArgumentTypes.Hash | string | Uint8Array): Promise<DatasetBase>
 
     storeDappUserSolution(
         captchas: CaptchaSolution[],
@@ -224,9 +235,9 @@ export interface Database {
 
     approveDappUserCommitment(commitmentId: string): Promise<void>
 
-    removeProcessedDappUserSolutions(commitmentIds: string[]): Promise<DeleteResult | undefined>
+    removeProcessedDappUserSolutions(commitmentIds: ArgumentTypes.Hash[]): Promise<DeleteResult | undefined>
 
-    removeProcessedDappUserCommitments(commitmentIds: string[]): Promise<DeleteResult | undefined>
+    removeProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<DeleteResult | undefined>
 
     getProcessedDappUserSolutions(): Promise<UserSolutionRecord[]>
 
@@ -236,7 +247,7 @@ export interface Database {
 
     flagUsedDappUserCommitments(commitmentIds: string[]): Promise<void>
 
-    getLastBatchCommitTime(): Promise<number>
+    getLastBatchCommitTime(): Promise<Date>
 
     getLastScheduledTask(task: ScheduledTaskNames): Promise<ScheduledTaskRecord | undefined>
 

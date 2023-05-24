@@ -17,7 +17,6 @@ import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Signer } from '@polkadot/api/types'
 import { stringToHex } from '@polkadot/util'
 import { ProsopoEnvError } from '@prosopo/common'
-import { ProsopoCaptchaSolutionCommitment, ProsopoContractMethods, ProsopoRandomProvider } from '@prosopo/contract'
 import {
     CaptchaMerkleTree,
     computeCaptchaHash,
@@ -29,20 +28,23 @@ import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { ProsopoApiError } from '../api/handlers'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
 import { TCaptchaSubmitResult } from '../types/client'
-import ProviderApi from '@prosopo/api/src/api/ProviderApi'
+import ProviderApi from '@prosopo/api/api/ProviderApi'
+import { ProsopoCaptchaContract } from '@prosopo/contract/contract/index'
+import { RandomProvider } from '@prosopo/types/contract/typechain/captcha/types-returns/captcha'
+import { ArgumentTypes } from '@prosopo/types/contract/typechain/captcha/types-arguments'
 
 export class ProsopoCaptchaApi {
     userAccount: string
-    contract: ProsopoContractMethods
-    provider: ProsopoRandomProvider
+    contract: ProsopoCaptchaContract
+    provider: RandomProvider
     providerApi: ProviderApi
     dappAccount: string
     private web2: boolean
 
     constructor(
         userAccount: string,
-        contract: ProsopoContractMethods,
-        provider: ProsopoRandomProvider,
+        contract: ProsopoCaptchaContract,
+        provider: RandomProvider,
         providerApi: ProviderApi,
         web2: boolean,
         dappAccount: string
@@ -65,7 +67,7 @@ export class ProsopoCaptchaApi {
         }
     }
 
-    public verifyCaptchaChallengeContent(provider: ProsopoRandomProvider, captchaChallenge: GetCaptchaResponse): void {
+    public verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: GetCaptchaResponse): void {
         // TODO make sure root is equal to root on the provider
         const proofLength = captchaChallenge.captchas[0].proof.length
         console.log(provider.provider)
@@ -106,21 +108,21 @@ export class ProsopoCaptchaApi {
         // console.log("solveCaptchaChallenge USER ACCOUNT", this.contract.getAccount().address);
         // console.log("solveCaptchaChallenge DAPP ACCOUNT", this.contract.getDappAddress());
         // console.log("solveCaptchaChallenge CONTRACT ADDRESS", this.contract.getContract().address.toString());
-        let tx: ContractSubmittableResult | undefined = undefined
+        const tx: ContractSubmittableResult | undefined = undefined
 
-        if (!this.web2) {
-            try {
-                tx = await this.contract.dappUserCommit(
-                    this.dappAccount,
-                    datasetId as string,
-                    commitmentId,
-                    this.provider.providerId.toString(),
-                    this.userAccount
-                )
-            } catch (err) {
-                throw new ProsopoEnvError(err)
-            }
-        }
+        // if (!this.web2) {
+        //     try {
+        //         tx = await this.contract.tx.dappUserCommit(
+        //             this.dappAccount,
+        //             datasetId as string,
+        //             commitmentId,
+        //             this.provider.providerId.toString(),
+        //             this.userAccount
+        //         )
+        //     } catch (err) {
+        //         throw new ProsopoEnvError(err)
+        //     }
+        // }
 
         let signature: string | undefined = undefined
 
@@ -145,8 +147,8 @@ export class ProsopoCaptchaApi {
                 requestHash,
                 this.contract.pair.address,
                 salt,
-                tx && tx.blockNumber ? tx.blockNumber.hash.toHex() : undefined,
-                tx ? (tx.txHash ? tx.txHash.toString() : undefined) : undefined,
+                undefined, // no longer used
+                undefined, // no longer used
                 this.web2,
                 signature
             )
@@ -154,11 +156,13 @@ export class ProsopoCaptchaApi {
             throw new ProsopoApiError(err)
         }
 
-        let commitment: ProsopoCaptchaSolutionCommitment | undefined = undefined
+        let commitment: ArgumentTypes.Commit | undefined = undefined
 
         if (!this.web2) {
             try {
-                commitment = await this.contract.getCaptchaSolutionCommitment(commitmentId)
+                commitment = (await this.contract.query.getCaptchaSolutionCommitment(commitmentId)).value
+                    .unwrap()
+                    .unwrap()
             } catch (err) {
                 throw new ProsopoEnvError(err)
             }

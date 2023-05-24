@@ -15,7 +15,7 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import HttpClientBase from './HttpClientBase'
 import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
-import { CaptchaSolution, ProsopoRandomProvider } from '@prosopo/types'
+import { CaptchaSolution, ReturnTypes } from '@prosopo/types'
 
 export default class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
@@ -32,7 +32,7 @@ export default class ProviderApi extends HttpClientBase {
 
     public getCaptchaChallenge(
         userAccount: string,
-        randomProvider: ProsopoRandomProvider
+        randomProvider: ReturnTypes.RandomProvider
     ): Promise<GetCaptchaResponse> {
         const { provider } = randomProvider
         const { blockNumber } = randomProvider

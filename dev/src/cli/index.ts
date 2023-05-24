@@ -6,6 +6,7 @@ import { deployDapp, deployProtocol } from '../deploy/index'
 import { setup } from '../setup/index'
 import { updateEnvFiles } from '../util/updateEnv'
 import { runTests } from '../test/index'
+import builder from '../buildScripts/esbuild'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -82,6 +83,19 @@ export async function processArgs(args) {
             []
         )
         .command({
+            command: 'build',
+            describe: 'Build one or more packages in the workspace',
+            builder: (yargs) =>
+                yargs.option('packages', {
+                    type: 'array',
+                    demand: true,
+                }),
+            handler: async (argv) => {
+                console.log('Building...')
+                await Promise.all(builder(argv.packages))
+            },
+        })
+        .command({
             command: 'setup',
             describe:
                 'Setup the development environment by registering a provider, staking, loading a data set and then registering a dapp and staking.',
@@ -98,6 +112,7 @@ export async function processArgs(args) {
                 await runTests()
             },
         })
+
     await yargs.parse()
 }
 processArgs(process.argv.slice(2))

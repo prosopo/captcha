@@ -13,9 +13,6 @@
 // limitations under the License.
 import { z } from 'zod'
 import { CaptchaSolutionSchema } from '../datasets'
-import { DappAccounts } from '../contract'
-import { AccountId } from '@polkadot/types/interfaces'
-import { Vec } from '@polkadot/types-codec'
 
 export interface DappUserSolutionResult {
     captchas: CaptchaIdAndProof[]
@@ -52,12 +49,4 @@ export interface PendingCaptchaRequest {
     salt: string
     requestHash: string
     deadline: number // unix timestamp
-}
-
-export interface ProvidersAccountsResponse {
-    accounts: Vec<AccountId>
-}
-
-export interface DappsAccountsResponse {
-    accounts: DappAccounts
 }

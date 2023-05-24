@@ -110,7 +110,7 @@ describe('BATCH TESTS', function () {
             )
 
             const providerTasks = await getSignedTasks(env, providerAccount)
-            const providerDetails = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+            const providerDetails = await providerTasks.contract.getProviderDetails(accountAddress(providerAccount))
             const dappAccount = await getUser(env, AccountKey.dappsWithStake)
             const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
 

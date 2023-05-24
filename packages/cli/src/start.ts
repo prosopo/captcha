@@ -105,7 +105,9 @@ async function start(nodeEnv: string) {
 function stop() {
     apiAppSrv.close()
 }
-
-start(process.env.NODE_ENV || 'development').catch((error) => {
-    console.error(error)
-})
+//if running in main process
+if (require.main === module) {
+    start(process.env.NODE_ENV || 'development').catch((error) => {
+        console.error(error)
+    })
+}

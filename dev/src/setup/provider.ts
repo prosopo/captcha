@@ -12,20 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { KeyringPair } from '@polkadot/keyring/types'
-import { createType } from '@polkadot/types'
-import { Hash } from '@polkadot/types/interfaces'
 import { ProsopoEnvError } from '@prosopo/common'
-import { getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
+import { stringToHexPadded } from '@prosopo/contract'
 import { Tasks } from '@prosopo/provider'
 import { Environment } from '@prosopo/env'
 import { IProviderAccount } from '@prosopo/types'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds'
-import { loadJSONFile } from '@prosopo/cli/dist/files'
+import { loadJSONFile } from '@prosopo/cli'
+import { hexToU8a } from '@polkadot/util'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
-        const providerDetails = await env.contractInterface.getProviderDetails(account.address)
+        const providerDetails = (await env.contractInterface.query.getProviderDetails(account.address)).value
+            .unwrap()
+            .unwrap()
         console.log(providerDetails.status)
         if (providerDetails.status.toString() === 'Active') {
             env.logger.info('Provider exists and is active, skipping registration.')
@@ -39,7 +40,7 @@ export async function registerProvider(env: Environment, account: IProviderAccou
 
         account.address = providerKeyringPair.address
 
-        const stakeAmount = await env.contractInterface.getProviderStakeDefault()
+        const stakeAmount = await env.contractInterface.contract['providerStakeThreshold']()
 
         // use the minimum stake amount from the contract to create a reasonable stake amount
         account.stake = getStakeAmount(env, stakeAmount)
@@ -54,35 +55,36 @@ export async function registerProvider(env: Environment, account: IProviderAccou
     }
 }
 
-export async function setupProvider(env: ProsopoEnvironment, provider: IProviderAccount): Promise<Hash> {
+export async function setupProvider(env: ProsopoEnvironment, provider: IProviderAccount): Promise<void> {
     if (!provider.pair) {
         throw new ProsopoEnvError('DEVELOPER.MISSING_PROVIDER_PAIR', undefined, undefined, { provider })
     }
     await env.changeSigner(provider.pair)
     const logger = env.logger
     const tasks = new Tasks(env)
-    const payeeKey = 'ProsopoPayee'
     logger.info('   - providerRegister')
+    // const payeeType = env.contractInterface.abi.registry.lookup.types.filter(
+    //     (t) => t.type.path.indexOf('Payee') > -1
+    // )[0]
+    // const payeeTypeDef = abi.registry.lookup.getTypeDef(`Lookup${payeeType.id.toNumber()}`)
+
     try {
-        await tasks.contractApi.providerRegister(
-            stringToHexPadded(provider.serviceOrigin),
+        await tasks.contract.tx.providerRegister(
+            Array.from(hexToU8a(stringToHexPadded(provider.url))),
             provider.fee,
-            createType(env.contractInterface.abi.registry, payeeKey, provider.payee)
+            provider.payee
         )
     } catch (e) {
         logger.warn(e)
     }
     logger.info('   - providerStake')
-    await tasks.contractApi.providerUpdate(
-        stringToHexPadded(provider.serviceOrigin),
+    await tasks.contract.tx.providerUpdate(
+        Array.from(hexToU8a(stringToHexPadded(provider.url))),
         provider.fee,
-        createType(env.contractInterface.abi.registry, payeeKey, provider.payee),
-        provider.stake
+        provider.payee,
+        { value: provider.stake }
     )
-    logger.info('   - providerAddDataset')
+    logger.info('   - providerSetDataset')
     const datasetJSON = loadJSONFile(provider.datasetFile)
-    const datasetResult = await tasks.providerAddDatasetFromFile(datasetJSON)
-    datasetResult.contractEvents!.map((event) => logger.debug(JSON.stringify(event, null, 4)))
-    const events = getEventsFromMethodName(datasetResult, 'ProviderAddDataset')
-    return events[0].event.args[1] as Hash
+    await tasks.providerSetDatasetFromFile(datasetJSON)
 }

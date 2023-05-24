@@ -45,11 +45,11 @@ export function snakeToCamelCase(str: string): string {
     return str.replace(/([-_][a-z])/g, (group) => group.toUpperCase().replace('-', '').replace('_', ''))
 }
 
-export function reverseHexString(str: string): string {
-    return (
+export function reverseHexString(str: string): `0x${string}` {
+    return `0x${
         str
             .match(/.{1,2}/g)
             ?.reverse()
             .join('') || ''
-    )
+    }`
 }

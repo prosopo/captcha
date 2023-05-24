@@ -40,7 +40,7 @@ export class ProsopoServer {
             this.contractName = this.config.networks[this.defaultEnvironment].prosopoContract.name
             this.logger = logger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
-                type: 'sr25519', // TODO get this from the chain
+                storageType: 'sr25519', // TODO get this from the chain
             })
             this.abi = abiJson as ContractAbi
         } else {

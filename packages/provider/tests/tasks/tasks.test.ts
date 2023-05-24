@@ -78,7 +78,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             throw new ProsopoEnvError(e, 'changeSigner')
         }
         try {
-            providerStakeDefault = new BN(await tasks.contractApi.getProviderStakeDefault())
+            providerStakeDefault = new BN(await tasks.contract.getProviderStakeDefault())
         } catch (e) {
             throw new ProsopoEnvError(e, 'getProviderStakeDefault')
         }
@@ -106,7 +106,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         // There must exist a dapp that is staked who can use the service
         const dappContractAccount = await getUser(mockEnv, AccountKey.dappsWithStake)
         const tasks = await getSignedTasks(mockEnv, providerAccount)
-        const providerDetails = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const providerDetails = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
         //await sleep(132000)
         const solvedCaptchas = await mockEnv.db!.getRandomSolvedCaptchasFromSingleDataset(
             providerDetails.datasetId.toString(),
@@ -156,7 +156,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, [providerMnemonic, providerAddress])
 
-        const result: ContractSubmittableResult = await tasks.contractApi.providerRegister(
+        const result: ContractSubmittableResult = await tasks.contract.providerRegister(
             PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
             PROVIDER.fee,
             createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE)
@@ -170,7 +170,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
         const value = providerStakeDefault
-        const result: ContractSubmittableResult = await tasks.contractApi.providerUpdate(
+        const result: ContractSubmittableResult = await tasks.contract.providerUpdate(
             PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
             PROVIDER.fee,
             createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
@@ -186,10 +186,10 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const result: ContractSubmittableResult = await tasks.providerAddDatasetFromFile(
+        const result: ContractSubmittableResult = await tasks.providerSetDatasetFromFile(
             JSON.parse(JSON.stringify(captchaData))
         )
-        const eventData = getEventsFromMethodName(result, 'ProviderAddDataset')
+        const eventData = getEventsFromMethodName(result, 'providerSetDataset')
 
         expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
     })
@@ -199,7 +199,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const datasetPromise = tasks.providerAddDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
+        const datasetPromise = tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
 
         datasetPromise.catch((e) => {
             console.log(e)
@@ -227,8 +227,8 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             tree.build(captchasHashed)
             const commitmentId = tree.root!.hash
 
-            const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
-            await tasks.contractApi.dappUserCommit(
+            const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
+            await tasks.contract.dappUserCommit(
                 accountContract(dappContractAccount),
                 provider.datasetId.toString(),
                 commitmentId,
@@ -237,7 +237,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             )
 
             const providerTasks = await getSignedTasks(mockEnv, providerAccount)
-            const result = await providerTasks.contractApi.providerApprove(commitmentId, 0)
+            const result = await providerTasks.contract.providerApprove(commitmentId, 0)
             const events = getEventsFromMethodName(result, 'ProviderApprove')
 
             expect(events![0].args[0].toHuman()).to.equal(commitmentId)
@@ -265,9 +265,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
 
-        await tasks.contractApi.dappUserCommit(
+        await tasks.contract.dappUserCommit(
             accountContract(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
@@ -277,7 +277,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const providerTasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const result = await providerTasks.contractApi.providerDisapprove(commitmentId)
+        const result = await providerTasks.contract.providerDisapprove(commitmentId)
         const events = getEventsFromMethodName(result, 'ProviderDisapprove')
 
         expect(events![0].args[0].toHuman()).to.equal(commitmentId)
@@ -306,7 +306,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
 
         const commitment = [
             accountContract(dappContractAccount),
@@ -319,7 +319,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         console.log('Commitment:', commitment)
 
-        const result: ContractSubmittableResult = await tasks.contractApi.dappUserCommit(
+        const result: ContractSubmittableResult = await tasks.contract.dappUserCommit(
             accountContract(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
@@ -356,9 +356,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
 
-        await tasks.contractApi.dappUserCommit(
+        await tasks.contract.dappUserCommit(
             accountContract(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
@@ -368,12 +368,12 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const providerTasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const result = await providerTasks.contractApi.providerApprove(commitmentId, 0)
+        const result = await providerTasks.contract.providerApprove(commitmentId, 0)
         const events = getEventsFromMethodName(result, 'ProviderApprove')
 
         expect(events![0].args[0].toHuman()).to.equal(commitmentId)
 
-        const commitment = await providerTasks.contractApi.getCaptchaSolutionCommitment(commitmentId)
+        const commitment = await providerTasks.contract.getCaptchaSolutionCommitment(commitmentId)
 
         // check the timestamp
         const completedAt = parseInt(commitment.completedAt.toString().replace(',', ''))
@@ -381,7 +381,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         expect(completedAt).to.be.above(0)
 
         // check how much time passed after successful completion
-        const lastCorrectCaptcha = await providerTasks.contractApi.getDappOperatorLastCorrectCaptcha(
+        const lastCorrectCaptcha = await providerTasks.contract.getDappOperatorLastCorrectCaptcha(
             accountAddress(dappUserAccount)
         )
 
@@ -393,7 +393,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
             const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-            const result = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+            const result = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
             expect(result).to.have.a.property('status')
         } catch (err) {
             throw new ProsopoEnvError(err, 'providerDetails')
@@ -405,7 +405,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const result = await tasks.contractApi.getProviderAccounts()
+        const result = await tasks.contract.getProviderAccounts()
 
         expect(result).to.be.an('array')
     })
@@ -434,10 +434,10 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             (event) => event.event.section === 'contracts'
         )
         const contractAddress = instantiateEvent?.event.data['contract'].toString()
-        const result: ContractSubmittableResult = await tasks.contractApi.dappRegister(contractAddress, 'Dapp')
+        const result: ContractSubmittableResult = await tasks.contract.dappRegister(contractAddress, 'Dapp')
         expect(result.txHash).to.not.be.empty
 
-        const dapp = await tasks.contractApi.getDappDetails(contractAddress)
+        const dapp = await tasks.contract.getDappDetails(contractAddress)
         expect(dapp.owner).to.equal(accountAddress(newAccount))
     })
 
@@ -456,7 +456,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, dappAccount)
 
-        const result: any = await tasks.contractApi.getDappDetails(accountContract(dappAccount))
+        const result: any = await tasks.contract.getDappDetails(accountContract(dappAccount))
 
         expect(result).to.have.a.property('status')
     })
@@ -466,9 +466,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const tasks = await getSignedTasks(mockEnv, dappAccount)
         const value = createType(mockEnv.contractInterface.abi.registry, 'u128', '10')
         const dappContractAddress = accountContract(dappAccount)
-        const dappBefore = await tasks.contractApi.getDappDetails(dappContractAddress)
-        await tasks.contractApi.dappFund(dappContractAddress, value)
-        const dappAfter = await tasks.contractApi.getDappDetails(dappContractAddress)
+        const dappBefore = await tasks.contract.getDappDetails(dappContractAddress)
+        await tasks.contract.dappFund(dappContractAddress, value)
+        const dappAfter = await tasks.contract.getDappDetails(dappContractAddress)
         // Do not do this https://github.com/polkadot-js/api/issues/5365
         //const dapp = createType(mockEnv.contractInterface.abi.registry, 'ProsopoDapp', dappStruct.toU8a())
         // @ts-ignore
@@ -498,9 +498,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
 
-        const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
 
-        const result: ContractSubmittableResult = await tasks.contractApi.dappUserCommit(
+        const result: ContractSubmittableResult = await tasks.contract.dappUserCommit(
             accountContract(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
@@ -535,7 +535,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
 
         const dappUserTasks = await getSignedTasks(mockEnv, dappUserAccount)
-        const provider = await dappUserTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const provider = await dappUserTasks.contract.getProviderDetails(accountAddress(providerAccount))
 
         const captchas = await dappUserTasks.getCaptchaWithProof(provider.datasetId.toString(), true, 1)
 
@@ -560,9 +560,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = await dappUserTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const provider = await dappUserTasks.contract.getProviderDetails(accountAddress(providerAccount))
 
-        const dappUserCommitResponse = await dappUserTasks.contractApi.dappUserCommit(
+        const dappUserCommitResponse = await dappUserTasks.contract.dappUserCommit(
             accountContract(dappContractAccount),
             provider.datasetId.toString(),
             commitmentId,
@@ -710,9 +710,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
 
-        const provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
 
-        await tasks.contractApi.dappUserCommit(
+        await tasks.contract.dappUserCommit(
             accountContract(dappAccount),
             provider.datasetId.toString(),
             initialCommitmentId,
@@ -723,7 +723,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         expect(tree).to.deep.equal(initialTree)
         expect(commitmentId).to.equal(initialCommitmentId)
-        const commitment = await tasks.contractApi.getCaptchaSolutionCommitment(commitmentId)
+        const commitment = await tasks.contract.getCaptchaSolutionCommitment(commitmentId)
         expect(commitment).to.not.be.undefined
     })
 
@@ -798,7 +798,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
                 'dappContractAccount',
                 accountContract(dappAccount)
             )
-            const { provider } = await dappUserTasks.contractApi.getRandomProvider(
+            const { provider } = await dappUserTasks.contract.getRandomProvider(
                 accountAddress(dappUserAccount),
                 accountContract(dappAccount)
             )
@@ -821,10 +821,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, dappAccount)
 
-        const res = await tasks.contractApi.getRandomProvider(
-            accountContract(dappAccount),
-            accountContract(dappAccount)
-        )
+        const res = await tasks.contract.getRandomProvider(accountContract(dappAccount), accountContract(dappAccount))
         const blockNumberParsed = parseBlockNumber(res.blockNumber.toString())
         await tasks.validateProviderWasRandomlyChosen(
             accountContract(dappAccount),
@@ -850,31 +847,31 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        let provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        let provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
 
-        await tasks.contractApi.providerUpdate(
+        await tasks.contract.providerUpdate(
             provider.serviceOrigin.toString(),
             provider.fee as unknown as number,
             createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
             0
         )
-        provider = await tasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+        provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
         expect(provider.status).to.equal('Deactivated')
-        await tasks.contractApi.providerUpdate(
+        await tasks.contract.providerUpdate(
             provider.serviceOrigin.toString() as string,
             provider.fee as unknown as number,
             createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
             providerStakeDefault
         )
 
-        await tasks.providerAddDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
+        await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
 
         const dappAccount = await getUser(mockEnv, AccountKey.dappsWithStake)
         const dappUser = await getUser(mockEnv, AccountKey.dappUsers)
 
         const dappUserTasks = await getSignedTasks(mockEnv, dappUser)
 
-        const res = await dappUserTasks.contractApi.getRandomProvider(
+        const res = await dappUserTasks.contract.getRandomProvider(
             accountAddress(dappUser),
             accountContract(dappAccount)
         )
@@ -899,7 +896,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const value = 1
 
-        const result: ContractSubmittableResult = await tasks.contractApi.providerUnstake(value)
+        const result: ContractSubmittableResult = await tasks.contract.providerUnstake(value)
         const events = getEventsFromMethodName(result, 'ProviderUnstake')
 
         expect(events![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
@@ -910,7 +907,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const result: ContractSubmittableResult = await tasks.contractApi.providerDeregister(
+        const result: ContractSubmittableResult = await tasks.contract.providerDeregister(
             accountAddress(providerAccount)
         )
         const events = getEventsFromMethodName(result, 'ProviderDeregister')

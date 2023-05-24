@@ -1,10 +1,10 @@
-import { HexString } from '@polkadot/util/types'
 import { Captcha, CaptchaTypes, CaptchaWithoutId, CaptchasSchema, SelectAllCaptchaSchema } from './captcha'
 import { z } from 'zod'
+import { ArgumentTypes } from '../contract/typechain/captcha/types-arguments'
 
 export type DatasetBase = {
-    datasetId?: HexString | string | null
-    datasetContentId?: HexString | string | null
+    datasetId?: ArgumentTypes.Hash
+    datasetContentId?: ArgumentTypes.Hash
     format: CaptchaTypes
     contentTree?: string[][]
     solutionTree?: string[][]
@@ -19,8 +19,8 @@ export interface DatasetRaw extends DatasetBase {
 }
 
 export type DatasetWithIds = {
-    datasetId: HexString | string
-    datasetContentId: HexString | string | null
+    datasetId: ArgumentTypes.Hash
+    datasetContentId: ArgumentTypes.Hash
     captchas: Captcha[]
     format: CaptchaTypes
     contentTree?: string[][]

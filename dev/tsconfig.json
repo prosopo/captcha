@@ -7,11 +7,10 @@
         "target": "esnext",
         "types": [
             "mocha"
-        ]
+        ],
     },
     "include": [
         "./src/**/*.ts"
-        //    "./tests/**/*.ts"
     ],
 
     "references": [
@@ -20,6 +19,9 @@
         },
         {
             "path": "../packages/common"
+        },
+        {
+            "path": "../packages/contract"
         },
         {
             "path": "../packages/env"

@@ -19,18 +19,19 @@
   },
   "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
-    "consola": "^2.15.3",
+    "@727-ventures/typechain-types": "^1.0.0-beta.1",
     "@polkadot/api": "10.7.1",
     "@polkadot/api-contract": "10.7.1",
     "@polkadot/types": "10.7.1",
     "@polkadot/types-codec": "10.7.1",
     "@prosopo/common": "^0.1.11",
+    "consola": "^2.15.3",
     "zod": "^3.17.9"
   },
   "devDependencies": {
     "@types/node": "^18.0.6",
     "tslib": "^2.4.0",
-    "typescript": "^5.0.4"
+    "typescript": "^4.9.4"
   },
   "sideEffects": false
 }

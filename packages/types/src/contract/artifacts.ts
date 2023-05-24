@@ -153,34 +153,34 @@ export const AbiCellSpec = z.object({
 })
 export const AbiTypesSpec = z.array(AbiTypeSpec)
 
-export const AbiStorageEntrySpec = z.lazy(() =>
+export const AbiStorageFieldSpec = z.lazy(() =>
     z.object({
         name: AbiText.optional(),
         layout: z.object({
             leaf: AbiCellSpec.optional(),
             enum: AbiEnumSpec.optional(),
-            root: AbiStorageEntrySpec.optional(),
-            struct: AbiStructSpec.optional(),
+            root: AbiStorageFieldSpec.optional(),
+            struct: AbiStorageStructSpec.optional(),
         }),
         root_key: AbiText.optional(),
     })
 )
 
-export const AbiStructSpec = z.object({
-    fields: z.array(AbiStorageEntrySpec),
+export const AbiStorageStructSpec = z.object({
+    fields: z.array(AbiStorageFieldSpec),
     name: z.string(),
 })
 
 export const AbiStorageSpec = z.object({
     root: z.object({
         layout: z.object({
-            struct: AbiStructSpec.optional(),
+            struct: AbiStorageStructSpec.optional(),
         }),
     }),
 })
 
 export type AbiStorage = z.infer<typeof AbiStorageSpec>
-export type AbiStorageEntry = z.infer<typeof AbiStorageEntrySpec>
+export type AbiStorageField = z.infer<typeof AbiStorageFieldSpec>
 
 export const AbiSpecDef = z.object({
     constructors: z.array(z.any()),

@@ -17,8 +17,8 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import { AssetsResolver, ContractAbi, EnvironmentTypes, IProsopoContractMethods, ProsopoConfig } from '@prosopo/types'
+import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
+import { AssetsResolver, ContractAbi, EnvironmentTypes, ProsopoConfig } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { LogLevel } from 'consola'
@@ -28,7 +28,7 @@ import { Databases } from '@prosopo/database'
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: IProsopoContractMethods
+    contractInterface: ProsopoCaptchaContract
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     contractName: string
@@ -97,10 +97,10 @@ export class Environment implements ProsopoEnvironment {
         this.contractInterface = await this.getContractApi()
     }
 
-    async getContractApi(): Promise<IProsopoContractMethods> {
+    async getContractApi(): Promise<ProsopoCaptchaContract> {
         const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
         this.logger.debug('Getting new contract instance with pair', this.pair.address, 'nonce', nonce.toString())
-        this.contractInterface = new ProsopoContractMethods(
+        this.contractInterface = new ProsopoCaptchaContract(
             this.api,
             this.abi,
             this.contractAddress,

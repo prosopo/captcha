@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ContractAbi, IProsopoContractMethods } from '@prosopo/types' // contract
-import { AssetsResolver } from '@prosopo/types' // datasets
+import { ContractAbi } from '@prosopo/types'
+import { AssetsResolver } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { ProsopoConfig } from '@prosopo/types' // config
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -23,7 +23,7 @@ import { Logger } from '@prosopo/common'
 export interface ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: IProsopoContractMethods
+    contractInterface: any
     contractAddress: string
     defaultEnvironment: string
     contractName: string

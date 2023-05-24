@@ -1,5 +1,6 @@
 import { BN } from '@polkadot/util'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { Payee } from '../contract/typechain/captcha/types-arguments/captcha'
 
 export interface IUserAccount {
     secret?: string
@@ -7,11 +8,11 @@ export interface IUserAccount {
 }
 
 export interface IProviderAccount extends IUserAccount {
-    serviceOrigin: string
+    url: string
     fee: number
     datasetFile: string
     stake: number | BN
-    payee: string
+    payee: Payee
     captchaDatasetId: string
     pair?: KeyringPair
 }
