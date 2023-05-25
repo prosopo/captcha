@@ -2058,7 +2058,7 @@ pub mod captcha {
                 DappPayee::Provider
             }
 
-            fn get_dapp_contract(index: u128) -> AccountId {
+            fn get_dapp_contract_account(index: u128) -> AccountId {
                 let account = get_account(DAPP_CONTRACT_ACCOUNT_PREFIX, index);
                 // mark the account as a contract
                 set_contract(account);
@@ -2083,7 +2083,7 @@ pub mod captcha {
                 set_caller(get_dapp_account(index));
                 // register the dapp
                 contract.dapp_register(
-                    get_dapp_contract(index),
+                    get_dapp_contract_account(index),
                     get_dapp_payee(),
                 ).unwrap();
 
@@ -2365,6 +2365,7 @@ pub mod captcha {
                     get_dapp_account,
                     get_user_account,
                     get_contract_account,
+                    get_dapp_contract_account,
                 ]
                 .iter()
                 {
