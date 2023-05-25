@@ -2039,7 +2039,7 @@ pub mod captcha {
                     get_provider_url(index),
                     get_provider_fee(),
                     get_provider_payee(),
-                );
+                ).unwrap();
                 // avoid accidentally reusing callee / caller
                 reset_caller_and_callee();
             }
@@ -2051,7 +2051,7 @@ pub mod captcha {
                 contract.dapp_register(
                     get_dapp_contract(index),
                     get_dapp_payee(),
-                );
+                ).unwrap();
 
                 // avoid accidentally reusing callee / caller
                 reset_caller_and_callee();
@@ -2061,9 +2061,9 @@ pub mod captcha {
                 let mut contract = get_contract(index);
                 for i in 0..size {
                     // register the provider
-                    register_provider(&mut contract, i);
+                    register_provider(&mut contract, i).unwrap();
                     // register the dapp
-                    register_dapp(&mut contract, i);
+                    register_dapp(&mut contract, i).unwrap();
                 }
                 contract
             }
