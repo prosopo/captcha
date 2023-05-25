@@ -2285,7 +2285,7 @@ pub mod captcha {
                 reset_caller_and_callee();
 
                 // only able to instantiate from the alice account
-                let account = AUTHOR.clone();
+                let mut account = AUTHOR.clone();
                 // ensure the account is not the author
                 account[0] = account[0].wrapping_add(1);
                 set_caller(AccountId::from(account));
