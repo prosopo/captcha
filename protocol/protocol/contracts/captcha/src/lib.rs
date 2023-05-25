@@ -2117,7 +2117,14 @@ pub mod captcha {
                 assert_eq!(contract.get_payees(), vec![Payee::Provider, Payee::Dapp]);
             }
 
-            
+            #[ink::test]
+            fn test_get_dapp_payees() {
+                reset_caller_and_callee();
+
+                let mut contract = get_contract(0);
+
+                assert_eq!(contract.get_dapp_payees(), vec![DappPayee::Provider]);
+            }
 
 
             #[ink::test]
