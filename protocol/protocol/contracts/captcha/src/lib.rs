@@ -1044,6 +1044,9 @@ pub mod captcha {
         fn provider_record_commit(&mut self, commit: &Commit) -> Result<(), Error> {
             let caller = self.env().caller();
 
+            // validate the commit
+            self.validate_commit(commit)?;
+
             // ensure the provider is active
             self.validate_provider_active(caller)?;
             // ensure the dapp is active
