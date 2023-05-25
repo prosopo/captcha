@@ -409,6 +409,31 @@ pub mod captcha {
         }
 
         #[ink(message)]
+        pub fn get_max_provider_fee(&self) -> Balance {
+            self.max_provider_fee
+        }
+
+        #[ink(message)]
+        pub fn get_min_num_active_providers(&self) -> u16 {
+            self.min_num_active_providers
+        }
+
+        #[ink(message)]
+        pub fn get_rewind_window(&self) -> u8 {
+            self.rewind_window
+        }
+
+        #[ink(message)]
+        pub fn get_max_user_history_len(&self) -> u16 {
+            self.max_user_history_len
+        }
+
+        #[ink(message)]
+        pub fn get_max_user_history_age(&self) -> BlockNumber {
+            self.max_user_history_age
+        }
+
+        #[ink(message)]
         pub fn get_random_active_provider(&self, user_account: AccountId, dapp_account: AccountId) -> Result<RandomActiveProvider, Error> {
             self.get_random_active_provider_at(user_account, dapp_account, self.env().block_number())
         }
