@@ -2070,12 +2070,36 @@ pub mod captcha {
 
             #[ink::test]
             fn test_provider_register_url_empty() {
+                reset_caller_and_callee();
 
+                let mut contract = get_contract(0);
+                let provider_account = get_provider_account(0);
+                // set the caller to the provider account
+                set_caller(provider_account);
+                // register the provider
+                // expect err because url is empty
+                contract.provider_register(
+                    vec![],
+                    get_provider_fee(),
+                    get_provider_payee(),
+                ).unwrap_err();
             }
 
             #[ink::test]
             fn test_provider_update_url_empty() {
+                reset_caller_and_callee();
 
+                let mut contract = get_contract_populated(0, 1);
+                let provider_account = get_provider_account(0);
+                // set the caller to the provider account
+                set_caller(provider_account);
+                // register the provider
+                // expect err because url is empty
+                contract.provider_update(
+                    vec![],
+                    get_provider_fee(),
+                    get_provider_payee(),
+                ).unwrap_err();
             }
 
             #[ink::test]
