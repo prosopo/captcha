@@ -2056,6 +2056,17 @@ pub mod captcha {
                 reset_caller_and_callee();
             }
 
+            fn get_contract_populated(index: u128, size: u128) -> Captcha {
+                let mut contract = get_contract(index);
+                for i in 0..size {
+                    // register the provider
+                    register_provider(&mut contract, i);
+                    // register the dapp
+                    register_dapp(&mut contract, i);
+                }
+                contract
+            }
+
             #[ink::test]
             fn test_provider_register_url_empty() {
 
