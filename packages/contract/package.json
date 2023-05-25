@@ -7,8 +7,7 @@
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
     "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix",
-    "contract:import": "@727-ventures/typechain-polkadot --in $1 --out src/typechain/$2"
+    "lint:fix": "npx eslint . --fix"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

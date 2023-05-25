@@ -22,7 +22,7 @@ import path from 'path'
 import { setupDapp } from './dapp'
 import { registerProvider } from './provider'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import { Payee } from '@prosopo/types/contract/typechain/captcha/types-arguments/captcha'
+import { ArgumentTypes } from '@prosopo/types'
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
@@ -33,7 +33,7 @@ function getDefaultProvider(): IProviderAccount {
     return {
         url: process.env.API_PORT ? `http://localhost:${process.env.API_PORT}` : 'http://localhost:3000',
         fee: 10,
-        payee: Payee.dapp,
+        payee: ArgumentTypes.Payee.dapp,
         stake: Math.pow(10, 13),
         datasetFile: path.resolve('./data/captchas.json'),
         address: process.env.PROVIDER_ADDRESS || '',

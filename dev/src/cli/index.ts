@@ -2,10 +2,12 @@ import { loadEnv } from '@prosopo/cli'
 import consola, { LogLevel } from 'consola'
 import path from 'path'
 import yargs from 'yargs'
-import { deployDapp, deployProtocol } from '../deploy/index'
+import { deployDapp, deployProtocol } from '../contract/deploy/index'
 import { setup } from '../setup/index'
 import { updateEnvFiles } from '../util/updateEnv'
 import { runTests } from '../test/index'
+import fs from 'fs'
+import { importContract } from '../contract'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -96,6 +98,32 @@ export async function processArgs(args) {
             handler: async () => {
                 console.log('Running tests')
                 await runTests()
+            },
+        })
+        .command({
+            command: 'import_contract',
+            describe: 'Import a contract into the contract package.',
+            builder: (yargs) =>
+                yargs
+                    .option('in', {
+                        type: 'string',
+                        demand: true,
+                        desc: "The path to the contract's abi",
+                    })
+                    .option('out', {
+                        type: 'string',
+                        demand: true,
+                        desc: 'The path to the output directory',
+                    }),
+            handler: async (argv) => {
+                const abiPath = path.resolve(argv.in)
+                if (!fs.existsSync(abiPath)) {
+                    throw new Error(
+                        `abiPath ${abiPath} does not exist. The command is running relative to the dev package.`
+                    )
+                }
+                const outPath = path.resolve(argv.out)
+                await importContract(abiPath, outPath)
             },
         })
 

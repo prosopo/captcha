@@ -6,7 +6,7 @@ import { ContractDeployer, oneUnit } from '@prosopo/contract'
 import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
 import { Environment } from '@prosopo/env'
 import path from 'path'
-import { AbiJSON, Wasm } from '../util'
+import { AbiJSON, Wasm } from '../../util'
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
