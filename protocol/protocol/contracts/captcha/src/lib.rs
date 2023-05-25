@@ -1902,6 +1902,7 @@ pub mod captcha {
         const default_accounts: fn() -> ink::env::test::DefaultAccounts<
             ink::env::DefaultEnvironment,
         > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
+        const advance_block: fn() = ink::env::test::advance_block::<ink::env::DefaultEnvironment>;
 
         const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
         const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
@@ -2114,7 +2115,19 @@ pub mod captcha {
 
             #[ink::test]
             fn test_update_seed_once_per_block() {
+                reset_caller_and_callee();
 
+                let mut contract = get_contract_populated(0, 1);
+
+                let provider_account = get_provider_account(0);
+
+                set_caller(provider_account);
+                for i in 0..10 {
+                    contract.update_seed().unwrap();
+                    // updating in the same block should fail
+                    contract.update_seed().unwrap_err();
+                    advance_block();
+                }
             }
 
             #[ink::test]
