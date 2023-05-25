@@ -2209,6 +2209,28 @@ pub mod captcha {
             }
 
             #[ink::test]
+            fn test_get_rewind_window_start() {
+                reset_caller_and_callee();
+
+                let mut contract = get_contract(0);
+
+                // expect rewind window start to be zero when block < rewind window
+                // this test only works with rewind window > 0
+                assert!(contract.get_rewind_window() > 0);
+
+                for i in 0..contract.get_rewind_window() {
+                    assert_eq!(contract.get_rewind_window_start(), 0);
+                    advance_block();
+                }
+
+                // expect rewind window start to be exactly rewind window when block > rewind window
+                for i in 0..10 {
+                    assert_eq!(contract.get_rewind_window_start(), contract.env().block_number() - contract.get_rewind_window() as u32);
+                    advance_block();
+                }
+            }
+
+            #[ink::test]
             fn test_update_seed() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
