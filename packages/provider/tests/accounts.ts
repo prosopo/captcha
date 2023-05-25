@@ -17,6 +17,8 @@ import { Tasks } from '../src/index'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { getPair } from '@prosopo/common'
 import { KeypairType } from '@polkadot/util-crypto/types'
+import { Payee } from '@prosopo/types/dist/contract/typechain/captcha/types-arguments/captcha'
+
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]
 export const accountContract = function (account: Account): string {
@@ -28,9 +30,9 @@ export const accountContract = function (account: Account): string {
 export type Account = [mnemonic: string, address: string, contractAddress?: string]
 
 export const PROVIDER: IProviderAccount = {
-    serviceOrigin: 'http://localhost:8282',
+    url: 'http://localhost:8282',
     fee: 10,
-    payee: 'Provider',
+    payee: Payee.dapp,
     stake: new BN(1000000000000000),
     datasetFile: './data/captchas.json',
     captchaDatasetId: '',

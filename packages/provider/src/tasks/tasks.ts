@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Hash } from '@polkadot/types/interfaces'
 import { stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import {
@@ -36,6 +35,7 @@ import {
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
+    RandomProvider,
 } from '@prosopo/types'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { ProsopoEnvironment } from '@prosopo/types-env'
@@ -44,7 +44,7 @@ import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
-import { ReturnTypes } from '@prosopo/types'
+import { Hash } from '@prosopo/types'
 import { SubmittableResult } from '@polkadot/api'
 import { ArgumentTypes } from '@prosopo/types'
 
@@ -134,105 +134,6 @@ export class Tasks {
     }
 
     /**
-     * Validate and store the captcha solution(s) from the Dapp User in a web3 environment
-     * @param {string} userAccount
-     * @param {string} dappAccount
-     * @param {string} requestHash
-     * @param {JSON} captchas
-     * @param blockHash
-     * @param txHash
-     * @return {Promise<DappUserSolutionResult>} result containing the contract event
-     */
-    async dappUserSolution(
-        userAccount: string,
-        dappAccount: string,
-        requestHash: string,
-        captchas: CaptchaSolution[],
-        blockHash: string,
-        txHash: string
-    ): Promise<DappUserSolutionResult> {
-        if (!(await this.dappIsActive(dappAccount))) {
-            throw new ProsopoEnvError('CONTRACT.DAPP_NOT_ACTIVE', this.getPaymentInfo.name, {}, { dappAccount })
-        }
-        if (blockHash === '' || txHash === '') {
-            throw new ProsopoEnvError(
-                'API.BAD_REQUEST',
-                this.getPaymentInfo.name,
-                {},
-                { userAccount, dappAccount, requestHash, blockHash, txHash }
-            )
-        }
-
-        const paymentInfo = await this.getPaymentInfo(userAccount, blockHash, txHash)
-        if (!paymentInfo) {
-            throw new ProsopoEnvError(
-                'API.PAYMENT_INFO_NOT_FOUND',
-                this.getPaymentInfo.name,
-                {},
-                { userAccount, blockHash, txHash }
-            )
-        }
-        const partialFee = paymentInfo?.partialFee
-        let response: DappUserSolutionResult = {
-            captchas: [],
-            partialFee: '0',
-            solutionApproved: false,
-        }
-        const { storedCaptchas, receivedCaptchas, captchaIds } =
-            await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
-        const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
-        const providerDetails = (await this.contract.methods.getProviderDetails(this.contract.pair.address, {})).value
-            .unwrap()
-            .unwrap()
-        const commitment = (await this.contract.methods.getCaptchaSolutionCommitment(commitmentId, {})).value
-            .unwrap()
-            .unwrap()
-        if (!commitment) {
-            throw new ProsopoEnvError(
-                'CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST',
-                this.dappUserSolution.name,
-                {},
-                { commitmentId: commitmentId }
-            )
-        }
-        const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
-        // Only do stuff if the commitment is Pending on chain and in local DB (avoid using Approved commitments twice)
-        if (pendingRequest && commitment.status.toString() === 'Pending') {
-            await this.db.storeDappUserSolution(
-                receivedCaptchas,
-                commitmentId,
-                userAccount,
-                dappAccount,
-                providerDetails.datasetId.toString()
-            )
-            if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
-                //await this.contract.providerApprove(commitmentId, partialFee)
-                response = {
-                    captchas: captchaIds.map((id) => ({
-                        captchaId: id,
-                        proof: tree.proof(id),
-                    })),
-                    partialFee: partialFee.toString(),
-                    solutionApproved: true,
-                }
-                await this.db.approveDappUserCommitment(commitmentId)
-            } else {
-                //await this.contract.providerDisapprove(commitmentId)
-                response = {
-                    captchas: captchaIds.map((id) => ({
-                        captchaId: id,
-                        proof: [[]],
-                    })),
-                    partialFee: partialFee.toString(),
-                    solutionApproved: false,
-                }
-            }
-        }
-
-        return response
-    }
-
-    /**
      * Validate and store the text captcha solution(s) from the Dapp User in a web2 environment
      * @param {string} userAccount
      * @param {string} dappAccount
@@ -241,7 +142,7 @@ export class Tasks {
      * @param {string} signature
      * @return {Promise<DappUserSolutionResult>} result containing the contract event
      */
-    async dappUserSolutionWeb2(
+    async dappUserSolution(
         userAccount: string,
         dappAccount: string,
         requestHash: string,
@@ -256,7 +157,7 @@ export class Tasks {
         const verification = signatureVerify(stringToHex(requestHash), signature, userAccount)
         if (!verification.isValid) {
             // the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-            throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', this.dappUserSolutionWeb2.name, {}, { userAccount })
+            throw new ProsopoEnvError('GENERAL.INVALID_SIGNATURE', this.dappUserSolution.name, {}, { userAccount })
         }
 
         let response: DappUserSolutionResult = {
@@ -566,7 +467,7 @@ export class Tasks {
         }
 
         const block = (await contract.api.rpc.chain.getBlockHash(blockNo)) as BlockHash
-        const randomProviderAndBlockNo = await this.contract.queryAtBlock<ReturnTypes.RandomProvider>(
+        const randomProviderAndBlockNo = await this.contract.queryAtBlock<RandomProvider>(
             block,
             'getRandomActiveProvider',
             [userAccount, dappContractAccount]

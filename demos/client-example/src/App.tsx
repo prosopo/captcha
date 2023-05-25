@@ -3,7 +3,8 @@ import { useState } from 'react'
 
 import { ProcaptchaOutput } from '@prosopo/procaptcha'
 
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
+import { ExtensionAccountSelect } from '@prosopo/procaptcha-react/dist/components'
+import { Procaptcha } from '@prosopo/procaptcha-react/dist/components'
 
 import './App.css'
 

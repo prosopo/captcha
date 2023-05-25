@@ -81,11 +81,9 @@ export class ProsopoCaptchaContract extends Contract {
         const api = (await this.api.at(blockHash)) as ApiPromise
         const methods = new MixedMethods(api, this.contract, this.signer)
         if (args) {
-            return (await methods[methodName](...args)
-                .value.unwrap()
-                .unwrap()) as T
+            return (await methods[methodName](...args)).value.unwrap().unwrap() as T
         } else {
-            return methods[methodName]() as T
+            return (await methods[methodName]()).value.unwrap().unwrap() as T
         }
     }
 

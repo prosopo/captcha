@@ -11,28 +11,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { stringToHexPadded } from '@prosopo/contract'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ContractDeployer, stringToHexPadded } from '@prosopo/contract'
+import { ProsopoEnvError, TranslationKey, getPair } from '@prosopo/common'
 import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds'
 import { Tasks } from '../../src/tasks'
 import { IDatabaseAccounts } from './DatabaseAccounts'
 import { Environment } from '@prosopo/env'
-import { TranslationKey, getPair } from '@prosopo/common'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
 import { AnyNumber } from '@polkadot/types-codec/types'
-import { accountAddress, accountContract, accountMnemonic } from '../accounts'
-import { Account } from '../accounts'
-import { ContractDeployer } from '@prosopo/contract'
+import { Account, accountAddress, accountContract, accountMnemonic } from '../accounts'
 import { Abi } from '@polkadot/api-contract'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { captchaData } from '../data/captchas'
+import { Payee } from '@prosopo/types'
+import { DappPayee } from '@prosopo/contract/dist/typechain/captcha/types-arguments/captcha'
 
-const serviceOriginBase = 'http://localhost:'
+const urlBase = 'http://localhost:'
 
 const PROVIDER_FEE = 10
-const PROVIDER_PAYEE = 'Dapp'
+const PROVIDER_PAYEE = Payee.dapp
 
 export enum IDatabasePopulatorMethodNames {
     registerProvider = 'registerProvider',
@@ -44,10 +43,10 @@ export enum IDatabasePopulatorMethodNames {
 }
 
 export class IDatabasePopulatorMethods {
-    registerProvider: (fund: boolean, serviceOrigin?: string, noPush?: boolean) => Promise<Account>
+    registerProvider: (fund: boolean, url?: string, noPush?: boolean) => Promise<Account>
     registerProviderWithStake: (fund: boolean) => Promise<Account>
     registerProviderWithStakeAndDataset: (fund: boolean) => Promise<Account>
-    registerDapp: (fund: boolean, serviceOrigin?: string, noPush?: boolean) => Promise<Account>
+    registerDapp: (fund: boolean, url?: string, noPush?: boolean) => Promise<Account>
     registerDappWithStake: (fund: boolean) => Promise<Account>
     registerDappUser: (fund: boolean) => Promise<Account>
 }
@@ -83,9 +82,8 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         this._isReady = this.mockEnv.isReady().then(() => {
             try {
                 const tasks = new Tasks(this.mockEnv)
-
-                return tasks.contract.getProviderStakeDefault().then((res) => {
-                    this.providerStakeDefault = new BN(res)
+                return tasks.contract.query.getProviderStakeThreshold().then((res) => {
+                    this.providerStakeDefault = new BN(res.value.unwrap().toNumber())
                     this.stakeAmount = getStakeAmount(env, this.providerStakeDefault)
                     this.sendAmount = getSendAmount(env, this.stakeAmount)
                 })
@@ -189,9 +187,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         return this.mockEnv.changeSigner(pair)
     }
 
-    public async registerProvider(fund: boolean, serviceOrigin?: string, noPush?: boolean): Promise<Account> {
+    public async registerProvider(fund: boolean, url?: string, noPush?: boolean): Promise<Account> {
         try {
-            const _serviceOrigin = serviceOrigin || serviceOriginBase + randomAsHex().slice(0, 8)
+            const _url = url || urlBase + randomAsHex().slice(0, 8)
 
             const account = this.createAccount()
             this.mockEnv.logger.debug(
@@ -200,7 +198,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 '`',
                 'with service origin',
-                _serviceOrigin
+                _url
             )
             if (fund) {
                 await this.sendFunds(accountAddress(account), 'Provider', this.sendAmount)
@@ -213,16 +211,15 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             // console.log(providerMaxFee)
             // process.exit()
 
-            const result = await tasks.contract.providerRegister(
-                stringToHexPadded(_serviceOrigin),
+            await tasks.contract.tx.providerRegister(
+                [stringToHexPadded(_url)],
                 createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
-                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE)
+                PROVIDER_PAYEE
             )
-            this.mockEnv.logger.debug(
-                'Event: ',
-                result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
-            )
-            const provider = await tasks.contract.getProviderDetails(accountAddress(account))
+
+            const provider = (await tasks.contract.query.getProviderDetails(accountAddress(account))).value
+                .unwrap()
+                .unwrap()
             //console.log('Registered provider', provider)
             if (!noPush) {
                 this._registeredProviders.push(account)
@@ -233,21 +230,17 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    private async updateProvider(account: Account, serviceOrigin: string) {
+    private async updateProvider(account: Account, url: string) {
         try {
             await this.changeSigner(account)
 
             const tasks = new Tasks(this.mockEnv)
 
-            const result = await tasks.contract.providerUpdate(
-                stringToHexPadded(serviceOrigin),
+            await tasks.contract.tx.providerUpdate(
+                [stringToHexPadded(url)],
                 createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
-                createType(this.mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-                this.stakeAmount
-            )
-            this.mockEnv.logger.debug(
-                'Event: ',
-                result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
+                PROVIDER_PAYEE,
+                { value: this.stakeAmount }
             )
 
             //const provider = await tasks.contractApi.getProviderDetails(accountAddress(account))
@@ -259,11 +252,11 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     public async registerProviderWithStake(fund: boolean): Promise<Account> {
         try {
-            const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
+            const url = urlBase + randomAsHex().slice(0, 8)
 
-            const account = await this.registerProvider(fund, serviceOrigin, true)
+            const account = await this.registerProvider(fund, url, true)
 
-            await this.updateProvider(account, serviceOrigin)
+            await this.updateProvider(account, url)
 
             this._registeredProvidersWithStake.push(account)
 
@@ -279,11 +272,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             const tasks = new Tasks(this.mockEnv)
 
-            const result = await tasks.providerSetDatasetFromFile(datasetJSON)
-            this.mockEnv.logger.debug(
-                'Event: ',
-                result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
-            )
+            await tasks.providerSetDatasetFromFile(datasetJSON)
         } catch (e) {
             throw this.createError(e, this.addDataset.name)
         }
@@ -291,10 +280,10 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     public async registerProviderWithStakeAndDataset(fund: boolean): Promise<Account> {
         try {
-            const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
+            const url = urlBase + randomAsHex().slice(0, 8)
 
-            const account = await this.registerProvider(fund, serviceOrigin, true)
-            await this.updateProvider(account, serviceOrigin)
+            const account = await this.registerProvider(fund, url, true)
+            await this.updateProvider(account, url)
             const datasetJSON = JSON.parse(JSON.stringify(captchaData))
             await this.addDataset(account, datasetJSON)
 
@@ -306,7 +295,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         }
     }
 
-    public async registerDapp(fund: boolean, serviceOrigin?: string, noPush?: boolean): Promise<Account> {
+    public async registerDapp(fund: boolean, url?: string, noPush?: boolean): Promise<Account> {
         try {
             const account = this.createAccount()
             this.mockEnv.logger.debug('Sending funds to `', accountAddress(account), '`')
@@ -343,11 +332,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             this.mockEnv.logger.debug('Dapp contract address', contractAddress)
 
-            const result = await tasks.contract.dappRegister(contractAddress, 'Dapp')
-            this.mockEnv.logger.debug(
-                'Event: ',
-                result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
-            )
+            await tasks.contract.tx.dappRegister(contractAddress, DappPayee.dapp)
 
             if (!noPush) {
                 this._registeredDapps.push(account)
@@ -364,18 +349,13 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
         const tasks = new Tasks(this.mockEnv)
 
-        const result = await tasks.contract.dappFund(accountContract(account), this.stakeAmount)
-
-        this.mockEnv.logger.debug(
-            'Event: ',
-            result.contractEvents ? result.contractEvents[0].event.identifier : 'No events'
-        )
+        await tasks.contract.tx.dappFund(accountContract(account), { value: this.stakeAmount })
     }
 
     public async registerDappWithStake(fund: boolean): Promise<Account> {
         try {
-            const serviceOrigin = serviceOriginBase + randomAsHex().slice(0, 8)
-            const account = await this.registerDapp(fund, serviceOrigin, true)
+            const url = urlBase + randomAsHex().slice(0, 8)
+            const account = await this.registerDapp(fund, url, true)
             await this.dappFund(account)
 
             this._registeredDappsWithStake.push(account)

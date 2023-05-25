@@ -5,13 +5,13 @@ import { WsProvider } from '@polkadot/rpc-provider'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
-import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import { ContractAbi } from '@prosopo/types'
+import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
+import { ContractAbi, RandomProvider } from '@prosopo/types'
 import { LogLevel, Logger, logger } from '@prosopo/common'
 
 export class ProsopoServer {
     config: ProsopoServerConfig
-    contractInterface: ProsopoContractMethods
+    contract: ProsopoCaptchaContract
     mnemonic: string
     prosopoContractAddress: string
     dappContractAddress: string
@@ -40,7 +40,7 @@ export class ProsopoServer {
             this.contractName = this.config.networks[this.defaultEnvironment].prosopoContract.name
             this.logger = logger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
-                storageType: 'sr25519', // TODO get this from the chain
+                type: 'sr25519', // TODO get this from the chain
             })
             this.abi = abiJson as ContractAbi
         } else {
@@ -80,18 +80,19 @@ export class ProsopoServer {
     public async isVerified(
         userAccount: string,
         providerUrl: string,
+        dappContractAccount: string,
         commitmentId: string,
         blockNumber: string
     ): Promise<boolean> {
         // first check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
         const block = (await this.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash
-        const getRandomProviderResponse = await contractApi.getRandomProvider(
-            userAccount,
-            this.dappContractAddress,
-            block
+        const getRandomProviderResponse = await this.contract.queryAtBlock<RandomProvider>(
+            block,
+            'getRandomActiveProvider',
+            [userAccount, dappContractAccount]
         )
-        const serviceOrigin = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
+        const serviceOrigin = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
         if (serviceOrigin !== providerUrl) {
             return false
         }
@@ -104,12 +105,14 @@ export class ProsopoServer {
             const result = await providerApi.verifyDappUser(userAccount, commitmentId)
             return result.solutionApproved
         } else {
-            return await contractApi.getDappOperatorIsHumanUser(userAccount, this.config.solutionThreshold)
+            return (await contractApi.query.dappOperatorIsHumanUser(userAccount, this.config.solutionThreshold)).value
+                .unwrap()
+                .unwrap()
         }
     }
 
-    public async getContractApi(): Promise<ProsopoContractMethods> {
-        this.contractInterface = new ProsopoContractMethods(
+    public async getContractApi(): Promise<ProsopoCaptchaContract> {
+        this.contract = new ProsopoCaptchaContract(
             this.api,
             this.abi,
             this.prosopoContractAddress,
@@ -117,6 +120,6 @@ export class ProsopoServer {
             this.contractName,
             0
         )
-        return this.contractInterface
+        return this.contract
     }
 }

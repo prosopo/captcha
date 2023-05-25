@@ -24,7 +24,7 @@
     "@prosopo/types-database": "^0.1.11",
     "mongodb": "4.8.1",
     "mongodb-memory-server": "^8.7.2",
-    "mongoose": "^6.7.2",
+    "mongoose": "^7.2.0",
     "zod": "^3.17.9"
   },
   "devDependencies": {

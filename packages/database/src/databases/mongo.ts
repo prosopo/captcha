@@ -55,12 +55,6 @@ mongoose.set('strictQuery', false)
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
 
-const errFn = function (err) {
-    if (err) throw err
-    // TODO bind a logger to the callback
-    //logger(LogLevel.Info, result).info(result)
-}
-
 /**
  * Returns the Database object through which Providers can put and get captchas
  * @param {string} url          The database endpoint
@@ -244,23 +238,20 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getRandomCaptcha.name, {}, datasetId)
         }
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1
-        const cursor = this.tables?.captcha.aggregate(
-            [
-                { $match: { datasetId, solved } },
-                { $sample: { size: sampleSize } },
-                {
-                    $project: {
-                        datasetId: 1,
-                        datasetContentId: 1,
-                        captchaId: 1,
-                        captchaContentId: 1,
-                        items: 1,
-                        target: 1,
-                    },
+        const cursor = this.tables?.captcha.aggregate([
+            { $match: { datasetId, solved } },
+            { $sample: { size: sampleSize } },
+            {
+                $project: {
+                    datasetId: 1,
+                    datasetContentId: 1,
+                    captchaId: 1,
+                    captchaContentId: 1,
+                    items: 1,
+                    target: 1,
                 },
-            ],
-            errFn
-        )
+            },
+        ])
         const docs = await cursor
 
         if (docs && docs.length) {

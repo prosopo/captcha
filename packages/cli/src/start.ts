@@ -106,7 +106,7 @@ function stop() {
     apiAppSrv.close()
 }
 //if running in main process
-if (require.main === module) {
+if (typeof require !== undefined && require.main === module) {
     start(process.env.NODE_ENV || 'development').catch((error) => {
         console.error(error)
     })

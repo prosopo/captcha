@@ -19,9 +19,6 @@ import { LogLevel } from '@prosopo/common'
 export default (): ProsopoConfig => ({
     logLevel: LogLevel.Debug, //TODO change to LOG_LEVEL
     defaultEnvironment: EnvironmentTypes.development, //TODO change to NODE_ENV
-    contract: {
-        abi: '../contract/src/abi/prosopo.json', //TODO is this needed?
-    },
     account: {
         password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
     },

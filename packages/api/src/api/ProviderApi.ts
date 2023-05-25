@@ -15,32 +15,25 @@
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import HttpClientBase from './HttpClientBase'
 import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
-import { CaptchaSolution, ReturnTypes } from '@prosopo/types'
+import { CaptchaSolution, CaptchaSolutionBodyType, RandomProvider, VerifySolutionBodyType } from '@prosopo/types'
 
-export default class ProviderApi extends HttpClientBase {
+export class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
 
     constructor(network: ProsopoNetwork, providerUrl: string) {
-        console.log(providerUrl)
         super(providerUrl)
         this.network = network
     }
 
-    public getProviders(): Promise<{ accounts: string[] }> {
-        return this.axios.get(`/v1/prosopo/providers`)
-    }
-
-    public getCaptchaChallenge(
-        userAccount: string,
-        randomProvider: ReturnTypes.RandomProvider
-    ): Promise<GetCaptchaResponse> {
+    public getCaptchaChallenge(userAccount: string, randomProvider: RandomProvider): Promise<GetCaptchaResponse> {
         const { provider } = randomProvider
         const { blockNumber } = randomProvider
+        const dappAccount = this.network.dappContract.address
 
         return this.axios.get(
-            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
-                this.network.dappContract.address
-            }/${blockNumber.toString().replace(/,/g, '')}`
+            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${dappAccount}/${blockNumber
+                .toString()
+                .replace(/,/g, '')}`
         )
     }
 
@@ -49,22 +42,16 @@ export default class ProviderApi extends HttpClientBase {
         requestHash: string,
         userAccount: string,
         salt: string,
-        blockHash?: string,
-        txHash?: string,
-        web2?: boolean,
         signature?: string
     ): Promise<CaptchaSolutionResponse> {
         return this.axios.post(`/v1/prosopo/provider/solution`, {
-            blockHash,
             captchas,
             requestHash,
-            txHash,
             userAccount,
             dappAccount: this.network.dappContract.address,
-            web2,
             salt,
             signature,
-        })
+        } as CaptchaSolutionBodyType)
     }
 
     public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
@@ -72,6 +59,6 @@ export default class ProviderApi extends HttpClientBase {
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
         }
-        return this.axios.post(`/v1/prosopo/provider/verify`, payload)
+        return this.axios.post(`/v1/prosopo/provider/verify`, payload as VerifySolutionBodyType)
     }
 }

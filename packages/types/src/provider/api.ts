@@ -25,6 +25,15 @@ export interface CaptchaIdAndProof {
     proof: string[][]
 }
 
+export const CaptchaRequestBody = z.object({
+    userAccount: z.string(),
+    dappAccount: z.string(),
+    datasetId: z.string(),
+    blockNumber: z.string(),
+})
+
+export type CaptchaRequestBodyType = z.infer<typeof CaptchaRequestBody>
+
 export const CaptchaSolutionBody = z.object({
     userAccount: z.string(),
     dappAccount: z.string(),
@@ -32,7 +41,6 @@ export const CaptchaSolutionBody = z.object({
     requestHash: z.string(),
     blockHash: z.string().optional(),
     txHash: z.string().optional(),
-    web2: z.boolean().optional().default(false),
     signature: z.string().optional(), // the signature to prove account ownership (web2 only)
 })
 
@@ -42,6 +50,8 @@ export const VerifySolutionBody = z.object({
     userAccount: z.string(),
     commitmentId: z.string().optional(),
 })
+
+export type VerifySolutionBodyType = z.infer<typeof VerifySolutionBody>
 
 export interface PendingCaptchaRequest {
     accountId: string

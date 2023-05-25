@@ -21,6 +21,7 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
             req.body.password &&
             req.body.prosopo &&
             req.body.prosopo.userAccountAddress &&
+            req.body.prosopo.dappAccount &&
             req.body.prosopo.blockNumber
         ) {
             console.log(req.body)
@@ -28,6 +29,7 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
                 await prosopoServer.isVerified(
                     req.body.prosopo.userAccountAddress,
                     req.body.prosopo.providerUrl,
+                    req.body.prosopo.dappAccount,
                     req.body.prosopo.commitmentId,
                     req.body.prosopo.blockNumber
                 )
@@ -83,6 +85,7 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
                     req.body.password &&
                     req.body.prosopo &&
                     req.body.prosopo.userAccountAddress &&
+                    req.body.prosopo.dappAccount &&
                     req.body.prosopo.blockNumber
                 ) {
                     console.log(req.body)
@@ -90,6 +93,7 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
                         await prosopoServer.isVerified(
                             req.body.prosopo.userAccountAddress,
                             req.body.prosopo.providerUrl,
+                            req.body.prosopo.dappAccount,
                             req.body.prosopo.commitmentId,
                             req.body.prosopo.blockNumber
                         )

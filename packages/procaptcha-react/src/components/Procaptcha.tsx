@@ -2,7 +2,6 @@ import Box from '@mui/material/Box'
 import Checkbox from '@mui/material/Checkbox'
 import Link from '@mui/material/Link'
 import Typography from '@mui/material/Typography'
-import { u32 } from '@polkadot/types'
 import { Alert, Backdrop, CircularProgress } from '@mui/material'
 import CaptchaComponent from './CaptchaComponent'
 import { useRef, useState } from 'react'
@@ -55,9 +54,10 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(undefined)
     const [loading, setLoading] = useState(false)
     const [account, setAccount] = useState<Account | undefined>(undefined)
+    const [dappAccount, setDappAccount] = useState<string | undefined>(undefined)
     const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
     const [timeout, setTimeout] = useRefAsState<NodeJS.Timeout | undefined>(undefined)
-    const [blockNumber, setBlockNumber] = useRefAsState<u32 | undefined>(undefined)
+    const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(undefined)
 
     const map = {
         isHuman: setIsHuman,
@@ -68,6 +68,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
         challenge: setChallenge,
         loading: setLoading,
         account: setAccount,
+        dappAccount: setDappAccount,
         submission: setSubmission,
         timeout: setTimeout,
         blockNumber: setBlockNumber,
@@ -85,6 +86,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             challenge,
             loading,
             account,
+            dappAccount,
             submission,
             timeout,
             blockNumber,

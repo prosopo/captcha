@@ -19,6 +19,7 @@ import { Tasks } from './tasks/tasks'
 import { CaptchaSolutionBody, CaptchaWithProof, DappUserSolutionResult, VerifySolutionBody } from '@prosopo/types'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { parseBlockNumber } from './util'
+import { CaptchaRequestBody } from '@prosopo/types'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -38,24 +39,15 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
      * @return {Captcha} - The Captcha data
      */
     router.get(
-        '/v1/prosopo/provider/captcha/:datasetId/:userAccount/:dappContractAccount/:blockNumber',
+        '/v1/prosopo/provider/captcha/:datasetId/:userAccount/:dappAccount/:blockNumber',
         async (req, res, next) => {
-            const { blockNumber, datasetId, userAccount, dappContractAccount } = req.params
-
-            if (!datasetId || !userAccount || !blockNumber || !dappContractAccount) {
-                return next(new ProsopoApiError('API.PARAMETER_UNDEFINED', undefined, 400))
-            }
-
             try {
+                const { blockNumber, datasetId, userAccount, dappAccount } = CaptchaRequestBody.parse(req.params)
+
                 validateAddress(userAccount, false, env.api.registry.chainSS58)
                 const blockNumberParsed = parseBlockNumber(blockNumber)
 
-                await tasks.validateProviderWasRandomlyChosen(
-                    userAccount,
-                    dappContractAccount,
-                    datasetId,
-                    blockNumberParsed
-                )
+                await tasks.validateProviderWasRandomlyChosen(userAccount, dappAccount, datasetId, blockNumberParsed)
 
                 const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount)
                 taskData.captchas = taskData.captchas.map((cwp: CaptchaWithProof) => ({
@@ -89,34 +81,17 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         }
 
         try {
-            let result: DappUserSolutionResult
-            if (parsed.web2) {
-                // TODO does this open an attack vector when dealing with a web3 dapp user?
-                result = await tasks.dappUserSolutionWeb2(
-                    parsed.userAccount,
-                    parsed.dappAccount,
-                    parsed.requestHash,
-                    parsed.captchas,
-                    parsed.signature
-                )
-                return res.json({
-                    status: req.i18n.t(result.solutionApproved ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
-                    ...result,
-                })
-            } else {
-                result = await tasks.dappUserSolution(
-                    parsed.userAccount,
-                    parsed.dappAccount,
-                    parsed.requestHash,
-                    parsed.captchas,
-                    parsed.blockHash,
-                    parsed.txHash
-                )
-                return res.json({
-                    status: req.t('API.CAPTCHA_PENDING'),
-                    ...result,
-                })
-            }
+            const result: DappUserSolutionResult = await tasks.dappUserSolution(
+                parsed.userAccount,
+                parsed.dappAccount,
+                parsed.requestHash,
+                parsed.captchas,
+                parsed.signature
+            )
+            return res.json({
+                status: req.i18n.t(result.solutionApproved ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
+                ...result,
+            })
         } catch (err) {
             return next(new ProsopoApiError(err, undefined, 400))
         }

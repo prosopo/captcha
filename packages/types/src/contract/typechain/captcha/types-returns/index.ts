@@ -1,1 +1,1 @@
-export * as ReturnTypes from './captcha'
+export * from './captcha'

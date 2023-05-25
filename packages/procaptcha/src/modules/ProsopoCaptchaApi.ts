@@ -24,14 +24,13 @@ import {
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
-import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
+import { CaptchaSolution, CaptchaWithProof, Commit } from '@prosopo/types'
 import { ProsopoApiError } from '../api/handlers'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
 import { TCaptchaSubmitResult } from '../types/client'
-import ProviderApi from '@prosopo/api'
+import { ProviderApi } from '@prosopo/api'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { RandomProvider } from '@prosopo/types'
-import { ArgumentTypes } from '@prosopo/types'
 
 export class ProsopoCaptchaApi {
     userAccount: string
@@ -147,16 +146,13 @@ export class ProsopoCaptchaApi {
                 requestHash,
                 this.contract.pair.address,
                 salt,
-                undefined, // no longer used
-                undefined, // no longer used
-                this.web2,
                 signature
             )
         } catch (err) {
             throw new ProsopoApiError(err)
         }
 
-        let commitment: ArgumentTypes.Commit | undefined = undefined
+        let commitment: Commit | undefined = undefined
 
         if (!this.web2) {
             try {

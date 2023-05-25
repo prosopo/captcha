@@ -44,7 +44,6 @@ export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 
 export const ProsopoConfigSchema = z.object({
     logLevel: z.nativeEnum(LogLevel),
-    contract: z.object({ abi: z.string() }),
     defaultEnvironment: z.nativeEnum(EnvironmentTypes),
     account: z.object({
         password: z.string().optional(),

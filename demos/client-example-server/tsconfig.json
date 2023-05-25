@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
-    "module": "commonjs",
     "target": "esnext",
     "rootDir": "./src",
     "outDir": "./dist",
@@ -28,5 +27,15 @@
     "./src/**/*.js"
   ],
   "exclude": ["node_modules", "dist"],
-
+  "references": [
+    {
+      "path": "../../packages/api"
+    },
+    {
+      "path": "../../packages/contract"
+    },
+    {
+      "path": "../../packages/server"
+    }
+  ]
 }

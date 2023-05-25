@@ -18,24 +18,29 @@ import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
-import { CaptchaSolution, DappUserSolutionResult, ProsopoConfigSchema } from '@prosopo/types'
-import { ProsopoEnvError, getPair } from '@prosopo/common'
-import { ContractDeployer, ProsopoCaptchaStatus, getEventsFromMethodName } from '@prosopo/contract'
+import {
+    ArgumentTypes,
+    CaptchaSolution,
+    CaptchaStatus,
+    DappUserSolutionResult,
+    ProsopoConfigSchema,
+} from '@prosopo/types'
+import { ProsopoEnvError, getPair, hexHash, i18n } from '@prosopo/common'
+import { ContractDeployer } from '@prosopo/contract'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
-import { PROVIDER, accountContract, getSignedTasks } from '../accounts'
+import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts'
 import { getUser } from '../getUser'
 import { MockEnvironment } from '@prosopo/env'
-import { hexHash, i18n } from '@prosopo/common'
 import { before } from 'mocha'
 import { createType } from '@polkadot/types'
 import { BN } from '@polkadot/util'
 import { parseBlockNumber } from '../../src/index'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { accountAddress, accountMnemonic } from '../accounts'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles'
-import { EventRecord } from '@polkadot/types/interfaces'
 import { captchaData } from '../data/captchas'
+import { DappPayee } from '@prosopo/contract/dist/typechain/captcha/types-arguments/captcha'
+import { EventRecord } from '@polkadot/types/interfaces'
+
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -47,10 +52,10 @@ function delay(ms) {
 export async function sleep(timeout) {
     await delay(timeout)
 }
-const PROVIDER_PAYEE = 'Provider'
+const PROVIDER_PAYEE = ArgumentTypes.Payee.dapp
 
 describe('CONTRACT TASKS', async function (): Promise<void> {
-    let providerStakeDefault: BN
+    let providerStakeThreshold: BN
     const ss58Format = 42
     const pairType = 'sr25519' as KeypairType
     const alicePair = await getPair(pairType, ss58Format, '//Alice')
@@ -78,9 +83,11 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             throw new ProsopoEnvError(e, 'changeSigner')
         }
         try {
-            providerStakeDefault = new BN(await tasks.contract.getProviderStakeDefault())
+            providerStakeThreshold = new BN(
+                (await tasks.contract.query.getProviderStakeThreshold()).value.unwrap().toNumber()
+            )
         } catch (e) {
-            throw new ProsopoEnvError(e, 'getProviderStakeDefault')
+            throw new ProsopoEnvError(e, 'getproviderStakeThreshold')
         }
 
         // try {
@@ -106,7 +113,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         // There must exist a dapp that is staked who can use the service
         const dappContractAccount = await getUser(mockEnv, AccountKey.dappsWithStake)
         const tasks = await getSignedTasks(mockEnv, providerAccount)
-        const providerDetails = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
+        const providerDetails = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            .unwrap()
+            .unwrap()
         //await sleep(132000)
         const solvedCaptchas = await mockEnv.db!.getRandomSolvedCaptchasFromSingleDataset(
             providerDetails.datasetId.toString(),
@@ -150,35 +159,30 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
     it('Provider registration', async function () {
         const [providerMnemonic, providerAddress] = mockEnv.createAccountAndAddToKeyring() || ['', '']
-        const stakeAmount = getStakeAmount(mockEnv, providerStakeDefault)
+        const stakeAmount = getStakeAmount(mockEnv, providerStakeThreshold)
         const sendAmount = getSendAmount(mockEnv, stakeAmount)
         await sendFunds(mockEnv, providerAddress, 'ProsopoPayee', sendAmount)
 
         const tasks = await getSignedTasks(mockEnv, [providerMnemonic, providerAddress])
 
-        const result: ContractSubmittableResult = await tasks.contract.providerRegister(
-            PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
+        await tasks.contract.tx.providerRegister(
+            [PROVIDER.url + randomAsHex().slice(0, 8)],
             PROVIDER.fee,
-            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE)
+            PROVIDER_PAYEE
         )
-
-        expect(result.txHash!).to.not.be.empty
     })
 
     it('Provider update', async (): Promise<void> => {
         const providerAccount = await getUser(mockEnv, AccountKey.providers)
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const value = providerStakeDefault
-        const result: ContractSubmittableResult = await tasks.contract.providerUpdate(
-            PROVIDER.serviceOrigin + randomAsHex().slice(0, 8),
+        const value = providerStakeThreshold
+        await tasks.contract.tx.providerUpdate(
+            [PROVIDER.url + randomAsHex().slice(0, 8)],
             PROVIDER.fee,
-            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-            value
+            PROVIDER_PAYEE,
+            { value }
         )
-
-        const eventData = getEventsFromMethodName(result, 'ProviderUpdate')
-        expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
     })
 
     it('Provider add dataset', async (): Promise<void> => {
@@ -186,12 +190,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const result: ContractSubmittableResult = await tasks.providerSetDatasetFromFile(
-            JSON.parse(JSON.stringify(captchaData))
-        )
-        const eventData = getEventsFromMethodName(result, 'providerSetDataset')
-
-        expect(eventData![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
+        await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
     })
 
     it('Inactive Provider cannot add dataset', async (): Promise<void> => {
@@ -227,20 +226,21 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             tree.build(captchasHashed)
             const commitmentId = tree.root!.hash
 
-            const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
-            await tasks.contract.dappUserCommit(
-                accountContract(dappContractAccount),
-                provider.datasetId.toString(),
-                commitmentId,
-                accountAddress(providerAccount),
-                accountAddress(dappUserAccount)
-            )
-
+            const provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+                .unwrap()
+                .unwrap()
             const providerTasks = await getSignedTasks(mockEnv, providerAccount)
-            const result = await providerTasks.contract.providerApprove(commitmentId, 0)
-            const events = getEventsFromMethodName(result, 'ProviderApprove')
-
-            expect(events![0].args[0].toHuman()).to.equal(commitmentId)
+            await providerTasks.contract.tx.providerCommit({
+                dapp: accountContract(dappContractAccount),
+                datasetId: provider.datasetId,
+                id: commitmentId,
+                provider: accountAddress(providerAccount),
+                user: accountAddress(dappUserAccount),
+                status: CaptchaStatus.approved,
+                requestedAt: '2023-05-25T19:00:00',
+                completedAt: '2023-05-25T19:00:00',
+                userSignature: ['0x01'],
+            })
         } catch (err) {
             throw new ProsopoEnvError(err, 'providerApprove')
         }
@@ -265,76 +265,21 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
-
-        await tasks.contract.dappUserCommit(
-            accountContract(dappContractAccount),
-            provider.datasetId.toString(),
-            commitmentId,
-            accountAddress(providerAccount),
-            accountAddress(dappUserAccount)
-        )
-
+        const provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            .unwrap()
+            .unwrap()
         const providerTasks = await getSignedTasks(mockEnv, providerAccount)
-
-        const result = await providerTasks.contract.providerDisapprove(commitmentId)
-        const events = getEventsFromMethodName(result, 'ProviderDisapprove')
-
-        expect(events![0].args[0].toHuman()).to.equal(commitmentId)
-    })
-
-    it('Provider commit and disapprove', async (): Promise<void> => {
-        const { captchaSolutions, dappUserAccount, dappContractAccount } =
-            await createMockCaptchaSolutionsAndRequestHash()
-
-        const salt = randomAsHex()
-
-        const tree = new CaptchaMerkleTree()
-
-        const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
-            ...captcha,
-            salt: salt,
-        }))
-
-        const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
-
-        tree.build(captchasHashed)
-
-        const commitmentId = tree.root!.hash
-
-        const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
-
-        const tasks = await getSignedTasks(mockEnv, providerAccount)
-
-        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
-
-        const commitment = [
-            accountContract(dappContractAccount),
-            provider.datasetId.toString(),
-            commitmentId,
-            accountAddress(providerAccount),
-            accountAddress(dappUserAccount),
-            'Disapproved' as unknown as ProsopoCaptchaStatus,
-        ] // TODO how to fix this?
-
-        console.log('Commitment:', commitment)
-
-        const result: ContractSubmittableResult = await tasks.contract.dappUserCommit(
-            accountContract(dappContractAccount),
-            provider.datasetId.toString(),
-            commitmentId,
-            accountAddress(providerAccount),
-            accountAddress(dappUserAccount),
-            'Disapproved' as unknown as ProsopoCaptchaStatus
-        )
-
-        if (!result) {
-            throw new ProsopoEnvError(new Error('Result is null'))
-        }
-
-        const events = getEventsFromMethodName(result, 'DappUserCommit')
-
-        expect(events![0].args[2].toHuman()).to.equal(accountContract(dappContractAccount))
+        await providerTasks.contract.tx.providerCommit({
+            dapp: accountContract(dappContractAccount),
+            datasetId: provider.datasetId.toString(),
+            id: commitmentId,
+            provider: accountAddress(providerAccount),
+            user: accountAddress(dappUserAccount),
+            status: CaptchaStatus.disapproved,
+            completedAt: '2023-05-25T09:00:00',
+            requestedAt: '2023-05-25T09:00:00',
+            userSignature: ['0x01'],
+        })
     })
 
     it('Timestamps check', async (): Promise<void> => {
@@ -356,24 +301,25 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
-
-        await tasks.contract.dappUserCommit(
-            accountContract(dappContractAccount),
-            provider.datasetId.toString(),
-            commitmentId,
-            accountAddress(providerAccount),
-            accountAddress(dappUserAccount)
-        )
-
+        const provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            .unwrap()
+            .unwrap()
         const providerTasks = await getSignedTasks(mockEnv, providerAccount)
+        await providerTasks.contract.tx.providerCommit({
+            dapp: accountContract(dappContractAccount),
+            datasetId: provider.datasetId.toString(),
+            id: commitmentId,
+            provider: accountAddress(providerAccount),
+            user: accountAddress(dappUserAccount),
+            status: CaptchaStatus.approved,
+            completedAt: '2023-05-25T09:00:00',
+            requestedAt: '2023-05-25T09:00:00',
+            userSignature: ['0x01'],
+        })
 
-        const result = await providerTasks.contract.providerApprove(commitmentId, 0)
-        const events = getEventsFromMethodName(result, 'ProviderApprove')
-
-        expect(events![0].args[0].toHuman()).to.equal(commitmentId)
-
-        const commitment = await providerTasks.contract.getCaptchaSolutionCommitment(commitmentId)
+        const commitment = (await providerTasks.contract.query.getCaptchaSolutionCommitment(commitmentId)).value
+            .unwrap()
+            .unwrap()
 
         // check the timestamp
         const completedAt = parseInt(commitment.completedAt.toString().replace(',', ''))
@@ -381,11 +327,13 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         expect(completedAt).to.be.above(0)
 
         // check how much time passed after successful completion
-        const lastCorrectCaptcha = await providerTasks.contract.getDappOperatorLastCorrectCaptcha(
-            accountAddress(dappUserAccount)
-        )
+        const lastCorrectCaptcha = (
+            await providerTasks.contract.query.dappOperatorLastCorrectCaptcha(accountAddress(dappUserAccount))
+        ).value
+            .unwrap()
+            .unwrap()
 
-        expect(Number.parseInt(lastCorrectCaptcha.beforeMs.toString())).to.be.above(0)
+        expect(Number.parseInt(lastCorrectCaptcha.before.toString())).to.be.above(0)
     })
 
     it('Provider details', async (): Promise<void> => {
@@ -393,7 +341,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
             const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-            const result = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
+            const result = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+                .unwrap()
+                .unwrap()
             expect(result).to.have.a.property('status')
         } catch (err) {
             throw new ProsopoEnvError(err, 'providerDetails')
@@ -405,7 +355,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        const result = await tasks.contract.getProviderAccounts()
+        const result = (await tasks.contract.query.getAllProviderIds()).value.unwrap().unwrap()
 
         expect(result).to.be.an('array')
     })
@@ -414,7 +364,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const newAccount = mockEnv.createAccountAndAddToKeyring() || ['', '']
 
         const tasks = await getSignedTasks(mockEnv, newAccount)
-        const stakeAmount = getStakeAmount(mockEnv, providerStakeDefault)
+        const stakeAmount = getStakeAmount(mockEnv, providerStakeThreshold)
         const sendAmount = getSendAmount(mockEnv, stakeAmount)
         await sendFunds(mockEnv, accountAddress(newAccount), 'Dapp', sendAmount)
         const dappParams = ['1000000000000000000', 1000, mockEnv.contractInterface.address, 65, 1000000]
@@ -434,10 +384,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             (event) => event.event.section === 'contracts'
         )
         const contractAddress = instantiateEvent?.event.data['contract'].toString()
-        const result: ContractSubmittableResult = await tasks.contract.dappRegister(contractAddress, 'Dapp')
-        expect(result.txHash).to.not.be.empty
+        await tasks.contract.tx.dappRegister(contractAddress, DappPayee.dapp)
 
-        const dapp = await tasks.contract.getDappDetails(contractAddress)
+        const dapp = (await tasks.contract.query.getDappDetails(contractAddress)).value.unwrap().unwrap()
         expect(dapp.owner).to.equal(accountAddress(newAccount))
     })
 
@@ -456,7 +405,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, dappAccount)
 
-        const result: any = await tasks.contract.getDappDetails(accountContract(dappAccount))
+        const result: any = (await tasks.contract.query.getProviderDetails(accountContract(dappAccount))).value
+            .unwrap()
+            .unwrap()
 
         expect(result).to.have.a.property('status')
     })
@@ -466,55 +417,10 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const tasks = await getSignedTasks(mockEnv, dappAccount)
         const value = createType(mockEnv.contractInterface.abi.registry, 'u128', '10')
         const dappContractAddress = accountContract(dappAccount)
-        const dappBefore = await tasks.contract.getDappDetails(dappContractAddress)
-        await tasks.contract.dappFund(dappContractAddress, value)
-        const dappAfter = await tasks.contract.getDappDetails(dappContractAddress)
-        // Do not do this https://github.com/polkadot-js/api/issues/5365
-        //const dapp = createType(mockEnv.contractInterface.abi.registry, 'ProsopoDapp', dappStruct.toU8a())
-        // @ts-ignore
-        expect(dappBefore.balance + value.toNumber()).to.equal(dappAfter.balance)
-    })
-
-    it('Dapp user commit', async (): Promise<void> => {
-        const { captchaSolutions, dappUserAccount, dappContractAccount } =
-            await createMockCaptchaSolutionsAndRequestHash()
-
-        const tasks = await getSignedTasks(mockEnv, dappUserAccount)
-
-        const salt = randomAsHex()
-
-        const tree = new CaptchaMerkleTree()
-
-        const captchaSolutionsSalted = captchaSolutions.map((captcha) => ({
-            ...captcha,
-            salt: salt,
-        }))
-
-        const captchasHashed = captchaSolutionsSalted.map((captcha) => computeCaptchaSolutionHash(captcha))
-
-        tree.build(captchasHashed)
-
-        const commitmentId = tree.root!.hash
-
-        const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
-
-        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
-
-        const result: ContractSubmittableResult = await tasks.contract.dappUserCommit(
-            accountContract(dappContractAccount),
-            provider.datasetId.toString(),
-            commitmentId,
-            accountAddress(providerAccount),
-            accountAddress(dappUserAccount)
-        )
-
-        if (!result) {
-            throw new ProsopoEnvError(new Error('Result is null'))
-        }
-
-        const events = getEventsFromMethodName(result, 'DappUserCommit')
-
-        expect(events![0].args[2].toHuman()).to.equal(accountContract(dappContractAccount))
+        const dappBefore = (await tasks.contract.query.getDappDetails(dappContractAddress)).value.unwrap().unwrap()
+        await tasks.contract.tx.dappFund(dappContractAddress, { value })
+        const dappAfter = (await tasks.contract.query.getDappDetails(dappContractAddress)).value.unwrap().unwrap()
+        expect(dappBefore.balance.toNumber() + value.toNumber()).to.equal(dappAfter.balance)
     })
 
     //TODO reinstate when https://github.com/polkadot-js/api/issues/5410 is resolved
@@ -535,7 +441,9 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
 
         const dappUserTasks = await getSignedTasks(mockEnv, dappUserAccount)
-        const provider = await dappUserTasks.contract.getProviderDetails(accountAddress(providerAccount))
+        const provider = (await dappUserTasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            .unwrap()
+            .unwrap()
 
         const captchas = await dappUserTasks.getCaptchaWithProof(provider.datasetId.toString(), true, 1)
 
@@ -560,26 +468,36 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = await dappUserTasks.contract.getProviderDetails(accountAddress(providerAccount))
-
-        const dappUserCommitResponse = await dappUserTasks.contract.dappUserCommit(
-            accountContract(dappContractAccount),
-            provider.datasetId.toString(),
-            commitmentId,
-            accountAddress(providerAccount),
-            accountAddress(dappUserAccount)
-        )
+        const provider = (await dappUserTasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            .unwrap()
+            .unwrap()
 
         // next part contains internal contract calls that must be run by provider
         const providerTasks = await getSignedTasks(mockEnv, providerAccount)
-        const blockHash = await mockEnv.api.rpc.chain.getBlockHash(dappUserCommitResponse.blockNumber)
+        await providerTasks.contract.tx.providerCommit({
+            dapp: accountContract(dappContractAccount),
+            datasetId: provider.datasetId.toString(),
+            id: commitmentId,
+            provider: accountAddress(providerAccount),
+            user: accountAddress(dappUserAccount),
+            status: CaptchaStatus.approved,
+            completedAt: '2023-05-25T09:00:00',
+            requestedAt: '2023-05-25T09:00:00',
+            userSignature: ['0x01'],
+        })
+
+        const commitment = (await providerTasks.contract.query.getCaptchaSolutionCommitment(commitmentId)).value
+            .unwrap()
+            .unwrap()
+
+        // next part contains internal contract calls that must be run by provider
+        const blockHash = await mockEnv.api.rpc.chain.getBlockHash(commitment.completedAt)
         const result: DappUserSolutionResult = await providerTasks.dappUserSolution(
             accountAddress(dappUserAccount),
             accountContract(dappContractAccount),
             requestHash,
             JSON.parse(JSON.stringify(captchaSolutionsSalted)),
-            blockHash.toString(),
-            dappUserCommitResponse.txHash.toString()
+            'signature'
         )
         expect(result.captchas.length).to.be.eq(2)
         const expectedProof = tree.proof(captchaSolutionsSalted[0].captchaId)
@@ -710,20 +628,28 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const providerAccount = await getUser(mockEnv, AccountKey.providersWithStakeAndDataset)
 
-        const provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
+        const provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            .unwrap()
+            .unwrap()
 
-        await tasks.contract.dappUserCommit(
-            accountContract(dappAccount),
-            provider.datasetId.toString(),
-            initialCommitmentId,
-            accountAddress(providerAccount),
-            accountAddress(dappUserAccount)
-        )
+        await tasks.contract.tx.providerCommit({
+            dapp: accountContract(dappAccount),
+            datasetId: provider.datasetId.toString(),
+            id: initialCommitmentId,
+            provider: accountAddress(providerAccount),
+            user: accountAddress(dappUserAccount),
+            status: CaptchaStatus.approved,
+            completedAt: '2023-05-25T09:00:00',
+            requestedAt: '2023-05-25T09:00:00',
+            userSignature: ['0x01'],
+        })
         const { commitmentId, tree } = await tasks.buildTreeAndGetCommitmentId(captchaSolutions)
 
         expect(tree).to.deep.equal(initialTree)
         expect(commitmentId).to.equal(initialCommitmentId)
-        const commitment = await tasks.contract.getCaptchaSolutionCommitment(commitmentId)
+        const commitment = (await tasks.contract.query.getCaptchaSolutionCommitment(commitmentId)).value
+            .unwrap()
+            .unwrap()
         expect(commitment).to.not.be.undefined
     })
 
@@ -798,10 +724,14 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
                 'dappContractAccount',
                 accountContract(dappAccount)
             )
-            const { provider } = await dappUserTasks.contract.getRandomProvider(
-                accountAddress(dappUserAccount),
-                accountContract(dappAccount)
-            )
+            const { provider } = (
+                await dappUserTasks.contract.query.getRandomActiveProvider(
+                    accountAddress(dappUserAccount),
+                    accountContract(dappAccount)
+                )
+            ).value
+                .unwrap()
+                .unwrap()
             const { captchas, requestHash } = await dappUserTasks.getRandomCaptchasAndRequestHash(
                 provider.datasetId.toString(),
                 hexHash(accountAddress(dappUserAccount))
@@ -821,7 +751,14 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, dappAccount)
 
-        const res = await tasks.contract.getRandomProvider(accountContract(dappAccount), accountContract(dappAccount))
+        const res = (
+            await tasks.contract.query.getRandomActiveProvider(
+                accountContract(dappAccount),
+                accountContract(dappAccount)
+            )
+        ).value
+            .unwrap()
+            .unwrap()
         const blockNumberParsed = parseBlockNumber(res.blockNumber.toString())
         await tasks.validateProviderWasRandomlyChosen(
             accountContract(dappAccount),
@@ -847,22 +784,20 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
-        let provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
+        let provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            .unwrap()
+            .unwrap()
 
-        await tasks.contract.providerUpdate(
-            provider.serviceOrigin.toString(),
-            provider.fee as unknown as number,
-            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-            0
-        )
-        provider = await tasks.contract.getProviderDetails(accountAddress(providerAccount))
+        await tasks.contract.tx.providerUpdate(provider.url, provider.fee as unknown as number, PROVIDER_PAYEE, {
+            value: 0,
+        })
+        provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            .unwrap()
+            .unwrap()
         expect(provider.status).to.equal('Deactivated')
-        await tasks.contract.providerUpdate(
-            provider.serviceOrigin.toString() as string,
-            provider.fee as unknown as number,
-            createType(mockEnv.contractInterface.abi.registry, 'ProsopoPayee', PROVIDER_PAYEE),
-            providerStakeDefault
-        )
+        await tasks.contract.tx.providerUpdate(provider.url, provider.fee as unknown as number, PROVIDER_PAYEE, {
+            value: providerStakeThreshold,
+        })
 
         await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
 
@@ -871,10 +806,14 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const dappUserTasks = await getSignedTasks(mockEnv, dappUser)
 
-        const res = await dappUserTasks.contract.getRandomProvider(
-            accountAddress(dappUser),
-            accountContract(dappAccount)
-        )
+        const res = (
+            await dappUserTasks.contract.query.getRandomActiveProvider(
+                accountAddress(dappUser),
+                accountContract(dappAccount)
+            )
+        ).value
+            .unwrap()
+            .unwrap()
         const blockNumberParsed = parseBlockNumber(res.blockNumber.toString())
         const valid = await dappUserTasks
             .validateProviderWasRandomlyChosen(
@@ -889,30 +828,12 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         expect(valid).to.be.false
     })
 
-    it('Provider unstake', async (): Promise<void> => {
-        const providerAccount = await getUser(mockEnv, AccountKey.providersWithStake)
-
-        const tasks = await getSignedTasks(mockEnv, providerAccount)
-
-        const value = 1
-
-        const result: ContractSubmittableResult = await tasks.contract.providerUnstake(value)
-        const events = getEventsFromMethodName(result, 'ProviderUnstake')
-
-        expect(events![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
-    })
-
     it('Provider deregister', async (): Promise<void> => {
         const providerAccount = await getUser(mockEnv, AccountKey.providersWithStake)
 
         const tasks = await getSignedTasks(mockEnv, providerAccount)
-
-        const result: ContractSubmittableResult = await tasks.contract.providerDeregister(
-            accountAddress(providerAccount)
-        )
-        const events = getEventsFromMethodName(result, 'ProviderDeregister')
-
-        expect(events![0].args[0].toHuman()).to.equal(accountAddress(providerAccount))
+        const isError = (await tasks.contract.tx.providerDeregister()).result?.isError
+        expect(isError).to.be.false
     })
 
     // TODO find out what is making this fail occasionally
