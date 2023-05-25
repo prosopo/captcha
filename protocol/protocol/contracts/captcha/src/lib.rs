@@ -409,6 +409,11 @@ pub mod captcha {
         }
 
         #[ink(message)]
+        pub fn get_admin(&self) -> AccountId {
+            self.admin
+        }
+
+        #[ink(message)]
         pub fn get_max_provider_fee(&self) -> u32 {
             self.max_provider_fee as u32
         }
