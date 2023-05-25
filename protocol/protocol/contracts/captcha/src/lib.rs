@@ -1918,6 +1918,12 @@ pub mod captcha {
                 AccountId::from([0x00; 32])
             }
 
+            // reset the caller and callee
+            fn reset_caller_and_callee() {
+                set_caller(get_unused_account());
+                set_callee(get_unused_account());
+            }
+
             // build an account. Accounts have the first byte set to the type of account and the next 16 bytes are the index of the account
             fn get_account_bytes(account_type: u8, index: u128) -> [u8; 32] {
                 let mut bytes = [0x00; 32];
@@ -1971,7 +1977,8 @@ pub mod captcha {
             /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
             fn get_contract(index: u128) -> Captcha {
                 let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
-                                                                           // make sure the contract gets allocated the above account
+                
+                // make sure the contract gets allocated the above account
                 set_callee(account);
                 // give the contract account some funds
                 set_account_balance(account, 1);
@@ -1992,6 +1999,134 @@ pub mod captcha {
                 // check the contract was created with the correct account
                 assert_eq!(contract.env().account_id(), account);
                 contract
+            }
+
+            fn get_provider_url(index: u128) -> Vec<u8> {
+                vec![index as u8; 32]
+            }
+
+            fn get_provider_fee() -> u32 {
+                1000
+            }
+
+            fn get_provider_payee() -> Payee {
+                Payee::Provider
+            }
+
+            fn get_dapp_payee() -> DappPayee {
+                DappPayee::Provider
+            }
+
+            fn register_provider(contract: &mut Captcha, index: u128) {
+                // set the caller to the provider account
+                set_caller(get_provider_account(index));
+                // register the provider
+                contract.provider_register(
+                    get_provider_url(index),
+                    get_provider_fee(index),
+                    get_provider_payee(index),
+                );
+                // avoid accidentally reusing callee / caller
+                reset_caller_and_callee();
+            }
+
+            fn register_dapp(contract: &mut Captcha, index: u128) {
+                // set the caller to the dapp account
+                set_caller(get_dapp_account(index));
+                // register the dapp
+                contract.dapp_register(
+                    get_dapp_contract(index),
+                    get_dapp_payee(),
+                );
+
+                // avoid accidentally reusing callee / caller
+                reset_caller_and_callee();
+            }
+
+            #[ink::test]
+            fn test_provider_register_url_empty() {
+
+            }
+
+            #[ink::test]
+            fn test_provider_update_url_empty() {
+
+            }
+
+            #[ink::test]
+            fn test_provider_register_fee_too_large() {
+
+            }
+
+            #[ink::test]
+            fn test_provider_update_fee_too_large() {
+
+            }
+
+            #[ink::test]
+            fn test_provider_register_pass() {
+
+            }
+
+            #[ink::test]
+            fn test_provider_update_pass() {
+                
+            }
+
+            // #[ink::test]
+            // fn test_provider_deregister() {
+                
+            // }
+
+            // #[ink::test]
+            // fn test_provider_deactivate() {
+                
+            // }
+
+            #[ink::test]
+            fn test_provider_reactivate() {
+                
+            }
+
+            #[ink::test]
+            fn test_update_seed_once_per_block() {
+
+            }
+
+            #[ink::test]
+            fn test_update_seed() {
+                // always set the caller to the unused account to start, avoid any mistakes with caller checks
+                set_caller(get_unused_account());
+
+                let mut contract = get_contract(0);
+
+                let provider_account = get_provider_account(0);
+                let user_account = get_user_account(0);
+                let admin_account = get_admin_account(0);
+                let dapp_account = get_dapp_account(0);
+                let unregistered_dapp_account = get_dapp_account(1);
+                let unregistered_provider_account = get_provider_account(1);
+
+                // register the provider and dapp
+
+
+                // for each account who should be able to update the seed, test that
+                for account in vec![
+                    provider_account,
+                    admin_account,
+                ].iter() {
+
+                }
+
+                // for each account who should not be able to update the seed, test that
+                for account in vec![
+                    user_account,
+                    dapp_account,
+                    unregistered_dapp_account,
+                    unregistered_provider_account,
+                ].iter() {
+
+                }
             }
 
             #[ink::test]
@@ -2037,6 +2172,10 @@ pub mod captcha {
                 assert_eq!(contract.max_user_history_age, 1000000);
                 assert_eq!(contract.min_num_active_providers, 0);
                 assert_eq!(contract.max_provider_fee, 1000);
+                assert_eq!(contract.seed, Seed {
+                    value: 0,
+                    block: 0,
+                });
 
                 // default state should be set
                 for payee in contract.get_payees().iter() {
