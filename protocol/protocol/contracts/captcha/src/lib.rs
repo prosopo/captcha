@@ -1394,15 +1394,17 @@ pub mod captcha {
 
             self.pay_fee(&caller, &commit.dapp)?;
 
-            // update the seed
-            self.update_seed()?;
-
             Ok(())
         }
 
         #[ink(message)]
         pub fn provider_commit(&mut self, commit: Commit) -> Result<(), Error> {
-            self.provider_record_commit(&commit)
+            self.provider_record_commit(&commit)?;
+
+            // update the seed
+            self.update_seed()?;
+
+            Ok(())
         }
 
         /// Provider submits 0-many captcha solution commitments
@@ -1411,6 +1413,9 @@ pub mod captcha {
             for commit in commits.iter() {
                 self.provider_record_commit(commit)?;
             }
+
+            // update the seed
+            self.update_seed()?;
 
             Ok(())
         }
