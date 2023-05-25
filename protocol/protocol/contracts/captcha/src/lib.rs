@@ -2129,12 +2129,36 @@ pub mod captcha {
 
             #[ink::test]
             fn test_provider_register_fee_too_large() {
+                reset_caller_and_callee();
 
+                let mut contract = get_contract(0);
+                let provider_account = get_provider_account(0);
+                // set the caller to the provider account
+                set_caller(provider_account);
+                // register the provider
+                // expect err because fee too large
+                contract.provider_register(
+                    get_provider_url(0),
+                    contract.get_provider_max_fee() + 1,
+                    get_provider_payee(),
+                ).unwrap_err();
             }
 
             #[ink::test]
             fn test_provider_update_fee_too_large() {
+                reset_caller_and_callee();
 
+                let mut contract = get_contract_populated(0, 1);
+                let provider_account = get_provider_account(0);
+                // set the caller to the provider account
+                set_caller(provider_account);
+                // register the provider
+                // expect err because fee too large
+                contract.provider_update(
+                    get_provider_url(0),
+                    contract.get_provider_max_fee() + 1,
+                    get_provider_payee(),
+                ).unwrap_err();
             }
 
             #[ink::test]
