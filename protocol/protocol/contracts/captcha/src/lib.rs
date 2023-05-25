@@ -2108,6 +2108,17 @@ pub mod captcha {
                 contract
             }
 
+            #[ink::test]
+            fn test_get_payees() {
+                reset_caller_and_callee();
+
+                let mut contract = get_contract(0);
+
+                assert_eq!(contract.get_payees(), vec![Payee::Provider, Payee::Dapp]);
+            }
+
+            
+
 
             #[ink::test]
             fn test_get_seed_at() {
