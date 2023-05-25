@@ -2036,8 +2036,8 @@ pub mod captcha {
                 // register the provider
                 contract.provider_register(
                     get_provider_url(index),
-                    get_provider_fee(index),
-                    get_provider_payee(index),
+                    get_provider_fee(),
+                    get_provider_payee(),
                 );
                 // avoid accidentally reusing callee / caller
                 reset_caller_and_callee();
