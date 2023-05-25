@@ -2288,7 +2288,7 @@ pub mod captcha {
                 let account = AUTHOR.clone();
                 // ensure the account is not the author
                 account[0] = account[0].wrapping_add(1);
-                set_caller(account);
+                set_caller(AccountId::from(account));
                 let contract =
                     Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
                 // should fail to construct and panic
