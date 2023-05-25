@@ -1439,7 +1439,7 @@ pub mod captcha {
             let caller = self.env().caller();
 
             // validate the commit
-            self.validate_commit(commit)?;
+            // self.validate_commit(commit)?;
 
             // ensure the provider is active
             self.validate_provider_active(caller)?;
