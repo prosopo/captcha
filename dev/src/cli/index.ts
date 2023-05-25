@@ -117,13 +117,13 @@ export async function processArgs(args) {
                     }),
             handler: async (argv) => {
                 const abiPath = path.resolve(argv.in)
+                const cwd = path.resolve('.')
                 if (!fs.existsSync(abiPath)) {
-                    throw new Error(
-                        `abiPath ${abiPath} does not exist. The command is running relative to the dev package.`
-                    )
+                    throw new Error(`abiPath ${abiPath} does not exist. The command is running relative to ${cwd}`)
                 }
                 const outPath = path.resolve(argv.out)
-                await importContract(abiPath, outPath)
+                // pass in relative path as typechain will resolve it relative to the cwd
+                await importContract(argv.in, argv.out)
             },
         })
 
