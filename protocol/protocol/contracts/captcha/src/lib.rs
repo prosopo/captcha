@@ -2285,7 +2285,10 @@ pub mod captcha {
                 reset_caller_and_callee();
 
                 // only able to instantiate from the alice account
-                set_caller(default_accounts().bob);
+                let account = AUTHOR.clone();
+                // ensure the account is not the author
+                account[0] = account[0].wrapping_add(1);
+                set_caller(account);
                 let contract =
                     Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
                 // should fail to construct and panic
