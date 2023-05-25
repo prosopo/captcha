@@ -1897,6 +1897,8 @@ pub mod captcha {
             ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
         const set_callee: fn(AccountId) =
             ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
+        const set_contract: fn(AccountId) =
+            ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
         const default_accounts: fn() -> ink::env::test::DefaultAccounts<
             ink::env::DefaultEnvironment,
         > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
@@ -1907,6 +1909,7 @@ pub mod captcha {
         const USER_ACCOUNT_PREFIX: u8 = 0x04;
         const CONTRACT_ACCOUNT_PREFIX: u8 = 0x05;
         const CODE_HASH_PREFIX: u8 = 0x06;
+        const DAPP_CONTRACT_ACCOUNT_PREFIX: u8 = 0x07;
 
         mod tests_inner {
 
@@ -2021,7 +2024,10 @@ pub mod captcha {
             }
 
             fn get_dapp_contract(index: u128) -> AccountId {
-                get_contract_account(index);
+                let account = get_account(DAPP_CONTRACT_ACCOUNT_PREFIX, index);
+                // mark the account as a contract
+                set_contract(account);
+                account
             }
 
             fn register_provider(contract: &mut Captcha, index: u128) {
