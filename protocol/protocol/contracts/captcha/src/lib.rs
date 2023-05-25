@@ -1966,7 +1966,10 @@ pub mod captcha {
 
             /// get the nth contract account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
             fn get_contract_account(index: u128) -> AccountId {
-                get_account(CONTRACT_ACCOUNT_PREFIX, index)
+                let account = get_account(CONTRACT_ACCOUNT_PREFIX, index);
+                // mark the account as a contract
+                set_contract(account);
+                account
             }
 
             /// get the nth code hash. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
@@ -2015,6 +2018,10 @@ pub mod captcha {
 
             fn get_dapp_payee() -> DappPayee {
                 DappPayee::Provider
+            }
+
+            fn get_dapp_contract(index: u128) -> AccountId {
+                get_contract_account(index);
             }
 
             fn register_provider(contract: &mut Captcha, index: u128) {
