@@ -409,8 +409,8 @@ pub mod captcha {
         }
 
         #[ink(message)]
-        pub fn get_max_provider_fee(&self) -> Balance {
-            self.max_provider_fee
+        pub fn get_max_provider_fee(&self) -> u32 {
+            self.max_provider_fee as u32
         }
 
         #[ink(message)]
@@ -2086,9 +2086,9 @@ pub mod captcha {
                 let mut contract = get_contract(index);
                 for i in 0..size {
                     // register the provider
-                    register_provider(&mut contract, i).unwrap();
+                    register_provider(&mut contract, i);
                     // register the dapp
-                    register_dapp(&mut contract, i).unwrap();
+                    register_dapp(&mut contract, i);
                 }
                 contract
             }
@@ -2139,7 +2139,7 @@ pub mod captcha {
                 // expect err because fee too large
                 contract.provider_register(
                     get_provider_url(0),
-                    contract.get_provider_max_fee() + 1,
+                    contract.get_max_provider_fee() + 1,
                     get_provider_payee(),
                 ).unwrap_err();
             }
@@ -2156,7 +2156,7 @@ pub mod captcha {
                 // expect err because fee too large
                 contract.provider_update(
                     get_provider_url(0),
-                    contract.get_provider_max_fee() + 1,
+                    contract.get_max_provider_fee() + 1,
                     get_provider_payee(),
                 ).unwrap_err();
             }
