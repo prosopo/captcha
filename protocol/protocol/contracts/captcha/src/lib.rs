@@ -42,6 +42,10 @@ macro_rules! lazy {
     };
 }
 
+const AUTHOR: [u8; 32] = [
+    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
+    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+];
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
@@ -2269,10 +2273,7 @@ pub mod captcha {
                 reset_caller_and_callee();
 
                 // only able to instantiate from the alice account
-                set_caller(AccountId::from([
-                    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
-                    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-                ]));
+                set_caller(AccountId::from(AUTHOR));
                 let contract =
                     Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
                 // should construct successfully
@@ -2991,10 +2992,7 @@ pub mod captcha {
                 let mut signature_bytes = [0u8; 64];
                 signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-                const ALICE: [u8; 32] = [
-                    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
-                    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-                ];
+                const ALICE: [u8; 32] = AUTHOR;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
@@ -3031,10 +3029,7 @@ pub mod captcha {
                 let mut signature_bytes = [0u8; 64];
                 signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-                const ALICE: [u8; 32] = [
-                    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
-                    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-                ];
+                const ALICE: [u8; 32] = AUTHOR;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
@@ -3110,10 +3105,7 @@ pub mod captcha {
                 let mut signature_bytes = [0u8; 64];
                 signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-                const ALICE: [u8; 32] = [
-                    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
-                    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-                ];
+                const ALICE: [u8; 32] = AUTHOR;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
@@ -3150,10 +3142,7 @@ pub mod captcha {
                 let mut signature_bytes = [0u8; 64];
                 signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-                const ALICE: [u8; 32] = [
-                    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
-                    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-                ];
+                const ALICE: [u8; 32] = AUTHOR;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
                 // verify the signature
