@@ -880,11 +880,11 @@ pub mod captcha {
                 self.provider_state_insert(&new_provider, &provider_account)?;
             }
 
-            // update the seed
-            self.update_seed()?;
-
             // record the old provider in the log
             self.log_provider(provider_account, if new { None } else { Some(old_provider) });
+
+            // update the seed
+            self.update_seed()?;
 
             Ok(())
         }
@@ -993,11 +993,11 @@ pub mod captcha {
                     .map_err(|_| Error::ContractTransferFailed)?;
             }
 
-            // update the seed
-            self.update_seed()?;
-
             // update the log
             self.log_provider(provider_account, None);
+
+            // update the seed
+            self.update_seed()?;
 
             Ok(())
         }
