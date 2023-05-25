@@ -413,6 +413,11 @@ pub mod captcha {
         }
 
         #[ink(message)]
+        pub fn get_seeds(&self) -> BTreeMap<BlockNumber, Seed> {
+            self.seed_log.get_or_default().clone()
+        }
+
+        #[ink(message)]
         pub fn get_admin(&self) -> AccountId {
             self.admin
         }
@@ -623,6 +628,7 @@ pub mod captcha {
 
         fn get_seed_at(&self, block_number: &BlockNumber) -> u128 {
             let mut result = self.seed.value;
+
             let seed_log = self.seed_log.get_or_default();
             // loop through log from most recent to oldest
             for (block, seed) in seed_log.iter().rev() {
@@ -2033,7 +2039,7 @@ pub mod captcha {
                     1000000,
                     0,
                     1000,
-                    255,
+                    50,
                 );
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
@@ -2100,6 +2106,59 @@ pub mod captcha {
                     register_dapp(&mut contract, i);
                 }
                 contract
+            }
+
+
+            #[ink::test]
+            fn test_get_seed_at() {
+                reset_caller_and_callee();
+
+                let mut contract = get_contract(0);
+
+                let admin_account = get_admin_account(0);
+                // set the caller to the provider account
+                set_caller(admin_account);
+
+                // make sure the rewind window >0
+                assert!(contract.get_rewind_window() > 0);
+
+                // for many more blocks than the rewind window, check that the seed is recorded on every change per block
+                let mut seeds: Vec<u128> = vec![contract.get_seed()];
+                let (limit, overflow) = contract.get_rewind_window().overflowing_mul(3);
+                assert!(!overflow);
+
+                for i in 0..limit {
+
+                    println!("{:#?}", seeds);
+                    println!("{:#?}", contract.get_seeds());
+
+                    // check most recent seed
+                    assert_eq!(contract.get_seed(), seeds.last().unwrap().clone());
+
+                    // check that the seeds in the rewind window are correct
+                    let window = contract.get_rewind_window() as BlockNumber;
+                    let block = contract.env().block_number();
+                    let range = if window > block { block } else { window };
+                    for j in 0..=range {
+                        let at = contract.env().block_number() - (j as BlockNumber);
+                        let a = contract.get_seed_at(&at);
+                        let b = seeds[j as usize];
+                        assert_eq!(a, b);
+                    }
+
+                    // add the seed for this block to our history
+                    seeds.push(contract.get_seed());
+
+                    if contract.get_rewind_window_start() > 0 {
+                        seeds.remove(0);
+                    }
+
+                    // update the seed for this block (which should log the previous in the history)
+                    contract.update_seed().unwrap();
+
+                    // advance to the next block
+                    advance_block();
+                }
             }
 
             #[ink::test]
