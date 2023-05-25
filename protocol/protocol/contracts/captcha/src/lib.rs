@@ -2280,16 +2280,13 @@ pub mod captcha {
 
                 // ctor params should be set
                 assert_eq!(contract.provider_stake_threshold, STAKE_THRESHOLD);
-                assert_eq!(contract.dapp_stake_threshold, STAKE_THRESHOLD);
-                assert_eq!(contract.admin, get_admin_account(0));
-                assert_eq!(contract.max_user_history_len, 10);
-                assert_eq!(contract.max_user_history_age, 1000000);
-                assert_eq!(contract.min_num_active_providers, 0);
-                assert_eq!(contract.max_provider_fee, 1000);
-                assert_eq!(contract.seed, Seed {
-                    value: 0,
-                    block: 0,
-                });
+                assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
+                assert_eq!(contract.get_admin(), get_admin_account(0));
+                assert_eq!(contract.get_max_user_history_len(), 10);
+                assert_eq!(contract.get_max_user_history_age(), 1000000);
+                assert_eq!(contract.get_min_num_active_providers(), 0);
+                assert_eq!(contract.get_max_provider_fee(), 1000);
+                assert_eq!(contract.get_seed(), 0);
 
                 // default state should be set
                 for payee in contract.get_payees().iter() {
