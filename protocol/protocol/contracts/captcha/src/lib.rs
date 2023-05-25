@@ -41,16 +41,16 @@ macro_rules! lazy {
         $lazy.set(&contents);
     };
 }
-
-const AUTHOR: [u8; 32] = [
-    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
-    44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-];
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod captcha {
+
+    const AUTHOR: [u8; 32] = [
+        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
+        44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+    ];
 
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
