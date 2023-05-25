@@ -343,6 +343,10 @@ pub mod captcha {
         CaptchaSolutionCommitmentAlreadyExists,
         /// Returned if verification of a signature fails (could be for many reasons, e.g. invalid public key, invalid payload, invalid signature)
         VerifyFailed,
+        /// Returned if block is in the future
+        BlockInFuture,
+        /// Returned if block is too far in the past
+        BlockOutsideRewindWindow,
     }
 
     impl Captcha {
@@ -470,7 +474,7 @@ pub mod captcha {
                 return err!(Error::DappInactive);
             }
             // get the seed which is based on the user, block, dapp and seed at the block
-            let seed = self.get_seed_at_user_dapp(user_account, dapp_account, block);
+            let seed = self.get_seed_at_user_dapp(user_account, dapp_account, block)?;
             // get the providers which were active at the block
             let active_providers = self.get_active_providers_at(block);
 
@@ -491,8 +495,8 @@ pub mod captcha {
         }
 
         /// Get a seed for a user and dapp at a block
-        fn get_seed_at_user_dapp(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> u128 {
-            let seed = self.get_seed_at(&block);
+        fn get_seed_at_user_dapp(&self, user_account: AccountId, dapp_account: AccountId, block: BlockNumber) -> Result<u128, Error> {
+            let seed = self.get_seed_at(block)?;
             
             // hash the account, block and seed
             let seed_value_bytes: [u8; 16] = seed.to_le_bytes();
@@ -509,7 +513,7 @@ pub mod captcha {
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
             // the random number can be derived from the hash
-            u128::from_le_bytes(hash_output)
+            Ok(u128::from_le_bytes(hash_output))
         }
 
         /// Rewind the providers to a given block
@@ -626,13 +630,25 @@ pub mod captcha {
             result.dapp.ok_or(Error::DappDoesNotExist)
         }
 
-        fn get_seed_at(&self, block_number: &BlockNumber) -> u128 {
+        fn check_inside_rewind_window(&self, block_number: BlockNumber) -> Result<(), Error> {
+            let start = self.get_rewind_window_start();
+            if block_number < start {
+                return Err(Error::BlockOutsideRewindWindow);
+            } else if block_number > self.env().block_number() {
+                return Err(Error::BlockInFuture);
+            }
+            Ok(())
+        }
+
+        fn get_seed_at(&self, block_number: BlockNumber) -> Result<u128, Error> {
+            self.check_inside_rewind_window(block_number)?;
+
             let mut result = self.seed.value;
 
             let seed_log = self.seed_log.get_or_default();
             // loop through log from most recent to oldest
             for (block, seed) in seed_log.iter().rev() {
-                if block <= block_number {
+                if block <= &block_number {
                     // update result if within block threshold
                     result = seed.value;
                 } else {
@@ -640,7 +656,7 @@ pub mod captcha {
                     break;
                 }
             }
-            result
+            Ok(result)
         }
 
         fn get_seed(&self) -> u128 {
@@ -2168,7 +2184,7 @@ pub mod captcha {
                     let range = if window > block { block } else { window };
                     for j in 0..=range {
                         let at = contract.env().block_number() - (j as BlockNumber);
-                        let a = contract.get_seed_at(&at);
+                        let a = contract.get_seed_at(at).unwrap();
                         let b = seeds[j as usize];
                         assert_eq!(a, b);
                     }
@@ -2203,7 +2219,7 @@ pub mod captcha {
                 advance_block();
 
                 // check that going back further than the rewind window hits an error
-                contract.get_seed_at(&(contract.get_rewind_window_start() - 1)).unwrap_err();
+                contract.get_seed_at((contract.get_rewind_window_start() - 1)).unwrap_err();
             }
 
             #[ink::test]
