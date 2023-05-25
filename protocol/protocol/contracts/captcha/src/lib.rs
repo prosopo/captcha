@@ -2189,6 +2189,24 @@ pub mod captcha {
             }
 
             #[ink::test]
+            fn test_get_seed_at_past_rewind_window() {
+                reset_caller_and_callee();
+
+                let mut contract = get_contract(0);
+                let admin_account = get_admin_account(0);
+                set_caller(admin_account);
+
+                // advance the block past the rewind window
+                for i in 0..contract.get_rewind_window() {
+                    advance_block();
+                }
+                advance_block();
+
+                // check that going back further than the rewind window hits an error
+                contract.get_seed_at(&(contract.get_rewind_window_start() - 1)).unwrap_err();
+            }
+
+            #[ink::test]
             fn test_provider_register_url_empty() {
                 reset_caller_and_callee();
 
@@ -2321,7 +2339,7 @@ pub mod captcha {
             }
 
             #[ink::test]
-            fn test_update_seed() {
+            fn test_update_seed_caller() {
                 reset_caller_and_callee();
 
                 let mut contract = get_contract_populated(0, 1);
