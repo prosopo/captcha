@@ -43,10 +43,10 @@ import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
-import { ProsopoCaptchaContract } from '@prosopo/contract/contract/interface'
-import { ReturnTypes } from '@prosopo/types/contract/typechain/captcha/types-returns'
+import { ProsopoCaptchaContract } from '@prosopo/contract'
+import { ReturnTypes } from '@prosopo/types'
 import { SubmittableResult } from '@polkadot/api'
-import { ArgumentTypes } from '@prosopo/types/contract/typechain/captcha/types-arguments'
+import { ArgumentTypes } from '@prosopo/types'
 
 /**
  * @description Tasks that are shared by the API and CLI

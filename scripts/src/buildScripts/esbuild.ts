@@ -1,6 +1,7 @@
 import esbuild from 'esbuild'
 import glob from 'glob'
 import dependencyTree, { Tree } from 'dependency-tree'
+import * as path from 'path'
 
 export enum PackageName {
     api = 'api',
@@ -20,31 +21,48 @@ export enum PackageName {
 }
 
 function getSourceFiles(pkg: PackageName) {
-    const files = glob.sync(`../packages/${pkg}/src/**/*.ts`).concat(glob.sync(`../packages/${pkg}/src/*.ts`))
-    console.log(files)
+    const fileTypesGlobPattern = '{ts,tsx}'
+    const files = glob
+        .sync(`../packages/${pkg}/src/**/*.${fileTypesGlobPattern}`)
+        .concat(glob.sync(`../packages/${pkg}/src/*.${fileTypesGlobPattern}`))
     return files
 }
 
-function getPackageImportAliases(): { [key: string]: string } {
+function getPackageExternals(): { [key: string]: string } {
     const imports = {}
     Object.values(PackageName).map((pkg) => {
         const packageImport = `@prosopo/${pkg}`
         imports[packageImport] = `${packageImport}/dist`
     })
-    console.log(imports)
     return imports
+}
+
+function findIndexFile(pkg: PackageName) {
+    let files = glob.sync(`../packages/${pkg}/src/index.ts`) // TODO pass base Url as argument
+    if (files.length === 0) {
+        // Look deeper for index files (e.g. in js subfolder if there are multiple languages in the project)
+        files = glob.sync(`../packages/${pkg}/src/**/index.ts`) // TODO pass base Url as argument
+    }
+    if (files.length === 0) {
+        throw new Error(`No index.ts file found for ${pkg}`)
+    }
+    console.info('Found index file: ', files[0])
+    return files[0]
 }
 
 // Get a list of packages from the tsconfig.json that are to built first, and the order in which they're to be built
 function getDependencyTree(pkg: PackageName, tsConfigPath: string): Tree {
+    // Requires this issue to be resolved to work with tsconfig paths https://github.com/dependents/node-dependency-tree/pull/138
+    const packagePath = path.resolve(__dirname, `../../../packages/${pkg}`)
+    console.log(`Looking in ${packagePath} for ${pkg} dependencies`)
     // Get the dependency list from the dependency-tree
     const depList = dependencyTree({
-        filename: `../packages/${pkg}/src/index.ts`,
-        directory: '..',
+        filename: findIndexFile(pkg),
+        directory: packagePath,
         tsConfig: tsConfigPath,
-        filter: (path) => path.indexOf('node_modules') === -1, // optional
+        //noTypeDefinitions: true,
+        filter: (path) => path.indexOf('node_modules') === -1 && path.indexOf('/src') !== -1, // optional
     })
-    console.log(JSON.stringify(depList, null, 2))
     return depList
 }
 
@@ -91,42 +109,78 @@ function dedupeArrays<T>(arrays: T[][]): T[][] {
     return [...new Set(arrays.map((arr) => JSON.stringify(arr)))].map((str) => JSON.parse(str))
 }
 
-function builder(packages: PackageName[]): Promise<void>[] {
-    const promises: Promise<void>[] = []
-    const packageImportAliases = getPackageImportAliases()
-    const tsConfigPath = 'tsconfig.json'
+async function buildPackage(pkg: PackageName, externals: string[]): Promise<PackageName> {
+    const sourceFiles = getSourceFiles(pkg)
+    console.log('source files', sourceFiles)
+    return esbuild
+        .build({
+            stdin: { contents: '' },
+            inject: sourceFiles,
+            bundle: false,
+            platform: 'node',
+            // plugins: [tsPaths(tsConfigPath), nodeExternalsPlugin()],
+            // external: externals,
+            sourcemap: true,
+            minify: false,
+            outdir: `../packages/${pkg}/dist`,
+            loader: { '.node': 'empty' },
+        })
+        .then(() => {
+            console.log(`⚡ ${pkg} Javascript build complete! ⚡`)
+            return pkg
+        })
+        .catch((err) => {
+            console.error(err)
+            process.exit(1)
+        })
+}
+
+function pruneLongestTree(dependencyTrees: PackageName[][]): {
+    longestTree: PackageName[]
+    prunedDependencyTrees: PackageName[][]
+    rootPkg: PackageName
+} {
+    const longestTree = dependencyTrees.reduce((a, b) => (a.length > b.length ? a : b))
+    const rootPkg: PackageName | undefined = longestTree.shift()
+    if (!rootPkg) {
+        throw new Error('No root package found')
+    }
+    // remove longestTree array from dependencyTrees
+    const prunedDependencyTrees = dependencyTrees.filter((x) => x !== longestTree)
+    return { longestTree, prunedDependencyTrees, rootPkg }
+}
+
+async function builder(packages: PackageName[]): Promise<void> {
+    const packageExternals = getPackageExternals()
+    const tsConfigPath = 'tsconfig.json' // TODO pass in tsconfig path
     let dependencyTrees: PackageName[][] = []
     for (const pkg of packages) {
         const dependencyTree = getDependencyTree(pkg, tsConfigPath)
         //TODO construct packageNameRegex from tsconfig baseUrl or paths
+        console.log(JSON.stringify(dependencyTree, null, 4))
         const parsedDependencyTree = parseDependencyTree(dependencyTree)
-        console.log('parsedDependencyTree', parsedDependencyTree)
         dependencyTrees = dependencyTrees.concat(parsedDependencyTree)
     }
     dependencyTrees = dedupeArrays(dependencyTrees)
-    for (const tree of dependencyTrees) {
+
+    const dependencySet = new Set(dependencyTrees.flat())
+    const dependenciesBuilt = new Set()
+    const externals = Object.keys(packageExternals).concat(Object.values(packageExternals))
+
+    let { longestTree, prunedDependencyTrees, rootPkg } = pruneLongestTree(dependencyTrees)
+    while (dependenciesBuilt.size < dependencySet.size - 1 && prunedDependencyTrees.length > 0) {
+        // build all packages in array
         //TODO work out what to build and when based on dependencyTrees
-        for (const pkg of tree) {
-            promises.push(
-                esbuild
-                    .build({
-                        stdin: { contents: '' },
-                        inject: getSourceFiles(pkg),
-                        bundle: true,
-                        platform: 'node',
-                        //plugins: [tsPaths(tsConfigPath), nodeExternalsPlugin()],
-                        external: Object.values(packageImportAliases),
-                        sourcemap: true,
-                        minify: false,
-                        outdir: `../packages/${pkg}/dist`,
-                        loader: { '.node': 'empty' },
-                    })
-                    .then(() => console.log(`⚡ ${pkg} Javascript build complete! ⚡`))
-                    .catch(() => process.exit(1))
-            )
+
+        for (const pkg of longestTree.reverse()) {
+            if (!dependenciesBuilt.has(pkg)) {
+                console.log('externals', externals)
+                dependenciesBuilt.add(await buildPackage(pkg, externals))
+            }
         }
+        ;({ longestTree, prunedDependencyTrees, rootPkg } = pruneLongestTree(prunedDependencyTrees))
     }
-    return promises
+    await buildPackage(rootPkg, externals)
 }
 
 export default builder

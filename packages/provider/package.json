@@ -9,7 +9,6 @@
     "build": "tsc --build --verbose",
     "esbuild": "npx esbuild src/**/*.ts,src/*.ts --tsconfig=tsconfig.json --platform=node --loader:.node=empty --outdir=dist",
     "build:debug": "tsc --build --verbose",
-    "build:webpack": "webpack --config webpack.config.js  --mode development",
     "build:test": "tsc --build --verbose tsconfig.test.json",
     "build:config": "tsc --project",
     "serve": "npm run setup && npm run start",

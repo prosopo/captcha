@@ -12,10 +12,9 @@
   "license": "Apache-2.0",
   "dependencies": {
     "consola": "^2.15.3",
-    "dependency-tree": "^8.1.2",
+    "dependency-tree": "^10.0.8",
     "esbuild": "^0.17.19 ",
     "esbuild-node-externals": "^1.0.3",
-    "esbuild-ts-paths": "file:../../esbuild-ts-paths",
     "yargs": "^17.5.1",
     "yargs-parser": "^21.0.1"
   },

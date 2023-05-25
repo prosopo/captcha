@@ -13,5 +13,16 @@
   },
   "include": [
     "src"
+  ],
+  "references": [
+    {
+      "path": "../api"
+    },
+    {
+      "path": "../common"
+    },
+    {
+      "path": "../procaptcha"
+    }
   ]
 }

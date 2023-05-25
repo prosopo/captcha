@@ -48,7 +48,7 @@ import {
 import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
 import mongoose, { Connection } from 'mongoose'
 import { DeleteResult } from 'mongodb'
-import { ArgumentTypes } from '@prosopo/types/contract/typechain/captcha/types-arguments'
+import { ArgumentTypes } from '@prosopo/types'
 
 mongoose.set('strictQuery', false)
 

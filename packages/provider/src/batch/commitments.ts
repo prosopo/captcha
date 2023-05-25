@@ -1,7 +1,7 @@
 import { ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { BN } from '@polkadot/util'
 import { BatchCommitConfig, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
-import { ArgumentTypes } from '@prosopo/types/contract/typechain/captcha/types-arguments'
+import { ArgumentTypes } from '@prosopo/types'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { ApiPromise } from '@polkadot/api'
 import { SubmittableExtrinsic } from '@polkadot/api/types'

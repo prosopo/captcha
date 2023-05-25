@@ -25,7 +25,7 @@ export async function processArgs(args) {
                 }),
             handler: async (argv) => {
                 console.log('Building...')
-                await Promise.all(builder(argv.packages))
+                await builder(argv.packages)
             },
         })
 

@@ -27,7 +27,7 @@ import { Connection, Model, Schema } from 'mongoose'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import { DeleteResult } from 'mongodb'
 import { Logger } from '@prosopo/common'
-import { ArgumentTypes } from '@prosopo/types/contract/typechain/captcha/types-arguments'
+import { ArgumentTypes } from '@prosopo/types'
 
 export interface UserCommitmentRecord extends ArgumentTypes.Commit {
     processed: boolean

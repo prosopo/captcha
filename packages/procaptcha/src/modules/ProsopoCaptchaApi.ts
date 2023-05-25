@@ -28,10 +28,10 @@ import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { ProsopoApiError } from '../api/handlers'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
 import { TCaptchaSubmitResult } from '../types/client'
-import ProviderApi from '@prosopo/api/api/ProviderApi'
-import { ProsopoCaptchaContract } from '@prosopo/contract/contract/index'
-import { RandomProvider } from '@prosopo/types/contract/typechain/captcha/types-returns/captcha'
-import { ArgumentTypes } from '@prosopo/types/contract/typechain/captcha/types-arguments'
+import ProviderApi from '@prosopo/api'
+import { ProsopoCaptchaContract } from '@prosopo/contract'
+import { RandomProvider } from '@prosopo/types'
+import { ArgumentTypes } from '@prosopo/types'
 
 export class ProsopoCaptchaApi {
     userAccount: string
