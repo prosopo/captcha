@@ -3498,7 +3498,7 @@ pub mod captcha {
                 // Call as dapp user and get a random provider
                 let selected_provider =
                     contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
-                assert_eq!(selected_provider.unwrap().provider_id, provider_account);
+                assert_eq!(selected_provider.unwrap().provider_account, provider_account);
 
                 // Switch the provider payee to Dapp
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -3511,7 +3511,7 @@ pub mod captcha {
                 // selected despite the payee change
                 let selected_provider =
                     contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
-                assert_eq!(selected_provider.unwrap().provider_id, provider_account);
+                assert_eq!(selected_provider.unwrap().provider_account, provider_account);
             }
 
             /// Test provider can supply a dapp user commit for themselves and approve or disapprove it
