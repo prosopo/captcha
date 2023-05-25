@@ -2126,6 +2126,15 @@ pub mod captcha {
                 assert_eq!(contract.get_dapp_payees(), vec![DappPayee::Provider]);
             }
 
+            #[ink::test]
+            fn test_get_statuses() {
+                reset_caller_and_callee();
+
+                let mut contract = get_contract(0);
+
+                assert_eq!(contract.get_statuses(), vec![GovernanceStatus::Active, GovernanceStatus::Inactive]);
+            }
+
 
             #[ink::test]
             fn test_get_seed_at() {
