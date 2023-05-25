@@ -407,6 +407,64 @@ pub mod captcha {
             err
         }
 
+        fn account_id_bytes<'a>(&'a self, account: &'a AccountId) -> &[u8; 32] {
+            AsRef::<[u8; 32]>::as_ref(account)
+        }
+
+        fn validate_commit(&self, commit: &Commit) -> Result<(), Error> {
+            // pull out commit fields into a byte array (the payload)
+            // field sizes:
+                // pub struct Commit {
+                //     id: Hash, // 32
+                //     user: AccountId, //32
+                //     dataset_id: Hash, // 32
+                //     status: CaptchaStatus, // 1
+                //     dapp: AccountId, // 32
+                //     provider: AccountId, // 32
+                //     requested_at: BlockNumber, // 4
+                //     completed_at: BlockNumber, // 4
+                //     user_signature_part1: [u8; 32], // ignored
+                //     user_signature_part2: [u8; 32], // ignored
+                // } 
+            let mut payload = [0u8; 
+                32 // id
+                + 32 // user_account
+                + 32 // dataset_id
+                + 1 // status
+                + 32 // dapp_account
+                + 32 // provider_account
+                + 4 // requested_at
+                + 4 // completed_at
+            ];
+            payload[..32].copy_from_slice(&commit.id.as_ref()[..]);
+            payload[32..64].copy_from_slice(self.account_id_bytes(&commit.user));
+            payload[64..96].copy_from_slice(&commit.dataset_id.as_ref()[..]);
+            payload[96] = commit.status as u8;
+            payload[97..129].copy_from_slice(self.account_id_bytes(&commit.dapp));
+            payload[129..161].copy_from_slice(self.account_id_bytes(&commit.provider));
+            payload[161..165].copy_from_slice(&commit.requested_at.to_le_bytes());
+            payload[165..169].copy_from_slice(&commit.completed_at.to_le_bytes());
+
+            // concat the user signature
+            let mut user_signature = [0u8; 64];
+            user_signature[..32].copy_from_slice(&commit.user_signature_part1);
+            user_signature[32..64].copy_from_slice(&commit.user_signature_part2);
+
+            // verify the user signature against the payload, i.e. ensure the user accepted the commitment data (e.g. that it was approved / disapproved), signed it, and returned it to the provider
+            let mut user_account_bytes = [0u8; 32];
+            user_account_bytes.copy_from_slice(self.account_id_bytes(&commit.user));
+
+            let res = self
+                .env()
+                .sr25519_verify(&user_signature, &payload, &user_account_bytes);
+
+            if res.is_err() {
+                return err!(Error::VerifyFailed);
+            }
+
+            Ok(())
+        }
+
         #[ink(message)]
         pub fn get_payees(&self) -> Vec<Payee> {
             vec![Payee::Dapp, Payee::Provider]
