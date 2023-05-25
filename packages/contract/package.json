@@ -8,9 +8,7 @@
     "build": "tsc --build --verbose",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix",
-    "generate:pull-meta": "curl -H \"Content-Type: application/json\" -d '{\"id\":\"1\", \"jsonrpc\":\"2.0\", \"method\": \"state_getMetadata\", \"params\":[]}' http://127.0.0.1:9933 -o metadata.json",
-    "generate:defs": "ts-node --skip-project ../../node_modules/.bin/polkadot-types-from-defs --package . --input ./src/interfaces --endpoint ./metadata.json",
-    "generate:meta": "ts-node --skip-project ../../node_modules/.bin/polkadot-types-from-chain --package . --endpoint ./metadata.json --output ./src/interfaces"
+    "contract:import": "@727-ventures/typechain-polkadot --in $1 --out src/typechain/$2"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

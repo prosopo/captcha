@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import '@polkadot/api-augment'
-export * from './abi'
 export * from './accounts'
 export * from './balances'
 export * from './contract'

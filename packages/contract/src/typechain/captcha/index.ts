@@ -2,7 +2,8 @@
 // export * from './constructors'
 // export * from './contract-info'
 export * from './contracts'
-// export * from './data'
+import { ContractAbi } from './contract-info'
+export const abiJson = JSON.parse(ContractAbi)
 // export * from './event-data'
 // export * from './event-types'
 // export * from './events'
