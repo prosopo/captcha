@@ -2232,8 +2232,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_update_seed() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract_populated(0, 1);
 
@@ -2267,8 +2266,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_ctor_guard_pass() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 // only able to instantiate from the alice account
                 set_caller(AccountId::from([
@@ -2283,8 +2281,7 @@ pub mod captcha {
             #[ink::test]
             #[should_panic]
             fn test_ctor_guard_fail() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
@@ -2295,8 +2292,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_ctor() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -2432,8 +2428,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_set_code_hash_unauthorised() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -2448,8 +2443,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_terminate() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 set_caller(get_admin_account(0)); // an account which does have permission to call terminate
@@ -2467,8 +2461,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_terminate_unauthorised() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 set_caller(get_user_account(0)); // an account which does not have permission to call terminate
@@ -2478,8 +2471,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_withdraw() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 println!("contract {:?}", contract.env().account_id());
@@ -2504,8 +2496,7 @@ pub mod captcha {
             #[ink::test]
             #[should_panic]
             fn test_withdraw_insufficient_funds() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -2517,8 +2508,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_withdraw_unauthorised() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -2529,8 +2519,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_check_admin() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 // try the first 10 accounts
@@ -2552,8 +2541,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_set_admin() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let old_admin = contract.admin;
@@ -2572,8 +2560,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_set_admin_unauthorised() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let old_admin = contract.admin;
@@ -2590,8 +2577,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_ctor_caller_admin() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -2602,8 +2588,7 @@ pub mod captcha {
             /// Assert contract provider minimum stake default set from constructor.
             #[ink::test]
             pub fn test_provider_stake_threshold() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -2614,8 +2599,7 @@ pub mod captcha {
             /// Assert contract dapp minimum stake default set from constructor.
             #[ink::test]
             pub fn test_dapp_stake_threshold() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let dapp_stake_threshold: u128 = contract.get_dapp_stake_threshold();
@@ -2625,8 +2609,7 @@ pub mod captcha {
             /// Test provider register
             #[ink::test]
             fn test_provider_register() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
@@ -2662,8 +2645,7 @@ pub mod captcha {
             /// Test provider deregister
             #[ink::test]
             fn test_provider_deactivate() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
@@ -2680,8 +2662,7 @@ pub mod captcha {
             /// Test list providers
             #[ink::test]
             fn test_list_providers_by_ids() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
@@ -2701,8 +2682,7 @@ pub mod captcha {
             #[ink::test]
             #[should_panic]
             fn test_get_random_number_zero_len() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 contract.get_random_number(0, get_unused_account(), get_unused_account());
@@ -2711,8 +2691,7 @@ pub mod captcha {
             // Test get random number
             #[ink::test]
             fn test_get_random_number() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let acc1 = AccountId::from([0x1; 32]);
@@ -2757,8 +2736,7 @@ pub mod captcha {
             /// Test provider register and update
             #[ink::test]
             fn test_provider_register_and_update() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let (provider_account, url, fee) = generate_provider_data(0x2, "2424", 0);
@@ -2799,8 +2777,7 @@ pub mod captcha {
             /// Test provider register with url error
             #[ink::test]
             fn test_provider_register_with_url_error() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -2835,8 +2812,7 @@ pub mod captcha {
             /// Test provider update with url error
             #[ink::test]
             fn test_provider_update_with_url_error() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -2872,8 +2848,7 @@ pub mod captcha {
             /// Test provider unstake
             #[ink::test]
             fn test_provider_deregister() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 // give the contract some funds
@@ -2897,8 +2872,7 @@ pub mod captcha {
             /// Test provider add data set
             #[ink::test]
             fn test_provider_set_dataset() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
@@ -2922,8 +2896,7 @@ pub mod captcha {
             /// Test dapp register with zero balance transfer
             #[ink::test]
             fn test_dapp_register_zero_balance_transfer() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let caller = AccountId::from([0x2; 32]);
@@ -2955,8 +2928,7 @@ pub mod captcha {
             /// Test dapp register with positive balance transfer
             #[ink::test]
             fn test_dapp_register_positive_balance_transfer() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let caller = AccountId::from([0x2; 32]);
@@ -2993,8 +2965,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_verify_sr25519_valid() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3034,8 +3005,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_verify_sr25519_invalid_signature() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3076,8 +3046,7 @@ pub mod captcha {
             #[ink::test]
             #[should_panic]
             fn test_verify_sr25519_invalid_public_key() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3115,8 +3084,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_verify_sr25519_invalid_data() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3156,8 +3124,7 @@ pub mod captcha {
 
             #[ink::test]
             fn test_verify_sr25519_invalid_payload() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3198,8 +3165,7 @@ pub mod captcha {
             /// Test dapp register and then update
             #[ink::test]
             fn test_dapp_register_and_update() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let caller = AccountId::from([0x2; 32]);
@@ -3253,8 +3219,7 @@ pub mod captcha {
             /// Test dapp fund account
             #[ink::test]
             fn test_dapp_fund() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let caller = AccountId::from([0x2; 32]);
@@ -3286,8 +3251,7 @@ pub mod captcha {
             /// Test dapp cancel
             #[ink::test]
             fn test_dapp_cancel() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 // give the contract some funds
@@ -3334,8 +3298,7 @@ pub mod captcha {
             /// Test provider approve
             #[ink::test]
             fn test_provider_approve() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3434,8 +3397,7 @@ pub mod captcha {
             /// Test provider cannot approve invalid solution id
             #[ink::test]
             fn test_provider_approve_invalid_id() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3497,8 +3459,7 @@ pub mod captcha {
             /// Test provider disapprove
             #[ink::test]
             fn test_provider_disapprove() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3600,8 +3561,7 @@ pub mod captcha {
             /// Test dapp user is human
             #[ink::test]
             fn test_dapp_operator_is_human_user() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3673,8 +3633,7 @@ pub mod captcha {
             #[ink::test]
             fn test_non_existent_dapp_account_has_zero_balance() {
                 let dapp_account = AccountId::from([0x2; 32]);
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 contract.get_dapp_balance(dapp_account).unwrap_err();
@@ -3684,8 +3643,7 @@ pub mod captcha {
             #[ink::test]
             fn test_non_existent_provider_account_has_zero_balance() {
                 let provider_account = AccountId::from([0x2; 32]);
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 contract.get_provider_balance(provider_account).unwrap_err();
@@ -3694,8 +3652,7 @@ pub mod captcha {
             // // Test get random provider
             #[ink::test]
             fn test_get_random_active_provider() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
@@ -3733,8 +3690,7 @@ pub mod captcha {
             // // Test get random provider
             #[ink::test]
             fn test_get_random_active_provider_dapp_any() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 let provider_account = AccountId::from([0x2; 32]);
@@ -3789,8 +3745,7 @@ pub mod captcha {
             /// Test provider can supply a dapp user commit for themselves and approve or disapprove it
             #[ink::test]
             fn test_provider_commit_and_approve_and_disapprove() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3875,8 +3830,7 @@ pub mod captcha {
             /// Test provider cannot supply a dapp user commit for a different Provider
             #[ink::test]
             fn test_provider_cannot_supply_commit_for_a_different_provider() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
 
@@ -3945,8 +3899,7 @@ pub mod captcha {
                 let op2 = AccountId::from([0x2; 32]);
                 let ops = vec![op1, op2];
                 // initialise the contract
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
+                reset_caller_and_callee();
 
                 let mut contract = get_contract(0);
                 (op1, op2, ops, contract)
