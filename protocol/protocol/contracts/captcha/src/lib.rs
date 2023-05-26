@@ -952,6 +952,8 @@ pub mod captcha {
             } else {
                 lookup.unwrap()
             };
+
+            // setup the new provider with updated fields
             if new {
                 self.provider_state_insert(&old_provider, &provider_account)?;
             }
@@ -959,11 +961,10 @@ pub mod captcha {
                 url: url.unwrap_or(old_provider.url.clone()),
                 fee: fee.unwrap_or(old_provider.fee),
                 payee: payee.unwrap_or(old_provider.payee),
-                balance: old_provider.balance,
-                status: old_provider.status,
                 dataset_id: dataset_id.unwrap_or(old_provider.dataset_id),
                 dataset_id_content: dataset_id_content
                     .unwrap_or(old_provider.dataset_id_content),
+                ..old_provider
             };
 
             new_provider.balance += self.env().transferred_value();
@@ -1304,19 +1305,11 @@ pub mod captcha {
                 status: GovernanceStatus::Inactive,
                 payee: payee.unwrap_or(DappPayee::Provider),
             });
-            let mut new_dapp = old_dapp;
-
-            // check current contract for ownership
-            if !new {
-                self.check_dapp_owner_is_caller(contract)?;
-            }
-
-            if let Some(payee) = payee {
-                new_dapp.payee = payee;
-            }
-            if let Some(owner) = owner {
-                new_dapp.owner = owner;
-            }
+            let mut new_dapp = Dapp {
+                payee: payee.unwrap_or(old_dapp.payee),
+                owner: owner.unwrap_or(old_dapp.owner),
+                ..old_dapp
+            };
 
             // update the dapp funds
             new_dapp.balance += self.env().transferred_value();
@@ -1328,13 +1321,17 @@ pub mod captcha {
                 GovernanceStatus::Inactive
             };
 
+            // by here the new dapp has been configured
+
             if !new && old_dapp == new_dapp {
                 // nothing to do as no change
                 return Ok(());
             }
 
-            // owner of the dapp cannot be an admin
-            self.check_not_admin(new_dapp.owner)?;
+            // check current contract for ownership
+            if !new {
+                self.check_dapp_owner_is_caller(contract)?;
+            }
 
             // if the dapp is new then add it to the list of dapps
             if new {
