@@ -419,6 +419,7 @@ pub mod captcha {
             }
         }
 
+        /// Returns the set of seeds used in the rewind window (including the current seed)
         #[ink(message)]
         pub fn get_seeds(&self) -> BTreeMap<BlockNumber, Seed> {
             let mut seeds = BTreeMap::new();
@@ -463,6 +464,7 @@ pub mod captcha {
             self.max_user_history_age
         }
 
+        /// Get a random active provider
         #[ink(message)]
         pub fn get_random_active_provider(
             &self,
@@ -476,6 +478,8 @@ pub mod captcha {
             )
         }
 
+        /// Get a random active provider at a specific block
+        #[ink(message)]
         pub fn get_random_active_provider_at(
             &self,
             user_account: AccountId,
@@ -529,6 +533,8 @@ pub mod captcha {
         }
 
         /// Get a seed for a user and dapp at a block
+        /// 
+        /// Note: does not check if the dapp is active!
         fn get_seed_user_dapp_at(
             &self,
             user_account: AccountId,
@@ -634,7 +640,9 @@ pub mod captcha {
             }
         }
 
-        fn get_provider_at(
+        /// Get a provider at a given block
+        #[ink(message)]
+        pub fn get_provider_at(
             &self,
             account: AccountId,
             block: BlockNumber,
@@ -662,7 +670,9 @@ pub mod captcha {
             result.provider.clone().ok_or(Error::ProviderDoesNotExist)
         }
 
-        fn get_dapp_at(&self, account: AccountId, block: BlockNumber) -> Result<Dapp, Error> {
+        /// Get a dapp at a given block
+        #[ink(message)]
+        pub fn get_dapp_at(&self, account: AccountId, block: BlockNumber) -> Result<Dapp, Error> {
             self.check_inside_rewind_window(block)?;
 
             // start with the current state of the provider as the most recent record
@@ -696,7 +706,9 @@ pub mod captcha {
             Ok(())
         }
 
-        fn get_seed_at(&self, block_number: BlockNumber) -> Result<u128, Error> {
+        /// Get a seed at a given block
+        #[ink(message)]
+        pub fn get_seed_at(&self, block_number: BlockNumber) -> Result<u128, Error> {
             self.check_inside_rewind_window(block_number)?;
 
             let mut result = self.seed;
@@ -795,8 +807,7 @@ pub mod captcha {
         /// Read more about multihash notation here https://w3c-ccg.github.io/multihash/index.xml#mh-example (adds two bytes to identify type and length of hash function)
         ///
         /// Note the signature must be sr25519 type.
-        #[ink(message)]
-        pub fn verify_sr25519(&self, signature: [u8; 64], payload: [u8; 49]) -> Result<(), Error> {
+        fn verify_sr25519(&self, signature: [u8; 64], payload: [u8; 49]) -> Result<(), Error> {
             let caller = self.env().caller();
             let mut caller_bytes = [0u8; 32];
             let caller_ref: &[u8] = caller.as_ref();
@@ -823,6 +834,7 @@ pub mod captcha {
             AsRef::<[u8; 32]>::as_ref(account)
         }
 
+        /// Validate a commit by checking the signature from the user against the remaining commit fields comprising the payload.
         fn validate_commit(&self, commit: &Commit) -> Result<(), Error> {
             // pull out commit fields into a byte array (the payload)
             // field sizes:
@@ -877,16 +889,19 @@ pub mod captcha {
             Ok(())
         }
 
+        /// Get a list of all the payees.
         #[ink(message)]
         pub fn get_payees(&self) -> Vec<Payee> {
             vec![Payee::Dapp, Payee::Provider]
         }
 
+        /// Get a list of all the dapp payees.
         #[ink(message)]
         pub fn get_dapp_payees(&self) -> Vec<DappPayee> {
             vec![DappPayee::Dapp, DappPayee::Provider, DappPayee::Any]
         }
 
+        /// Get a list of all the statuses.
         #[ink(message)]
         pub fn get_statuses(&self) -> Vec<GovernanceStatus> {
             vec![GovernanceStatus::Active, GovernanceStatus::Inactive]
@@ -913,6 +928,7 @@ pub mod captcha {
             Hash::from(hash_output)
         }
 
+        /// Check a provider fee against the max provider fee limit
         fn check_provider_fee(&self, fee: u32) -> Result<(), Error> {
             if fee as u128 > self.max_provider_fee {
                 return err!(self, Error::ProviderFeeTooHigh);
@@ -921,6 +937,7 @@ pub mod captcha {
         }
 
         /// Configure a provider
+        /// A single place to configure a provider, ensuring all checks and balances are carried out
         fn provider_configure(
             &mut self,
             url: Option<Vec<u8>>,
@@ -1177,6 +1194,7 @@ pub mod captcha {
             Ok(())
         }
 
+        /// Log a provider's past configuration
         fn log_provider(&mut self, account: AccountId, provider: Option<Provider>) {
             // prune the logs before adding to them
             self.prune_logs();
@@ -1198,6 +1216,7 @@ pub mod captcha {
                 .insert(self.env().block_number(), &group);
         }
 
+        /// Log a dapp's past configuration
         fn log_dapp(&mut self, account: AccountId, dapp: Option<Dapp>) {
             // prune the logs before adding to them
             self.prune_logs();
@@ -1219,6 +1238,8 @@ pub mod captcha {
                 .insert(self.env().block_number(), &group);
         }
 
+        /// Prune the logs
+        /// This ensures all logs are within the rewind window
         fn prune_logs(&mut self) {
             let last = self.logs_pruned_at;
             let start = self.get_rewind_window_start();
@@ -1240,12 +1261,15 @@ pub mod captcha {
             self.logs_pruned_at = self.env().block_number();
         }
 
-        fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
+        /// Get a provider
+        #[ink(message)]
+        pub fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
             self.providers
                 .get(account)
                 .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))
         }
 
+        /// Add funds to a provider
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
@@ -1255,7 +1279,7 @@ pub mod captcha {
             Ok(())
         }
 
-        /// Add a new data set
+        /// Set a new dataset for a provider
         #[ink(message)]
         pub fn provider_set_dataset(
             &mut self,
@@ -1277,7 +1301,6 @@ pub mod captcha {
             if !self.env().is_contract(&contract) {
                 return err!(self, Error::InvalidContract);
             }
-
             Ok(())
         }
 
@@ -1293,7 +1316,6 @@ pub mod captcha {
             if self.dapps.get(contract).is_some() {
                 return err!(self, Error::DappExists);
             }
-
             Ok(())
         }
 
@@ -1304,7 +1326,6 @@ pub mod captcha {
             if dapp.owner != caller {
                 return err!(self, Error::NotAuthorised);
             }
-
             Ok(())
         }
 
@@ -1504,7 +1525,9 @@ pub mod captcha {
             self.dapp_users.insert(account, &user);
         }
 
-        fn get_user_history_summary(
+        /// Get a summary of the commit history for a user
+        #[ink(message)]
+        pub fn get_user_history_summary(
             &self,
             account: AccountId,
         ) -> Result<UserHistorySummary, Error> {
@@ -1579,6 +1602,7 @@ pub mod captcha {
             Ok(())
         }
 
+        /// Provider submits a captcha solution commitment
         #[ink(message)]
         pub fn provider_commit(&mut self, commit: Commit) -> Result<(), Error> {
             self.provider_record_commit(&commit)?;
@@ -1645,6 +1669,7 @@ pub mod captcha {
             Ok(self.get_user_history_summary(user)?.score > threshold)
         }
 
+        /// Get the last correct captcha solution for a user
         #[ink(message)]
         pub fn dapp_operator_last_correct_captcha(
             &self,
@@ -2632,6 +2657,7 @@ pub mod captcha {
             assert_eq!(contract.get_min_num_active_providers(), 0);
             assert_eq!(contract.get_max_provider_fee(), 1000);
             assert_eq!(contract.get_seed(), 0);
+            assert_eq!(contract.get_rewind_window(), 50);
 
             // default state should be set
             for payee in contract.get_payees().iter() {
@@ -2721,26 +2747,27 @@ pub mod captcha {
             }
         }
 
-        // #[ink::test]
-        // fn test_set_code_hash() {
+        #[ink::test]
+        fn test_set_code_hash() {
 
-        //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-        //     set_caller(get_unused_account());
-        //
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            set_caller(get_unused_account());
+        
 
-        //     let mut contract = get_contract(0);
-        //     set_callee(get_contract_account());
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
 
-        //     let new_code_hash = get_code_hash(1);
-        //     let old_code_hash = contract.env().own_code_hash().unwrap();
-        //     assert_ne!(Hash::from(new_code_hash), old_code_hash);
+            // TODO set code hash and own code hash are not implement in ink! yet 
 
-        //     set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
+            // let new_code_hash = get_code_hash(1);
+            // let old_code_hash = contract.env().own_code_hash().unwrap();
+            // assert_ne!(Hash::from(new_code_hash), old_code_hash);
 
-        //     assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
+            // assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
 
-        //     assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
-        // }
+            // assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
+        }
 
         #[ink::test]
         fn test_set_code_hash_unauthorised() {
@@ -3242,192 +3269,192 @@ pub mod captcha {
         //         .contains(&dapp_contract));
         // }
 
-        // #[ink::test]
-        // fn test_verify_sr25519_valid() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_verify_sr25519_valid() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract(0);
+            let mut contract = get_contract(0);
 
-        //     let data = "hello";
-        //     let mut data_hash = [0u8; 16];
-        //     Blake2x128::hash(data.as_bytes(), &mut data_hash);
-        //     println!("data_hash: {:?}", data_hash);
-        //     let data_hex = hex::encode(data_hash);
-        //     println!("data_hex: {:?}", data_hex);
-        //     // hex of prefix + hex of message hash + hex of suffix make the payload
-        //     let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
-        //     println!("payload: {}", payload);
-        //     let payload_hex = hex::encode(payload);
-        //     println!("payload_hex: {}", payload_hex);
-        //     // put payload into bytes
-        //     let mut payload_bytes = [0u8; 49];
-        //     payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
+            let data = "hello";
+            let mut data_hash = [0u8; 16];
+            Blake2x128::hash(data.as_bytes(), &mut data_hash);
+            println!("data_hash: {:?}", data_hash);
+            let data_hex = hex::encode(data_hash);
+            println!("data_hex: {:?}", data_hex);
+            // hex of prefix + hex of message hash + hex of suffix make the payload
+            let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
+            println!("payload: {}", payload);
+            let payload_hex = hex::encode(payload);
+            println!("payload_hex: {}", payload_hex);
+            // put payload into bytes
+            let mut payload_bytes = [0u8; 49];
+            payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
 
-        //     // Test against a known signature
-        //     // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
-        //     let signature_hex = "0a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
-        //     println!("signature: {}", signature_hex);
-        //     let mut signature_bytes = [0u8; 64];
-        //     signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
+            // Test against a known signature
+            // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
+            let signature_hex = "0a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
+            println!("signature: {}", signature_hex);
+            let mut signature_bytes = [0u8; 64];
+            signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-        //     const ALICE: [u8; 32] = AUTHOR;
-        //     ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
+            const ALICE: [u8; 32] = AUTHOR;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
-        //     // verify the signature
-        //     contract
-        //         .verify_sr25519(signature_bytes, payload_bytes)
-        //         .unwrap();
-        // }
+            // verify the signature
+            contract
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap();
+        }
 
-        // #[ink::test]
-        // fn test_verify_sr25519_invalid_signature() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_verify_sr25519_invalid_signature() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract(0);
+            let mut contract = get_contract(0);
 
-        //     let data = "hello";
-        //     let mut data_hash = [0u8; 16];
-        //     Blake2x128::hash(data.as_bytes(), &mut data_hash);
-        //     println!("data_hash: {:?}", data_hash);
-        //     let data_hex = hex::encode(data_hash);
-        //     println!("data_hex: {:?}", data_hex);
-        //     // hex of prefix + hex of message hash + hex of suffix make the payload
-        //     let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
-        //     println!("payload: {}", payload);
-        //     let payload_hex = hex::encode(payload);
-        //     println!("payload_hex: {}", payload_hex);
-        //     // put payload into bytes
-        //     let mut payload_bytes = [0u8; 49];
-        //     payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
+            let data = "hello";
+            let mut data_hash = [0u8; 16];
+            Blake2x128::hash(data.as_bytes(), &mut data_hash);
+            println!("data_hash: {:?}", data_hash);
+            let data_hex = hex::encode(data_hash);
+            println!("data_hex: {:?}", data_hex);
+            // hex of prefix + hex of message hash + hex of suffix make the payload
+            let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
+            println!("payload: {}", payload);
+            let payload_hex = hex::encode(payload);
+            println!("payload_hex: {}", payload_hex);
+            // put payload into bytes
+            let mut payload_bytes = [0u8; 49];
+            payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
 
-        //     // Test against a known signature
-        //     // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
-        //     let signature_hex = "1a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
-        //     println!("signature: {}", signature_hex);
-        //     let mut signature_bytes = [0u8; 64];
-        //     signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
+            // Test against a known signature
+            // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
+            let signature_hex = "1a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
+            println!("signature: {}", signature_hex);
+            let mut signature_bytes = [0u8; 64];
+            signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-        //     const ALICE: [u8; 32] = AUTHOR;
-        //     ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
+            const ALICE: [u8; 32] = AUTHOR;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
-        //     // verify the signature
-        //     contract
-        //         .verify_sr25519(signature_bytes, payload_bytes)
-        //         .unwrap_err();
-        // }
+            // verify the signature
+            contract
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap_err();
+        }
 
-        // #[ink::test]
-        // #[should_panic]
-        // fn test_verify_sr25519_invalid_public_key() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        #[should_panic]
+        fn test_verify_sr25519_invalid_public_key() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract(0);
+            let mut contract = get_contract(0);
 
-        //     let data = "hello";
-        //     let mut data_hash = [0u8; 16];
-        //     Blake2x128::hash(data.as_bytes(), &mut data_hash);
-        //     println!("data_hash: {:?}", data_hash);
-        //     let data_hex = hex::encode(data_hash);
-        //     println!("data_hex: {:?}", data_hex);
-        //     // hex of prefix + hex of message hash + hex of suffix make the payload
-        //     let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
-        //     println!("payload: {}", payload);
-        //     let payload_hex = hex::encode(payload);
-        //     println!("payload_hex: {}", payload_hex);
-        //     // put payload into bytes
-        //     let mut payload_bytes = [0u8; 49];
-        //     payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
+            let data = "hello";
+            let mut data_hash = [0u8; 16];
+            Blake2x128::hash(data.as_bytes(), &mut data_hash);
+            println!("data_hash: {:?}", data_hash);
+            let data_hex = hex::encode(data_hash);
+            println!("data_hex: {:?}", data_hex);
+            // hex of prefix + hex of message hash + hex of suffix make the payload
+            let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
+            println!("payload: {}", payload);
+            let payload_hex = hex::encode(payload);
+            println!("payload_hex: {}", payload_hex);
+            // put payload into bytes
+            let mut payload_bytes = [0u8; 49];
+            payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
 
-        //     // Test against a known signature
-        //     // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
-        //     let signature_hex = "0a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
-        //     println!("signature: {}", signature_hex);
-        //     let mut signature_bytes = [0u8; 64];
-        //     signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
+            // Test against a known signature
+            // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
+            let signature_hex = "0a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
+            println!("signature: {}", signature_hex);
+            let mut signature_bytes = [0u8; 64];
+            signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-        //     const ALICE: [u8; 32] = [
-        //         213, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
-        //         44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-        //     ];
-        //     ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
+            const ALICE: [u8; 32] = [
+                213, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
+                44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
-        //     // verify the signature
-        //     let valid = contract.verify_sr25519(signature_bytes, payload_bytes);
-        // }
+            // verify the signature
+            let valid = contract.verify_sr25519(signature_bytes, payload_bytes);
+        }
 
-        // #[ink::test]
-        // fn test_verify_sr25519_invalid_data() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_verify_sr25519_invalid_data() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract(0);
+            let mut contract = get_contract(0);
 
-        //     let data = "hello2";
-        //     let mut data_hash = [0u8; 16];
-        //     Blake2x128::hash(data.as_bytes(), &mut data_hash);
-        //     println!("data_hash: {:?}", data_hash);
-        //     let data_hex = hex::encode(data_hash);
-        //     println!("data_hex: {:?}", data_hex);
-        //     // hex of prefix + hex of message hash + hex of suffix make the payload
-        //     let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
-        //     println!("payload: {}", payload);
-        //     let payload_hex = hex::encode(payload);
-        //     println!("payload_hex: {}", payload_hex);
-        //     // put payload into bytes
-        //     let mut payload_bytes = [0u8; 49];
-        //     payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
+            let data = "hello2";
+            let mut data_hash = [0u8; 16];
+            Blake2x128::hash(data.as_bytes(), &mut data_hash);
+            println!("data_hash: {:?}", data_hash);
+            let data_hex = hex::encode(data_hash);
+            println!("data_hex: {:?}", data_hex);
+            // hex of prefix + hex of message hash + hex of suffix make the payload
+            let payload = "<Bytes>0x".to_string() + &data_hex + "</Bytes>";
+            println!("payload: {}", payload);
+            let payload_hex = hex::encode(payload);
+            println!("payload_hex: {}", payload_hex);
+            // put payload into bytes
+            let mut payload_bytes = [0u8; 49];
+            payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
 
-        //     // Test against a known signature
-        //     // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
-        //     let signature_hex = "0a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
-        //     println!("signature: {}", signature_hex);
-        //     let mut signature_bytes = [0u8; 64];
-        //     signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
+            // Test against a known signature
+            // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
+            let signature_hex = "0a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
+            println!("signature: {}", signature_hex);
+            let mut signature_bytes = [0u8; 64];
+            signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-        //     const ALICE: [u8; 32] = AUTHOR;
-        //     ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
+            const ALICE: [u8; 32] = AUTHOR;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
-        //     // verify the signature
-        //     contract
-        //         .verify_sr25519(signature_bytes, payload_bytes)
-        //         .unwrap_err();
-        // }
+            // verify the signature
+            contract
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap_err();
+        }
 
-        // #[ink::test]
-        // fn test_verify_sr25519_invalid_payload() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_verify_sr25519_invalid_payload() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract(0);
+            let mut contract = get_contract(0);
 
-        //     let data = "hello";
-        //     let mut data_hash = [0u8; 16];
-        //     Blake2x128::hash(data.as_bytes(), &mut data_hash);
-        //     println!("data_hash: {:?}", data_hash);
-        //     let data_hex = hex::encode(data_hash);
-        //     println!("data_hex: {:?}", data_hex);
-        //     // hex of prefix + hex of message hash + hex of suffix make the payload
-        //     let payload = "<Aytes>0x".to_string() + &data_hex + "</Bytes>";
-        //     println!("payload: {}", payload);
-        //     let payload_hex = hex::encode(payload);
-        //     println!("payload_hex: {}", payload_hex);
-        //     // put payload into bytes
-        //     let mut payload_bytes = [0u8; 49];
-        //     payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
+            let data = "hello";
+            let mut data_hash = [0u8; 16];
+            Blake2x128::hash(data.as_bytes(), &mut data_hash);
+            println!("data_hash: {:?}", data_hash);
+            let data_hex = hex::encode(data_hash);
+            println!("data_hex: {:?}", data_hex);
+            // hex of prefix + hex of message hash + hex of suffix make the payload
+            let payload = "<Aytes>0x".to_string() + &data_hex + "</Bytes>";
+            println!("payload: {}", payload);
+            let payload_hex = hex::encode(payload);
+            println!("payload_hex: {}", payload_hex);
+            // put payload into bytes
+            let mut payload_bytes = [0u8; 49];
+            payload_bytes.copy_from_slice(hex::decode(payload_hex).unwrap().as_slice());
 
-        //     // Test against a known signature
-        //     // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
-        //     let signature_hex = "0a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
-        //     println!("signature: {}", signature_hex);
-        //     let mut signature_bytes = [0u8; 64];
-        //     signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
+            // Test against a known signature
+            // sign the payload in polkjs. Note this will be different every time as signature changes randomly, but should always be valid
+            let signature_hex = "0a7da2b631704cdcfe93c740e41217b9ac667a0c8755d8da1a8232db527f487c87e780d2edc1896aeb6b1bef0bc7c38d9df2135b633eab8bfb1777e82fad3a8f";
+            println!("signature: {}", signature_hex);
+            let mut signature_bytes = [0u8; 64];
+            signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
-        //     const ALICE: [u8; 32] = AUTHOR;
-        //     ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
+            const ALICE: [u8; 32] = AUTHOR;
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
-        //     // verify the signature
-        //     contract
-        //         .verify_sr25519(signature_bytes, payload_bytes)
-        //         .unwrap_err();
-        // }
+            // verify the signature
+            contract
+                .verify_sr25519(signature_bytes, payload_bytes)
+                .unwrap_err();
+        }
 
         // /// Test dapp register and then update
         // #[ink::test]
