@@ -224,15 +224,6 @@ pub mod captcha {
         pub status: GovernanceStatus,
         pub payee: Payee,
     }
-
-    /// A seed for rng.
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct Seed {
-        pub value: u128,
-        pub block: BlockNumber,
-    }
-
     /// Record of when a provider changes and at what block
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
@@ -253,6 +244,7 @@ pub mod captcha {
         pub account: AccountId,
     }
 
+    pub type Seed = u128;
     // Contract storage
     #[ink(storage)]
     pub struct Captcha {
@@ -273,7 +265,8 @@ pub mod captcha {
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
         seed: Seed,                                  // the current seed for rng
-        seed_log: Lazy<BTreeMap<BlockNumber, Seed>>, // the history of seeds for rng, stored newest first
+        seed_at: BlockNumber, // the block at which the seed was set
+        seed_log: Lazy<BTreeMap<BlockNumber, u128>>, // the history of seeds for rng
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
         provider_account_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
         provider_log: Mapping<AccountBlockId, ProviderRecord>, // log of provider changes for a given account
@@ -406,7 +399,8 @@ pub mod captcha {
                 min_num_active_providers,
                 max_provider_fee,
                 seed_log: Default::default(),
-                seed: Seed { value: 0, block: 0 },
+                seed: 0,
+                seed_at: 0,
                 rewind_window,
                 provider_account_log: Default::default(),
                 provider_log: Default::default(),
@@ -418,7 +412,7 @@ pub mod captcha {
 
         #[ink(message)]
         pub fn get_seeds(&self) -> BTreeMap<BlockNumber, Seed> {
-            let seeds = self.seed_log.get_or_default().clone();
+            let mut seeds = self.seed_log.get_or_default().clone();
             seeds.insert(self.env().block_number(), self.seed);
             seeds
         }
@@ -645,24 +639,24 @@ pub mod captcha {
         fn get_seed_at(&self, block_number: BlockNumber) -> Result<u128, Error> {
             self.check_inside_rewind_window(block_number)?;
 
-            let mut result = self.seed.value;
+            let mut result = &self.seed;
 
             let seed_log = self.seed_log.get_or_default();
             // loop through log from most recent to oldest
             for (block, seed) in seed_log.iter().rev() {
                 if block <= &block_number {
                     // update result if within block threshold
-                    result = seed.value;
+                    result = seed;
                 } else {
                     // hit block threshold, stop looping
                     break;
                 }
             }
-            Ok(result)
+            Ok(*result)
         }
 
         fn get_seed(&self) -> u128 {
-            self.seed.value
+            self.seed
         }
 
         /// Update the seed
@@ -670,14 +664,14 @@ pub mod captcha {
         pub fn update_seed(&mut self) -> Result<bool, Error> {
             let block_number = self.env().block_number();
 
-            let seed = self.seed;
-            if seed.block == block_number {
+            let seed_at = self.seed_at;
+            if seed_at == block_number {
                 // seed already updated for this block
                 // disallow updating the seed for the same block twice to avoid spamming
                 return Ok(false);
             }
             // else seed has not been updated for the current block
-
+            
             let caller = self.env().caller();
 
             // only providers can call this function
@@ -710,7 +704,8 @@ pub mod captcha {
             seed_log = seed_log.split_off(&self.get_rewind_window_start());
 
             // add the current seed to the log
-            seed_log.insert(seed.block, seed);
+            let seed = self.seed;
+            seed_log.insert(seed_at, seed);
 
             // then compute new seed value
             // what to use in the seed?
@@ -726,17 +721,16 @@ pub mod captcha {
             input[0..32].copy_from_slice(&caller_bytes[..]);
             input[32..36].copy_from_slice(&block_number.to_le_bytes()[..]);
             input[36..44].copy_from_slice(&block_timestamp.to_le_bytes()[..]);
-            input[44..60].copy_from_slice(&seed.value.to_le_bytes()[..]);
+            input[44..60].copy_from_slice(&seed.to_le_bytes()[..]);
 
             let hash = self.env().hash_bytes::<Blake2x128>(&input);
             // convert hash to u128 for the new seed value
             let new_seed_value = u128::from_le_bytes(hash);
 
             // update seed and history
-            self.seed = Seed {
-                value: new_seed_value,
-                block: block_number,
-            };
+            self.seed = new_seed_value;
+            self.seed_at = block_number;
+
             self.seed_log.set(&seed_log);
 
             Ok(true)
