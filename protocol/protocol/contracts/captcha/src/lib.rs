@@ -2144,6 +2144,7 @@ pub mod captcha {
 
             // avoid accidentally reusing caller
             reset_caller();
+            reset_callee();
         }
 
         fn register_dapp(contract: &mut Captcha, index: u128) {
@@ -2157,6 +2158,7 @@ pub mod captcha {
 
             // avoid accidentally reusing caller
             reset_caller();
+            reset_callee();
         }
 
         fn get_contract_populated(index: u128, size: u128) -> Captcha {
