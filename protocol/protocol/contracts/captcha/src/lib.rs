@@ -277,7 +277,7 @@ pub mod captcha {
         max_provider_fee: Balance,
         seed: Seed,                                  // the current seed for rng
         seed_at: BlockNumber,                        // the block at which the seed was set
-        seed_log: Lazy<BTreeMap<BlockNumber, u128>>, // the history of seeds for rng
+        seed_log: Mapping<BlockNumber, u128>, // the history of seeds for rng
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
         provider_account_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
         provider_log: Mapping<AccountBlockId, ProviderRecord>, // log of provider changes for a given account
@@ -421,8 +421,15 @@ pub mod captcha {
 
         #[ink(message)]
         pub fn get_seeds(&self) -> BTreeMap<BlockNumber, Seed> {
-            let mut seeds = self.seed_log.get_or_default().clone();
-            seeds.insert(self.env().block_number(), self.seed);
+            let mut seeds = BTreeMap::new();
+            let start = self.get_rewind_window_start();
+            let end = self.env().block_number();
+            for i in start..end {
+                if let Some(seed) = self.seed_log.get(&i) {
+                    seeds.insert(i, seed);
+                }
+            }
+            seeds.insert(end, self.seed);
             seeds
         }
 
@@ -692,20 +699,23 @@ pub mod captcha {
         fn get_seed_at(&self, block_number: BlockNumber) -> Result<u128, Error> {
             self.check_inside_rewind_window(block_number)?;
 
-            let mut result = &self.seed;
+            let mut result = self.seed;
 
-            let seed_log = self.seed_log.get_or_default();
-            // loop through log from most recent to oldest
-            for (block, seed) in seed_log.iter().rev() {
-                if block <= &block_number {
-                    // update result if within block threshold
+            // loop through blocks until we find a seed record
+            // if no seed record is found, the result will be the current seed (i.e. seed has not changed since the given block)
+            let block_number = self.env().block_number();
+            let start = self.get_rewind_window_start();
+            for at in (start..=block_number).rev() {
+                let seed = self.seed_log.get(&at);
+                if let Some(seed) = seed {
+                    // found a record of the seed
+                    // this will be the seed value at the given block
                     result = seed;
-                } else {
-                    // hit block threshold, stop looping
                     break;
                 }
             }
-            Ok(*result)
+
+            Ok(result)
         }
 
         fn get_seed(&self) -> u128 {
@@ -737,15 +747,8 @@ pub mod captcha {
             }
 
             // put the old seed into the log
-            let mut seed_log = self.seed_log.get_or_default();
-            // prune the seed log as old entries may have become too old and land outside the rewind_window window
-            // split the tree into two parts, one with elements older than the threshold block and the other with elements newer than (or equal to) the threshold block
-            // retain the newer elements
-            seed_log = seed_log.split_off(&self.get_rewind_window_start());
-
-            // add the current seed to the log
             let seed = self.seed;
-            seed_log.insert(seed_at, seed);
+            self.seed_log.insert(seed_at, &seed);            
 
             // then compute new seed value
             // what to use in the seed?
@@ -767,11 +770,14 @@ pub mod captcha {
             // convert hash to u128 for the new seed value
             let new_seed_value = u128::from_le_bytes(hash);
 
-            // update seed and history
+            // update seed
             self.seed = new_seed_value;
             self.seed_at = block_number;
 
-            self.seed_log.set(&seed_log);
+            debug!("new seed: {}", self.seed);
+            debug!("new seed at: {}", self.seed_at);
+
+            self.prune_logs();
 
             Ok(true)
         }
@@ -1212,14 +1218,18 @@ pub mod captcha {
             let start = self.get_rewind_window_start();
             // for all records which land outside the rewind window, remove them. E.g. between the last prune and the start of the rewind window
             for block in last..start {
+                // remove providers
                 let provider_accounts = self.provider_account_log.take(block).unwrap_or_default();
-                let dapp_accounts = self.dapp_account_log.take(block).unwrap_or_default();
                 for account in provider_accounts {
                     self.provider_log.remove(AccountBlockId { account, block });
                 }
+                // remove dapps
+                let dapp_accounts = self.dapp_account_log.take(block).unwrap_or_default();
                 for account in dapp_accounts {
                     self.dapp_log.remove(AccountBlockId { account, block });
                 }
+                // remove seeds
+                self.seed_log.remove(block);
             }
             self.logs_pruned_at = self.env().block_number();
         }
