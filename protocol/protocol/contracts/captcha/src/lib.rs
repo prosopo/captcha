@@ -533,7 +533,7 @@ pub mod captcha {
         }
 
         /// Get a seed for a user and dapp at a block
-        /// 
+        ///
         /// Note: does not check if the dapp is active!
         fn get_seed_user_dapp_at(
             &self,
@@ -2749,16 +2749,14 @@ pub mod captcha {
 
         #[ink::test]
         fn test_set_code_hash() {
-
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
-        
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
             set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
 
-            // TODO set code hash and own code hash are not implement in ink! yet 
+            // TODO set code hash and own code hash are not implement in ink! yet
 
             // let new_code_hash = get_code_hash(1);
             // let old_code_hash = contract.env().own_code_hash().unwrap();
@@ -3271,7 +3269,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_verify_sr25519_valid() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
 
@@ -3308,7 +3307,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_verify_sr25519_invalid_signature() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
 
@@ -3346,7 +3346,8 @@ pub mod captcha {
         #[ink::test]
         #[should_panic]
         fn test_verify_sr25519_invalid_public_key() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
 
@@ -3373,8 +3374,8 @@ pub mod captcha {
             signature_bytes.copy_from_slice(hex::decode(signature_hex).unwrap().as_slice());
 
             const ALICE: [u8; 32] = [
-                213, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
-                44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+                213, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
             ];
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(AccountId::from(ALICE));
 
@@ -3384,7 +3385,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_verify_sr25519_invalid_data() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
 
@@ -3421,7 +3423,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_verify_sr25519_invalid_payload() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
 
