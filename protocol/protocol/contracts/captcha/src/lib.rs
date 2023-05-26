@@ -1038,9 +1038,6 @@ pub mod captcha {
                 if new { None } else { Some(old_provider) },
             );
 
-            // update the seed
-            self.update_seed()?;
-
             Ok(())
         }
 
@@ -1100,7 +1097,12 @@ pub mod captcha {
                 return err!(self, Error::ProviderExists);
             }
 
-            self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None)
+            let result = self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None);
+
+            // update the seed
+            self.update_seed()?;
+
+            result
         }
 
         /// Update an existing provider, their url, fee and deposit funds
@@ -1117,14 +1119,24 @@ pub mod captcha {
                 return err!(self, Error::ProviderDoesNotExist);
             }
 
-            self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None)
+            let result = self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None);
+
+            // update the seed
+            self.update_seed()?;
+
+            result
         }
 
         /// De-activate a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deactivate(&mut self) -> Result<(), Error> {
             // Change status to deactivated
-            self.provider_configure(None, None, None, true, None, None)
+            let result = self.provider_configure(None, None, None, true, None, None);
+
+            // update the seed
+            self.update_seed()?;
+
+            result
         }
 
         /// Unstake and deactivate the provider's service, returning stake
