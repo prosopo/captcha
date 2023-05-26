@@ -351,6 +351,8 @@ pub mod captcha {
         BlockInFuture,
         /// Returned if block is too far in the past
         BlockOutsideRewindWindow,
+        /// Returned if the url is empty, which is not allowed
+        UrlEmpty,
     }
 
     impl Captcha {
@@ -995,6 +997,11 @@ pub mod captcha {
             if !new && old_provider == new_provider {
                 // no need to update anything
                 return Ok(());
+            }
+
+            // url cannot be empty
+            if new_provider.url.is_empty() {
+                return err!(self, Error::UrlEmpty);
             }
 
             // dataset content id cannot be equal to dataset id
@@ -2378,74 +2385,81 @@ pub mod captcha {
             assert_eq!(result, Err(Error::BlockInFuture));
         }
 
-        // #[ink::test]
-        // fn test_provider_register_url_empty() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_provider_register_url_empty() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract(0);
-        //     set_callee(contract.env().account_id());
-        //     let provider_account = get_provider_account(0);
-        //     // set the caller to the provider account
-        //     set_caller(provider_account);
-        //     // register the provider
-        //     // expect err because url is empty
-        //     contract.provider_register(
-        //         vec![],
-        //         get_provider_fee(),
-        //         get_provider_payee(),
-        //     ).unwrap_err();
-        // }
+            let mut contract = get_contract(0);
+            set_callee(contract.env().account_id());
+            let provider_account = get_provider_account(0);
+            // set the caller to the provider account
+            set_caller(provider_account);
+            // register the provider
+            // expect err because url is empty
+            let result = contract.provider_register(
+                vec![],
+                get_provider_fee(),
+                get_provider_payee(),
+            );
+            assert_eq!(result, Err(Error::UrlEmpty));
+        }
 
-        // #[ink::test]
-        // fn test_provider_update_url_empty() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_provider_update_url_empty() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract_populated(0, 1);
-        //     let provider_account = get_provider_account(0);
-        //     // set the caller to the provider account
-        //     set_caller(provider_account);
-        //     // register the provider
-        //     // expect err because url is empty
-        //     contract.provider_update(
-        //         vec![],
-        //         get_provider_fee(),
-        //         get_provider_payee(),
-        //     ).unwrap_err();
-        // }
+            let mut contract = get_contract_populated(0, 1);
+            set_callee(contract.env().account_id());
+            let provider_account = get_provider_account(0);
+            // set the caller to the provider account
+            set_caller(provider_account);
+            // register the provider
+            // expect err because url is empty
+            let result = contract.provider_update(
+                vec![],
+                get_provider_fee(),
+                get_provider_payee(),
+            );
+            assert_eq!(result, Err(Error::UrlEmpty));
+        }
 
-        // #[ink::test]
-        // fn test_provider_register_fee_too_large() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_provider_register_fee_too_large() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract(0);
-        //     let provider_account = get_provider_account(0);
-        //     // set the caller to the provider account
-        //     set_caller(provider_account);
-        //     // register the provider
-        //     // expect err because fee too large
-        //     contract.provider_register(
-        //         get_provider_url(0),
-        //         contract.get_max_provider_fee() + 1,
-        //         get_provider_payee(),
-        //     ).unwrap_err();
-        // }
+            let mut contract = get_contract(0);
+            set_callee(contract.env().account_id());
+            let provider_account = get_provider_account(0);
+            // set the caller to the provider account
+            set_caller(provider_account);
+            // register the provider
+            // expect err because fee too large
+            let result = contract.provider_register(
+                get_provider_url(0),
+                contract.get_max_provider_fee() + 1,
+                get_provider_payee(),
+            );
+            assert_eq!(result, Err(Error::ProviderFeeTooHigh));
+        }
 
-        // #[ink::test]
-        // fn test_provider_update_fee_too_large() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_provider_update_fee_too_large() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract_populated(0, 1);
-        //     let provider_account = get_provider_account(0);
-        //     // set the caller to the provider account
-        //     set_caller(provider_account);
-        //     // register the provider
-        //     // expect err because fee too large
-        //     contract.provider_update(
-        //         get_provider_url(0),
-        //         contract.get_max_provider_fee() + 1,
-        //         get_provider_payee(),
-        //     ).unwrap_err();
-        // }
+            let mut contract = get_contract_populated(0, 1);
+            set_callee(contract.env().account_id());
+            let provider_account = get_provider_account(0);
+            // set the caller to the provider account
+            set_caller(provider_account);
+            // register the provider
+            // expect err because fee too large
+            let result = contract.provider_update(
+                get_provider_url(0),
+                contract.get_max_provider_fee() + 1,
+                get_provider_payee(),
+            );
+            assert_eq!(result, Err(Error::ProviderFeeTooHigh));
+        }
 
         // #[ink::test]
         // fn test_provider_register_pass() {
