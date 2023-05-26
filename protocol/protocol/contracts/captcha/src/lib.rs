@@ -23,12 +23,10 @@ macro_rules! print_err {
         ink::env::debug_println!(
             "ERROR: 
     type: {:?}
-    fn: {:?}
     block: {:?}
     caller: {:?}
 ",
             $err,
-            function_name!(),
             get_self!().env().block_number(),
             get_self!().env().caller(),
         );
@@ -57,7 +55,6 @@ macro_rules! lazy {
     };
 }
 #[allow(unused_macros)]
-#[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod captcha {
