@@ -74,6 +74,7 @@ export interface ProcaptchaEvents {
     onHuman: (output: ProcaptchaOutput) => void
     onExtensionNotFound: () => void
     onExpired: () => void
+    onFailed: () => void
 }
 
 /**

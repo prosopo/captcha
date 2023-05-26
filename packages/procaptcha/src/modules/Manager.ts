@@ -70,7 +70,7 @@ export const Manager = (
                 alert(`Account ${address} not found`)
             },
             onError: (error) => {
-                alert(error ? error.message : 'An error occurred')
+                alert(`${error?.message ?? 'An unexpected error occurred'}, please try again`)
             },
             onHuman: (output) => {
                 console.log('onHuman event triggered', output)
@@ -79,7 +79,10 @@ export const Manager = (
                 alert('No extension found')
             },
             onExpired: () => {
-                alert('Challenge has expired')
+                alert('Challenge has expired, please try again')
+            },
+            onFailed: () => {
+                alert('Captcha challenge failed. Please try again')
             },
         },
         callbacks
@@ -285,9 +288,11 @@ export const Manager = (
             const account = getAccount()
             const blockNumber = getBlockNumber()
             const signer = account.extension.signer
+
             if (!challenge.captchas[0].captcha.datasetId) {
                 throw new Error('No datasetId set for challenge')
             }
+
             const captchaApi = getCaptchaApi()
 
             // send the commitment to the provider
@@ -304,8 +309,7 @@ export const Manager = (
 
             if (!isHuman) {
                 // user failed the captcha for some reason according to the provider
-                // let the user know
-                alert('Captcha challenge failed. Please try again.')
+                events.onFailed()
             }
 
             // update the state with the result of the submission
