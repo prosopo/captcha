@@ -623,6 +623,8 @@ pub mod captcha {
             account: AccountId,
             block: BlockNumber,
         ) -> Result<Provider, Error> {
+            self.check_inside_rewind_window(block)?;
+
             // start with the current state of the provider as the most recent record
             let mut result: ProviderRecord = ProviderRecord {
                 provider: self.providers.get(&account),
@@ -645,6 +647,8 @@ pub mod captcha {
         }
 
         fn get_dapp_at(&self, account: AccountId, block: BlockNumber) -> Result<Dapp, Error> {
+            self.check_inside_rewind_window(block)?;
+
             // start with the current state of the provider as the most recent record
             let mut result: DappRecord = DappRecord {
                 dapp: self.dapps.get(&account),
@@ -2106,7 +2110,7 @@ pub mod captcha {
         }
 
         fn get_provider_url(index: u128) -> Vec<u8> {
-            vec![index as u8; 32]
+            index.to_le_bytes().to_vec()
         }
 
         fn get_provider_fee() -> u32 {
@@ -2142,6 +2146,8 @@ pub mod captcha {
                     get_provider_payee(),
                 )
                 .unwrap();
+            // advance the block, as in production the provider would not be seen until block rollover
+            advance_block();
 
             // avoid accidentally reusing caller
             reset_caller();
@@ -2156,6 +2162,8 @@ pub mod captcha {
             contract
                 .dapp_register(get_dapp_contract_account(index), get_dapp_payee())
                 .unwrap();
+            // advance the block, as in production the dapp would not be seen until block rollover
+            advance_block();
 
             // avoid accidentally reusing caller
             reset_caller();
