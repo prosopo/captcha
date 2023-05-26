@@ -2126,7 +2126,7 @@ pub mod captcha {
 
                 let mut contract = get_contract(0);
 
-                assert_eq!(contract.get_payees(), vec![Payee::Provider, Payee::Dapp]);
+                assert_eq!(contract.get_payees(), vec![Payee::Dapp, Payee::Provider]);
             }
 
             #[ink::test]
