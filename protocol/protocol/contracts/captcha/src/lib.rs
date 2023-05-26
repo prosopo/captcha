@@ -1949,6 +1949,7 @@ pub mod captcha {
             ink::env::test::get_account_balance::<DefaultEnvironment>;
         const is_contract: fn(AccountId) -> bool = ink::env::test::is_contract::<DefaultEnvironment>;
         const callee: fn() -> AccountId = ink::env::test::callee::<DefaultEnvironment>;
+        const advance_block: fn() = ink::env::test::advance_block::<DefaultEnvironment>;
 
 
         const STAKE_THRESHOLD: u128 = 1000000000000;
@@ -2209,23 +2210,25 @@ pub mod captcha {
             //     }
             // }
 
-            // #[ink::test]
-            // fn test_get_seed_at_past_rewind_window() {
-            //     reset_caller_and_callee();
+            #[ink::test]
+            fn test_get_seed_at_past_rewind_window() {
+                reset_caller();
+                reset_callee();
 
-            //     let mut contract = get_contract(0);
-            //     let admin_account = get_admin_account(0);
-            //     set_caller(admin_account);
+                let mut contract = get_contract(0);
+                set_callee(contract.env().account_id());
+                let admin_account = get_admin_account(0);
+                set_caller(admin_account);
 
-            //     // advance the block past the rewind window
-            //     for i in 0..contract.get_rewind_window() {
-            //         advance_block();
-            //     }
-            //     advance_block();
+                // advance the block past the rewind window
+                for i in 0..contract.get_rewind_window() {
+                    advance_block();
+                }
+                advance_block();
 
-            //     // check that going back further than the rewind window hits an error
-            //     contract.get_seed_at((contract.get_rewind_window_start() - 1)).unwrap_err();
-            // }
+                // check that going back further than the rewind window hits an error
+                contract.get_seed_at((contract.get_rewind_window_start() - 1)).unwrap_err();
+            }
 
             // #[ink::test]
             // fn test_provider_register_url_empty() {
