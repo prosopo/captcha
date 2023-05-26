@@ -1099,7 +1099,7 @@ pub mod captcha {
             payee: Payee,
         ) -> Result<(), Error> {
             // this function is for registration only
-            if self.get_provider(self.env().caller()).is_ok() {
+            if self.providers.get(self.env().caller()).is_some() {
                 return err!(Error::ProviderExists);
             }
 
