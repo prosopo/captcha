@@ -212,11 +212,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             // console.log(providerMaxFee)
             // process.exit()
 
-            await tasks.contract.tx.providerRegister(
-                _url,
-                createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
-                PROVIDER_PAYEE
-            )
+            await tasks.contract.tx.providerRegister(_url, PROVIDER_FEE, PROVIDER_PAYEE)
 
             const provider = (await tasks.contract.query.getProviderDetails(accountAddress(account))).value
                 .unwrap()
