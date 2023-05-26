@@ -955,16 +955,18 @@ pub mod captcha {
             if new {
                 self.provider_state_insert(&old_provider, &provider_account)?;
             }
-            let mut new_provider = old_provider.clone();
+            let mut new_provider = Provider {
+                url: url.unwrap_or(old_provider.url.clone()),
+                fee: fee.unwrap_or(old_provider.fee),
+                payee: payee.unwrap_or(old_provider.payee),
+                balance: old_provider.balance,
+                status: old_provider.status,
+                dataset_id: dataset_id.unwrap_or(old_provider.dataset_id),
+                dataset_id_content: dataset_id_content
+                    .unwrap_or(old_provider.dataset_id_content),
+            };
 
-            // update the config
-            new_provider.url = url.unwrap_or(old_provider.url.clone());
-            new_provider.fee = fee.unwrap_or(old_provider.fee);
-            new_provider.payee = payee.unwrap_or(old_provider.payee);
             new_provider.balance += self.env().transferred_value();
-            new_provider.dataset_id = dataset_id.unwrap_or(old_provider.dataset_id);
-            new_provider.dataset_id_content =
-                dataset_id_content.unwrap_or(old_provider.dataset_id_content);
 
             // proceed only if there has been a change
             if old_provider == new_provider {
