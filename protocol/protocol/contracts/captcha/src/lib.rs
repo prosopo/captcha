@@ -2123,7 +2123,9 @@ pub mod captcha {
 
             // check the contract was created with the correct account
             assert_eq!(contract.env().account_id(), account);
+            println!("contract account1: {:?}", contract.env().account_id());
             reset_callee();
+            println!("contract account2: {:?}", contract.env().account_id());
             contract
         }
 
@@ -2167,7 +2169,7 @@ pub mod captcha {
         fn register_provider(contract: &mut Captcha, index: u128) {
             // set the caller to the provider account
             set_caller(get_provider_account(index));
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(index));
             // register the provider
             set_value_transferred(contract.get_provider_stake_threshold());
             contract
@@ -2194,7 +2196,7 @@ pub mod captcha {
         fn register_dapp(contract: &mut Captcha, index: u128) {
             // set the caller to the dapp account
             set_caller(get_dapp_account(index));
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(index));
             set_value_transferred(contract.get_dapp_stake_threshold());
             // register the dapp
             contract
@@ -2226,7 +2228,7 @@ pub mod captcha {
             reset_callee();
 
             let mut contract = get_contract(0);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
 
             assert_eq!(contract.get_payees(), vec![Payee::Dapp, Payee::Provider]);
         }
@@ -2237,7 +2239,7 @@ pub mod captcha {
             reset_callee();
 
             let mut contract = get_contract(0);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
 
             assert_eq!(
                 contract.get_dapp_payees(),
@@ -2251,7 +2253,7 @@ pub mod captcha {
             reset_callee();
 
             let mut contract = get_contract(0);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
 
             assert_eq!(
                 contract.get_statuses(),
@@ -2264,7 +2266,7 @@ pub mod captcha {
             reset_caller(); reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
 
             let admin_account = get_admin_account(0);
             // set the caller to the provider account
@@ -2320,7 +2322,7 @@ pub mod captcha {
             reset_callee();
 
             let mut contract = get_contract(0);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2338,7 +2340,7 @@ pub mod captcha {
             reset_callee();
 
             let mut contract = get_contract(0);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2353,7 +2355,7 @@ pub mod captcha {
             reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2374,7 +2376,7 @@ pub mod captcha {
             reset_callee();
 
             let mut contract = get_contract(0);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2390,7 +2392,7 @@ pub mod captcha {
             reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2411,7 +2413,7 @@ pub mod captcha {
             reset_callee();
 
             let mut contract = get_contract(0);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2426,7 +2428,7 @@ pub mod captcha {
             reset_caller(); reset_callee();
 
             let mut contract = get_contract(0);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let provider_account = get_provider_account(0);
             // set the caller to the provider account
             set_caller(provider_account);
@@ -2445,7 +2447,7 @@ pub mod captcha {
             reset_caller(); reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let provider_account = get_provider_account(0);
             // set the caller to the provider account
             set_caller(provider_account);
@@ -2464,7 +2466,7 @@ pub mod captcha {
             reset_caller(); reset_callee();
 
             let mut contract = get_contract(0);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let provider_account = get_provider_account(0);
             // set the caller to the provider account
             set_caller(provider_account);
@@ -2483,7 +2485,7 @@ pub mod captcha {
             reset_caller(); reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
             let provider_account = get_provider_account(0);
             // set the caller to the provider account
             set_caller(provider_account);
@@ -2502,7 +2504,7 @@ pub mod captcha {
             reset_caller(); reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
-            set_callee(contract.env().account_id());
+            set_callee(get_contract_account(0));
 
             let provider_account = get_provider_account(0);
 
@@ -2523,6 +2525,7 @@ pub mod captcha {
             reset_caller(); reset_callee();
 
             let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
 
             // expect rewind window start to be zero when block < rewind window
             // this test only works with rewind window > 0
@@ -2545,6 +2548,7 @@ pub mod captcha {
             reset_caller(); reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
+            set_callee(get_contract_account(0));
 
             let provider_account = get_provider_account(0);
             let user_account = get_user_account(0);
@@ -2575,348 +2579,293 @@ pub mod captcha {
             }
         }
 
+        #[ink::test]
+        fn test_ctor_guard_pass() {
+            reset_caller(); reset_callee();
+
+            // only able to instantiate from the alice account
+            set_caller(AccountId::from(AUTHOR));
+            let contract =
+                Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
+            // should construct successfully
+        }
+
+        #[ink::test]
+        #[should_panic]
+        fn test_ctor_guard_fail() {
+            reset_caller(); reset_callee();
+
+            // only able to instantiate from the alice account
+            let mut account = AUTHOR.clone();
+            // ensure the account is not the author
+            account[0] = account[0].wrapping_add(1);
+            set_caller(AccountId::from(account));
+            let contract =
+                Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
+            // should fail to construct and panic
+        }
+
+        #[ink::test]
+        fn test_ctor() {
+            reset_caller(); reset_callee();
+
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+
+            // ctor params should be set
+            assert_eq!(contract.provider_stake_threshold, STAKE_THRESHOLD);
+            assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
+            assert_eq!(contract.get_admin(), get_admin_account(0));
+            assert_eq!(contract.get_max_user_history_len(), 10);
+            assert_eq!(contract.get_max_user_history_age(), 1000000);
+            assert_eq!(contract.get_min_num_active_providers(), 0);
+            assert_eq!(contract.get_max_provider_fee(), 1000);
+            assert_eq!(contract.get_seed(), 0);
+
+            // default state should be set
+            for payee in contract.get_payees().iter() {
+                for status in contract.get_statuses().iter() {
+                    assert_eq!(
+                        contract.provider_accounts.get(ProviderState {
+                            payee: *payee,
+                            status: *status
+                        }),
+                        None
+                    );
+                }
+            }
+            assert_eq!(contract.dapp_accounts.get(), None);
+            assert_eq!(contract.user_accounts.get(), None);
+        }
+
+        /// Test accounts are funded with existential deposit
+        #[ink::test]
+        fn test_accounts_funded() {
+            for func in vec![
+                get_admin_account,
+                get_provider_account,
+                get_dapp_account,
+                get_user_account,
+                get_contract_account,
+                get_dapp_contract_account,
+            ]
+            .iter()
+            {
+                for i in 0..10 {
+                    let account = func(i);
+                    // check the account has funds. Will panic if not as no existential deposit == account not found
+                    get_account_balance(account).unwrap();
+                }
+            }
+
+            // same for contracts
+            for func in vec![
+                get_contract,
+            ].iter() {
+                for i in 0..10 {
+                    let contract = func(i);
+                    set_callee(get_contract_account(i));
+                    // check the account has funds. Will panic if not as no existential deposit == account not found
+                    get_account_balance(contract.env().account_id()).unwrap();
+                }
+            }
+        }
+
+        /// Are the unit test accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
+        #[ink::test]
+        fn test_accounts_unique() {
+            let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
+
+            // for each method of generating an account
+            for func in vec![
+                get_admin_account,
+                get_provider_account,
+                get_dapp_account,
+                get_user_account,
+                get_contract_account,
+                get_dapp_contract_account,
+            ]
+            .iter()
+            {
+                // try the first 10 accounts
+                for i in 0..10 {
+                    let account = func(i);
+                    assert!(
+                        set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
+                        "Duplicate account ID found: {:?}",
+                        account
+                    );
+                }
+            }
+
+            // do the same for non-account based IDs
+            for func in vec![get_code_hash].iter() {
+                // try the first 10 accounts
+                for i in 0..10 {
+                    let account = func(i);
+                    assert!(
+                        set.insert(account),
+                        "Duplicate account ID found: {:?}",
+                        account
+                    );
+                }
+            }
+        }
+
         // #[ink::test]
-        // fn test_ctor_guard_pass() {
-        //     reset_caller(); reset_callee();
+        // fn test_set_code_hash() {
 
-        //     // only able to instantiate from the alice account
-        //     set_caller(AccountId::from(AUTHOR));
-        //     let contract =
-        //         Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
-        //     // should construct successfully
-        // }
-
-        // #[ink::test]
-        // #[should_panic]
-        // fn test_ctor_guard_fail() {
-        //     reset_caller(); reset_callee();
-
-        //     // only able to instantiate from the alice account
-        //     let mut account = AUTHOR.clone();
-        //     // ensure the account is not the author
-        //     account[0] = account[0].wrapping_add(1);
-        //     set_caller(AccountId::from(account));
-        //     let contract =
-        //         Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
-        //     // should fail to construct and panic
-        // }
-
-        // #[ink::test]
-        // fn test_ctor() {
-        //     reset_caller(); reset_callee();
+        //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
+        //     set_caller(get_unused_account());
+        //
 
         //     let mut contract = get_contract(0);
-
-        //     // ctor params should be set
-        //     assert_eq!(contract.provider_stake_threshold, STAKE_THRESHOLD);
-        //     assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
-        //     assert_eq!(contract.get_admin(), get_admin_account(0));
-        //     assert_eq!(contract.get_max_user_history_len(), 10);
-        //     assert_eq!(contract.get_max_user_history_age(), 1000000);
-        //     assert_eq!(contract.get_min_num_active_providers(), 0);
-        //     assert_eq!(contract.get_max_provider_fee(), 1000);
-        //     assert_eq!(contract.get_seed(), 0);
-
-        //     // default state should be set
-        //     for payee in contract.get_payees().iter() {
-        //         for status in contract.get_statuses().iter() {
-        //             assert_eq!(
-        //                 contract.provider_accounts.get(ProviderState {
-        //                     payee: *payee,
-        //                     status: *status
-        //                 }),
-        //                 None
-        //             );
-        //         }
-        //     }
-        //     assert_eq!(contract.dapp_accounts.get(), None);
-        //     assert_eq!(contract.user_accounts.get(), None);
-        // }
-
-        // /// Test accounts are funded with existential deposit
-        // #[ink::test]
-        // fn test_accounts_funded() {
-        //     for func in vec![
-        //         get_admin_account,
-        //         get_provider_account,
-        //         get_dapp_account,
-        //         get_user_account,
-        //         get_contract_account,
-        //     ]
-        //     .iter()
-        //     {
-        //         for i in 0..10 {
-        //             let account = func(i);
-        //             // check the account has funds. Will panic if not as no existential deposit == account not found
-        //             get_account_balance(account).unwrap();
-        //         }
-        //     }
-
-        //     // same for contracts
-        //     for i in 0..10 {
-        //         let contract = get_contract(i);
-        //         // check the account has funds. Will panic if not as no existential deposit == account not found
-        //         get_account_balance(contract.env().account_id()).unwrap();
-        //     }
-        // }
-
-        // /// Are the unit test accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
-        // #[ink::test]
-        // fn test_accounts_unique() {
-        //     let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
-
-        //     // for each method of generating an account
-        //     for func in vec![
-        //         get_admin_account,
-        //         get_provider_account,
-        //         get_dapp_account,
-        //         get_user_account,
-        //         get_contract_account,
-        //         get_dapp_contract_account,
-        //     ]
-        //     .iter()
-        //     {
-        //         // try the first 10 accounts
-        //         for i in 0..10 {
-        //             let account = func(i);
-        //             assert!(
-        //                 set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
-        //                 "Duplicate account ID found: {:?}",
-        //                 account
-        //             );
-        //         }
-        //     }
-
-        //     // do the same for non-account based IDs
-        //     for func in vec![get_code_hash].iter() {
-        //         // try the first 10 accounts
-        //         for i in 0..10 {
-        //             let account = func(i);
-        //             assert!(
-        //                 set.insert(account),
-        //                 "Duplicate account ID found: {:?}",
-        //                 account
-        //             );
-        //         }
-        //     }
-        // }
-
-        // /// Are the unit test contracts unique, i.e. make sure there's no collisions in contract accounts as two contracts with the same account could work around funding tests as utilising the same account
-        // #[ink::test]
-        // fn test_contracts_unique() {
-        //     let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
-
-        //     // for the first 10 contracts
-        //     for i in 0..9 {
-        //         let contract = get_contract(i);
-        //         let account = contract.env().account_id();
-        //         assert!(
-        //             set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
-        //             "Duplicate account ID found: {:?}",
-        //             account
-        //         );
-        //     }
-        // }
-
-        // // #[ink::test]
-        // // fn test_set_code_hash() {
-
-        // //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-        // //     set_caller(get_unused_account());
-        // //
-
-        // //     let mut contract = get_contract(0);
-
-        // //     let new_code_hash = get_code_hash(1);
-        // //     let old_code_hash = contract.env().own_code_hash().unwrap();
-        // //     assert_ne!(Hash::from(new_code_hash), old_code_hash);
-
-        // //     set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
-
-        // //     assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
-
-        // //     assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
-        // // }
-
-        // #[ink::test]
-        // fn test_set_code_hash_unauthorised() {
-        //     reset_caller(); reset_callee();
-
-        //     let mut contract = get_contract(0);
-
-        //     set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
+        //     set_callee(get_contract_account());
 
         //     let new_code_hash = get_code_hash(1);
-        //     assert_eq!(
-        //         contract.set_code_hash(new_code_hash),
-        //         Err(Error::NotAuthorised)
-        //     );
+        //     let old_code_hash = contract.env().own_code_hash().unwrap();
+        //     assert_ne!(Hash::from(new_code_hash), old_code_hash);
+
+        //     set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
+
+        //     assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
+
+        //     assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
         // }
 
-        // #[ink::test]
-        // fn test_terminate() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_set_code_hash_unauthorised() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract(0);
-        //     set_caller(get_admin_account(0)); // an account which does have permission to call terminate
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
 
-        //     let contract_account = contract.env().account_id();
-        //     let bal = get_account_balance(contract_account).unwrap();
-        //     let admin = get_admin_account(0);
-        //     let should_terminate = move || contract.terminate().unwrap();
-        //     ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
-        //         should_terminate,
-        //         get_admin_account(0),
-        //         bal,
-        //     );
-        // }
+            set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
 
-        // #[ink::test]
-        // fn test_terminate_unauthorised() {
-        //     reset_caller(); reset_callee();
+            let new_code_hash = get_code_hash(1);
+            assert_eq!(
+                contract.set_code_hash(new_code_hash),
+                Err(Error::NotAuthorised)
+            );
+        }
 
-        //     let mut contract = get_contract(0);
-        //     set_caller(get_user_account(0)); // an account which does not have permission to call terminate
+        #[ink::test]
+        fn test_terminate() {
+            reset_caller(); reset_callee();
 
-        //     assert_eq!(contract.terminate().unwrap_err(), Error::NotAuthorised);
-        // }
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            set_caller(get_admin_account(0)); // an account which does have permission to call terminate
 
-        // #[ink::test]
-        // fn test_withdraw() {
-        //     reset_caller(); reset_callee();
+            let contract_account = contract.env().account_id();
+            let bal = get_account_balance(contract_account).unwrap();
+            let admin = get_admin_account(0);
+            let should_terminate = move || contract.terminate().unwrap();
+            ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
+                should_terminate,
+                get_admin_account(0),
+                bal,
+            );
+        }
 
-        //     let mut contract = get_contract(0);
-        //     println!("contract {:?}", contract.env().account_id());
+        #[ink::test]
+        fn test_terminate_unauthorised() {
+            reset_caller(); reset_callee();
 
-        //     // give the contract funds
-        //     set_account_balance(contract.env().account_id(), 10000000000);
-        //     set_caller(get_admin_account(0)); // use the admin acc
-        //     let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
-        //     let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
-        //     let withdraw_amount: u128 = 1;
-        //     contract.withdraw(withdraw_amount).unwrap();
-        //     assert_eq!(
-        //         get_account_balance(get_admin_account(0)).unwrap(),
-        //         admin_bal + withdraw_amount
-        //     );
-        //     assert_eq!(
-        //         get_account_balance(contract.env().account_id()).unwrap(),
-        //         contract_bal - withdraw_amount
-        //     );
-        // }
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            set_caller(get_user_account(0)); // an account which does not have permission to call terminate
 
-        // #[ink::test]
-        // #[should_panic]
-        // fn test_withdraw_insufficient_funds() {
-        //     reset_caller(); reset_callee();
+            assert_eq!(contract.terminate().unwrap_err(), Error::NotAuthorised);
+        }
 
-        //     let mut contract = get_contract(0);
+        #[ink::test]
+        fn test_withdraw() {
+            reset_caller(); reset_callee();
 
-        //     set_caller(get_admin_account(0)); // use the admin acc
-        //     let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
-        //     let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
-        //     contract.withdraw(contract_bal + 1); // panics as bal would go below existential deposit
-        // }
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
 
-        // #[ink::test]
-        // fn test_withdraw_unauthorised() {
-        //     reset_caller(); reset_callee();
+            // give the contract funds
+            set_account_balance(contract.env().account_id(), 10000000000);
+            set_caller(get_admin_account(0)); // use the admin acc
+            let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
+            let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
+            let withdraw_amount: u128 = 1;
+            contract.withdraw(withdraw_amount).unwrap();
+            assert_eq!(
+                get_account_balance(get_admin_account(0)).unwrap(),
+                admin_bal + withdraw_amount
+            );
+            assert_eq!(
+                get_account_balance(contract.env().account_id()).unwrap(),
+                contract_bal - withdraw_amount
+            );
+        }
 
-        //     let mut contract = get_contract(0);
+        #[ink::test]
+        #[should_panic]
+        fn test_withdraw_insufficient_funds() {
+            reset_caller(); reset_callee();
 
-        //     // give the contract funds
-        //     set_caller(get_user_account(0)); // use the admin acc
-        //     assert_eq!(contract.withdraw(1), Err(Error::NotAuthorised));
-        // }
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
 
-        // #[ink::test]
-        // fn test_check_admin() {
-        //     reset_caller(); reset_callee();
+            set_caller(get_admin_account(0)); // use the admin acc
+            let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
+            let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
+            contract.withdraw(contract_bal + 1); // panics as bal would go below existential deposit
+        }
 
-        //     let mut contract = get_contract(0);
-        //     // try the first 10 accounts
-        //     for i in 0..9 {
-        //         let acc = get_admin_account(i);
-        //         if acc == contract.admin {
-        //             assert!(contract.check_admin(acc).is_ok());
-        //             assert!(contract.check_not_admin(acc).is_err());
-        //             set_caller(acc);
-        //             assert!(contract.check_caller_admin().is_ok());
-        //         } else {
-        //             assert!(contract.check_admin(acc).is_err());
-        //             assert!(contract.check_not_admin(acc).is_ok());
-        //             set_caller(acc);
-        //             assert!(contract.check_caller_admin().is_err());
-        //         }
-        //     }
-        // }
+        #[ink::test]
+        fn test_withdraw_unauthorised() {
+            reset_caller(); reset_callee();
 
-        // #[ink::test]
-        // fn test_set_admin() {
-        //     reset_caller(); reset_callee();
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
 
-        //     let mut contract = get_contract(0);
-        //     let old_admin = contract.admin;
-        //     let new_admin = get_admin_account(1);
-        //     assert_ne!(old_admin, new_admin);
+            // give the contract funds
+            set_caller(get_user_account(0)); // use the admin acc
+            assert_eq!(contract.withdraw(1), Err(Error::NotAuthorised));
+        }
 
-        //     contract.check_admin(old_admin).unwrap();
-        //     contract.check_not_admin(new_admin).unwrap();
+        #[ink::test]
+        fn test_set_admin() {
+            reset_caller(); reset_callee();
 
-        //     set_caller(old_admin);
-        //     contract.set_admin(new_admin).unwrap();
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            let old_admin = contract.admin;
+            let new_admin = get_admin_account(1);
+            assert_ne!(old_admin, new_admin);
 
-        //     contract.check_admin(new_admin).unwrap();
-        //     contract.check_not_admin(old_admin).unwrap();
-        // }
+            contract.check_admin(old_admin).unwrap();
+            contract.check_not_admin(new_admin).unwrap();
 
-        // #[ink::test]
-        // fn test_set_admin_unauthorised() {
-        //     reset_caller(); reset_callee();
+            set_caller(old_admin);
+            contract.set_admin(new_admin).unwrap();
 
-        //     let mut contract = get_contract(0);
-        //     let old_admin = contract.admin;
-        //     let new_admin = get_admin_account(1);
-        //     assert_ne!(old_admin, new_admin);
+            contract.check_admin(new_admin).unwrap();
+            contract.check_not_admin(old_admin).unwrap();
+        }
 
-        //     contract.check_admin(old_admin).unwrap();
-        //     contract.check_not_admin(new_admin).unwrap();
+        #[ink::test]
+        fn test_set_admin_unauthorised() {
+            reset_caller(); reset_callee();
 
-        //     // can only call set_admin from the current admin account (old admin)
-        //     set_caller(new_admin);
-        //     contract.set_admin(new_admin).unwrap_err();
-        // }
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            let old_admin = contract.admin;
+            let new_admin = get_admin_account(1);
+            assert_ne!(old_admin, new_admin);
 
-        // #[ink::test]
-        // fn test_ctor_caller_admin() {
-        //     reset_caller(); reset_callee();
+            contract.check_admin(old_admin).unwrap();
+            contract.check_not_admin(new_admin).unwrap();
 
-        //     let mut contract = get_contract(0);
-
-        //     // check the caller is admin
-        //     assert_eq!(contract.admin, get_admin_account(0));
-        // }
-
-        // /// Assert contract provider minimum stake default set from constructor.
-        // #[ink::test]
-        // pub fn test_provider_stake_threshold() {
-        //     reset_caller(); reset_callee();
-
-        //     let mut contract = get_contract(0);
-
-        //     let provider_stake_threshold: u128 = contract.get_provider_stake_threshold();
-        //     assert!(STAKE_THRESHOLD.eq(&provider_stake_threshold));
-        // }
-
-        // /// Assert contract dapp minimum stake default set from constructor.
-        // #[ink::test]
-        // pub fn test_dapp_stake_threshold() {
-        //     reset_caller(); reset_callee();
-
-        //     let mut contract = get_contract(0);
-        //     let dapp_stake_threshold: u128 = contract.get_dapp_stake_threshold();
-        //     assert!(STAKE_THRESHOLD.eq(&dapp_stake_threshold));
-        // }
+            // can only call set_admin from the current admin account (old admin)
+            set_caller(new_admin);
+            contract.set_admin(new_admin).unwrap_err();
+        }
 
         // /// Test provider register
         // #[ink::test]
