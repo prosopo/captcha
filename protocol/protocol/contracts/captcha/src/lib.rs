@@ -18,19 +18,34 @@
 pub use self::captcha::{Captcha, CaptchaRef};
 
 /// Print and return an error in ink
-macro_rules! err {
+macro_rules! print_err {
     ($err:expr) => {{
-        Err(get_self!().print_err($err, function_name!()))
+        ink::env::debug_println!(
+            "ERROR: 
+    type: {:?}
+    fn: {:?}
+    block: {:?}
+    caller: {:?}
+",
+            $err,
+            function_name!(),
+            get_self!().env().block_number(),
+            get_self!().env().caller(),
+        );
+        $err
     }};
 }
 
-// ($err:expr) => (
-// |$err| crate::print_error($err, function_name!(), get_self!().env().block_number(), get_self!().env().caller())
-// );
+macro_rules! err {
+    ($err:expr) => {{
+        print_err!($err);
+        Err($err)
+    }};
+}
 
 macro_rules! err_fn {
     ($err:expr) => {
-        || get_self!().print_err($err, function_name!())
+        || print_err!($err)
     };
 }
 
@@ -810,18 +825,6 @@ pub mod captcha {
         pub fn get_caller(&self) -> AccountId {
             debug!("caller: {:?}", self.env().caller());
             self.env().caller()
-        }
-
-        /// Print and return an error
-        fn print_err(&self, err: Error, fn_name: &str) -> Error {
-            debug!(
-                "ERROR in {}() at block {} with caller {:?}\n'{:?}'",
-                fn_name,
-                self.env().block_number(),
-                self.env().caller(),
-                err
-            );
-            err
         }
 
         fn account_id_bytes<'a>(&'a self, account: &'a AccountId) -> &[u8; 32] {
