@@ -2487,8 +2487,10 @@ pub mod captcha {
             advance_block();
             for i in 0..10 {
                 contract.update_seed().unwrap();
+
                 // updating in the same block should fail
-                contract.update_seed().unwrap_err();
+                let result = contract.update_seed().unwrap();
+                assert_eq!(result, false);
                 advance_block();
             }
         }
