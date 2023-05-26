@@ -1931,6 +1931,7 @@ pub mod captcha {
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
+        use ink::env::DefaultEnvironment;
 
         use crate::captcha::Error::{ProviderInactive, ProviderInsufficientFunds};
 
@@ -1939,22 +1940,18 @@ pub mod captcha {
 
         type Event = <Captcha as ::ink::reflect::ContractEventBase>::Type;
 
-        const STAKE_THRESHOLD: u128 = 1000000000000;
+        const set_contract: fn(AccountId) = ink::env::test::set_contract::<DefaultEnvironment>;
+        const set_caller: fn(AccountId) = ink::env::test::set_caller::<DefaultEnvironment>;
+        const set_account_balance: fn(AccountId, Balance) =
+            ink::env::test::set_account_balance::<DefaultEnvironment>;
+        const set_callee: fn(AccountId) = ink::env::test::set_callee::<DefaultEnvironment>;
+        const get_account_balance: fn(AccountId) -> Result<Balance, ink::env::Error> =
+            ink::env::test::get_account_balance::<DefaultEnvironment>;
+        const is_contract: fn(AccountId) -> bool = ink::env::test::is_contract::<DefaultEnvironment>;
+        const callee: fn() -> AccountId = ink::env::test::callee::<DefaultEnvironment>;
 
-        const set_caller: fn(AccountId) =
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
-        const get_account_balance: fn(AccountId) -> Result<u128, ink::env::Error> =
-            ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>;
-        const set_account_balance: fn(AccountId, u128) =
-            ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
-        const set_callee: fn(AccountId) =
-            ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
-        const set_contract: fn(AccountId) =
-            ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
-        const default_accounts: fn() -> ink::env::test::DefaultAccounts<
-            ink::env::DefaultEnvironment,
-        > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
-        const advance_block: fn() = ink::env::test::advance_block::<ink::env::DefaultEnvironment>;
+
+        const STAKE_THRESHOLD: u128 = 1000000000000;
 
         const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
         const DAPP_ACCOUNT_PREFIX: u8 = 0x02;
@@ -1969,10 +1966,14 @@ pub mod captcha {
                 AccountId::from([0x00; 32])
             }
 
-            // reset the caller and callee
-            fn reset_caller_and_callee() {
-                set_caller(get_unused_account());
+            // reset the callee
+            fn reset_callee() {
                 set_callee(get_unused_account());
+            }
+
+            // reset the caller
+            fn reset_caller() {
+                set_caller(get_unused_account());
             }
 
             // build an account. Accounts have the first byte set to the type of account and the next 16 bytes are the index of the account
@@ -1992,6 +1993,9 @@ pub mod captcha {
                     // give it funds to create it
                     set_account_balance(account, 1);
                 }
+
+                // check the account has a balance of >0
+                assert!(get_account_balance(account).unwrap() > 0);
                 account
             }
 
@@ -2019,7 +2023,9 @@ pub mod captcha {
             fn get_contract_account(index: u128) -> AccountId {
                 let account = get_account(CONTRACT_ACCOUNT_PREFIX, index);
                 // mark the account as a contract
+                set_callee(account);
                 set_contract(account);
+                reset_callee();
                 account
             }
 
@@ -2030,14 +2036,11 @@ pub mod captcha {
 
             /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
             fn get_contract(index: u128) -> Captcha {
-                let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
-                
+                let account = get_contract_account(index); // the account for the contract
                 // make sure the contract gets allocated the above account
                 set_callee(account);
-                // give the contract account some funds
-                set_account_balance(account, 1);
-                // set the caller to the first admin
-                set_caller(get_admin_account(0));
+                // set the caller to the matching admin at index
+                set_caller(get_admin_account(index));
                 // now construct the contract instance
                 let mut contract = Captcha::new_unguarded(
                     STAKE_THRESHOLD,
@@ -2048,10 +2051,10 @@ pub mod captcha {
                     1000,
                     50,
                 );
-                // set the caller back to the unused acc
-                set_caller(get_unused_account());
+
                 // check the contract was created with the correct account
                 assert_eq!(contract.env().account_id(), account);
+                reset_callee();
                 contract
             }
 
@@ -2074,34 +2077,39 @@ pub mod captcha {
             fn get_dapp_contract_account(index: u128) -> AccountId {
                 let account = get_account(DAPP_CONTRACT_ACCOUNT_PREFIX, index);
                 // mark the account as a contract
+                set_callee(account);
                 set_contract(account);
+                reset_callee();
                 account
             }
 
             fn register_provider(contract: &mut Captcha, index: u128) {
                 // set the caller to the provider account
                 set_caller(get_provider_account(index));
+                set_callee(contract.env().account_id());
                 // register the provider
                 contract.provider_register(
                     get_provider_url(index),
                     get_provider_fee(),
                     get_provider_payee(),
                 ).unwrap();
-                // avoid accidentally reusing callee / caller
-                reset_caller_and_callee();
+
+                // avoid accidentally reusing caller
+                reset_caller();
             }
 
             fn register_dapp(contract: &mut Captcha, index: u128) {
                 // set the caller to the dapp account
                 set_caller(get_dapp_account(index));
+                set_callee(contract.env().account_id());
                 // register the dapp
                 contract.dapp_register(
                     get_dapp_contract_account(index),
                     get_dapp_payee(),
                 ).unwrap();
 
-                // avoid accidentally reusing callee / caller
-                reset_caller_and_callee();
+                // avoid accidentally reusing caller
+                reset_caller();
             }
 
             fn get_contract_populated(index: u128, size: u128) -> Captcha {
@@ -2117,27 +2125,33 @@ pub mod captcha {
 
             #[ink::test]
             fn test_get_payees() {
-                reset_caller_and_callee();
+                reset_caller();
+                reset_callee();
 
                 let mut contract = get_contract(0);
+                set_callee(contract.env().account_id());
 
                 assert_eq!(contract.get_payees(), vec![Payee::Dapp, Payee::Provider]);
             }
 
             #[ink::test]
             fn test_get_dapp_payees() {
-                reset_caller_and_callee();
+                reset_caller();
+                reset_callee();
 
                 let mut contract = get_contract(0);
+                set_callee(contract.env().account_id());
 
                 assert_eq!(contract.get_dapp_payees(), vec![DappPayee::Dapp, DappPayee::Provider, DappPayee::Any]);
             }
 
             #[ink::test]
             fn test_get_statuses() {
-                reset_caller_and_callee();
+                reset_caller();
+                reset_callee();
 
                 let mut contract = get_contract(0);
+                set_callee(contract.env().account_id());
 
                 assert_eq!(contract.get_statuses(), vec![GovernanceStatus::Active, GovernanceStatus::Inactive]);
             }
