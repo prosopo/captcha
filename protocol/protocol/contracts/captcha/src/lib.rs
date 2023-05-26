@@ -2211,7 +2211,7 @@ pub mod captcha {
             // }
 
             #[ink::test]
-            fn test_get_seed_at_past_rewind_window() {
+            fn test_get_seed_at_beyond_rewind_window() {
                 reset_caller();
                 reset_callee();
 
@@ -2227,7 +2227,23 @@ pub mod captcha {
                 advance_block();
 
                 // check that going back further than the rewind window hits an error
-                contract.get_seed_at((contract.get_rewind_window_start() - 1)).unwrap_err();
+                let result = contract.get_seed_at((contract.get_rewind_window_start() - 1));
+                assert_eq!(result, Err(Error::BlockOutsideRewindWindow));
+            }
+
+            #[ink::test]
+            fn test_get_seed_at_future_block() {
+                reset_caller();
+                reset_callee();
+
+                let mut contract = get_contract(0);
+                set_callee(contract.env().account_id());
+                let admin_account = get_admin_account(0);
+                set_caller(admin_account);
+
+                // check that going to the future block hits an error
+                let result = contract.get_seed_at((contract.env().block_number() + 1));
+                assert_eq!(result, Err(Error::BlockInFuture));
             }
 
             // #[ink::test]
