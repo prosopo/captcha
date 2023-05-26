@@ -937,8 +937,8 @@ pub mod captcha {
 
             let default_dataset_id = Hash::default();
             let provider_account = self.env().caller();
-            let lookup = self.get_provider(provider_account);
-            let new = lookup.is_err();
+            let lookup = self.providers.get(provider_account);
+            let new = lookup.is_none();
             let old_provider = if new {
                 Provider {
                     status: GovernanceStatus::Inactive,
