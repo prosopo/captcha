@@ -2776,7 +2776,7 @@ pub mod captcha {
             set_callee(get_contract_account(0));
             set_caller(get_user_account(0)); // an account which does not have permission to call terminate
 
-            assert_eq!(contract.terminate().unwrap_err(), Error::NotAuthorised);
+            assert_eq!(contract.terminate(), Err(Error::NotAuthorised));
         }
 
         #[ink::test]
@@ -2864,7 +2864,8 @@ pub mod captcha {
 
             // can only call set_admin from the current admin account (old admin)
             set_caller(new_admin);
-            contract.set_admin(new_admin).unwrap_err();
+            let result = contract.set_admin(new_admin);
+            assert_eq!(result, Err(Error::NotAuthorised));
         }
 
         // /// Test provider register
