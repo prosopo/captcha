@@ -418,7 +418,9 @@ pub mod captcha {
 
         #[ink(message)]
         pub fn get_seeds(&self) -> BTreeMap<BlockNumber, Seed> {
-            self.seed_log.get_or_default().clone()
+            let seeds = self.seed_log.get_or_default().clone();
+            seeds.insert(self.env().block_number(), self.seed);
+            seeds
         }
 
         #[ink(message)]
