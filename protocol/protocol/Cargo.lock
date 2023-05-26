@@ -98,9 +98,7 @@ version = "4.0.0"
 dependencies = [
  "disable_macro",
  "hex",
- "inject_self_macro",
  "ink 4.1.0",
- "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
 ]

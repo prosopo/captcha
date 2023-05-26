@@ -10,14 +10,6 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 hex = "0.4.3"
 
-[dependencies.inject_self_macro]
-version = "0.3.0"
-path = "../../crates/inject_self_macro"
-
-[dependencies.named_functions_macro]
-version = "0.3.0"
-path = "../../crates/named_functions_macro"
-
 [dependencies.disable_macro]
 version = "0.3.0"
 path = "../../crates/disable_macro"
