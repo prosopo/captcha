@@ -275,8 +275,8 @@ pub mod captcha {
         max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
-        seed: Seed,                                  // the current seed for rng
-        seed_at: BlockNumber,                        // the block at which the seed was set
+        seed: Seed,                           // the current seed for rng
+        seed_at: BlockNumber,                 // the block at which the seed was set
         seed_log: Mapping<BlockNumber, u128>, // the history of seeds for rng
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
         provider_account_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
@@ -744,7 +744,10 @@ pub mod captcha {
 
             // only providers or admin can call this function
             if self.admin != caller {
-                let provider = self.providers.get(caller).ok_or_else(err_fn!(self, Error::NotAuthorised))?;
+                let provider = self
+                    .providers
+                    .get(caller)
+                    .ok_or_else(err_fn!(self, Error::NotAuthorised))?;
                 // only active providers can call this method
                 if provider.status != GovernanceStatus::Active {
                     return err!(self, Error::ProviderInactive);
@@ -753,7 +756,7 @@ pub mod captcha {
 
             // put the old seed into the log
             let seed = self.seed;
-            self.seed_log.insert(seed_at, &seed);            
+            self.seed_log.insert(seed_at, &seed);
 
             // then compute new seed value
             // what to use in the seed?
@@ -958,8 +961,7 @@ pub mod captcha {
                 fee: fee.unwrap_or(old_provider.fee),
                 payee: payee.unwrap_or(old_provider.payee),
                 dataset_id: dataset_id.unwrap_or(old_provider.dataset_id),
-                dataset_id_content: dataset_id_content
-                    .unwrap_or(old_provider.dataset_id_content),
+                dataset_id_content: dataset_id_content.unwrap_or(old_provider.dataset_id_content),
                 ..old_provider
             };
 
@@ -1101,7 +1103,8 @@ pub mod captcha {
                 return err!(self, Error::ProviderExists);
             }
 
-            let result = self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None);
+            let result =
+                self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None);
 
             // update the seed
             self.update_seed()?;
@@ -1123,7 +1126,8 @@ pub mod captcha {
                 return err!(self, Error::ProviderDoesNotExist);
             }
 
-            let result = self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None);
+            let result =
+                self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None);
 
             // update the seed
             self.update_seed()?;
@@ -2016,8 +2020,8 @@ pub mod captcha {
             ink::env::test::is_contract::<DefaultEnvironment>;
         const callee: fn() -> AccountId = ink::env::test::callee::<DefaultEnvironment>;
         const advance_block: fn() = ink::env::test::advance_block::<DefaultEnvironment>;
-        const set_value_transferred: fn(Balance) = ink::env::test::set_value_transferred::<
-            DefaultEnvironment>;
+        const set_value_transferred: fn(Balance) =
+            ink::env::test::set_value_transferred::<DefaultEnvironment>;
 
         fn increment_block(inc: u32) {
             for _ in 0..inc {
@@ -2181,10 +2185,12 @@ pub mod captcha {
                 .unwrap();
             set_value_transferred(0);
             // set the dataset for the provider
-            contract.provider_set_dataset(
-                get_provider_dataset_id(index),
-                get_provider_dataset_id_content(index),
-            ).unwrap();
+            contract
+                .provider_set_dataset(
+                    get_provider_dataset_id(index),
+                    get_provider_dataset_id_content(index),
+                )
+                .unwrap();
             // advance the block, as in production the provider would not be seen until block rollover
             advance_block();
 
@@ -2263,7 +2269,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_get_seed_at() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
             set_callee(get_contract_account(0));
@@ -2306,7 +2313,6 @@ pub mod captcha {
 
                 // update the seed for this block (which should log the previous in the history)
                 contract.update_seed().unwrap();
-
             }
 
             // check that the seed history is dropped after the rewind window amount of blocks
@@ -2425,7 +2431,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_provider_register_url_empty() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2434,17 +2441,15 @@ pub mod captcha {
             set_caller(provider_account);
             // register the provider
             // expect err because url is empty
-            let result = contract.provider_register(
-                vec![],
-                get_provider_fee(),
-                get_provider_payee(),
-            );
+            let result =
+                contract.provider_register(vec![], get_provider_fee(), get_provider_payee());
             assert_eq!(result, Err(Error::UrlEmpty));
         }
 
         #[ink::test]
         fn test_provider_update_url_empty() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
             set_callee(get_contract_account(0));
@@ -2453,17 +2458,14 @@ pub mod captcha {
             set_caller(provider_account);
             // register the provider
             // expect err because url is empty
-            let result = contract.provider_update(
-                vec![],
-                get_provider_fee(),
-                get_provider_payee(),
-            );
+            let result = contract.provider_update(vec![], get_provider_fee(), get_provider_payee());
             assert_eq!(result, Err(Error::UrlEmpty));
         }
 
         #[ink::test]
         fn test_provider_register_fee_too_large() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2482,7 +2484,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_provider_update_fee_too_large() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
             set_callee(get_contract_account(0));
@@ -2501,7 +2504,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_update_seed_once_per_block() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
             set_callee(get_contract_account(0));
@@ -2522,7 +2526,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_get_rewind_window_start() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2538,14 +2543,18 @@ pub mod captcha {
 
             // expect rewind window start to be exactly rewind window when block > rewind window
             for i in 0..10 {
-                assert_eq!(contract.get_rewind_window_start(), contract.env().block_number() - contract.get_rewind_window() as u32);
+                assert_eq!(
+                    contract.get_rewind_window_start(),
+                    contract.env().block_number() - contract.get_rewind_window() as u32
+                );
                 advance_block();
             }
         }
 
         #[ink::test]
         fn test_update_seed_caller() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract_populated(0, 1);
             set_callee(get_contract_account(0));
@@ -2558,10 +2567,7 @@ pub mod captcha {
             let unregistered_provider_account = get_provider_account(1);
 
             // for each account who should be able to update the seed, test that
-            for account in vec![
-                provider_account,
-                admin_account,
-            ].iter() {
+            for account in vec![provider_account, admin_account].iter() {
                 set_caller(*account);
                 assert_eq!(contract.update_seed(), Ok(true));
                 advance_block();
@@ -2573,7 +2579,9 @@ pub mod captcha {
                 dapp_account,
                 unregistered_dapp_account,
                 unregistered_provider_account,
-            ].iter() {
+            ]
+            .iter()
+            {
                 set_caller(*account);
                 assert_eq!(contract.update_seed(), Err(Error::NotAuthorised));
             }
@@ -2581,7 +2589,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_ctor_guard_pass() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             // only able to instantiate from the alice account
             set_caller(AccountId::from(AUTHOR));
@@ -2593,7 +2602,8 @@ pub mod captcha {
         #[ink::test]
         #[should_panic]
         fn test_ctor_guard_fail() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             // only able to instantiate from the alice account
             let mut account = AUTHOR.clone();
@@ -2607,7 +2617,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_ctor() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2659,9 +2670,7 @@ pub mod captcha {
             }
 
             // same for contracts
-            for func in vec![
-                get_contract,
-            ].iter() {
+            for func in vec![get_contract].iter() {
                 for i in 0..10 {
                     let contract = func(i);
                     set_callee(get_contract_account(i));
@@ -2735,7 +2744,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_set_code_hash_unauthorised() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2751,7 +2761,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_terminate() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2770,7 +2781,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_terminate_unauthorised() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2781,7 +2793,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_withdraw() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2806,7 +2819,8 @@ pub mod captcha {
         #[ink::test]
         #[should_panic]
         fn test_withdraw_insufficient_funds() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2819,7 +2833,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_withdraw_unauthorised() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2831,7 +2846,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_set_admin() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
@@ -2851,7 +2867,8 @@ pub mod captcha {
 
         #[ink::test]
         fn test_set_admin_unauthorised() {
-            reset_caller(); reset_callee();
+            reset_caller();
+            reset_callee();
 
             let mut contract = get_contract(0);
             set_callee(get_contract_account(0));
