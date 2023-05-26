@@ -505,7 +505,7 @@ pub mod captcha {
                 return err!(self, Error::DappInactive);
             }
             // get the seed which is based on the user, block, dapp and seed at the block
-            let seed = self.get_seed_at_user_dapp(user_account, dapp_account, block)?;
+            let seed = self.get_seed_user_dapp_at(user_account, dapp_account, block)?;
             // get the providers which were active at the block
             let active_providers = self.get_active_providers_at(block);
 
@@ -526,7 +526,7 @@ pub mod captcha {
         }
 
         /// Get a seed for a user and dapp at a block
-        fn get_seed_at_user_dapp(
+        fn get_seed_user_dapp_at(
             &self,
             user_account: AccountId,
             dapp_account: AccountId,
