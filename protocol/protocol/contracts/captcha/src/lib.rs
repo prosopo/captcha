@@ -2540,39 +2540,40 @@ pub mod captcha {
             }
         }
 
-        // #[ink::test]
-        // fn test_update_seed_caller() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_update_seed_caller() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract_populated(0, 1);
+            let mut contract = get_contract_populated(0, 1);
 
-        //     let provider_account = get_provider_account(0);
-        //     let user_account = get_user_account(0);
-        //     let admin_account = get_admin_account(0);
-        //     let dapp_account = get_dapp_account(0);
-        //     let unregistered_dapp_account = get_dapp_account(1);
-        //     let unregistered_provider_account = get_provider_account(1);
+            let provider_account = get_provider_account(0);
+            let user_account = get_user_account(0);
+            let admin_account = get_admin_account(0);
+            let dapp_account = get_dapp_account(0);
+            let unregistered_dapp_account = get_dapp_account(1);
+            let unregistered_provider_account = get_provider_account(1);
 
-        //     // for each account who should be able to update the seed, test that
-        //     for account in vec![
-        //         provider_account,
-        //         admin_account,
-        //     ].iter() {
-        //         set_caller(*account);
-        //         contract.update_seed().unwrap();
-        //     }
+            // for each account who should be able to update the seed, test that
+            for account in vec![
+                provider_account,
+                admin_account,
+            ].iter() {
+                set_caller(*account);
+                assert_eq!(contract.update_seed(), Ok(true));
+                advance_block();
+            }
 
-        //     // for each account who should not be able to update the seed, test that
-        //     for account in vec![
-        //         user_account,
-        //         dapp_account,
-        //         unregistered_dapp_account,
-        //         unregistered_provider_account,
-        //     ].iter() {
-        //         set_caller(*account);
-        //         contract.update_seed().unwrap_err();
-        //     }
-        // }
+            // for each account who should not be able to update the seed, test that
+            for account in vec![
+                user_account,
+                dapp_account,
+                unregistered_dapp_account,
+                unregistered_provider_account,
+            ].iter() {
+                set_caller(*account);
+                assert_eq!(contract.update_seed(), Err(Error::NotAuthorised));
+            }
+        }
 
         // #[ink::test]
         // fn test_ctor_guard_pass() {
