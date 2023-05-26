@@ -968,6 +968,25 @@ pub mod captcha {
 
             new_provider.balance += self.env().transferred_value();
 
+            // if the provider is
+            // not deactivating
+            // has a balance >= provider_stake_threshold
+            // has a dataset_id
+            // has a dataset_id_content
+            new_provider.status = if new_provider.balance >= self.provider_stake_threshold
+                && new_provider.dataset_id != default_dataset_id
+                && new_provider.dataset_id_content != default_dataset_id
+                && !deactivate
+            {
+                // then set the status to active
+                GovernanceStatus::Active
+            } else {
+                // else set the status to deactivated
+                GovernanceStatus::Inactive
+            };
+
+            // by here the new provider has been configured
+
             // proceed only if there has been a change
             if old_provider == new_provider {
                 // no need to update anything
@@ -989,23 +1008,6 @@ pub mod captcha {
                 self.datasets
                     .insert(new_provider.dataset_id, &provider_account);
             }
-
-            // if the provider is
-            // not deactivating
-            // has a balance >= provider_stake_threshold
-            // has a dataset_id
-            // has a dataset_id_content
-            new_provider.status = if new_provider.balance >= self.provider_stake_threshold
-                && new_provider.dataset_id != default_dataset_id
-                && new_provider.dataset_id_content != default_dataset_id
-                && !deactivate
-            {
-                // then set the status to active
-                GovernanceStatus::Active
-            } else {
-                // else set the status to deactivated
-                GovernanceStatus::Inactive
-            };
 
             let old_url_hash = self.hash_vec_u8(&old_provider.url);
             let new_url_hash = self.hash_vec_u8(&new_provider.url);
