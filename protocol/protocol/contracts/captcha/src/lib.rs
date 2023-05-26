@@ -2249,6 +2249,39 @@ pub mod captcha {
                 assert_eq!(result, Err(Error::BlockInFuture));
             }
 
+            #[ink::test]
+            fn test_get_provider_at_beyond_rewind_window() {
+                reset_caller();
+                reset_callee();
+
+                let mut contract = get_contract_populated(0, 1);
+                set_callee(contract.env().account_id());
+                let admin_account = get_admin_account(0);
+                set_caller(admin_account);
+
+                // advance the block past the rewind window
+                increment_block(contract.get_rewind_window() as u32 + 1);
+
+                // check that going back further than the rewind window hits an error
+                let result = contract.get_provider_at(get_provider_account(0), (contract.get_rewind_window_start() - 1));
+                assert_eq!(result, Err(Error::BlockOutsideRewindWindow));
+            }
+
+            #[ink::test]
+            fn test_get_provider_at_future_block() {
+                reset_caller();
+                reset_callee();
+
+                let mut contract = get_contract(0);
+                set_callee(contract.env().account_id());
+                let admin_account = get_admin_account(0);
+                set_caller(admin_account);
+
+                // check that going to the future block hits an error
+                let result = contract.get_provider_at(get_provider_account(0), (contract.env().block_number() + 1));
+                assert_eq!(result, Err(Error::BlockInFuture));
+            }
+
             // #[ink::test]
             // fn test_provider_register_url_empty() {
             //     reset_caller_and_callee();
