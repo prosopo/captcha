@@ -989,7 +989,7 @@ pub mod captcha {
             // by here the new provider has been configured
 
             // proceed only if there has been a change
-            if old_provider == new_provider {
+            if !new && old_provider == new_provider {
                 // no need to update anything
                 return Ok(());
             }
