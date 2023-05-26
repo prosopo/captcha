@@ -731,25 +731,12 @@ pub mod captcha {
 
             let caller = self.env().caller();
 
-            // only providers can call this function
-            let provider_lookup = self.get_provider(self.env().caller());
-            match provider_lookup {
-                Ok(_) => {
-                    let provider = provider_lookup.unwrap();
-                    // only active providers can call this method
-                    if provider.status != GovernanceStatus::Active {
-                        return err!(self, Error::NotAuthorised);
-                    }
-                    // else continue, provider is active and has been active from the previous block or before
-                }
-                Err(_) => {
-                    // caller is not a provider
-                    // allow if they are an admin
-                    if self.admin != caller {
-                        // caller is not an admin and not a provider
-                        return err!(self, Error::NotAuthorised);
-                    }
-                    // else continue, caller is an admin
+            // only providers or admin can call this function
+            if self.admin != caller {
+                let provider = self.providers.get(caller).ok_or_else(err_fn!(self, Error::NotAuthorised))?;
+                // only active providers can call this method
+                if provider.status != GovernanceStatus::Active {
+                    return err!(self, Error::ProviderInactive);
                 }
             }
 
@@ -2009,6 +1996,8 @@ pub mod captcha {
             ink::env::test::is_contract::<DefaultEnvironment>;
         const callee: fn() -> AccountId = ink::env::test::callee::<DefaultEnvironment>;
         const advance_block: fn() = ink::env::test::advance_block::<DefaultEnvironment>;
+        const set_value_transferred: fn(Balance) = ink::env::test::set_value_transferred::<
+            DefaultEnvironment>;
 
         fn increment_block(inc: u32) {
             for _ in 0..inc {
@@ -2025,6 +2014,8 @@ pub mod captcha {
         const CONTRACT_ACCOUNT_PREFIX: u8 = 0x05;
         const CODE_HASH_PREFIX: u8 = 0x06;
         const DAPP_CONTRACT_ACCOUNT_PREFIX: u8 = 0x07;
+        const DATASET_ID_PREFIX: u8 = 0x08;
+        const DATASET_ID_CONTENT_PREFIX: u8 = 0x09;
 
         // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
         fn get_unused_account() -> AccountId {
@@ -2105,6 +2096,7 @@ pub mod captcha {
             set_callee(account);
             // set the caller to the matching admin at index
             set_caller(get_admin_account(index));
+            set_value_transferred(STAKE_THRESHOLD);
             // now construct the contract instance
             let mut contract =
                 Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 50);
@@ -2127,6 +2119,18 @@ pub mod captcha {
             Payee::Provider
         }
 
+        fn get_provider_dataset_id(index: u128) -> Hash {
+            let mut bytes = [DATASET_ID_PREFIX; 32];
+            bytes[0..16].copy_from_slice(&index.to_le_bytes());
+            bytes.into()
+        }
+
+        fn get_provider_dataset_id_content(index: u128) -> Hash {
+            let mut bytes = [DATASET_ID_CONTENT_PREFIX; 32];
+            bytes[0..16].copy_from_slice(&index.to_le_bytes());
+            bytes.into()
+        }
+
         fn get_dapp_payee() -> DappPayee {
             DappPayee::Provider
         }
@@ -2145,6 +2149,7 @@ pub mod captcha {
             set_caller(get_provider_account(index));
             set_callee(contract.env().account_id());
             // register the provider
+            set_value_transferred(contract.get_provider_stake_threshold());
             contract
                 .provider_register(
                     get_provider_url(index),
@@ -2152,6 +2157,12 @@ pub mod captcha {
                     get_provider_payee(),
                 )
                 .unwrap();
+            set_value_transferred(0);
+            // set the dataset for the provider
+            contract.provider_set_dataset(
+                get_provider_dataset_id(index),
+                get_provider_dataset_id_content(index),
+            ).unwrap();
             // advance the block, as in production the provider would not be seen until block rollover
             advance_block();
 
@@ -2164,10 +2175,12 @@ pub mod captcha {
             // set the caller to the dapp account
             set_caller(get_dapp_account(index));
             set_callee(contract.env().account_id());
+            set_value_transferred(contract.get_dapp_stake_threshold());
             // register the dapp
             contract
                 .dapp_register(get_dapp_contract_account(index), get_dapp_payee())
                 .unwrap();
+            set_value_transferred(0);
             // advance the block, as in production the dapp would not be seen until block rollover
             advance_block();
 
@@ -2461,47 +2474,24 @@ pub mod captcha {
             assert_eq!(result, Err(Error::ProviderFeeTooHigh));
         }
 
-        // #[ink::test]
-        // fn test_provider_register_pass() {
+        #[ink::test]
+        fn test_update_seed_once_per_block() {
+            reset_caller(); reset_callee();
 
-        // }
+            let mut contract = get_contract_populated(0, 1);
+            set_callee(contract.env().account_id());
 
-        // #[ink::test]
-        // fn test_provider_update_pass() {
+            let provider_account = get_provider_account(0);
 
-        // }
-
-        // // #[ink::test]
-        // // fn test_provider_deregister() {
-
-        // // }
-
-        // // #[ink::test]
-        // // fn test_provider_deactivate() {
-
-        // // }
-
-        // #[ink::test]
-        // fn test_provider_reactivate() {
-
-        // }
-
-        // #[ink::test]
-        // fn test_update_seed_once_per_block() {
-        //     reset_caller(); reset_callee();
-
-        //     let mut contract = get_contract_populated(0, 1);
-
-        //     let provider_account = get_provider_account(0);
-
-        //     set_caller(provider_account);
-        //     for i in 0..10 {
-        //         contract.update_seed().unwrap();
-        //         // updating in the same block should fail
-        //         contract.update_seed().unwrap_err();
-        //         advance_block();
-        //     }
-        // }
+            set_caller(provider_account);
+            advance_block();
+            for i in 0..10 {
+                contract.update_seed().unwrap();
+                // updating in the same block should fail
+                contract.update_seed().unwrap_err();
+                advance_block();
+            }
+        }
 
         // #[ink::test]
         // fn test_get_rewind_window_start() {
