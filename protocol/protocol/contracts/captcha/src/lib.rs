@@ -1951,6 +1951,12 @@ pub mod captcha {
         const callee: fn() -> AccountId = ink::env::test::callee::<DefaultEnvironment>;
         const advance_block: fn() = ink::env::test::advance_block::<DefaultEnvironment>;
 
+        fn increment_block(inc: u32) {
+            for _ in 0..inc {
+                advance_block();
+            }
+        }
+
 
         const STAKE_THRESHOLD: u128 = 1000000000000;
 
@@ -2221,10 +2227,7 @@ pub mod captcha {
                 set_caller(admin_account);
 
                 // advance the block past the rewind window
-                for i in 0..contract.get_rewind_window() {
-                    advance_block();
-                }
-                advance_block();
+                increment_block(contract.get_rewind_window() as u32 + 1);
 
                 // check that going back further than the rewind window hits an error
                 let result = contract.get_seed_at((contract.get_rewind_window_start() - 1));
