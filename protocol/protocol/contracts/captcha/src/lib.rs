@@ -429,7 +429,7 @@ pub mod captcha {
                     seeds.insert(i, seed);
                 }
             }
-            seeds.insert(end, self.seed);
+            seeds.insert(self.seed_at, self.seed);
             seeds
         }
 
@@ -701,11 +701,16 @@ pub mod captcha {
 
             let mut result = self.seed;
 
+            if block_number == self.seed_at {
+                // asking for the seed at the current block
+                return Ok(result);
+            }
+
             // loop through blocks until we find a seed record
             // if no seed record is found, the result will be the current seed (i.e. seed has not changed since the given block)
-            let block_number = self.env().block_number();
-            let start = self.get_rewind_window_start();
-            for at in (start..=block_number).rev() {
+            let start = block_number;
+            let end = self.env().block_number();
+            for at in (start..=end) {
                 let seed = self.seed_log.get(&at);
                 if let Some(seed) = seed {
                     // found a record of the seed
@@ -773,9 +778,6 @@ pub mod captcha {
             // update seed
             self.seed = new_seed_value;
             self.seed_at = block_number;
-
-            debug!("new seed: {}", self.seed);
-            debug!("new seed at: {}", self.seed_at);
 
             self.prune_logs();
 
@@ -2257,57 +2259,60 @@ pub mod captcha {
             );
         }
 
-        // #[ink::test]
-        // fn test_get_seed_at() {
-        //     reset_caller(); reset_callee();
+        #[ink::test]
+        fn test_get_seed_at() {
+            reset_caller(); reset_callee();
 
-        //     let mut contract = get_contract_populated(0, 1);
+            let mut contract = get_contract_populated(0, 1);
+            set_callee(contract.env().account_id());
 
-        //     let admin_account = get_admin_account(0);
-        //     // set the caller to the provider account
-        //     set_caller(admin_account);
+            let admin_account = get_admin_account(0);
+            // set the caller to the provider account
+            set_caller(admin_account);
 
-        //     // make sure the rewind window >0
-        //     assert!(contract.get_rewind_window() > 0);
+            // make sure the rewind window >0
+            assert!(contract.get_rewind_window() > 0);
 
-        //     // for many more blocks than the rewind window, check that the seed is recorded on every change per block
-        //     let mut seeds: Vec<u128> = vec![contract.get_seed()];
-        //     let (limit, overflow) = contract.get_rewind_window().overflowing_mul(3);
-        //     assert!(!overflow);
+            // for many more blocks than the rewind window, check that the seed is recorded on every change per block
+            let (limit, overflow) = contract.get_rewind_window().overflowing_mul(3);
+            assert!(!overflow);
 
-        //     for i in 0..limit {
+            let mut seeds: BTreeMap<BlockNumber, u128> = BTreeMap::new();
 
-        //         println!("{:#?}", seeds);
-        //         println!("{:#?}", contract.get_seeds());
+            for i in 0..limit {
+                // add the current seed
+                seeds.insert(contract.seed_at, contract.seed);
 
-        //         // check most recent seed
-        //         assert_eq!(contract.get_seed(), seeds.last().unwrap().clone());
+                seeds = seeds.split_off(&contract.get_rewind_window_start());
 
-        //         // check that the seeds in the rewind window are correct
-        //         let window = contract.get_rewind_window() as BlockNumber;
-        //         let block = contract.env().block_number();
-        //         let range = if window > block { block } else { window };
-        //         for j in 0..=range {
-        //             let at = contract.env().block_number() - (j as BlockNumber);
-        //             let a = contract.get_seed_at(at).unwrap();
-        //             let b = seeds[j as usize];
-        //             assert_eq!(a, b);
-        //         }
+                // check the seed history is equal
+                assert_eq!(seeds, contract.get_seeds());
 
-        //         // add the seed for this block to our history
-        //         seeds.push(contract.get_seed());
+                // check that the seeds in the rewind window are correct
+                let window = contract.get_rewind_window() as BlockNumber;
+                let block = contract.env().block_number();
+                let range = if window > block { block } else { window };
+                for j in 0..seeds.len() - 1 {
+                    let at = contract.env().block_number() - (j as BlockNumber);
+                    let a = contract.get_seed_at(at).unwrap();
+                    let b = seeds.get(&at).unwrap().clone();
+                    assert_eq!(a, b);
+                }
 
-        //         if contract.get_rewind_window_start() > 0 {
-        //             seeds.remove(0);
-        //         }
+                // advance to the next block
+                advance_block();
 
-        //         // update the seed for this block (which should log the previous in the history)
-        //         contract.update_seed().unwrap();
+                // update the seed for this block (which should log the previous in the history)
+                contract.update_seed().unwrap();
 
-        //         // advance to the next block
-        //         advance_block();
-        //     }
-        // }
+            }
+
+            // check that the seed history is dropped after the rewind window amount of blocks
+            increment_block(contract.get_rewind_window() as u32);
+            seeds = BTreeMap::new();
+            seeds.insert(contract.seed_at, contract.seed);
+            assert_eq!(contract.get_seeds(), seeds);
+        }
 
         #[ink::test]
         fn test_get_seed_at_beyond_rewind_window() {
