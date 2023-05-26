@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ContractDeployer, stringToHexPadded } from '@prosopo/contract'
+import { ContractDeployer } from '@prosopo/contract'
 import { ProsopoEnvError, TranslationKey, getPair } from '@prosopo/common'
 import { mnemonicGenerate, randomAsHex } from '@polkadot/util-crypto'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds'
@@ -19,14 +19,13 @@ import { Tasks } from '../../src/tasks'
 import { IDatabaseAccounts } from './DatabaseAccounts'
 import { Environment } from '@prosopo/env'
 import { createType } from '@polkadot/types'
-import { BN } from '@polkadot/util'
+import { BN, stringToU8a } from '@polkadot/util'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { Account, accountAddress, accountContract, accountMnemonic } from '../accounts'
 import { Abi } from '@polkadot/api-contract'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { captchaData } from '../data/captchas'
-import { Payee } from '@prosopo/types'
-import { DappPayee } from '@prosopo/contract/dist/typechain/captcha/types-arguments/captcha'
+import { DappPayee, Payee } from '@prosopo/types'
 
 const urlBase = 'http://localhost:'
 
@@ -189,7 +188,9 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
     public async registerProvider(fund: boolean, url?: string, noPush?: boolean): Promise<Account> {
         try {
-            const _url = url || urlBase + randomAsHex().slice(0, 8)
+            const urlString = url || urlBase + randomAsHex().slice(0, 8)
+            console.log(urlString)
+            const _url = Array.from(stringToU8a(urlString))
 
             const account = this.createAccount()
             this.mockEnv.logger.debug(
@@ -198,7 +199,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
                 accountAddress(account),
                 '`',
                 'with service origin',
-                _url
+                urlString
             )
             if (fund) {
                 await this.sendFunds(accountAddress(account), 'Provider', this.sendAmount)
@@ -212,7 +213,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             // process.exit()
 
             await tasks.contract.tx.providerRegister(
-                [stringToHexPadded(_url)],
+                _url,
                 createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
                 PROVIDER_PAYEE
             )
@@ -237,7 +238,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
             const tasks = new Tasks(this.mockEnv)
 
             await tasks.contract.tx.providerUpdate(
-                [stringToHexPadded(url)],
+                Array.from(stringToU8a(url)),
                 createType(this.mockEnv.contractInterface.abi.registry, 'Balance', PROVIDER_FEE),
                 PROVIDER_PAYEE,
                 { value: this.stakeAmount }

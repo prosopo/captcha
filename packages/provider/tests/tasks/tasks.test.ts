@@ -33,12 +33,12 @@ import { getUser } from '../getUser'
 import { MockEnvironment } from '@prosopo/env'
 import { before } from 'mocha'
 import { createType } from '@polkadot/types'
-import { BN } from '@polkadot/util'
+import { BN, stringToU8a } from '@polkadot/util'
 import { parseBlockNumber } from '../../src/index'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles'
 import { captchaData } from '../data/captchas'
-import { DappPayee } from '@prosopo/contract/dist/typechain/captcha/types-arguments/captcha'
+import { DappPayee } from '@prosopo/types'
 import { EventRecord } from '@polkadot/types/interfaces'
 
 chai.should()
@@ -165,11 +165,26 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(mockEnv, [providerMnemonic, providerAddress])
 
-        await tasks.contract.tx.providerRegister(
-            [PROVIDER.url + randomAsHex().slice(0, 8)],
+        const queryResult = await tasks.contract.query.providerRegister(
+            Array.from(stringToU8a(PROVIDER.url + randomAsHex().slice(0, 8))),
             PROVIDER.fee,
             PROVIDER_PAYEE
         )
+
+        if (queryResult.value.err) {
+            throw new Error(queryResult.value.err)
+        }
+
+        if (queryResult.value.ok?.err) {
+            throw new Error(queryResult.value.ok.err)
+        }
+
+        const result = await tasks.contract.tx.providerRegister(
+            Array.from(stringToU8a(PROVIDER.url + randomAsHex().slice(0, 8))),
+            PROVIDER.fee,
+            PROVIDER_PAYEE
+        )
+        expect(result?.error).to.be.undefined
     })
 
     it('Provider update', async (): Promise<void> => {
@@ -177,12 +192,15 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const tasks = await getSignedTasks(mockEnv, providerAccount)
 
         const value = providerStakeThreshold
-        await tasks.contract.tx.providerUpdate(
-            [PROVIDER.url + randomAsHex().slice(0, 8)],
-            PROVIDER.fee,
-            PROVIDER_PAYEE,
-            { value }
-        )
+        const result = (
+            await tasks.contract.tx.providerUpdate(
+                Array.from(stringToU8a(PROVIDER.url + randomAsHex().slice(0, 8))),
+                PROVIDER.fee,
+                PROVIDER_PAYEE,
+                { value }
+            )
+        ).result
+        expect(result?.isError).to.be.false
     })
 
     it('Provider add dataset', async (): Promise<void> => {
@@ -384,8 +402,8 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             (event) => event.event.section === 'contracts'
         )
         const contractAddress = instantiateEvent?.event.data['contract'].toString()
-        await tasks.contract.tx.dappRegister(contractAddress, DappPayee.dapp)
-
+        const result = (await tasks.contract.tx.dappRegister(contractAddress, DappPayee.dapp)).result
+        expect(result?.isError).to.be.false
         const dapp = (await tasks.contract.query.getDappDetails(contractAddress)).value.unwrap().unwrap()
         expect(dapp.owner).to.equal(accountAddress(newAccount))
     })
@@ -418,7 +436,8 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const value = createType(mockEnv.contractInterface.abi.registry, 'u128', '10')
         const dappContractAddress = accountContract(dappAccount)
         const dappBefore = (await tasks.contract.query.getDappDetails(dappContractAddress)).value.unwrap().unwrap()
-        await tasks.contract.tx.dappFund(dappContractAddress, { value })
+        const result = (await tasks.contract.tx.dappFund(dappContractAddress, { value })).result
+        expect(result?.isError).to.be.false
         const dappAfter = (await tasks.contract.query.getDappDetails(dappContractAddress)).value.unwrap().unwrap()
         expect(dappBefore.balance.toNumber() + value.toNumber()).to.equal(dappAfter.balance)
     })
@@ -632,17 +651,20 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             .unwrap()
             .unwrap()
 
-        await tasks.contract.tx.providerCommit({
-            dapp: accountContract(dappAccount),
-            datasetId: provider.datasetId.toString(),
-            id: initialCommitmentId,
-            provider: accountAddress(providerAccount),
-            user: accountAddress(dappUserAccount),
-            status: CaptchaStatus.approved,
-            completedAt: '2023-05-25T09:00:00',
-            requestedAt: '2023-05-25T09:00:00',
-            userSignature: ['0x01'],
-        })
+        const result = (
+            await tasks.contract.tx.providerCommit({
+                dapp: accountContract(dappAccount),
+                datasetId: provider.datasetId.toString(),
+                id: initialCommitmentId,
+                provider: accountAddress(providerAccount),
+                user: accountAddress(dappUserAccount),
+                status: CaptchaStatus.approved,
+                completedAt: '2023-05-25T09:00:00',
+                requestedAt: '2023-05-25T09:00:00',
+                userSignature: ['0x01'],
+            })
+        ).result
+        expect(result?.isError).to.be.false
         const { commitmentId, tree } = await tasks.buildTreeAndGetCommitmentId(captchaSolutions)
 
         expect(tree).to.deep.equal(initialTree)
@@ -788,16 +810,22 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             .unwrap()
             .unwrap()
 
-        await tasks.contract.tx.providerUpdate(provider.url, provider.fee as unknown as number, PROVIDER_PAYEE, {
-            value: 0,
-        })
+        const resultProviderUpdate1 = (
+            await tasks.contract.tx.providerUpdate(provider.url, provider.fee as unknown as number, PROVIDER_PAYEE, {
+                value: 0,
+            })
+        ).result
+        expect(resultProviderUpdate1?.isError).to.be.false
         provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
         expect(provider.status).to.equal('Deactivated')
-        await tasks.contract.tx.providerUpdate(provider.url, provider.fee as unknown as number, PROVIDER_PAYEE, {
-            value: providerStakeThreshold,
-        })
+        const resultproviderUpdate2 = (
+            await tasks.contract.tx.providerUpdate(provider.url, provider.fee as unknown as number, PROVIDER_PAYEE, {
+                value: providerStakeThreshold,
+            })
+        ).result
+        expect(resultproviderUpdate2?.isError).to.be.false
 
         await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
 

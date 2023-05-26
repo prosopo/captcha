@@ -15,6 +15,9 @@
 
     "references": [
         {
+            "path": "../packages/api"
+        },
+        {
             "path": "../packages/cli"
         },
         {
@@ -24,10 +27,28 @@
             "path": "../packages/contract"
         },
         {
+            "path": "../packages/database"
+        },
+        {
+            "path": "../packages/datasets"
+        },
+        {
             "path": "../packages/env"
         },
         {
+            "path": "../packages/procaptcha"
+        },
+        {
+            "path": "../packages/procaptcha-react"
+        },
+        {
             "path": "../packages/provider"
+        },
+        {
+            "path": "../packages/server"
+        },
+        {
+            "path": "../packages/types"
         },
         {
             "path": "../packages/types-database"
