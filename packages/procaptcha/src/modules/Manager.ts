@@ -123,12 +123,7 @@ export const Manager = (
      */
     const start = async () => {
         try {
-            if (state.loading) {
-                console.log('Procaptcha already loading')
-                return
-            }
-            if (state.isHuman) {
-                console.log('already human')
+            if (!canStartProcess()) {
                 return
             }
 
@@ -196,22 +191,41 @@ export const Manager = (
             const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
             console.log('Signature:', signed)
 
-            // get a random provider
-            const getRandomProviderResponse = await contract.getRandomProvider(
-                account.account.address,
-                config.network.dappContract.address
-            )
-            const blockNumber = getRandomProviderResponse.blockNumber
-            console.log('provider', getRandomProviderResponse)
-            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
-            // get the provider api inst
-            providerApi = await loadProviderApi(providerUrl)
-            console.log('providerApi', providerApi)
-            // get the captcha challenge and begin the challenge
-            const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
+            let challengeData
+            try {
+                // get a random provider and iterate through this stuff
+                challengeData = await generateChallenge(contract, account, config)
+            } catch (err) {
+                console.error(err)
+                // dispatch relevant error event
+                errorToEventMap[err.name]
+                let count = 0
 
-            console.log('captchaApi', captchaApi)
-            const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
+                const api = await ApiPromise.create()
+
+                const unsubscribe = await api.rpc.chain.subscribeNewHeads(async (header) => {
+                    console.log(`Chain is at block: #${header.number}`)
+
+                    try {
+                        challengeData = await generateChallenge(contract, account, config)
+                    } catch (err) {
+                        console.error(err)
+                        return
+                    }
+
+                    if (++count === 5) {
+                        unsubscribe()
+                        process.exit(0)
+                    }
+                })
+            }
+
+            if (!challengeData) {
+                throw new Error('No challenge returned from contract')
+            }
+            const { challenge, blockNumber } = challengeData
+            providerApi = challengeData.providerApi
+
             console.log('challenge', challenge)
             if (challenge.captchas.length <= 0) {
                 throw new Error('No captchas returned from provider')
@@ -245,6 +259,47 @@ export const Manager = (
             // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
         }
+    }
+
+    const canStartProcess = () => {
+        if (state.loading) {
+            console.log('Procaptcha already loading')
+            return false;
+        }
+        if (state.isHuman) {
+            console.log('already human')
+            return false;
+        }
+        return true;
+    }
+
+    const generateChallenge = async (contract: ProsopoContractMethods, account: Account, config: ProcaptchaConfig) => {
+        const getRandomProviderResponse = await contract.getRandomProvider(
+            account.account.address,
+            config.network.dappContract.address
+        )
+
+        const {
+            blockNumber,
+            provider: { serviceOrigin },
+        } = getRandomProviderResponse
+
+        console.log('provider', getRandomProviderResponse)
+
+        const providerUrl = trimProviderUrl(serviceOrigin.toString())
+
+        // get the provider api inst
+        const providerApi = await loadProviderApi(providerUrl)
+        console.log('providerApi', providerApi)
+
+        // get the captcha challenge and begin the challenge
+        const captchaChallengeApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
+        console.log('captchaChallengeApi', captchaChallengeApi)
+
+        const challenge: GetCaptchaResponse = await captchaChallengeApi.getCaptchaChallenge()
+        console.log('challenge', challenge)
+
+        return { challenge, blockNumber, providerApi }
     }
 
     const submit = async () => {

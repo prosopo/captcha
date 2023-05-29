@@ -16,6 +16,7 @@
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Signer } from '@polkadot/api/types'
 import { stringToHex } from '@polkadot/util'
+import ProviderApi from '@prosopo/api/src/api/ProviderApi'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoCaptchaSolutionCommitment, ProsopoContractMethods, ProsopoRandomProvider } from '@prosopo/contract'
 import {
@@ -29,7 +30,6 @@ import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { ProsopoApiError } from '../api/handlers'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
 import { TCaptchaSubmitResult } from '../types/client'
-import ProviderApi from '@prosopo/api/src/api/ProviderApi'
 
 export class ProsopoCaptchaApi {
     userAccount: string
@@ -57,7 +57,11 @@ export class ProsopoCaptchaApi {
 
     public async getCaptchaChallenge(): Promise<GetCaptchaResponse> {
         try {
-            const captchaChallenge = await this.providerApi.getCaptchaChallenge(this.userAccount, this.provider)
+            const captchaChallenge = await this.providerApi.getCaptchaChallenge(
+                this.userAccount,
+                this.provider,
+                this.dappAccount
+            )
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
             return captchaChallenge
         } catch (e) {

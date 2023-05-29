@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import HttpClientBase from './HttpClientBase'
-import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
 import { CaptchaSolution, ProsopoRandomProvider } from '@prosopo/types'
+import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
+import HttpClientBase from './HttpClientBase'
 
 export default class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
@@ -30,18 +30,34 @@ export default class ProviderApi extends HttpClientBase {
         return this.axios.get(`/v1/prosopo/providers`)
     }
 
-    public getCaptchaChallenge(
+    public async getCaptchaChallenge(
         userAccount: string,
-        randomProvider: ProsopoRandomProvider
+        randomProvider: ProsopoRandomProvider,
+        dappAccount: string
     ): Promise<GetCaptchaResponse> {
-        const { provider } = randomProvider
-        const { blockNumber } = randomProvider
+        let currentProvider = randomProvider
 
-        return this.axios.get(
-            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
-                this.network.dappContract.address
-            }/${blockNumber.toString().replace(/,/g, '')}`
-        )
+        // 40 attempts to garuntee attempts across at least 3 blocks.
+        for (let attempt = 0; attempt < 40; attempt++) {
+            const { provider } = currentProvider
+            const { blockNumber } = currentProvider
+
+            try {
+                return await this.axios.get(
+                    `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
+                        this.network.dappContract.address
+                    }/${blockNumber.toString().replace(/,/g, '')}`
+                )
+            } catch (e) {
+                console.log(e)
+                currentProvider = await this.axios.get(`/v1/prosopo/random_provider/${userAccount}/${dappAccount}`)
+            }
+
+            // Wait for 0.5 seconds before retrying.
+            await new Promise((resolve) => setTimeout(resolve, 500))
+        }
+
+        throw new Error('Failed to get captcha challenge after maximum retry attempts')
     }
 
     public submitCaptchaSolution(
