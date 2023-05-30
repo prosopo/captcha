@@ -215,7 +215,7 @@ export const Manager = (
                         }
 
                         // setup timeout
-                        const timeout = timoutSetup(challenge, events, updateState)
+                        const timeout = timeoutSetup(challenge, events, updateState)
 
                         // update state with new challenge
                         updateState({
@@ -227,7 +227,12 @@ export const Manager = (
                             blockNumber,
                         })
                     },
-                    (error) => console.error('Failed to fetch challenge and block number', error)
+                    (err) => {
+                        console.error(err)
+                        // dispatch relevant error event
+                        const event = errorToEventMap[err.constructor] || events.onError
+                        event(err)
+                    }
                 )
         } catch (err) {
             console.error(err)
@@ -500,7 +505,7 @@ export const Manager = (
         return blockNumber
     }
 
-    const timoutSetup = (
+    const timeoutSetup = (
         challenge: GetCaptchaResponse,
         events: ProcaptchaEvents,
         updateState: (nextState: Partial<ProcaptchaState>) => void
