@@ -240,10 +240,10 @@ export const Manager = (
     }
 
     const retryStrategy = ({ maxRetryAttempts = 5, api }) => {
-        return (attempts: Observable<any>) => {
+        return (attempts) => {
             let retryAttempt = 0
             return attempts.pipe(
-                concatMap((error) => {
+                concatMap(() => {
                     retryAttempt++
                     if (retryAttempt > maxRetryAttempts) {
                         return throwError(
@@ -309,15 +309,7 @@ export const Manager = (
             const salt = randomAsHex()
 
             // append solution to each captcha in the challenge
-            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
-                const solution = state.solutions[index]
-                return {
-                    captchaId: captcha.captcha.captchaId,
-                    captchaContentId: captcha.captcha.captchaContentId,
-                    salt,
-                    solution,
-                }
-            })
+            const captchaSolution: CaptchaSolution[] = getCaptchaSolution(state, salt)
 
             const account = getAccount()
             const blockNumber = getBlockNumber()
@@ -527,6 +519,18 @@ export const Manager = (
         nextRound,
     }
 }
+function getCaptchaSolution(state: ProcaptchaState, salt: string): CaptchaSolution[] {
+    return state.challenge.captchas.map((captcha, index) => {
+        const solution = state.solutions[index]
+        return {
+            captchaId: captcha.captcha.captchaId,
+            captchaContentId: captcha.captcha.captchaContentId,
+            salt,
+            solution,
+        }
+    })
+}
+
 function timoutSetup(
     challenge: GetCaptchaResponse,
     events: ProcaptchaEvents,
