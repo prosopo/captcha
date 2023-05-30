@@ -309,7 +309,15 @@ export const Manager = (
             const salt = randomAsHex()
 
             // append solution to each captcha in the challenge
-            const captchaSolution: CaptchaSolution[] = getCaptchaSolution(state, salt)
+            const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
+                const solution = state.solutions[index]
+                return {
+                    captchaId: captcha.captcha.captchaId,
+                    captchaContentId: captcha.captcha.captchaContentId,
+                    salt,
+                    solution,
+                }
+            })
 
             const account = getAccount()
             const blockNumber = getBlockNumber()
@@ -492,6 +500,23 @@ export const Manager = (
         return blockNumber
     }
 
+    const timoutSetup = (
+        challenge: GetCaptchaResponse,
+        events: ProcaptchaEvents,
+        updateState: (nextState: Partial<ProcaptchaState>) => void
+    ) => {
+        const timeMillis: number = challenge.captchas
+            .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
+            .reduce((a, b) => a + b)
+        const timeout = setTimeout(() => {
+            console.log('challenge expired after ' + timeMillis + 'ms')
+            events.onExpired()
+            // expired, disallow user's claim to be human
+            updateState({ isHuman: false, showModal: false, loading: false })
+        }, timeMillis)
+        return timeout
+    }
+
     /**
      * Load the contract instance using addresses from config.
      */
@@ -518,32 +543,4 @@ export const Manager = (
         select,
         nextRound,
     }
-}
-function getCaptchaSolution(state: ProcaptchaState, salt: string): CaptchaSolution[] {
-    return state.challenge.captchas.map((captcha, index) => {
-        const solution = state.solutions[index]
-        return {
-            captchaId: captcha.captcha.captchaId,
-            captchaContentId: captcha.captcha.captchaContentId,
-            salt,
-            solution,
-        }
-    })
-}
-
-function timoutSetup(
-    challenge: GetCaptchaResponse,
-    events: ProcaptchaEvents,
-    updateState: (nextState: Partial<ProcaptchaState>) => void
-) {
-    const timeMillis: number = challenge.captchas
-        .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
-        .reduce((a, b) => a + b)
-    const timeout = setTimeout(() => {
-        console.log('challenge expired after ' + timeMillis + 'ms')
-        events.onExpired()
-        // expired, disallow user's claim to be human
-        updateState({ isHuman: false, showModal: false, loading: false })
-    }, timeMillis)
-    return timeout
 }
