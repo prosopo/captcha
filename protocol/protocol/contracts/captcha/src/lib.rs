@@ -237,8 +237,8 @@ pub mod captcha {
         captcha_solution_commitments: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
-        max_user_history_len: u8, // the max number of captcha results to store in history for a user
-        max_user_history_age: u8, // the max age, in blocks, of captcha results to store in history for a user
+        max_user_history_len: u16, // the max number of captcha results to store in history for a user
+        max_user_history_age: u16, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
     }
@@ -312,8 +312,8 @@ pub mod captcha {
         pub fn new(
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
-            max_user_history_len: u8,
-            max_user_history_age: u8,
+            max_user_history_len: u16,
+            max_user_history_age: u16,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
@@ -337,8 +337,8 @@ pub mod captcha {
         fn new_unguarded(
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
-            max_user_history_len: u8,
-            max_user_history_age: u8,
+            max_user_history_len: u16,
+            max_user_history_age: u16,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
