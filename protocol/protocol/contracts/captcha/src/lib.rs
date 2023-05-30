@@ -204,8 +204,8 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct UserHistorySummary {
-        pub correct: u8,
-        pub incorrect: u8,
+        pub correct: u16,
+        pub incorrect: u16,
         pub score: u8,
     }
 
