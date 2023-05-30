@@ -24,6 +24,7 @@ import {
 import { sleep } from '../utils/utils'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
 import storage from './storage'
+import { Observable, concatMap, defer, retryWhen, throwError } from 'rxjs'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -197,46 +198,37 @@ export const Manager = (
             console.log('Signature:', signed)
 
             // get a random provider
-            const getRandomProviderResponse = await contract.getRandomProvider(
-                account.account.address,
-                config.network.dappContract.address
-            )
-            const blockNumber = getRandomProviderResponse.blockNumber
-            console.log('provider', getRandomProviderResponse)
-            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
-            // get the provider api inst
-            providerApi = await loadProviderApi(providerUrl)
-            console.log('providerApi', providerApi)
-            // get the captcha challenge and begin the challenge
-            const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
+            let challenge: GetCaptchaResponse
+            let blockNumber: u32
 
-            console.log('captchaApi', captchaApi)
-            const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
-            console.log('challenge', challenge)
-            if (challenge.captchas.length <= 0) {
-                throw new Error('No captchas returned from provider')
-            }
+            // Fetch the captcha challenge and retry up to 5 times if it fails, waiting for the next block before each retry
+            defer(() => fetchCaptchaChallenge(contract, account, config))
+                .pipe(retryWhen(retryStrategy({ maxRetryAttempts: 5, api: contract.api })))
+                .subscribe(
+                    (response) => {
+                        challenge = response.challenge
+                        blockNumber = response.blockNumber
+                        console.log('Challenge and block number fetched successfully', challenge, blockNumber)
 
-            // setup timeout
-            const timeMillis: number = challenge.captchas
-                .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
-                .reduce((a, b) => a + b)
-            const timeout = setTimeout(() => {
-                console.log('challenge expired after ' + timeMillis + 'ms')
-                events.onExpired()
-                // expired, disallow user's claim to be human
-                updateState({ isHuman: false, showModal: false, loading: false })
-            }, timeMillis)
+                        if (challenge.captchas.length <= 0) {
+                            throw new Error('No captchas returned from provider')
+                        }
 
-            // update state with new challenge
-            updateState({
-                index: 0,
-                solutions: challenge.captchas.map(() => []),
-                challenge,
-                showModal: true,
-                timeout,
-                blockNumber,
-            })
+                        // setup timeout
+                        const timeout = timoutSetup(challenge, events, updateState)
+
+                        // update state with new challenge
+                        updateState({
+                            index: 0,
+                            solutions: challenge.captchas.map(() => []),
+                            challenge,
+                            showModal: true,
+                            timeout,
+                            blockNumber,
+                        })
+                    },
+                    (error) => console.error('Failed to fetch challenge and block number', error)
+                )
         } catch (err) {
             console.error(err)
             // dispatch relevant error event
@@ -245,6 +237,59 @@ export const Manager = (
             // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
         }
+    }
+
+    const retryStrategy = ({ maxRetryAttempts = 5, api }) => {
+        return (attempts: Observable<any>) => {
+            let retryAttempt = 0
+            return attempts.pipe(
+                concatMap((error) => {
+                    retryAttempt++
+                    if (retryAttempt > maxRetryAttempts) {
+                        return throwError(
+                            () => new Error(`No responsive provider found after ${maxRetryAttempts} attempts`)
+                        )
+                    }
+                    // Wait for the next block
+                    return new Observable((subscriber) => {
+                        const unsubscribe = api.rpc.chain.subscribeNewHeads((header) => {
+                            console.log(`Chain is at block: #${header.number}`)
+                            unsubscribe()
+                            subscriber.next()
+                        })
+                    })
+                })
+            )
+        }
+    }
+
+    const fetchCaptchaChallenge = async (contract, account, config) => {
+        // get a random provider
+        const getRandomProviderResponse = await contract.getRandomProvider(
+            account.account.address,
+            config.network.dappContract.address
+        )
+
+        const blockNumber = getRandomProviderResponse.blockNumber
+        console.log('provider', getRandomProviderResponse)
+        const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
+
+        // get the provider api inst
+        const providerApi = await loadProviderApi(providerUrl)
+        console.log('providerApi', providerApi)
+
+        // get the captcha challenge and begin the challenge
+        const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
+        console.log('captchaApi', captchaApi)
+
+        const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
+        console.log('challenge', challenge)
+
+        if (challenge.captchas.length <= 0) {
+            throw new Error('No captchas returned from provider')
+        }
+
+        return { challenge, blockNumber }
     }
 
     const submit = async () => {
@@ -481,4 +526,20 @@ export const Manager = (
         select,
         nextRound,
     }
+}
+function timoutSetup(
+    challenge: GetCaptchaResponse,
+    events: ProcaptchaEvents,
+    updateState: (nextState: Partial<ProcaptchaState>) => void
+) {
+    const timeMillis: number = challenge.captchas
+        .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
+        .reduce((a, b) => a + b)
+    const timeout = setTimeout(() => {
+        console.log('challenge expired after ' + timeMillis + 'ms')
+        events.onExpired()
+        // expired, disallow user's claim to be human
+        updateState({ isHuman: false, showModal: false, loading: false })
+    }, timeMillis)
+    return timeout
 }
