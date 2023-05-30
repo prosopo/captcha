@@ -14,4 +14,4 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 export * from './HttpClientBase'
-export * from './ProviderApi'
+export { default as ProviderApi } from './ProviderApi'
