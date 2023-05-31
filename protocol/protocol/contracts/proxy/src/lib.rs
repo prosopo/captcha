@@ -1,24 +1,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-/// Print and return an error in ink
-macro_rules! err {
-    ($err:expr) => {{
-        Err(get_self!().print_err($err, function_name!()))
-    }};
-}
-
-// macro_rules! err_fn {
-//     ($err:expr) => {
-//         || get_self!().print_err($err, function_name!())
-//     };
-// }
-
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod proxy {
 
+    use common::err;
+    #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::env::debug_println as debug;
     use ink::storage::traits::StorageLayout;
 
@@ -64,27 +53,15 @@ pub mod proxy {
             }
         }
 
-        /// Print and return an error
-        fn print_err(&self, err: Error, fn_name: &str) -> Error {
-            debug!(
-                "ERROR in {}() at block {} with caller {:?}\n'{:?}'",
-                fn_name,
-                self.env().block_number(),
-                self.env().caller(),
-                err
-            );
-            err
-        }
-
         /// Set the destination to forward to for this contract
         #[ink(message)]
         pub fn proxy_set_destination(&mut self, destination: AccountId) -> Result<(), Error> {
             if self.env().caller() != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             if !self.env().is_contract(&destination) {
-                return err!(Error::InvalidDestination);
+                return err!(self, Error::InvalidDestination);
             }
 
             self.destination = destination;
@@ -95,7 +72,7 @@ pub mod proxy {
         #[ink(message)]
         pub fn proxy_set_admin(&mut self, new_admin: AccountId) -> Result<(), Error> {
             if self.env().caller() != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             self.admin = new_admin;
@@ -106,7 +83,7 @@ pub mod proxy {
         pub fn proxy_withdraw(&mut self, amount: Balance) -> Result<(), Error> {
             let caller = self.env().caller();
             if caller != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             match self.env().transfer(caller, amount) {
@@ -119,7 +96,7 @@ pub mod proxy {
         pub fn proxy_terminate(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
             if caller != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             self.env().terminate_contract(caller);
@@ -134,12 +111,12 @@ pub mod proxy {
         #[ink(message)]
         pub fn proxy_set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
             if self.env().caller() != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             match ink::env::set_code_hash(&code_hash) {
                 Ok(()) => Ok(()),
-                Err(_) => err!(Error::SetCodeHashFailed),
+                Err(_) => err!(self, Error::SetCodeHashFailed),
             }
         }
 
@@ -201,6 +178,7 @@ pub mod proxy {
         )
     )]
     mod tests {
+        use common_dev::common_dev::tests::*;
         use ink;
         use ink::codegen::Env;
         use ink::env::hash::Blake2x256;
@@ -210,99 +188,18 @@ pub mod proxy {
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
 
-        const set_caller: fn(AccountId) =
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
-        const get_account_balance: fn(AccountId) -> Result<u128, ink::env::Error> =
-            ink::env::test::get_account_balance::<ink::env::DefaultEnvironment>;
-        const set_account_balance: fn(AccountId, u128) =
-            ink::env::test::set_account_balance::<ink::env::DefaultEnvironment>;
-        const set_callee: fn(AccountId) =
-            ink::env::test::set_callee::<ink::env::DefaultEnvironment>;
-        const set_contract: fn(AccountId) =
-            ink::env::test::set_contract::<ink::env::DefaultEnvironment>;
-        const default_accounts: fn() -> ink::env::test::DefaultAccounts<
-            ink::env::DefaultEnvironment,
-        > = ink::env::test::default_accounts::<ink::env::DefaultEnvironment>;
-
-        // unused account is 0x00 - do not use this, it will be the default caller, so could get around caller checks accidentally
-        fn get_unused_account() -> AccountId {
-            AccountId::from([0x00; 32])
-        }
-
-        const ADMIN_ACCOUNT_PREFIX: u8 = 0x01;
-        const USER_ACCOUNT_PREFIX: u8 = 0x04;
-        const CONTRACT_ACCOUNT_PREFIX: u8 = 0x05;
-        const CODE_HASH_PREFIX: u8 = 0x06;
-        const FORWARD_ADDRESS_PREFIX: u8 = 0x07;
-
-        // build an account. Accounts have the first byte set to the type of account and the next 16 bytes are the index of the account
-        fn get_account_bytes(account_type: u8, index: u128) -> [u8; 32] {
-            let mut bytes = [0x00; 32];
-            bytes[0] = account_type;
-            bytes[1..17].copy_from_slice(&index.to_le_bytes());
-            bytes
-        }
-
-        fn get_account(account_type: u8, index: u128) -> AccountId {
-            let account = AccountId::from(get_account_bytes(account_type, index));
-            // fund the account so it exists if not already
-            let balance = get_account_balance(account);
-            if balance.is_err() {
-                // account doesn't have the existential deposit so doesn't exist
-                // give it funds to create it
-                set_account_balance(account, 1);
-            }
-            account
-        }
-
-        /// get the nth code hash. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_code_hash(index: u128) -> [u8; 32] {
-            get_account_bytes(CODE_HASH_PREFIX, index)
-        }
-
-        /// get the nth user account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_user_account(index: u128) -> AccountId {
-            get_account(USER_ACCOUNT_PREFIX, index)
-        }
-
-        /// get the nth contract account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_contract_account(index: u128) -> AccountId {
-            let account = get_account(CONTRACT_ACCOUNT_PREFIX, index);
-            set_contract(account); // mark the account as a contract
-            account
-        }
-
-        /// get the nth admin account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_admin_account(index: u128) -> AccountId {
-            get_account(ADMIN_ACCOUNT_PREFIX, index)
-        }
-
-        fn get_forward_account(index: u128) -> AccountId {
-            get_account(FORWARD_ADDRESS_PREFIX, index)
-        }
-
         /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_contract(index: u128) -> Proxy {
-            let account = get_account(CONTRACT_ACCOUNT_PREFIX, index); // the account for the contract
-                                                                       // make sure the contract gets allocated the above account
-            set_callee(account);
-            // give the contract account some funds
-            set_account_balance(account, 1);
-            // set the caller to the first admin
-            set_caller(get_admin_account(0));
-            // now construct the contract instance
-            let mut contract = Proxy::new_unguarded(get_admin_account(index));
-            // set the caller back to the unused acc
-            set_caller(get_unused_account());
-            // check the contract was created with the correct account
-            assert_eq!(contract.env().account_id(), account);
-            contract
+        fn get_contract_unguarded(index: u128) -> Proxy {
+            get_contract(index, |index| {
+                Proxy::new_unguarded(get_contract_account(index))
+            })
         }
 
         #[ink::test]
         fn test_ctor_guard_pass() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
             // only able to instantiate from the alice account
             set_caller(AccountId::from([
@@ -317,7 +214,8 @@ pub mod proxy {
         #[should_panic]
         fn test_ctor_guard_fail() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
@@ -325,87 +223,14 @@ pub mod proxy {
             // should fail to construct and panic
         }
 
-        /// Test accounts are funded with existential deposit
-        #[ink::test]
-        fn test_accounts_funded() {
-            for func in vec![get_admin_account, get_contract_account].iter() {
-                for i in 0..10 {
-                    let account = func(i);
-                    // check the account has funds. Will panic if not as no existential deposit == account not found
-                    get_account_balance(account).unwrap();
-                }
-            }
-
-            // same for contracts
-            for i in 0..10 {
-                let contract = get_contract(i);
-                // check the account has funds. Will panic if not as no existential deposit == account not found
-                get_account_balance(contract.env().account_id()).unwrap();
-            }
-        }
-
-        /// Are the unit test accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
-        #[ink::test]
-        fn test_accounts_unique() {
-            let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
-
-            // for each method of generating an account
-            for func in vec![
-                get_admin_account,
-                get_contract_account,
-                get_user_account,
-                get_forward_account,
-            ]
-            .iter()
-            {
-                // try the first 10 accounts
-                for i in 0..10 {
-                    let account = func(i);
-                    assert!(
-                        set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
-                        "Duplicate account ID found: {:?}",
-                        account
-                    );
-                }
-            }
-
-            // do the same for non-account based IDs
-            for func in vec![get_code_hash].iter() {
-                // try the first 10 accounts
-                for i in 0..10 {
-                    let account = func(i);
-                    assert!(
-                        set.insert(account),
-                        "Duplicate account ID found: {:?}",
-                        account
-                    );
-                }
-            }
-        }
-
-        /// Are the unit test contracts unique, i.e. make sure there's no collisions in contract accounts as two contracts with the same account could work around funding tests as utilising the same account
-        #[ink::test]
-        fn test_contracts_unique() {
-            let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
-
-            // for the first 10 contracts
-            for i in 0..9 {
-                let contract = get_contract(i);
-                let account = contract.env().account_id();
-                assert!(
-                    set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
-                    "Duplicate account ID found: {:?}",
-                    account
-                );
-            }
-        }
-
         #[ink::test]
         fn test_proxy_set_admin() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
             let old_admin = contract.admin;
             let new_admin = get_admin_account(1);
             assert_ne!(old_admin, new_admin);
@@ -417,9 +242,11 @@ pub mod proxy {
         #[ink::test]
         fn test_proxy_set_admin_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
             let old_admin = contract.admin;
             let new_admin = get_admin_account(1);
             assert_ne!(old_admin, new_admin);
@@ -432,9 +259,11 @@ pub mod proxy {
         #[ink::test]
         fn test_ctor_caller_admin() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
 
             // check the caller is admin
             assert_eq!(contract.admin, get_admin_account(0));
@@ -443,9 +272,11 @@ pub mod proxy {
         #[ink::test]
         fn test_proxy_terminate() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
             set_caller(get_admin_account(0)); // an account which does have permission to call proxy_terminate
 
             let contract_account = contract.env().account_id();
@@ -462,9 +293,11 @@ pub mod proxy {
         #[ink::test]
         fn test_proxy_terminate_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
             set_caller(get_user_account(0)); // an account which does not have permission to call proxy_terminate
 
             assert_eq!(
@@ -476,9 +309,11 @@ pub mod proxy {
         #[ink::test]
         fn test_proxy_withdraw() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
 
             // give the contract funds
             set_account_balance(contract.env().account_id(), 10000000000);
@@ -501,9 +336,11 @@ pub mod proxy {
         #[should_panic]
         fn test_proxy_withdraw_insufficient_funds() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
 
             set_caller(get_admin_account(0)); // use the admin acc
             let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
@@ -514,9 +351,11 @@ pub mod proxy {
         #[ink::test]
         fn test_proxy_withdraw_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
 
             // give the contract funds
             set_caller(get_user_account(1)); // use the admin acc
@@ -526,9 +365,11 @@ pub mod proxy {
         #[ink::test]
         fn test_proxy_set_destination() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
 
             let old_dest = contract.destination;
             let new_dest = get_contract_account(1);
@@ -542,9 +383,11 @@ pub mod proxy {
         #[ink::test]
         fn test_proxy_set_destination_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
 
             set_caller(get_user_account(1)); // use the admin acc
             assert_eq!(
@@ -556,9 +399,11 @@ pub mod proxy {
         #[ink::test]
         fn test_proxy_set_destination_not_contract() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
 
             set_caller(get_admin_account(0)); // use the admin acc
             assert_eq!(
@@ -572,9 +417,11 @@ pub mod proxy {
         // fn test_proxy_set_code_hash() {
 
         //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-        //     set_caller(get_unused_account());
+        //     reset_caller();
+        //     reset_callee();
 
-        //     let mut contract = get_contract(0);
+        //     let mut contract = get_contract_unguarded(0);
+        //     set_callee(get_contract_account(0));
 
         //     let new_code_hash = get_code_hash(1);
         //     let old_code_hash = contract.env().own_code_hash().unwrap();
@@ -590,9 +437,11 @@ pub mod proxy {
         #[ink::test]
         fn test_proxy_set_code_hash_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
+            reset_caller();
+            reset_callee();
 
-            let mut contract = get_contract(0);
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
 
             set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
 

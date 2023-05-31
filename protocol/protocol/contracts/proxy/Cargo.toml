@@ -5,7 +5,7 @@ authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io"]
 edition = "2021"
 
 [dependencies]
-ink = { git = "https://github.com/prosopo/ink", rev="bec5105fb79926377341179389336fcac620c50d", default-features = false }
+ink = { git = "https://github.com/prosopo/ink", rev="9ca19c462d5f5d1572ddce595d2698207241fd4a", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 
@@ -20,6 +20,18 @@ path = "../../crates/named_functions_macro"
 [dependencies.disable_macro]
 version = "0.3.0"
 path = "../../crates/disable_macro"
+
+[dependencies.common]
+version = "0.3.0"
+path = "../../contracts/common"
+default-features = false
+features = ["ink-as-dependency"] 
+
+[dev-dependencies.common_dev]
+version = "0.3.0"
+path = "../../contracts/common_dev"
+default-features = false
+features = ["ink-as-dependency"] 
 
 [lib]
 name = "proxy"

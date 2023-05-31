@@ -17,44 +17,6 @@
 
 pub use self::captcha::{Captcha, CaptchaRef};
 
-/// Print and return an error in ink
-macro_rules! print_err {
-    ($self_:ident, $err:expr) => {{
-        ink::env::debug_println!(
-            "ERROR: 
-    type: {:?}
-    block: {:?}
-    caller: {:?}
-",
-            $err,
-            $self_.env().block_number(),
-            $self_.env().caller(),
-        );
-        $err
-    }};
-}
-
-macro_rules! err {
-    ($self_:ident, $err:expr) => {{
-        print_err!($self_, $err);
-        Err($err)
-    }};
-}
-
-macro_rules! err_fn {
-    ($self_:ident, $err:expr) => {
-        || print_err!($self_, $err)
-    };
-}
-
-macro_rules! lazy {
-    ($lazy:expr, $func:ident, $value:expr) => {
-        let mut contents = $lazy.get_or_default();
-        contents.$func($value);
-        $lazy.set(&contents);
-    };
-}
-
 #[ink::contract]
 pub mod captcha {
 
@@ -62,7 +24,10 @@ pub mod captcha {
         212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88,
         133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
     ];
-
+    
+    use common::err;
+    use common::err_fn;
+    use common::lazy;
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_map::BTreeMap;
@@ -460,7 +425,7 @@ pub mod captcha {
         }
 
         #[ink(message)]
-        pub fn get_max_user_history_age(&self) -> BlockNumber {
+        pub fn get_max_user_history_age(&self) -> u16 {
             self.max_user_history_age
         }
 
