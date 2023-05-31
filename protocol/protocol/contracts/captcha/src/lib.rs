@@ -132,7 +132,7 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaData {
-        provider: AccountId,
+        provider_account: AccountId,
         dataset_id: Hash,
         dataset_id_content: Hash,
     }
@@ -144,11 +144,11 @@ pub mod captcha {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Commit {
         id: Hash,                       // the commitment id
-        user: AccountId,                // the user who submitted the commitment
+        user_account: AccountId,                // the user who submitted the commitment
         dataset_id: Hash,               // the dataset id
         status: CaptchaStatus,          // the status of the commitment
-        dapp: AccountId,                // the dapp which the user completed the captcha on
-        provider: AccountId,            // the provider who supplied the challenge
+        dapp_account: AccountId,                // the dapp which the user completed the captcha on
+        provider_account: AccountId,            // the provider who supplied the challenge
         requested_at: BlockNumber,      // the block number at which the captcha was requested
         completed_at: BlockNumber,      // the block number at which the captcha was completed
         user_signature_part1: [u8; 32], // the user's signature of the commitment
@@ -457,7 +457,7 @@ pub mod captcha {
             Ok(RandomActiveProvider {
                 provider_account: account,
                 provider,
-                block_number: block,
+                block,
             })
         }
 
@@ -507,13 +507,13 @@ pub mod captcha {
 
             // hash the account, block and seed
             let seed_value_bytes: [u8; 16] = seed.to_le_bytes();
-            let block_number_bytes: [u8; 4] = block.to_le_bytes();
+            let block_bytes: [u8; 4] = block.to_le_bytes();
             let user_account_bytes: &[u8; 32] = user_account.as_ref();
             let dapp_account_bytes: &[u8; 32] = dapp_account.as_ref();
             // pack all the data into a single byte array
             let mut bytes: [u8; 16 + 4 + 32 + 32] = [0u8; 16 + 4 + 32 + 32];
             bytes[0..16].copy_from_slice(&seed_value_bytes[..]);
-            bytes[16..20].copy_from_slice(&block_number_bytes[..]);
+            bytes[16..20].copy_from_slice(&block_bytes[..]);
             bytes[20..52].copy_from_slice(&user_account_bytes[..]);
             bytes[52..74].copy_from_slice(&dapp_account_bytes[..]);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
@@ -658,11 +658,11 @@ pub mod captcha {
             result.dapp.ok_or(Error::DappDoesNotExist)
         }
 
-        fn check_inside_rewind_window(&self, block_number: BlockNumber) -> Result<(), Error> {
+        fn check_inside_rewind_window(&self, block: BlockNumber) -> Result<(), Error> {
             let start = self.get_rewind_window_start();
-            if block_number < start {
+            if block < start {
                 return err!(self, Error::BlockOutsideRewindWindow);
-            } else if block_number > self.env().block_number() {
+            } else if block > self.env().block_number() {
                 return err!(self, Error::BlockInFuture);
             }
             Ok(())
@@ -670,19 +670,19 @@ pub mod captcha {
 
         /// Get a seed at a given block
         #[ink(message)]
-        pub fn get_seed_at(&self, block_number: BlockNumber) -> Result<u128, Error> {
-            self.check_inside_rewind_window(block_number)?;
+        pub fn get_seed_at(&self, block: BlockNumber) -> Result<u128, Error> {
+            self.check_inside_rewind_window(block)?;
 
             let mut result = self.seed;
 
-            if block_number == self.seed_at {
+            if block == self.seed_at {
                 // asking for the seed at the current block
                 return Ok(result);
             }
 
             // loop through blocks until we find a seed record
             // if no seed record is found, the result will be the current seed (i.e. seed has not changed since the given block)
-            let start = block_number;
+            let start = block;
             let end = self.env().block_number();
             for at in start..=end {
                 let seed = self.seed_log.get(at);
@@ -704,10 +704,10 @@ pub mod captcha {
         /// Update the seed
         #[ink(message)]
         pub fn update_seed(&mut self) -> Result<bool, Error> {
-            let block_number = self.env().block_number();
+            let block = self.env().block_number();
 
             let seed_at = self.seed_at;
-            if seed_at == block_number {
+            if seed_at == block {
                 // seed already updated for this block
                 // disallow updating the seed for the same block twice to avoid spamming
                 return Ok(false);
@@ -744,7 +744,7 @@ pub mod captcha {
             let mut input = [0u8; 60];
             let caller_bytes: &[u8; 32] = AsRef::<[u8; 32]>::as_ref(&caller);
             input[0..32].copy_from_slice(&caller_bytes[..]);
-            input[32..36].copy_from_slice(&block_number.to_le_bytes()[..]);
+            input[32..36].copy_from_slice(&block.to_le_bytes()[..]);
             input[36..44].copy_from_slice(&block_timestamp.to_le_bytes()[..]);
             input[44..60].copy_from_slice(&seed.to_le_bytes()[..]);
 
@@ -754,7 +754,7 @@ pub mod captcha {
 
             // update seed
             self.seed = new_seed_value;
-            self.seed_at = block_number;
+            self.seed_at = block;
 
             self.prune_logs();
 
@@ -817,11 +817,11 @@ pub mod captcha {
                 + 4 // completed_at
             ];
             payload[..32].copy_from_slice(commit.id.as_ref());
-            payload[32..64].copy_from_slice(account_id_bytes(&commit.user));
+            payload[32..64].copy_from_slice(account_id_bytes(&commit.user_account));
             payload[64..96].copy_from_slice(commit.dataset_id.as_ref());
             payload[96] = commit.status as u8;
-            payload[97..129].copy_from_slice(account_id_bytes(&commit.dapp));
-            payload[129..161].copy_from_slice(account_id_bytes(&commit.provider));
+            payload[97..129].copy_from_slice(account_id_bytes(&commit.dapp_account));
+            payload[129..161].copy_from_slice(account_id_bytes(&commit.provider_account));
             payload[161..165].copy_from_slice(&commit.requested_at.to_le_bytes());
             payload[165..169].copy_from_slice(&commit.completed_at.to_le_bytes());
 
@@ -832,7 +832,7 @@ pub mod captcha {
 
             // verify the user signature against the payload, i.e. ensure the user accepted the commitment data (e.g. that it was approved / disapproved), signed it, and returned it to the provider
             let mut user_account_bytes = [0u8; 32];
-            user_account_bytes.copy_from_slice(account_id_bytes(&commit.user));
+            user_account_bytes.copy_from_slice(account_id_bytes(&commit.user_account));
 
             let res = self
                 .env()
@@ -1253,15 +1253,15 @@ pub mod captcha {
         }
 
         /// Check the contract is a contract
-        fn check_is_contract(&self, contract: AccountId) -> Result<(), Error> {
-            if !self.env().is_contract(&contract) {
+        fn check_is_contract(&self, account: AccountId) -> Result<(), Error> {
+            if !self.env().is_contract(&account) {
                 return err!(self, Error::InvalidContract);
             }
             Ok(())
         }
 
         /// Get an existing dapp
-        fn get_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
+        fn get_dapp(&self, account: AccountId) -> Result<Dapp, Error> {
             self.dapps
                 .get(contract)
                 .ok_or_else(err_fn!(self, Error::DappDoesNotExist))
@@ -1269,16 +1269,16 @@ pub mod captcha {
 
         /// Check a dapp is missing / non-existent
         fn check_dapp_does_not_exist(&self, contract: AccountId) -> Result<(), Error> {
-            if self.dapps.get(contract).is_some() {
+            if self.dapps.get(account).is_some() {
                 return err!(self, Error::DappExists);
             }
             Ok(())
         }
 
         /// Check a dapp is owned by the caller
-        fn check_dapp_owner_is_caller(&self, contract: AccountId) -> Result<(), Error> {
+        fn check_dapp_owner_is_caller(&self, account: AccountId) -> Result<(), Error> {
             let caller = self.env().caller();
-            let dapp = self.get_dapp(contract)?;
+            let dapp = self.get_dapp(account)?;
             if dapp.owner != caller {
                 return err!(self, Error::NotAuthorised);
             }
@@ -1430,13 +1430,13 @@ pub mod captcha {
         /// Trim the user history to the max length and age.
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
-            let block_number = self.env().block_number();
-            let max_age = if block_number < self.max_user_history_age as u32 {
-                block_number
+            let block = self.env().block_number();
+            let max_age = if block < self.max_user_history_age as u32 {
+                block
             } else {
                 self.max_user_history_age as u32
             };
-            let age_threshold = block_number - max_age;
+            let age_threshold = block - max_age;
             let mut expired = Vec::new();
             // trim the history down to max length
             while history.len() > self.max_user_history_len.into() {
@@ -1545,16 +1545,16 @@ pub mod captcha {
             // ensure the provider is active
             self.validate_provider_active(caller)?;
             // ensure the dapp is active
-            self.validate_dapp(commit.dapp)?;
+            self.validate_dapp(commit.dapp_account)?;
 
             // check commitment doesn't already exist
             if self.captcha_solution_commitments.get(commit.id).is_some() {
                 return err!(self, Error::CommitAlreadyExists);
             }
 
-            self.record_commitment(commit.user, commit.id, commit);
+            self.record_commitment(commit.user_account, commit.id, commit);
 
-            self.pay_fee(&caller, &commit.dapp)?;
+            self.pay_fee(&caller, &commit.dapp_account)?;
 
             Ok(())
         }
@@ -1620,19 +1620,19 @@ pub mod captcha {
         #[ink(message)]
         pub fn dapp_operator_is_human_user(
             &self,
-            user: AccountId,
+            account: AccountId,
             threshold: u8,
         ) -> Result<bool, Error> {
-            Ok(self.get_user_history_summary(user)?.score > threshold)
+            Ok(self.get_user_history_summary(account)?.score > threshold)
         }
 
         /// Get the last correct captcha solution for a user
         #[ink(message)]
         pub fn dapp_operator_last_correct_captcha(
             &self,
-            user: AccountId,
+            account: AccountId,
         ) -> Result<LastCorrectCaptcha, Error> {
-            let user = self.get_dapp_user(user)?;
+            let user = self.get_dapp_user(account)?;
             let (history, _expired) = self.trim_user_history(user.history);
             let mut last_correct_captcha = None;
             for hash in history {
@@ -1651,7 +1651,7 @@ pub mod captcha {
 
             Ok(LastCorrectCaptcha {
                 before: self.env().block_number() - last_correct_captcha.completed_at,
-                dapp_id: last_correct_captcha.dapp,
+                dapp_id: last_correct_captcha.dapp_account,
             })
         }
 
@@ -1659,9 +1659,9 @@ pub mod captcha {
 
         fn validate_provider_exists_and_has_funds(
             &self,
-            provider_id: AccountId,
+            account: AccountId,
         ) -> Result<Provider, Error> {
-            if self.providers.get(provider_id).is_none() {
+            if self.providers.get(account).is_none() {
                 return err!(self, Error::ProviderDoesNotExist);
             }
             let provider = self.get_provider_details(provider_id)?;
@@ -1671,8 +1671,8 @@ pub mod captcha {
             Ok(provider)
         }
 
-        fn validate_provider_active(&self, provider_id: AccountId) -> Result<Provider, Error> {
-            let provider = self.validate_provider_exists_and_has_funds(provider_id)?;
+        fn validate_provider_active(&self, account: AccountId) -> Result<Provider, Error> {
+            let provider = self.validate_provider_exists_and_has_funds(account)?;
             if provider.status != GovernanceStatus::Active {
                 return err!(self, Error::ProviderInactive);
             }
@@ -1709,7 +1709,7 @@ pub mod captcha {
             let provider = self.get_provider(provider_account)?;
             Ok(CaptchaData {
                 dataset_id,
-                provider: provider_account,
+                provider_account: provider_account,
                 dataset_id_content: provider.dataset_id_content,
             })
         }
@@ -1718,9 +1718,9 @@ pub mod captcha {
         ///
         /// Returns an error if the user does not exist
         #[ink(message)]
-        pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
+        pub fn get_dapp_user(&self, account: AccountId) -> Result<User, Error> {
             self.dapp_users
-                .get(dapp_user_id)
+                .get(account)
                 .ok_or_else(err_fn!(self, Error::DappUserDoesNotExist))
         }
 
@@ -1728,9 +1728,9 @@ pub mod captcha {
         ///
         /// Returns an error if the user does not exist
         #[ink(message)]
-        pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
+        pub fn get_provider_details(&self, account: AccountId) -> Result<Provider, Error> {
             self.providers
-                .get(accountid)
+                .get(account)
                 .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))
         }
 
@@ -1750,18 +1750,18 @@ pub mod captcha {
         #[ink(message)]
         pub fn get_captcha_solution_commitment(
             &self,
-            captcha_solution_commitment_id: Hash,
+            id: Hash,
         ) -> Result<Commit, Error> {
             if self
                 .captcha_solution_commitments
-                .get(captcha_solution_commitment_id)
+                .get(id)
                 .is_none()
             {
                 return err!(self, Error::CommitDoesNotExist);
             }
             let commitment = self
                 .captcha_solution_commitments
-                .get(captcha_solution_commitment_id)
+                .get(id)
                 .ok_or_else(err_fn!(self, Error::CommitDoesNotExist))?;
 
             Ok(commitment)
@@ -1770,15 +1770,15 @@ pub mod captcha {
         /// Returns the account balance for the specified `dapp`.
         ///
         #[ink(message)]
-        pub fn get_dapp_balance(&self, dapp: AccountId) -> Result<Balance, Error> {
-            Ok(self.get_dapp_details(dapp)?.balance)
+        pub fn get_dapp_balance(&self, dapp_contract: AccountId) -> Result<Balance, Error> {
+            Ok(self.get_dapp_details(dapp_contract)?.balance)
         }
 
         /// Returns the account balance for the specified `provider`.
         ///
         #[ink(message)]
-        pub fn get_provider_balance(&self, provider: AccountId) -> Result<Balance, Error> {
-            Ok(self.get_provider_details(provider)?.balance)
+        pub fn get_provider_balance(&self, account: AccountId) -> Result<Balance, Error> {
+            Ok(self.get_provider_details(account)?.balance)
         }
 
         /// List providers given an array of account id
@@ -1787,11 +1787,11 @@ pub mod captcha {
         #[ink(message)]
         pub fn list_providers_by_ids(
             &self,
-            provider_ids: Vec<AccountId>,
+            provider_accounts: Vec<AccountId>,
         ) -> Result<Vec<Provider>, Error> {
             let mut providers = Vec::new();
-            for provider_id in provider_ids {
-                let provider = self.providers.get(provider_id);
+            for provider_account in provider_accounts {
+                let provider = self.providers.get(provider_account);
                 if provider.is_none() {
                     continue;
                 }
@@ -1815,11 +1815,11 @@ pub mod captcha {
                     if providers_set.is_none() {
                         continue;
                     }
-                    let provider_ids = providers_set
+                    let provider_accounts = providers_set
                         .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?
                         .into_iter()
                         .collect();
-                    providers.append(&mut self.list_providers_by_ids(provider_ids)?);
+                    providers.append(&mut self.list_providers_by_ids(provider_accounts)?);
                 }
             }
             Ok(providers)
@@ -1858,19 +1858,19 @@ pub mod captcha {
             const BLOCK_NUMBER_SIZE: usize = 4;
             const BLOCK_TIMESTAMP_SIZE: usize = 8;
             const ACCOUNT_SIZE: usize = 32;
-            let block_number: u32 = self.env().block_number();
+            let block: u32 = self.env().block_number();
             let block_timestamp: u64 = self.env().block_timestamp();
             let user_account_bytes: &[u8; ACCOUNT_SIZE] = user_account.as_ref();
             let dapp_account_bytes: &[u8; ACCOUNT_SIZE] = dapp_account.as_ref();
             // pack all the data into a single byte array
-            let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
+            let block_arr: [u8; BLOCK_NUMBER_SIZE] = block.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
             let mut bytes: [u8; BLOCK_TIMESTAMP_SIZE
                 + BLOCK_NUMBER_SIZE
                 + ACCOUNT_SIZE
                 + ACCOUNT_SIZE] =
                 [0x0; BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE + ACCOUNT_SIZE];
-            bytes[0..BLOCK_NUMBER_SIZE].copy_from_slice(&block_number_arr);
+            bytes[0..BLOCK_NUMBER_SIZE].copy_from_slice(&block_arr);
             bytes[BLOCK_NUMBER_SIZE..BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE]
                 .copy_from_slice(&block_timestamp_arr);
             bytes[BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE
