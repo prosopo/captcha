@@ -381,6 +381,36 @@ pub mod captcha {
             }
         }
 
+        /// Get all provider accounts
+        #[ink(message)]
+        pub fn get_provider_accounts(&self) -> BTreeSet<AccountId> {
+            let mut accounts = BTreeSet::new();
+            for payee in self.get_payees().iter() {
+                for status in self.get_statuses().iter() {
+                    let group = self.provider_accounts.get(ProviderState {
+                        payee: *payee,
+                        status: *status,
+                    }).unwrap_or_default();
+                    for account in group.iter() {
+                        accounts.insert(*account);
+                    }
+                }
+            }
+            accounts
+        }
+
+        /// Get all dapp accounts
+        #[ink(message)]
+        pub fn get_dapp_accounts(&self) -> BTreeSet<AccountId> {
+            self.dapp_accounts.get().unwrap_or_default()
+        }
+
+        /// Get all user accounts
+        #[ink(message)]
+        pub fn get_user_accounts(&self) -> BTreeSet<AccountId> {
+            self.user_accounts.get().unwrap_or_default()
+        }
+
         /// Returns the set of seeds used in the rewind window (including the current seed)
         #[ink(message)]
         pub fn get_seeds(&self) -> BTreeMap<BlockNumber, Seed> {
@@ -1798,39 +1828,6 @@ pub mod captcha {
                 providers.push(provider.ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?);
             }
             Ok(providers)
-        }
-
-        /// List providers given an array of status
-        ///
-        /// Returns empty if none were matched
-        #[ink(message)]
-        pub fn list_providers_by_status(
-            &self,
-            statuses: Vec<GovernanceStatus>,
-        ) -> Result<Vec<Provider>, Error> {
-            let mut providers = Vec::<Provider>::new();
-            for status in statuses {
-                for payee in [Payee::Dapp, Payee::Provider] {
-                    let providers_set = self.provider_accounts.get(ProviderState { status, payee });
-                    if providers_set.is_none() {
-                        continue;
-                    }
-                    let provider_accounts = providers_set
-                        .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?
-                        .into_iter()
-                        .collect();
-                    providers.append(&mut self.list_providers_by_ids(provider_accounts)?);
-                }
-            }
-            Ok(providers)
-        }
-
-        /// Get the AccountIds of all Providers ever registered
-        ///
-        /// Returns {Vec<AccountId>}
-        #[ink(message)]
-        pub fn get_all_provider_ids(&self) -> Result<Vec<AccountId>, Error> {
-            self.list_providers_by_status(self.get_statuses())
         }
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
