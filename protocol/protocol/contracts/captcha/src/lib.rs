@@ -426,7 +426,7 @@ pub mod captcha {
             //     user_signature_part1: [u8; 32], // ignored
             //     user_signature_part2: [u8; 32], // ignored
             // }
-            let mut payload = [0u8; 
+            let mut payload = [0u8;
                 32 // id
                 + 32 // user_account
                 + 32 // dataset_id
