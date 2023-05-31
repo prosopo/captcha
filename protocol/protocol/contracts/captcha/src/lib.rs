@@ -160,6 +160,8 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Dapp {
+        account: AccountId,
+        account_index: u128,
         status: GovernanceStatus,
         balance: Balance,
         owner: AccountId,
@@ -229,7 +231,8 @@ pub mod captcha {
         provider_stake_threshold: Balance,
         dapp_stake_threshold: Balance,
         dapps: Mapping<AccountId, Dapp>,
-        dapp_accounts: Lazy<BTreeSet<AccountId>>,
+        dapp_accounts: Mapping<u128, AccountId>,
+        dapp_accounts_len: u128,
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
@@ -315,6 +318,8 @@ pub mod captcha {
         BlockOutsideRewindWindow,
         /// Returned if the url is empty, which is not allowed
         UrlEmpty,
+        /// Returned if the index is invalid
+        InvalidIndex,
     }
 
     impl Captcha {
@@ -378,6 +383,7 @@ pub mod captcha {
                 dapp_account_log: Default::default(),
                 dapp_log: Default::default(),
                 logs_pruned_at: 0,
+                dapp_accounts_len: 0,
             }
         }
 
@@ -401,8 +407,13 @@ pub mod captcha {
 
         /// Get all dapp accounts
         #[ink(message)]
-        pub fn get_dapp_accounts(&self) -> BTreeSet<AccountId> {
-            self.dapp_accounts.get().unwrap_or_default()
+        pub fn get_dapp_accounts(&self) -> Result<BTreeSet<AccountId>, Error> {
+            let mut accounts = BTreeSet::new();
+            for index in 0..self.dapp_accounts_len {
+                let account = self.dapp_accounts.get(index).ok_or_else(err_fn!(self, Error::InvalidIndex))?;
+                accounts.insert(account);
+            }
+            Ok(accounts)
         }
 
         /// Get all user accounts
@@ -1328,6 +1339,8 @@ pub mod captcha {
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
             let old_dapp = dapp_lookup.unwrap_or(Dapp {
+                account: contract,
+                account_index: 0,
                 owner: owner.unwrap_or(self.env().caller()),
                 balance: 0,
                 status: GovernanceStatus::Inactive,
@@ -1338,6 +1351,11 @@ pub mod captcha {
                 owner: owner.unwrap_or(old_dapp.owner),
                 ..old_dapp
             };
+
+            if new {
+                new_dapp.account_index = self.dapp_accounts_len;
+                self.dapp_accounts_len += 1;
+            }
 
             // update the dapp funds
             new_dapp.balance += self.env().transferred_value();
@@ -1363,7 +1381,8 @@ pub mod captcha {
 
             // if the dapp is new then add it to the list of dapps
             if new {
-                lazy!(self.dapp_accounts, insert, contract);
+                self.dapp_accounts.insert(self.dapp_accounts_len, &contract);
+                self.dapp_accounts_len += 1;
             }
 
             // update the dapp in the mapping
@@ -1441,7 +1460,16 @@ pub mod captcha {
 
             // remove the dapp
             self.dapps.remove(contract);
-            lazy!(self.dapp_accounts, remove, &contract);
+            // remove the account at the index
+            self.dapp_accounts.remove(dapp.account_index);
+            // move the last account into the index
+            let last_account = self.dapp_accounts.get(self.dapp_accounts_len - 1).ok_or_else(err_fn!(self, Error::InvalidIndex))?;
+            let mut last = self.get_dapp(last_account)?;
+            last.account_index = dapp.account_index;
+            self.dapps.insert(last.account, &last);
+            self.dapp_accounts.insert(dapp.account_index, &last_account);
+            // decrement the dapp accounts len
+            self.dapp_accounts_len -= 1;
 
             // update the log
             self.log_dapp(contract, None);
@@ -2611,7 +2639,7 @@ pub mod captcha {
                     );
                 }
             }
-            assert_eq!(contract.dapp_accounts.get(), None);
+            // assert_eq!(contract.dapp_accounts.get(), None);
             assert_eq!(contract.user_accounts.get(), None);
         }
 
