@@ -163,7 +163,7 @@ pub mod captcha {
     pub struct RandomActiveProvider {
         provider_account: AccountId,
         provider: Provider,
-        block_number: u32,
+        block_number: BlockNumber,
     }
     /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
     /// the captchas received by a DappUser did belong to the Provider's original dataset
@@ -272,7 +272,7 @@ pub mod captcha {
         dapp_users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
-        max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
+        max_user_history_age: u16, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
         seed: Seed,                           // the current seed for rng
@@ -362,7 +362,7 @@ pub mod captcha {
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: BlockNumber,
+            max_user_history_age: u16,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
             rewind_window: u8,
@@ -385,7 +385,7 @@ pub mod captcha {
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: BlockNumber,
+            max_user_history_age: u16,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
             rewind_window: u8,
@@ -860,9 +860,9 @@ pub mod captcha {
                 + 4 // requested_at
                 + 4 // completed_at
             ];
-            payload[..32].copy_from_slice(&commit.id.as_ref()[..]);
+            payload[..32].copy_from_slice(commit.id.as_ref());
             payload[32..64].copy_from_slice(self.account_id_bytes(&commit.user));
-            payload[64..96].copy_from_slice(&commit.dataset_id.as_ref()[..]);
+            payload[64..96].copy_from_slice(commit.dataset_id.as_ref());
             payload[96] = commit.status as u8;
             payload[97..129].copy_from_slice(self.account_id_bytes(&commit.dapp));
             payload[129..161].copy_from_slice(self.account_id_bytes(&commit.provider));
@@ -1475,10 +1475,10 @@ pub mod captcha {
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             let block_number = self.env().block_number();
-            let max_age = if block_number < self.max_user_history_age {
+            let max_age = if block_number < self.max_user_history_age as u32 {
                 block_number
             } else {
-                self.max_user_history_age
+                self.max_user_history_age as u32
             };
             let age_threshold = block_number - max_age;
             let mut expired = Vec::new();
@@ -1554,8 +1554,9 @@ pub mod captcha {
                 summary.score = 0;
             } else {
                 // score is between 0 - 200, i.e. 0% - 100% in 0.5% increments
-                summary.score =
-                    ((summary.correct * 200) / (summary.correct + summary.incorrect)) as u8;
+                let total: u16 = summary.correct + summary.incorrect;
+                let correct: u16 = summary.correct * 200;
+                summary.score = (correct / total) as u8;
             }
 
             Ok(summary)
