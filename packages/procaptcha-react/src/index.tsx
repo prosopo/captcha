@@ -1,5 +1,5 @@
-import ReactDOM from 'react-dom'
 import { Procaptcha } from './components/Procaptcha'
+import ReactDOM from 'react-dom'
 
 let siteKey
 if (document && document.currentScript && 'src' in document.currentScript) {

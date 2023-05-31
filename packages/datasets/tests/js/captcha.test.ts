@@ -11,7 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { expect } from 'chai'
+import {
+    Captcha,
+    CaptchaItemTypes,
+    CaptchaSolution,
+    CaptchaTypes,
+    CaptchaWithoutId,
+    Dataset,
+    HashedItem,
+    Item,
+    MerkleProof,
+} from '@prosopo/types'
 import {
     compareCaptchaSolutions,
     computeCaptchaHash,
@@ -24,19 +34,9 @@ import {
     sortAndComputeHashes,
     verifyProof,
 } from '@prosopo/datasets'
-import path from 'path'
+import { expect } from 'chai'
 import { it } from 'mocha'
-import {
-    Captcha,
-    CaptchaItemTypes,
-    CaptchaSolution,
-    CaptchaTypes,
-    CaptchaWithoutId,
-    Dataset,
-    HashedItem,
-    Item,
-    MerkleProof,
-} from '@prosopo/types'
+import path from 'path'
 
 describe('CAPTCHA FUNCTIONS', async function () {
     this.timeout(parseInt(process.env.testTimeout || '120000000'))

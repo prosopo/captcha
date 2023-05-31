@@ -1,36 +1,36 @@
-import demoApi, { PAGE_SIZE, Token } from 'api/demoApi';
-import { ProductList } from 'components/ProductCard';
-import React, { useCallback, useState } from 'react';
+import { ProductList } from 'components/ProductCard'
+import React, { useCallback, useState } from 'react'
+import demoApi, { PAGE_SIZE, Token } from 'api/demoApi'
 
 export interface HomeProps {
-  tokens: Token[];
+    tokens: Token[]
 }
 
 const Home: React.FunctionComponent<HomeProps> = ({ tokens: _tokens }) => {
-  const [tokens, setTokens] = useState(_tokens);
-  const [canLoadMore, setCanLoadMore] = useState(_tokens.length % PAGE_SIZE == 0);
-  const loadMore = useCallback(async () => {
-    const newTokens = await demoApi.getTokens(PAGE_SIZE, tokens.length).catch(() => []);
+    const [tokens, setTokens] = useState(_tokens)
+    const [canLoadMore, setCanLoadMore] = useState(_tokens.length % PAGE_SIZE == 0)
+    const loadMore = useCallback(async () => {
+        const newTokens = await demoApi.getTokens(PAGE_SIZE, tokens.length).catch(() => [])
 
-    if (newTokens.length == 0 || newTokens.length % PAGE_SIZE > 0) {
-      setCanLoadMore(false);
-    }
+        if (newTokens.length == 0 || newTokens.length % PAGE_SIZE > 0) {
+            setCanLoadMore(false)
+        }
 
-    setTokens([...tokens, ...newTokens]);
-  }, [tokens]);
+        setTokens([...tokens, ...newTokens])
+    }, [tokens])
 
-  return (
-    <div className="py-8">
-      <ProductList onLoadMore={canLoadMore ? loadMore : null} tokens={tokens} />
-    </div>
-  );
-};
+    return (
+        <div className="py-8">
+            <ProductList onLoadMore={canLoadMore ? loadMore : null} tokens={tokens} />
+        </div>
+    )
+}
 export async function getServerSideProps(): Promise<{ props: HomeProps }> {
-  const tokens = await demoApi.getTokens(PAGE_SIZE).catch(() => []);
+    const tokens = await demoApi.getTokens(PAGE_SIZE).catch(() => [])
 
-  return {
-    props: { tokens },
-  };
+    return {
+        props: { tokens },
+    }
 }
 
-export default Home;
+export default Home

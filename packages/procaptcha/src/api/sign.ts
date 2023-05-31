@@ -1,6 +1,6 @@
 import { Keyring } from '@polkadot/keyring'
-import { u8aToHex } from '@polkadot/util'
 import { blake2AsHex } from '@polkadot/util-crypto'
+import { u8aToHex } from '@polkadot/util'
 
 export function sign(message: string, account): { messageHash: string; signature: string } {
     const keyring = new Keyring({ type: 'ecdsa' })

@@ -2,9 +2,9 @@ import bcrypt from 'bcryptjs'
 
 import jwt from 'jsonwebtoken'
 
-import { UserInterface } from '../models/user'
 import { Connection } from 'mongoose'
 import { ProsopoServer } from '@prosopo/server'
+import { UserInterface } from '../models/user'
 
 const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, res, next) => {
     try {
