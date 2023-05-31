@@ -1,6 +1,5 @@
 **/artifacts/*
 packages/**/dist/*
-packages/**/webpack.config.js
 **/.eslintrc.js
 demos/**/dist/*
 demos/**/scripts/*
