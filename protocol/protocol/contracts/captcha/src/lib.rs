@@ -20,14 +20,10 @@ pub use self::captcha::{Captcha, CaptchaRef};
 #[ink::contract]
 pub mod captcha {
 
-    const AUTHOR: [u8; 32] = [
-        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88,
-        133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-    ];
-    
     use common::err;
     use common::err_fn;
     use common::lazy;
+    use common::AUTHOR;
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_map::BTreeMap;
@@ -391,7 +387,7 @@ pub mod captcha {
             let start = self.get_rewind_window_start();
             let end = self.env().block_number();
             for i in start..end {
-                if let Some(seed) = self.seed_log.get(&i) {
+                if let Some(seed) = self.seed_log.get(i) {
                     seeds.insert(i, seed);
                 }
             }
@@ -482,7 +478,7 @@ pub mod captcha {
             let active_providers = self.get_active_providers_at(block);
 
             // pick a random provider from the active providers
-            let mut active_provider_count = 0 as u128;
+            let mut active_provider_count = 0_u128;
             for (_, group) in active_providers.iter() {
                 active_provider_count += group.len() as u128;
             }
@@ -494,7 +490,7 @@ pub mod captcha {
                 }
                 index -= group.len() as u128;
             }
-            return err!(self, Error::NoActiveProviders);
+            err!(self, Error::NoActiveProviders)
         }
 
         /// Get a seed for a user and dapp at a block
@@ -544,7 +540,7 @@ pub mod captcha {
             let mut found: BTreeSet<AccountId> = BTreeSet::new();
             for at_block in block..=current_block {
                 // get the list of provider accounts that changed in this block
-                let mut accounts = self.provider_account_log.get(&at_block).unwrap_or_default();
+                let mut accounts = self.provider_account_log.get(at_block).unwrap_or_default();
                 // remove any accounts we've already found a version for
                 accounts.retain(|account| !found.contains(account));
                 // for each provider which changed
@@ -552,7 +548,7 @@ pub mod captcha {
                     // get the provider at this block
                     let record = self
                         .provider_log
-                        .get(&AccountBlockId {
+                        .get(AccountBlockId {
                             account: *account,
                             block: at_block,
                         })
@@ -591,7 +587,7 @@ pub mod captcha {
 
             // at this point, all providers which we active between the target block and the current block have been found and added to the found map. Likewise, all providers which were active and have stayed active, thus having no log records, have also been added.
 
-            return result;
+            result
         }
 
         /// Get the block at which the rewind window begins
@@ -616,7 +612,7 @@ pub mod captcha {
 
             // start with the current state of the provider as the most recent record
             let mut result: ProviderRecord = ProviderRecord {
-                provider: self.providers.get(&account),
+                provider: self.providers.get(account),
             };
             let current_block = self.env().block_number();
 
@@ -632,7 +628,7 @@ pub mod captcha {
                 }
             }
 
-            result.provider.clone().ok_or(Error::ProviderDoesNotExist)
+            result.provider.ok_or(Error::ProviderDoesNotExist)
         }
 
         /// Get a dapp at a given block
@@ -642,7 +638,7 @@ pub mod captcha {
 
             // start with the current state of the provider as the most recent record
             let mut result: DappRecord = DappRecord {
-                dapp: self.dapps.get(&account),
+                dapp: self.dapps.get(account),
             };
             let current_block = self.env().block_number();
 
@@ -687,8 +683,8 @@ pub mod captcha {
             // if no seed record is found, the result will be the current seed (i.e. seed has not changed since the given block)
             let start = block_number;
             let end = self.env().block_number();
-            for at in (start..=end) {
-                let seed = self.seed_log.get(&at);
+            for at in start..=end {
+                let seed = self.seed_log.get(at);
                 if let Some(seed) = seed {
                     // found a record of the seed
                     // this will be the seed value at the given block
@@ -2295,7 +2291,7 @@ pub mod captcha {
                 for j in 0..seeds.len() - 1 {
                     let at = contract.env().block_number() - (j as BlockNumber);
                     let a = contract.get_seed_at(at).unwrap();
-                    let b = seeds.get(&at).unwrap().clone();
+                    let b = *seeds.get(&at).unwrap();
                     assert_eq!(a, b);
                 }
 
@@ -2327,7 +2323,7 @@ pub mod captcha {
             increment_block(contract.get_rewind_window() as u32 + 1);
 
             // check that going back further than the rewind window hits an error
-            let result = contract.get_seed_at((contract.get_rewind_window_start() - 1));
+            let result = contract.get_seed_at(contract.get_rewind_window_start() - 1);
             assert_eq!(result, Err(Error::BlockOutsideRewindWindow));
         }
 
@@ -2342,7 +2338,7 @@ pub mod captcha {
             set_caller(admin_account);
 
             // check that going to the future block hits an error
-            let result = contract.get_seed_at((contract.env().block_number() + 1));
+            let result = contract.get_seed_at(contract.env().block_number() + 1);
             assert_eq!(result, Err(Error::BlockInFuture));
         }
 
@@ -2362,7 +2358,7 @@ pub mod captcha {
             // check that going back further than the rewind window hits an error
             let result = contract.get_provider_at(
                 get_provider_account(0),
-                (contract.get_rewind_window_start() - 1),
+                contract.get_rewind_window_start() - 1,
             );
             assert_eq!(result, Err(Error::BlockOutsideRewindWindow));
         }
@@ -2379,7 +2375,7 @@ pub mod captcha {
 
             // check that going to the future block hits an error
             let result = contract
-                .get_provider_at(get_provider_account(0), (contract.env().block_number() + 1));
+                .get_provider_at(get_provider_account(0), contract.env().block_number() + 1);
             assert_eq!(result, Err(Error::BlockInFuture));
         }
 
@@ -2399,7 +2395,7 @@ pub mod captcha {
             // check that going back further than the rewind window hits an error
             let result = contract.get_dapp_at(
                 get_dapp_account(0),
-                (contract.get_rewind_window_start() - 1),
+                contract.get_rewind_window_start() - 1,
             );
             assert_eq!(result, Err(Error::BlockOutsideRewindWindow));
         }
@@ -2416,7 +2412,7 @@ pub mod captcha {
 
             // check that going to the future block hits an error
             let result =
-                contract.get_dapp_at(get_dapp_account(0), (contract.env().block_number() + 1));
+                contract.get_dapp_at(get_dapp_account(0), contract.env().block_number() + 1);
             assert_eq!(result, Err(Error::BlockInFuture));
         }
 
@@ -2510,7 +2506,7 @@ pub mod captcha {
 
                 // updating in the same block should fail
                 let result = contract.update_seed().unwrap();
-                assert_eq!(result, false);
+                assert!(!result);
                 advance_block();
             }
         }
@@ -2585,8 +2581,7 @@ pub mod captcha {
 
             // only able to instantiate from the alice account
             set_caller(AccountId::from(AUTHOR));
-            let contract =
-                Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 20, 0, 1000, 255);
+            let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 20, 0, 1000, 255);
             // should construct successfully
         }
 
@@ -2597,12 +2592,11 @@ pub mod captcha {
             reset_callee();
 
             // only able to instantiate from the alice account
-            let mut account = AUTHOR.clone();
+            let mut account = AUTHOR;
             // ensure the account is not the author
             account[0] = account[0].wrapping_add(1);
             set_caller(AccountId::from(account));
-            let contract =
-                Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 20, 0, 1000, 255);
+            let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 20, 0, 1000, 255);
             // should fail to construct and panic
         }
 

@@ -4,6 +4,7 @@
 pub mod proxy {
 
     use common::err;
+    use common::AUTHOR;
     #[allow(unused_imports)]
     use ink::env::debug_println as debug;
     #[allow(unused_imports)]
@@ -34,10 +35,7 @@ pub mod proxy {
         /// later changed the `forward_to` address.
         #[ink(constructor)]
         pub fn new(destination: AccountId) -> Self {
-            let instantiator = AccountId::from([
-                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
-                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-            ]); // alice
+            let instantiator = AccountId::from(AUTHOR);
             if Self::env().caller() != instantiator {
                 panic!("Not authorised to instantiate this contract");
             }
@@ -200,10 +198,7 @@ pub mod proxy {
             reset_callee();
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from([
-                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
-                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-            ]));
+            set_caller(AccountId::from(AUTHOR));
             let contract = Proxy::new(get_contract_account(0));
             // should construct successfully
         }
