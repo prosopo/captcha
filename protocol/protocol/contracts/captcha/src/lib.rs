@@ -414,18 +414,18 @@ pub mod captcha {
         fn validate_commit(&self, commit: &Commit) -> Result<(), Error> {
             // pull out commit fields into a byte array (the payload)
             // field sizes:
-                // pub struct Commit {
-                //     id: Hash, // 32
-                //     user: AccountId, //32
-                //     dataset_id: Hash, // 32
-                //     status: CaptchaStatus, // 1
-                //     dapp: AccountId, // 32
-                //     provider: AccountId, // 32
-                //     requested_at: BlockNumber, // 4
-                //     completed_at: BlockNumber, // 4
-                //     user_signature_part1: [u8; 32], // ignored
-                //     user_signature_part2: [u8; 32], // ignored
-                // } 
+            // pub struct Commit {
+            //     id: Hash, // 32
+            //     user: AccountId, //32
+            //     dataset_id: Hash, // 32
+            //     status: CaptchaStatus, // 1
+            //     dapp: AccountId, // 32
+            //     provider: AccountId, // 32
+            //     requested_at: BlockNumber, // 4
+            //     completed_at: BlockNumber, // 4
+            //     user_signature_part1: [u8; 32], // ignored
+            //     user_signature_part2: [u8; 32], // ignored
+            // }
             let mut payload = [0u8; 
                 32 // id
                 + 32 // user_account
@@ -436,9 +436,9 @@ pub mod captcha {
                 + 4 // requested_at
                 + 4 // completed_at
             ];
-            payload[..32].copy_from_slice(&commit.id.as_ref()[..]);
+            payload[..32].copy_from_slice(commit.id.as_ref());
             payload[32..64].copy_from_slice(self.account_id_bytes(&commit.user));
-            payload[64..96].copy_from_slice(&commit.dataset_id.as_ref()[..]);
+            payload[64..96].copy_from_slice(commit.dataset_id.as_ref());
             payload[96] = commit.status as u8;
             payload[97..129].copy_from_slice(self.account_id_bytes(&commit.dapp));
             payload[129..161].copy_from_slice(self.account_id_bytes(&commit.provider));
