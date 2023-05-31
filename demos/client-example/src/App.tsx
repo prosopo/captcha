@@ -1,9 +1,8 @@
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ProcaptchaOutput } from '@prosopo/procaptcha'
-import { ExtensionAccountSelect } from '@prosopo/procaptcha-react'
+import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
 import './App.css'
-import render from '@prosopo/procaptcha-react'
 
 function App() {
     const [email, setEmail] = useState<string>('')
@@ -22,11 +21,6 @@ function App() {
 
     const label = isLogin ? 'Login' : 'Sign up'
     const urlPath = isLogin ? 'login' : 'signup'
-
-    useEffect(() => {
-        console.log('main component rendered')
-        render()
-    }, [])
 
     const onLoggedIn = (token) => {
         console.log('getting private resource with token ', token)
@@ -185,7 +179,10 @@ function App() {
                                 />
                             </FormControl>
 
-                            <div id="procaptcha"></div>
+                            <Procaptcha
+                                config={config}
+                                callbacks={{ onAccountNotFound, onError, onHuman, onExpired }}
+                            />
 
                             <div>
                                 <Stack direction="column" spacing={1} sx={{ '& button': { m: 1 } }}>

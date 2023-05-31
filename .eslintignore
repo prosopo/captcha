@@ -1,3 +1,7 @@
 **/artifacts/*
-**/dist/*
+packages/**/dist/*
+packages/**/webpack.config.js
 **/.eslintrc.js
+demos/**/dist/*
+demos/**/scripts/*
+demos/**/next.config.js
