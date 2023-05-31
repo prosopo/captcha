@@ -1,1 +1,1 @@
-export { default } from './HorizontalCard';
+export { default } from './HorizontalCard'

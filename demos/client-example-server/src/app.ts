@@ -1,11 +1,11 @@
-import express from 'express'
-import routesFactory from './routes/routes'
-import memoryServerSetup from './utils/database'
-import connectionFactory from './utils/connection'
 import { ProsopoServer } from '@prosopo/server'
-import prosopoConfig from './prosopo.config'
+import connectionFactory from './utils/connection'
 import dotenv from 'dotenv'
+import express from 'express'
+import memoryServerSetup from './utils/database'
 import path from 'path'
+import prosopoConfig from './prosopo.config'
+import routesFactory from './routes/routes'
 
 export function loadEnv() {
     dotenv.config({ path: getEnvFile() })
