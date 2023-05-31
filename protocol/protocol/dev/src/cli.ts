@@ -6,7 +6,7 @@ import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
 import { stdout, stderr, stdin } from 'process';
 
-const exec = (command: string, pipe?: boolean) => {
+const exec = (command: string, pipe?: boolean, returnOutput?: boolean) => {
 
     console.log(`> ${command}`)
 
@@ -32,11 +32,11 @@ const exec = (command: string, pipe?: boolean) => {
     return new Promise((resolve, reject) => {
         prc.on('close', function (code) {
             console.log("")
-            const output = {
+            const output = returnOutput ? {
                 stdout: stdoutData.join(''),
                 stderr: stderrData.join(''),
                 code,
-            }
+            } : undefined;
             if (code === 0) {
                 resolve(output);
             } else {

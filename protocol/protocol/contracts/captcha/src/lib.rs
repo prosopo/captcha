@@ -148,7 +148,7 @@ pub mod captcha {
     pub struct RandomProvider {
         provider_id: AccountId,
         provider: Provider,
-        block_number: u32,
+        block_number: BlockNumber,
         dataset_id_content: Hash,
     }
 
@@ -239,7 +239,7 @@ pub mod captcha {
         dapp_users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
-        max_user_history_age: BlockNumber, // the max age, in blocks, of captcha results to store in history for a user
+        max_user_history_age: u16, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
         max_provider_fee: Balance,
     }
@@ -314,7 +314,7 @@ pub mod captcha {
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: BlockNumber,
+            max_user_history_age: u16,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
@@ -339,7 +339,7 @@ pub mod captcha {
             provider_stake_threshold: Balance,
             dapp_stake_threshold: Balance,
             max_user_history_len: u16,
-            max_user_history_age: BlockNumber,
+            max_user_history_age: u16,
             min_num_active_providers: u16,
             max_provider_fee: Balance,
         ) -> Self {
@@ -939,10 +939,10 @@ pub mod captcha {
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             let block_number = self.env().block_number();
-            let max_age = if block_number < self.max_user_history_age {
+            let max_age = if block_number < self.max_user_history_age as u32 {
                 block_number
             } else {
-                self.max_user_history_age
+                self.max_user_history_age as u32
             };
             let age_threshold = block_number - max_age;
             let mut expired = Vec::new();
@@ -1016,8 +1016,9 @@ pub mod captcha {
                 summary.score = 0;
             } else {
                 // score is between 0 - 200, i.e. 0% - 100% in 0.5% increments
-                summary.score =
-                    ((summary.correct * 200) / (summary.correct + summary.incorrect)) as u8;
+                let total: u16 = summary.correct + summary.incorrect;
+                let correct: u16 = summary.correct * 200;
+                summary.score = (correct / total) as u8;
             }
 
             Ok(summary)
@@ -1675,7 +1676,7 @@ pub mod captcha {
                 set_caller(get_admin_account(0));
                 // now construct the contract instance
                 let mut contract =
-                    Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                    Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
                 // set the caller back to the unused acc
                 set_caller(get_unused_account());
                 // check the contract was created with the correct account
@@ -1693,7 +1694,7 @@ pub mod captcha {
                     212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130,
                     44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
                 ]));
-                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
                 // should construct successfully
             }
 
@@ -1705,7 +1706,7 @@ pub mod captcha {
 
                 // only able to instantiate from the alice account
                 set_caller(default_accounts().bob);
-                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000);
+                let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
                 // should fail to construct and panic
             }
 
@@ -1721,7 +1722,7 @@ pub mod captcha {
                 assert_eq!(contract.dapp_stake_threshold, STAKE_THRESHOLD);
                 assert_eq!(contract.admin, get_admin_account(0));
                 assert_eq!(contract.max_user_history_len, 10);
-                assert_eq!(contract.max_user_history_age, 1000000);
+                assert_eq!(contract.max_user_history_age, 255);
                 assert_eq!(contract.min_num_active_providers, 0);
                 assert_eq!(contract.max_provider_fee, 1000);
 
