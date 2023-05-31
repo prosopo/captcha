@@ -1,12 +1,12 @@
 // Copyright 2017-2023 @polkadot/react-hooks authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Weight, WeightV2 } from '@polkadot/types/interfaces'
+import { ApiPromise } from '@polkadot/api'
+import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util'
+import { convertWeight } from '@polkadot/api-contract/base/util'
 import type { BN } from '@polkadot/util'
 import type { UseWeight } from '@prosopo/types'
-import { BN_MILLION, BN_ONE, BN_TEN, BN_ZERO } from '@polkadot/util'
-import { ApiPromise } from '@polkadot/api'
-import { convertWeight } from '@polkadot/api-contract/base/util'
+import type { Weight, WeightV2 } from '@polkadot/types/interfaces'
 
 export function useWeightImpl(api: ApiPromise, blockTime: BN, scalingFactor: BN): Promise<UseWeight> {
     const isWeightV2 = !!api.registry.createType<WeightV2>('Weight').proofSize

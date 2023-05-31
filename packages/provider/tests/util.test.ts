@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { hexHash } from '@prosopo/common'
-import { expect } from 'chai'
 import { encodeStringAddress, shuffleArray } from '../src/util'
+import { expect } from 'chai'
+import { hexHash } from '@prosopo/common'
 
 describe('UTIL FUNCTIONS', () => {
     it('does not modify an already encoded address', () => {

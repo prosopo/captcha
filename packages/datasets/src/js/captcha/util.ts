@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import client from 'axios'
 import { ProsopoEnvError } from '@prosopo/common'
+import client from 'axios'
 
 export async function downloadImage(url: string): Promise<Uint8Array> {
     try {
