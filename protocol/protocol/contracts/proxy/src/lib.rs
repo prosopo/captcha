@@ -1,5 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use self::proxy::{Proxy, ProxyRef};
+
 #[ink::contract]
 pub mod proxy {
 

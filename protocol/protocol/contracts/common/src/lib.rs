@@ -51,6 +51,8 @@ macro_rules! lazy {
     };
 }
 
+pub use self::common::{Common, CommonRef};
+
 /// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
 pub mod common {

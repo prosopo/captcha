@@ -1,5 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use self::common_dev::{Common, CommonDevRef};
+
 /// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
 pub mod common_dev {
