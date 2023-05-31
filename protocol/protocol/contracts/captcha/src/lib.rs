@@ -2114,7 +2114,7 @@ pub mod captcha {
             set_value_transferred(STAKE_THRESHOLD);
             // now construct the contract instance
             let mut contract =
-                Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 50);
+                Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 20, 0, 1000, 50);
 
             // check the contract was created with the correct account
             assert_eq!(contract.env().account_id(), account);
@@ -2586,7 +2586,7 @@ pub mod captcha {
             // only able to instantiate from the alice account
             set_caller(AccountId::from(AUTHOR));
             let contract =
-                Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
+                Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 20, 0, 1000, 255);
             // should construct successfully
         }
 
@@ -2602,7 +2602,7 @@ pub mod captcha {
             account[0] = account[0].wrapping_add(1);
             set_caller(AccountId::from(account));
             let contract =
-                Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 1000000, 0, 1000, 255);
+                Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 20, 0, 1000, 255);
             // should fail to construct and panic
         }
 
@@ -2619,7 +2619,7 @@ pub mod captcha {
             assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
             assert_eq!(contract.get_admin(), get_admin_account(0));
             assert_eq!(contract.get_max_user_history_len(), 10);
-            assert_eq!(contract.get_max_user_history_age(), 1000000);
+            assert_eq!(contract.get_max_user_history_age(), 20);
             assert_eq!(contract.get_min_num_active_providers(), 0);
             assert_eq!(contract.get_max_provider_fee(), 1000);
             assert_eq!(contract.get_seed(), 0);
