@@ -660,9 +660,9 @@ pub mod captcha {
         fn check_inside_rewind_window(&self, block_number: BlockNumber) -> Result<(), Error> {
             let start = self.get_rewind_window_start();
             if block_number < start {
-                return Err(Error::BlockOutsideRewindWindow);
+                return err!(self, Error::BlockOutsideRewindWindow);
             } else if block_number > self.env().block_number() {
-                return Err(Error::BlockInFuture);
+                return err!(self, Error::BlockInFuture);
             }
             Ok(())
         }
@@ -779,7 +779,7 @@ pub mod captcha {
                 .sr25519_verify(&signature, &payload, &caller_bytes);
 
             if res.is_err() {
-                return Err(Error::VerifyFailed);
+                return err!(self, Error::VerifyFailed);
             }
 
             Ok(())
@@ -1507,7 +1507,7 @@ pub mod captcha {
                 } else if result.status == CaptchaStatus::Disapproved {
                     summary.incorrect += 1;
                 } else {
-                    return Err(Error::InvalidCaptchaStatus);
+                    return err!(self, Error::InvalidCaptchaStatus);
                 }
             }
 
@@ -1649,7 +1649,7 @@ pub mod captcha {
             }
 
             if last_correct_captcha.is_none() {
-                return Err(Error::NoCorrectCaptcha);
+                return err!(self, Error::NoCorrectCaptcha);
             }
 
             let last_correct_captcha = last_correct_captcha.unwrap();

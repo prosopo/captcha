@@ -86,7 +86,7 @@ pub mod proxy {
 
             match self.env().transfer(caller, amount) {
                 Ok(()) => Ok(()),
-                Err(_) => Err(Error::TransferFailed),
+                Err(_) => err!(self, Error::TransferFailed),
             }
         }
 
