@@ -7,9 +7,9 @@
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
     "test": "ts-node src/cli/index.ts test",
-    "deploy": "node dist/deploy/protocol.js",
-    "cli": "node dist/cli/index.js",
-    "setup": "node dist/cli/index.js setup"
+    "deploy": "ts-node src/deploy/protocol.js",
+    "cli": "ts-node src/cli/index.js",
+    "setup": "ts-node src/cli/index.js setup"
   },
   "author": "Prosopo Limited",
   "license": "Apache-2.0",
@@ -28,6 +28,7 @@
     "consola": "^2.15.3",
     "dotenv": "^16.0.3",
     "glob": "^10.0.0",
+    "ts-node": "^10.9.1",
     "yargs": "^17.5.1",
     "yargs-parser": "^21.0.1"
   },
