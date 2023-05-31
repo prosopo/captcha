@@ -1830,17 +1830,7 @@ pub mod captcha {
         /// Returns {Vec<AccountId>}
         #[ink(message)]
         pub fn get_all_provider_ids(&self) -> Result<Vec<AccountId>, Error> {
-            let mut provider_ids = Vec::<AccountId>::new();
-            for status in [GovernanceStatus::Active, GovernanceStatus::Inactive] {
-                for payee in [Payee::Provider, Payee::Dapp] {
-                    let providers_set = self.provider_accounts.get(ProviderState { status, payee });
-                    if providers_set.is_none() {
-                        continue;
-                    }
-                    provider_ids.append(&mut providers_set.unwrap().into_iter().collect());
-                }
-            }
-            Ok(provider_ids)
+            self.list_providers_by_status(self.get_statuses())
         }
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
