@@ -125,7 +125,7 @@ pub mod captcha {
     pub struct RandomActiveProvider {
         provider_account: AccountId,
         provider: Provider,
-        block_number: BlockNumber,
+        block: BlockNumber,
     }
     /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
     /// the captchas received by a DappUser did belong to the Provider's original dataset
@@ -188,7 +188,7 @@ pub mod captcha {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct LastCorrectCaptcha {
         pub before: BlockNumber,
-        pub dapp_id: AccountId,
+        pub dapp_account: AccountId,
     }
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -209,7 +209,7 @@ pub mod captcha {
     pub struct DappRecord {
         pub dapp: Option<Dapp>, // the dapp snapshot. None if deleted.
     }
-    /// Record of when a dapp changes and at what block
+    /// A key to log by block and account
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct AccountBlockId {
@@ -230,7 +230,7 @@ pub mod captcha {
         dapp_stake_threshold: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Lazy<BTreeSet<AccountId>>,
-        captcha_solution_commitments: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
+        commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
@@ -366,7 +366,7 @@ pub mod captcha {
                 user_accounts: Default::default(),
                 max_user_history_len,
                 max_user_history_age,
-                captcha_solution_commitments: Default::default(),
+                commits: Default::default(),
                 min_num_active_providers,
                 max_provider_fee,
                 seed_log: Default::default(),
@@ -796,11 +796,11 @@ pub mod captcha {
             // field sizes:
             // pub struct Commit {
             //     id: Hash, // 32
-            //     user: AccountId, //32
+            //     user_account: AccountId, //32
             //     dataset_id: Hash, // 32
             //     status: CaptchaStatus, // 1
-            //     dapp: AccountId, // 32
-            //     provider: AccountId, // 32
+            //     dapp_account: AccountId, // 32
+            //     provider_account: AccountId, // 32
             //     requested_at: BlockNumber, // 4
             //     completed_at: BlockNumber, // 4
             //     user_signature_part1: [u8; 32], // ignored
@@ -1263,12 +1263,12 @@ pub mod captcha {
         /// Get an existing dapp
         fn get_dapp(&self, account: AccountId) -> Result<Dapp, Error> {
             self.dapps
-                .get(contract)
+                .get(account)
                 .ok_or_else(err_fn!(self, Error::DappDoesNotExist))
         }
 
         /// Check a dapp is missing / non-existent
-        fn check_dapp_does_not_exist(&self, contract: AccountId) -> Result<(), Error> {
+        fn check_dapp_does_not_exist(&self, account: AccountId) -> Result<(), Error> {
             if self.dapps.get(account).is_some() {
                 return err!(self, Error::DappExists);
             }
@@ -1446,7 +1446,7 @@ pub mod captcha {
             // trim the history down to max age
             while !history.is_empty()
                 && self
-                    .captcha_solution_commitments
+                    .commits
                     .get(history.last().unwrap())
                     .unwrap()
                     .completed_at
@@ -1466,7 +1466,7 @@ pub mod captcha {
                 .get(account)
                 .unwrap_or_else(|| self.create_new_dapp_user(account));
             // add the new commitment
-            self.captcha_solution_commitments.insert(hash, result);
+            self.commits.insert(hash, result);
             user.history.insert(0, hash);
 
             // trim the user history by len and age, removing any expired commitments
@@ -1475,7 +1475,7 @@ pub mod captcha {
             user.history = history;
             // remove the expired commitments
             for hash in expired.iter() {
-                self.captcha_solution_commitments.remove(hash);
+                self.commits.remove(hash);
             }
 
             self.dapp_users.insert(account, &user);
@@ -1496,7 +1496,7 @@ pub mod captcha {
                 score: 0,
             };
             for hash in history.iter() {
-                let result = self.captcha_solution_commitments.get(hash).unwrap();
+                let result = self.commits.get(hash).unwrap();
                 if result.status == CaptchaStatus::Approved {
                     summary.correct += 1;
                 } else if result.status == CaptchaStatus::Disapproved {
@@ -1548,7 +1548,7 @@ pub mod captcha {
             self.validate_dapp(commit.dapp_account)?;
 
             // check commitment doesn't already exist
-            if self.captcha_solution_commitments.get(commit.id).is_some() {
+            if self.commits.get(commit.id).is_some() {
                 return err!(self, Error::CommitAlreadyExists);
             }
 
@@ -1636,7 +1636,7 @@ pub mod captcha {
             let (history, _expired) = self.trim_user_history(user.history);
             let mut last_correct_captcha = None;
             for hash in history {
-                let entry = self.captcha_solution_commitments.get(hash).unwrap();
+                let entry = self.commits.get(hash).unwrap();
                 if entry.status == CaptchaStatus::Approved {
                     last_correct_captcha = Some(entry);
                     break;
@@ -1651,7 +1651,7 @@ pub mod captcha {
 
             Ok(LastCorrectCaptcha {
                 before: self.env().block_number() - last_correct_captcha.completed_at,
-                dapp_id: last_correct_captcha.dapp_account,
+                dapp_account: last_correct_captcha.dapp_account,
             })
         }
 
@@ -1664,7 +1664,7 @@ pub mod captcha {
             if self.providers.get(account).is_none() {
                 return err!(self, Error::ProviderDoesNotExist);
             }
-            let provider = self.get_provider_details(provider_id)?;
+            let provider = self.get_provider_details(account)?;
             if provider.balance < self.provider_stake_threshold {
                 return err!(self, Error::ProviderInsufficientFunds);
             }
@@ -1679,13 +1679,13 @@ pub mod captcha {
             Ok(provider)
         }
 
-        fn validate_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
+        fn validate_dapp(&self, account: AccountId) -> Result<Dapp, Error> {
             // Guard against dapps using service that are not registered
-            if self.dapps.get(contract).is_none() {
+            if self.dapps.get(account).is_none() {
                 return err!(self, Error::DappDoesNotExist);
             }
             // Guard against dapps using service that are Suspended or Deactivated
-            let dapp = self.get_dapp_details(contract)?;
+            let dapp = self.get_dapp_details(account)?;
             if dapp.status != GovernanceStatus::Active {
                 return err!(self, Error::DappInactive);
             }
@@ -1738,9 +1738,9 @@ pub mod captcha {
         ///
         /// Returns an error if the dapp does not exist
         #[ink(message)]
-        pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
+        pub fn get_dapp_details(&self, account: AccountId) -> Result<Dapp, Error> {
             self.dapps
-                .get(contract)
+                .get(account)
                 .ok_or_else(err_fn!(self, Error::DappDoesNotExist))
         }
 
@@ -1753,14 +1753,14 @@ pub mod captcha {
             id: Hash,
         ) -> Result<Commit, Error> {
             if self
-                .captcha_solution_commitments
+                .commits
                 .get(id)
                 .is_none()
             {
                 return err!(self, Error::CommitDoesNotExist);
             }
             let commitment = self
-                .captcha_solution_commitments
+                .commits
                 .get(id)
                 .ok_or_else(err_fn!(self, Error::CommitDoesNotExist))?;
 
@@ -1770,8 +1770,8 @@ pub mod captcha {
         /// Returns the account balance for the specified `dapp`.
         ///
         #[ink(message)]
-        pub fn get_dapp_balance(&self, dapp_contract: AccountId) -> Result<Balance, Error> {
-            Ok(self.get_dapp_details(dapp_contract)?.balance)
+        pub fn get_dapp_balance(&self, account: AccountId) -> Result<Balance, Error> {
+            Ok(self.get_dapp_details(account)?.balance)
         }
 
         /// Returns the account balance for the specified `provider`.
