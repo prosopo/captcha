@@ -2393,10 +2393,8 @@ pub mod captcha {
             increment_block(contract.get_rewind_window() as u32 + 1);
 
             // check that going back further than the rewind window hits an error
-            let result = contract.get_dapp_at(
-                get_dapp_account(0),
-                contract.get_rewind_window_start() - 1,
-            );
+            let result =
+                contract.get_dapp_at(get_dapp_account(0), contract.get_rewind_window_start() - 1);
             assert_eq!(result, Err(Error::BlockOutsideRewindWindow));
         }
 
