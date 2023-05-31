@@ -958,8 +958,9 @@ pub mod captcha {
                 summary.score = 0;
             } else {
                 // score is between 0 - 200, i.e. 0% - 100% in 0.5% increments
-                summary.score =
-                    (summary.correct * 200) / (summary.correct + summary.incorrect) as u8;
+                let total: u16 = summary.correct + summary.incorrect;
+                let correct: u16 = summary.correct * 200;
+                summary.score = (correct / total) as u8;
             }
 
             Ok(summary)
