@@ -26,7 +26,8 @@
     "build": "NODE_ENV=production react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "cypress:open": "cypress open"
+    "cypress:open": "cypress open",
+    "lint:fix": "npx eslint . --fix"
   },
   "eslintConfig": {
     "extends": [

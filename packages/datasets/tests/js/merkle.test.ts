@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
 import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '@prosopo/datasets'
 import { expect } from 'chai'
-import { it } from 'mocha'
-import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
 import { hexHashArray } from '@prosopo/common'
+import { it } from 'mocha'
 
 async function getDataset(): Promise<Dataset> {
     return {
