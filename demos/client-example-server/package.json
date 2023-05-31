@@ -4,7 +4,7 @@
   "description": "Backend for client-example",
   "main": "build/app.js",
   "scripts": {
-    "start": "npm run build && node ./dist/app.js",
+    "start": "npm run build && ts-node ./src/app.js",
     "build": "tsc --build --verbose",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:fix": "npx eslint . --fix"
@@ -27,6 +27,7 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.7.0",
-    "mongoose-sequence": "^5.3.1"
+    "mongoose-sequence": "^5.3.1",
+    "ts-node": "^10.9.1"
   }
 }
