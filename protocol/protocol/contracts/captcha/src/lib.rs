@@ -17,41 +17,18 @@
 
 pub use self::captcha::{Captcha, CaptchaRef};
 
-/// Print and return an error in ink
-macro_rules! err {
-    ($err:expr) => {{
-        Err(get_self!().print_err($err, function_name!()))
-    }};
-}
-
-// ($err:expr) => (
-// |$err| crate::print_error($err, function_name!(), get_self!().env().block_number(), get_self!().env().caller())
-// );
-
-macro_rules! err_fn {
-    ($err:expr) => {
-        || get_self!().print_err($err, function_name!())
-    };
-}
-
-macro_rules! lazy {
-    ($lazy:expr, $func:ident, $value:expr) => {
-        let mut contents = $lazy.get_or_default();
-        contents.$func($value);
-        $lazy.set(&contents);
-    };
-}
-
 #[allow(unused_macros)]
 #[named_functions_macro::named_functions] // allows the use of the function_name!() macro
 #[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod captcha {
 
+    use common::err;
+    use common::err_fn;
+    use common::lazy;
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
-
     use ink::prelude::vec;
     use ink::prelude::vec::Vec;
     use ink::storage::Lazy;

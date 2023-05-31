@@ -22,7 +22,7 @@ fn named_impl(params: TokenStream, input: TokenStream) -> Result<TokenStream, &'
         return Err("unexpected attribute arguments");
     }
 
-    let output = handle(input);
+    let output = handle(input, String::new());
 
     Ok(output.into_iter().collect())
 }
@@ -34,9 +34,10 @@ enum State {
     Dash,
     Arrow,
     Body,
+    Mod,
 }
 
-fn handle(input: TokenStream) -> TokenStream {
+fn handle(input: TokenStream, mut mod_name: String) -> TokenStream {
     let input = input.into_iter().peekable();
     let mut output = Vec::<TokenTree>::new();
     let mut state = State::Fn;
@@ -45,12 +46,13 @@ fn handle(input: TokenStream) -> TokenStream {
         match tt {
             TokenTree::Group(mut g) => {
                 let span = g.span();
-                let mut sub_ts = handle(g.stream());
+                // println!("mod_name: {:?}", mod_name);
+                let mut sub_ts = handle(g.stream(), mod_name.clone());
                 // the group following the arrow with the curly delimiter will be the body of the func
                 if state == State::Body && g.delimiter() == Delimiter::Brace {
                     let mut inject = quote!(
                         macro_rules! function_name {() => (
-                            #fname
+                            concat!(#mod_name, "::", #fname)
                         )}
                     );
                     inject.extend(sub_ts);
@@ -62,7 +64,18 @@ fn handle(input: TokenStream) -> TokenStream {
                 output.push(g.into());
             }
             TokenTree::Ident(i) => {
-                if i == "fn" {
+                if i == "mod" {
+                    // found the "fn" keyword
+                    // now look for the fn name
+                    state = State::Mod;
+                } else if state == State::Mod {
+                    // if already found the "mod" , the mod name should follow
+                    if mod_name.is_empty() {
+                        mod_name = i.to_string();
+                    } else {
+                        mod_name = mod_name + "::" + &i.to_string();
+                    }
+                } else if i == "fn" {
                     // found the "fn" keyword
                     // now look for the fn name
                     state = State::FnName;
