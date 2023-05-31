@@ -57,6 +57,10 @@ pub use self::common::{Common, CommonRef};
 #[ink::contract]
 pub mod common {
 
+    pub fn account_id_bytes<'a>(account: &'a AccountId) -> &[u8; 32] {
+        AsRef::<[u8; 32]>::as_ref(account)
+    }
+
     /// No fields are stored in the util contract as it's just filler
     #[ink(storage)]
     pub struct Common {}

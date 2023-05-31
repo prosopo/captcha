@@ -24,6 +24,7 @@ pub mod captcha {
     use common::err_fn;
     use common::lazy;
     use common::AUTHOR;
+    use common::common::account_id_bytes;
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_map::BTreeMap;
@@ -770,9 +771,7 @@ pub mod captcha {
         /// Note the signature must be sr25519 type.
         fn verify_sr25519(&self, signature: [u8; 64], payload: [u8; 49]) -> Result<(), Error> {
             let caller = self.env().caller();
-            let mut caller_bytes = [0u8; 32];
-            let caller_ref: &[u8] = caller.as_ref();
-            caller_bytes.copy_from_slice(&caller_ref[..32]);
+            let mut caller_bytes = account_id_bytes(&caller);
 
             let res = self
                 .env()
@@ -789,10 +788,6 @@ pub mod captcha {
         pub fn get_caller(&self) -> AccountId {
             debug!("caller: {:?}", self.env().caller());
             self.env().caller()
-        }
-
-        fn account_id_bytes<'a>(&'a self, account: &'a AccountId) -> &[u8; 32] {
-            AsRef::<[u8; 32]>::as_ref(account)
         }
 
         /// Validate a commit by checking the signature from the user against the remaining commit fields comprising the payload.
@@ -822,11 +817,11 @@ pub mod captcha {
                 + 4 // completed_at
             ];
             payload[..32].copy_from_slice(commit.id.as_ref());
-            payload[32..64].copy_from_slice(self.account_id_bytes(&commit.user));
+            payload[32..64].copy_from_slice(account_id_bytes(&commit.user));
             payload[64..96].copy_from_slice(commit.dataset_id.as_ref());
             payload[96] = commit.status as u8;
-            payload[97..129].copy_from_slice(self.account_id_bytes(&commit.dapp));
-            payload[129..161].copy_from_slice(self.account_id_bytes(&commit.provider));
+            payload[97..129].copy_from_slice(account_id_bytes(&commit.dapp));
+            payload[129..161].copy_from_slice(account_id_bytes(&commit.provider));
             payload[161..165].copy_from_slice(&commit.requested_at.to_le_bytes());
             payload[165..169].copy_from_slice(&commit.completed_at.to_le_bytes());
 
@@ -837,7 +832,7 @@ pub mod captcha {
 
             // verify the user signature against the payload, i.e. ensure the user accepted the commitment data (e.g. that it was approved / disapproved), signed it, and returned it to the provider
             let mut user_account_bytes = [0u8; 32];
-            user_account_bytes.copy_from_slice(self.account_id_bytes(&commit.user));
+            user_account_bytes.copy_from_slice(account_id_bytes(&commit.user));
 
             let res = self
                 .env()
