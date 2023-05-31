@@ -1,5 +1,5 @@
-import mongoose, { Connection } from 'mongoose'
 import UserSchema from '../models/user'
+import mongoose, { Connection } from 'mongoose'
 import mongoose_sequence from 'mongoose-sequence'
 
 function connectionFactory(uri: string): Connection {

@@ -1,6 +1,6 @@
-import fse from 'fs-extra'
-import { hexToU8a, isWasm } from '@polkadot/util'
 import { Abi } from '@polkadot/api-contract'
+import { hexToU8a, isWasm } from '@polkadot/util'
+import fse from 'fs-extra'
 
 const path = require('node:path')
 

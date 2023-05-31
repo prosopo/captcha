@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
-import { TypeDefInfo } from '@polkadot/types-create'
 import { ContractSelector } from '@polkadot/types/interfaces'
-import { hexToU8a } from '@polkadot/util'
-import { encodeStringArgs } from '@prosopo/contract'
-import { describe } from 'mocha'
-import chai from 'chai'
 import { Environment, MockEnvironment } from '@prosopo/env'
-import { getPair } from '@prosopo/common'
-import { ProsopoConfigSchema } from '@prosopo/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { LogLevel, logger } from '@prosopo/common'
+import { ProsopoConfigSchema } from '@prosopo/types'
+import { TypeDefInfo } from '@polkadot/types-create'
+import { describe } from 'mocha'
+import { encodeStringArgs } from '@prosopo/contract'
+import { getPair } from '@prosopo/common'
+import { hexToU8a } from '@polkadot/util'
+import chai from 'chai'
 
 const expect = chai.expect
 

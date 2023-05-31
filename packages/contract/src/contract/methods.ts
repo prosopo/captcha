@@ -1,5 +1,3 @@
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { Vec, u128 } from '@polkadot/types-codec'
 import { AccountId, Balance } from '@polkadot/types/interfaces'
 import { BN, hexToU8a } from '@polkadot/util'
 import {
@@ -13,7 +11,9 @@ import {
     ProsopoProvider,
     ProsopoRandomProvider,
 } from '@prosopo/types'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ProsopoContractApi } from './interface'
+import { Vec, u128 } from '@polkadot/types-codec'
 
 export class ProsopoContractMethods extends ProsopoContractApi implements IProsopoContractMethods {
     // transactions
