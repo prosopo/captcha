@@ -5,7 +5,6 @@ import { SignerPayloadRaw } from '@polkadot/types/types'
 import { stringToU8a } from '@polkadot/util'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { GetCaptchaResponse } from '@prosopo/api'
-import ProviderApi from '@prosopo/api/src/api/ProviderApi'
 import { trimProviderUrl } from '@prosopo/common'
 import { ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
 import { CaptchaSolution, ContractAbi } from '@prosopo/types'
@@ -24,7 +23,9 @@ import {
 import { sleep } from '../utils/utils'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
 import storage from './storage'
-import { Observable, concatMap, defer, retryWhen, throwError } from 'rxjs'
+import { ProviderApi } from '@prosopo/api'
+import { Observable, Subject } from 'rxjs'
+import { VoidFn } from '@polkadot/api/types'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -124,17 +125,9 @@ export const Manager = (
      */
     const start = async () => {
         try {
-            if (state.loading) {
-                console.log('Procaptcha already loading')
-                return
-            }
-            if (state.isHuman) {
-                console.log('already human')
-                return
-            }
-
-            resetState()
             // set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
+            validateState(state)
+            resetState()
             updateState({ loading: true })
 
             // snapshot the config into the state
@@ -197,25 +190,64 @@ export const Manager = (
             const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
             console.log('Signature:', signed)
 
-            // get a random provider
-            let challenge: GetCaptchaResponse
-            let blockNumber: u32
+            const blockSubject = new Subject<number>()
 
-            // Fetch the captcha challenge and retry up to 5 times if it fails, waiting for the next block before each retry
-            defer(() => fetchCaptchaChallenge(contract, account, config))
-                .pipe(retryWhen(retryStrategy({ maxRetryAttempts: 5, api: contract.api })))
-                .subscribe(
-                    (response) => {
-                        challenge = response.challenge
-                        blockNumber = response.blockNumber
-                        console.log('Challenge and block number fetched successfully', challenge, blockNumber)
+            const blockObservable = new Observable<number>((subscriber) => {
+                blockSubject.subscribe((blockNumber) => {
+                    subscriber.next(blockNumber)
+                })
+            })
 
-                        if (challenge.captchas.length <= 0) {
-                            throw new Error('No captchas returned from provider')
+            let unsubscribe: VoidFn
+
+            ApiPromise.create().then((api) => {
+                blockSubject.next(0)
+                let count = 0
+
+                // Subscribe to new block headers
+                api.rpc.chain
+                    .subscribeNewHeads((header) => {
+                        // Emit value on every new block, but only for the first 5 blocks
+                        if (count < 5) {
+                            blockSubject.next(header.number.toNumber())
+                            count++
+                        } else {
+                            // Unsubscribe after 5 blocks
+                            if (unsubscribe) {
+                                unsubscribe()
+                            }
                         }
+                    })
+                    .then((unsub) => {
+                        unsubscribe = unsub
+                    })
+            })
+
+            // Subscribe to our observable
+            blockObservable.subscribe(
+                async (blockAttempt) => {
+                    try {
+                        console.log(`Block Observable: #${blockAttempt}`)
+
+                        const getRandomProviderResponse = await contract.getRandomProvider(
+                            account.account.address,
+                            config.network.dappContract.address
+                        )
+                        console.log('provider', getRandomProviderResponse)
+
+                        // get the provider api inst
+                        providerApi = await getProviderApiInst(getRandomProviderResponse, providerApi, loadProviderApi)
+
+                        // get the captcha challenge and begin the challenge
+                        const challenge: GetCaptchaResponse = await fetchCaptchaChallenge(
+                            loadCaptchaApi,
+                            contract,
+                            getRandomProviderResponse,
+                            providerApi
+                        )
 
                         // setup timeout
-                        const timeout = timeoutSetup(challenge, events, updateState)
+                        const timeout = setupTimeout(challenge, events, updateState)
 
                         // update state with new challenge
                         updateState({
@@ -224,16 +256,18 @@ export const Manager = (
                             challenge,
                             showModal: true,
                             timeout,
-                            blockNumber,
+                            blockNumber: getRandomProviderResponse.blockNumber,
                         })
-                    },
-                    (err) => {
-                        console.error(err)
-                        // dispatch relevant error event
-                        const event = errorToEventMap[err.constructor] || events.onError
-                        event(err)
+
+                        unsubscribe()
+                    } catch (err) {
+                        console.log(err)
                     }
-                )
+                },
+                (err) => {
+                    console.log(err)
+                }
+            )
         } catch (err) {
             console.error(err)
             // dispatch relevant error event
@@ -242,59 +276,6 @@ export const Manager = (
             // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
         }
-    }
-
-    const retryStrategy = ({ maxRetryAttempts = 5, api }) => {
-        return (attempts) => {
-            let retryAttempt = 0
-            return attempts.pipe(
-                concatMap(() => {
-                    retryAttempt++
-                    if (retryAttempt > maxRetryAttempts) {
-                        return throwError(
-                            () => new Error(`No responsive provider found after ${maxRetryAttempts} attempts`)
-                        )
-                    }
-                    // Wait for the next block
-                    return new Observable((subscriber) => {
-                        const unsubscribe = api.rpc.chain.subscribeNewHeads((header) => {
-                            console.log(`Chain is at block: #${header.number}`)
-                            unsubscribe()
-                            subscriber.next()
-                        })
-                    })
-                })
-            )
-        }
-    }
-
-    const fetchCaptchaChallenge = async (contract, account, config) => {
-        // get a random provider
-        const getRandomProviderResponse = await contract.getRandomProvider(
-            account.account.address,
-            config.network.dappContract.address
-        )
-
-        const blockNumber = getRandomProviderResponse.blockNumber
-        console.log('provider', getRandomProviderResponse)
-        const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
-
-        // get the provider api inst
-        const providerApi = await loadProviderApi(providerUrl)
-        console.log('providerApi', providerApi)
-
-        // get the captcha challenge and begin the challenge
-        const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
-        console.log('captchaApi', captchaApi)
-
-        const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
-        console.log('challenge', challenge)
-
-        if (challenge.captchas.length <= 0) {
-            throw new Error('No captchas returned from provider')
-        }
-
-        return { challenge, blockNumber }
     }
 
     const submit = async () => {
@@ -422,6 +403,17 @@ export const Manager = (
         updateState({ index: state.index + 1 })
     }
 
+    const validateState = (state: ProcaptchaState) => {
+        if (state.loading) {
+            console.log('Procaptcha already loading')
+            throw new Error('Procaptcha already loading')
+        }
+        if (state.isHuman) {
+            console.log('already human')
+            throw new Error('already human')
+        }
+    }
+
     const loadCaptchaApi = async (
         contract: ProsopoContractMethods,
         provider: ProsopoRandomProvider,
@@ -505,7 +497,11 @@ export const Manager = (
         return blockNumber
     }
 
-    const timeoutSetup = (
+    /**
+     * Calculates the time limit for the challenge by summing up the individual time limits of each CAPTCHA.
+     * Defaults to 30 seconds if no time limit is specified.
+     */
+    const setupTimeout = (
         challenge: GetCaptchaResponse,
         events: ProcaptchaEvents,
         updateState: (nextState: Partial<ProcaptchaState>) => void
@@ -513,13 +509,13 @@ export const Manager = (
         const timeMillis: number = challenge.captchas
             .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
             .reduce((a, b) => a + b)
-        const timeout = setTimeout(() => {
+
+        return setTimeout(() => {
             console.log('challenge expired after ' + timeMillis + 'ms')
             events.onExpired()
             // expired, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
         }, timeMillis)
-        return timeout
     }
 
     /**
@@ -539,6 +535,45 @@ export const Manager = (
             'prosopo',
             0
         )
+    }
+
+    /**
+     * Fetches a CAPTCHA challenge from a provider and throws if none are returned
+     */
+    const fetchCaptchaChallenge = async (
+        loadCaptchaApi: (
+            contract: ProsopoContractMethods,
+            provider: ProsopoRandomProvider,
+            providerApi: ProviderApi
+        ) => Promise<ProsopoCaptchaApi>,
+        contract: ProsopoContractMethods,
+        getRandomProviderResponse: ProsopoRandomProvider,
+        providerApi: ProviderApi
+    ) => {
+        const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
+        console.log('captchaApi', captchaApi)
+        const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
+        console.log('challenge', challenge)
+
+        if (challenge.captchas.length <= 0) {
+            throw new Error('No captchas returned from provider')
+        }
+
+        return challenge
+    }
+
+    /**
+     * Retrieves an instance of the Provider API.
+     */
+    const getProviderApiInst = async (
+        getRandomProviderResponse: ProsopoRandomProvider,
+        providerApi: ProviderApi,
+        loadProviderApi: (providerUrl: string) => Promise<ProviderApi>
+    ) => {
+        const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
+        providerApi = await loadProviderApi(providerUrl)
+        console.log('providerApi', providerApi)
+        return providerApi
     }
 
     return {
