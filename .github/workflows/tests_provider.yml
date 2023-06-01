@@ -104,6 +104,8 @@ jobs:
           echo $(npx tsc --version)
           cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cp env.development .env.test
+          echo "NODE_ENV=test" >> $GITHUB_ENV
+          echo $NODE_ENV
         
 
       - name: Deploy the contracts and run the unit tests
@@ -116,7 +118,7 @@ jobs:
           git status | head -n 1
           docker container ls
           cat .env.development
-          NODE_ENV=test npm run test
+          npm run test
 
       - name: Remove the docker containers
         run: |
