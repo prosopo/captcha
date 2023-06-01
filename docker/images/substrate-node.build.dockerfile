@@ -1,6 +1,6 @@
 FROM docker.io/paritytech/ci-linux:production AS builder
 
-RUN git clone --depth 1 --branch polkadot-v0.9.40 https://github.com/paritytech/substrate
+RUN git clone --depth 1 --branch polkadot-v0.9.43 https://github.com/paritytech/substrate
 
 WORKDIR /builds/substrate
 
