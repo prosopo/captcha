@@ -1,8 +1,8 @@
-import { Dataset, DatasetRaw } from '@prosopo/types'
 import { Captcha, CaptchaWithoutId } from '@prosopo/types'
-import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
 import { CaptchaMerkleTree } from './merkle'
+import { Dataset, DatasetRaw } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
+import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw)

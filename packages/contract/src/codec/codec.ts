@@ -13,8 +13,8 @@
 // limitations under the License.
 import { Registry } from '@polkadot/types-codec/types/registry'
 import { Vec } from '@polkadot/types-codec'
-import type { Codec } from '@polkadot/types-codec/types'
 import { createTypeUnsafe } from '@polkadot/types'
+import type { Codec } from '@polkadot/types-codec/types'
 
 export type DecodeFunction = (registry: Registry, data: Uint8Array) => Vec<Codec>
 

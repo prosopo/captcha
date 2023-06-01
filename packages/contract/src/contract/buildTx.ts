@@ -13,12 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
-import { SubmittableResult } from '@polkadot/api'
-import type { SignerOptions } from '@polkadot/api/types'
-import { SubmittableExtrinsic } from '@polkadot/api/types'
-import type { Registry } from '@polkadot/types/types'
-import { TransactionResponse } from '@prosopo/types'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { SubmittableExtrinsic } from '@polkadot/api/types'
+import { SubmittableResult } from '@polkadot/api'
+import { TransactionResponse } from '@prosopo/types'
+import type { Registry } from '@polkadot/types/types'
+import type { SignerOptions } from '@polkadot/api/types'
 
 export async function buildTx(
     registry: Registry,

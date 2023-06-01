@@ -11,17 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { promiseQueue } from '../../src/util'
-import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts'
-import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator'
-import { Environment } from '@prosopo/env'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import consola from 'consola'
-import { ProsopoEnvError } from '@prosopo/common'
-import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles'
 import { Abi } from '@polkadot/api-contract'
-import { ProsopoConfig } from '@prosopo/types'
+import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts'
+import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles'
+import { Environment } from '@prosopo/env'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { promiseQueue } from '../../src/util'
+import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator'
+import consola from 'consola'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`
 

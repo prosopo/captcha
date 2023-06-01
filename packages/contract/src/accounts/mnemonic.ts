@@ -1,5 +1,5 @@
-import { Keyring } from '@polkadot/keyring'
 import { KeypairType } from '@polkadot/util-crypto/types'
+import { Keyring } from '@polkadot/keyring'
 import { cryptoWaitReady, mnemonicGenerate } from '@polkadot/util-crypto'
 
 /** Generate a mnemonic, returning the mnemonic and associated address

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "npm run build && node ./dist/app.js",
     "build": "tsc --build --verbose",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:fix": "npx eslint . --fix"
   },
   "repository": {
     "type": "git",

@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
+import { ProsopoConfigSchema } from '@prosopo/types'
 import { before } from 'mocha'
+import { getPair } from '@prosopo/common'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import { getPair } from '@prosopo/common'
-import { KeypairType } from '@polkadot/util-crypto/types'
-import { ProsopoConfigSchema } from '@prosopo/types'
 
 chai.should()
 chai.use(chaiAsPromised)
