@@ -99,7 +99,7 @@ async function runMochaTests(files, log) {
             const runner = mocha.run()
 
             runner.on('end', () => {
-                log.info('All tests done')
+                log.info(`All tests done. ${numberOfFailures} failures.`)
                 if (numberOfFailures > 0) {
                     reject(new Error(`Test run failed with ${numberOfFailures} failures.`))
                 }

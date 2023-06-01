@@ -97,12 +97,8 @@ export async function processArgs(args) {
             command: 'test',
             describe: 'Run all of the tests in the workspace',
             handler: async () => {
-                try {
-                    log.info('Running tests')
-                    await runTests()
-                } catch {
-                    process.exit(1)
-                }
+                log.info('Running tests')
+                await runTests()
             },
         })
         .command({
