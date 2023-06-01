@@ -1,13 +1,13 @@
 import { ApiPromise } from '@polkadot/api'
+import { BlockHash } from '@polkadot/types/interfaces/chain/index'
+import { ContractAbi, RandomProvider } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { WsProvider } from '@polkadot/rpc-provider'
-import { BlockHash } from '@polkadot/types/interfaces/chain/index'
-import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
-import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
-import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
-import { ContractAbi, RandomProvider } from '@prosopo/types'
 import { LogLevel, Logger, logger } from '@prosopo/common'
+import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
+import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
+import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
+import { WsProvider } from '@polkadot/rpc-provider'
 
 export class ProsopoServer {
     config: ProsopoServerConfig

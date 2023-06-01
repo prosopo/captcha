@@ -1,6 +1,6 @@
-import { SubmittableExtrinsic } from '@polkadot/api/types'
-import { BN } from '@polkadot/util'
 import { ArgumentTypes } from './typechain/captcha/types-arguments'
+import { BN } from '@polkadot/util'
+import { SubmittableExtrinsic } from '@polkadot/api/types'
 
 export interface ExtrinsicBatch {
     extrinsics: SubmittableExtrinsic<'promise'>[]

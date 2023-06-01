@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { BatchCommitments } from '@prosopo/provider'
+import { Compact, u128 } from '@polkadot/types'
+import { PayeeSchema } from '@prosopo/types'
+import { ProsopoEnvError, logger as getLogger } from '@prosopo/common'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { Tasks } from '@prosopo/provider'
+import { cwd } from 'process'
+import { encodeStringAddress } from '@prosopo/provider'
+import { loadJSONFile } from './files'
 import parser from 'cron-parser'
 import pm2 from 'pm2'
-import { cwd } from 'process'
-import { ProsopoEnvError, logger as getLogger } from '@prosopo/common'
-import { Compact, u128 } from '@polkadot/types'
-import { Tasks } from '@prosopo/provider'
-import { PayeeSchema } from '@prosopo/types'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { encodeStringAddress } from '@prosopo/provider'
-import { BatchCommitments } from '@prosopo/provider'
-import { loadJSONFile } from './files'
 const yargs = require('yargs')
 
 const validateAddress = (argv) => {

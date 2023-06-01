@@ -13,17 +13,17 @@
 // limitations under the License.
 
 import { ApiPromise } from '@polkadot/api'
-import { Keyring } from '@polkadot/keyring'
-import { KeyringPair } from '@polkadot/keyring/types'
-import { WsProvider } from '@polkadot/rpc-provider'
-import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { AssetsResolver, ContractAbi, EnvironmentTypes, ProsopoConfig } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { LogLevel } from 'consola'
-import { LocalAssetsResolver } from './assets'
 import { Databases } from '@prosopo/database'
+import { Keyring } from '@polkadot/keyring'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LocalAssetsResolver } from './assets'
+import { LogLevel } from 'consola'
+import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { WsProvider } from '@polkadot/rpc-provider'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig

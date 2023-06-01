@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
-import translationEn from './locales/en.json'
 import { hexToString } from '@polkadot/util'
+import translationEn from './locales/en.json'
 
 export function isClientSide(): boolean {
     return !!(typeof window !== 'undefined' && window.document && window.document.createElement)
@@ -16,7 +16,7 @@ type NestedKeyOf<ObjectType extends object> = {
         : `${Key}`
 }[keyof ObjectType & (string | number)]
 
-function getLeafFieldPath(obj: Object | string): string[] {
+function getLeafFieldPath(obj: object | string): string[] {
     if (typeof obj === 'string') {
         return [obj]
     }

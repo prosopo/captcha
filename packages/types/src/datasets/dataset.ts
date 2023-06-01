@@ -1,6 +1,6 @@
+import { ArgumentTypes } from '../contract/typechain/captcha/types-arguments'
 import { Captcha, CaptchaTypes, CaptchaWithoutId, CaptchasSchema, SelectAllCaptchaSchema } from './captcha'
 import { z } from 'zod'
-import { ArgumentTypes } from '../contract/typechain/captcha/types-arguments'
 
 export type DatasetBase = {
     datasetId?: ArgumentTypes.Hash

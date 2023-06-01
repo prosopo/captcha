@@ -1,9 +1,9 @@
+import { KeypairType } from '@polkadot/util-crypto/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair, KeyringPair$Json } from '@polkadot/keyring/types'
-import { hexToU8a, isHex } from '@polkadot/util'
-import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
-import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoEnvError } from '../error'
+import { cryptoWaitReady, mnemonicValidate } from '@polkadot/util-crypto'
+import { hexToU8a, isHex } from '@polkadot/util'
 
 export async function getPair(pairType: KeypairType, ss58Format: number, secret: string): Promise<KeyringPair> {
     await cryptoWaitReady()

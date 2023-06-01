@@ -8,9 +8,9 @@ import type { GasLimit, GasLimitAndRequiredValue } from '@727-ventures/typechain
 import type { KeyringPair } from '@polkadot/keyring/types'
 import type BN from 'bn.js'
 // @ts-ignore
+import { EventRecord } from '@polkadot/api/submittable'
 import { decodeEvents } from '../shared/utils'
 import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/captcha.json'
-import type { EventRecord } from '@polkadot/api/submittable'
 
 export default class Methods {
     private __nativeContract: ContractPromise

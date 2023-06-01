@@ -12,7 +12,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { isHex } from '@polkadot/util'
 import {
     Captcha,
     CaptchaSolution,
@@ -44,11 +43,12 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
+import { isHex } from '@polkadot/util'
 
-import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
-import mongoose, { Connection } from 'mongoose'
-import { DeleteResult } from 'mongodb'
 import { ArgumentTypes } from '@prosopo/types'
+import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
+import { DeleteResult } from 'mongodb'
+import mongoose, { Connection } from 'mongoose'
 
 mongoose.set('strictQuery', false)
 

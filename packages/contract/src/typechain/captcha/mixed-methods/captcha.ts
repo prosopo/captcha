@@ -14,10 +14,10 @@ import type BN from 'bn.js'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { getTypeDescription } from './../shared/utils'
 // @ts-ignore
+import { EventRecord } from '@polkadot/api/submittable'
 import { decodeEvents } from '../shared/utils'
 import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json'
 import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/captcha.json'
-import type { EventRecord } from '@polkadot/api/submittable'
 
 export default class Methods {
     private __nativeContract: ContractPromise

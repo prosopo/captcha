@@ -8,7 +8,9 @@
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
     "cli": "node ./dist/cli/cli.js",
-    "start": "node ./dist/start.js"
+    "start": "node ./dist/start.js",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix"
   },
   "dependencies": {
     "dotenv": "^16.0.1",

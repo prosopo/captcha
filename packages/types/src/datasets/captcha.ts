@@ -13,9 +13,9 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { z } from 'zod'
 import { AccountId } from '@polkadot/types/interfaces'
 import { u32 } from '@polkadot/types'
+import { z } from 'zod'
 
 export enum CaptchaTypes {
     SelectAll = 'SelectAll',

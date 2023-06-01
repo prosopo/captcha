@@ -3,7 +3,7 @@ import { LogLevel, Logger, logger } from '@prosopo/common'
 import { glob } from 'glob'
 import { loadEnv } from '@prosopo/cli'
 require('ts-mocha')
-const Mocha = require('mocha')
+import Mocha from 'mocha'
 loadEnv()
 const logLevel = process.env.LOG_LEVEL ? (process.env.LOG_LEVEL as unknown as LogLevel) : LogLevel.Info
 const testConfig = {
@@ -71,16 +71,16 @@ export async function findTestFiles(logger: Logger): Promise<string[]> {
     })
 }
 
-const mochaConfig = {
-    // Specify "require" for CommonJS
-    require: 'ts-node/register',
-    // Specify "loader" for native ESM
-    loader: 'ts-node/esm',
-    extensions: ['ts', 'tsx'],
-    spec: ['tests/**/*.test.*'],
-    'watch-files': ['src'],
-    inspect: true,
-}
+// const mochaConfig = {
+//     // Specify "require" for CommonJS
+//     require: 'ts-node/register',
+//     // Specify "loader" for native ESM
+//     loader: 'ts-node/esm',
+//     extensions: ['ts', 'tsx'],
+//     spec: ['tests/**/*.test.*'],
+//     'watch-files': ['src'],
+//     inspect: true,
+// }
 
 async function runMochaTests(files, log) {
     // eslint-disable-next-line no-async-promise-executor
@@ -89,7 +89,6 @@ async function runMochaTests(files, log) {
             const numberOfFailures = 0
             //You cannot use it.only, describe.only, this.only(), etc., in parallel mode.
             const mocha = await new Mocha({ timeout: 12000000, parallel: false, color: true, noHighlighting: false })
-            mocha.config = mochaConfig
             log.info('Mocha options', JSON.stringify(mocha.options, null, 2))
 
             files.forEach((file) => {

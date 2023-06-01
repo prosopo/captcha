@@ -1,5 +1,5 @@
-import fs, { WriteStream, createWriteStream } from 'fs'
 import { ProsopoEnvError } from '@prosopo/common'
+import fs, { WriteStream, createWriteStream } from 'fs'
 
 export function loadJSONFile(filePath: string, logger?: any) {
     // const parsedFilePath = handleFileProtocol(filePath, logger)
