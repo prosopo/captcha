@@ -1,9 +1,9 @@
-import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
 import { GetCaptchaResponse } from '@prosopo/api'
-import { TCaptchaSubmitResult } from './client'
-import { ProsopoNetwork } from '@prosopo/api'
+import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
 import { Optional } from './utils'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi'
+import { ProsopoNetwork } from '@prosopo/api'
+import { TCaptchaSubmitResult } from './client'
 
 /**
  * House the account and associated extension.

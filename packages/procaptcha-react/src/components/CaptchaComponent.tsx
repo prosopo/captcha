@@ -13,15 +13,15 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
-import Typography from '@mui/material/Typography'
-import ThemeProvider from '@mui/material/styles/ThemeProvider'
-import addDataAttr from '../util'
-import CaptchaWidget from './CaptchaWidget'
-import theme from './theme'
 import { GetCaptchaResponse } from '@prosopo/api/types/api'
 import { useTranslation } from '@prosopo/common'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import CaptchaWidget from './CaptchaWidget'
+import ThemeProvider from '@mui/material/styles/ThemeProvider'
+import Typography from '@mui/material/Typography'
+import addDataAttr from '../util'
+import theme from './theme'
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse

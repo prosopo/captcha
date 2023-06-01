@@ -11,20 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { stringToHex } from '@polkadot/util'
-import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import {
-    CaptchaMerkleTree,
-    buildDataset,
-    captchaSort,
-    compareCaptchaSolutions,
-    computeCaptchaSolutionHash,
-    computePendingRequestHash,
-    parseAndSortCaptchaSolutions,
-    parseCaptchaDataset,
-} from '@prosopo/datasets'
-import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import consola from 'consola'
+import { ArgumentTypes } from '@prosopo/types'
+import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import {
     Captcha,
     CaptchaConfig,
@@ -37,16 +25,28 @@ import {
     DatasetRaw,
     RandomProvider,
 } from '@prosopo/types'
+import {
+    CaptchaMerkleTree,
+    buildDataset,
+    captchaSort,
+    compareCaptchaSolutions,
+    computeCaptchaSolutionHash,
+    computePendingRequestHash,
+    parseAndSortCaptchaSolutions,
+    parseCaptchaDataset,
+} from '@prosopo/datasets'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
-import { BlockHash } from '@polkadot/types/interfaces/chain/index'
-import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
-import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { Hash } from '@prosopo/types'
+import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { ProsopoCaptchaContract } from '@prosopo/contract'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
+import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { SubmittableResult } from '@polkadot/api'
-import { ArgumentTypes } from '@prosopo/types'
+import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
+import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
+import { stringToHex } from '@polkadot/util'
+import consola from 'consola'
 
 /**
  * @description Tasks that are shared by the API and CLI

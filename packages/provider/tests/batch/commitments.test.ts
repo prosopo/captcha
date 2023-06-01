@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { MockEnvironment } from '@prosopo/env'
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import { BatchCommitments } from '../../src/batch'
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
-import { accountContract, getSignedTasks } from '../accounts'
-import { getUser } from '../getUser'
+import { ApiPromise } from '@polkadot/api'
 import { ArgumentTypes, CaptchaSolution, ProsopoConfigSchema, ScheduledTaskNames } from '@prosopo/types'
+import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util'
+import { BatchCommitments } from '../../src/batch'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { MockEnvironment } from '@prosopo/env'
+import { accountAddress, accountMnemonic } from '../accounts'
+import { accountContract, getSignedTasks } from '../accounts'
+import { getPair } from '@prosopo/common'
+import { getUser } from '../getUser'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../tasks/tasks.test'
-import { accountAddress, accountMnemonic } from '../accounts'
-import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util'
-import { ApiPromise } from '@polkadot/api'
-import { getPair } from '@prosopo/common'
-import { KeyringPair } from '@polkadot/keyring/types'
+import chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect

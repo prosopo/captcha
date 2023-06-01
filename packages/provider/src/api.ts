@@ -11,15 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { validateAddress } from '@polkadot/util-crypto'
-import { ProsopoApiError } from '@prosopo/common'
-import { parseCaptchaAssets } from '@prosopo/datasets'
-import express, { Router } from 'express'
-import { Tasks } from './tasks/tasks'
-import { CaptchaSolutionBody, CaptchaWithProof, DappUserSolutionResult, VerifySolutionBody } from '@prosopo/types'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { parseBlockNumber } from './util'
 import { CaptchaRequestBody } from '@prosopo/types'
+import { CaptchaSolutionBody, CaptchaWithProof, DappUserSolutionResult, VerifySolutionBody } from '@prosopo/types'
+import { ProsopoApiError } from '@prosopo/common'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { Tasks } from './tasks/tasks'
+import { parseBlockNumber } from './util'
+import { parseCaptchaAssets } from '@prosopo/datasets'
+import { validateAddress } from '@polkadot/util-crypto'
+import express, { Router } from 'express'
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol

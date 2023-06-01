@@ -1,12 +1,12 @@
 /* This file is auto-generated */
 
-import type { ContractPromise } from '@polkadot/api-contract'
-import type { ApiPromise } from '@polkadot/api'
-import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/typechain-types'
-import type { QueryReturnType } from '@727-ventures/typechain-types'
 import { handleReturnType, queryOkJSON } from '@727-ventures/typechain-types'
 import type * as ArgumentTypes from '../types-arguments/captcha'
 import type * as ReturnTypes from '../types-returns/captcha'
+import type { ApiPromise } from '@polkadot/api'
+import type { ContractPromise } from '@polkadot/api-contract'
+import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/typechain-types'
+import type { QueryReturnType } from '@727-ventures/typechain-types'
 import type BN from 'bn.js'
 //@ts-ignore
 import { ReturnNumber } from '@727-ventures/typechain-types'

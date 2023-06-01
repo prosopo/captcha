@@ -12,12 +12,7 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds'
-import { Tasks } from '../../src/tasks'
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-import { randomAsHex } from '@polkadot/util-crypto'
-import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
+import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import {
     ArgumentTypes,
     CaptchaSolution,
@@ -25,21 +20,26 @@ import {
     DappUserSolutionResult,
     ProsopoConfigSchema,
 } from '@prosopo/types'
-import { ProsopoEnvError, getPair, hexHash, i18n } from '@prosopo/common'
-import { ContractDeployer } from '@prosopo/contract'
-import { AccountKey } from '../dataUtils/DatabaseAccounts'
-import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts'
-import { getUser } from '../getUser'
-import { MockEnvironment } from '@prosopo/env'
-import { before } from 'mocha'
-import { createType } from '@polkadot/types'
 import { BN, stringToU8a } from '@polkadot/util'
-import { parseBlockNumber } from '../../src/index'
-import { KeypairType } from '@polkadot/util-crypto/types'
+import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
+import { ContractDeployer } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles'
-import { captchaData } from '../data/captchas'
 import { DappPayee } from '@prosopo/types'
 import { EventRecord } from '@polkadot/types/interfaces'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { MockEnvironment } from '@prosopo/env'
+import { PROVIDER, accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts'
+import { ProsopoEnvError, getPair, hexHash, i18n } from '@prosopo/common'
+import { Tasks } from '../../src/tasks'
+import { before } from 'mocha'
+import { captchaData } from '../data/captchas'
+import { createType } from '@polkadot/types'
+import { getSendAmount, getStakeAmount, sendFunds } from '../dataUtils/funds'
+import { getUser } from '../getUser'
+import { parseBlockNumber } from '../../src/index'
+import { randomAsHex } from '@polkadot/util-crypto'
+import chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
 
 chai.should()
 chai.use(chaiAsPromised)

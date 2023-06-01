@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { BN } from '@polkadot/util'
-import { Tasks } from '../src/index'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { getPair } from '@prosopo/common'
+import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { Tasks } from '../src/index'
+import { getPair } from '@prosopo/common'
 
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]

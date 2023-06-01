@@ -1,13 +1,13 @@
-import { ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import { ApiPromise } from '@polkadot/api'
+import { ArgumentTypes } from '@prosopo/types'
 import { BN } from '@polkadot/util'
 import { BatchCommitConfig, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
-import { ArgumentTypes } from '@prosopo/types'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { ApiPromise } from '@polkadot/api'
-import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { Logger } from '@prosopo/common'
-import { randomAsHex } from '@polkadot/util-crypto'
+import { ProsopoCaptchaContract, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
+import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
+import { randomAsHex } from '@polkadot/util-crypto'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'dappUserCommit'

@@ -13,10 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { Signer } from '@polkadot/api/types'
-import { stringToHex } from '@polkadot/util'
-import { ProsopoEnvError } from '@prosopo/common'
 import {
     CaptchaMerkleTree,
     computeCaptchaHash,
@@ -25,12 +21,16 @@ import {
     verifyProof,
 } from '@prosopo/datasets'
 import { CaptchaSolution, CaptchaWithProof, Commit } from '@prosopo/types'
-import { ProsopoApiError } from '../api/handlers'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
-import { TCaptchaSubmitResult } from '../types/client'
-import { ProviderApi } from '@prosopo/api'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
+import { ProsopoApiError } from '../api/handlers'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/types'
+import { Signer } from '@polkadot/api/types'
+import { TCaptchaSubmitResult } from '../types/client'
+import { stringToHex } from '@polkadot/util'
 
 export class ProsopoCaptchaApi {
     userAccount: string

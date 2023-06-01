@@ -1,11 +1,11 @@
+import { Abi } from '@polkadot/api-contract'
 import { AbiMetadata, AbiStorageField } from '@prosopo/types'
 import { AccountId, PortableType, StorageEntryMetadataLatest } from '@polkadot/types/interfaces'
-import { hexToNumber } from '@polkadot/util'
-import { reverseHexString } from '@prosopo/common'
+import { ApiPromise } from '@polkadot/api'
 import { ProsopoContractError } from '../handlers'
 import { firstValueFrom } from 'rxjs'
-import { Abi } from '@polkadot/api-contract'
-import { ApiPromise } from '@polkadot/api'
+import { hexToNumber } from '@polkadot/util'
+import { reverseHexString } from '@prosopo/common'
 
 const primitivesSizeInBytes = {
     u8: 1, // 2**0
