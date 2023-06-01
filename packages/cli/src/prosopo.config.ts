@@ -14,10 +14,10 @@
 // import {ProsopoConfig} from './types';
 
 import { DatabaseTypes, EnvironmentTypes, ProsopoConfig } from '@prosopo/types'
-import { LogLevel } from '@prosopo/common'
+import { getLogLevel } from './process.env'
 
 export default (): ProsopoConfig => ({
-    logLevel: LogLevel.Debug, //TODO change to LOG_LEVEL
+    logLevel: getLogLevel(),
     defaultEnvironment: EnvironmentTypes.development, //TODO change to NODE_ENV
     account: {
         password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,

@@ -1,11 +1,11 @@
 import { DatabaseTypes, EnvironmentTypes, ProsopoConfigSchema } from '@prosopo/types'
-import { LogLevel, Logger, logger } from '@prosopo/common'
+import { Logger, logger } from '@prosopo/common'
+import { getLogLevel, loadEnv } from '@prosopo/cli'
 import { glob } from 'glob'
-import { loadEnv } from '@prosopo/cli'
 require('ts-mocha')
 import Mocha from 'mocha'
 loadEnv()
-const logLevel = process.env.LOG_LEVEL ? (process.env.LOG_LEVEL as unknown as LogLevel) : LogLevel.Info
+const logLevel = getLogLevel()
 const testConfig = {
     logLevel,
     contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.

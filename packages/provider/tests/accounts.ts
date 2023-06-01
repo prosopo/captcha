@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util'
-import { IDappAccount, IProviderAccount } from '@prosopo/types'
+import { IDappAccount, IProviderAccount, Payee } from '@prosopo/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../src/index'

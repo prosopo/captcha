@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel } from 'consola'
+import { LogLevel } from '@prosopo/common'
 import { z } from 'zod'
 
 export enum DatabaseTypes {

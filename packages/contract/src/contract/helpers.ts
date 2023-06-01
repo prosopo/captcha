@@ -21,7 +21,7 @@ import { ApiBase } from '@polkadot/api/types'
 import { BN, BN_ONE, BN_ZERO, bnFromHex, isHex, isU8a, stringToHex } from '@polkadot/util'
 import { Bytes } from '@polkadot/types-codec'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { Logger } from '@prosopo/common'
+import { Logger, capitaliseFirstLetter } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers'
 import { Registry } from '@polkadot/types-codec/types/registry'
 import { SubmittableResult } from '@polkadot/api'
@@ -33,7 +33,7 @@ import { Weight } from '@polkadot/types/interfaces/runtime/index'
  * @return {string} event name
  */
 export function getEventNameFromMethodName(contractMethodName: string): string {
-    return contractMethodName[0].toUpperCase() + contractMethodName.substring(1)
+    return capitaliseFirstLetter(contractMethodName)
 }
 
 /**

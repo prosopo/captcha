@@ -1,6 +1,6 @@
 import { KeypairType } from '@polkadot/util-crypto/types'
+import { LogLevel, ProsopoEnvError, capitaliseFirstLetter } from '@prosopo/common'
 import { ProsopoConfig } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
 import prosopoConfig from './prosopo.config'
 
 export function getEnv() {
@@ -29,4 +29,19 @@ export function getSecret(): string {
 
 export function getConfig(): ProsopoConfig {
     return prosopoConfig() as ProsopoConfig
+}
+
+/**
+ * Get the log level from the passed value or from environment variables or a default of `info`.
+ * @param logTypeOption
+ */
+export function getLogLevel(logTypeOption?: string): LogLevel {
+    const logType = capitaliseFirstLetter(
+        logTypeOption ? logTypeOption : process.env.LOG_LEVEL ? process.env.LOG_LEVEL : 'info'
+    )
+    if (logType) {
+        return LogLevel[logType] ? LogLevel[logType] : LogLevel.Info
+    } else {
+        return LogLevel.Info
+    }
 }
