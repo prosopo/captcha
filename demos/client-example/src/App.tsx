@@ -1,10 +1,7 @@
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
-
 import { ProcaptchaOutput } from '@prosopo/procaptcha'
-
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
-
 import './App.css'
 
 function App() {

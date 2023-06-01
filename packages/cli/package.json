@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
-    "cli": "node ./dist/cli/cli.js",
-    "start": "node ./dist/cli/start.js"
+    "cli": "node ./dist/cli.js",
+    "start": "node ./dist/start.js"
   },
   "dependencies": {
     "dotenv": "^16.0.1",

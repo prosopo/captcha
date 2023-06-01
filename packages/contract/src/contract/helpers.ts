@@ -190,7 +190,7 @@ export function getOptions(
                 : null
             : null,
         value: value || BN_ZERO,
-    }
+    } as ContractOptions
 }
 
 // Convert a dispatch error to a readable message

@@ -1,13 +1,13 @@
-import { LogLevel, Logger, logger } from '@prosopo/common'
 import { DatabaseTypes, EnvironmentTypes, ProsopoConfigSchema } from '@prosopo/types'
-import { loadEnv } from '@prosopo/cli'
+import { LogLevel, Logger, logger } from '@prosopo/common'
 import { glob } from 'glob'
+import { loadEnv } from '@prosopo/cli'
 require('ts-mocha')
 const Mocha = require('mocha')
 loadEnv()
-
+const logLevel = process.env.LOG_LEVEL ? (process.env.LOG_LEVEL as unknown as LogLevel) : LogLevel.Info
 const testConfig = {
-    logLevel: LogLevel.Debug,
+    logLevel,
     contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.
     defaultEnvironment: EnvironmentTypes.development,
     account: {
@@ -79,7 +79,7 @@ const mochaConfig = {
     extensions: ['ts', 'tsx'],
     spec: ['tests/**/*.test.*'],
     'watch-files': ['src'],
-    timeout: 12000000,
+    inspect: true,
 }
 
 async function runMochaTests(files, log) {
@@ -87,20 +87,24 @@ async function runMochaTests(files, log) {
     return new Promise(async (resolve, reject) => {
         try {
             const numberOfFailures = 0
-            const mocha = await new Mocha()
+            //You cannot use it.only, describe.only, this.only(), etc., in parallel mode.
+            const mocha = await new Mocha({ timeout: 12000000, parallel: false, color: true, noHighlighting: false })
             mocha.config = mochaConfig
+            log.info('Mocha options', JSON.stringify(mocha.options, null, 2))
+
             files.forEach((file) => {
                 mocha.addFile(file)
                 log.info('Adding file: ', file)
             })
 
-            mocha.parallelMode(false)
-
             const runner = mocha.run()
 
             runner.on('end', () => {
                 log.info('All tests done')
-                resolve(numberOfFailures)
+                if (numberOfFailures > 0) {
+                    reject(new Error(`Test run failed with ${numberOfFailures} failures.`))
+                }
+                resolve(0)
             })
         } catch (err) {
             reject(err)
@@ -110,16 +114,12 @@ async function runMochaTests(files, log) {
 
 export async function runTests() {
     try {
-        const log = logger(
-            process.env.LOG_LEVEL ? (process.env.LOG_LEVEL as unknown as LogLevel) : LogLevel.Debug,
-            'TestRunner'
-        )
+        const log = logger(logLevel, 'TestRunner')
         const files = await findTestFiles(log)
 
         // Set config for tests
         ProsopoConfigSchema.parse(testConfig)
         process.env.config = JSON.stringify(testConfig)
-        process.env.testTimeout = '12000000' // 20 minutes
 
         return await runMochaTests(files, log)
     } catch (err) {
