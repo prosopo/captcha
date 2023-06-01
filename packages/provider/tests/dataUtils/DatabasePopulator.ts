@@ -189,7 +189,6 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
     public async registerProvider(fund: boolean, url?: string, noPush?: boolean): Promise<Account> {
         try {
             const urlString = url || urlBase + randomAsHex().slice(0, 8)
-            console.log(urlString)
             const _url = Array.from(stringToU8a(urlString))
 
             const account = this.createAccount()

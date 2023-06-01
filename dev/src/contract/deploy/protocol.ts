@@ -1,12 +1,12 @@
 import { Abi } from '@polkadot/api-contract'
-import { AccountId, EventRecord } from '@polkadot/types/interfaces'
-import { randomAsHex } from '@polkadot/util-crypto'
-import { getPair, reverseHexString } from '@prosopo/common'
-import { ContractDeployer, oneUnit } from '@prosopo/contract'
-import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
-import { Environment } from '@prosopo/env'
-import path from 'path'
 import { AbiJSON, Wasm } from '../../util'
+import { AccountId, EventRecord } from '@polkadot/types/interfaces'
+import { ContractDeployer, oneUnit } from '@prosopo/contract'
+import { Environment } from '@prosopo/env'
+import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
+import { getPair, reverseHexString } from '@prosopo/common'
+import { randomAsHex } from '@polkadot/util-crypto'
+import path from 'path'
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
@@ -45,10 +45,10 @@ export async function run(wasmPath: string, abiPath: string): Promise<AccountId>
 if (typeof require !== 'undefined' && require.main === module) {
     console.log('Loading env from', path.resolve('.'))
     loadEnv(path.resolve('.'))
-    if (!process.env.PROTOCOL_WASM_PATH || !process.env.PROTOCOL_ABI_PATH) {
+    if (!process.env.CAPTCHA_WASM_PATH || !process.env.CAPTCHA_ABI_PATH) {
         throw new Error('Missing protocol wasm or abi path')
     }
-    run(process.env.PROTOCOL_WASM_PATH, process.env.PROTOCOL_ABI_PATH)
+    run(process.env.CAPTCHA_WASM_PATH, process.env.CAPTCHA_ABI_PATH)
         .then((deployResult) => {
             console.log('Deployed with address', deployResult)
             process.exit(0)

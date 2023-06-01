@@ -20,7 +20,7 @@ import {
     computeItemHash,
     verifyProof,
 } from '@prosopo/datasets'
-import { CaptchaSolution, CaptchaWithProof, Commit } from '@prosopo/types'
+import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ProsopoApiError } from '../api/handlers'
@@ -109,20 +109,6 @@ export class ProsopoCaptchaApi {
         // console.log("solveCaptchaChallenge CONTRACT ADDRESS", this.contract.getContract().address.toString());
         const tx: ContractSubmittableResult | undefined = undefined
 
-        // if (!this.web2) {
-        //     try {
-        //         tx = await this.contract.tx.dappUserCommit(
-        //             this.dappAccount,
-        //             datasetId as string,
-        //             commitmentId,
-        //             this.provider.providerId.toString(),
-        //             this.userAccount
-        //         )
-        //     } catch (err) {
-        //         throw new ProsopoEnvError(err)
-        //     }
-        // }
-
         let signature: string | undefined = undefined
 
         if (this.web2) {
@@ -152,19 +138,7 @@ export class ProsopoCaptchaApi {
             throw new ProsopoApiError(err)
         }
 
-        let commitment: Commit | undefined = undefined
-
-        if (!this.web2) {
-            try {
-                commitment = (await this.contract.query.getCaptchaSolutionCommitment(commitmentId)).value
-                    .unwrap()
-                    .unwrap()
-            } catch (err) {
-                throw new ProsopoEnvError(err)
-            }
-        }
-
-        return [result, commitmentId, tx, commitment]
+        return [result, commitmentId, tx]
     }
 }
 

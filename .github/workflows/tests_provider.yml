@@ -62,8 +62,8 @@ jobs:
 
       - if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
-          docker pull prosopo/substrate:dev-aura-aadbbed50ede27817158c7517f13f6f61c9cf000
-          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:dev-aura-aadbbed50ede27817158c7517f13f6f61c9cf000
+          docker pull prosopo/substrate-contracts-node:v0.25
+          docker save -o ~/image-cache/prosopo.tar prosopo/substrate-contracts-node:v0.25
           docker pull mongo:5.0.4
           docker save -o ~/image-cache/mongo.tar mongo:5.0.4
 
@@ -103,17 +103,20 @@ jobs:
           cd captcha
           echo $(npx tsc --version)
           cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cp env.development .env.test
+        
 
-      - name: Setup the environment and run the unit tests
+      - name: Deploy the contracts and run the unit tests
         run: |
           cd captcha
+          npm run deploy_protocol
+          npm run deploy_dapp
           git status | head -n 1
           cd dev
-          cp env.development .env.development
           git status | head -n 1
           docker container ls
           cat .env.development
-          npm run test
+          NODE_ENV=test npm run test
 
       - name: Remove the docker containers
         run: |

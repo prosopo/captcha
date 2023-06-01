@@ -1,5 +1,5 @@
 import { DatabaseTypes, EnvironmentTypes, ProsopoConfigSchema } from '@prosopo/types'
-import { Logger, logger } from '@prosopo/common'
+import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { getLogLevel, loadEnv } from '@prosopo/cli'
 import { glob } from 'glob'
 require('ts-mocha')
@@ -98,10 +98,15 @@ async function runMochaTests(files, log) {
 
             const runner = mocha.run()
 
+            runner.on('fail', (test, err) => {
+                log.error('Test failed', test.title, err)
+                reject(new ProsopoEnvError(err))
+            })
+
             runner.on('end', () => {
                 log.info(`All tests done. ${numberOfFailures} failures.`)
                 if (numberOfFailures > 0) {
-                    reject(new Error(`Test run failed with ${numberOfFailures} failures.`))
+                    reject(new ProsopoEnvError(new Error(`Test run failed with ${numberOfFailures} failures.`)))
                 }
                 resolve(0)
             })
