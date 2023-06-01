@@ -1,3 +1,6 @@
 **/artifacts/*
-**/dist/*
+packages/**/dist/*
 **/.eslintrc.js
+demos/**/dist/*
+demos/**/scripts/*
+demos/**/next.config.js

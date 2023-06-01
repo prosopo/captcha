@@ -1,3 +1,13 @@
+# Prosopo Dev Package
+
+This package contains the scripts and configuration for setting up a development environment for Prosopo.
+
+## Prerequisites
+
+- A unix-style environment (Linux, MacOS, WSL2)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Node.js](https://nodejs.org/en/download/)
+
 ## Dev Setup
 
 ### Set up Containers
@@ -64,3 +74,27 @@ npm run setup && npm run start
 ```
 
 **Protocol** and **Dapp** contracts **must** exist on the substrate node for the setup script to run.
+
+## Testing
+
+### Run tests
+
+Run all the tests using the following command from the root of the captcha workspace.
+
+```bash
+npm run test
+```
+
+### Workflow testing
+
+The GitHub workflow runs the tests on an aura substrate node with 6s block times. A pre-deployed protocol contract is used
+with the container prosopo/substrate:dev-aura-aadbbed50ede27817158c7517f13f6f61c9cf000. To test with this container, use
+the docker compose file called `docker-compose.test.yml` in the scripts repository. Copy the template env.development
+file to `.env.test` in the dev package so that the correct contract addresses are used.
+
+```bash
+docker compose --file ./docker/docker-compose.development.yml down
+docker compose --file ./docker/docker-compose.test.yml up -d
+cp dev/env.development dev/.env.test
+NODE_ENV=test npm run test
+```

@@ -12,8 +12,12 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "src/**/*.ts",
-    "src/*.ts",
-    "src/**/*.tsx",
+    "src/index.tsx",
+    "src/index.html"
+  ],
+  "references": [
+    {
+      "path": "../procaptcha-react"
+    }
   ]
 }

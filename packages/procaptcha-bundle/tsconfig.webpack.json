@@ -5,6 +5,10 @@
     "jsx": "react-jsx",
     "module": "commonjs",
     "skipLibCheck": true,
-    "target": "esnext"
+    "target": "esnext",
+    "lib": [
+      "es6",
+      "dom"
+    ]
   }
 }

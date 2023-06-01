@@ -9,7 +9,7 @@ import {
 } from '../types/manager'
 import { ApiPromise, Keyring } from '@polkadot/api'
 import { CaptchaSolution, ContractAbi } from '@prosopo/types'
-import { GetCaptchaResponse } from '@prosopo/api'
+import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client'
@@ -22,7 +22,6 @@ import { u32 } from '@polkadot/types'
 import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
-import ProviderApi from '@prosopo/api/src/api/ProviderApi'
 import storage from './storage'
 
 export const defaultState = (): Partial<ProcaptchaState> => {

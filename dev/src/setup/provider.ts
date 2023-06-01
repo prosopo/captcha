@@ -72,6 +72,7 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
     } catch (e) {
         logger.warn(e)
     }
+    const registeredProvider = await env.contractInterface.getProviderDetails(provider.address)
     logger.info('   - providerStake')
     await tasks.contractApi.providerUpdate(
         stringToHexPadded(provider.serviceOrigin),
