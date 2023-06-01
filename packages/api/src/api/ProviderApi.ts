@@ -13,11 +13,11 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import HttpClientBase from './HttpClientBase'
-import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
 import { CaptchaSolution, CaptchaSolutionBodyType, RandomProvider, VerifySolutionBodyType } from '@prosopo/types'
+import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
+import HttpClientBase from './HttpClientBase'
 
-export class ProviderApi extends HttpClientBase {
+export default class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
 
     constructor(network: ProsopoNetwork, providerUrl: string) {

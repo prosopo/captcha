@@ -13,19 +13,19 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
-import { BN, BN_ONE, BN_ZERO, bnFromHex, isHex, isU8a, stringToHex } from '@polkadot/util'
-import { AnyJson } from '@polkadot/types/types/codec'
-import { ProsopoContractError } from '../handlers'
 import { Abi } from '@polkadot/api-contract'
+import { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
 import { AccountId, DispatchError, Event, EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
-import { Bytes } from '@polkadot/types-codec'
-import { Registry } from '@polkadot/types-codec/types/registry'
-import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { Weight } from '@polkadot/types/interfaces/runtime/index'
+import { AnyJson } from '@polkadot/types/types/codec'
 import { ApiBase } from '@polkadot/api/types'
-import { SubmittableResult } from '@polkadot/api'
+import { BN, BN_ONE, BN_ZERO, bnFromHex, isHex, isU8a, stringToHex } from '@polkadot/util'
+import { Bytes } from '@polkadot/types-codec'
+import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Logger } from '@prosopo/common'
+import { ProsopoContractError } from '../handlers'
+import { Registry } from '@polkadot/types-codec/types/registry'
+import { SubmittableResult } from '@polkadot/api'
+import { Weight } from '@polkadot/types/interfaces/runtime/index'
 
 /**
  * Get the event name from the contract method name
@@ -190,7 +190,7 @@ export function getOptions(
                 : null
             : null,
         value: value || BN_ZERO,
-    }
+    } as ContractOptions
 }
 
 // Convert a dispatch error to a readable message

@@ -11,11 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Captcha, CaptchaSolution } from '@prosopo/types'
+import { Logger, ProsopoEnvError } from '@prosopo/common'
+import { arrayJoin } from '@prosopo/common'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
-import { arrayJoin } from '@prosopo/common'
-import { Logger, ProsopoEnvError } from '@prosopo/common'
-import { Captcha, CaptchaSolution } from '@prosopo/types'
 import pl from 'nodejs-polars'
 
 export function encodeStringAddress(address: string) {

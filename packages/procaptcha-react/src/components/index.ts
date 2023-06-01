@@ -1,4 +1,4 @@
-// Copyright (C) 2021-2022 Prosopo (UK) Ltd.
+// Copyright (C) 2021-2023 Prosopo (UK) Ltd.
 // This file is part of procaptcha-react <https://github.com/prosopo/procaptcha-react>.
 //
 // procaptcha-react is free software: you can redistribute it and/or modify

@@ -17,6 +17,6 @@
     "references": [
         {
             "path": "../types"
-        },
+        }
     ]
 }

@@ -1,7 +1,7 @@
-import { isAuth, login, signup } from '../controllers/auth'
-import express from 'express'
 import { Connection } from 'mongoose'
 import { ProsopoServer } from '@prosopo/server'
+import { isAuth, login, signup } from '../controllers/auth'
+import express from 'express'
 
 const router = express.Router()
 

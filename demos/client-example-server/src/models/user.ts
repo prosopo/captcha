@@ -1,11 +1,10 @@
-import mongoose, {Schema} from 'mongoose';
-
+import mongoose, { Schema } from 'mongoose'
 
 export interface UserInterface {
-    id: number;
-    email: string;
-    name: string;
-    password: string;
+    id: number
+    email: string
+    name: string
+    password: string
 }
 
 const UserSchema = new Schema<UserInterface>({
@@ -20,6 +19,6 @@ const UserSchema = new Schema<UserInterface>({
         type: mongoose.SchemaTypes.String,
         required: true,
     },
-});
+})
 
-export default UserSchema;
+export default UserSchema

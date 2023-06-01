@@ -105,8 +105,8 @@ async function start(nodeEnv: string) {
 function stop() {
     apiAppSrv.close()
 }
-//if running in main process
-if (typeof require !== undefined && require.main === module) {
+//if main process
+if (typeof require!== undefined && require.main === module) {
     start(process.env.NODE_ENV || 'development').catch((error) => {
         console.error(error)
     })

@@ -17,7 +17,6 @@ import { Tasks } from '../src/index'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { getPair } from '@prosopo/common'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { Payee } from '@prosopo/types/dist/contract/typechain/captcha/types-arguments/captcha'
 
 export const accountMnemonic = (account: Account) => account[0]
 export const accountAddress = (account: Account) => account[1]

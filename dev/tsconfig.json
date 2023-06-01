@@ -39,6 +39,9 @@
             "path": "../packages/procaptcha"
         },
         {
+            "path": "../packages/procaptcha-bundle"
+        },
+        {
             "path": "../packages/procaptcha-react"
         },
         {

@@ -1,20 +1,16 @@
 module.exports = {
     env: {
         browser: true,
-        es2021: true,
+        es2022: true,
+        node: true,
     },
-    extends: [
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-        'prettier',
-        'plugin:prettier/recommended',
-    ],
+    extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended', 'prettier'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
     },
-    plugins: ['unused-imports', '@typescript-eslint', 'prettier'],
+    plugins: ['unused-imports', '@typescript-eslint', 'sort-imports-es6-autofix', 'prettier'],
     rules: {
         'no-unused-vars': 'off',
         'unused-imports/no-unused-imports': 'error',
@@ -34,6 +30,14 @@ module.exports = {
             {
                 ignoreDeclarationSort: true,
                 allowSeparatedGroups: false,
+            },
+        ],
+        'sort-imports-es6-autofix/sort-imports-es6': [
+            2,
+            {
+                ignoreCase: false,
+                ignoreMemberSort: false,
+                memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
             },
         ],
         'prettier/prettier': ['error'],
