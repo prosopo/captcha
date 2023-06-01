@@ -9,7 +9,7 @@ import { getPair } from '@prosopo/common'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
-const log = logger(LogLevel.Info, 'deploy')
+const log = logger(LogLevel.Info, 'dev.deploy')
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()

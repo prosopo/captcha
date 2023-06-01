@@ -12,7 +12,7 @@ export interface IProviderAccount extends IUserAccount {
     fee: number
     datasetFile: string
     stake: number | BN
-    payee: Payee
+    payee: Payee.dapp
     captchaDatasetId: string
     pair?: KeyringPair
 }

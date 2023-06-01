@@ -99,7 +99,7 @@ export class ProsopoCaptchaContract extends Contract {
         this.pair = pair
         this.contractName = contractName
         this.nonce = currentNonce
-        this.logger = logger(logLevel || LogLevel.Info, `ProsopoCaptchaContract: ${contractName}`)
+        this.logger = logger(logLevel || LogLevel.Info, `${ProsopoCaptchaContract.name}.${contractName}`)
         this.json = AbiMetaDataSpec.parse(this.abi.json)
         this.createStorageGetters()
         //this.wrapContractMethods()

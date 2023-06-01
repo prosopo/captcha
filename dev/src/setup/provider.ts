@@ -11,16 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoEnvError } from '@prosopo/common'
-import { stringToHexPadded } from '@prosopo/contract'
-import { Tasks } from '@prosopo/provider'
 import { Environment } from '@prosopo/env'
 import { IProviderAccount } from '@prosopo/types'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { ProsopoContractError, stringToHexPadded } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
+import { Tasks } from '@prosopo/provider'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds'
-import { loadJSONFile } from '@prosopo/cli'
 import { hexToU8a } from '@polkadot/util'
+import { loadJSONFile } from '@prosopo/cli'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
@@ -40,7 +40,7 @@ export async function registerProvider(env: Environment, account: IProviderAccou
 
         account.address = providerKeyringPair.address
 
-        const stakeAmount = await env.contractInterface.contract['providerStakeThreshold']()
+        const stakeAmount = await env.contractInterface['providerStakeThreshold']()
 
         // use the minimum stake amount from the contract to create a reasonable stake amount
         account.stake = getStakeAmount(env, stakeAmount)
@@ -63,21 +63,29 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
     const logger = env.logger
     const tasks = new Tasks(env)
     logger.info('   - providerRegister')
-    // const payeeType = env.contractInterface.abi.registry.lookup.types.filter(
-    //     (t) => t.type.path.indexOf('Payee') > -1
-    // )[0]
-    // const payeeTypeDef = abi.registry.lookup.getTypeDef(`Lookup${payeeType.id.toNumber()}`)
 
     try {
-        await tasks.contract.tx.providerRegister(
+        const queryResult = await tasks.contract.query.providerRegister(
             Array.from(hexToU8a(stringToHexPadded(provider.url))),
             provider.fee,
             provider.payee
         )
-    } catch (e) {
-        logger.warn(e)
+    } catch (err) {
+        if (typeof err === 'object' && 'issue' in err && err.issue === 'OUTPUT_IS_NULL') {
+            logger.info('   - providerRegister: provider is not registered')
+        } else {
+            logger.debug('Unexpected error')
+            throw new ProsopoContractError(err)
+        }
     }
-    const registeredProvider = await env.contractInterface.getProviderDetails(provider.address)
+
+    await tasks.contract.tx.providerRegister(
+        Array.from(hexToU8a(stringToHexPadded(provider.url))),
+        provider.fee,
+        provider.payee
+    )
+
+    const registeredProvider = await env.contractInterface.query.getProviderDetails(provider.address)
     logger.info('   - providerStake')
     await tasks.contract.tx.providerUpdate(
         Array.from(hexToU8a(stringToHexPadded(provider.url))),
