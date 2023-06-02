@@ -27,7 +27,6 @@ pub mod captcha {
     use common::common::account_id_bytes;
     use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
-    use ink::prelude::collections::btree_map::BTreeMap;
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
     use ink::prelude::vec::Vec;
@@ -411,19 +410,22 @@ pub mod captcha {
             self.user_accounts.get().unwrap_or_default()
         }
 
-        /// Returns the set of seeds used in the rewind window (including the current seed)
+        /// Returns the set of seeds used in the rewind window (including the current seed), most recent first
         #[ink(message)]
-        pub fn get_seeds(&self) -> BTreeMap<BlockNumber, Seed> {
-            let mut seeds = BTreeMap::new();
+        pub fn get_seeds(&self) -> Vec<Seed> {
+            let mut seeds = Vec::new();
             let start = self.get_rewind_window_start();
             let end = self.env().block_number();
-            for i in start..end {
+            let mut current_seed = self.seed;
+            seeds.push(current_seed);
+            for i in (start..end).rev() {
                 if let Some(seed) = self.seed_log.get(i) {
-                    seeds.insert(i, seed);
+                    current_seed = seed;
                 }
+                seeds.push(current_seed);
             }
-            seeds.insert(self.seed_at, self.seed);
-            seeds
+
+            seeds.reverse();
         }
 
         #[ink(message)]
@@ -510,11 +512,11 @@ pub mod captcha {
 
             // pick a random provider from the active providers
             let mut active_provider_count = 0_u128;
-            for (_, group) in active_providers.iter() {
+            for group in active_providers.iter() {
                 active_provider_count += group.len() as u128;
             }
             let mut index = seed % active_provider_count;
-            for (_, group) in active_providers.iter() {
+            for group in active_providers.iter() {
                 if index < group.len() as u128 {
                     let account = group.iter().nth(index as usize).unwrap();
                     return Ok(*account);
@@ -555,15 +557,15 @@ pub mod captcha {
 
         /// Rewind the providers to a given block
         ///
-        /// Returns the active providers mapped by their payee type. The values are housed in a set to ensure account ids are sorted. The account ids may become out of order when applying changes from a past block, hence the need to store them in a stored fashion.
+        /// Returns the active providers mapped by their payee type. The values are housed in a set to ensure account ids are sorted. The account ids may become out of order when applying changes from a past block, hence the need to store them in a stored fashion. The order of the returned vec is the same order as get_payees().
         fn get_active_providers_at(
             &self,
             block: BlockNumber,
-        ) -> BTreeMap<Payee, BTreeSet<AccountId>> {
+        ) -> Vec<BTreeSet<AccountId>> {
             // make a mapping of payee to provider accounts
-            let mut result: BTreeMap<Payee, BTreeSet<AccountId>> = BTreeMap::new();
-            for payee in self.get_payees().iter() {
-                result.insert(*payee, BTreeSet::new());
+            let mut result: Vec<BTreeSet<AccountId>> = Vec::new();
+            for _ in self.get_payees().iter() {
+                result.push(BTreeSet::new());
             }
             // go through the rewind window from the target block to the current block looking for the version of provider closest to the target block
             // we want to get the version of provider closest to the target block. E.g. if we have versions of provider for blocks 7, 11 and 19 and the target block is 9, we want the version at block 11. The version at block 7 is too early so we ignore it. The version at block 19 is too late so we ignore it. The version at block 11 is the version which was the state of the provider in block 9.
@@ -587,7 +589,10 @@ pub mod captcha {
                     if let Some(provider) = record.provider {
                         // use the provider status to put it into the right group by payee
                         if provider.status == GovernanceStatus::Active {
-                            result.get_mut(&provider.payee).unwrap().insert(*account);
+                            // enums are stored as ints under the hood, so can use that as the index
+                            let index = provider.payee as usize;
+                            let group = &mut result[index];
+                            group.insert(*account);
                         }
                     } // else provider was deleted, so do not add to a group
                       // tick off that we've found a version of this provider for the block target
@@ -611,7 +616,9 @@ pub mod captcha {
                     let provider = self.providers.get(account).unwrap();
                     if provider.status == GovernanceStatus::Active {
                         // now we have found a version of the provider from the current block
-                        result.get_mut(&provider.payee).unwrap().insert(*account);
+                        let index = provider.payee as usize;
+                        let group = &mut result[index];
+                        group.insert(*account);
                     }
                 }
             }
@@ -1970,6 +1977,7 @@ pub mod captcha {
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
         use ink::env::DefaultEnvironment;
+        use ink::prelude::btree_map::BTreeMap;
 
         use crate::captcha::Error::{ProviderInactive, ProviderInsufficientFunds};
 
