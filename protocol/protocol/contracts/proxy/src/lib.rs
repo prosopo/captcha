@@ -408,26 +408,28 @@ pub mod proxy {
             );
         }
 
-        // #[ink::test]
-        // fn test_proxy_set_code_hash() {
+        #[ink::test]
+        fn test_proxy_set_code_hash() {
 
-        //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-        //     reset_caller();
-        //     reset_callee();
+            // always set the caller to the unused account to start, avoid any mistakes with caller checks
+            reset_caller();
+            reset_callee();
 
-        //     let mut contract = get_contract_unguarded(0);
-        //     set_callee(get_contract_account(0));
+            let mut contract = get_contract_unguarded(0);
+            set_callee(get_contract_account(0));
 
-        //     let new_code_hash = get_code_hash(1);
-        //     let old_code_hash = contract.env().own_code_hash().unwrap();
-        //     assert_ne!(Hash::from(new_code_hash), old_code_hash);
+            let new_code_hash = get_code_hash(1);
+            // TODO ink does not have own_code_hash() or set_code_hash() in testing environment yet
+            
+            // let old_code_hash = contract.env().own_code_hash().unwrap();
+            // assert_ne!(Hash::from(new_code_hash), old_code_hash);
 
-        //     set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
+            // set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
 
-        //     assert_eq!(contract.proxy_set_code_hash(new_code_hash), Ok(()));
+            // assert_eq!(contract.proxy_set_code_hash(new_code_hash), Ok(()));
 
-        //     assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
-        // }
+            // assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
+        }
 
         #[ink::test]
         fn test_proxy_set_code_hash_unauthorised() {
