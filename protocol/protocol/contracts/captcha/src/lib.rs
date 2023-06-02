@@ -231,7 +231,7 @@ pub mod captcha {
         dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Lazy<BTreeSet<AccountId>>,
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
-        dapp_users: Mapping<AccountId, User>,
+        users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u16, // the max age, in blocks, of captcha results to store in history for a user
@@ -358,7 +358,7 @@ pub mod captcha {
                 provider_accounts: Default::default(),
                 urls: Default::default(),
                 datasets: Default::default(),
-                dapp_users: Default::default(),
+                users: Default::default(),
                 provider_stake_threshold,
                 dapp_stake_threshold,
                 dapps: Default::default(),
@@ -1492,7 +1492,7 @@ pub mod captcha {
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
         fn record_commitment(&mut self, account: AccountId, hash: Hash, result: &Commit) {
             let mut user = self
-                .dapp_users
+                .users
                 .get(account)
                 .unwrap_or_else(|| self.create_new_dapp_user(account));
             // add the new commitment
@@ -1508,7 +1508,7 @@ pub mod captcha {
                 self.commits.remove(hash);
             }
 
-            self.dapp_users.insert(account, &user);
+            self.users.insert(account, &user);
         }
 
         /// Get a summary of the commit history for a user
@@ -1551,7 +1551,7 @@ pub mod captcha {
         /// Create a new dapp user if they do not already exist
         fn create_new_dapp_user(&mut self, account: AccountId) -> User {
             // create the user and add to our list of dapp users
-            let lookup = self.dapp_users.get(account);
+            let lookup = self.users.get(account);
             if let Some(user) = lookup {
                 return user;
             }
@@ -1559,7 +1559,7 @@ pub mod captcha {
             let user = User {
                 history: Default::default(),
             };
-            self.dapp_users.insert(account, &user);
+            self.users.insert(account, &user);
             let mut user_accounts = self.user_accounts.get_or_default();
             user_accounts.insert(account);
             self.user_accounts.set(&user_accounts);
@@ -1749,7 +1749,7 @@ pub mod captcha {
         /// Returns an error if the user does not exist
         #[ink(message)]
         pub fn get_dapp_user(&self, account: AccountId) -> Result<User, Error> {
-            self.dapp_users
+            self.users
                 .get(account)
                 .ok_or_else(err_fn!(self, Error::DappUserDoesNotExist))
         }
