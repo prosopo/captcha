@@ -241,8 +241,9 @@ pub mod captcha {
         seed_at: BlockNumber,                 // the block at which the seed was set
         seed_log: Mapping<BlockNumber, u128>, // the history of seeds for rng
         rewind_window: u8, // the number of blocks in the past that the rng can be replayed/rewinded
-        account_change_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
+        provider_account_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
         provider_log: Mapping<AccountBlockId, ProviderRecord>, // log of provider changes for a given account
+        dapp_account_log: Mapping<BlockNumber, BTreeSet<AccountId>>, // log of what accounts changed at which block
         dapp_log: Mapping<AccountBlockId, DappRecord>, // log of dapp changes for a given account
         logs_pruned_at: BlockNumber, // the last block that the provider logs were pruned
     }
@@ -372,8 +373,9 @@ pub mod captcha {
                 seed: 0,
                 seed_at: 0,
                 rewind_window,
-                account_change_log: Default::default(),
+                provider_account_log: Default::default(),
                 provider_log: Default::default(),
+                dapp_account_log: Default::default(),
                 dapp_log: Default::default(),
                 logs_pruned_at: 0,
             }
@@ -569,7 +571,7 @@ pub mod captcha {
             let mut found: BTreeSet<AccountId> = BTreeSet::new();
             for at_block in block..=current_block {
                 // get the list of provider accounts that changed in this block
-                let mut accounts = self.account_change_log.get(at_block).unwrap_or_default();
+                let mut accounts = self.provider_account_log.get(at_block).unwrap_or_default();
                 // remove any accounts we've already found a version for
                 accounts.retain(|account| !found.contains(account));
                 // for each provider which changed
@@ -1192,11 +1194,11 @@ pub mod captcha {
             );
             // record that this account has changed
             let mut group = self
-                .account_change_log
+                .provider_account_log
                 .get(self.env().block_number())
                 .unwrap_or_default();
             group.insert(account);
-            self.account_change_log
+            self.provider_account_log
                 .insert(self.env().block_number(), &group);
         }
 
@@ -1214,11 +1216,11 @@ pub mod captcha {
             );
             // record that this account has changed
             let mut group = self
-                .account_change_log
+                .dapp_account_log
                 .get(self.env().block_number())
                 .unwrap_or_default();
             group.insert(account);
-            self.account_change_log
+            self.dapp_account_log
                 .insert(self.env().block_number(), &group);
         }
 
@@ -1229,15 +1231,17 @@ pub mod captcha {
             let start = self.get_rewind_window_start();
             // for all records which land outside the rewind window, remove them. E.g. between the last prune and the start of the rewind window
             for block in last..start {
-                // find the accounts that changes at the block
-                let accounts = self.account_change_log.take(block).unwrap_or_default();
-                for account in accounts {
-                    // remove provider logs for the account at the block
+                // remove providers
+                let provider_accounts = self.provider_account_log.take(block).unwrap_or_default();
+                for account in provider_accounts {
                     self.provider_log.remove(AccountBlockId { account, block });
-                    // remove dapp logs for the account at the block
+                }
+                // remove dapps
+                let dapp_accounts = self.dapp_account_log.take(block).unwrap_or_default();
+                for account in dapp_accounts {
                     self.dapp_log.remove(AccountBlockId { account, block });
                 }
-                // remove seed log entry at the block
+                // remove seeds
                 self.seed_log.remove(block);
             }
             self.logs_pruned_at = self.env().block_number();
