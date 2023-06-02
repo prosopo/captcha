@@ -160,8 +160,6 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Dapp {
-        account: AccountId,
-        account_index: u128,
         status: GovernanceStatus,
         balance: Balance,
         owner: AccountId,
@@ -232,6 +230,7 @@ pub mod captcha {
         dapp_stake_threshold: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_accounts: Mapping<u128, AccountId>,
+        dapp_account_indices: Mapping<AccountId, u128>,
         dapp_accounts_len: u128,
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         dapp_users: Mapping<AccountId, User>,
@@ -368,6 +367,7 @@ pub mod captcha {
                 dapp_stake_threshold,
                 dapps: Default::default(),
                 dapp_accounts: Default::default(),
+                dapp_account_indices: Default::default(),
                 user_accounts: Default::default(),
                 max_user_history_len,
                 max_user_history_age,
@@ -1339,8 +1339,6 @@ pub mod captcha {
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
             let old_dapp = dapp_lookup.unwrap_or(Dapp {
-                account: contract,
-                account_index: 0,
                 owner: owner.unwrap_or(self.env().caller()),
                 balance: 0,
                 status: GovernanceStatus::Inactive,
@@ -1351,11 +1349,6 @@ pub mod captcha {
                 owner: owner.unwrap_or(old_dapp.owner),
                 ..old_dapp
             };
-
-            if new {
-                new_dapp.account_index = self.dapp_accounts_len;
-                self.dapp_accounts_len += 1;
-            }
 
             // update the dapp funds
             new_dapp.balance += self.env().transferred_value();
@@ -1381,6 +1374,8 @@ pub mod captcha {
 
             // if the dapp is new then add it to the list of dapps
             if new {
+                // add the index mapping the dapp
+                self.dapp_account_indices.insert(contract, &self.dapp_accounts_len);
                 self.dapp_accounts.insert(self.dapp_accounts_len, &contract);
                 self.dapp_accounts_len += 1;
             }
@@ -1460,17 +1455,21 @@ pub mod captcha {
 
             // remove the dapp
             self.dapps.remove(contract);
+
+            // get the index of the dapp account
+            let index = self.dapp_account_indices.get(&contract).ok_or_else(err_fn!(self, Error::InvalidIndex))?;
             // remove the account at the index
-            self.dapp_accounts.remove(dapp.account_index);
-            // move the last account into the index
-            let last_account = self.dapp_accounts.get(self.dapp_accounts_len - 1).ok_or_else(err_fn!(self, Error::InvalidIndex))?;
-            let mut last = self.get_dapp(last_account)?;
-            last.account_index = dapp.account_index;
-            self.dapps.insert(last.account, &last);
-            self.dapp_accounts.insert(dapp.account_index, &last_account);
+            self.dapp_accounts.remove(index);
             // decrement the dapp accounts len
             self.dapp_accounts_len -= 1;
-
+            // at this point, there's a hole at index in the contiguous indices for dapp accounts
+            // move the last account into the index to fill the hole, making it contiguous again
+            let last_account = self.dapp_accounts.take(self.dapp_accounts_len).ok_or_else(err_fn!(self, Error::InvalidIndex))?;
+            // remove the index for the last account
+            self.dapp_account_indices.remove(last_account);
+            // set the index for the last account to the index of the removed account
+            self.dapp_account_indices.insert(last_account, &index);
+            
             // update the log
             self.log_dapp(contract, None);
 
