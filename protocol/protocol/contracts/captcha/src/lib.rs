@@ -939,6 +939,7 @@ pub mod captcha {
             deactivate: bool,
             dataset_id: Option<Hash>,
             dataset_id_content: Option<Hash>,
+            should_exist: bool,
         ) -> Result<(), Error> {
             if fee.is_some() {
                 self.check_provider_fee(fee.unwrap())?;
@@ -948,6 +949,15 @@ pub mod captcha {
             let provider_account = self.env().caller();
             let lookup = self.providers.get(provider_account);
             let new = lookup.is_none();
+            if new && should_exist {
+                // error if the provider should already exist, but doesn't
+                return err!(self, Error::ProviderDoesNotExist);
+            }
+            if !new && !should_exist {
+                // error if the provider should not exist but does
+                return err!(self, Error::ProviderExists);
+            }
+
             let old_provider = if new {
                 Provider {
                     status: GovernanceStatus::Inactive,
@@ -1108,13 +1118,8 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            // this function is for registration only
-            if self.providers.get(self.env().caller()).is_some() {
-                return err!(self, Error::ProviderExists);
-            }
-
             let result =
-                self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None);
+                self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None, false);
 
             // update the seed
             self.update_seed()?;
@@ -1131,13 +1136,8 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            // this function is for updating only, not registering
-            if self.providers.get(self.env().caller()).is_none() {
-                return err!(self, Error::ProviderDoesNotExist);
-            }
-
             let result =
-                self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None);
+                self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None, true);
 
             // update the seed
             self.update_seed()?;
@@ -1267,7 +1267,7 @@ pub mod captcha {
         #[ink(payable)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
             if self.env().transferred_value() > 0 {
-                return self.provider_configure(None, None, None, false, None, None);
+                return self.provider_configure(None, None, None, false, None, None, true);
             }
             Ok(())
         }
@@ -1286,6 +1286,7 @@ pub mod captcha {
                 false,
                 Some(dataset_id),
                 Some(dataset_id_content),
+                true
             )
         }
 
