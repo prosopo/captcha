@@ -2147,62 +2147,123 @@ pub mod captcha {
             account
         }
 
-        fn register_provider(contract: &mut Captcha, index: u128) {
-            // set the caller to the provider account
-            set_caller(get_provider_account(index));
-            set_callee(get_contract_account(index));
-            // register the provider
-            set_value_transferred(contract.get_provider_stake_threshold());
-            contract
-                .provider_register(
-                    get_provider_url(index),
-                    get_provider_fee(),
-                    get_provider_payee(),
-                )
-                .unwrap();
-            set_value_transferred(0);
-            // set the dataset for the provider
-            contract
-                .provider_set_dataset(
-                    get_provider_dataset_id(index),
-                    get_provider_dataset_id_content(index),
-                )
-                .unwrap();
-            // advance the block, as in production the provider would not be seen until block rollover
-            advance_block();
-
-            // avoid accidentally reusing caller
-            reset_caller();
-            reset_callee();
+        fn increment_account_balance(account: AccountId, amount: Balance) {
+            let mut balance = get_account_balance(account).unwrap();
+            balance += amount;
+            set_account_balance(account, balance);
         }
 
-        fn register_dapp(contract: &mut Captcha, index: u128) {
+        /// Setup a dapp given the contract and contract's index
+        fn setup_dapp(contract: &mut Captcha, contract_index: u128, dapp_index: u128) {
             // set the caller to the dapp account
-            set_caller(get_dapp_account(index));
-            set_callee(get_contract_account(index));
-            set_value_transferred(contract.get_dapp_stake_threshold());
+            set_caller(get_dapp_account(dapp_index));
+            set_callee(get_contract_account(contract_index));
+
             // register the dapp
             contract
                 .dapp_register(get_dapp_contract_account(index), get_dapp_payee())
                 .unwrap();
+
+            if activate {
+                activate_dapp(contract, contract_index, dapp_index);
+            }
+            
+            // avoid accidentally reusing caller
+            reset_caller();
+            reset_callee();
+        }
+
+        fn activate_dapp(contract: &mut Captcha, contract_index: u128, dapp_index: u128) {
+            // set the caller to the dapp account
+            set_caller(get_dapp_account(dapp_index));
+            set_callee(get_contract_account(contract_index));
+
+            let account = get_provider_account(provider_index);
+            // give the dapp some funds above the threshold
+            let funds = contract.get_dapp_stake_threshold();
+            // allocate them to the account
+            increment_account_balance(account, funds);
+            set_value_transferred(funds);
+
+            contract.dapp_fund().unwrap();
             set_value_transferred(0);
-            // advance the block, as in production the dapp would not be seen until block rollover
-            advance_block();
 
             // avoid accidentally reusing caller
             reset_caller();
             reset_callee();
         }
 
-        fn get_contract_populated(index: u128, size: u128) -> Captcha {
-            let mut contract = get_contract(index);
-            for i in 0..size {
-                // register the provider
-                register_provider(&mut contract, i);
-                // register the dapp
-                register_dapp(&mut contract, i);
-            }
+        /// Setup a provider given the index of the provider. Activate the provider if instructed to do so, which adds funds as required
+        fn setup_provider(contract: &mut Captcha, contract_index: u128, provider_index: u128, activate: bool) {
+            // set the callee to the contract
+            set_caller(get_contract_account(contract_index));
+            // set the caller to the provider account
+            set_caller(get_provider_account(provider_index));
+
+            // register the provider
+            contract.provider_register(
+                get_provider_url(provider_index),
+                get_provider_fee(),
+                get_provider_payee(),
+            ).unwrap();
+            // set the dataset for the provider
             contract
+                .provider_set_dataset(
+                    get_provider_dataset_id(provider_index),
+                    get_provider_dataset_id_content(provider_index),
+                )
+                .unwrap();
+            // optionally activate the provider
+            if activate {
+                activate_provider(contract, contract_index, provider_index);
+            }
+
+            // check dapp is active/inactive
+            assert_eq!(GovernanceStatus::Active, contract.get_dapp(account).unwrap().status);
+
+            // avoid accidentally reusing caller
+            reset_caller();
+            reset_callee();
+        }
+
+        fn activate_provider(contract: &mut Captcha, contract_index: u128, provider_index: u128) {
+            // set the callee to the contract
+            set_caller(get_contract_account(contract_index));
+            // set the caller to the provider account
+            set_caller(get_provider_account(provider_index));
+
+            let account = get_provider_account(provider_index);
+            // give the provider some funds above the threshold
+            let funds = contract.get_provider_stake_threshold();
+            // allocate them to the account
+            increment_account_balance(account, funds);
+            set_value_transferred(funds);
+
+            set_caller(account);
+            contract.provider_fund().unwrap();
+            set_value_transferred(0);
+
+            // check provider is active/inactive
+            assert_eq!(GovernanceStatus::Active, contract.get_provider(account).unwrap().status);
+
+            // avoid accidentally reusing caller
+            set_caller(get_unused_account());
+            set_callee(get_unused_account());
+        }
+
+        #[ink::test]
+        fn test_provider_update_url_in_use() {
+            reset_caller();
+            reset_callee();
+
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            setup_provider(&contract, 0, true);
+
+            set_caller(get_provider_account(0));
+
+            // attempt to set provider 0's url to provider 1's url, which should error
+            assert_eq!(Err(Error::ProviderUrlUsed), contract.provider_update(get_provider_url(1), 0, Payee::Provider));
         }
 
         #[ink::test]
