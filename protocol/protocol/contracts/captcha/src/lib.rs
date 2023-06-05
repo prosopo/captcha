@@ -2217,6 +2217,17 @@ pub mod captcha {
             assert_eq!(Err(Error::ProviderExists), contract.provider_register(Vec::new(), 0, Payee::Provider));
         }
 
+        #[ink::test]
+        fn test_provider_update_does_not_exist() {
+            reset_caller();
+            reset_callee();
+
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            set_caller(get_provider_account(0));
+
+            assert_eq!(Err(Error::ProviderDoesNotExist), contract.provider_update(Vec::new(), 0, Payee::Provider));
+        }
 
         #[ink::test]
         fn test_dapp_register_already_exists() {
