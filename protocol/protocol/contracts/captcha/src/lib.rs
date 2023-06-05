@@ -2338,6 +2338,19 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_dapp_update_is_contract() {
+            reset_caller();
+            reset_callee();
+
+            let mut contract = get_contract_populated(0, 1);
+            set_callee(get_contract_account(0));
+            set_caller(get_dapp_account(0));
+
+            // contract set to an account which is not a contract should error
+            assert_eq!(Err(Error::InvalidContract), contract.dapp_update(get_unused_account(), DappPayee::Provider, get_dapp_account(0)));
+        }
+
+        #[ink::test]
         fn test_get_payees() {
             reset_caller();
             reset_callee();
