@@ -39,7 +39,6 @@ export async function batch(
         blockHash,
         runtimeVersion,
     }
-
     const batchExtrinsic = contract.api.tx.utility.batch(extrinsics)
     const balance = await contract.api.query.system.account(pair.address)
     const paymentInfo = await batchExtrinsic.paymentInfo(pair)

@@ -99,7 +99,6 @@ export class Environment implements ProsopoEnvironment {
 
     async getContractApi(): Promise<ProsopoCaptchaContract> {
         const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
-        this.logger.debug('Getting new contract instance with pair', this.pair.address, 'nonce', nonce.toString())
         this.contractInterface = new ProsopoCaptchaContract(
             this.api,
             this.abi,
@@ -126,17 +125,14 @@ export class Environment implements ProsopoEnvironment {
                 await this.importDatabase().catch((err) => {
                     this.logger.error(err)
                 })
-            } else if (this.db?.connection?.readyState !== 1) {
-                this.db
-                    .connect()
-                    .then(() => {
-                        this.logger.info(`Connected to db`)
-                    })
-                    .catch((err) => {
-                        this.logger.error(err)
-                    })
+            }
+            if (this.db && this.db.connection?.readyState !== 1) {
+                this.logger.warn(`Database connection is not ready, reconnecting...`)
+                await this.db.connect()
+                this.logger.info(`Connected to db`)
             }
         } catch (err) {
+            this.logger.error(err)
             throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
         }
     }

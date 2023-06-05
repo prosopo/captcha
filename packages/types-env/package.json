@@ -21,8 +21,8 @@
   },
   "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
-    "@polkadot/keyring": "12.2.1",
-    "@polkadot/types": "10.7.1",
+    "@polkadot/keyring": "12.2.2",
+    "@polkadot/types": "10.8.1",
     "@prosopo/common": "^0.1.11",
     "@prosopo/types": "^0.1.11",
     "@prosopo/types-database": "^0.1.11"

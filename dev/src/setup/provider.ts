@@ -63,13 +63,21 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
     const logger = env.logger
     const tasks = new Tasks(env)
     logger.info('   - providerRegister')
+    const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
+        Array.from(hexToU8a(stringToHexPadded(provider.url))),
+        provider.fee,
+        provider.payee,
+        {
+            value: provider.stake,
+        },
+    ]
 
     try {
-        const queryResult = await tasks.contract.query.providerRegister(
-            Array.from(hexToU8a(stringToHexPadded(provider.url))),
-            provider.fee,
-            provider.payee
-        )
+        const queryResult = await tasks.contract.query.providerRegister(...providerRegisterArgs)
+        const error = queryResult.value.err || queryResult.value.ok?.err
+        if (error) {
+            throw new ProsopoContractError(error)
+        }
     } catch (err) {
         if (typeof err === 'object' && 'issue' in err && err.issue === 'OUTPUT_IS_NULL') {
             logger.info('   - providerRegister: provider is not registered')
@@ -78,21 +86,20 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
             throw new ProsopoContractError(err)
         }
     }
-
-    await tasks.contract.tx.providerRegister(
-        Array.from(hexToU8a(stringToHexPadded(provider.url))),
-        provider.fee,
-        provider.payee
-    )
+    try {
+        const txResult = await tasks.contract.tx.providerRegister(...providerRegisterArgs)
+    } catch (err) {
+        logger.error(JSON.stringify(err.error))
+    }
 
     const registeredProvider = await env.contractInterface.query.getProviderDetails(provider.address)
+    const registeredProviderError = registeredProvider.value.err || registeredProvider.value.ok?.err
+    if (registeredProviderError) {
+        throw new ProsopoContractError(registeredProviderError)
+    }
     logger.info('   - providerStake')
-    await tasks.contract.tx.providerUpdate(
-        Array.from(hexToU8a(stringToHexPadded(provider.url))),
-        provider.fee,
-        provider.payee,
-        { value: provider.stake }
-    )
+    await tasks.contract.query.providerUpdate(...providerRegisterArgs)
+    await tasks.contract.tx.providerUpdate(...providerRegisterArgs)
     logger.info('   - providerSetDataset')
     const datasetJSON = loadJSONFile(provider.datasetFile)
     await tasks.providerSetDatasetFromFile(datasetJSON)

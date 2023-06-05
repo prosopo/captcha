@@ -22,10 +22,10 @@
   "homepage": "https://github.com/prosopo/captcha#readme",
   "sideEffects": false,
   "dependencies": {
-    "@polkadot/api": "10.7.1",
-    "@polkadot/keyring": "12.2.1",
-    "@polkadot/rpc-provider": "10.7.1",
-    "@polkadot/types": "10.7.1",
+    "@polkadot/api": "10.8.1",
+    "@polkadot/keyring": "12.2.2",
+    "@polkadot/rpc-provider": "10.8.1",
+    "@polkadot/types": "10.8.1",
     "@prosopo/api": "^0.1.11",
     "@prosopo/contract": "^0.1.11",
     "@prosopo/types": "^0.1.11"

@@ -205,7 +205,7 @@ export class ProsopoCaptchaContract extends Contract {
             options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit, true)
             handleContractCallOutcomeErrors(response, contractMethodName)
             return {
-                extrinsic: this.tx[contractMethodName](options, ...encodedArgs),
+                extrinsic: this.contract.tx[contractMethodName](options, ...encodedArgs),
                 options,
                 storageDeposit: response.storageDeposit,
             }

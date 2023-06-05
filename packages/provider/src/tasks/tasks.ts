@@ -11,20 +11,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ArgumentTypes } from '@prosopo/types'
-import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import {
+    ArgumentTypes,
     Captcha,
     CaptchaConfig,
     CaptchaSolution,
     CaptchaSolutionConfig,
     CaptchaStates,
+    CaptchaStatus,
     CaptchaWithProof,
+    Commit,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
+    Hash,
+    PendingCaptchaRequest,
     RandomProvider,
 } from '@prosopo/types'
+import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import {
     CaptchaMerkleTree,
     buildDataset,
@@ -36,7 +40,6 @@ import {
     parseCaptchaDataset,
 } from '@prosopo/datasets'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Hash } from '@prosopo/types'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
@@ -44,8 +47,8 @@ import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { SubmittableResult } from '@polkadot/api'
 import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
+import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import { stringToHex } from '@polkadot/util'
 import consola from 'consola'
 
 /**
@@ -170,16 +173,29 @@ export class Tasks {
         const providerDetails = (await this.contract.methods.getProviderDetails(this.contract.pair.address, {})).value
             .unwrap()
             .unwrap()
-        const pendingRequest = await this.validateDappUserSolutionRequestIsPending(requestHash, userAccount, captchaIds)
+        const pendingRecord = await this.db.getDappUserPending(requestHash)
+        const pendingRequest = await this.validateDappUserSolutionRequestIsPending(
+            requestHash,
+            pendingRecord,
+            userAccount,
+            captchaIds
+        )
         // Only do stuff if the request is in the local DB
+        const userSignature = hexToU8a(signature)
         if (pendingRequest) {
-            await this.db.storeDappUserSolution(
-                receivedCaptchas,
-                commitmentId,
-                userAccount,
-                dappAccount,
-                providerDetails.datasetId.toString()
-            )
+            const commit: Commit = {
+                id: commitmentId,
+                user: userAccount,
+                dapp: dappAccount,
+                provider: this.contract.pair.address,
+                datasetId: providerDetails.datasetId.toString(),
+                status: CaptchaStatus.pending,
+                userSignaturePart1: [...userSignature.slice(0, userSignature.length / 2)],
+                userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
+                requestedAt: pendingRecord.deadline,
+                completedAt: Date.now(),
+            }
+            await this.db.storeDappUserSolution(receivedCaptchas, commit)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
                 response = {
                     captchas: captchaIds.map((id) => ({
@@ -278,15 +294,16 @@ export class Tasks {
     /**
      * Validate that a Dapp User is responding to their own pending captcha request
      * @param {string} requestHash
+     * @param {PendingCaptchaRequest} pendingRecord
      * @param {string} userAccount
      * @param {string[]} captchaIds
      */
     async validateDappUserSolutionRequestIsPending(
         requestHash: string,
+        pendingRecord: PendingCaptchaRequest,
         userAccount: string,
         captchaIds: string[]
     ): Promise<boolean> {
-        const pendingRecord = await this.db.getDappUserPending(requestHash)
         const currentTime = Date.now()
         if (pendingRecord.deadline < currentTime) {
             // deadline for responding to the captcha has expired

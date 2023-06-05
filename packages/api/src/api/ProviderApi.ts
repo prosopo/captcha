@@ -47,8 +47,8 @@ export default class ProviderApi extends HttpClientBase {
         return this.axios.post(`/v1/prosopo/provider/solution`, {
             captchas,
             requestHash,
-            userAccount,
-            dappAccount: this.network.dappContract.address,
+            user: userAccount,
+            dapp: this.network.dappContract.address,
             salt,
             signature,
         } as CaptchaSolutionBodyType)

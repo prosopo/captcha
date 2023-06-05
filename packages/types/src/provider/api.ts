@@ -35,8 +35,8 @@ export const CaptchaRequestBody = z.object({
 export type CaptchaRequestBodyType = z.infer<typeof CaptchaRequestBody>
 
 export const CaptchaSolutionBody = z.object({
-    userAccount: z.string(),
-    dappAccount: z.string(),
+    user: z.string(),
+    dapp: z.string(),
     captchas: z.array(CaptchaSolutionSchema),
     requestHash: z.string(),
     blockHash: z.string().optional(),

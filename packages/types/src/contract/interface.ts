@@ -3,7 +3,7 @@
 // import { Logger } from '@prosopo/common'
 //
 //
-// export interface IProsopoCaptchaContract extends CaptchaContract {
+// export interface IProsopoCaptchaContract {
 //     contractName: string
 //     pair: IKeyringPair
 //     options: ContractOptions

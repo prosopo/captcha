@@ -16,6 +16,8 @@ import {
     Captcha,
     CaptchaSolution,
     CaptchaStates,
+    CaptchaStatus,
+    Commit,
     DatasetBase,
     DatasetWithIds,
     DatasetWithIdsAndTree,
@@ -82,20 +84,26 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async connect(): Promise<void> {
         return new Promise((resolve, reject) => {
+            console.log(mongoose.connection)
             if (this.connection) {
                 resolve()
             }
-            this.logger.info(`mongo url: ${this.url}`)
+            this.logger.info(`Mongo url: ${this.url}`)
             mongoose.connect(this.url, { dbName: this.dbname })
             this.connection = mongoose.connection
             this.tables = {
-                captcha: this.connection.model<Captcha>('Captcha', CaptchaRecordSchema),
-                dataset: this.connection.model<DatasetBase>('Dataset', DatasetRecordSchema),
-                solution: this.connection.model<SolutionRecord>('Solution', SolutionRecordSchema),
-                commitment: this.connection.model<UserCommitmentRecord>('UserCommitment', UserCommitmentRecordSchema),
-                usersolution: this.connection.model<UserSolutionRecord>('UserSolution', UserSolutionRecordSchema),
-                pending: this.connection.model<PendingCaptchaRequest>('Pending', PendingRecordSchema),
-                scheduler: this.connection.model<ScheduledTaskRecord>('Scheduler', ScheduledTaskRecordSchema),
+                captcha: this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
+                dataset: this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
+                solution: this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
+                commitment:
+                    this.connection.models.UserCommitment ||
+                    this.connection.model('UserCommitment', UserCommitmentRecordSchema),
+                usersolution:
+                    this.connection.models.UserSolution ||
+                    this.connection.model('UserSolution', UserSolutionRecordSchema),
+                pending: this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
+                scheduler:
+                    this.connection.models.Scheduler || this.connection.model('Scheduler', ScheduledTaskRecordSchema),
             }
             this.connection.once('open', resolve).on('error', (e) => {
                 this.logger.info(`mongoose connection  error`)
@@ -107,6 +115,20 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 this.logger.error(e)
                 reject(new ProsopoEnvError(e, 'DATABASE.CONNECT_ERROR', {}, this.url))
             })
+        })
+    }
+
+    /** Close connection to the database */
+    async close(): Promise<void> {
+        this.logger.info(`Closing connection to ${this.url}`)
+        await new Promise<void>(async (resolve, reject): Promise<void> => {
+            mongoose.connection
+                .close()
+                .then(() => {
+                    this.logger.info(`Connection to ${this.url} closed`)
+                    resolve()
+                })
+                .catch(reject)
         })
     }
 
@@ -330,31 +352,15 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /**
      * @description Store a Dapp User's captcha solution commitment
      */
-    async storeDappUserSolution(
-        captchas: CaptchaSolution[],
-        commitmentId: string,
-        userAccount: string,
-        dappAccount: string,
-        datasetId: string
-    ): Promise<void> {
-        if (!isHex(commitmentId)) {
-            throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.storeDappUserSolution.name, {}, commitmentId)
-        }
-
+    async storeDappUserSolution(captchas: CaptchaSolution[], commit: Commit): Promise<void> {
         const commitmentRecord = UserCommitmentSchema.parse({
-            userAccount,
-            dappAccount,
-            datasetId,
-            commitmentId: commitmentId,
-            approved: false,
-            datetime: new Date(),
+            ...commit,
             processed: false,
-        })
-
+        } as UserCommitmentRecord)
         if (captchas.length) {
             await this.tables?.commitment.updateOne(
                 {
-                    commitmentId,
+                    id: commit.id,
                 },
                 commitmentRecord,
                 { upsert: true }
@@ -362,14 +368,14 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
             const ops = captchas.map((captcha: CaptchaSolution) => ({
                 updateOne: {
-                    filter: { commitmentId: commitmentId, captchaId: captcha.captchaId },
+                    filter: { commitmentId: commit.id, captchaId: captcha.captchaId },
                     update: {
                         $set: <UserSolutionRecord>{
                             captchaId: captcha.captchaId,
                             captchaContentId: captcha.captchaContentId,
                             salt: captcha.salt,
                             solution: captcha.solution,
-                            commitmentId,
+                            commitmentId: commit.id,
                             processed: false,
                         },
                     },
@@ -403,7 +409,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /** @description Remove processed Dapp User captcha commitments from the user commitments table
      */
     async removeProcessedDappUserCommitments(commitmentIds: string[]): Promise<DeleteResult | undefined> {
-        return await this.tables?.commitment.deleteMany({ processed: true, commitmentId: { $in: commitmentIds } })
+        return await this.tables?.commitment.deleteMany({ processed: true, id: { $in: commitmentIds } })
     }
 
     /**
@@ -591,7 +597,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param commitmentId
      */
     async getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord | undefined> {
-        const commitmentCursor = this.tables?.commitment?.findOne({ commitmentId: commitmentId }).lean()
+        const commitmentCursor = this.tables?.commitment?.findOne({ id: commitmentId }).lean()
 
         const doc = await commitmentCursor
 
@@ -617,7 +623,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     async approveDappUserCommitment(commitmentId: string): Promise<void> {
         try {
             await this.tables?.commitment
-                ?.findOneAndUpdate({ commitmentId: commitmentId }, { $set: { approved: true } }, { upsert: false })
+                ?.findOneAndUpdate(
+                    { id: commitmentId },
+                    { $set: { status: CaptchaStatus.approved } },
+                    { upsert: false }
+                )
                 .lean()
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)
@@ -646,11 +656,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         try {
             const distinctCommitmentIds = [...new Set(commitmentIds)]
             await this.tables?.commitment
-                ?.updateMany(
-                    { commitmentId: { $in: distinctCommitmentIds } },
-                    { $set: { processed: true } },
-                    { upsert: false }
-                )
+                ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)

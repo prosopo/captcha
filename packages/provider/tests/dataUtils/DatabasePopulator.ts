@@ -15,7 +15,7 @@ import { Abi } from '@polkadot/api-contract'
 import { Account, accountAddress, accountContract, accountMnemonic } from '../accounts'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN, stringToU8a } from '@polkadot/util'
-import { ContractDeployer } from '@prosopo/contract'
+import { ContractDeployer, ProsopoContractError } from '@prosopo/contract'
 import { DappPayee, Payee } from '@prosopo/types'
 import { Environment } from '@prosopo/env'
 import { EventRecord } from '@polkadot/types/interfaces'
@@ -328,7 +328,19 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             this.mockEnv.logger.debug('Dapp contract address', contractAddress)
 
+            const queryResult = await tasks.contract.query.dappRegister(contractAddress, DappPayee.dapp)
+
+            const error = queryResult.value.err || queryResult.value.ok?.err
+
+            if (error) {
+                throw new ProsopoContractError(error)
+            }
+
             await tasks.contract.tx.dappRegister(contractAddress, DappPayee.dapp)
+
+            const dapp = await tasks.contract.query.getDappDetails(contractAddress)
+
+            this.mockEnv.logger.debug('Dapp registered', dapp.value.unwrap().unwrap())
 
             if (!noPush) {
                 this._registeredDapps.push(account)

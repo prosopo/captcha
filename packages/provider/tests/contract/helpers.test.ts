@@ -13,9 +13,9 @@
 // limitations under the License.
 import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { ContractSelector } from '@polkadot/types/interfaces'
-import { Environment, MockEnvironment } from '@prosopo/env'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { LogLevel, logger } from '@prosopo/common'
+import { LogLevel, ProsopoEnvError, logger } from '@prosopo/common'
+import { MockEnvironment } from '@prosopo/env'
 import { ProsopoConfigSchema } from '@prosopo/types'
 import { TypeDefInfo } from '@polkadot/types-create'
 import { describe } from 'mocha'
@@ -27,29 +27,27 @@ import chai from 'chai'
 const expect = chai.expect
 
 describe('CONTRACT HELPERS', function () {
-    this.timeout(30000)
     const log = logger(LogLevel.Debug, 'TEST')
-    let env: Environment
+    let env: MockEnvironment
+    let pairType: KeypairType
+    let ss58Format: number
 
-    before(function (): Promise<void> {
-        return new Promise((resolve, reject) => {
-            try {
-                const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
-                const ss58Format = 42
-                getPair('sr25519' as KeypairType, ss58Format, mnemonic).then((pair) => {
-                    log.info('process.env.config', JSON.stringify(process.env.config, null, 4))
-                    const config = ProsopoConfigSchema.parse(JSON.parse(process.env.config ? process.env.config : '{}'))
-                    env = new MockEnvironment(pair, config)
-                    log.info('before env.isReady')
-                    env.isReady().then(() => {
-                        log.info('after env.isReady')
-                        resolve()
-                    })
-                })
-            } catch (e) {
-                reject(e)
-            }
-        })
+    beforeEach(async function () {
+        ss58Format = 42
+        pairType = 'sr25519' as KeypairType
+        const alicePair = await getPair(pairType, ss58Format, '//Alice')
+        const config = ProsopoConfigSchema.parse(JSON.parse(process.env.config ? process.env.config : '{}'))
+        env = new MockEnvironment(alicePair, config)
+        try {
+            await env.isReady()
+        } catch (e) {
+            throw new ProsopoEnvError(e, 'isReady')
+        }
+    })
+
+    afterEach(async (): Promise<void> => {
+        console.log('in after')
+        await env.db?.close()
     })
 
     it('Properly encodes `Hash` arguments when passed unhashed', async function (done) {

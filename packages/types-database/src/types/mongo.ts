@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ArgumentTypes } from '@prosopo/types'
+import { ArgumentTypes, Commit } from '@prosopo/types'
 import {
     Captcha,
     CaptchaSolution,
@@ -40,7 +40,8 @@ export const UserCommitmentSchema = z.object({
     provider: z.string(),
     id: z.string(),
     status: z.nativeEnum(ArgumentTypes.CaptchaStatus),
-    userSignature: z.array(z.number()),
+    userSignaturePart1: z.array(z.number()),
+    userSignaturePart2: z.array(z.number()),
     completedAt: z.number(),
     requestedAt: z.number(),
     processed: z.boolean(),
@@ -88,12 +89,14 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     user: { type: String, required: true },
     dapp: { type: String, required: true },
+    provider: { type: String, required: true },
     datasetId: { type: String, required: true },
     id: { type: String, required: true },
     status: { type: String, required: true },
     requestedAt: { type: Number, required: true },
     completedAt: { type: Number, required: true },
-    userSignature: { type: String, required: true },
+    userSignaturePart1: { type: Array, required: true },
+    userSignaturePart2: { type: Array, required: true },
     processed: { type: Boolean, required: true },
 })
 
@@ -187,6 +190,8 @@ export interface Database {
 
     connect(): Promise<void>
 
+    close(): Promise<void>
+
     storeDataset(dataset: Dataset): Promise<void>
 
     getDataset(datasetId: string): Promise<DatasetWithIds>
@@ -205,13 +210,7 @@ export interface Database {
 
     getDatasetDetails(datasetId: ArgumentTypes.Hash | string | Uint8Array): Promise<DatasetBase>
 
-    storeDappUserSolution(
-        captchas: CaptchaSolution[],
-        commitmentId: string,
-        userAccount: string,
-        dappAccount: string,
-        datasetId: string
-    ): Promise<void>
+    storeDappUserSolution(captchas: CaptchaSolution[], commit: Commit): Promise<void>
 
     storeDappUserPending(userAccount: string, requestHash: string, salt: string, deadline: number): Promise<void>
 
