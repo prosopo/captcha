@@ -2230,6 +2230,42 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_provider_fund_does_not_exist() {
+            reset_caller();
+            reset_callee();
+
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            set_caller(get_provider_account(0));
+
+            assert_eq!(Err(Error::ProviderDoesNotExist), contract.provider_fund());
+        }
+
+        #[ink::test]
+        fn test_provider_set_dataset_does_not_exist() {
+            reset_caller();
+            reset_callee();
+
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            set_caller(get_provider_account(0));
+
+            assert_eq!(Err(Error::ProviderDoesNotExist), contract.provider_set_dataset(get_provider_dataset_id(0), get_provider_dataset_id_content(0)));
+        }
+
+        #[ink::test]
+        fn test_provider_deactivate_does_not_exist() {
+            reset_caller();
+            reset_callee();
+
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            set_caller(get_provider_account(0));
+
+            assert_eq!(Err(Error::ProviderDoesNotExist), contract.provider_deactivate());
+        }
+
+        #[ink::test]
         fn test_dapp_register_already_exists() {
             reset_caller();
             reset_callee();
