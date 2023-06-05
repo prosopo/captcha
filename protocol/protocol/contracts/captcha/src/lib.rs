@@ -2218,6 +2218,18 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_dapp_register_already_exists() {
+            reset_caller();
+            reset_callee();
+
+            let mut contract = get_contract_populated(0, 1);
+            set_callee(get_contract_account(0));
+            set_caller(get_dapp_account(0));
+
+            assert_eq!(Err(Error::DappExists), contract.dapp_register(get_dapp_contract_account(0), DappPayee::Provider));
+        }
+
+        #[ink::test]
         fn test_provider_update_does_not_exist() {
             reset_caller();
             reset_callee();
@@ -2227,6 +2239,18 @@ pub mod captcha {
             set_caller(get_provider_account(0));
 
             assert_eq!(Err(Error::ProviderDoesNotExist), contract.provider_update(Vec::new(), 0, Payee::Provider));
+        }
+
+        #[ink::test]
+        fn test_dapp_update_does_not_exist() {
+            reset_caller();
+            reset_callee();
+
+            let mut contract = get_contract(0);
+            set_callee(get_contract_account(0));
+            set_caller(get_provider_account(0));
+
+            assert_eq!(Err(Error::DappDoesNotExist), contract.dapp_update(get_dapp_contract_account(0), DappPayee::Provider, get_dapp_account(0)));
         }
 
         #[ink::test]
@@ -2276,18 +2300,6 @@ pub mod captcha {
             set_caller(get_provider_account(0));
 
             assert_eq!(Err(Error::ProviderDoesNotExist), contract.provider_deregister());
-        }
-
-        #[ink::test]
-        fn test_dapp_register_already_exists() {
-            reset_caller();
-            reset_callee();
-
-            let mut contract = get_contract_populated(0, 1);
-            set_callee(get_contract_account(0));
-            set_caller(get_dapp_account(0));
-
-            assert_eq!(Err(Error::DappExists), contract.dapp_register(get_dapp_contract_account(0), DappPayee::Provider));
         }
 
         #[ink::test]
