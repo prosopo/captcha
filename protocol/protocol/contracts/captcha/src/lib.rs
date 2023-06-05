@@ -2219,6 +2219,18 @@ pub mod captcha {
 
 
         #[ink::test]
+        fn test_dapp_register_already_exists() {
+            reset_caller();
+            reset_callee();
+
+            let mut contract = get_contract_populated(0, 1);
+            set_callee(get_contract_account(0));
+            set_caller(get_dapp_account(0));
+
+            assert_eq!(Err(Error::DappExists), contract.dapp_register(get_dapp_contract_account(0), DappPayee::Provider));
+        }
+
+        #[ink::test]
         fn test_get_payees() {
             reset_caller();
             reset_callee();
