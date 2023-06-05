@@ -34,6 +34,8 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
 }
 
 export async function run(wasmPath: string, abiPath: string): Promise<AccountId> {
+    log.info('WASM Path', wasmPath)
+    log.info('ABI Path', abiPath)
     const wasm = await Wasm(path.resolve(wasmPath))
     const abi = await AbiJSON(path.resolve(abiPath))
     const deployResult = await deploy(wasm, abi)
@@ -50,9 +52,6 @@ if (typeof require !== 'undefined' && require.main === module) {
     loadEnv(path.resolve('.'))
     if (!process.env.CAPTCHA_WASM_PATH || !process.env.CAPTCHA_ABI_PATH) {
         throw new Error('Missing protocol wasm or abi path')
-    } else {
-        log.info('WASM Path', process.env.CAPTCHA_WASM_PATH)
-        log.info('ABI Path', process.env.CAPTCHA_ABI_PATH)
     }
     run(process.env.CAPTCHA_WASM_PATH, process.env.CAPTCHA_ABI_PATH)
         .then((deployResult) => {
