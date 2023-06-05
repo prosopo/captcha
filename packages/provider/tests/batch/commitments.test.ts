@@ -84,7 +84,6 @@ describe('BATCH TESTS', function () {
     })
 
     afterEach(async (): Promise<void> => {
-        console.log('in after')
         await env.db?.close()
     })
 

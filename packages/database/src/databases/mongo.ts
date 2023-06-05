@@ -84,7 +84,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async connect(): Promise<void> {
         return new Promise((resolve, reject) => {
-            console.log(mongoose.connection)
             if (this.connection) {
                 resolve()
             }

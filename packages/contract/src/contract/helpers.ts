@@ -110,7 +110,6 @@ export function decodeEvents(contractAddress: AccountId, records: EventRecord[],
         .filter(
             ({ event }) =>
                 function () {
-                    console.log(event.toPrimitive())
                     return (
                         event.toPrimitive().section === 'contracts' &&
                         event.toPrimitive().data!['contract'] === contractAddress.toString()
@@ -119,12 +118,9 @@ export function decodeEvents(contractAddress: AccountId, records: EventRecord[],
         )
         .map((record): DecodedEvent | null => {
             try {
-                console.log(record.event.toHuman())
-                // @ts-ignore
-                console.log(record.event.index.toPrimitive())
                 return abi.decodeEvent(record.event.data.toU8a() as Bytes)
             } catch (error) {
-                console.log(error)
+                console.error(error)
                 return null
             }
         })

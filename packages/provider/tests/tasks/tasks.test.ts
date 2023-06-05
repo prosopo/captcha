@@ -75,7 +75,6 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
     })
 
     afterEach(async (): Promise<void> => {
-        console.log('in after')
         await env.db?.close()
     })
 
@@ -517,7 +516,6 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         // next part contains internal contract calls that must be run by provider
         const blockHash = await env.api.rpc.chain.getBlockHash(commitment.completedAt)
-        console.log('signature', u8aToHex(userSignature), u8aToHex(userSignature).length)
         const result: DappUserSolutionResult = await providerTasks.dappUserSolution(
             accountAddress(dappUserAccount),
             accountContract(dappContractAccount),
