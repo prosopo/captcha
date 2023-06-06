@@ -2386,12 +2386,13 @@ pub mod captcha {
             assert_eq!(seed, contract.get_seed());
         }
 
-        /// Provider register should leave the provider inactive as dataset not set and reg fn is only to register, not activate
         #[ink::test]
-        fn test_provider_register_inactive() {
+        fn test_provider_register() {
             let mut contract = get_contract(0);
             // set the caller to the provider account
             set_caller(get_provider_account(0));
+
+            let seed = contract.get_seed();
 
             // give necessary funds to the provider
             increment_account_balance(get_provider_account(0), contract.get_provider_stake_threshold());
@@ -2408,6 +2409,9 @@ pub mod captcha {
                 GovernanceStatus::Inactive,
                 contract.get_provider(get_provider_account(0)).unwrap().status
             );
+
+            // ensure the seed has not been touched
+            assert_eq!(seed, contract.get_seed());
         }
 
         #[ink::test]
