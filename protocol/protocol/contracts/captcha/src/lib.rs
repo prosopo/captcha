@@ -2281,6 +2281,7 @@ pub mod captcha {
         fn test_provider_update_url_in_use() {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
+            setup_provider(&mut contract, 0, 1, true);
 
             set_caller(get_provider_account(0));
 
