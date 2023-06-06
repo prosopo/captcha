@@ -57,7 +57,7 @@ export const CaptchaSolutionBody = z.object({
     [ApiParams.dapp]: z.string(),
     [ApiParams.captchas]: z.array(CaptchaSolutionSchema),
     [ApiParams.requestHash]: z.string(),
-    [ApiParams.signature]: z.string().optional(), // the signature to prove account ownership
+    [ApiParams.signature]: z.string(), // the signature to prove account ownership
 })
 
 export type CaptchaSolutionBodyType = z.infer<typeof CaptchaSolutionBody>

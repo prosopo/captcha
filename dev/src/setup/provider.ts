@@ -71,11 +71,13 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
             value: provider.stake,
         },
     ]
-
+    let providerExists = false
     try {
         const queryResult = await tasks.contract.query.providerRegister(...providerRegisterArgs)
         const error = queryResult.value.err || queryResult.value.ok?.err
-        if (error) {
+        if (error && error == 'ProviderExists') {
+            providerExists = true
+        } else if (error) {
             throw new ProsopoContractError(error)
         }
     } catch (err) {
@@ -86,10 +88,8 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
             throw new ProsopoContractError(err)
         }
     }
-    try {
-        const txResult = await tasks.contract.tx.providerRegister(...providerRegisterArgs)
-    } catch (err) {
-        logger.error(JSON.stringify(err.error))
+    if (!providerExists) {
+        await tasks.contract.tx.providerRegister(...providerRegisterArgs)
     }
 
     const registeredProvider = await env.contractInterface.query.getProviderDetails(provider.address)

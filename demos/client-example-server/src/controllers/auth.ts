@@ -25,7 +25,6 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
             req.body.prosopo[ApiParams.dapp] &&
             req.body.prosopo[ApiParams.blockNumber]
         ) {
-            console.log(req.body)
             if (
                 await prosopoServer.isVerified(
                     req.body.prosopo[ApiParams.user],
@@ -89,7 +88,6 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
                     req.body.prosopo.dappAccount &&
                     req.body.prosopo.blockNumber
                 ) {
-                    console.log(req.body)
                     if (
                         await prosopoServer.isVerified(
                             req.body.prosopo.userAccountAddress,

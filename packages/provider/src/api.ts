@@ -15,14 +15,17 @@ import {
     ApiParams,
     ApiPaths,
     CaptchaSolutionBody,
+    CaptchaStatus,
     CaptchaWithProof,
     DappUserSolutionResult,
     VerifySolutionBody,
 } from '@prosopo/types'
 import { CaptchaRequestBody } from '@prosopo/types'
+import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types/provider/index'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { Tasks } from './tasks/tasks'
+import { UserCommitmentRecord } from '@prosopo/types-database'
 import { parseBlockNumber } from './util'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto'
@@ -80,7 +83,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
      * @return {DappUserSolutionResult} - The Captcha solution result and proof
      */
     router.post(ApiPaths.SubmitCaptchaSolution, async (req, res, next) => {
-        let parsed
+        let parsed: CaptchaSolutionBodyType
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
         } catch (err) {
@@ -111,28 +114,30 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
      * @param {string} commitmentId - The captcha solution to look up
      */
     router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
-        let parsed
+        let parsed: VerifySolutionBodyType
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
             return next(new ProsopoApiError(err, undefined, 400))
         }
         try {
-            let solution
+            let solution: UserCommitmentRecord | undefined
             let statusMessage = 'API.USER_NOT_VERIFIED'
             if (!parsed.commitmentId) {
-                solution = await tasks.getDappUserCommitmentByAccount(parsed.userAccount)
+                solution = await tasks.getDappUserCommitmentByAccount(parsed.user)
             } else {
                 solution = await tasks.getDappUserCommitmentById(parsed.commitmentId)
             }
             if (solution) {
-                if (solution.approved) {
+                let approved = false
+                if (solution.status === CaptchaStatus.approved) {
                     statusMessage = 'API.USER_VERIFIED'
+                    approved = true
                 }
                 return res.json({
                     status: req.t(statusMessage),
-                    solutionApproved: !!solution.approved,
-                    commitmentId: solution.commitmentId,
+                    solutionApproved: approved,
+                    commitmentId: solution.id,
                 })
             }
             return res.json({
