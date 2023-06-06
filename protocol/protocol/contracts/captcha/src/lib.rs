@@ -1144,13 +1144,10 @@ pub mod captcha {
         /// De-activate a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deactivate(&mut self) -> Result<(), Error> {
-            // Change status to deactivated
-            self.provider_configure(None, None, None, true, None, None, true)?;
-
-            // update the seed
+            // update seed first while provider still active
             self.update_seed()?;
-
-            Ok(())
+            // Change status to deactivated
+            self.provider_configure(None, None, None, true, None, None, true)
         }
 
         /// Unstake and deactivate the provider's service, returning stake
@@ -2273,6 +2270,28 @@ pub mod captcha {
                 GovernanceStatus::Active,
                 contract.get_provider(account).unwrap().status
             );
+        }
+
+        #[ink::test]
+        fn test_provider_deactivate_active_updates_seed() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, true);
+
+            let seed = contract.get_seed();
+            advance_block();
+            contract.provider_deactivate().unwrap();
+            assert_ne!(seed, contract.get_seed());
+        }
+
+        #[ink::test]
+        fn test_provider_deactivate_inactive_does_not_update_seed() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, false);
+
+            let seed = contract.get_seed();
+            advance_block();
+            contract.provider_deactivate().unwrap();
+            assert_eq!(seed, contract.get_seed());
         }
 
         #[ink::test]
