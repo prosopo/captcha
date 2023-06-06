@@ -80,7 +80,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     /**
-     * @description Connect to the database and set the dataset and captcha tables
+     * @description Connect to the database and set the various tables
      */
     async connect(): Promise<void> {
         return new Promise((resolve, reject) => {
