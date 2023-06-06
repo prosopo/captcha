@@ -41,7 +41,6 @@ async function main() {
     if (!process.env.REACT_APP_SERVER_MNEMONIC) {
         throw new Error('No mnemonic found')
     }
-    console.log(process.env)
 
     const config = prosopoConfig()
 

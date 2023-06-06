@@ -15,5 +15,5 @@
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
 export * from './CaptchaWidget'
 export * from './CaptchaComponent'
-export * from './ExtensionAccountSelect'
+export { default as ExtensionAccountSelect } from './ExtensionAccountSelect'
 export * from './Procaptcha'

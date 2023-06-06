@@ -15,16 +15,25 @@
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
 import { Abi } from '@polkadot/api-contract'
 import { AbiMessage, ContractCallOutcome, ContractOptions, DecodedEvent } from '@polkadot/api-contract/types'
-import { AccountId, DispatchError, Event, EventRecord, StorageDeposit, WeightV2 } from '@polkadot/types/interfaces'
+import {
+    AccountId,
+    BlockNumber,
+    DispatchError,
+    Event,
+    EventRecord,
+    StorageDeposit,
+    WeightV2,
+} from '@polkadot/types/interfaces'
 import { AnyJson } from '@polkadot/types/types/codec'
 import { ApiBase } from '@polkadot/api/types'
+import { ApiPromise, SubmittableResult } from '@polkadot/api'
 import { BN, BN_ONE, BN_ZERO, bnFromHex, isHex, isU8a, stringToHex } from '@polkadot/util'
 import { Bytes } from '@polkadot/types-codec'
+import { Compact } from '@polkadot/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { Logger } from '@prosopo/common'
+import { Logger, capitaliseFirstLetter } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers'
 import { Registry } from '@polkadot/types-codec/types/registry'
-import { SubmittableResult } from '@polkadot/api'
 import { Weight } from '@polkadot/types/interfaces/runtime/index'
 
 /**
@@ -33,7 +42,7 @@ import { Weight } from '@polkadot/types/interfaces/runtime/index'
  * @return {string} event name
  */
 export function getEventNameFromMethodName(contractMethodName: string): string {
-    return contractMethodName[0].toUpperCase() + contractMethodName.substring(1)
+    return capitaliseFirstLetter(contractMethodName)
 }
 
 /**
@@ -110,7 +119,6 @@ export function decodeEvents(contractAddress: AccountId, records: EventRecord[],
         .filter(
             ({ event }) =>
                 function () {
-                    console.log(event.toPrimitive())
                     return (
                         event.toPrimitive().section === 'contracts' &&
                         event.toPrimitive().data!['contract'] === contractAddress.toString()
@@ -119,12 +127,9 @@ export function decodeEvents(contractAddress: AccountId, records: EventRecord[],
         )
         .map((record): DecodedEvent | null => {
             try {
-                console.log(record.event.toHuman())
-                // @ts-ignore
-                console.log(record.event.index.toPrimitive())
                 return abi.decodeEvent(record.event.data.toU8a() as Bytes)
             } catch (error) {
-                console.log(error)
+                console.error(error)
                 return null
             }
         })
@@ -241,4 +246,12 @@ export function formatEvent(event: Event): string {
     return `${event.section}.${event.method}${
         'docs' in event ? (Array.isArray(event.docs) ? `(${event.docs.join('')})` : event.docs || '') : ''
     }`
+}
+
+export function getExpectedBlockTime(api: ApiPromise): BN {
+    return new BN(api.consts.babe?.expectedBlockTime || 6000)
+}
+
+export async function getBlockNumber(api: ApiPromise): Promise<Compact<BlockNumber>> {
+    return (await api.rpc.chain.getBlock()).block.header.number
 }

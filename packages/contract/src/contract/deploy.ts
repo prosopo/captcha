@@ -142,7 +142,6 @@ export async function dryRunDeploy(
             ]
 
             const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
-            console.log('dryRunResult', dryRunResult.toHuman())
             contract = code.tx[method](
                 {
                     gasLimit: dryRunResult.gasRequired,

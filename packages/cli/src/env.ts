@@ -1,7 +1,7 @@
-import path from 'path'
-import dotenv from 'dotenv'
-import { getEnv } from './process.env'
 import { LogLevel, logger } from '@prosopo/common'
+import { getEnv } from './process.env'
+import dotenv from 'dotenv'
+import path from 'path'
 
 export function loadEnv(rootDir?: string, filename?: string, filePath?: string) {
     const envPath = getEnvFile(path.resolve(rootDir || '.'), filename, filePath)

@@ -1,27 +1,47 @@
 {
     "extends": "./tsconfig.build.json",
-    "files": [],
     "references": [
-        { 
-            "path": "./packages/contract" 
+        {
+            "path": "./packages/api"
         },
-        { 
-            "path": "./packages/api" 
+        {
+            "path": "./packages/cli"
         },
-        { 
-            "path": "./packages/datasets" 
+        {
+            "path": "./packages/common"
         },
-        { 
-            "path": "./packages/common" 
-        }, 
-        { 
-            "path": "./packages/provider" 
-        }, 
-        { 
-            "path": "./packages/procaptcha" 
-        }, 
-        { 
-            "path": "./packages/procaptcha-react" 
+        {
+            "path": "./packages/contract"
+        },
+        {
+            "path": "./packages/database"
+        },
+        {
+            "path": "./packages/datasets"
+        },
+        {
+            "path": "./packages/env"
+        },
+        {
+            "path": "./packages/procaptcha"
+        },
+        {
+            "path": "./packages/procaptcha-react"
+        },
+        {
+            "path": "./packages/provider"
+        },
+        {
+            "path": "./packages/server"
+        },
+        {
+            "path": "./packages/types"
+        },
+        {
+            "path": "./packages/types-database"
+        },
+        {
+            "path": "./packages/types-env"
         }
     ]
 }

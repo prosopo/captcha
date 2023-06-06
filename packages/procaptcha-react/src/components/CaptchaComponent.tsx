@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha-react.  If not, see <http://www.gnu.org/licenses/>.
-import { GetCaptchaResponse } from '@prosopo/api/src/types/api'
+import { GetCaptchaResponse } from '@prosopo/api/types/api'
 import { useTranslation } from '@prosopo/common'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'

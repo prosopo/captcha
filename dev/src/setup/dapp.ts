@@ -1,6 +1,7 @@
 import { Tasks } from '@prosopo/provider'
 import { IDappAccount } from '@prosopo/types'
 import { ProsopoEnvironment } from '@prosopo/types-env'
+import { DappPayee } from '@prosopo/types/dist/contract/typechain/captcha/types-arguments/captcha'
 
 export async function setupDapp(env: ProsopoEnvironment, dapp: IDappAccount): Promise<void> {
     const logger = env.logger
@@ -9,13 +10,13 @@ export async function setupDapp(env: ProsopoEnvironment, dapp: IDappAccount): Pr
         const tasks = new Tasks(env)
 
         try {
-            await tasks.contractApi.getDappDetails(dapp.contractAccount)
+            ;(await tasks.contract.query.getDappDetails(dapp.contractAccount)).value.unwrap().unwrap()
             logger.info('   - dapp is already registered')
         } catch (e) {
             logger.info('   - dappRegister')
-            await tasks.contractApi.dappRegister(dapp.contractAccount, 'Dapp')
+            await tasks.contract.tx.dappRegister(dapp.contractAccount, DappPayee.dapp)
             logger.info('   - dappFund')
-            await tasks.contractApi.dappFund(dapp.contractAccount, dapp.fundAmount)
+            await tasks.contract.tx.dappFund(dapp.contractAccount, { value: dapp.fundAmount })
         }
     }
 }

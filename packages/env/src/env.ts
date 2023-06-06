@@ -13,22 +13,22 @@
 // limitations under the License.
 
 import { ApiPromise } from '@polkadot/api'
+import { AssetsResolver, ContractAbi, EnvironmentTypes, ProsopoConfig } from '@prosopo/types'
+import { Database } from '@prosopo/types-database'
+import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { WsProvider } from '@polkadot/rpc-provider'
-import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import { AssetsResolver, ContractAbi, EnvironmentTypes, IProsopoContractMethods, ProsopoConfig } from '@prosopo/types'
-import { Database } from '@prosopo/types-database'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { LogLevel } from 'consola'
 import { LocalAssetsResolver } from './assets'
-import { Databases } from '@prosopo/database'
+import { LogLevel } from 'consola'
+import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { WsProvider } from '@polkadot/rpc-provider'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoConfig
     db: Database | undefined
-    contractInterface: IProsopoContractMethods
+    contractInterface: ProsopoCaptchaContract
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     contractName: string
@@ -97,10 +97,9 @@ export class Environment implements ProsopoEnvironment {
         this.contractInterface = await this.getContractApi()
     }
 
-    async getContractApi(): Promise<IProsopoContractMethods> {
+    async getContractApi(): Promise<ProsopoCaptchaContract> {
         const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
-        this.logger.debug('Getting new contract instance with pair', this.pair.address, 'nonce', nonce.toString())
-        this.contractInterface = new ProsopoContractMethods(
+        this.contractInterface = new ProsopoCaptchaContract(
             this.api,
             this.abi,
             this.contractAddress,
@@ -126,17 +125,14 @@ export class Environment implements ProsopoEnvironment {
                 await this.importDatabase().catch((err) => {
                     this.logger.error(err)
                 })
-            } else if (this.db?.connection?.readyState !== 1) {
-                this.db
-                    .connect()
-                    .then(() => {
-                        this.logger.info(`Connected to db`)
-                    })
-                    .catch((err) => {
-                        this.logger.error(err)
-                    })
+            }
+            if (this.db && this.db.connection?.readyState !== 1) {
+                this.logger.warn(`Database connection is not ready, reconnecting...`)
+                await this.db.connect()
+                this.logger.info(`Connected to db`)
             }
         } catch (err) {
+            this.logger.error(err)
             throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
         }
     }

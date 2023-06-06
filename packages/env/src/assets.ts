@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Application } from 'express'
 import { Asset, AssetsResolver } from '@prosopo/types'
 import { URL } from 'url'
-import { Application } from 'express'
 
 export type LocalAssetsResolverConfig = {
     absolutePath: string

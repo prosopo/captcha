@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { BatchCommitments } from '@prosopo/provider'
+import { Compact, u128 } from '@polkadot/types'
+import { PayeeSchema } from '@prosopo/types'
+import { ProsopoEnvError, logger as getLogger } from '@prosopo/common'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { Tasks } from '@prosopo/provider'
+import { cwd } from 'process'
+import { encodeStringAddress } from '@prosopo/provider'
+import { loadJSONFile } from './files'
 import parser from 'cron-parser'
 import pm2 from 'pm2'
-import { cwd } from 'process'
-import { ProsopoEnvError, logger as getLogger } from '@prosopo/common'
-import { Compact, u128 } from '@polkadot/types'
-import { Tasks } from '@prosopo/provider'
-import { PayeeSchema } from '@prosopo/types'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { encodeStringAddress } from '@prosopo/provider'
-import { BatchCommitments } from '@prosopo/provider'
-import { loadJSONFile } from './files'
 const yargs = require('yargs')
 
 const validateAddress = (argv) => {
@@ -92,7 +92,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                     }),
             async (argv) => {
-                const result = await tasks.contractApi.providerRegister(argv.origin, argv.fee, argv.payee)
+                const result = await tasks.contract.tx.providerRegister(argv.origin, argv.fee, argv.payee)
 
                 logger.info(JSON.stringify(result, null, 2))
             },
@@ -124,10 +124,12 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         desc: 'The value to stake in the contract',
                     }),
             async (argv) => {
-                const provider = await tasks.contractApi.getProviderDetails(argv.address)
+                const provider = (await tasks.contract.query.getProviderDetails(argv.address, {})).value
+                    .unwrap()
+                    .unwrap()
                 if (provider && (argv.origin || argv.fee || argv.payee || argv.value)) {
-                    const result = await tasks.contractApi.providerUpdate(
-                        argv.origin || provider.serviceOrigin,
+                    const result = await tasks.contract.tx.providerUpdate(
+                        argv.origin || provider.url,
                         argv.fee || provider.fee,
                         argv.payee || provider.payee,
                         argv.value || 0
@@ -149,9 +151,9 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.contractApi.providerDeregister(argv.address)
+                    await tasks.contract.tx.providerDeregister(argv.address)
 
-                    logger.info(JSON.stringify(result, null, 2))
+                    logger.info('Provider registered')
                 } catch (err) {
                     logger.error(err)
                 }
@@ -159,27 +161,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             [validateAddress]
         )
         .command(
-            'provider_unstake',
-            'Unstake funds as a Provider',
-            (yargs) =>
-                yargs.option('value', {
-                    type: 'number',
-                    demand: true,
-                    desc: 'The value to unstake from the contract',
-                }),
-            async (argv) => {
-                try {
-                    const result = await tasks.contractApi.providerUnstake(argv.value)
-
-                    logger.info(JSON.stringify(result, null, 2))
-                } catch (err) {
-                    logger.error(err)
-                }
-            },
-            [validateValue]
-        )
-        .command(
-            'provider_add_data_set',
+            'provider_set_data_set',
             'Add a dataset as a Provider',
             (yargs) =>
                 yargs.option('file', {
@@ -190,7 +172,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             async (argv) => {
                 try {
                     const jsonFile = loadJSONFile(argv.file, logger) as JSON
-                    const result = await tasks.providerAddDatasetFromFile(jsonFile)
+                    const result = await tasks.providerSetDatasetFromFile(jsonFile)
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -205,7 +187,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             (yargs) => yargs,
             async () => {
                 try {
-                    const result = await tasks.contractApi.getProviderAccounts()
+                    const result = await tasks.contract.contract['providerAccounts']()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -220,7 +202,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             (yargs) => yargs,
             async () => {
                 try {
-                    const result = await tasks.contractApi['dappAccounts']()
+                    const result = await tasks.contract.contract['dappAccounts']()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -240,7 +222,9 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.contractApi.getProviderDetails(argv.address)
+                    const result = (await tasks.contract.query.getProviderDetails(argv.address, {})).value
+                        .unwrap()
+                        .unwrap()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {
@@ -260,7 +244,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = await tasks.contractApi.getDappDetails(argv.address)
+                    const result = (await tasks.contract.query.getDappDetails(argv.address)).value.unwrap().unwrap()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {

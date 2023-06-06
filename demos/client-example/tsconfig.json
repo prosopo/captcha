@@ -16,7 +16,7 @@
   ],
   "references": [
     {
-      "path": "../packages/procaptcha-react"
+      "path": "../../packages/procaptcha-react"
     }
   ]
 }

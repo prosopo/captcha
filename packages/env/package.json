@@ -6,11 +6,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose"
+    "build": "tsc --build --verbose",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix"
   },
   "dependencies": {
     "dotenv": "^16.0.1",
-    "@polkadot/util-crypto": "10.3.1",
+    "@polkadot/util-crypto": "12.2.2",
     "@prosopo/common": "^0.1.11",
     "@prosopo/contract": "^0.1.11",
     "@prosopo/database": "^0.1.11",
@@ -19,7 +21,7 @@
     "@prosopo/types-env": "^0.1.11"
   },
   "devDependencies": {
-    "typescript": "^4.8.3"
+    "typescript": "^4.9.4"
   },
   "author": "Prosopo",
   "license": "Apache-2.0",

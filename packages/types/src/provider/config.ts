@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { LogLevel } from '@prosopo/common'
 import { z } from 'zod'
-import { LogLevel } from 'consola'
 
 export enum DatabaseTypes {
     mongo = 'mongo',
@@ -44,7 +44,6 @@ export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 
 export const ProsopoConfigSchema = z.object({
     logLevel: z.nativeEnum(LogLevel),
-    contract: z.object({ abi: z.string() }),
     defaultEnvironment: z.nativeEnum(EnvironmentTypes),
     account: z.object({
         password: z.string().optional(),

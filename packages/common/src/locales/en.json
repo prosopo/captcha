@@ -41,7 +41,7 @@
         "INVALID_TYPE": "Invalid type",
         "INVALID_ABI": "Invalid ABI",
         "NOT_HANDLED": "Not handled",
-        "INVALID_STORAGE_TYPE": "Invalid storage type",
+        "INVALID_STORAGE_TYPE": "Invalid storage type"
     },
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",
@@ -85,7 +85,7 @@
         "INVALID_CAPTCHA_CHALLENGE": "Invalid captcha challenge",
         "INVALID_DATASET_CONTENT_ID": "Invalid dataset content id",
         "DAPP_USER_SOLUTION_NOT_FOUND": "Dapp user solution not found",
-        "INVALID_PROVIDER_URL": "Invalid provider url",
+        "INVALID_PROVIDER_URL": "Invalid provider url"
     },
     "API": {
         "BODY_UNDEFINED": "Body must be defined in API POST call",

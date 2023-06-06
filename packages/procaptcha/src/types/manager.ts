@@ -1,10 +1,10 @@
+import { ApiParams } from '@prosopo/types'
 import { GetCaptchaResponse } from '@prosopo/api'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
 import { Optional } from './utils'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi'
 import { ProsopoNetwork } from '@prosopo/api'
 import { TCaptchaSubmitResult } from './client'
-import { u32 } from '@polkadot/types'
 
 /**
  * House the account and associated extension.
@@ -46,9 +46,10 @@ export interface ProcaptchaState {
     showModal: boolean // whether to show the modal or not
     loading: boolean // whether the captcha is loading or not
     account: Account | undefined // the account operating the challenge. undefined if not set
+    dappAccount: string | undefined // the account of the dapp. undefined if not set (soon to be siteKey)
     submission: TCaptchaSubmitResult | undefined // the result of the captcha submission. undefined if not submitted
     timeout: NodeJS.Timeout | undefined // the timer for the captcha challenge. undefined if not set
-    blockNumber: u32 | undefined // the block number in which the random provider was chosen. undefined if not set
+    blockNumber: number | undefined // the block number in which the random provider was chosen. undefined if not set
 }
 
 /**
@@ -83,8 +84,9 @@ export interface ProcaptchaEvents {
  * provider or a captcha challenge.
  */
 export interface ProcaptchaOutput {
-    commitmentId?: string
-    providerUrl?: string
-    userAccountAddress: string
-    blockNumber?: u32
+    [ApiParams.commitmentId]?: string
+    [ApiParams.providerUrl]?: string
+    [ApiParams.dapp]: string
+    [ApiParams.user]: string
+    [ApiParams.blockNumber]?: number
 }

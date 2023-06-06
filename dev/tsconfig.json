@@ -7,11 +7,10 @@
         "target": "esnext",
         "types": [
             "mocha"
-        ]
+        ],
     },
     "include": [
         "./src/**/*.ts"
-        //    "./tests/**/*.ts"
     ],
 
     "references": [

@@ -11,21 +11,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { KeyringPair } from '@polkadot/keyring/types'
-import { createType } from '@polkadot/types'
-import { Hash } from '@polkadot/types/interfaces'
-import { ProsopoEnvError } from '@prosopo/common'
-import { getEventsFromMethodName, stringToHexPadded } from '@prosopo/contract'
-import { Tasks } from '@prosopo/provider'
 import { Environment } from '@prosopo/env'
 import { IProviderAccount } from '@prosopo/types'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { ProsopoContractError, stringToHexPadded } from '@prosopo/contract'
+import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
+import { Tasks } from '@prosopo/provider'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds'
-import { loadJSONFile } from '@prosopo/cli/dist/files'
+import { hexToU8a } from '@polkadot/util'
+import { loadJSONFile } from '@prosopo/cli'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
-        const providerDetails = await env.contractInterface.getProviderDetails(account.address)
+        const providerDetails = (await env.contractInterface.query.getProviderDetails(account.address)).value
+            .unwrap()
+            .unwrap()
         console.log(providerDetails.status)
         if (providerDetails.status.toString() === 'Active') {
             env.logger.info('Provider exists and is active, skipping registration.')
@@ -39,7 +40,7 @@ export async function registerProvider(env: Environment, account: IProviderAccou
 
         account.address = providerKeyringPair.address
 
-        const stakeAmount = await env.contractInterface.getProviderStakeDefault()
+        const stakeAmount = await env.contractInterface['providerStakeThreshold']()
 
         // use the minimum stake amount from the contract to create a reasonable stake amount
         account.stake = getStakeAmount(env, stakeAmount)
@@ -54,36 +55,52 @@ export async function registerProvider(env: Environment, account: IProviderAccou
     }
 }
 
-export async function setupProvider(env: ProsopoEnvironment, provider: IProviderAccount): Promise<Hash> {
+export async function setupProvider(env: ProsopoEnvironment, provider: IProviderAccount): Promise<void> {
     if (!provider.pair) {
         throw new ProsopoEnvError('DEVELOPER.MISSING_PROVIDER_PAIR', undefined, undefined, { provider })
     }
     await env.changeSigner(provider.pair)
     const logger = env.logger
     const tasks = new Tasks(env)
-    const payeeKey = 'ProsopoPayee'
     logger.info('   - providerRegister')
-    try {
-        await tasks.contractApi.providerRegister(
-            stringToHexPadded(provider.serviceOrigin),
-            provider.fee,
-            createType(env.contractInterface.abi.registry, payeeKey, provider.payee)
-        )
-    } catch (e) {
-        logger.warn(e)
-    }
-    const registeredProvider = await env.contractInterface.getProviderDetails(provider.address)
-    logger.info('   - providerStake')
-    await tasks.contractApi.providerUpdate(
-        stringToHexPadded(provider.serviceOrigin),
+    const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
+        Array.from(hexToU8a(stringToHexPadded(provider.url))),
         provider.fee,
-        createType(env.contractInterface.abi.registry, payeeKey, provider.payee),
-        provider.stake
-    )
-    logger.info('   - providerAddDataset')
+        provider.payee,
+        {
+            value: provider.stake,
+        },
+    ]
+    let providerExists = false
+    try {
+        const queryResult = await tasks.contract.query.providerRegister(...providerRegisterArgs)
+        const error = queryResult.value.err || queryResult.value.ok?.err
+        if (error && error == 'ProviderExists') {
+            providerExists = true
+        } else if (error) {
+            throw new ProsopoContractError(error)
+        }
+    } catch (err) {
+        if (typeof err === 'object' && 'issue' in err && err.issue === 'OUTPUT_IS_NULL') {
+            logger.info('   - providerRegister: provider is not registered')
+        } else {
+            logger.debug('Unexpected error')
+            throw new ProsopoContractError(err)
+        }
+    }
+    if (!providerExists) {
+        await tasks.contract.tx.providerRegister(...providerRegisterArgs)
+    }
+
+    const registeredProvider = await env.contractInterface.query.getProviderDetails(provider.address)
+    const registeredProviderError = registeredProvider.value.err || registeredProvider.value.ok?.err
+    if (registeredProviderError) {
+        throw new ProsopoContractError(registeredProviderError)
+    }
+    logger.info('   - providerStake')
+    await tasks.contract.query.providerUpdate(...providerRegisterArgs)
+    await tasks.contract.tx.providerUpdate(...providerRegisterArgs)
+    logger.info('   - providerSetDataset')
     const datasetJSON = loadJSONFile(provider.datasetFile)
-    const datasetResult = await tasks.providerAddDatasetFromFile(datasetJSON)
-    datasetResult.contractEvents!.map((event) => logger.debug(JSON.stringify(event, null, 4)))
-    const events = getEventsFromMethodName(datasetResult, 'ProviderAddDataset')
-    return events[0].event.args[1] as Hash
+    await tasks.providerSetDatasetFromFile(datasetJSON)
 }

@@ -6,7 +6,7 @@ docker run --rm -it -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux
 # Deploy (protocol)
 
 ```bash
-docker compose --file docker-compose.substrate-node.yml up &
+docker compose --file docker-compose.substrate.yml up &
 
 docker run --network host --rm -it -v $(pwd)/contracts:/contracts paritytech/contracts-ci-linux:latest cargo contract instantiate "/contracts/target/ink/prosopo.wasm" --args 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 1000000000000 --constructor "default" --suri "//Alice" --value 2000000000000 --url "ws://localhost:9944" --manifest-path "/contracts/Cargo.toml" --verbose
 ```

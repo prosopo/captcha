@@ -24,5 +24,8 @@
     "@prosopo/types": "^0.1.11",
     "axios": "^0.27.2"
   },
+  "devDependencies": {
+    "typescript": "^4.9.4"
+  },
   "sideEffects": false
 }

@@ -11,10 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { CaptchaSolutionBody, CaptchaWithProof, DappUserSolutionResult, VerifySolutionBody } from '@prosopo/types'
+import {
+    ApiParams,
+    ApiPaths,
+    CaptchaSolutionBody,
+    CaptchaStatus,
+    CaptchaWithProof,
+    DappUserSolutionResult,
+    VerifySolutionBody,
+} from '@prosopo/types'
+import { CaptchaRequestBody } from '@prosopo/types'
+import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types/provider/index'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { Tasks } from './tasks/tasks'
+import { UserCommitmentRecord } from '@prosopo/types-database'
 import { parseBlockNumber } from './util'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto'
@@ -38,26 +49,17 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
      * @return {Captcha} - The Captcha data
      */
     router.get(
-        '/v1/prosopo/provider/captcha/:datasetId/:userAccount/:dappContractAccount/:blockNumber',
+        `${ApiPaths.GetCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}/:${ApiParams.blockNumber}`,
         async (req, res, next) => {
-            const { blockNumber, datasetId, userAccount, dappContractAccount } = req.params
-
-            if (!datasetId || !userAccount || !blockNumber || !dappContractAccount) {
-                return next(new ProsopoApiError('API.PARAMETER_UNDEFINED', undefined, 400))
-            }
-
             try {
-                validateAddress(userAccount, false, env.api.registry.chainSS58)
+                const { blockNumber, datasetId, user, dapp } = CaptchaRequestBody.parse(req.params)
+
+                validateAddress(user, false, env.api.registry.chainSS58)
                 const blockNumberParsed = parseBlockNumber(blockNumber)
 
-                await tasks.validateProviderWasRandomlyChosen(
-                    userAccount,
-                    dappContractAccount,
-                    datasetId,
-                    blockNumberParsed
-                )
+                await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
 
-                const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount)
+                const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
                 taskData.captchas = taskData.captchas.map((cwp: CaptchaWithProof) => ({
                     ...cwp,
                     captcha: {
@@ -80,8 +82,8 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
      * @param {Captcha[]} captchas - The Captcha solutions
      * @return {DappUserSolutionResult} - The Captcha solution result and proof
      */
-    router.post('/v1/prosopo/provider/solution', async (req, res, next) => {
-        let parsed
+    router.post(ApiPaths.SubmitCaptchaSolution, async (req, res, next) => {
+        let parsed: CaptchaSolutionBodyType
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
         } catch (err) {
@@ -89,34 +91,17 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
         }
 
         try {
-            let result: DappUserSolutionResult
-            if (parsed.web2) {
-                // TODO does this open an attack vector when dealing with a web3 dapp user?
-                result = await tasks.dappUserSolutionWeb2(
-                    parsed.userAccount,
-                    parsed.dappAccount,
-                    parsed.requestHash,
-                    parsed.captchas,
-                    parsed.signature
-                )
-                return res.json({
-                    status: req.i18n.t(result.solutionApproved ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
-                    ...result,
-                })
-            } else {
-                result = await tasks.dappUserSolution(
-                    parsed.userAccount,
-                    parsed.dappAccount,
-                    parsed.requestHash,
-                    parsed.captchas,
-                    parsed.blockHash,
-                    parsed.txHash
-                )
-                return res.json({
-                    status: req.t('API.CAPTCHA_PENDING'),
-                    ...result,
-                })
-            }
+            const result: DappUserSolutionResult = await tasks.dappUserSolution(
+                parsed[ApiParams.user],
+                parsed[ApiParams.dapp],
+                parsed[ApiParams.requestHash],
+                parsed[ApiParams.captchas],
+                parsed[ApiParams.signature]
+            )
+            return res.json({
+                status: req.i18n.t(result.solutionApproved ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
+                ...result,
+            })
         } catch (err) {
             return next(new ProsopoApiError(err, undefined, 400))
         }
@@ -128,29 +113,31 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
      * @param {string} userAccount - Dapp User id
      * @param {string} commitmentId - The captcha solution to look up
      */
-    router.post('/v1/prosopo/provider/verify', async (req, res, next) => {
-        let parsed
+    router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
+        let parsed: VerifySolutionBodyType
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
             return next(new ProsopoApiError(err, undefined, 400))
         }
         try {
-            let solution
+            let solution: UserCommitmentRecord | undefined
             let statusMessage = 'API.USER_NOT_VERIFIED'
             if (!parsed.commitmentId) {
-                solution = await tasks.getDappUserCommitmentByAccount(parsed.userAccount)
+                solution = await tasks.getDappUserCommitmentByAccount(parsed.user)
             } else {
                 solution = await tasks.getDappUserCommitmentById(parsed.commitmentId)
             }
             if (solution) {
-                if (solution.approved) {
+                let approved = false
+                if (solution.status === CaptchaStatus.approved) {
                     statusMessage = 'API.USER_VERIFIED'
+                    approved = true
                 }
                 return res.json({
                     status: req.t(statusMessage),
-                    solutionApproved: !!solution.approved,
-                    commitmentId: solution.commitmentId,
+                    solutionApproved: approved,
+                    commitmentId: solution.id,
                 })
             }
             return res.json({

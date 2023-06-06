@@ -14,21 +14,20 @@
 
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import { ApiPromise } from '@polkadot/api'
-import { BN, BN_THOUSAND, BN_TWO, bnMin } from '@polkadot/util'
+import { ArgumentTypes, CaptchaSolution, CaptchaStatus, ProsopoConfigSchema, ScheduledTaskNames } from '@prosopo/types'
+import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
 import { BatchCommitments } from '../../src/batch'
-import { CaptchaSolution, ProsopoConfigSchema, ScheduledTaskNames } from '@prosopo/types'
-import { ESLint } from 'eslint'
+import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
-import { accountAddress, accountMnemonic } from '../accounts'
-import { accountContract, getSignedTasks } from '../accounts'
-import { getPair } from '@prosopo/common'
+import { ProsopoEnvError, getPair } from '@prosopo/common'
+import { UserCommitmentRecord } from '@prosopo/types-database'
+import { accountAddress, accountContract, accountMnemonic } from '../accounts'
+import { getSignedTasks } from '../accounts'
 import { getUser } from '../getUser'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../tasks/tasks.test'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import Environment = ESLint.Environment
-import { KeyringPair } from '@polkadot/keyring/types'
 chai.should()
 chai.use(chaiAsPromised)
 const expect = chai.expect
@@ -61,22 +60,25 @@ function calcInterval(api: ApiPromise): BN {
 }
 
 describe('BATCH TESTS', function () {
-    this.timeout(120000000)
-    const mnemonic = 'unaware pulp tuna oyster tortoise judge ordinary doll maid whisper cry cat'
-    const ss58Format = 42
-    const pairType = 'sr25519'
+    let ss58Format: number
+    let pairType: KeypairType
     let env: MockEnvironment
-    let pair: KeyringPair
 
-    before(async () => {
-        pair = await getPair(pairType, ss58Format, mnemonic)
+    beforeEach(async function () {
+        ss58Format = 42
+        pairType = 'sr25519' as KeypairType
+        const alicePair = await getPair(pairType, ss58Format, '//Alice')
         const config = ProsopoConfigSchema.parse(JSON.parse(process.env.config ? process.env.config : '{}'))
-        env = new MockEnvironment(pair, config)
-        await env.isReady()
+        env = new MockEnvironment(alicePair, config)
+        try {
+            await env.isReady()
+        } catch (e) {
+            throw new ProsopoEnvError(e, 'isReady')
+        }
     })
 
-    after(async () => {
-        await env.db?.connection?.close()
+    afterEach(async (): Promise<void> => {
+        await env.db?.close()
     })
 
     const commitmentCount = 50
@@ -110,7 +112,11 @@ describe('BATCH TESTS', function () {
             )
 
             const providerTasks = await getSignedTasks(env, providerAccount)
-            const providerDetails = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+            const providerDetails = (
+                await providerTasks.contract.query.getProviderDetails(accountAddress(providerAccount))
+            ).value
+                .unwrap()
+                .unwrap()
             const dappAccount = await getUser(env, AccountKey.dappsWithStake)
             const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
 
@@ -125,6 +131,9 @@ describe('BATCH TESTS', function () {
                 const commitmentIds: string[] = []
 
                 // Store 10 commitments in the local db
+                const completedAt = (await env.api.rpc.chain.getBlock()).block.header.number.toNumber()
+                const requestedAt = completedAt - 1
+                const requestHash = 'requestHash'
                 for (let count = 0; count < commitmentCount; count++) {
                     // need to submit different commits under different user accounts to avoid the commitments being
                     // trimmed by the contract when the max number of commitments per user is reached (e.g. 10 per user)
@@ -132,15 +141,23 @@ describe('BATCH TESTS', function () {
                     // not the real commitment id, which would be calculated as the root of a merkle tree
                     const commitmentId = randomAsHex()
                     commitmentIds.push(commitmentId)
-                    const approved = count % 2 === 0
-                    await providerTasks.db.storeDappUserSolution(
-                        [captchaSolution],
-                        commitmentId,
-                        accountAddress(dappUser),
-                        accountContract(dappAccount),
-                        providerDetails.datasetId.toString()
-                    )
-                    if (approved) {
+                    const status = count % 2 === 0 ? CaptchaStatus.approved : CaptchaStatus.disapproved
+                    const signer = env.keyring.addFromMnemonic(accountMnemonic(dappUser))
+                    const userSignature = signer.sign(stringToHex(requestHash))
+                    const commit: UserCommitmentRecord = {
+                        id: commitmentId,
+                        user: accountAddress(dappUser),
+                        provider: accountAddress(providerAccount),
+                        datasetId: providerDetails.datasetId.toString(),
+                        dapp: accountContract(dappAccount),
+                        status,
+                        requestedAt,
+                        completedAt,
+                        userSignature: Array.from(userSignature),
+                        processed: false,
+                    }
+                    await providerTasks.db.storeDappUserSolution([captchaSolution], commit)
+                    if (status === CaptchaStatus.approved) {
                         await providerTasks.db.approveDappUserCommitment(commitmentId)
                     }
                     await sleep(10)
@@ -150,7 +167,7 @@ describe('BATCH TESTS', function () {
 
                 // Try to get commitments that are ready to be batched
                 const commitmentsFromDbBeforeProcessing = (await batcher.getCommitments()).filter(
-                    (solution) => commitmentIds.indexOf(solution.commitmentId) > -1
+                    (solution) => commitmentIds.indexOf(solution.id.toString()) > -1
                 )
 
                 // Check the commitments are not returned from the db as they are not yet processed
@@ -162,13 +179,15 @@ describe('BATCH TESTS', function () {
 
                 // Check the commitments are returned from the db as they are now processed
                 const commitmentsFromDbBeforeBatching = (await batcher.getCommitments()).filter(
-                    (solution) => commitmentIds.indexOf(solution.commitmentId) > -1
+                    (solution) => commitmentIds.indexOf(solution.id.toString()) > -1
                 )
                 expect(commitmentsFromDbBeforeBatching.length).to.be.equal(commitmentCount)
 
                 // n/2 commitments should be approved and n/2 disapproved
                 expect(
-                    commitmentsFromDbBeforeBatching.map((c) => +c.approved).reduce((prev, next) => prev + next)
+                    commitmentsFromDbBeforeBatching
+                        .map((c) => +(c.status === ArgumentTypes.CaptchaStatus.approved))
+                        .reduce((prev, next) => prev + next)
                 ).to.equal(Math.round(commitmentCount / 2))
 
                 // Commit the commitments to the contract
@@ -210,7 +229,7 @@ describe('BATCH TESTS', function () {
                 if (batcherResult && batcherResult.result && batcherResult.result.data) {
                     const processedCommitmentIds = batcherResult.result.data.commitmentIds
                     const processedCommitments = commitmentsFromDbBeforeBatching.filter(
-                        (commitment) => processedCommitmentIds.indexOf(commitment.commitmentId) > -1
+                        (commitment) => processedCommitmentIds.indexOf(commitment.id.toString()) > -1
                     )
 
                     // Try to get the solutions from the db
@@ -223,7 +242,7 @@ describe('BATCH TESTS', function () {
 
                     // Try to get the commitments from the db
                     const commitmentsFromDbAfter = (await env.db.getProcessedDappUserCommitments()).filter(
-                        (commitment) => processedCommitmentIds.indexOf(commitment.commitmentId) === -1
+                        (commitment) => processedCommitmentIds.indexOf(commitment.id.toString()) === -1
                     )
 
                     // Check the processed commitments are no longer in the db
@@ -247,10 +266,12 @@ describe('BATCH TESTS', function () {
                     let count = 0
                     for (const commitment of processedCommitments) {
                         const approved = count % 2 === 0 ? 'Approved' : 'Disapproved'
-                        env.logger.debug(`Getting commitmentId ${commitment.commitmentId} from contract`)
-                        const contractCommitment = await contractApi.getCaptchaSolutionCommitment(
-                            commitment.commitmentId
-                        )
+                        env.logger.debug(`Getting commitmentId ${commitment.id} from contract`)
+                        const contractCommitment = (
+                            await contractApi.query.getCaptchaSolutionCommitment(commitment.id)
+                        ).value
+                            .unwrap()
+                            .unwrap()
                         expect(contractCommitment).to.be.not.empty
                         expect(contractCommitment.status).to.be.equal(approved)
                         count++

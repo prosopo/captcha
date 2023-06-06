@@ -12,17 +12,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Hash } from '@polkadot/types/interfaces'
-import { isHex } from '@polkadot/util'
 import {
     Captcha,
     CaptchaSolution,
     CaptchaStates,
+    CaptchaStatus,
     DatasetBase,
     DatasetWithIds,
     DatasetWithIdsAndTree,
     DatasetWithIdsAndTreeSchema,
     PendingCaptchaRequest,
+    ScheduledTaskNames,
+    ScheduledTaskResult,
+    ScheduledTaskStatus,
 } from '@prosopo/types'
 import {
     CaptchaRecordSchema,
@@ -32,6 +34,7 @@ import {
     ScheduledTaskRecord,
     ScheduledTaskRecordSchema,
     ScheduledTaskSchema,
+    SolutionRecord,
     SolutionRecordSchema,
     Tables,
     UserCommitmentRecord,
@@ -41,22 +44,17 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
+import { isHex } from '@polkadot/util'
 
-import { AsyncFactory, LogLevel, Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import mongoose, { Connection } from 'mongoose'
-import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
+import { ArgumentTypes } from '@prosopo/types'
+import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
 import { DeleteResult } from 'mongodb'
+import mongoose, { Connection } from 'mongoose'
 
 mongoose.set('strictQuery', false)
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = 'mongodb://127.0.0.1:27017'
-
-const callbackFn = function (err, result) {
-    if (err) throw err
-    // TODO bind a logger to the callback
-    logger(LogLevel.Info, result).info(result)
-}
 
 /**
  * Returns the Database object through which Providers can put and get captchas
@@ -81,24 +79,29 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     /**
-     * @description Connect to the database and set the dataset and captcha tables
+     * @description Connect to the database and set the various tables
      */
     async connect(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.connection) {
                 resolve()
             }
-            this.logger.info(`mongo url: ${this.url}`)
+            this.logger.info(`Mongo url: ${this.url}`)
             mongoose.connect(this.url, { dbName: this.dbname })
             this.connection = mongoose.connection
             this.tables = {
-                captcha: this.connection.model('Captcha', CaptchaRecordSchema),
-                dataset: this.connection.model('Dataset', DatasetRecordSchema),
-                solution: this.connection.model('Solution', SolutionRecordSchema),
-                commitment: this.connection.model('UserCommitment', UserCommitmentRecordSchema),
-                usersolution: this.connection.model('UserSolution', UserSolutionRecordSchema),
-                pending: this.connection.model('Pending', PendingRecordSchema),
-                scheduler: this.connection.model('Scheduler', ScheduledTaskRecordSchema),
+                captcha: this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
+                dataset: this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
+                solution: this.connection.models.Solution || this.connection.model('Solution', SolutionRecordSchema),
+                commitment:
+                    this.connection.models.UserCommitment ||
+                    this.connection.model('UserCommitment', UserCommitmentRecordSchema),
+                usersolution:
+                    this.connection.models.UserSolution ||
+                    this.connection.model('UserSolution', UserSolutionRecordSchema),
+                pending: this.connection.models.Pending || this.connection.model('Pending', PendingRecordSchema),
+                scheduler:
+                    this.connection.models.Scheduler || this.connection.model('Scheduler', ScheduledTaskRecordSchema),
             }
             this.connection.once('open', resolve).on('error', (e) => {
                 this.logger.info(`mongoose connection  error`)
@@ -110,6 +113,20 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 this.logger.error(e)
                 reject(new ProsopoEnvError(e, 'DATABASE.CONNECT_ERROR', {}, this.url))
             })
+        })
+    }
+
+    /** Close connection to the database */
+    async close(): Promise<void> {
+        this.logger.info(`Closing connection to ${this.url}`)
+        await new Promise<void>(async (resolve, reject): Promise<void> => {
+            mongoose.connection
+                .close()
+                .then(() => {
+                    this.logger.info(`Connection to ${this.url} closed`)
+                    resolve()
+                })
+                .catch(reject)
         })
     }
 
@@ -176,9 +193,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                             update: { $set: captchaSolutionDoc },
                             upsert: true,
                         },
-                    })),
-                    // @ts-ignore
-                    callbackFn
+                    }))
                 )
             }
         } catch (err) {
@@ -190,14 +205,16 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param {string} datasetId
      */
     async getDataset(datasetId: string): Promise<DatasetWithIds> {
-        try {
-            const datasetDoc = await this.tables?.dataset.findOne({ datasetId: datasetId }).lean()
+        const datasetDoc: DatasetWithIds | null | undefined = await this.tables?.dataset
+            .findOne({ datasetId: datasetId })
+            .lean()
 
+        if (datasetDoc) {
             const { datasetContentId, format, contentTree, solutionTree } = datasetDoc
 
-            const captchas = (await this.tables?.captcha.find({ datasetId }).lean()) || []
+            const captchas: Captcha[] = (await this.tables?.captcha.find({ datasetId }).lean()) || []
 
-            const solutions = (await this.tables?.solution.find({ datasetId }).lean()) || []
+            const solutions: SolutionRecord[] = (await this.tables?.solution.find({ datasetId }).lean()) || []
 
             const solutionsKeyed = {}
             for (const solution of solutions) {
@@ -222,9 +239,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     }
                 }),
             }
-        } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.DATASET_LOAD_FAILED')
         }
+        throw new ProsopoEnvError('DATABASE.DATASET_GET_FAILED', undefined, {}, datasetId)
     }
 
     /**
@@ -235,30 +251,27 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async getRandomCaptcha(
         solved: boolean,
-        datasetId: Hash | string | Uint8Array,
+        datasetId: ArgumentTypes.Hash,
         size?: number
     ): Promise<Captcha[] | undefined> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getRandomCaptcha.name, {}, datasetId)
         }
         const sampleSize = size ? Math.abs(Math.trunc(size)) : 1
-        const cursor = this.tables?.captcha.aggregate(
-            [
-                { $match: { datasetId, solved } },
-                { $sample: { size: sampleSize } },
-                {
-                    $project: {
-                        datasetId: 1,
-                        datasetContentId: 1,
-                        captchaId: 1,
-                        captchaContentId: 1,
-                        items: 1,
-                        target: 1,
-                    },
+        const cursor = this.tables?.captcha.aggregate([
+            { $match: { datasetId, solved } },
+            { $sample: { size: sampleSize } },
+            {
+                $project: {
+                    datasetId: 1,
+                    datasetContentId: 1,
+                    captchaId: 1,
+                    captchaContentId: 1,
+                    items: 1,
+                    target: 1,
                 },
-            ],
-            callbackFn
-        )
+            },
+        ])
         const docs = await cursor
 
         if (docs && docs.length) {
@@ -299,12 +312,15 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param {Captcha}  captcha
      * @param {string}   datasetId  the id of the data set
      */
-    async updateCaptcha(captcha: Captcha, datasetId: Hash | string | Uint8Array): Promise<void> {
+    async updateCaptcha(captcha: Captcha, datasetId: ArgumentTypes.Hash): Promise<void> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.updateCaptcha.name, {}, datasetId)
         }
-
-        await this.tables?.captcha.updateOne({ datasetId }, { $set: captcha }, { upsert: false }, callbackFn)
+        try {
+            await this.tables?.captcha.updateOne({ datasetId }, { $set: captcha }, { upsert: false })
+        } catch (err) {
+            throw new ProsopoEnvError(err, this.updateCaptcha.name, {}, datasetId)
+        }
     }
 
     /**
@@ -317,12 +333,12 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /**
      * @description Get a dataset by Id
      */
-    async getDatasetDetails(datasetId: Hash | string): Promise<DatasetBase> {
+    async getDatasetDetails(datasetId: ArgumentTypes.Hash): Promise<DatasetBase> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getDatasetDetails.name, {}, datasetId)
         }
 
-        const doc = await this.tables?.dataset.findOne({ datasetId }).lean()
+        const doc: DatasetBase | undefined | null = await this.tables?.dataset.findOne({ datasetId }).lean()
 
         if (doc) {
             return doc
@@ -334,31 +350,12 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /**
      * @description Store a Dapp User's captcha solution commitment
      */
-    async storeDappUserSolution(
-        captchas: CaptchaSolution[],
-        commitmentId: string,
-        userAccount: string,
-        dappAccount: string,
-        datasetId: string
-    ): Promise<void> {
-        if (!isHex(commitmentId)) {
-            throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.storeDappUserSolution.name, {}, commitmentId)
-        }
-
-        const commitmentRecord = UserCommitmentSchema.parse({
-            userAccount,
-            dappAccount,
-            datasetId,
-            commitmentId: commitmentId,
-            approved: false,
-            datetime: new Date(),
-            processed: false,
-        })
-
+    async storeDappUserSolution(captchas: CaptchaSolution[], commit: UserCommitmentRecord): Promise<void> {
+        const commitmentRecord = UserCommitmentSchema.parse(commit)
         if (captchas.length) {
             await this.tables?.commitment.updateOne(
                 {
-                    commitmentId,
+                    id: commit.id,
                 },
                 commitmentRecord,
                 { upsert: true }
@@ -366,22 +363,21 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
             const ops = captchas.map((captcha: CaptchaSolution) => ({
                 updateOne: {
-                    filter: { commitmentId: commitmentId, captchaId: captcha.captchaId },
+                    filter: { commitmentId: commit.id, captchaId: captcha.captchaId },
                     update: {
                         $set: <UserSolutionRecord>{
                             captchaId: captcha.captchaId,
                             captchaContentId: captcha.captchaContentId,
                             salt: captcha.salt,
                             solution: captcha.solution,
-                            commitmentId,
+                            commitmentId: commit.id,
                             processed: false,
                         },
                     },
                     upsert: true,
                 },
             }))
-            // @ts-ignore
-            await this.tables?.usersolution.bulkWrite(ops, callbackFn)
+            await this.tables?.usersolution.bulkWrite(ops)
         }
     }
 
@@ -408,7 +404,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /** @description Remove processed Dapp User captcha commitments from the user commitments table
      */
     async removeProcessedDappUserCommitments(commitmentIds: string[]): Promise<DeleteResult | undefined> {
-        return await this.tables?.commitment.deleteMany({ processed: true, commitmentId: { $in: commitmentIds } })
+        return await this.tables?.commitment.deleteMany({ processed: true, id: { $in: commitmentIds } })
     }
 
     /**
@@ -418,17 +414,21 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         userAccount: string,
         requestHash: string,
         salt: string,
-        deadline: number
+        deadlineTimestamp: number,
+        requestedAtBlock: number
     ): Promise<void> {
         if (!isHex(requestHash)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.storeDappUserPending.name, {}, requestHash)
         }
-
-        await this.tables?.pending.updateOne(
-            { requestHash: requestHash },
-            { $set: { accountId: userAccount, pending: true, salt, requestHash, deadline } },
-            { upsert: true }
-        )
+        const pendingRecord = {
+            accountId: userAccount,
+            pending: true,
+            salt,
+            requestHash,
+            deadlineTimestamp,
+            requestedAtBlock,
+        }
+        await this.tables?.pending.updateOne({ requestHash: requestHash }, { $set: pendingRecord }, { upsert: true })
     }
 
     /**
@@ -439,7 +439,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getDappUserPending.name, {}, requestHash)
         }
 
-        const doc = await this.tables?.pending.findOne({ requestHash: requestHash }).lean()
+        const doc: PendingCaptchaRequest | null | undefined = await this.tables?.pending
+            .findOne({ requestHash: requestHash })
+            .lean()
 
         if (doc) {
             return doc
@@ -594,7 +596,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param commitmentId
      */
     async getDappUserCommitmentById(commitmentId: string): Promise<UserCommitmentRecord | undefined> {
-        const commitmentCursor = this.tables?.commitment?.findOne({ commitmentId: commitmentId }).lean()
+        const commitmentCursor = this.tables?.commitment?.findOne({ id: commitmentId }).lean()
 
         const doc = await commitmentCursor
 
@@ -606,9 +608,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param {string[]} userAccount
      */
     async getDappUserCommitmentByAccount(userAccount: string): Promise<UserCommitmentRecord[]> {
-        const commitmentCursor = this.tables?.commitment?.find({ userAccount }).lean()
-
-        const docs = await commitmentCursor
+        const docs: UserCommitmentRecord[] | null | undefined = await this.tables?.commitment
+            ?.find({ userAccount })
+            .lean()
 
         return docs ? (docs as UserCommitmentRecord[]) : []
     }
@@ -620,7 +622,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     async approveDappUserCommitment(commitmentId: string): Promise<void> {
         try {
             await this.tables?.commitment
-                ?.findOneAndUpdate({ commitmentId: commitmentId }, { $set: { approved: true } }, { upsert: false })
+                ?.findOneAndUpdate(
+                    { id: commitmentId },
+                    { $set: { status: CaptchaStatus.approved } },
+                    { upsert: false }
+                )
                 .lean()
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)
@@ -649,11 +655,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         try {
             const distinctCommitmentIds = [...new Set(commitmentIds)]
             await this.tables?.commitment
-                ?.updateMany(
-                    { commitmentId: { $in: distinctCommitmentIds } },
-                    { $set: { processed: true } },
-                    { upsert: false }
-                )
+                ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
@@ -663,26 +665,28 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /**
      * @description Get the last batch commit time or return 0 if none
      */
-    async getLastBatchCommitTime(): Promise<number> {
+    async getLastBatchCommitTime(): Promise<Date> {
         const cursor = this.tables?.scheduler
             ?.findOne({ processName: ScheduledTaskNames.BatchCommitment, status: ScheduledTaskStatus.Completed })
             .sort({ timestamp: -1 })
-            .lean()
-        const doc = await cursor
+        const doc: ScheduledTaskRecord | null | undefined = await cursor?.lean()
 
         if (doc) {
-            return doc.timestamp
+            return doc.datetime
         }
 
-        return 0
+        return new Date(0)
     }
 
     /**
      * @description Get the last batch commit time or return 0 if none
      */
     async getLastScheduledTask(task: ScheduledTaskNames): Promise<ScheduledTaskRecord | undefined> {
-        const cursor = this.tables?.scheduler?.findOne({ processName: task }).sort({ datetime: -1 }).lean()
-        return await cursor
+        const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler
+            ?.findOne({ processName: task })
+            .sort({ datetime: -1 })
+            .lean()
+        return cursor ? cursor : undefined
     }
 
     /**

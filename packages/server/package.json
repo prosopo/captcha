@@ -6,7 +6,9 @@
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npx eslint .",
+    "lint:fix": "npx eslint . --fix"
   },
   "repository": {
     "type": "git",
@@ -20,12 +22,15 @@
   "homepage": "https://github.com/prosopo/captcha#readme",
   "sideEffects": false,
   "dependencies": {
-    "@polkadot/api": "9.13.6",
-    "@polkadot/keyring": "10.3.1",
-    "@polkadot/rpc-provider": "9.13.6",
-    "@polkadot/types": "9.13.6",
+    "@polkadot/api": "10.8.1",
+    "@polkadot/keyring": "12.2.2",
+    "@polkadot/rpc-provider": "10.8.1",
+    "@polkadot/types": "10.8.1",
     "@prosopo/api": "^0.1.11",
     "@prosopo/contract": "^0.1.11",
     "@prosopo/types": "^0.1.11"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.4"
   }
 }

@@ -13,7 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { CaptchaSolution, ProsopoRandomProvider } from '@prosopo/types'
+import {
+    ApiPaths,
+    CaptchaSolution,
+    CaptchaSolutionBody,
+    CaptchaSolutionBodyType,
+    RandomProvider,
+    VerifySolutionBodyType,
+} from '@prosopo/types'
 import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
 import HttpClientBase from './HttpClientBase'
 
@@ -21,27 +28,20 @@ export default class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
 
     constructor(network: ProsopoNetwork, providerUrl: string) {
-        console.log(providerUrl)
+        console.log('ProviderApi', providerUrl)
         super(providerUrl)
         this.network = network
     }
 
-    public getProviders(): Promise<{ accounts: string[] }> {
-        return this.axios.get(`/v1/prosopo/providers`)
-    }
-
-    public getCaptchaChallenge(
-        userAccount: string,
-        randomProvider: ProsopoRandomProvider
-    ): Promise<GetCaptchaResponse> {
+    public getCaptchaChallenge(userAccount: string, randomProvider: RandomProvider): Promise<GetCaptchaResponse> {
         const { provider } = randomProvider
         const { blockNumber } = randomProvider
-
-        return this.axios.get(
-            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${
-                this.network.dappContract.address
-            }/${blockNumber.toString().replace(/,/g, '')}`
-        )
+        const dappAccount = this.network.dappContract.address
+        const url = `${ApiPaths.GetCaptchaChallenge}/${provider.datasetId}/${userAccount}/${dappAccount}/${blockNumber
+            .toString()
+            .replace(/,/g, '')}`
+        console.log(url)
+        return this.axios.get(url)
     }
 
     public submitCaptchaSolution(
@@ -49,29 +49,24 @@ export default class ProviderApi extends HttpClientBase {
         requestHash: string,
         userAccount: string,
         salt: string,
-        blockHash?: string,
-        txHash?: string,
-        web2?: boolean,
         signature?: string
     ): Promise<CaptchaSolutionResponse> {
-        return this.axios.post(`/v1/prosopo/provider/solution`, {
-            blockHash,
+        const captchaSolutionBody: CaptchaSolutionBodyType = CaptchaSolutionBody.parse({
             captchas,
             requestHash,
-            txHash,
-            userAccount,
-            dappAccount: this.network.dappContract.address,
-            web2,
+            user: userAccount,
+            dapp: this.network.dappContract.address,
             salt,
             signature,
         })
+        return this.axios.post(ApiPaths.SubmitCaptchaSolution, captchaSolutionBody)
     }
 
     public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
-        const payload = { userAccount }
+        const payload = { user: userAccount }
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
         }
-        return this.axios.post(`/v1/prosopo/provider/verify`, payload)
+        return this.axios.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }
 }

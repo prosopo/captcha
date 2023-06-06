@@ -1,11 +1,14 @@
+import { LogLevel, logger } from '@prosopo/common'
+import { deployDapp, deployProtocol } from '../contract/deploy/index'
+import { getLogLevel } from '@prosopo/cli'
+import { importContract } from '../contract'
 import { loadEnv } from '@prosopo/cli'
-import consola, { LogLevel } from 'consola'
-import path from 'path'
-import yargs from 'yargs'
-import { deployDapp, deployProtocol } from '../deploy/index'
+import { runTests } from '../test/index'
 import { setup } from '../setup/index'
 import { updateEnvFiles } from '../util/updateEnv'
-import { runTests } from '../test/index'
+import fs from 'fs'
+import path from 'path'
+import yargs from 'yargs'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -16,7 +19,7 @@ export async function processArgs(args) {
         choices: Object.keys(LogLevel),
     }).argv
 
-    const logger = consola.create({ level: LogLevel[parsed.logLevel || 'Info'] })
+    const log = logger(getLogLevel(parsed.logLevel), 'CLI')
 
     yargs
         .usage('Usage: $0 [global options] <command> [options]')
@@ -31,14 +34,14 @@ export async function processArgs(args) {
                     default: false,
                 }),
             async (argv) => {
-                if (!process.env.PROTOCOL_WASM_PATH || !process.env.PROTOCOL_ABI_PATH) {
+                if (!process.env.CAPTCHA_WASM_PATH || !process.env.CAPTCHA_ABI_PATH) {
                     throw new Error('Missing protocol wasm or json path')
                 }
                 const protocolContractAddress = await deployProtocol(
-                    process.env.PROTOCOL_WASM_PATH,
-                    process.env.PROTOCOL_ABI_PATH
+                    process.env.CAPTCHA_WASM_PATH,
+                    process.env.CAPTCHA_ABI_PATH
                 )
-                logger.info('contract address', protocolContractAddress)
+                log.info('contract address', protocolContractAddress)
                 if (argv.update_env) {
                     await updateEnvFiles(
                         [
@@ -47,7 +50,7 @@ export async function processArgs(args) {
                             'NEXT_PUBLIC_PROSOPO_CONTRACT_ADDRESS',
                         ],
                         protocolContractAddress.toString(),
-                        logger
+                        log
                     )
                 }
             },
@@ -65,7 +68,7 @@ export async function processArgs(args) {
                 }),
             async (argv) => {
                 const dappContractAddress = await deployDapp()
-                logger.info('contract address', dappContractAddress)
+                log.info('contract address', dappContractAddress)
                 if (argv.update_env) {
                     await updateEnvFiles(
                         [
@@ -75,7 +78,7 @@ export async function processArgs(args) {
                             'PROSOPO_SITE_KEY',
                         ],
                         dappContractAddress.toString(),
-                        logger
+                        log
                     )
                 }
             },
@@ -86,7 +89,7 @@ export async function processArgs(args) {
             describe:
                 'Setup the development environment by registering a provider, staking, loading a data set and then registering a dapp and staking.',
             handler: async () => {
-                console.log('Running setup scripts')
+                log.info('Running setup scripts')
                 await setup()
             },
         })
@@ -94,10 +97,37 @@ export async function processArgs(args) {
             command: 'test',
             describe: 'Run all of the tests in the workspace',
             handler: async () => {
-                console.log('Running tests')
+                log.info('Running tests')
                 await runTests()
             },
         })
+        .command({
+            command: 'import_contract',
+            describe: 'Import a contract into the contract package.',
+            builder: (yargs) =>
+                yargs
+                    .option('in', {
+                        type: 'string',
+                        demand: true,
+                        desc: "The path to the contract's abi",
+                    })
+                    .option('out', {
+                        type: 'string',
+                        demand: true,
+                        desc: 'The path to the output directory',
+                    }),
+            handler: async (argv) => {
+                const abiPath = path.resolve(argv.in)
+                const cwd = path.resolve('.')
+                if (!fs.existsSync(abiPath)) {
+                    throw new Error(`abiPath ${abiPath} does not exist. The command is running relative to ${cwd}`)
+                }
+                const outPath = path.resolve(argv.out)
+                // pass in relative path as typechain will resolve it relative to the cwd
+                await importContract(argv.in, argv.out)
+            },
+        })
+
     await yargs.parse()
 }
 processArgs(process.argv.slice(2))

@@ -13,8 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with provider.  If not, see <http://www.gnu.org/licenses/>.
-import { blake2AsHex } from '@polkadot/util-crypto'
 import { arrayJoin } from './array'
+import { blake2AsHex } from '@polkadot/util-crypto'
 export const HEX_HASH_BIT_LENGTH = 256
 
 export function hexHash(data: string | Uint8Array, bitLength?: 256 | 512 | 64 | 128 | 384 | undefined): string {
