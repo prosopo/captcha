@@ -2417,6 +2417,13 @@ pub mod captcha {
             assert_eq!(Hash::default(), provider.dataset_id_content);
             assert_eq!(0, provider.balance);
             assert_eq!(GovernanceStatus::Inactive, provider.status);
+            // check none has been logged as the entry for the provider until this block
+            assert_eq!(Some(ProviderRecord {
+                provider: None,
+            }), contract.provider_log.get(AccountBlockId {
+                account: get_provider_account(0),
+                block: contract.env().block_number(),
+            }));
         }
 
         #[ink::test]
