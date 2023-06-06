@@ -1331,7 +1331,6 @@ pub mod captcha {
 
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
-            debug!("dapp_configure: {:?}", dapp_lookup);
 
             if new && should_exist {
                 return err!(self, Error::DappDoesNotExist);
@@ -2150,27 +2149,38 @@ pub mod captcha {
         ) {
             // set the caller to the dapp account
             set_callee(get_contract_account(contract_index));
-            set_caller(get_dapp_account(dapp_index));
+            let owner = get_dapp_account(dapp_index);
+            set_caller(owner);
 
+            let account = get_dapp_contract_account(dapp_index);
             // register the dapp
             contract
-                .dapp_register(get_dapp_contract_account(dapp_index), get_dapp_payee())
+                .dapp_register(account, get_dapp_payee())
                 .unwrap();
 
-            let dapp = contract.get_dapp(get_dapp_contract_account(dapp_index)).unwrap();
+            let dapp = contract.get_dapp(account).unwrap();
             println!("registered dapp {}: {:?}", dapp_index, dapp);
             
+            // check the previous dapp state was logged
+            assert_eq!(DappRecord {
+                dapp: None,
+            }, contract.dapp_log.get(AccountBlockId {
+                account,
+                block: contract.env().block_number()
+            }).unwrap());
+            // check the dapp is inactive
+            assert_eq!(GovernanceStatus::Inactive, dapp.status);
+            // check against the fields
+            assert_eq!(get_dapp_payee(), dapp.payee);
+            assert_eq!(0, dapp.balance);
+            assert_eq!(owner, dapp.owner);
+            assert!(contract.get_dapp_accounts().contains(&account));
+
+            // in the real world, the block would rollover
+            advance_block();
 
             if activate {
                 activate_dapp(contract, contract_index, dapp_index);
-            } else {
-                // check dapp is not active
-                assert_eq!(
-                    GovernanceStatus::Inactive,
-                    contract
-                        .get_dapp(get_dapp_account(dapp_index))
-                        .unwrap()
-                        .status);
             }
         }
 
@@ -2183,7 +2193,8 @@ pub mod captcha {
             // give the dapp some funds above the threshold
             let funds = contract.get_dapp_stake_threshold();
             // allocate them to the account
-            let balance = contract.get_dapp(dapp_contract_account).unwrap().balance;
+            let before = contract.get_dapp(dapp_contract_account).unwrap();
+            let balance = before.balance;
             
             set_value_transferred(funds);
             set_caller(account);
@@ -2193,16 +2204,30 @@ pub mod captcha {
             set_value_transferred(0);
 
             // check funds have been added to the account
-            assert_eq!(balance + funds, contract.get_dapp(dapp_contract_account).unwrap().balance);
-
-            let dapp = contract.get_dapp(get_dapp_contract_account(dapp_index)).unwrap();
-            println!("activated dapp {}: {:?}", dapp_index, dapp);
+            let after = contract.get_dapp(get_dapp_contract_account(dapp_index)).unwrap();
             
-            // check dapp has acquired funds and been marked as active
-            assert_eq!(
-                GovernanceStatus::Active,
-                contract.get_dapp(dapp_contract_account).unwrap().status
-            );
+            // check the previous dapp state was logged
+            assert_eq!(DappRecord {
+                dapp: Some(before),
+            }, contract.dapp_log.get(AccountBlockId {
+                account: dapp_contract_account,
+                block: contract.env().block_number()
+            }).unwrap());
+            // check the dapp is inactive
+            assert_eq!(GovernanceStatus::Active, after.status);
+            // check against the fields
+            assert_eq!(balance + funds, after.balance);
+            assert!(contract.get_dapp_accounts().contains(&dapp_contract_account));
+            assert_eq!(before, Dapp {
+                status: before.status,
+                balance: before.balance,
+                ..after
+            });
+
+            println!("activated dapp {}: {:?}", dapp_index, after);
+
+            // in the real world, the block would rollover
+            advance_block();
         }
 
         /// Setup a provider given the index of the provider. Activate the provider if instructed to do so, which adds funds as required
