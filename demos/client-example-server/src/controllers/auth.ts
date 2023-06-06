@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 
 import jwt from 'jsonwebtoken'
 
+import { ApiParams } from '@prosopo/types'
 import { Connection } from 'mongoose'
 import { ProsopoServer } from '@prosopo/server'
 import { UserInterface } from '../models/user'
@@ -20,16 +21,17 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
             req.body.email &&
             req.body.password &&
             req.body.prosopo &&
-            req.body.prosopo.userAccountAddress &&
-            req.body.prosopo.blockNumber
+            req.body.prosopo[ApiParams.user] &&
+            req.body.prosopo[ApiParams.dapp] &&
+            req.body.prosopo[ApiParams.blockNumber]
         ) {
-            console.log(req.body)
             if (
                 await prosopoServer.isVerified(
-                    req.body.prosopo.userAccountAddress,
-                    req.body.prosopo.providerUrl,
-                    req.body.prosopo.commitmentId,
-                    req.body.prosopo.blockNumber
+                    req.body.prosopo[ApiParams.user],
+                    req.body.prosopo[ApiParams.providerUrl],
+                    req.body.prosopo[ApiParams.dapp],
+                    req.body.prosopo[ApiParams.commitmentId],
+                    req.body.prosopo[ApiParams.blockNumber]
                 )
             ) {
                 // password hash
@@ -82,16 +84,17 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
                     req.body.email &&
                     req.body.password &&
                     req.body.prosopo &&
-                    req.body.prosopo.userAccountAddress &&
-                    req.body.prosopo.blockNumber
+                    req.body.prosopo[ApiParams.user] &&
+                    req.body.prosopo[ApiParams.dapp] &&
+                    req.body.prosopo[ApiParams.blockNumber]
                 ) {
-                    console.log(req.body)
                     if (
                         await prosopoServer.isVerified(
-                            req.body.prosopo.userAccountAddress,
-                            req.body.prosopo.providerUrl,
-                            req.body.prosopo.commitmentId,
-                            req.body.prosopo.blockNumber
+                            req.body.prosopo[ApiParams.user],
+                            req.body.prosopo[ApiParams.providerUrl],
+                            req.body.prosopo[ApiParams.dapp],
+                            req.body.prosopo[ApiParams.commitmentId],
+                            req.body.prosopo[ApiParams.blockNumber]
                         )
                     ) {
                         // password hash

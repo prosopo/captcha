@@ -1,5 +1,5 @@
-import { ProsopoDatabase as MongoDatabase } from './mongo'
 import { Logger } from '@prosopo/common'
+import { ProsopoDatabase as MongoDatabase } from './mongo'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
 export class MongoMemoryDatabase extends MongoDatabase {

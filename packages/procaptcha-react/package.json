@@ -21,9 +21,9 @@
         "@emotion/styled": "^11.10.4",
         "@mui/icons-material": "^5.11.16",
         "@mui/material": "^5.13.3",
-        "@polkadot/extension-dapp": "0.44.8",
-        "@polkadot/extension-inject": "0.44.8",
-        "@polkadot/types": "9.13.6",
+        "@polkadot/extension-dapp": "0.46.4",
+        "@polkadot/extension-inject": "0.46.4",
+        "@polkadot/types": "10.8.1",
         "@prosopo/common": "^0.1.11",
         "@prosopo/procaptcha": "^0.1.11",
         "i18next": "^22.5.0",
@@ -31,7 +31,7 @@
         "react-dom": "^18.2.0"
     },
     "devDependencies": {
-        "typescript": "^4.7.4"
+        "typescript": "^4.9.4"
     },
     "repository": {
         "type": "git",

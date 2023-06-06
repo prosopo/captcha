@@ -11,16 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Environment } from '@prosopo/env'
+import { LocalAssetsResolver } from '@prosopo/env'
 import { ProsopoApiError, getPair, i18nMiddleware } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
-import cors from 'cors'
-import express from 'express'
 import { Server } from 'http'
-import { prosopoRouter } from '@prosopo/provider/dist/api'
-import { LocalAssetsResolver } from '@prosopo/env'
-import { Environment } from '@prosopo/env'
 import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { loadEnv } from './env'
+import { prosopoRouter } from '@prosopo/provider'
+import cors from 'cors'
+import express from 'express'
 
 let apiAppSrv: Server
 
@@ -106,7 +106,7 @@ function stop() {
     apiAppSrv.close()
 }
 //if main process
-if (typeof require!== undefined && require.main === module) {
+if (typeof require !== undefined && require.main === module) {
     start(process.env.NODE_ENV || 'development').catch((error) => {
         console.error(error)
     })

@@ -9,6 +9,7 @@
   },
   "scripts": {
     "cmd": "e() { $@ ;}; f() { cmd=\"$1\"; shift; for arg in $@; do str=$(printf \"$cmd\" \"$arg\"); echo exec: $str; echo; e $str || exit 1; done ;}; f",
+    "esbuild": "npm run -w @prosopo/dev cli build provider",
     "build": "npm run --silent cmd \"npm run --silent -w @prosopo/%s build\"",
     "b": "npm run --silent build",
     "build+deps": "f() { npm run build $(npm run --silent deps $@) ;}; f",
@@ -71,6 +72,7 @@
     "version": "npm --no-git-tag-version --allow-same-version --workspaces --workspaces-update version",
     "ls:ws": "npm run --workspaces env | grep npm_package_name | cut -d '=' -f 2",
     "setup": "npm -w @prosopo/dev run setup",
+    "setup:all": "npm run deploy_protocol && npm run deploy_dapp && npm run setup",
     "start:provider": "npm -w @prosopo/cli run start",
     "start:server": "npm -w @prosopo/client-example-server run start",
     "start:demo": "npm -w @prosopo/client-example run start",
@@ -91,12 +93,13 @@
     "dev"
   ],
   "devDependencies": {
-    "@parcel/packager-ts": "^2.8.3",
-    "@parcel/transformer-typescript-types": "^2.8.3",
+    "@eslint/eslintrc": "^2.0.3",
+    "@types/node": "^20.2.5",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
     "babel-plugin-import": "^1.13.6",
     "depcheck": "^1.4.3",
+    "esbuild": "0.17.19",
     "eslint": "^8.41.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-absolute-imports-only": "^1.0.1",
@@ -105,9 +108,10 @@
     "eslint-plugin-unused-imports": "^2.0.0",
     "nodemon": "^2.0.20",
     "npm-check-updates": "^15.3.4",
+    "tsc-alias": "^1.8.6",
+    "tsconfig-paths-webpack-plugin": "^4.0.1",
     "tslib": "^2.5.2",
-    "tslint-plugin-prettier": "^2.3.0",
-    "typescript": "^4.7.4"
+    "typescript": "^4.9.4"
   },
   "description": "Integrates prosopo packages for development purposes",
   "bugs": {
@@ -115,5 +119,5 @@
   },
   "homepage": "https://github.com/prosopo/captcha#readme",
   "keywords": [],
-  "license": "ISC"
+  "license": "Apache-2.0"
 }

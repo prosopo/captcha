@@ -1,31 +1,28 @@
 {
   "exclude": [
-      "node_modules",
-      "build",
+    "node_modules",
+    "build"
+  ],
+  "include": [
+    "**/src/**/*"
   ],
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
-
     "composite": true,
-
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-
     "sourceMap": true,
-
     "declaration": true,
     "declarationMap": true,
-
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
+    "forceConsistentCasingInFileNames": true,
     "strictPropertyInitialization": false,
     "useUnknownInCatchVariables": false,
     "resolveJsonModule": true,
-
     "noImplicitAny": false,
     "noImplicitOverride": true,
     "noUnusedLocals": false,
@@ -34,17 +31,71 @@
     "noFallthroughCasesInSwitch": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-
     "strict": true,
     "importHelpers": true,
     "skipLibCheck": true,
-
     "types": [
-      "node",
+      "node"
     ],
-
     "lib": [
-      "esnext",
-    ]
+      "esnext"
+    ],
+    "baseUrl": "./packages",
+    "paths": {
+      "@prosopo/api": [
+        "api/src"
+      ],
+      "@prosopo/api/*": [
+        "api/src/*"
+      ],
+      "@prosopo/cli": [
+        "cli/src"
+      ],
+      "@prosopo/cli/*": [
+        "cli/src/*"
+      ],
+      "@prosopo/common": [
+        "common/src"
+      ],
+      "@prosopo/common/*": [
+        "common/src/*"
+      ],
+      "@prosopo/contract/*": [
+        "contract/src/*"
+      ],
+      "@prosopo/database/*": [
+        "database/src/*"
+      ],
+      "@prosopo/datasets/*": [
+        "datasets/src/*"
+      ],
+      "@prosopo/env/*": [
+        "env/src/*"
+      ],
+      "@prosopo/procaptcha/*": [
+        "procaptcha/src/*"
+      ],
+      "@prosopo/procaptcha-react/*": [
+        "procaptcha-react/src/*"
+      ],
+      "@prosopo/provider/*": [
+        "provider/src/*"
+      ],
+      "@prosopo/server/*": [
+        "server/src/*"
+      ],
+      "@prosopo/types/*": [
+        "types/src/*"
+      ],
+      "@prosopo/types/contract/typechain/captcha/types-arguments": [
+        "types/src/contract/typechain/captcha/types-arguments/index.ts"
+      ],
+      "@prosopo/types-database/*": [
+        "types-database/src/*"
+      ],
+      "@prosopo/types-env/*": [
+        "types-env/src/*"
+      ]
+    }
   }
 }

@@ -85,6 +85,28 @@ export const AbiVariantSpec = z.object({
     name: z.string(),
 })
 
+//An enum in the storage section of the abi
+// {
+//                                 "0": {
+//                                   "fields": [],
+//                                   "name": "Pending"
+//                                 },
+//                                 "1": {
+//                                   "fields": [],
+//                                   "name": "Approved"
+//                                 },
+//                                 "2": {
+//                                   "fields": [],
+//                                   "name": "Disapproved"
+//                                 }
+
+const AbiStorageEnumFieldSpec = z.object({
+    name: z.string(),
+    fields: z.array(z.any()),
+})
+
+export const AbiStorageEnumSpec = z.record(z.number().min(0), AbiStorageEnumFieldSpec)
+
 export const AbiTypeSpec = z.object({
     id: z.number(),
     type: z.object({
@@ -96,7 +118,7 @@ export const AbiTypeSpec = z.object({
                 .optional(),
             variant: z
                 .object({
-                    variants: z.array(AbiVariantSpec),
+                    variants: z.union([z.array(AbiVariantSpec).optional(), AbiStorageEnumSpec]),
                 })
                 .optional(),
             sequence: z
@@ -131,34 +153,34 @@ export const AbiCellSpec = z.object({
 })
 export const AbiTypesSpec = z.array(AbiTypeSpec)
 
-export const AbiStorageEntrySpec = z.lazy(() =>
+export const AbiStorageFieldSpec = z.lazy(() =>
     z.object({
         name: AbiText.optional(),
         layout: z.object({
             leaf: AbiCellSpec.optional(),
             enum: AbiEnumSpec.optional(),
-            root: AbiStorageEntrySpec.optional(),
-            struct: AbiStructSpec.optional(),
+            root: AbiStorageFieldSpec.optional(),
+            struct: AbiStorageStructSpec.optional(),
         }),
         root_key: AbiText.optional(),
     })
 )
 
-export const AbiStructSpec = z.object({
-    fields: z.array(AbiStorageEntrySpec),
+export const AbiStorageStructSpec = z.object({
+    fields: z.array(AbiStorageFieldSpec),
     name: z.string(),
 })
 
 export const AbiStorageSpec = z.object({
     root: z.object({
         layout: z.object({
-            struct: AbiStructSpec.optional(),
+            struct: AbiStorageStructSpec.optional(),
         }),
     }),
 })
 
 export type AbiStorage = z.infer<typeof AbiStorageSpec>
-export type AbiStorageEntry = z.infer<typeof AbiStorageEntrySpec>
+export type AbiStorageField = z.infer<typeof AbiStorageFieldSpec>
 
 export const AbiSpecDef = z.object({
     constructors: z.array(z.any()),

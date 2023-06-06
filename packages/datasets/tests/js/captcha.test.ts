@@ -39,7 +39,6 @@ import { it } from 'mocha'
 import path from 'path'
 
 describe('CAPTCHA FUNCTIONS', async function () {
-    this.timeout(parseInt(process.env.testTimeout || '120000000'))
     let MOCK_ITEMS: Item[]
     let DATASET: Dataset
     let RECEIVED: CaptchaSolution[]

@@ -36,34 +36,18 @@ jobs:
           path: captcha
           submodules: recursive
 
-      - name: Clone scripts repository
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.base_ref }}
-          repository: prosopo/scripts
-          path: scripts
-          #ssh-key: ${{ secrets.SSH_KEY }}
-          #ssh-strict: false
-
-      - name: Checkout correct scripts branch
-        run: |
-          cd scripts
-          git fetch
-          git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
-          git pull
-
       - run: mkdir -p ~/image-cache
 
       - id: image-cache
         uses: actions/cache@v3
         with:
           path: ~/image-cache
-          key: image-cache-docker-${{ runner.os }}
+          key: image-cache-docker-${{ runner.os }}-${{ hashFiles('./captcha/docker/docker-compose.test.yml') }}
 
       - if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
-          docker pull prosopo/substrate:dev-aura-aadbbed50ede27817158c7517f13f6f61c9cf000
-          docker save -o ~/image-cache/prosopo.tar prosopo/substrate:dev-aura-aadbbed50ede27817158c7517f13f6f61c9cf000
+          docker pull prosopo/substrate-contracts-node:v0.25
+          docker save -o ~/image-cache/prosopo.tar prosopo/substrate-contracts-node:v0.25
           docker pull mongo:5.0.4
           docker save -o ~/image-cache/mongo.tar mongo:5.0.4
 
@@ -75,8 +59,9 @@ jobs:
 
       - name: Start the docker images
         run: |
-          cd scripts
-          docker compose --file ./docker/docker-compose.development.yml up -d
+          cd captcha
+          docker compose --file ./docker/docker-compose.test.yml up -d
+          docker container ls
 
       - id: node-cache
         uses: actions/cache@v3
@@ -103,20 +88,25 @@ jobs:
           cd captcha
           echo $(npx tsc --version)
           cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cp env.development .env.test
+          echo "NODE_ENV=test" >> $GITHUB_ENV
+          echo $NODE_ENV
+        
 
-      - name: Setup the environment and run the unit tests
+      - name: Deploy the contracts and run the unit tests
         run: |
           cd captcha
+          npm run deploy_protocol
+          npm run deploy_dapp
           git status | head -n 1
           cd dev
-          cp env.development .env.development
           git status | head -n 1
           docker container ls
-          cat .env.development
+          cat .env.test
           npm run test
 
       - name: Remove the docker containers
         run: |
-          cd scripts
-          docker compose --file ./docker/docker-compose.development.yml down
+          cd captcha
+          docker compose --file ./docker/docker-compose.test.yml down
 

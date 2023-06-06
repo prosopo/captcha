@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
+import '@polkadot/api-augment'
 export * from './interface'
-export * from './buildTx'
 export * from './helpers'
-export * from './methods'
 export * from './useWeight'
 export * from './deploy'
 export * from './batch'
+export * from './storage'

@@ -23,6 +23,7 @@
     "@prosopo/api": "^0.1.11",
     "@prosopo/contract": "^0.1.11",
     "@prosopo/server": "^0.1.11",
+    "@prosopo/types": "^0.1.11",
     "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",

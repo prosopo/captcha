@@ -8,9 +8,9 @@ import {
     ProcaptchaStateUpdateFn,
 } from '../types/manager'
 import { ApiPromise, Keyring } from '@polkadot/api'
-import { CaptchaSolution, ContractAbi } from '@prosopo/types'
+import { CaptchaSolution, ContractAbi, RandomProvider } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
-import { ProsopoContractMethods, ProsopoRandomProvider, abiJson } from '@prosopo/contract'
+import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client'
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -18,7 +18,6 @@ import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../utils/utils'
 import { stringToU8a } from '@polkadot/util'
 import { trimProviderUrl } from '@prosopo/common'
-import { u32 } from '@polkadot/types'
 import ExtensionWeb2 from '../api/ExtensionWeb2'
 import ExtensionWeb3 from '../api/ExtensionWeb3'
 import ProsopoCaptchaApi from './ProsopoCaptchaApi'
@@ -137,6 +136,7 @@ export const Manager = (
 
             // snapshot the config into the state
             const config = getConfig()
+            updateState({ dappAccount: config.network.dappContract.address })
             console.log('Starting procaptcha using config:', config)
 
             // allow UI to catch up with the loading state
@@ -149,15 +149,22 @@ export const Manager = (
             // first, ask the smart contract
             const contract = await loadContract()
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
-            const contractIsHuman = await contract.getDappOperatorIsHumanUser(
-                account.account.address,
-                config.solutionThreshold
-            )
+            let contractIsHuman = false
+            try {
+                contractIsHuman = (
+                    await contract.query.dappOperatorIsHumanUser(account.account.address, config.solutionThreshold)
+                ).value
+                    .unwrap()
+                    .unwrap()
+            } catch (error) {
+                console.warn(error)
+            }
 
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
                 events.onHuman({
-                    userAccountAddress: account.account.address,
+                    user: account.account.address,
+                    dapp: config.network.dappContract.address,
                 })
                 return
             }
@@ -176,7 +183,8 @@ export const Manager = (
                         updateState({ isHuman: true, loading: false })
                         events.onHuman({
                             providerUrl: providerUrlFromStorage,
-                            userAccountAddress: account.account.address,
+                            user: account.account.address,
+                            dapp: config.network.dappContract.address,
                             commitmentId: verifyDappUserResponse.commitmentId,
                         })
                         return
@@ -196,13 +204,17 @@ export const Manager = (
             console.log('Signature:', signed)
 
             // get a random provider
-            const getRandomProviderResponse = await contract.getRandomProvider(
-                account.account.address,
-                config.network.dappContract.address
-            )
+            const getRandomProviderResponse = (
+                await contract.query.getRandomActiveProvider(
+                    account.account.address,
+                    config.network.dappContract.address
+                )
+            ).value
+                .unwrap()
+                .unwrap()
             const blockNumber = getRandomProviderResponse.blockNumber
             console.log('provider', getRandomProviderResponse)
-            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
+            const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             // get the provider api inst
             providerApi = await loadProviderApi(providerUrl)
             console.log('providerApi', providerApi)
@@ -308,8 +320,9 @@ export const Manager = (
             })
             if (state.isHuman) {
                 events.onHuman({
-                    providerUrl: trimProviderUrl(captchaApi.provider.provider.serviceOrigin.toString()),
-                    userAccountAddress: account.account.address,
+                    providerUrl: trimProviderUrl(captchaApi.provider.provider.url.toString()),
+                    user: account.account.address,
+                    dapp: getDappAccount(),
                     commitmentId: submission[1],
                     blockNumber,
                 })
@@ -372,8 +385,8 @@ export const Manager = (
     }
 
     const loadCaptchaApi = async (
-        contract: ProsopoContractMethods,
-        provider: ProsopoRandomProvider,
+        contract: ProsopoCaptchaContract,
+        provider: RandomProvider,
         providerApi: ProviderApi
     ) => {
         const config = getConfig()
@@ -446,24 +459,32 @@ export const Manager = (
         return account
     }
 
+    const getDappAccount = () => {
+        if (!state.dappAccount) {
+            throw new Error('Dapp account not loaded')
+        }
+        const dappAccount: string = state.dappAccount
+        return dappAccount
+    }
+
     const getBlockNumber = () => {
         if (!state.blockNumber) {
             throw new Error('Account not loaded')
         }
-        const blockNumber: u32 = state.blockNumber
+        const blockNumber: number = state.blockNumber
         return blockNumber
     }
 
     /**
      * Load the contract instance using addresses from config.
      */
-    const loadContract = async (): Promise<ProsopoContractMethods> => {
+    const loadContract = async (): Promise<ProsopoCaptchaContract> => {
         const config = getConfig()
         const api = await ApiPromise.create({ provider: new WsProvider(config.network.endpoint) })
         // TODO create a shared keyring that's stored somewhere
         const type = 'sr25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
-        return new ProsopoContractMethods(
+        return new ProsopoCaptchaContract(
             api,
             abiJson as ContractAbi,
             config.network.prosopoContract.address,

@@ -7,7 +7,7 @@
     "target": "esnext"
   },
   "include": [
-    "./src/**/*.ts",
+    "./src/**/*.ts"
   ],
   "references": [
     {

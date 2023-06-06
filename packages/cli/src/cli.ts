@@ -13,10 +13,10 @@
 // limitations under the License.
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
-import { getPair } from '@prosopo/common'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
-import { processArgs } from './argv'
 import { Environment } from '@prosopo/env'
+import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
+import { getPair } from '@prosopo/common'
+import { processArgs } from './argv'
 async function main() {
     const secret = getSecret()
     const ss58Format = getSs58Format()

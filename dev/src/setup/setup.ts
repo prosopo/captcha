@@ -22,6 +22,7 @@ import path from 'path'
 import { setupDapp } from './dapp'
 import { registerProvider } from './provider'
 import { ProsopoEnvironment } from '@prosopo/types-env'
+import { ArgumentTypes } from '@prosopo/types'
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
@@ -30,9 +31,9 @@ function getRootDir() {
 
 function getDefaultProvider(): IProviderAccount {
     return {
-        serviceOrigin: process.env.API_PORT ? `http://localhost:${process.env.API_PORT}` : 'http://localhost:3000',
+        url: process.env.API_PORT ? `http://localhost:${process.env.API_PORT}` : 'http://localhost:3000',
         fee: 10,
-        payee: 'Dapp',
+        payee: ArgumentTypes.Payee.dapp,
         stake: Math.pow(10, 13),
         datasetFile: path.resolve('./data/captchas.json'),
         address: process.env.PROVIDER_ADDRESS || '',
@@ -108,7 +109,7 @@ export async function setup() {
         const env = new Environment(pair, defaultConfig())
         await env.isReady()
 
-        const dappStakeDefault = (await env.contractInterface.getDappStakeDefault()).muln(2)
+        const dappStakeDefault = (await env.contractInterface['dappStakeThreshold']()).muln(2)
         defaultDapp.fundAmount = BN.max(dappStakeDefault, new BN(defaultDapp.fundAmount))
         defaultProvider.secret = mnemonic
 

@@ -55,47 +55,48 @@ Place the required variables in the `prosopo.config.ts` file in the root of the 
 | API_BASE_URL                             | Base URL for API, e.g. http://localhost:3000                                   |
 
 #### Config
+
 ```typescript
 const config = {
-  contract: {
-    abi: '<PROTOCOL_CONTRACT_JSON_ABI_PATH>'
-  },
-  networks: {
-    development: {
-      endpoint: '<SUBSTATE_NODE_ENDPOINT>', // e.g. ws://127.0.0.1:9944
-      contract: {
-        address: '<PROTOCOL_CONTRACT_ADDRESS>',
-        name: 'prosopo'
-      }
-    }
-  },
-  captchas: {
-    solved: {
-      count: '<CAPTCHA_SOLVED_COUNT>'
+    contract: {
+        abi: '<PROTOCOL_CONTRACT_JSON_ABI_PATH>'
     },
-    unsolved: {
-      count: '<CAPTCHA_UNSOLVED_COUNT>'
+    networks: {
+        development: {
+            endpoint: '<SUBSTATE_NODE_ENDPOINT>', // e.g. ws://127.0.0.1:9944
+            contract: {
+                address: '<PROTOCOL_CONTRACT_ADDRESS>',
+                name: 'prosopo'
+            }
+        }
+    },
+    captchas: {
+        solved: {
+            count: '<CAPTCHA_SOLVED_COUNT>'
+        },
+        unsolved: {
+            count: '<CAPTCHA_UNSOLVED_COUNT>'
+        }
+    },
+    captchaSolutions: {
+        requiredNumberOfSolutions: '<CAPTCHA_SOLUTION_REQUIRED_SOLUTION_COUNT>',
+        solutionWinningPercentage: '<CAPTCHA_SOLUTION_WINNING_PERCENTAGE>',
+        captchaFilePath: '<CAPTCHA_FILE_PATH>',
+    },
+    database: {
+        development: {
+            storageType: 'mongo',
+            endpoint: `mongodb://<MONGO_USERNAME>:<MONGO_PASSWORD>@<MONGO_HOST>:<MONGO_PORT>`,
+            dbname: '<DATABASE_NAME>',
+        }
+    },
+    assets: {
+        absolutePath: '',
+        basePath: ''
+    },
+    server: {
+        baseURL: '<API_BASE_URL>',
     }
-  },
-  captchaSolutions: {
-    requiredNumberOfSolutions: '<CAPTCHA_SOLUTION_REQUIRED_SOLUTION_COUNT>',
-    solutionWinningPercentage: '<CAPTCHA_SOLUTION_WINNING_PERCENTAGE>',
-    captchaFilePath: '<CAPTCHA_FILE_PATH>',
-  },
-  database: {
-    development: {
-      type: 'mongo',
-      endpoint: `mongodb://<MONGO_USERNAME>:<MONGO_PASSWORD>@<MONGO_HOST>:<MONGO_PORT>`,
-      dbname: '<DATABASE_NAME>',
-    }
-  },
-  assets : {
-    absolutePath: '',
-    basePath: ''
-  },
-  server : {
-    baseURL: '<API_BASE_URL>',
-  }
 }
 ```
 

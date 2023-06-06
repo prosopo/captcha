@@ -1,7 +1,11 @@
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import { useState } from 'react'
+
 import { ProcaptchaOutput } from '@prosopo/procaptcha'
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react'
+
+import { ExtensionAccountSelect } from '@prosopo/procaptcha-react/dist/components'
+import { Procaptcha } from '@prosopo/procaptcha-react/dist/components'
+
 import './App.css'
 
 function App() {
@@ -137,7 +141,7 @@ function App() {
         <div>
             <Box className={'App'} sx={{ display: 'flex' }}>
                 <Box>
-                    <Typography>{message ? getMessage() : null}</Typography>
+                    <Typography component={'span'}>{message ? getMessage() : null}</Typography>
                     {!config.web2 ? (
                         <ExtensionAccountSelect dappName={config.dappName} value={account} onChange={setAccount} />
                     ) : (

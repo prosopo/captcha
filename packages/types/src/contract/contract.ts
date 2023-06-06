@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with contract. If not, see <http://www.gnu.org/licenses/>.
 
-import { SubmittableResult } from '@polkadot/api'
 import { DecodedEvent } from '@polkadot/api-contract/types'
+import { SubmittableResult } from '@polkadot/api'
 
 export interface TransactionResponse {
     from: string

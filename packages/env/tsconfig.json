@@ -4,11 +4,11 @@
         "rootDir": "./src",
         "outDir": "./dist",
         "module": "commonjs",
-        "target": "esnext"
+        "target": "esnext",
     },
     "include": [
-        "./src/**/*.ts"
-        //    "./tests/**/*.ts"
+        "./src/**/*.ts",
+        "./src/*.ts"
     ],
     "references": [
         {

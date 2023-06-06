@@ -14,6 +14,18 @@
   "include": [
     "src/**/*.ts",
     "src/*.ts",
-    "src/**/*.tsx",
+    "src/**/*.tsx"
+  ],
+  "references": [
+    {
+      "path": "../api"
+    },
+    {
+      "path": "../common"
+    },
+    {
+      "path": "../procaptcha"
+    }
+
   ]
 }

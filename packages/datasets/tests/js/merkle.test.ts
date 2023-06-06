@@ -56,7 +56,6 @@ async function getDataset(): Promise<Dataset> {
 }
 
 describe('DATASETS MERKLE TREE', async function () {
-    this.timeout(parseInt(process.env.testTimeout || '120000000'))
     let DATASET: Dataset
     before(async () => {
         DATASET = await getDataset()

@@ -11,7 +11,7 @@ services:
         CONTRACT_NAME: prosopo
         CONTRACT_PATH: protocol/contracts
         CONTRACT_ARGS: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY 1000000000000 1000000000000" # protocol
-        SUBSTRATE_URL: "ws://substrate-node:9944"
+        SUBSTRATE_URL: "ws://substrate:9944"
         SURI: //Alice
         ENDOWMENT: 2000000000000
         CONSTRUCTOR: default
@@ -21,9 +21,9 @@ services:
       #     source: ./protocol/contracts
       #     target: /contracts/prosopo
     links:
-      - substrate-node
-  substrate-node:
-    image: prosopo/substrate-node:dev
+      - substrate
+  substrate:
+    image: prosopo/substrate:polkadot-v0.9.43
     ports:
       - "9615:9615"
       - "9944:9944"

@@ -8,9 +8,21 @@
         "lib": [
             "esnext",
             "dom"
-        ]
+        ],
     },
     "include": [
-        "./src/**/*.ts"
+        "./src/**/*.ts",
+        "./src/*.ts"
     ],
+    "references": [
+        {
+            "path": "../api"
+        },
+        {
+            "path": "../contract"
+        },
+        {
+            "path": "../types"
+        }
+    ]
 }

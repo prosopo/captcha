@@ -1,6 +1,6 @@
 import { TFunction } from 'i18next'
-import translationEn from './locales/en.json'
 import { hexToString } from '@polkadot/util'
+import translationEn from './locales/en.json'
 
 export function isClientSide(): boolean {
     return !!(typeof window !== 'undefined' && window.document && window.document.createElement)
@@ -16,7 +16,7 @@ type NestedKeyOf<ObjectType extends object> = {
         : `${Key}`
 }[keyof ObjectType & (string | number)]
 
-function getLeafFieldPath(obj: Object | string): string[] {
+function getLeafFieldPath(obj: object | string): string[] {
     if (typeof obj === 'string') {
         return [obj]
     }
@@ -45,11 +45,11 @@ export function snakeToCamelCase(str: string): string {
     return str.replace(/([-_][a-z])/g, (group) => group.toUpperCase().replace('-', '').replace('_', ''))
 }
 
-export function reverseHexString(str: string): string {
-    return (
+export function reverseHexString(str: string): `0x${string}` {
+    return `0x${
         str
             .match(/.{1,2}/g)
             ?.reverse()
             .join('') || ''
-    )
+    }`
 }

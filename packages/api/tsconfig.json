@@ -8,10 +8,11 @@
         "lib": [
             "esnext",
             "dom"
-        ]
+        ],
     },
     "include": [
-        "./src/**/*.ts"
+        "./src/**/*.ts",
+        "./src/*.ts"
     ],
     "references": [
         {

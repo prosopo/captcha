@@ -1,17 +1,17 @@
 import { ApiPromise } from '@polkadot/api'
+import { BlockHash } from '@polkadot/types/interfaces/chain/index'
+import { ContractAbi, RandomProvider } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { WsProvider } from '@polkadot/rpc-provider'
-import { BlockHash } from '@polkadot/types/interfaces/chain/index'
-import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
-import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
-import { ProsopoContractMethods, abiJson } from '@prosopo/contract'
-import { ContractAbi } from '@prosopo/types'
 import { LogLevel, Logger, logger } from '@prosopo/common'
+import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
+import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
+import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
+import { WsProvider } from '@polkadot/rpc-provider'
 
 export class ProsopoServer {
     config: ProsopoServerConfig
-    contractInterface: ProsopoContractMethods
+    contract: ProsopoCaptchaContract
     mnemonic: string
     prosopoContractAddress: string
     dappContractAddress: string
@@ -78,38 +78,39 @@ export class ProsopoServer {
     }
 
     public async isVerified(
-        userAccount: string,
+        user: string,
         providerUrl: string,
+        dapp: string,
         commitmentId: string,
         blockNumber: string
     ): Promise<boolean> {
         // first check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
         const block = (await this.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash
-        const getRandomProviderResponse = await contractApi.getRandomProvider(
-            userAccount,
-            this.dappContractAddress,
-            block
+        const getRandomProviderResponse = await this.contract.queryAtBlock<RandomProvider>(
+            block,
+            'getRandomActiveProvider',
+            [user, dapp]
         )
-        const serviceOrigin = trimProviderUrl(getRandomProviderResponse.provider.serviceOrigin.toString())
-        if (serviceOrigin !== providerUrl) {
+        const providerUrlTrimmed = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+        if (providerUrlTrimmed !== providerUrl) {
             return false
         }
-
-        if (providerUrl && commitmentId) {
-            console.log('providerUrl', providerUrl)
-            console.log('web3Account', userAccount)
-            console.log('commitmentId', commitmentId)
+        console.log('providerUrlTrimmed', providerUrlTrimmed, 'commitmentId', commitmentId)
+        if (providerUrlTrimmed && commitmentId) {
             const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifyDappUser(userAccount, commitmentId)
+            const result = await providerApi.verifyDappUser(user, commitmentId)
+            console.log(result)
             return result.solutionApproved
         } else {
-            return await contractApi.getDappOperatorIsHumanUser(userAccount, this.config.solutionThreshold)
+            return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
+                .unwrap()
+                .unwrap()
         }
     }
 
-    public async getContractApi(): Promise<ProsopoContractMethods> {
-        this.contractInterface = new ProsopoContractMethods(
+    public async getContractApi(): Promise<ProsopoCaptchaContract> {
+        this.contract = new ProsopoCaptchaContract(
             this.api,
             this.abi,
             this.prosopoContractAddress,
@@ -117,6 +118,6 @@ export class ProsopoServer {
             this.contractName,
             0
         )
-        return this.contractInterface
+        return this.contract
     }
 }

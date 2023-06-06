@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   substrate:
-    image: prosopo/substrate:dev-aura-aadbbed50ede27817158c7517f13f6f61c9cf000
+    image: prosopo/substrate-contracts-node:v0.25
     ports:
       - "9615:9615"
       - "9944:9944"
