@@ -2275,6 +2275,19 @@ pub mod captcha {
             );
         }
 
+
+        #[ink::test]
+        fn test_provider_fund_active_updates_seed() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, true);
+
+            let seed = contract.get_seed();
+            advance_block();
+            set_value_transferred(1);
+            contract.provider_fund().unwrap();
+            assert_ne!(seed, contract.get_seed());
+        }
+
         #[ink::test]
         fn test_provider_update_active_updates_seed() {
             let mut contract = get_contract(0);
