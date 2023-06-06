@@ -2404,14 +2404,19 @@ pub mod captcha {
                     get_provider_payee(),
                 )
                 .unwrap();
-            // ensure not active
-            assert_eq!(
-                GovernanceStatus::Inactive,
-                contract.get_provider(get_provider_account(0)).unwrap().status
-            );
 
             // ensure the seed has not been touched
             assert_eq!(seed, contract.get_seed());
+
+            // check the provider was registered correctly
+            let provider = contract.get_provider(get_provider_account(0)).unwrap();
+            assert_eq!(get_provider_url(0), provider.url);
+            assert_eq!(get_provider_fee(), provider.fee);
+            assert_eq!(get_provider_payee(), provider.payee);
+            assert_eq!(Hash::default(), provider.dataset_id);
+            assert_eq!(Hash::default(), provider.dataset_id_content);
+            assert_eq!(0, provider.balance);
+            assert_eq!(GovernanceStatus::Inactive, provider.status);
         }
 
         #[ink::test]
