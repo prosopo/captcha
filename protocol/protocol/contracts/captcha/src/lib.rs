@@ -2858,6 +2858,16 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_payee_mapping() {
+            assert_eq!(Payee::Dapp, DappPayee::Dapp.try_into().unwrap());
+            assert_eq!(Payee::Provider, DappPayee::Provider.try_into().unwrap());
+            assert_eq!(DappPayee::Dapp, Payee::Dapp.try_into().unwrap());
+            assert_eq!(DappPayee::Provider, Payee::Provider.try_into().unwrap());
+            let result: Result<Payee, ()> = TryFrom::<DappPayee>::try_from(DappPayee::Any);
+            result.unwrap_err();
+        }
+
+        #[ink::test]
         fn test_get_seed_at() {
             let account = get_contract_account(0); // the account for the contract
             set_callee(account);
