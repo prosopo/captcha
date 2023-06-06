@@ -141,7 +141,7 @@ function App() {
         <div>
             <Box className={'App'} sx={{ display: 'flex' }}>
                 <Box>
-                    <Typography>{message ? getMessage() : null}</Typography>
+                    <Typography component={'span'}>{message ? getMessage() : null}</Typography>
                     {!config.web2 ? (
                         <ExtensionAccountSelect dappName={config.dappName} value={account} onChange={setAccount} />
                     ) : (

@@ -84,17 +84,17 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
                     req.body.email &&
                     req.body.password &&
                     req.body.prosopo &&
-                    req.body.prosopo.userAccountAddress &&
-                    req.body.prosopo.dappAccount &&
-                    req.body.prosopo.blockNumber
+                    req.body.prosopo[ApiParams.user] &&
+                    req.body.prosopo[ApiParams.dapp] &&
+                    req.body.prosopo[ApiParams.blockNumber]
                 ) {
                     if (
                         await prosopoServer.isVerified(
-                            req.body.prosopo.userAccountAddress,
-                            req.body.prosopo.providerUrl,
-                            req.body.prosopo.dappAccount,
-                            req.body.prosopo.commitmentId,
-                            req.body.prosopo.blockNumber
+                            req.body.prosopo[ApiParams.user],
+                            req.body.prosopo[ApiParams.providerUrl],
+                            req.body.prosopo[ApiParams.dapp],
+                            req.body.prosopo[ApiParams.commitmentId],
+                            req.body.prosopo[ApiParams.blockNumber]
                         )
                     ) {
                         // password hash
