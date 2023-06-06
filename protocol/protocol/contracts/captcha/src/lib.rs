@@ -2089,6 +2089,9 @@ pub mod captcha {
             // check the contract was created with the correct account
             assert_eq!(contract.env().account_id(), account);
 
+            // give the contract some funds, otherwise it might dip below the existential deposit and be deleted (or panic in the test env)
+            increment_account_balance(account, STAKE_THRESHOLD);
+
             // advance the block to avoid block checks
             advance_block();
 
