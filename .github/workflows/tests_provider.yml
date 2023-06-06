@@ -36,29 +36,15 @@ jobs:
           path: captcha
           submodules: recursive
 
-      - name: Clone scripts repository
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.base_ref }}
-          repository: prosopo/scripts
-          path: scripts
-          #ssh-key: ${{ secrets.SSH_KEY }}
-          #ssh-strict: false
-
-      - name: Checkout correct scripts branch
-        run: |
-          cd scripts
-          git fetch
-          git checkout ${{ github.head_ref }} || git checkout ${{ github.base_ref }} || git checkout develop
-          git pull
-
       - run: mkdir -p ~/image-cache
+
+      - run: ls ./captcha/docker
 
       - id: image-cache
         uses: actions/cache@v3
         with:
           path: ~/image-cache
-          key: image-cache-docker-${{ runner.os }}-${{ hashFiles('./docker/docker-compose.test.yml') }}
+          key: image-cache-docker-${{ runner.os }}-${{ hashFiles('./captcha/docker/docker-compose.test.yml') }}
 
       - if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
@@ -72,7 +58,7 @@ jobs:
 
       - name: Start the docker images
         run: |
-          cd scripts
+          cd captcha
           docker compose --file ./docker/docker-compose.test.yml up -d
           docker container ls
 
