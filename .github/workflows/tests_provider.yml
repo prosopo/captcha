@@ -58,25 +58,22 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/image-cache
-          key: image-cache-docker-${{ runner.os }}
+          key: image-cache-docker-${{ runner.os }}-${{ hashFiles('./docker/docker-compose.test.yml') }}
 
       - if: steps.image-cache.outputs.cache-hit != 'true'
         run: |
           docker pull prosopo/substrate-contracts-node:v0.25
           docker save -o ~/image-cache/prosopo.tar prosopo/substrate-contracts-node:v0.25
-          docker pull mongo:5.0.4
-          docker save -o ~/image-cache/mongo.tar mongo:5.0.4
 
       - if: steps.image-cache.outputs.cache-hit == 'true'
         run: |
           ls ~/image-cache
           docker load -i ~/image-cache/prosopo.tar
-          docker load -i ~/image-cache/mongo.tar
 
       - name: Start the docker images
         run: |
           cd scripts
-          docker compose --file ./docker/docker-compose.development.yml up -d
+          docker compose --file ./docker/docker-compose.test.yml up -d
           docker container ls
 
       - id: node-cache
