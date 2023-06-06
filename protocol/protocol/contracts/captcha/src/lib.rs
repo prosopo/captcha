@@ -795,6 +795,8 @@ pub mod captcha {
             self.seed = new_seed_value;
             self.seed_at = block;
 
+            debug!("Updated seed to {} at block {}", new_seed_value, block);
+
             self.prune_logs();
 
             Ok(true)
@@ -2852,18 +2854,19 @@ pub mod captcha {
                 seeds.push(contract.get_seed());
             }
 
-            assert_eq!(seeds, vec![65483748331838000980902127313352482465, 85430836295071609865113669194656069839, 251947362297324393568756400924010309049, 203700771680071056788878656076841028000, 123218550939910032012745774295206212681, 44999193108112175961926579756757711199, 190316865797632131221077968264188182827, 65691630378172829806214571177329707908, 219897463591066706401375856314049762593, 246261253306437263805039943537337338766]);
+            assert_eq!(seeds, vec![29484902659086428677905932203876438528, 220054241943680630487477214323220761043, 293381017595197031343665221144713685785, 183370201396006768619536927048813552287, 79751992273971833687162258116622282823, 278808677286996191924545869250252043783, 148396805558454760269179325279861957306, 18427894178892698781164334927667696895, 312201683620559894742653248358580806439, 51374553630933184379546151719810160058]);
         }
 
         #[ink::test]
         fn test_get_seed_at() {
-            let mut contract = get_contract(0);
-            setup_provider(&mut contract, 0, 0, true);
-            setup_dapp(&mut contract, 0, 0, true);
-
-            let admin_account = get_admin_account(0);
-            // set the caller to the provider account
-            set_caller(admin_account);
+            let account = get_contract_account(0); // the account for the contract
+            set_callee(account);
+            // set the caller to the matching admin at index
+            set_caller(get_admin_account(0));
+            
+            // now construct the contract instance
+            let mut contract =
+                Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 20, 0, 1000, 50);
 
             // make sure the rewind window >0
             assert!(contract.get_rewind_window() > 0);
@@ -2875,22 +2878,9 @@ pub mod captcha {
             let (limit, overflow) = limit.overflowing_add(contract.env().block_number());
             assert!(!overflow);
 
-            let mut seeds: Vec<Seed> = vec![0, contract.seed];
+            let mut seeds: Vec<Seed> = contract.get_seeds();
 
             for i in 0..limit {
-                // check the seed history is equal
-                assert_eq!(seeds, contract.get_seeds());
-
-                // check that the seeds in the rewind window are correct
-                let window = contract.get_rewind_window() as BlockNumber;
-                let block = contract.env().block_number();
-                let range = if window > block { block } else { window };
-                for j in 0..seeds.len() - 1 {
-                    let at = contract.env().block_number() - (j as BlockNumber);
-                    let a = contract.get_seed_at(at).unwrap();
-                    let b = seeds[seeds.len() - 1 - j];
-                    assert_eq!(a, b);
-                }
 
                 // advance to the next block
                 advance_block();
@@ -2904,6 +2894,20 @@ pub mod captcha {
                 if seeds.len() - 1 > contract.get_rewind_window() as usize {
                     // -1 because the current block is not yet in the history
                     seeds.remove(0);
+                }
+
+                // check the seed history is equal
+                assert_eq!(seeds, contract.get_seeds());
+
+                // check that the seeds in the rewind window are correct
+                let window = contract.get_rewind_window() as BlockNumber;
+                let block = contract.env().block_number();
+                let range = if window > block { block } else { window };
+                for j in 0..seeds.len() - 1 {
+                    let at = contract.env().block_number() - (j as BlockNumber);
+                    let a = contract.get_seed_at(at).unwrap();
+                    let b = seeds[seeds.len() - 1 - j];
+                    assert_eq!(a, b);
                 }
             }
 
