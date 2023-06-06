@@ -2287,6 +2287,17 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_provider_set_dataset_inactive_does_not_update_seed() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, false);
+
+            let seed = contract.get_seed();
+            advance_block();
+            contract.provider_set_dataset(get_provider_dataset_id(0), get_provider_dataset_id_content(0)).unwrap();
+            assert_eq!(seed, contract.get_seed());
+        }
+
+        #[ink::test]
         fn test_provider_fund_active_updates_seed() {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
