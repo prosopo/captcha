@@ -2183,14 +2183,17 @@ pub mod captcha {
             // give the dapp some funds above the threshold
             let funds = contract.get_dapp_stake_threshold();
             // allocate them to the account
-            increment_account_balance(account, funds);
+            let balance = contract.get_dapp(dapp_contract_account).unwrap().balance;
+            
             set_value_transferred(funds);
-
             set_caller(account);
             contract
                 .dapp_fund(dapp_contract_account)
                 .unwrap();
             set_value_transferred(0);
+
+            // check funds have been added to the account
+            assert_eq!(balance + funds, contract.get_dapp(dapp_contract_account).unwrap().balance);
 
             let dapp = contract.get_dapp(get_dapp_contract_account(dapp_index)).unwrap();
             println!("activated dapp {}: {:?}", dapp_index, dapp);
@@ -2212,7 +2215,8 @@ pub mod captcha {
             // set the callee to the contract
             set_callee(get_contract_account(contract_index));
             // set the caller to the provider account
-            set_caller(get_provider_account(provider_index));
+            let account = get_provider_account(provider_index);
+            set_caller(account);
 
             // register the provider
             contract
@@ -2230,7 +2234,7 @@ pub mod captcha {
                 )
                 .unwrap();
 
-            let provider = contract.get_provider(get_provider_account(provider_index)).unwrap();
+            let provider = contract.get_provider(account).unwrap();
             println!("registered provider {}: {:?}", provider_index, provider);
 
             // optionally activate the provider
@@ -2243,6 +2247,7 @@ pub mod captcha {
                     provider
                         .status
                 );
+                check_provider_in_group(&contract, account, &provider);
             }
 
         }
@@ -2251,18 +2256,22 @@ pub mod captcha {
             // set the callee to the contract
             set_callee(get_contract_account(contract_index));
             // set the caller to the provider account
-            set_caller(get_provider_account(provider_index));
+            let account = get_provider_account(provider_index);
+            set_caller(account);
 
             let account = get_provider_account(provider_index);
             // give the provider some funds above the threshold
             let funds = contract.get_provider_stake_threshold();
             // allocate them to the account
-            increment_account_balance(account, funds);
+            let balance = contract.get_provider(account).unwrap().balance;
+            
             set_value_transferred(funds);
-
             set_caller(account);
             contract.provider_fund().unwrap();
             set_value_transferred(0);
+
+            // check funds have been added to the account
+            assert_eq!(balance + funds, contract.get_provider(account).unwrap().balance);
 
             let provider = contract.get_provider(get_provider_account(provider_index)).unwrap();
             println!("activated provider {}: {:?}", provider_index, provider);
@@ -2272,6 +2281,7 @@ pub mod captcha {
                 GovernanceStatus::Active,
                 contract.get_provider(account).unwrap().status
             );
+            check_provider_in_group(&contract, account, &provider);
         }
 
         #[ink::test]
@@ -2347,7 +2357,7 @@ pub mod captcha {
                     let group = contract.provider_accounts.get(ProviderState {
                         payee,
                         status,
-                    }).unwrap();
+                    }).unwrap_or_default();
                     if payee == provider.payee && status == provider.status {
                         assert!(group.contains(&account));
                     } else {
@@ -2374,17 +2384,16 @@ pub mod captcha {
             // check provider is inactive
             // check nothing else has changed
             let mut after = contract.get_provider(get_provider_account(0)).unwrap();
+            check_provider_in_group(&contract, account, &after);
             assert_eq!(GovernanceStatus::Inactive, after.status);
             after.status = before.status;
             assert_eq!(before, after);
-
-            check_provider_in_group(&contract, account, &after);
         }
 
         #[ink::test]
         fn test_provider_deactivate_was_inactive() {
             let mut contract = get_contract(0);
-            setup_provider(&mut contract, 0, 0, true);
+            setup_provider(&mut contract, 0, 0, false);
             let account = get_provider_account(0);
 
             let before = contract.get_provider(get_provider_account(0)).unwrap();
@@ -2393,15 +2402,14 @@ pub mod captcha {
             advance_block();
             contract.provider_deactivate().unwrap();
             // check seed has changed
-            assert_ne!(seed, contract.get_seed());
+            assert_eq!(seed, contract.get_seed());
 
             // check provider is inactive
             // check nothing else has changed
             let after = contract.get_provider(get_provider_account(0)).unwrap();
+            check_provider_in_group(&contract, account, &after);
             assert_eq!(GovernanceStatus::Inactive, after.status);
             assert_eq!(before, after);
-
-            check_provider_in_group(&contract, account, &after);
         }
 
         #[ink::test]
