@@ -2453,6 +2453,7 @@ pub mod captcha {
                     }
                 }
             }
+            assert!(contract.get_provider_accounts().contains(&account));
         }
 
         #[ink::test]
