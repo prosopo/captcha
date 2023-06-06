@@ -2637,6 +2637,24 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_update_seed_reproducibility() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, true);
+            
+            let rounds = 10;
+            let mut seeds: Vec<u128> = Vec::new();
+            for _ in 0..rounds {
+                advance_block();
+                set_value_transferred(1);
+                contract.provider_fund().unwrap();
+                set_value_transferred(0);
+                seeds.push(contract.get_seed());
+            }
+
+            assert_eq!(seeds, vec![65483748331838000980902127313352482465, 85430836295071609865113669194656069839, 251947362297324393568756400924010309049, 203700771680071056788878656076841028000, 123218550939910032012745774295206212681, 44999193108112175961926579756757711199, 190316865797632131221077968264188182827, 65691630378172829806214571177329707908, 219897463591066706401375856314049762593, 246261253306437263805039943537337338766]);
+        }
+
+        #[ink::test]
         fn test_get_seed_at() {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
