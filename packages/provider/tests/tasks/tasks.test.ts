@@ -22,7 +22,7 @@ import {
 } from '@prosopo/types'
 import { BN, stringToHex, stringToU8a, u8aToHex } from '@polkadot/util'
 import { CaptchaMerkleTree, computeCaptchaSolutionHash, computePendingRequestHash } from '@prosopo/datasets'
-import { ContractDeployer } from '@prosopo/contract'
+import { ContractDeployer, getBlockNumber } from '@prosopo/contract'
 import { DappAbiJSON, DappWasm } from '../dataUtils/dapp-example-contract/loadFiles'
 import { DappPayee } from '@prosopo/types'
 import { EventRecord } from '@polkadot/types/interfaces'
@@ -115,12 +115,15 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             pendingRequestSalt
         )
 
+        const blockNumber = (await getBlockNumber(env.api)).toNumber()
+
         if ('storeDappUserPending' in env.db!) {
             await env.db.storeDappUserPending(
                 hexHash(accountAddress(dappUserAccount)),
                 requestHash,
                 pendingRequestSalt,
-                99999999999999
+                99999999999999,
+                blockNumber
             )
         }
         const signer = env.keyring.addFromMnemonic(accountMnemonic(dappUserAccount))
@@ -135,6 +138,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             dappContractAccount,
             userSalt,
             userSignature,
+            blockNumber,
         }
     }
 
@@ -711,7 +715,8 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
     })
 
     it('Validates the Dapp User Solution Request is Pending', async (): Promise<void> => {
-        const { dappUserAccount, captchaSolutions, providerAccount } = await createMockCaptchaSolutionsAndRequestHash()
+        const { dappUserAccount, captchaSolutions, providerAccount, blockNumber } =
+            await createMockCaptchaSolutionsAndRequestHash()
 
         const tasks = await getSignedTasks(env, dappUserAccount)
 
@@ -724,7 +729,8 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             hexHash(accountAddress(dappUserAccount)),
             requestHash,
             pendingRequestSalt,
-            99999999999999
+            99999999999999,
+            blockNumber
         )
         const pendingRecord = await env.db!.getDappUserPending(requestHash)
         const valid = await tasks.validateDappUserSolutionRequestIsPending(

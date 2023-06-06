@@ -14,19 +14,13 @@
 
 import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import { ApiPromise } from '@polkadot/api'
-import {
-    ArgumentTypes,
-    CaptchaSolution,
-    CaptchaStatus,
-    Commit,
-    ProsopoConfigSchema,
-    ScheduledTaskNames,
-} from '@prosopo/types'
+import { ArgumentTypes, CaptchaSolution, CaptchaStatus, ProsopoConfigSchema, ScheduledTaskNames } from '@prosopo/types'
 import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
 import { BatchCommitments } from '../../src/batch'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, getPair } from '@prosopo/common'
+import { UserCommitmentRecord } from '@prosopo/types-database'
 import { accountAddress, accountContract, accountMnemonic } from '../accounts'
 import { getSignedTasks } from '../accounts'
 import { getUser } from '../getUser'
@@ -150,7 +144,7 @@ describe('BATCH TESTS', function () {
                     const status = count % 2 === 0 ? CaptchaStatus.approved : CaptchaStatus.disapproved
                     const signer = env.keyring.addFromMnemonic(accountMnemonic(dappUser))
                     const userSignature = signer.sign(stringToHex(requestHash))
-                    const commit: Commit = {
+                    const commit: UserCommitmentRecord = {
                         id: commitmentId,
                         user: accountAddress(dappUser),
                         provider: accountAddress(providerAccount),
@@ -159,8 +153,8 @@ describe('BATCH TESTS', function () {
                         status,
                         requestedAt,
                         completedAt,
-                        userSignaturePart1: [...userSignature.slice(0, userSignature.length / 2)],
-                        userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
+                        userSignature: Array.from(userSignature),
+                        processed: false,
                     }
                     await providerTasks.db.storeDappUserSolution([captchaSolution], commit)
                     if (status === CaptchaStatus.approved) {
