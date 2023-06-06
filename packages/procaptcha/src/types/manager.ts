@@ -1,3 +1,4 @@
+import { ApiParams } from '@prosopo/types'
 import { GetCaptchaResponse } from '@prosopo/api'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
 import { Optional } from './utils'
@@ -83,9 +84,9 @@ export interface ProcaptchaEvents {
  * provider or a captcha challenge.
  */
 export interface ProcaptchaOutput {
-    commitmentId?: string
-    providerUrl?: string
-    dappAccount: string
-    userAccountAddress: string
-    blockNumber?: number
+    [ApiParams.commitmentId]?: string
+    [ApiParams.providerUrl]?: string
+    [ApiParams.dapp]: string
+    [ApiParams.user]: string
+    [ApiParams.blockNumber]?: number
 }

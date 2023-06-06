@@ -29,6 +29,7 @@ export enum ApiParams {
     requestHash = 'requestHash',
     captchas = 'captchas',
     commitmentId = 'commitmentId',
+    providerUrl = 'providerUrl',
 }
 
 export interface DappUserSolutionResult {

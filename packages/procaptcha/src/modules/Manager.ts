@@ -163,8 +163,8 @@ export const Manager = (
             if (contractIsHuman) {
                 updateState({ isHuman: true, loading: false })
                 events.onHuman({
-                    userAccountAddress: account.account.address,
-                    dappAccount: config.network.dappContract.address,
+                    user: account.account.address,
+                    dapp: config.network.dappContract.address,
                 })
                 return
             }
@@ -183,8 +183,8 @@ export const Manager = (
                         updateState({ isHuman: true, loading: false })
                         events.onHuman({
                             providerUrl: providerUrlFromStorage,
-                            userAccountAddress: account.account.address,
-                            dappAccount: config.network.dappContract.address,
+                            user: account.account.address,
+                            dapp: config.network.dappContract.address,
                             commitmentId: verifyDappUserResponse.commitmentId,
                         })
                         return
@@ -321,8 +321,8 @@ export const Manager = (
             if (state.isHuman) {
                 events.onHuman({
                     providerUrl: trimProviderUrl(captchaApi.provider.provider.url.toString()),
-                    userAccountAddress: account.account.address,
-                    dappAccount: getDappAccount(),
+                    user: account.account.address,
+                    dapp: getDappAccount(),
                     commitmentId: submission[1],
                     blockNumber,
                 })

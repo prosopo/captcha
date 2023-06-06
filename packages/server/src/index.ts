@@ -78,9 +78,9 @@ export class ProsopoServer {
     }
 
     public async isVerified(
-        userAccount: string,
+        user: string,
         providerUrl: string,
-        dappContractAccount: string,
+        dapp: string,
         commitmentId: string,
         blockNumber: string
     ): Promise<boolean> {
@@ -90,22 +90,19 @@ export class ProsopoServer {
         const getRandomProviderResponse = await this.contract.queryAtBlock<RandomProvider>(
             block,
             'getRandomActiveProvider',
-            [userAccount, dappContractAccount]
+            [user, dapp]
         )
-        const serviceOrigin = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
-        if (serviceOrigin !== providerUrl) {
+        const providerUrlTrimmed = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
+        if (providerUrlTrimmed !== providerUrl) {
             return false
         }
 
-        if (providerUrl && commitmentId) {
-            console.log('providerUrl', providerUrl)
-            console.log('web3Account', userAccount)
-            console.log('commitmentId', commitmentId)
+        if (providerUrlTrimmed && commitmentId) {
             const providerApi = await this.getProviderApi(providerUrl)
-            const result = await providerApi.verifyDappUser(userAccount, commitmentId)
+            const result = await providerApi.verifyDappUser(user, commitmentId)
             return result.solutionApproved
         } else {
-            return (await contractApi.query.dappOperatorIsHumanUser(userAccount, this.config.solutionThreshold)).value
+            return (await contractApi.query.dappOperatorIsHumanUser(user, this.config.solutionThreshold)).value
                 .unwrap()
                 .unwrap()
         }
