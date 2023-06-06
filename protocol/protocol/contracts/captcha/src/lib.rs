@@ -2153,7 +2153,6 @@ pub mod captcha {
             dapp_index: u128,
             activate: bool,
         ) {
-            let orig_callee = callee();
             // set the caller to the dapp account
             set_callee(get_contract_account(contract_index));
             set_caller(get_dapp_account(dapp_index));
@@ -2177,14 +2176,9 @@ pub mod captcha {
                         .unwrap()
                         .status);
             }
-
-            // avoid accidentally reusing caller
-            reset_caller();
-            set_callee(orig_callee);
         }
 
         fn activate_dapp(contract: &mut Captcha, contract_index: u128, dapp_index: u128) {
-            let orig_callee = callee();
             // set the caller to the dapp account
             set_callee(get_contract_account(contract_index));
 
@@ -2209,10 +2203,6 @@ pub mod captcha {
                 GovernanceStatus::Active,
                 contract.get_dapp(dapp_contract_account).unwrap().status
             );
-
-            // avoid accidentally reusing caller
-            reset_caller();
-            set_callee(orig_callee);
         }
 
         /// Setup a provider given the index of the provider. Activate the provider if instructed to do so, which adds funds as required
@@ -2222,7 +2212,6 @@ pub mod captcha {
             provider_index: u128,
             activate: bool,
         ) {
-            let orig_callee = callee();
             // set the callee to the contract
             set_callee(get_contract_account(contract_index));
             // set the caller to the provider account
@@ -2259,13 +2248,9 @@ pub mod captcha {
                 );
             }
 
-            // avoid accidentally reusing caller
-            reset_caller();
-            set_callee(orig_callee);
         }
 
         fn activate_provider(contract: &mut Captcha, contract_index: u128, provider_index: u128) {
-            let orig_callee = callee();
             // set the callee to the contract
             set_callee(get_contract_account(contract_index));
             // set the caller to the provider account
@@ -2290,10 +2275,6 @@ pub mod captcha {
                 GovernanceStatus::Active,
                 contract.get_provider(account).unwrap().status
             );
-
-            // avoid accidentally reusing caller
-            reset_caller();
-            set_callee(orig_callee);
         }
 
         #[ink::test]
