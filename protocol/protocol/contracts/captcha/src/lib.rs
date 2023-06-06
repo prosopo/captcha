@@ -760,7 +760,7 @@ pub mod captcha {
                 let provider = self
                     .providers
                     .get(caller)
-                    .ok_or_else(err_fn!(self, Error::NotAuthorised))?;
+                    .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?;
                 // only active providers can call this method
                 if provider.status != GovernanceStatus::Active {
                     return Ok(false);
@@ -2883,7 +2883,7 @@ pub mod captcha {
             .iter()
             {
                 set_caller(*account);
-                assert_eq!(contract.update_seed(), Err(Error::NotAuthorised));
+                assert_eq!(contract.update_seed(), Err(Error::ProviderDoesNotExist));
             }
         }
 
