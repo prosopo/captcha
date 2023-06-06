@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ArgumentTypes, Commit } from '@prosopo/types'
+import { ArgumentTypes } from '@prosopo/types'
 import {
     Captcha,
     CaptchaSolution,
@@ -29,7 +29,8 @@ import { PendingCaptchaRequest } from '@prosopo/types'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
 import { z } from 'zod'
 
-export interface UserCommitmentRecord extends ArgumentTypes.Commit {
+export interface UserCommitmentRecord extends Omit<ArgumentTypes.Commit, 'userSignaturePart1' | 'userSignaturePart2'> {
+    userSignature: number[]
     processed: boolean
 }
 
@@ -40,8 +41,7 @@ export const UserCommitmentSchema = z.object({
     provider: z.string(),
     id: z.string(),
     status: z.nativeEnum(ArgumentTypes.CaptchaStatus),
-    userSignaturePart1: z.array(z.number()),
-    userSignaturePart2: z.array(z.number()),
+    userSignature: z.array(z.number()),
     completedAt: z.number(),
     requestedAt: z.number(),
     processed: z.boolean(),
@@ -95,8 +95,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     status: { type: String, required: true },
     requestedAt: { type: Number, required: true },
     completedAt: { type: Number, required: true },
-    userSignaturePart1: { type: Array, required: true },
-    userSignaturePart2: { type: Array, required: true },
+    userSignature: { type: [Number], required: true },
     processed: { type: Boolean, required: true },
 })
 
@@ -145,7 +144,8 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     pending: { type: Boolean, required: true },
     salt: { type: String, required: true },
     requestHash: { type: String, required: true },
-    deadline: { type: Number, required: true }, // unix timestamp
+    deadlineTimestamp: { type: Number, required: true }, // unix timestamp
+    requestedAtBlock: { type: Number, required: true },
 })
 
 export const ScheduledTaskSchema = z.object({
@@ -210,9 +210,15 @@ export interface Database {
 
     getDatasetDetails(datasetId: ArgumentTypes.Hash | string | Uint8Array): Promise<DatasetBase>
 
-    storeDappUserSolution(captchas: CaptchaSolution[], commit: Commit): Promise<void>
+    storeDappUserSolution(captchas: CaptchaSolution[], commit: UserCommitmentRecord): Promise<void>
 
-    storeDappUserPending(userAccount: string, requestHash: string, salt: string, deadline: number): Promise<void>
+    storeDappUserPending(
+        userAccount: string,
+        requestHash: string,
+        salt: string,
+        deadlineTimestamp: number,
+        requestedAtBlock: number
+    ): Promise<void>
 
     getDappUserPending(requestHash: string): Promise<PendingCaptchaRequest>
 

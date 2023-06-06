@@ -14,8 +14,25 @@
 import { CaptchaSolutionSchema } from '../datasets'
 import { z } from 'zod'
 
+export enum ApiPaths {
+    GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
+    SubmitCaptchaSolution = '/v1/prosopo/provider/solution',
+    VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
+}
+
+export enum ApiParams {
+    datasetId = 'datasetId',
+    user = 'user',
+    dapp = 'dapp',
+    blockNumber = 'blockNumber',
+    signature = 'signature',
+    requestHash = 'requestHash',
+    captchas = 'captchas',
+    commitmentId = 'commitmentId',
+}
+
 export interface DappUserSolutionResult {
-    captchas: CaptchaIdAndProof[]
+    [ApiParams.captchas]: CaptchaIdAndProof[]
     partialFee?: string
     solutionApproved: boolean
 }
@@ -26,29 +43,27 @@ export interface CaptchaIdAndProof {
 }
 
 export const CaptchaRequestBody = z.object({
-    userAccount: z.string(),
-    dappAccount: z.string(),
-    datasetId: z.string(),
-    blockNumber: z.string(),
+    [ApiParams.user]: z.string(),
+    [ApiParams.dapp]: z.string(),
+    [ApiParams.datasetId]: z.string(),
+    [ApiParams.blockNumber]: z.string(),
 })
 
 export type CaptchaRequestBodyType = z.infer<typeof CaptchaRequestBody>
 
 export const CaptchaSolutionBody = z.object({
-    user: z.string(),
-    dapp: z.string(),
-    captchas: z.array(CaptchaSolutionSchema),
-    requestHash: z.string(),
-    blockHash: z.string().optional(),
-    txHash: z.string().optional(),
-    signature: z.string().optional(), // the signature to prove account ownership (web2 only)
+    [ApiParams.user]: z.string(),
+    [ApiParams.dapp]: z.string(),
+    [ApiParams.captchas]: z.array(CaptchaSolutionSchema),
+    [ApiParams.requestHash]: z.string(),
+    [ApiParams.signature]: z.string().optional(), // the signature to prove account ownership
 })
 
 export type CaptchaSolutionBodyType = z.infer<typeof CaptchaSolutionBody>
 
 export const VerifySolutionBody = z.object({
-    userAccount: z.string(),
-    commitmentId: z.string().optional(),
+    [ApiParams.user]: z.string(),
+    [ApiParams.commitmentId]: z.string().optional(),
 })
 
 export type VerifySolutionBodyType = z.infer<typeof VerifySolutionBody>
@@ -57,6 +72,7 @@ export interface PendingCaptchaRequest {
     accountId: string
     pending: boolean
     salt: string
-    requestHash: string
-    deadline: number // unix timestamp
+    [ApiParams.requestHash]: string
+    deadlineTimestamp: number // unix timestamp
+    requestedAtBlock: number // expected block number
 }

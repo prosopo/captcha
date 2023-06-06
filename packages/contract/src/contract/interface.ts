@@ -22,7 +22,7 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, logger, snakeToCamelCase } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
-import { encodeStringArgs, getOptions, handleContractCallOutcomeErrors } from './helpers'
+import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { firstValueFrom } from 'rxjs'
 import { getPrimitiveStorageFields, getPrimitiveStorageValue, getPrimitiveTypes, getStorageKeyAndType } from './storage'
 import { useWeightImpl } from './useWeight'
@@ -183,7 +183,7 @@ export class ProsopoCaptchaContract extends Contract {
         // Always query first as errors are passed back from a dry run but not from a transaction
         const message = this.abi.findMessage(contractMethodName)
         const encodedArgs: Uint8Array[] = encodeStringArgs(this.abi, message, args)
-        const expectedBlockTime = new BN(this.api.consts.babe?.expectedBlockTime)
+        const expectedBlockTime = getExpectedBlockTime(this.api)
         const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(1))
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
         this.logger.debug('Sending address: ', this.pair.address)

@@ -1,5 +1,5 @@
 import { ApiPromise } from '@polkadot/api'
-import { ArgumentTypes } from '@prosopo/types'
+import { ArgumentTypes, Commit } from '@prosopo/types'
 import { BN } from '@polkadot/util'
 import { BatchCommitConfig, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
@@ -91,8 +91,9 @@ export class BatchCommitments {
         const maxBlockWeight = this.contract.api.consts.system.blockWeights.maxBlock
         const commitmentArray: ArgumentTypes.Commit[] = []
         let extrinsic: SubmittableExtrinsic<'promise'> | undefined
-        for (const { processed: _processed, ...commitment } of commitments) {
-            commitmentArray.push(commitment)
+        for (const commitment of commitments) {
+            const commit = this.convertCommit(commitment)
+            commitmentArray.push(commit)
             const encodedArgs: Uint8Array[] = encodeStringArgs(this.contract.abi, fragment, [commitmentArray])
 
             // TODO can we get storage deposit from the provided query method?
@@ -185,5 +186,18 @@ export class BatchCommitments {
         const removeCommitmentsResult = await this.db.removeProcessedDappUserCommitments(commitmentIds)
         this.logger.info('Deleted user solutions', removeSolutionsResult)
         this.logger.info('Deleted user commitments', removeCommitmentsResult)
+    }
+
+    convertCommit(commitment: UserCommitmentRecord): Commit {
+        const { processed, userSignature, requestedAt, completedAt, ...commit } = commitment
+
+        return {
+            ...commit,
+            userSignaturePart1: userSignature.slice(0, userSignature.length / 2),
+            userSignaturePart2: userSignature.slice(userSignature.length / 2),
+            // to satisfy typescript
+            requestedAt: new BN(requestedAt).toNumber(),
+            completedAt: new BN(completedAt).toNumber(),
+        }
     }
 }

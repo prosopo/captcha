@@ -11,8 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import {
+    ApiParams,
+    ApiPaths,
+    CaptchaSolutionBody,
+    CaptchaWithProof,
+    DappUserSolutionResult,
+    VerifySolutionBody,
+} from '@prosopo/types'
 import { CaptchaRequestBody } from '@prosopo/types'
-import { CaptchaSolutionBody, CaptchaWithProof, DappUserSolutionResult, VerifySolutionBody } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { Tasks } from './tasks/tasks'
@@ -39,17 +46,17 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
      * @return {Captcha} - The Captcha data
      */
     router.get(
-        '/v1/prosopo/provider/captcha/:datasetId/:userAccount/:dappAccount/:blockNumber',
+        `${ApiPaths.GetCaptchaChallenge}/:${ApiParams.datasetId}/:${ApiParams.user}/:${ApiParams.dapp}/:${ApiParams.blockNumber}`,
         async (req, res, next) => {
             try {
-                const { blockNumber, datasetId, userAccount, dappAccount } = CaptchaRequestBody.parse(req.params)
+                const { blockNumber, datasetId, user, dapp } = CaptchaRequestBody.parse(req.params)
 
-                validateAddress(userAccount, false, env.api.registry.chainSS58)
+                validateAddress(user, false, env.api.registry.chainSS58)
                 const blockNumberParsed = parseBlockNumber(blockNumber)
 
-                await tasks.validateProviderWasRandomlyChosen(userAccount, dappAccount, datasetId, blockNumberParsed)
+                await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
 
-                const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, userAccount)
+                const taskData = await tasks.getRandomCaptchasAndRequestHash(datasetId, user)
                 taskData.captchas = taskData.captchas.map((cwp: CaptchaWithProof) => ({
                     ...cwp,
                     captcha: {
@@ -72,7 +79,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
      * @param {Captcha[]} captchas - The Captcha solutions
      * @return {DappUserSolutionResult} - The Captcha solution result and proof
      */
-    router.post('/v1/prosopo/provider/solution', async (req, res, next) => {
+    router.post(ApiPaths.SubmitCaptchaSolution, async (req, res, next) => {
         let parsed
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
@@ -82,11 +89,11 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
 
         try {
             const result: DappUserSolutionResult = await tasks.dappUserSolution(
-                parsed.userAccount,
-                parsed.dappAccount,
-                parsed.requestHash,
-                parsed.captchas,
-                parsed.signature
+                parsed[ApiParams.user],
+                parsed[ApiParams.dapp],
+                parsed[ApiParams.requestHash],
+                parsed[ApiParams.captchas],
+                parsed[ApiParams.signature]
             )
             return res.json({
                 status: req.i18n.t(result.solutionApproved ? 'API.CAPTCHA_PASSED' : 'API.CAPTCHA_FAILED'),
@@ -103,7 +110,7 @@ export function prosopoRouter(env: ProsopoEnvironment): Router {
      * @param {string} userAccount - Dapp User id
      * @param {string} commitmentId - The captcha solution to look up
      */
-    router.post('/v1/prosopo/provider/verify', async (req, res, next) => {
+    router.post(ApiPaths.VerifyCaptchaSolution, async (req, res, next) => {
         let parsed
         try {
             parsed = VerifySolutionBody.parse(req.body)

@@ -20,7 +20,6 @@ import {
     CaptchaStates,
     CaptchaStatus,
     CaptchaWithProof,
-    Commit,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
@@ -41,7 +40,7 @@ import {
 } from '@prosopo/datasets'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { ProsopoCaptchaContract } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getBlockNumber } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
@@ -182,18 +181,19 @@ export class Tasks {
         )
         // Only do stuff if the request is in the local DB
         const userSignature = hexToU8a(signature)
+        const blockNumber = (await getBlockNumber(this.contract.api)).toNumber()
         if (pendingRequest) {
-            const commit: Commit = {
+            const commit: UserCommitmentRecord = {
                 id: commitmentId,
                 user: userAccount,
                 dapp: dappAccount,
                 provider: this.contract.pair.address,
                 datasetId: providerDetails.datasetId.toString(),
                 status: CaptchaStatus.pending,
-                userSignaturePart1: [...userSignature.slice(0, userSignature.length / 2)],
-                userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
-                requestedAt: pendingRecord.deadline,
-                completedAt: Date.now(),
+                userSignature: Array.from(userSignature),
+                requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
+                completedAt: blockNumber,
+                processed: false,
             }
             await this.db.storeDappUserSolution(receivedCaptchas, commit)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
@@ -305,7 +305,7 @@ export class Tasks {
         captchaIds: string[]
     ): Promise<boolean> {
         const currentTime = Date.now()
-        if (pendingRecord.deadline < currentTime) {
+        if (pendingRecord.deadlineTimestamp < currentTime) {
             // deadline for responding to the captcha has expired
             this.logger.info('Deadline for responding to captcha has expired')
             return false
@@ -354,8 +354,10 @@ export class Tasks {
 
         const currentTime = Date.now()
         const timeLimit = captchas.map((captcha) => captcha.captcha.timeLimitMs || 30000).reduce((a, b) => a + b, 0)
-        const deadline = timeLimit + currentTime
-        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadline)
+
+        const deadlineTs = timeLimit + currentTime
+        const currentBlockNumber = await getBlockNumber(this.contract.api)
+        await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber.toNumber())
         return { captchas, requestHash }
     }
 
@@ -451,13 +453,13 @@ export class Tasks {
      * @param {string} userAccount - Same user that called `get_random_provider`
      * @param {string} dappContractAccount - account of dapp that is requesting captcha
      * @param {string} datasetId - `captcha_dataset_id` from the result of `get_random_provider`
-     * @param {string} blockNo - Block on which `get_random_provider` was called
+     * @param {string} blockNumber - Block on which `get_random_provider` was called
      */
     async validateProviderWasRandomlyChosen(
         userAccount: string,
         dappContractAccount: string,
         datasetId: string | Hash,
-        blockNo: number
+        blockNumber: number
     ) {
         const contract = await this.contract.contract
         if (!contract) {
@@ -466,7 +468,7 @@ export class Tasks {
 
         const header = await contract.api.rpc.chain.getHeader()
 
-        const isBlockNoValid = await this.isRecentBlock(contract, header, blockNo)
+        const isBlockNoValid = await this.isRecentBlock(contract, header, blockNumber)
 
         if (!isBlockNoValid) {
             throw new ProsopoEnvError(
@@ -474,16 +476,16 @@ export class Tasks {
                 this.validateProviderWasRandomlyChosen.name,
                 {},
                 {
-                    userAccount: userAccount,
-                    dappContractAccount: dappContractAccount,
-                    datasetId: datasetId,
-                    header: header,
-                    blockNo: blockNo,
+                    userAccount,
+                    dappContractAccount,
+                    datasetId,
+                    header,
+                    blockNumber,
                 }
             )
         }
 
-        const block = (await contract.api.rpc.chain.getBlockHash(blockNo)) as BlockHash
+        const block = (await contract.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash
         const randomProviderAndBlockNo = await this.contract.queryAtBlock<RandomProvider>(
             block,
             'getRandomActiveProvider',

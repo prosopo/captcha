@@ -17,7 +17,6 @@ import {
     CaptchaSolution,
     CaptchaStates,
     CaptchaStatus,
-    Commit,
     DatasetBase,
     DatasetWithIds,
     DatasetWithIdsAndTree,
@@ -351,11 +350,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /**
      * @description Store a Dapp User's captcha solution commitment
      */
-    async storeDappUserSolution(captchas: CaptchaSolution[], commit: Commit): Promise<void> {
-        const commitmentRecord = UserCommitmentSchema.parse({
-            ...commit,
-            processed: false,
-        } as UserCommitmentRecord)
+    async storeDappUserSolution(captchas: CaptchaSolution[], commit: UserCommitmentRecord): Promise<void> {
+        const commitmentRecord = UserCommitmentSchema.parse(commit)
         if (captchas.length) {
             await this.tables?.commitment.updateOne(
                 {
@@ -418,17 +414,21 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         userAccount: string,
         requestHash: string,
         salt: string,
-        deadline: number
+        deadlineTimestamp: number,
+        requestedAtBlock: number
     ): Promise<void> {
         if (!isHex(requestHash)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.storeDappUserPending.name, {}, requestHash)
         }
-
-        await this.tables?.pending.updateOne(
-            { requestHash: requestHash },
-            { $set: { accountId: userAccount, pending: true, salt, requestHash, deadline } },
-            { upsert: true }
-        )
+        const pendingRecord = {
+            accountId: userAccount,
+            pending: true,
+            salt,
+            requestHash,
+            deadlineTimestamp,
+            requestedAtBlock,
+        }
+        await this.tables?.pending.updateOne({ requestHash: requestHash }, { $set: pendingRecord }, { upsert: true })
     }
 
     /**

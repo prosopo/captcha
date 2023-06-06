@@ -104,9 +104,6 @@ export class ProsopoCaptchaApi {
         const commitmentId = tree.root!.hash
 
         console.log('solveCaptchaChallenge commitmentId', commitmentId)
-        // console.log("solveCaptchaChallenge USER ACCOUNT", this.contract.getAccount().address);
-        // console.log("solveCaptchaChallenge DAPP ACCOUNT", this.contract.getDappAddress());
-        // console.log("solveCaptchaChallenge CONTRACT ADDRESS", this.contract.getContract().address.toString());
         const tx: ContractSubmittableResult | undefined = undefined
 
         let signature: string | undefined = undefined

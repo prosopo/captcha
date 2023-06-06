@@ -13,7 +13,14 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-import { CaptchaSolution, CaptchaSolutionBodyType, RandomProvider, VerifySolutionBodyType } from '@prosopo/types'
+import {
+    ApiPaths,
+    CaptchaSolution,
+    CaptchaSolutionBody,
+    CaptchaSolutionBodyType,
+    RandomProvider,
+    VerifySolutionBodyType,
+} from '@prosopo/types'
 import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
 import HttpClientBase from './HttpClientBase'
 
@@ -31,7 +38,7 @@ export default class ProviderApi extends HttpClientBase {
         const dappAccount = this.network.dappContract.address
 
         return this.axios.get(
-            `/v1/prosopo/provider/captcha/${provider.datasetId}/${userAccount}/${dappAccount}/${blockNumber
+            `${ApiPaths.GetCaptchaChallenge}/${provider.datasetId}/${userAccount}/${dappAccount}/${blockNumber
                 .toString()
                 .replace(/,/g, '')}`
         )
@@ -44,21 +51,22 @@ export default class ProviderApi extends HttpClientBase {
         salt: string,
         signature?: string
     ): Promise<CaptchaSolutionResponse> {
-        return this.axios.post(`/v1/prosopo/provider/solution`, {
+        const captchaSolutionBody: CaptchaSolutionBodyType = CaptchaSolutionBody.parse({
             captchas,
             requestHash,
             user: userAccount,
             dapp: this.network.dappContract.address,
             salt,
             signature,
-        } as CaptchaSolutionBodyType)
+        })
+        return this.axios.post(ApiPaths.SubmitCaptchaSolution, captchaSolutionBody)
     }
 
     public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
-        const payload = { userAccount }
+        const payload = { user: userAccount }
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
         }
-        return this.axios.post(`/v1/prosopo/provider/verify`, payload as VerifySolutionBodyType)
+        return this.axios.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
     }
 }
