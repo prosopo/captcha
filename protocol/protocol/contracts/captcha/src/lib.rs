@@ -2275,25 +2275,133 @@ pub mod captcha {
         }
 
         #[ink::test]
-        fn test_provider_deregister_active_updates_seed() {
+        fn test_provider_deregister_was_active() {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
 
+            let account = get_provider_account(0);
+            let provider = contract.get_provider(account).unwrap();
+            let balance = get_account_balance(account).unwrap();
+            // provider must have some balance to return
+            assert_ne!(0, balance);
+
             let seed = contract.get_seed();
             advance_block();
             contract.provider_deregister().unwrap();
+
+            // check the seed has been updated
             assert_ne!(seed, contract.get_seed());
+            // check remaining balance is returned
+            assert_eq!(balance + provider.balance, get_account_balance(account).unwrap());
+
+            // check provider is no longer in the contract
+            assert_eq!(None, contract.providers.get(&account));
+            assert!(!contract.get_provider_accounts().contains(&account));
+
+            // check provider has been logged as deregistered
+            assert_eq!(Some(ProviderRecord {
+                provider: None,
+            }), contract.provider_log.get(AccountBlockId {
+                account,
+                block: contract.env().block_number(),
+            }));
         }
 
         #[ink::test]
-        fn test_provider_deregister_inactive_does_not_update_seed() {
+        fn test_provider_deregister_was_inactive() {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, false);
+
+            let account = get_provider_account(0);
+            let provider = contract.get_provider(account).unwrap();
+            let balance = get_account_balance(account).unwrap();
+            // provider must have some balance to return
+            assert_ne!(0, balance);
 
             let seed = contract.get_seed();
             advance_block();
             contract.provider_deregister().unwrap();
+
+            // check the seed has not been updated
             assert_eq!(seed, contract.get_seed());
+            // check remaining balance is returned
+            assert_eq!(balance + provider.balance, get_account_balance(account).unwrap());
+
+            // check provider is no longer in the contract
+            assert_eq!(None, contract.providers.get(&account));
+            assert!(!contract.get_provider_accounts().contains(&account));
+
+            // check provider has been logged as deregistered
+            assert_eq!(Some(ProviderRecord {
+                provider: None,
+            }), contract.provider_log.get(AccountBlockId {
+                account,
+                block: contract.env().block_number(),
+            }));
+        }
+
+        fn check_provider_in_group(contract: &Captcha, account: AccountId, provider: &Provider) {
+            // check provider is in the inactive group
+            for payee in contract.get_payees() {
+                for status in contract.get_statuses() {
+                    let group = contract.provider_accounts.get(ProviderState {
+                        payee,
+                        status,
+                    }).unwrap();
+                    if payee == provider.payee && status == provider.status {
+                        assert!(group.contains(&account));
+                    } else {
+                        assert!(!group.contains(&account));
+                    }
+                }
+            }
+        }
+
+        #[ink::test]
+        fn test_provider_deactivate_was_active() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, true);
+            let account = get_provider_account(0);
+
+            let before = contract.get_provider(get_provider_account(0)).unwrap();
+
+            let seed = contract.get_seed();
+            advance_block();
+            contract.provider_deactivate().unwrap();
+            // check seed has changed
+            assert_ne!(seed, contract.get_seed());
+
+            // check provider is inactive
+            // check nothing else has changed
+            let mut after = contract.get_provider(get_provider_account(0)).unwrap();
+            assert_eq!(GovernanceStatus::Inactive, after.status);
+            after.status = before.status;
+            assert_eq!(before, after);
+
+            check_provider_in_group(&contract, account, &after);
+        }
+
+        #[ink::test]
+        fn test_provider_deactivate_was_inactive() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, true);
+            let account = get_provider_account(0);
+
+            let before = contract.get_provider(get_provider_account(0)).unwrap();
+
+            let seed = contract.get_seed();
+            advance_block();
+            contract.provider_deactivate().unwrap();
+            // check seed has changed
+            assert_ne!(seed, contract.get_seed());
+
+            // check provider is inactive
+            // check nothing else has changed
+            let after = contract.get_provider(get_provider_account(0)).unwrap();
+            assert_eq!(GovernanceStatus::Inactive, after.status);
+            assert_eq!(before, after);
+
+            check_provider_in_group(&contract, account, &after);
         }
 
         #[ink::test]
