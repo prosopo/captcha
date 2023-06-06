@@ -107,6 +107,6 @@ jobs:
 
       - name: Remove the docker containers
         run: |
-          cd scripts
+          cd captcha
           docker compose --file ./docker/docker-compose.test.yml down
 
