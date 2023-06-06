@@ -942,10 +942,6 @@ pub mod captcha {
             dataset_id_content: Option<Hash>,
             should_exist: bool,
         ) -> Result<(), Error> {
-            if fee.is_some() {
-                self.check_provider_fee(fee.unwrap())?;
-            }
-
             let default_dataset_id = Hash::default();
             let provider_account = self.env().caller();
             let lookup = self.providers.get(provider_account);
@@ -1006,6 +1002,11 @@ pub mod captcha {
             };
 
             // by here the new provider has been configured
+
+            // check the fee
+            if fee.is_some() {
+                self.check_provider_fee(fee.unwrap())?;
+            }
 
             // proceed only if there has been a change
             if !new && old_provider == new_provider {
@@ -1265,12 +1266,8 @@ pub mod captcha {
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
-            if self.env().transferred_value() > 0 {
-                return self.provider_configure(None, None, None, false, None, None, true);
-            }
-            
+            self.provider_configure(None, None, None, false, None, None, true)?;
             self.update_seed()?;
-
             Ok(())
         }
 
@@ -1342,6 +1339,7 @@ pub mod captcha {
 
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
+            debug!("dapp_configure: {:?}", dapp_lookup);
 
             if new && should_exist {
                 return err!(self, Error::DappDoesNotExist);
@@ -1425,7 +1423,6 @@ pub mod captcha {
             payee: DappPayee,
             owner: AccountId,
         ) -> Result<(), Error> {
-            // configure the dapp
             self.dapp_configure(contract, Some(payee), Some(owner), false, true)
         }
 
@@ -1433,9 +1430,6 @@ pub mod captcha {
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            if self.env().transferred_value() == 0 {
-                return Ok(());
-            }
             self.dapp_configure(contract, None, None, false, true)
         }
 
@@ -2024,16 +2018,6 @@ pub mod captcha {
             get_account(UNUSED_ACCOUNT_PREFIX, 0)
         }
 
-        fn get_unused_contract_account() -> AccountId {
-            let orig_callee = callee();
-            let account = get_account(UNUSED_CONTRACT_ACCOUNT_PREFIX, 0);
-            // mark the account as a contract
-            set_callee(account);
-            set_contract(account);
-            set_callee(account);
-            account
-        }
-
         // reset the caller
         fn reset_caller() {
             set_caller(get_unused_account());
@@ -2099,8 +2083,8 @@ pub mod captcha {
         }
 
         /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
+        /// NOTE: this sets the callee to the contract account
         fn get_contract(index: u128) -> Captcha {
-            let orig_callee = callee();
             let account = get_contract_account(index); // the account for the contract
             set_callee(account);
             // set the caller to the matching admin at index
@@ -2112,10 +2096,11 @@ pub mod captcha {
 
             // check the contract was created with the correct account
             assert_eq!(contract.env().account_id(), account);
-            set_callee(orig_callee);
 
             // advance the block to avoid block checks
             advance_block();
+
+            reset_caller();
 
             contract
         }
@@ -2149,12 +2134,9 @@ pub mod captcha {
         }
 
         fn get_dapp_contract_account(index: u128) -> AccountId {
-            let orig_callee = callee();
             let account = get_account(DAPP_CONTRACT_ACCOUNT_PREFIX, index);
             // mark the account as a contract
-            set_callee(account);
             set_contract(account);
-            set_callee(orig_callee);
             account
         }
 
@@ -2317,7 +2299,6 @@ pub mod captcha {
         #[ink::test]
         fn test_provider_update_url_in_use() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             setup_provider(&mut contract, 0, 0, true);
 
             set_caller(get_provider_account(0));
@@ -2334,7 +2315,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
             set_caller(get_provider_account(0));
 
             assert_eq!(
@@ -2348,7 +2328,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
             set_caller(get_dapp_account(0));
 
             assert_eq!(
@@ -2360,7 +2339,6 @@ pub mod captcha {
         #[ink::test]
         fn test_provider_update_does_not_exist() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_provider_account(0));
 
             assert_eq!(
@@ -2372,7 +2350,6 @@ pub mod captcha {
         #[ink::test]
         fn test_dapp_update_does_not_exist() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_dapp_account(0));
 
             assert_eq!(
@@ -2388,7 +2365,6 @@ pub mod captcha {
         #[ink::test]
         fn test_provider_fund_does_not_exist() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_provider_account(0));
 
             assert_eq!(Err(Error::ProviderDoesNotExist), contract.provider_fund());
@@ -2397,7 +2373,6 @@ pub mod captcha {
         #[ink::test]
         fn test_dapp_fund_does_not_exist() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_dapp_account(0));
 
             assert_eq!(
@@ -2409,7 +2384,6 @@ pub mod captcha {
         #[ink::test]
         fn test_provider_set_dataset_does_not_exist() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_provider_account(0));
 
             assert_eq!(
@@ -2424,7 +2398,6 @@ pub mod captcha {
         #[ink::test]
         fn test_provider_deactivate_does_not_exist() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_provider_account(0));
 
             assert_eq!(
@@ -2436,7 +2409,6 @@ pub mod captcha {
         #[ink::test]
         fn test_dapp_deactivate_does_not_exist() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_dapp_account(0));
 
             assert_eq!(
@@ -2448,7 +2420,6 @@ pub mod captcha {
         #[ink::test]
         fn test_provider_deregister_does_not_exist() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_provider_account(0));
 
             assert_eq!(
@@ -2460,7 +2431,6 @@ pub mod captcha {
         #[ink::test]
         fn test_dapp_deregister_does_not_exist() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_dapp_account(0));
 
             assert_eq!(
@@ -2474,7 +2444,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
             set_caller(get_dapp_account(0));
 
             // contract set to an account which is not a contract should error
@@ -2493,7 +2462,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
             set_caller(get_dapp_account(0));
 
             // contract set to an account which is not a contract should error
@@ -2506,7 +2474,6 @@ pub mod captcha {
         #[ink::test]
         fn test_get_payees() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
 
             assert_eq!(contract.get_payees(), vec![Payee::Dapp, Payee::Provider]);
         }
@@ -2514,7 +2481,6 @@ pub mod captcha {
         #[ink::test]
         fn test_get_dapp_payees() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
 
             assert_eq!(
                 contract.get_dapp_payees(),
@@ -2525,7 +2491,6 @@ pub mod captcha {
         #[ink::test]
         fn test_get_statuses() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
 
             assert_eq!(
                 contract.get_statuses(),
@@ -2538,7 +2503,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
 
             let admin_account = get_admin_account(0);
             // set the caller to the provider account
@@ -2607,7 +2571,6 @@ pub mod captcha {
         #[ink::test]
         fn test_get_seed_at_beyond_rewind_window() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2622,7 +2585,6 @@ pub mod captcha {
         #[ink::test]
         fn test_get_seed_at_future_block() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2636,7 +2598,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2654,7 +2615,6 @@ pub mod captcha {
         #[ink::test]
         fn test_get_provider_at_future_block() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2669,7 +2629,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2685,7 +2644,6 @@ pub mod captcha {
         #[ink::test]
         fn test_get_dapp_at_future_block() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             let admin_account = get_admin_account(0);
             set_caller(admin_account);
 
@@ -2698,7 +2656,6 @@ pub mod captcha {
         #[ink::test]
         fn test_provider_register_url_empty() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             let provider_account = get_provider_account(0);
             // set the caller to the provider account
             set_caller(provider_account);
@@ -2714,7 +2671,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
             let provider_account = get_provider_account(0);
             // set the caller to the provider account
             set_caller(provider_account);
@@ -2727,7 +2683,6 @@ pub mod captcha {
         #[ink::test]
         fn test_provider_register_fee_too_large() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             let provider_account = get_provider_account(0);
             // set the caller to the provider account
             set_caller(provider_account);
@@ -2746,7 +2701,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
             let provider_account = get_provider_account(0);
             // set the caller to the provider account
             set_caller(provider_account);
@@ -2765,7 +2719,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
 
             let provider_account = get_provider_account(0);
 
@@ -2784,7 +2737,6 @@ pub mod captcha {
         #[ink::test]
         fn test_get_rewind_window_start() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
 
             // expect rewind window start to be zero when block < rewind window
             // this test only works with rewind window > 0
@@ -2810,7 +2762,6 @@ pub mod captcha {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
             setup_dapp(&mut contract, 0, 0, true);
-            set_callee(get_contract_account(0));
 
             let provider_account = get_provider_account(0);
             let user_account = get_user_account(0);
@@ -2863,7 +2814,6 @@ pub mod captcha {
         #[ink::test]
         fn test_ctor() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
 
             // ctor params should be set
             assert_eq!(contract.provider_stake_threshold, STAKE_THRESHOLD);
@@ -2970,7 +2920,6 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
 
             // TODO set code hash and own code hash are not implement in ink! yet
@@ -2987,7 +2936,6 @@ pub mod captcha {
         #[ink::test]
         fn test_set_code_hash_unauthorised() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
 
             set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
 
@@ -3001,7 +2949,6 @@ pub mod captcha {
         #[ink::test]
         fn test_terminate() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_admin_account(0)); // an account which does have permission to call terminate
 
             let contract_account = contract.env().account_id();
@@ -3018,7 +2965,6 @@ pub mod captcha {
         #[ink::test]
         fn test_terminate_unauthorised() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             set_caller(get_user_account(0)); // an account which does not have permission to call terminate
 
             assert_eq!(contract.terminate(), Err(Error::NotAuthorised));
@@ -3027,7 +2973,6 @@ pub mod captcha {
         #[ink::test]
         fn test_withdraw() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
 
             // give the contract funds
             set_account_balance(contract.env().account_id(), 10000000000);
@@ -3050,7 +2995,6 @@ pub mod captcha {
         #[should_panic]
         fn test_withdraw_insufficient_funds() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
 
             set_caller(get_admin_account(0)); // use the admin acc
             let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
@@ -3061,7 +3005,6 @@ pub mod captcha {
         #[ink::test]
         fn test_withdraw_unauthorised() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
 
             // give the contract funds
             set_caller(get_user_account(0)); // use the admin acc
@@ -3071,7 +3014,6 @@ pub mod captcha {
         #[ink::test]
         fn test_set_admin() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             let old_admin = contract.admin;
             let new_admin = get_admin_account(1);
             assert_ne!(old_admin, new_admin);
@@ -3089,7 +3031,6 @@ pub mod captcha {
         #[ink::test]
         fn test_set_admin_unauthorised() {
             let mut contract = get_contract(0);
-            set_callee(get_contract_account(0));
             let old_admin = contract.admin;
             let new_admin = get_admin_account(1);
             assert_ne!(old_admin, new_admin);
