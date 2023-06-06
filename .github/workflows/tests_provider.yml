@@ -108,5 +108,5 @@ jobs:
       - name: Remove the docker containers
         run: |
           cd scripts
-          docker compose --file ./docker/docker-compose.development.yml down
+          docker compose --file ./docker/docker-compose.test.yml down
 
