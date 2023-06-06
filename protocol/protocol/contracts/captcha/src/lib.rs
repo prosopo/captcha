@@ -2286,6 +2286,17 @@ pub mod captcha {
             assert_ne!(seed, contract.get_seed());
         }
 
+        #[ink::test]
+        fn test_provider_update_inactive_does_not_update_seed() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, false);
+
+            let seed = contract.get_seed();
+            advance_block();
+            contract.provider_update(get_provider_url(0), get_provider_fee(), get_provider_payee()).unwrap();
+            assert_eq!(seed, contract.get_seed());
+        }
+
         /// Provider register should leave the provider inactive as dataset not set and reg fn is only to register, not activate
         #[ink::test]
         fn test_provider_register_inactive() {
