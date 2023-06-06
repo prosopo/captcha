@@ -2218,6 +2218,8 @@ pub mod captcha {
             let account = get_provider_account(provider_index);
             set_caller(account);
 
+            let seed = contract.get_seed();
+
             // register the provider
             contract
                 .provider_register(
@@ -2226,6 +2228,38 @@ pub mod captcha {
                     get_provider_payee(),
                 )
                 .unwrap();
+
+            // ensure the seed has not been touched
+            assert_eq!(seed, contract.get_seed());
+
+            // check the provider was registered correctly
+            let mut provider = contract.get_provider(account).unwrap();
+            assert_eq!(get_provider_url(provider_index), provider.url);
+            assert_eq!(get_provider_fee(), provider.fee);
+            assert_eq!(get_provider_payee(), provider.payee);
+            assert_eq!(Hash::default(), provider.dataset_id);
+            assert_eq!(Hash::default(), provider.dataset_id_content);
+            assert_eq!(0, provider.balance);
+            assert_eq!(GovernanceStatus::Inactive, provider.status);
+            // check none has been logged as the entry for the provider until this block
+            assert_eq!(Some(ProviderRecord {
+                provider: None,
+            }), contract.provider_log.get(AccountBlockId {
+                account,
+                block: contract.env().block_number(),
+            }));
+            // check provider is inactive
+            assert_eq!(
+                GovernanceStatus::Inactive,
+                provider
+                    .status
+            );
+            check_provider_in_group(&contract, account, &provider);
+
+// block would be advanced in real world
+            advance_block();
+
+            let before = contract.get_provider(account).unwrap();
             // set the dataset for the provider
             contract
                 .provider_set_dataset(
@@ -2233,6 +2267,30 @@ pub mod captcha {
                     get_provider_dataset_id_content(provider_index),
                 )
                 .unwrap();
+            // check the provider was dataset was set correctly
+            let mut after = contract.get_provider(account).unwrap();
+            assert_eq!(before, Provider {
+                dataset_id: before.dataset_id,
+                dataset_id_content: before.dataset_id_content,
+                ..after
+            });
+            // check provider has been logged as the entry for the provider until this block
+            assert_eq!(Some(ProviderRecord {
+                provider: Some(before),
+            }), contract.provider_log.get(AccountBlockId {
+                account,
+                block: contract.env().block_number(),
+            }));
+            // check provider is inactive
+            assert_eq!(
+                GovernanceStatus::Inactive,
+                after
+                    .status
+            );
+            check_provider_in_group(&contract, account, &provider);
+
+// block would be advanced in real world
+            advance_block();
 
             let provider = contract.get_provider(account).unwrap();
             println!("registered provider {}: {:?}", provider_index, provider);
@@ -2240,14 +2298,6 @@ pub mod captcha {
             // optionally activate the provider
             if activate {
                 activate_provider(contract, contract_index, provider_index);
-            } else {
-                // check provider is inactive
-                assert_eq!(
-                    GovernanceStatus::Inactive,
-                    provider
-                        .status
-                );
-                check_provider_in_group(&contract, account, &provider);
             }
 
         }
@@ -2260,6 +2310,7 @@ pub mod captcha {
             set_caller(account);
 
             let account = get_provider_account(provider_index);
+            let before = contract.get_provider(account).unwrap();
             // give the provider some funds above the threshold
             let funds = contract.get_provider_stake_threshold();
             // allocate them to the account
@@ -2270,18 +2321,28 @@ pub mod captcha {
             contract.provider_fund().unwrap();
             set_value_transferred(0);
 
-            // check funds have been added to the account
-            assert_eq!(balance + funds, contract.get_provider(account).unwrap().balance);
-
             let provider = contract.get_provider(get_provider_account(provider_index)).unwrap();
             println!("activated provider {}: {:?}", provider_index, provider);
 
-            // check provider is active, i.e. funds have been added and dataset is set correctly
-            assert_eq!(
-                GovernanceStatus::Active,
-                contract.get_provider(account).unwrap().status
-            );
+            // check the provider was activated correctly
+            let mut after = contract.get_provider(account).unwrap();
+            assert_eq!(before, Provider {
+                balance: before.balance,
+                status: before.status,
+                ..after
+            });
+            assert_eq!(balance + funds, after.balance);
+            assert_eq!(GovernanceStatus::Active, after.status);
+            assert_eq!(Some(ProviderRecord {
+                provider: Some(before),
+            }), contract.provider_log.get(AccountBlockId {
+                account,
+                block: contract.env().block_number(),
+            }));
             check_provider_in_group(&contract, account, &provider);
+
+            // block would be advanced in real world
+            advance_block();
         }
 
         #[ink::test]
@@ -2521,25 +2582,6 @@ pub mod captcha {
                 )
                 .unwrap();
 
-            // ensure the seed has not been touched
-            assert_eq!(seed, contract.get_seed());
-
-            // check the provider was registered correctly
-            let provider = contract.get_provider(get_provider_account(0)).unwrap();
-            assert_eq!(get_provider_url(0), provider.url);
-            assert_eq!(get_provider_fee(), provider.fee);
-            assert_eq!(get_provider_payee(), provider.payee);
-            assert_eq!(Hash::default(), provider.dataset_id);
-            assert_eq!(Hash::default(), provider.dataset_id_content);
-            assert_eq!(0, provider.balance);
-            assert_eq!(GovernanceStatus::Inactive, provider.status);
-            // check none has been logged as the entry for the provider until this block
-            assert_eq!(Some(ProviderRecord {
-                provider: None,
-            }), contract.provider_log.get(AccountBlockId {
-                account: get_provider_account(0),
-                block: contract.env().block_number(),
-            }));
         }
 
         #[ink::test]
