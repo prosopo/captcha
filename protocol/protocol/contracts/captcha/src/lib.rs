@@ -2170,6 +2170,7 @@ pub mod captcha {
             if activate {
                 activate_dapp(contract, contract_index, dapp_index);
             } else {
+                // check dapp is not active
                 assert_eq!(
                     GovernanceStatus::Inactive,
                     contract
@@ -2200,6 +2201,7 @@ pub mod captcha {
             let dapp = contract.get_dapp(get_dapp_contract_account(dapp_index)).unwrap();
             println!("activated dapp {}: {:?}", dapp_index, dapp);
             
+            // check dapp has acquired funds and been marked as active
             assert_eq!(
                 GovernanceStatus::Active,
                 contract.get_dapp(dapp_contract_account).unwrap().status
@@ -2271,10 +2273,34 @@ pub mod captcha {
             let provider = contract.get_provider(get_provider_account(provider_index)).unwrap();
             println!("activated provider {}: {:?}", provider_index, provider);
 
-            // check provider is active
+            // check provider is active, i.e. funds have been added and dataset is set correctly
             assert_eq!(
                 GovernanceStatus::Active,
                 contract.get_provider(account).unwrap().status
+            );
+        }
+
+        /// Provider register should leave the provider inactive as dataset not set and reg fn is only to register, not activate
+        #[ink::test]
+        fn test_provider_register_inactive() {
+            let mut contract = get_contract(0);
+            // set the caller to the provider account
+            set_caller(get_provider_account(0));
+
+            // give necessary funds to the provider
+            increment_account_balance(get_provider_account(0), contract.get_provider_stake_threshold());
+            // register the provider with all attributes set to become active
+            contract
+                .provider_register(
+                    get_provider_url(0),
+                    get_provider_fee(),
+                    get_provider_payee(),
+                )
+                .unwrap();
+            // ensure not active
+            assert_eq!(
+                GovernanceStatus::Inactive,
+                contract.get_provider(get_provider_account(0)).unwrap().status
             );
         }
 
