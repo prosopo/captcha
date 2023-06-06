@@ -38,8 +38,6 @@ jobs:
 
       - run: mkdir -p ~/image-cache
 
-      - run: ls ./captcha/docker
-
       - id: image-cache
         uses: actions/cache@v3
         with:
@@ -50,11 +48,14 @@ jobs:
         run: |
           docker pull prosopo/substrate-contracts-node:v0.25
           docker save -o ~/image-cache/prosopo.tar prosopo/substrate-contracts-node:v0.25
+          docker pull mongo:5.0.4
+          docker save -o ~/image-cache/mongo.tar mongo:5.0.4
 
       - if: steps.image-cache.outputs.cache-hit == 'true'
         run: |
           ls ~/image-cache
           docker load -i ~/image-cache/prosopo.tar
+          docker load -i ~/image-cache/mongo.tar
 
       - name: Start the docker images
         run: |
