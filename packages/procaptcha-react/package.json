@@ -1,49 +1,48 @@
 {
-  "name": "@prosopo/procaptcha-react",
-  "version": "0.1.11",
-  "author": "PROSOPO LIMITED <info@prosopo.io>",
-  "license": "Apache-2.0",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "source": "./src/index.ts",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose",
-    "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix"
-  },
-  "browserslist": [
-    "> 0.5%, last 2 versions, not dead"
-  ],
-
-  "dependencies": {
-    "@emotion/react": "^11.10.4",
-    "@emotion/styled": "^11.10.4",
-    "@mui/icons-material": "^5.10.9",
-    "@mui/material": "^5.10.11",
-    "@mui/styles": "^5.8.3",
-    "@polkadot/extension-dapp": "0.44.8",
-    "@polkadot/extension-inject": "0.44.8",
-    "@polkadot/types": "9.13.6",
-    "@prosopo/common": "^0.1.11",
-    "@prosopo/procaptcha": "^0.1.11",
-    "react": "^17.0.0",
-    "react-dom": "^17.0.0"
-  },
-  "devDependencies": {
-    "typescript": "^4.7.4"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/prosopo/procaptcha-react.git"
-  },
-  "bugs": {
-    "url": "https://github.com/prosopo/procaptcha-react/issues"
-  },
-  "homepage": "https://github.com/prosopo/procaptcha-react#readme",
-  "description": "",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org"
-  }
+    "name": "@prosopo/procaptcha-react",
+    "version": "0.1.11",
+    "author": "PROSOPO LIMITED <info@prosopo.io>",
+    "license": "Apache-2.0",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "source": "./src/index.ts",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "lint": "npx eslint .",
+        "lint:fix": "npx eslint . --fix"
+    },
+    "browserslist": [
+        "> 0.5%, last 2 versions, not dead"
+    ],
+    "dependencies": {
+        "@emotion/react": "^11.10.4",
+        "@emotion/styled": "^11.10.4",
+        "@mui/icons-material": "^5.11.16",
+        "@mui/material": "^5.13.3",
+        "@polkadot/extension-dapp": "0.44.8",
+        "@polkadot/extension-inject": "0.44.8",
+        "@polkadot/types": "9.13.6",
+        "@prosopo/common": "^0.1.11",
+        "@prosopo/procaptcha": "^0.1.11",
+        "i18next": "^22.5.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    },
+    "devDependencies": {
+        "typescript": "^4.7.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/prosopo/procaptcha-react.git"
+    },
+    "bugs": {
+        "url": "https://github.com/prosopo/procaptcha-react/issues"
+    },
+    "homepage": "https://github.com/prosopo/procaptcha-react#readme",
+    "description": "",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    }
 }

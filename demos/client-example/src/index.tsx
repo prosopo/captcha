@@ -1,16 +1,16 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
 import App from './App'
 import reportWebVitals from './reportWebVitals'
-
 import CssBaseline from '@mui/material/CssBaseline'
+import ReactDOM from 'react-dom/client'
 
-ReactDOM.render(
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
+
+root.render(
     <React.Fragment>
         <CssBaseline />
         <App />
-    </React.Fragment>,
-    document.getElementById('root') as HTMLElement
+    </React.Fragment>
 )
 
 // If you want to start measuring performance in your app, pass a function
