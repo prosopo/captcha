@@ -2771,11 +2771,13 @@ pub mod captcha {
             let unregistered_provider_account = get_provider_account(1);
 
             // for each account who should be able to update the seed, test that
+            advance_block();
             for account in vec![provider_account, admin_account].iter() {
                 set_caller(*account);
                 assert_eq!(contract.update_seed(), Ok(true));
                 advance_block();
             }
+            advance_block();
 
             // for each account who should not be able to update the seed, test that
             for account in vec![
