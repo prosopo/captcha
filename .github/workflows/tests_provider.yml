@@ -102,7 +102,7 @@ jobs:
           cd dev
           git status | head -n 1
           docker container ls
-          cat .env.development
+          cat .env.test
           npm run test
 
       - name: Remove the docker containers
