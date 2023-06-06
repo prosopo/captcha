@@ -419,14 +419,15 @@ pub mod captcha {
             let start = self.get_rewind_window_start();
             let end = self.env().block_number();
             let mut seeds = Vec::new();
-            let diff = (end - start) as usize;
-            seeds.resize(diff + 1, 0);
+            let diff = end - start;
             let mut current_seed = self.seed;
-            for i in (start..=end).rev() {
-                if let Some(seed) = self.seed_log.get(i) {
+            seeds.resize(diff as usize + 1, current_seed);
+            for i in (0..=diff).rev() {
+                let at = i + start;
+                if let Some(seed) = self.seed_log.get(at) {
                     current_seed = seed;
                 }
-                seeds[(i - start - 1) as usize] = current_seed;
+                seeds[(i) as usize] = current_seed;
             }
 
             seeds
@@ -2500,20 +2501,9 @@ pub mod captcha {
             let (limit, overflow) = limit.overflowing_add(contract.env().block_number());
             assert!(!overflow);
 
-            let mut seeds: Vec<Seed> = vec![0, 0, 0];
-            assert_eq!(seeds, contract.get_seeds());
-
-            advance_block();
-            assert!(contract.update_seed().unwrap());
-            seeds = vec![0, contract.seed, contract.seed, contract.seed];
+            let mut seeds: Vec<Seed> = vec![0, contract.seed];
 
             for i in 0..limit {
-                println!("i: {}", i);
-                // println!("seeds: {:?}", seeds);
-                // println!("contract seeds: {:?}", contract.get_seeds());
-                // println!("seeds len: {}", seeds.len());
-                // println!("contract seeds len: {}", contract.get_seeds().len());
-
                 // check the seed history is equal
                 assert_eq!(seeds, contract.get_seeds());
 
@@ -2546,7 +2536,7 @@ pub mod captcha {
             // check that the seed history is dropped after the rewind window amount of blocks
             increment_block(contract.get_rewind_window() as u32);
             seeds = Vec::new();
-            seeds.push(contract.seed);
+            seeds.resize(contract.get_rewind_window() as usize + 1, contract.seed);
             assert_eq!(contract.get_seeds(), seeds);
         }
 
