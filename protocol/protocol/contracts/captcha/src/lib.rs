@@ -2279,6 +2279,20 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_provider_register_url_in_use() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, true);
+
+            set_caller(get_provider_account(1));
+
+            // attempt to set provider 0's url to provider 1's url, which should error
+            assert_eq!(
+                Err(Error::ProviderUrlUsed),
+                contract.provider_register(get_provider_url(0), 0, Payee::Provider)
+            );
+        }
+
+        #[ink::test]
         fn test_provider_update_url_in_use() {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
