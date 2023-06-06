@@ -2387,6 +2387,20 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_get_dapp_accounts() {
+            let mut contract = get_contract(0);
+            setup_dapp(&mut contract, 0, 0, false);
+            setup_dapp(&mut contract, 0, 1, true);
+            setup_dapp(&mut contract, 0, 2, false);
+
+            let accounts = contract.get_dapp_accounts();
+            assert_eq!(3, accounts.len());
+            assert!(accounts.contains(&get_dapp_account(0)));
+            assert!(accounts.contains(&get_dapp_account(1)));
+            assert!(accounts.contains(&get_dapp_account(2)));
+        }
+
+        #[ink::test]
         fn test_provider_deregister_was_active() {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
