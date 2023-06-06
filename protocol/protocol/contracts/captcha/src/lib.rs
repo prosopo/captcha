@@ -2454,6 +2454,17 @@ pub mod captcha {
         }
 
         #[ink::test]
+        fn test_provider_set_dataset_same_id() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, false);
+
+            assert_eq!(Err(Error::DatasetIdSolutionsSame), contract.provider_set_dataset(
+                Hash::from([0x01; 32]),
+                Hash::from([0x01; 32]), // same id's should error
+            ));
+        }
+
+        #[ink::test]
         fn test_provider_deactivate_was_active() {
             let mut contract = get_contract(0);
             setup_provider(&mut contract, 0, 0, true);
