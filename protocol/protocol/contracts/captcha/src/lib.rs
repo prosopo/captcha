@@ -1153,8 +1153,10 @@ pub mod captcha {
         /// Unstake and deactivate the provider's service, returning stake
         #[ink(message)]
         pub fn provider_deregister(&mut self) -> Result<(), Error> {
-            let provider_account = self.env().caller();
+            // update the seed while the provider is still active
+            self.update_seed()?;
 
+            let provider_account = self.env().caller();
             let provider = self.get_provider(provider_account)?;
 
             // remove the provider
@@ -1173,9 +1175,6 @@ pub mod captcha {
 
             // update the log
             self.log_provider(provider_account, None);
-
-            // update the seed
-            self.update_seed()?;
 
             Ok(())
         }
@@ -2270,6 +2269,28 @@ pub mod captcha {
                 GovernanceStatus::Active,
                 contract.get_provider(account).unwrap().status
             );
+        }
+
+        #[ink::test]
+        fn test_provider_deregister_active_updates_seed() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, true);
+
+            let seed = contract.get_seed();
+            advance_block();
+            contract.provider_deregister().unwrap();
+            assert_ne!(seed, contract.get_seed());
+        }
+
+        #[ink::test]
+        fn test_provider_deregister_inactive_does_not_update_seed() {
+            let mut contract = get_contract(0);
+            setup_provider(&mut contract, 0, 0, false);
+
+            let seed = contract.get_seed();
+            advance_block();
+            contract.provider_deregister().unwrap();
+            assert_eq!(seed, contract.get_seed());
         }
 
         #[ink::test]
