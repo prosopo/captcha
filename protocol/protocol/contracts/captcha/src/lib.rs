@@ -1121,12 +1121,7 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None, false)?;
-
-            // update the seed
-            self.update_seed()?;
-
-            Ok(())
+            self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None, false)
         }
 
         /// Update an existing provider, their url, fee and deposit funds
