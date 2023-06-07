@@ -478,8 +478,7 @@ pub mod captcha {
         }
 
         /// Get a random active provider at a specific block
-        #[ink(message)]
-        pub fn get_random_active_provider_at(
+        fn get_random_active_provider_at(
             &self,
             user_account: AccountId,
             dapp_account: AccountId,
@@ -642,8 +641,7 @@ pub mod captcha {
         }
 
         /// Get a provider at a given block
-        #[ink(message)]
-        pub fn get_provider_at(
+        fn get_provider_at(
             &self,
             account: AccountId,
             block: BlockNumber,
@@ -672,8 +670,7 @@ pub mod captcha {
         }
 
         /// Get a dapp at a given block
-        #[ink(message)]
-        pub fn get_dapp_at(&self, account: AccountId, block: BlockNumber) -> Result<Dapp, Error> {
+        fn get_dapp_at(&self, account: AccountId, block: BlockNumber) -> Result<Dapp, Error> {
             self.check_inside_rewind_window(block)?;
 
             // start with the current state of the provider as the most recent record
@@ -708,8 +705,7 @@ pub mod captcha {
         }
 
         /// Get a seed at a given block
-        #[ink(message)]
-        pub fn get_seed_at(&self, block: BlockNumber) -> Result<u128, Error> {
+        fn get_seed_at(&self, block: BlockNumber) -> Result<Seed, Error> {
             self.check_inside_rewind_window(block)?;
 
             let mut result = self.seed;
@@ -736,7 +732,7 @@ pub mod captcha {
             Ok(result)
         }
 
-        fn get_seed(&self) -> u128 {
+        fn get_seed(&self) -> Seed {
             self.seed
         }
 
@@ -795,40 +791,9 @@ pub mod captcha {
             self.seed = new_seed_value;
             self.seed_at = block;
 
-            debug!("Updated seed to {} at block {}", new_seed_value, block);
-
             self.prune_logs();
 
             Ok(true)
-        }
-
-        /// Verify a signature. The payload is a blake128 hash of the payload wrapped in the Byte tag. E.g.
-        ///     message=hello
-        ///     hash=blake128(message) // 0x1234... (32 bytes)
-        ///     payload=<Bytes>0x1234...</Bytes> (32 bytes + 15 bytes (tags) + 2 bytes (multihash notation) = 49 bytes)
-        ///
-        /// Read more about multihash notation here https://w3c-ccg.github.io/multihash/index.xml#mh-example (adds two bytes to identify type and length of hash function)
-        ///
-        /// Note the signature must be sr25519 type.
-        fn verify_sr25519(&self, signature: [u8; 64], payload: [u8; 49]) -> Result<(), Error> {
-            let caller = self.env().caller();
-            let caller_bytes = account_id_bytes(&caller);
-
-            let res = self
-                .env()
-                .sr25519_verify(&signature, &payload, &caller_bytes);
-
-            if res.is_err() {
-                return err!(self, Error::VerifyFailed);
-            }
-
-            Ok(())
-        }
-
-        #[ink(message)]
-        pub fn get_caller(&self) -> AccountId {
-            debug!("caller: {:?}", self.env().caller());
-            self.env().caller()
         }
 
         /// Validate a commit by checking the signature from the user against the remaining commit fields comprising the payload.
@@ -925,14 +890,6 @@ pub mod captcha {
             Hash::from(hash_output)
         }
 
-        /// Check a provider fee against the max provider fee limit
-        fn check_provider_fee(&self, fee: u32) -> Result<(), Error> {
-            if fee as u128 > self.max_provider_fee {
-                return err!(self, Error::ProviderFeeTooHigh);
-            }
-            Ok(())
-        }
-
         /// Configure a provider
         /// A single place to configure a provider, ensuring all checks and balances are carried out
         fn provider_configure(
@@ -945,7 +902,6 @@ pub mod captcha {
             dataset_id_content: Option<Hash>,
             should_exist: bool,
         ) -> Result<(), Error> {
-            let default_dataset_id = Hash::default();
             let provider_account = self.env().caller();
             let lookup = self.providers.get(provider_account);
             let new = lookup.is_none();
@@ -958,6 +914,7 @@ pub mod captcha {
                 return err!(self, Error::ProviderExists);
             }
 
+            let default_dataset_id = Hash::default();
             let old_provider = if new {
                 Provider {
                     status: GovernanceStatus::Inactive,
@@ -1006,17 +963,17 @@ pub mod captcha {
 
             // by here the new provider has been configured
 
-            // check the fee
-            if fee.is_some() {
-                self.check_provider_fee(fee.unwrap())?;
-            }
-
             // proceed only if there has been a change
             if !new && old_provider == new_provider {
                 // no need to update anything
                 return Ok(());
             }
 
+            // check the fee
+            if new_provider.fee > self.max_provider_fee {
+                return err!(self, Error::ProviderFeeTooHigh);
+            }
+            
             // url cannot be empty
             if new_provider.url.is_empty() {
                 return err!(self, Error::UrlEmpty);
@@ -1287,14 +1244,6 @@ pub mod captcha {
             Ok(())
         }
 
-        /// Check the contract is a contract
-        fn check_is_contract(&self, account: AccountId) -> Result<(), Error> {
-            if !self.env().is_contract(&account) {
-                return err!(self, Error::InvalidContract);
-            }
-            Ok(())
-        }
-
         /// Get an existing dapp
         fn get_dapp(&self, account: AccountId) -> Result<Dapp, Error> {
             self.dapps
@@ -1329,8 +1278,6 @@ pub mod captcha {
             deactivate: bool,
             should_exist: bool,
         ) -> Result<(), Error> {
-            self.check_is_contract(contract)?;
-
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
 
@@ -1368,6 +1315,11 @@ pub mod captcha {
             if !new && old_dapp == new_dapp {
                 // nothing to do as no change
                 return Ok(());
+            }
+
+            // check the dapp is a contract
+            if !self.env().is_contract(&contract) {
+                return err!(self, Error::InvalidContract);
             }
 
             // check current contract for ownership
@@ -1429,10 +1381,10 @@ pub mod captcha {
         /// Cancel services as a dapp, returning remaining tokens
         #[ink(message)]
         pub fn dapp_deregister(&mut self, contract: AccountId) -> Result<(), Error> {
-            let dapp = self.get_dapp(contract)?;
-
             // check current contract for ownership
             self.check_dapp_owner_is_caller(contract)?;
+
+            let dapp = self.get_dapp(contract)?;
 
             let balance = dapp.balance;
             if balance > 0 {
