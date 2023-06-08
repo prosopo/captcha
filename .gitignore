@@ -119,7 +119,10 @@ secrets.json
 .env*
 
 # Ingnore build target
-contracts/target/
+protocol/target/ink/*/release
+protocol/target/ink/*/wasm32-unknown-unknown
+protocol/target/ink/*/CACHEDIR.TAG
+protocol/target/**/.rustc_info.json
 
 /db/
 /data/
