@@ -1,0 +1,15 @@
+[lib]
+proc-macro = true
+name = "inject_self_macro"
+
+[package]
+name = "inject_self_macro"
+version = "0.3.0"
+authors = ["George Oastler <goastler4@gmail.com>"]
+edition = "2021"
+
+description = "macro that injects a getter for the self variable into a function"
+
+[dependencies]
+quote = "1.0"
+proc-macro2 = "1.0.51"
