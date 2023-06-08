@@ -121,10 +121,8 @@ secrets.json
 # Ingnore build target
 protocol/target/ink/*/release
 protocol/target/ink/*/wasm32-unknown-unknown
-protocol/target/ink/*/wasm32-unknown-unknown
 protocol/target/ink/*/CACHEDIR.TAG
-protocol/target/ink/*/.rustc_info.json
-protocol/target/.rustc_info.json
+protocol/target/**/.rustc_info.json
 
 /db/
 /data/
