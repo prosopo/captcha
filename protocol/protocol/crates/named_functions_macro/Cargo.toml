@@ -1,0 +1,15 @@
+[lib]
+proc-macro = true
+name = "named_functions_macro"
+
+[package]
+name = "named_functions_macro"
+version = "0.3.0"
+authors = ["George Oastler <goastler4@gmail.com>"]
+edition = "2021"
+
+description = "macro that expands to the name of the function it is in"
+
+[dependencies]
+quote = "1.0"
+proc-macro2 = "1.0.51"

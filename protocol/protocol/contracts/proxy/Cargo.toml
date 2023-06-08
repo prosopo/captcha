@@ -1,0 +1,56 @@
+[package]
+name = "proxy"
+version = "4.0.0"
+authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io"]
+edition = "2021"
+
+[dependencies]
+ink = { git = "https://github.com/prosopo/ink", rev="9ca19c462d5f5d1572ddce595d2698207241fd4a", default-features = false }
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
+
+[dependencies.inject_self_macro]
+version = "0.3.0"
+path = "../../crates/inject_self_macro"
+
+[dependencies.named_functions_macro]
+version = "0.3.0"
+path = "../../crates/named_functions_macro"
+
+[dependencies.disable_macro]
+version = "0.3.0"
+path = "../../crates/disable_macro"
+
+[dependencies.common]
+version = "0.3.0"
+path = "../../contracts/common"
+default-features = false
+features = ["ink-as-dependency"] 
+
+[dev-dependencies.common_dev]
+version = "0.3.0"
+path = "../../contracts/common_dev"
+default-features = false
+features = ["ink-as-dependency"] 
+
+[lib]
+name = "proxy"
+path = "src/lib.rs"
+crate-type = [
+    # Used for normal contract Wasm blobs.
+    "cdylib",
+    "rlib"
+]
+
+# Needed until https://github.com/paritytech/ink/issues/364 is resolved.
+[profile.release]
+overflow-checks = false
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "scale/std",
+    "scale-info/std",
+]
+ink-as-dependency = []
