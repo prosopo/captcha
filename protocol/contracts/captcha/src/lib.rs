@@ -671,12 +671,16 @@ pub mod captcha {
             }
 
             let old_dapp = dapp_lookup.unwrap_or(Dapp {
-                owner: owner.unwrap_or(self.env().caller()),
+                owner: self.env().caller(),
                 balance: 0,
                 status: GovernanceStatus::Inactive,
-                payee: payee.unwrap_or(DappPayee::Provider),
+                payee: DappPayee::Provider,
             });
-            let mut new_dapp = old_dapp;
+            let mut new_dapp = Dapp {
+                payee: payee.unwrap_or(old_dapp.payee),
+                owner: owner.unwrap_or(old_dapp.owner),
+                ..old_dapp
+            };
 
             // check current contract for ownership
             if !new {
