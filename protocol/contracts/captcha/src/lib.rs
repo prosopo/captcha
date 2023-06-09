@@ -190,7 +190,7 @@ pub mod captcha {
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct ProviderState {
+    pub struct ProviderCategory {
         pub status: GovernanceStatus,
         pub payee: Payee,
     }
@@ -200,7 +200,7 @@ pub mod captcha {
     pub struct Captcha {
         admin: AccountId, // the admin in control of this contract
         providers: Mapping<AccountId, Provider>,
-        provider_accounts: Mapping<ProviderState, BTreeSet<AccountId>>,
+        provider_accounts: Mapping<ProviderCategory, BTreeSet<AccountId>>,
         urls: Mapping<Hash, AccountId>, // url hash mapped to provider account
         datasets: Mapping<Hash, AccountId>,
         provider_stake_threshold: Balance,
@@ -398,8 +398,8 @@ pub mod captcha {
             }
         }
 
-        fn get_provider_state(&self, provider: &Provider) -> ProviderState {
-            ProviderState {
+        fn get_provider_category(&self, provider: &Provider) -> ProviderCategory {
+            ProviderCategory {
                 payee: provider.payee,
                 status: provider.status,
             }
@@ -510,13 +510,13 @@ pub mod captcha {
 
             // update the category if status or payee has changed
             if new {
-                self.provider_state_insert(&new_provider, &provider_account)?;
+                self.provider_category_add(&new_provider, &provider_account)?;
             } else {
-                let old_provider_state = self.get_provider_state(&old_provider);
-                let new_provider_state = self.get_provider_state(&new_provider);
-                if old_provider_state != new_provider_state {
-                    self.provider_state_remove(&old_provider, &provider_account)?;
-                    self.provider_state_insert(&new_provider, &provider_account)?;
+                let old_provider_category = self.get_provider_category(&old_provider);
+                let new_provider_category = self.get_provider_category(&new_provider);
+                if old_provider_category != new_provider_category {
+                    self.provider_category_remove(&old_provider, &provider_account)?;
+                    self.provider_category_add(&new_provider, &provider_account)?;
                 }
             }
 
@@ -524,12 +524,12 @@ pub mod captcha {
         }
 
         /// Remove the provider from their state
-        fn provider_state_remove(
+        fn provider_category_remove(
             &mut self,
             provider: &Provider,
             provider_account: &AccountId,
         ) -> Result<(), Error> {
-            let category = self.get_provider_state(&provider);
+            let category = self.get_provider_category(&provider);
             let mut set = self.provider_accounts.get(category).unwrap_or_default();
             let removed = set.remove(provider_account);
             if !removed {
@@ -542,12 +542,12 @@ pub mod captcha {
         }
 
         /// Add a provider to their state
-        fn provider_state_insert(
+        fn provider_category_add(
             &mut self,
             provider: &Provider,
             provider_account: &AccountId,
         ) -> Result<(), Error> {
-            let category = self.get_provider_state(&provider);
+            let category = self.get_provider_category(&provider);
             let mut set = self.provider_accounts.get(category).unwrap_or_default();
             let inserted = set.insert(*provider_account);
             if !inserted {
@@ -600,7 +600,7 @@ pub mod captcha {
             self.providers.remove(provider_account);
 
             // remove the provider from their category
-            self.provider_state_remove(&provider, &provider_account)?;
+            self.provider_category_remove(&provider, &provider_account)?;
 
             // return the stake
             let balance = provider.balance;
@@ -1101,7 +1101,7 @@ pub mod captcha {
             let mut providers = Vec::<Provider>::new();
             for status in statuses {
                 for payee in [Payee::Dapp, Payee::Provider] {
-                    let providers_set = self.provider_accounts.get(ProviderState { status, payee });
+                    let providers_set = self.provider_accounts.get(ProviderCategory { status, payee });
                     if providers_set.is_none() {
                         continue;
                     }
@@ -1130,7 +1130,7 @@ pub mod captcha {
                 // Get the active providers for which the payee is dapp
                 let active_providers_initial = self
                     .provider_accounts
-                    .get(ProviderState {
+                    .get(ProviderCategory {
                         status,
                         payee: Payee::Dapp,
                     })
@@ -1140,7 +1140,7 @@ pub mod captcha {
                 // Get the active providers for which the payee is provider
                 let active_providers_secondary = self
                     .provider_accounts
-                    .get(ProviderState {
+                    .get(ProviderCategory {
                         status,
                         payee: Payee::Provider,
                     })
@@ -1174,7 +1174,7 @@ pub mod captcha {
                 // Get the active providers based on the dapps payee field
                 active_providers = self
                     .provider_accounts
-                    .get(ProviderState { status, payee })
+                    .get(ProviderCategory { status, payee })
                     .unwrap_or_default();
 
                 // If the length is 0, then there are no active providers
@@ -1215,7 +1215,7 @@ pub mod captcha {
             let mut provider_ids = Vec::<AccountId>::new();
             for status in [GovernanceStatus::Active, GovernanceStatus::Inactive] {
                 for payee in [Payee::Provider, Payee::Dapp] {
-                    let providers_set = self.provider_accounts.get(ProviderState { status, payee });
+                    let providers_set = self.provider_accounts.get(ProviderCategory { status, payee });
                     if providers_set.is_none() {
                         continue;
                     }
@@ -1506,7 +1506,7 @@ pub mod captcha {
             for payee in contract.get_payees().iter() {
                 for status in contract.get_statuses().iter() {
                     assert_eq!(
-                        contract.provider_accounts.get(ProviderState {
+                        contract.provider_accounts.get(ProviderCategory {
                             payee: *payee,
                             status: *status
                         }),
@@ -1804,7 +1804,7 @@ pub mod captcha {
                 "{}",
                 contract
                     .provider_accounts
-                    .get(ProviderState {
+                    .get(ProviderCategory {
                         status: GovernanceStatus::Inactive,
                         payee: Payee::Provider
                     })
@@ -1814,7 +1814,7 @@ pub mod captcha {
 
             assert!(contract
                 .provider_accounts
-                .get(ProviderState {
+                .get(ProviderCategory {
                     status: GovernanceStatus::Inactive,
                     payee: Payee::Dapp
                 })
@@ -1930,7 +1930,7 @@ pub mod captcha {
             assert!(contract.providers.get(provider_account).is_some());
             assert!(contract
                 .provider_accounts
-                .get(ProviderState {
+                .get(ProviderCategory {
                     status: GovernanceStatus::Inactive,
                     payee: Payee::Dapp
                 })
@@ -1945,7 +1945,7 @@ pub mod captcha {
             contract.provider_update(url.clone(), fee, Payee::Dapp);
             assert!(contract
                 .provider_accounts
-                .get(ProviderState {
+                .get(ProviderCategory {
                     status: GovernanceStatus::Inactive,
                     payee: Payee::Dapp
                 })
@@ -1987,7 +1987,7 @@ pub mod captcha {
             assert!(contract.providers.get(provider_account).is_none());
             assert!(!contract
                 .provider_accounts
-                .get(ProviderState {
+                .get(ProviderCategory {
                     status: GovernanceStatus::Inactive,
                     payee: Payee::Dapp
                 })
