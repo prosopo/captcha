@@ -23,7 +23,6 @@ pub mod captcha {
     use common::err;
     use common::err_fn;
     use common::lazy;
-    use ink::env::debug_println as debug;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
@@ -382,6 +381,7 @@ pub mod captcha {
             deactivate: bool,
             dataset_id: Option<Hash>,
             dataset_id_content: Option<Hash>,
+            should_exist: bool,
         ) -> Result<(), Error> {
             let default_dataset_id = Hash::default();
             let provider_account = self.env().caller();
@@ -400,6 +400,16 @@ pub mod captcha {
             } else {
                 lookup.unwrap()
             };
+
+            if new && should_exist {
+                // error if the provider should already exist, but doesn't
+                return err!(self, Error::ProviderDoesNotExist);
+            }
+            if !new && !should_exist {
+                // error if the provider should not exist but does
+                return err!(self, Error::ProviderExists);
+            }
+
             if new {
                 self.provider_state_insert(&old_provider, &provider_account)?;
             }
@@ -537,12 +547,7 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            // this function is for registration only
-            if self.get_provider(self.env().caller()).is_ok() {
-                return err!(self, Error::ProviderExists);
-            }
-
-            self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None)
+            self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None, false)
         }
 
         /// Update an existing provider, their url, fee and deposit funds
@@ -554,19 +559,13 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            // this function is for updating only, not registering
-            if self.providers.get(self.env().caller()).is_none() {
-                return err!(self, Error::ProviderDoesNotExist);
-            }
-
-            self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None)
+            self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None, true)
         }
 
         /// De-activate a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deactivate(&mut self) -> Result<(), Error> {
-            // Change status to deactivated
-            self.provider_configure(None, None, None, true, None, None)
+            self.provider_configure(None, None, None, true, None, None, true)
         }
 
         /// Unstake and deactivate the provider's service, returning stake
@@ -602,10 +601,7 @@ pub mod captcha {
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
-            if self.env().transferred_value() > 0 {
-                return self.provider_configure(None, None, None, false, None, None);
-            }
-            Ok(())
+            self.provider_configure(None, None, None, false, None, None, true)
         }
 
         /// Add a new data set
@@ -622,6 +618,7 @@ pub mod captcha {
                 false,
                 Some(dataset_id),
                 Some(dataset_id_content),
+                true,
             )
         }
 
