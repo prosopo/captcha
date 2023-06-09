@@ -1101,7 +1101,9 @@ pub mod captcha {
             let mut providers = Vec::<Provider>::new();
             for status in statuses {
                 for payee in [Payee::Dapp, Payee::Provider] {
-                    let providers_set = self.provider_accounts.get(ProviderCategory { status, payee });
+                    let providers_set = self
+                        .provider_accounts
+                        .get(ProviderCategory { status, payee });
                     if providers_set.is_none() {
                         continue;
                     }
@@ -1215,7 +1217,9 @@ pub mod captcha {
             let mut provider_ids = Vec::<AccountId>::new();
             for status in [GovernanceStatus::Active, GovernanceStatus::Inactive] {
                 for payee in [Payee::Provider, Payee::Dapp] {
-                    let providers_set = self.provider_accounts.get(ProviderCategory { status, payee });
+                    let providers_set = self
+                        .provider_accounts
+                        .get(ProviderCategory { status, payee });
                     if providers_set.is_none() {
                         continue;
                     }
