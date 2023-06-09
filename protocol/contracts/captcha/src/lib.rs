@@ -902,11 +902,14 @@ pub mod captcha {
         /// Record a commit from a provider and user
         fn provider_record_commit(&mut self, commit: &Commit) -> Result<(), Error> {
             let caller = self.env().caller();
+            let provider = self.get_provider(caller)?;
+            let dapp = self.get_dapp(commit.dapp)?;
 
             // ensure the provider is active
-            self.validate_provider_active(caller)?;
+            self.check_provider_active(&provider)?;
+
             // ensure the dapp is active
-            self.validate_dapp(commit.dapp)?;
+            self.check_dapp_active(&dapp)?;
 
             // check commitment doesn't already exist
             if self.captcha_solution_commitments.get(commit.id).is_some() {
@@ -1008,37 +1011,7 @@ pub mod captcha {
             })
         }
 
-        // Informational / Validation functions
-
-        fn validate_provider_exists_and_has_funds(
-            &self,
-            provider_id: AccountId,
-        ) -> Result<Provider, Error> {
-            if self.providers.get(provider_id).is_none() {
-                return err!(self, Error::ProviderDoesNotExist);
-            }
-            let provider = self.get_provider(provider_id)?;
-            if provider.balance < self.provider_stake_threshold {
-                return err!(self, Error::ProviderInsufficientFunds);
-            }
-            Ok(provider)
-        }
-
-        fn validate_provider_active(&self, provider_id: AccountId) -> Result<Provider, Error> {
-            let provider = self.validate_provider_exists_and_has_funds(provider_id)?;
-            if provider.status != GovernanceStatus::Active {
-                return err!(self, Error::ProviderInactive);
-            }
-            Ok(provider)
-        }
-
-        fn validate_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
-            // Guard against dapps using service that are not registered
-            if self.dapps.get(contract).is_none() {
-                return err!(self, Error::DappDoesNotExist);
-            }
-            // Guard against dapps using service that are Suspended or Deactivated
-            let dapp = self.get_dapp(contract)?;
+        fn check_dapp_active(&self, dapp: &Dapp) -> Result<(), Error> {
             if dapp.status != GovernanceStatus::Active {
                 return err!(self, Error::DappInactive);
             }
@@ -1047,7 +1020,17 @@ pub mod captcha {
             if dapp.balance < self.dapp_stake_threshold {
                 return err!(self, Error::DappInsufficientFunds);
             }
-            Ok(dapp)
+            Ok(())
+        }
+
+        fn check_provider_active(&self, provider: &Provider) -> Result<(), Error> {
+            if provider.status != GovernanceStatus::Active {
+                return err!(self, Error::ProviderInactive);
+            }
+            if provider.balance < self.provider_stake_threshold {
+                return err!(self, Error::ProviderInsufficientFunds);
+            }
+            Ok(())
         }
 
         /// Get a single captcha dataset
@@ -1153,7 +1136,8 @@ pub mod captcha {
             user_account: AccountId,
             dapp_contract_account: AccountId,
         ) -> Result<RandomProvider, Error> {
-            let dapp = self.validate_dapp(dapp_contract_account)?;
+            let dapp = self.get_dapp(dapp_contract_account)?;
+            self.check_dapp_active(&dapp)?;
             let status = GovernanceStatus::Active;
             let active_providers;
             let mut index: u128;
