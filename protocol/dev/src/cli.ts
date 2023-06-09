@@ -20,14 +20,14 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
         return
     }
     // else change has been made
-    console.log("set env variable", name, "to", value, "in", filePath)
     // backup original file (if not already)
     const backupFilePath = `${filePath}${backupFileExtension}`
     if(!fs.existsSync(backupFilePath)) {
-        console.log("backing up", filePath, "to", backupFilePath)
+        console.log("backing up", filePath)
         fs.copyFileSync(filePath, backupFilePath)
     }
     // then overwrite original file with the new content
+    console.log("setting env variable", name, "in", filePath)
     fs.writeFileSync(filePath, result)
 }
 
@@ -59,6 +59,10 @@ const setEnvVariables = (filePath: string) => {
 }
 
 const unsetEnvVariables = (filePath: string) => {
+    if(!fs.existsSync(filePath)) {
+        // file no longer exists (was probably a backup file which got deleted)
+        return;
+    }
     const stats = fs.lstatSync(filePath);
     if(stats.isDirectory()) {
         // recurse into directory
@@ -73,12 +77,17 @@ const unsetEnvVariables = (filePath: string) => {
             const backupFilePath = `${filePath}${backupFileExtension}`
             if(fs.existsSync(backupFilePath)) {
                 // restore backup (copy without environment variables set)
+                console.log("unsetting env vars in", filePath)
                 fs.copyFileSync(backupFilePath, filePath)
-                console.log("unset env vars in ", backupFilePath)
+                fs.rmSync(backupFilePath, {
+                    force: true,
+                })
             } else {
-                console.log("failed to revert env variables in ", filePath)
+                console.log("failed to revert env variables in", filePath)
             }
         }
+    } else {
+        throw new Error(`Unknown file type: ${filePath}`)
     }
 }
 
@@ -92,15 +101,16 @@ const clearEnvBackupFiles = (filePath: string) => {
         })
     } else if(stats.isFile()) {
         // process file
+        // check for backup version of the file
         if (filePath.endsWith(contractSrcFileExtension + backupFileExtension)) {
-            // check for backup version of the file
-            const backupFilePath = `${filePath}${backupFileExtension}`
-            if(fs.existsSync(backupFilePath)) {
-                // remove backup
-                fs.rmSync(backupFilePath)
-                console.log("removed backup file: ", backupFilePath)
-            }
+            // remove backup
+            console.log("removing backup file", filePath)
+            fs.rmSync(filePath, {
+                force: true,
+            })
         }
+    } else {
+        throw new Error(`Unknown file type: ${filePath}`)
     }
 }
 
@@ -372,8 +382,6 @@ export async function processArgs(args: string[]) {
                         await execCargo(argv, 'contract build', contractPath)
                         // unset the env variables using the backups
                         unsetEnvVariables(contractPath)
-                        // clear the backups
-                        clearEnvBackupFiles(contractPath)
                     }
                 }
             },
