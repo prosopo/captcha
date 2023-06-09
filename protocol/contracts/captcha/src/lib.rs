@@ -229,8 +229,12 @@ pub mod captcha {
         NotOwner,
         /// Returned when the contract to address transfer fails
         ContractTransferFailed,
+        /// Returned if provider account exists when it shouldn't
+        ProviderAccountExists,
         /// Returned if provider exists when it shouldn't
         ProviderExists,
+        /// Returned if provider account does not exists when it shouldn't
+        ProviderAccountDoesNotExist,
         /// Returned if provider does not exist when it should
         ProviderDoesNotExist,
         /// Returned if provider has insufficient funds to operate
@@ -533,7 +537,7 @@ pub mod captcha {
             let removed = set.remove(provider_account);
             if !removed {
                 // expected provider to be in set
-                return err!(self, Error::ProviderDoesNotExist);
+                return err!(self, Error::ProviderAccountDoesNotExist);
             }
             self.provider_accounts.insert(category, &set);
 
@@ -551,7 +555,7 @@ pub mod captcha {
             let inserted = set.insert(*provider_account);
             if !inserted {
                 // expected provider to not already be in set
-                return err!(self, Error::ProviderExists);
+                return err!(self, Error::ProviderAccountExists);
             }
             self.provider_accounts.insert(category, &set);
 
@@ -946,16 +950,12 @@ pub mod captcha {
             provider_account: &AccountId,
             dapp_account: &AccountId,
         ) -> Result<(), Error> {
-            let mut provider = self
-                .providers
-                .get(provider_account)
-                .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?;
-            if provider.fee != 0 {
-                let mut dapp = self
-                    .dapps
-                    .get(dapp_account)
-                    .ok_or_else(err_fn!(self, Error::DappDoesNotExist))?;
+            // error if the provider is not found
+            let mut provider = self.get_provider(provider_account)?;
+            // error if the dapp is not found
+            let mut dapp = self.get_dapp(dapp_account)?;
 
+            if provider.fee != 0 {
                 let fee = Balance::from(provider.fee);
                 if provider.payee == Payee::Provider {
                     dapp.balance -= fee;
@@ -1098,7 +1098,7 @@ pub mod captcha {
                 if provider.is_none() {
                     continue;
                 }
-                providers.push(provider.ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?);
+                providers.push(provider.unwrap());
             }
             Ok(providers)
         }
@@ -1118,8 +1118,7 @@ pub mod captcha {
                     if providers_set.is_none() {
                         continue;
                     }
-                    let provider_ids = providers_set
-                        .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?
+                    let provider_ids = providers_set.unwrap()
                         .into_iter()
                         .collect();
                     providers.append(&mut self.list_providers_by_ids(provider_ids)?);
@@ -1211,10 +1210,7 @@ pub mod captcha {
             }
 
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
-            let provider = self
-                .providers
-                .get(provider_id)
-                .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?;
+            let provider = self.get_provider(provider_id)?;
 
             let captcha_data = self.get_captcha_data(provider.dataset_id)?;
             let dataset_id_content = captcha_data.dataset_id_content;
