@@ -214,7 +214,7 @@ pub mod captcha {
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u16, // the max age, in blocks, of captcha results to store in history for a user
         min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
-        max_provider_fee: Balance,
+        max_provider_fee: u32,
     }
 
     /// The error types
@@ -289,7 +289,7 @@ pub mod captcha {
             max_user_history_len: u16,
             max_user_history_age: u16,
             min_num_active_providers: u16,
-            max_provider_fee: Balance,
+            max_provider_fee: u32,
         ) -> Self {
             let instantiator = AccountId::from([
                 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
@@ -314,7 +314,7 @@ pub mod captcha {
             max_user_history_len: u16,
             max_user_history_age: u16,
             min_num_active_providers: u16,
-            max_provider_fee: Balance,
+            max_provider_fee: u32,
         ) -> Self {
             Self {
                 admin: Self::env().caller(),
