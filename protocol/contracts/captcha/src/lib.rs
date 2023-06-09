@@ -126,13 +126,13 @@ pub mod captcha {
     }
 
     struct ProviderConfig {
-        pub payee: Option<Payee>,
-        pub fee: Option<u32>,
-        pub url: Option<Vec<u8>>,
-        pub dataset_id: Option<Hash>,
-        pub dataset_id_content: Option<Hash>,
-        pub deactivate: bool,
-        pub should_exist: bool,
+        payee: Option<Payee>,
+        fee: Option<u32>,
+        url: Option<Vec<u8>>,
+        dataset_id: Option<Hash>,
+        dataset_id_content: Option<Hash>,
+        deactivate: bool,
+        should_exist: bool,
     }
 
     impl Default for ProviderConfig {
@@ -195,6 +195,26 @@ pub mod captcha {
         balance: Balance,
         owner: AccountId,
         payee: DappPayee,
+    }
+
+    struct DappConfig {
+        contract: AccountId,
+        payee: Option<DappPayee>,
+        owner: Option<AccountId>,
+        deactivate: bool,
+        should_exist: bool,
+    }
+
+    impl Default for DappConfig {
+        fn default() -> Self {
+            Self {
+                contract: AccountId::from([0u8; 32]),
+                payee: None,
+                owner: None,
+                deactivate: false,
+                should_exist: true,
+            }
+        }
     }
 
     /// Users are the users of DApps that are required to be verified as human before they are
@@ -702,26 +722,22 @@ pub mod captcha {
         /// Configure a dapp (existing or new)
         fn dapp_configure(
             &mut self,
-            contract: AccountId,
-            payee: Option<DappPayee>,
-            owner: Option<AccountId>,
-            deactivate: bool,
-            should_exist: bool,
+            config: DappConfig
         ) -> Result<(), Error> {
-            let dapp_lookup = self.dapps.get(contract);
+            let dapp_lookup = self.dapps.get(config.contract);
             let new = dapp_lookup.is_none();
 
-            if new && should_exist {
+            if new && config.should_exist {
                 return err!(self, Error::DappDoesNotExist);
             }
-            if !new && !should_exist {
+            if !new && !config.should_exist {
                 return err!(self, Error::DappExists);
             }
 
             let old_dapp = dapp_lookup.unwrap_or_else(|| self.default_dapp());
             let mut new_dapp = Dapp {
-                payee: payee.unwrap_or(old_dapp.payee),
-                owner: owner.unwrap_or(old_dapp.owner),
+                payee: config.payee.unwrap_or(old_dapp.payee),
+                owner: config.owner.unwrap_or(old_dapp.owner),
                 ..old_dapp
             };
 
@@ -729,7 +745,7 @@ pub mod captcha {
             new_dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            new_dapp.status = if new_dapp.balance >= self.dapp_stake_threshold && !deactivate {
+            new_dapp.status = if new_dapp.balance >= self.dapp_stake_threshold && !config.deactivate {
                 GovernanceStatus::Active
             } else {
                 GovernanceStatus::Inactive
@@ -743,7 +759,7 @@ pub mod captcha {
             }
 
             // check the dapp is a contract
-            if !self.env().is_contract(&contract) {
+            if !self.env().is_contract(&config.contract) {
                 return err!(self, Error::InvalidContract);
             }
 
@@ -754,11 +770,11 @@ pub mod captcha {
 
             // if the dapp is new then add it to the list of dapps
             if new {
-                lazy!(self.dapp_contracts, insert, contract);
+                lazy!(self.dapp_contracts, insert, config.contract);
             }
 
             // update the dapp in the mapping
-            self.dapps.insert(contract, &new_dapp);
+            self.dapps.insert(config.contract, &new_dapp);
 
             Ok(())
         }
@@ -771,13 +787,12 @@ pub mod captcha {
             contract: AccountId,
             payee: DappPayee,
         ) -> Result<(), Error> {
-            self.dapp_configure(
+            self.dapp_configure(DappConfig {
                 contract,
-                Some(payee),
-                None, // the caller is made the owner of the contract
-                false,
-                false,
-            )
+                payee: Some(payee),
+                should_exist: false,
+                ..Default::default()
+            })
         }
 
         /// Update a dapp with new funds, setting status as appropriate
@@ -789,14 +804,24 @@ pub mod captcha {
             payee: DappPayee,
             owner: AccountId,
         ) -> Result<(), Error> {
-            self.dapp_configure(contract, Some(payee), Some(owner), false, true)
+            self.dapp_configure(DappConfig {
+                contract,
+                payee: Some(payee),
+                owner: Some(owner),
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            self.dapp_configure(contract, None, None, false, true)
+            self.dapp_configure(DappConfig {
+                contract,
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Cancel services as a dapp, returning remaining tokens
@@ -824,7 +849,12 @@ pub mod captcha {
         /// Deactivate a dapp, leaving stake intact
         #[ink(message)]
         pub fn dapp_deactivate(&mut self, contract: AccountId) -> Result<(), Error> {
-            self.dapp_configure(contract, None, None, true, true)
+            self.dapp_configure(DappConfig {
+                contract,
+                deactivate: true,
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Trim the user history to the max length and age.
