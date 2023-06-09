@@ -375,6 +375,27 @@ pub mod captcha {
             Hash::from(hash_output)
         }
 
+        fn default_provider(&self) -> Provider {
+            Provider {
+                balance: Default::default(),
+                url: Default::default(),
+                fee: Default::default(),
+                payee: Default::default(),
+                dataset_id: Default::default(),
+                dataset_id_content: Default::default(),
+                status: Default::default(),
+            }
+        }
+
+        fn default_dapp(&self) -> Dapp {
+            Dapp {
+                payee: Default::default(),
+                status: Default::default(),
+                owner: self.env().caller(),
+                balance: Default::default(),
+            }
+        }
+
         /// Configure a provider
         fn provider_configure(
             &mut self,
@@ -400,19 +421,7 @@ pub mod captcha {
             }
 
             let default_dataset_id = Hash::default();
-            let old_provider = if new {
-                Provider {
-                    status: GovernanceStatus::Inactive,
-                    balance: 0,
-                    fee: 0,
-                    url: Vec::new(),
-                    dataset_id: default_dataset_id,
-                    payee: Payee::Provider,
-                    dataset_id_content: default_dataset_id,
-                }
-            } else {
-                lookup.unwrap()
-            };
+            let old_provider = lookup.unwrap_or_else(|| self.default_provider());
 
             // setup the new provider with updated fields
             if new {
@@ -671,12 +680,7 @@ pub mod captcha {
                 return err!(self, Error::DappExists);
             }
 
-            let old_dapp = dapp_lookup.unwrap_or(Dapp {
-                owner: self.env().caller(),
-                balance: 0,
-                status: GovernanceStatus::Inactive,
-                payee: DappPayee::Provider,
-            });
+            let old_dapp = dapp_lookup.unwrap_or_else(|| self.default_dapp());
             let mut new_dapp = Dapp {
                 payee: payee.unwrap_or(old_dapp.payee),
                 owner: owner.unwrap_or(old_dapp.owner),
