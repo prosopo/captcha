@@ -24,17 +24,17 @@ npm run setup:all
 
 In different terminals run
 
-## Terminal 1
+#### Terminal 1
 ```bash
 npm run start:server
 ```
 
-## Terminal 2
+#### Terminal 2
 ```bash
 npm run start:provider
 ```
 
-## Terminal 3
+#### Terminal 3
 ```bash
 npm run start:demo
 ```
