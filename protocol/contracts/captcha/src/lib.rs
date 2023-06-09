@@ -611,6 +611,7 @@ pub mod captcha {
 
         /// Add a new data set
         #[ink(message)]
+        #[ink(payable)]
         pub fn provider_set_dataset(
             &mut self,
             dataset_id: Hash,
