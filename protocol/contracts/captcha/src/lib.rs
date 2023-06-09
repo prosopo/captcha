@@ -839,7 +839,8 @@ pub mod captcha {
             self.dapp_users.insert(account, &user);
         }
 
-        fn get_user_history_summary(
+        #[ink(message)]
+        pub fn get_user_history_summary(
             &self,
             account: AccountId,
         ) -> Result<UserHistorySummary, Error> {
