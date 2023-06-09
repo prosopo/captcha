@@ -280,9 +280,6 @@ pub mod captcha {
         ProviderFeeTooHigh,
         /// Returned if the commitment already exists
         CommitAlreadyExists,
-        CaptchaSolutionCommitmentAlreadyExists,
-        /// Returned if verification of a signature fails (could be for many reasons, e.g. invalid public key, invalid payload, invalid signature)
-        VerifyFailed,
     }
 
     impl Captcha {
