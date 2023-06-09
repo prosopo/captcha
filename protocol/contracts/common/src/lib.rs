@@ -3,23 +3,37 @@
 /// Print and return an error in ink
 #[macro_export]
 macro_rules! err {
-    ($e:expr) => {{
-        let self_ = get_self!();
+    ($self_:ident, $err:expr) => {{
         ink::env::debug_println!(
-            "'{:?}' error in {:?}() at block {:?} with caller {:?}",
-            $e,
-            function_name!(),
-            self_.env().block_number(),
-            self_.env().caller(),
+            "ERROR: 
+    type: {:?}
+    block: {:?}
+    caller: {:?}
+",
+            $err,
+            $self_.env().block_number(),
+            $self_.env().caller(),
         );
-        Err($e)
+        Err($err)
     }};
 }
 
 #[macro_export]
 macro_rules! err_fn {
-    ($err:expr) => {
-        || get_self!().print_err($err, function_name!())
+    ($self_:ident, $err:expr) => {
+        || {
+            ink::env::debug_println!(
+                "ERROR: 
+        type: {:?}
+        block: {:?}
+        caller: {:?}
+    ",
+                $err,
+                $self_.env().block_number(),
+                $self_.env().caller(),
+            );
+            $err
+        }
     };
 }
 
