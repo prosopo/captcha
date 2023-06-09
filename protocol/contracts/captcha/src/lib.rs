@@ -373,13 +373,6 @@ pub mod captcha {
             Hash::from(hash_output)
         }
 
-        fn check_provider_fee(&self, fee: u32) -> Result<(), Error> {
-            if fee as u128 > self.max_provider_fee {
-                return err!(self, Error::ProviderFeeTooHigh);
-            }
-            Ok(())
-        }
-
         /// Configure a provider
         fn provider_configure(
             &mut self,
@@ -390,10 +383,6 @@ pub mod captcha {
             dataset_id: Option<Hash>,
             dataset_id_content: Option<Hash>,
         ) -> Result<(), Error> {
-            if fee.is_some() {
-                self.check_provider_fee(fee.unwrap())?;
-            }
-
             let default_dataset_id = Hash::default();
             let provider_account = self.env().caller();
             let lookup = self.get_provider(provider_account);
@@ -436,6 +425,11 @@ pub mod captcha {
                 && new_provider.dataset_id_content == new_provider.dataset_id
             {
                 return err!(self, Error::DatasetIdSolutionsSame);
+            }
+
+            // check the fee is not too high
+            if new_provider.fee > self.max_provider_fee {
+                return err!(self, Error::ProviderFeeTooHigh);
             }
 
             // update the dataset mapping to provider
