@@ -639,7 +639,8 @@ pub mod captcha {
         }
 
         /// Get an existing dapp
-        fn get_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
+        #[ink(message)]
+        pub fn get_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
             self.dapps
                 .get(contract)
                 .ok_or_else(err_fn!(self, Error::DappDoesNotExist))
