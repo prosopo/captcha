@@ -1120,20 +1120,6 @@ pub mod captcha {
             Ok(commitment)
         }
 
-        /// Returns the account balance for the specified `dapp`.
-        ///
-        #[ink(message)]
-        pub fn get_dapp_balance(&self, dapp: AccountId) -> Result<Balance, Error> {
-            Ok(self.get_dapp_details(dapp)?.balance)
-        }
-
-        /// Returns the account balance for the specified `provider`.
-        ///
-        #[ink(message)]
-        pub fn get_provider_balance(&self, provider: AccountId) -> Result<Balance, Error> {
-            Ok(self.get_provider_details(provider)?.balance)
-        }
-
         /// List providers given an array of account id
         ///
         /// Returns empty if none were matched
