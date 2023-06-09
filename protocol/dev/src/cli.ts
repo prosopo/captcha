@@ -12,6 +12,7 @@ const contractSrcFileExtension = '.rs'
 const backupFileExtension = '.bak'
 
 const setEnvVariable = (filePath: string, name: string, value: string) => {
+    console.log("setting env variable", name, "in", filePath)
     const content = fs.readFileSync(filePath, 'utf8')
     const regex = new RegExp(`const\\s+${name}:([^=]+)=[^;]+;`, 'gms');
     const result = content.replaceAll(regex, `const ${name}:$1= ${value};`)
@@ -27,7 +28,6 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
         fs.copyFileSync(filePath, backupFilePath)
     }
     // then overwrite original file with the new content
-    console.log("setting env variable", name, "in", filePath)
     fs.writeFileSync(filePath, result)
 }
 
@@ -82,8 +82,6 @@ const unsetEnvVariables = (filePath: string) => {
                 fs.rmSync(backupFilePath, {
                     force: true,
                 })
-            } else {
-                console.log("failed to revert env variables in", filePath)
             }
         }
     } else {
