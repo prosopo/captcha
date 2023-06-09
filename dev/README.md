@@ -10,6 +10,37 @@ This package contains the scripts and configuration for setting up a development
 
 ## Dev Setup
 
+### Quickstart
+
+```bash
+git clone https://github.com/prosopo/captcha
+cd captcha
+npm i
+npm run bd dev
+docker compose --file docker/docker-compose.development.yml up -d
+cp ./dev/env.development ./dev/.env.development
+npm run setup:all
+```
+
+In 4 different terminals run
+
+## Terminal 1
+```bash
+npm run start:server
+```
+
+## Terminal 2
+```bash
+npm run start:provider
+```
+
+## Terminal 3
+```bash
+npm run start:demo
+```
+
+Go to [http://localhost:3001](http://localhost:3001) in your browser.
+
 ### Set up Containers
 
 Setup your integration containers by running the following command from the root of
