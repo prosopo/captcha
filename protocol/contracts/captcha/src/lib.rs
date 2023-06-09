@@ -1017,7 +1017,7 @@ pub mod captcha {
             if self.providers.get(provider_id).is_none() {
                 return err!(self, Error::ProviderDoesNotExist);
             }
-            let provider = self.get_provider_details(provider_id)?;
+            let provider = self.get_provider(provider_id)?;
             if provider.balance < self.provider_stake_threshold {
                 return err!(self, Error::ProviderInsufficientFunds);
             }
@@ -1038,7 +1038,7 @@ pub mod captcha {
                 return err!(self, Error::DappDoesNotExist);
             }
             // Guard against dapps using service that are Suspended or Deactivated
-            let dapp = self.get_dapp_details(contract)?;
+            let dapp = self.get_dapp(contract)?;
             if dapp.status != GovernanceStatus::Active {
                 return err!(self, Error::DappInactive);
             }
@@ -1075,26 +1075,6 @@ pub mod captcha {
             self.dapp_users
                 .get(dapp_user_id)
                 .ok_or_else(err_fn!(self, Error::DappUserDoesNotExist))
-        }
-
-        /// Get a single provider's details
-        ///
-        /// Returns an error if the user does not exist
-        #[ink(message)]
-        pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
-            self.providers
-                .get(accountid)
-                .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))
-        }
-
-        /// Get a single dapps details
-        ///
-        /// Returns an error if the dapp does not exist
-        #[ink(message)]
-        pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
-            self.dapps
-                .get(contract)
-                .ok_or_else(err_fn!(self, Error::DappDoesNotExist))
         }
 
         /// Get a solution commitment
