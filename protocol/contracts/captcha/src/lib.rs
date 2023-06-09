@@ -629,15 +629,6 @@ pub mod captcha {
             )
         }
 
-        /// Check the contract is a contract
-        fn check_is_contract(&self, contract: AccountId) -> Result<(), Error> {
-            if !self.env().is_contract(&contract) {
-                return err!(self, Error::InvalidContract);
-            }
-
-            Ok(())
-        }
-
         /// Get an existing dapp
         #[ink(message)]
         pub fn get_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
@@ -674,7 +665,9 @@ pub mod captcha {
             owner: Option<AccountId>,
             deactivate: bool,
         ) -> Result<(), Error> {
-            self.check_is_contract(contract)?;
+            if !self.env().is_contract(&contract) {
+                return err!(self, Error::InvalidContract);
+            }
 
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
