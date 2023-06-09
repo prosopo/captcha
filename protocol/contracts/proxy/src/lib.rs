@@ -1,14 +1,15 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[allow(unused_macros)]
-#[named_functions_macro::named_functions] // allows the use of the function_name!() macro
-#[inject_self_macro::inject_self] // allows the use of the get_self!() macro
+pub use self::proxy::{Proxy, ProxyRef};
+
 #[ink::contract]
 pub mod proxy {
 
     use common::err;
-    #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
+    use common::INK_AUTHOR;
+    #[allow(unused_imports)]
     use ink::env::debug_println as debug;
+    #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::traits::StorageLayout;
 
     #[ink(storage)]
@@ -36,11 +37,8 @@ pub mod proxy {
         /// later changed the `forward_to` address.
         #[ink(constructor)]
         pub fn new(destination: AccountId) -> Self {
-            let instantiator = AccountId::from([
-                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
-                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-            ]); // alice
-            if Self::env().caller() != instantiator {
+            let author = AccountId::from(INK_AUTHOR);
+            if Self::env().caller() != author {
                 panic!("Not authorised to instantiate this contract");
             }
             Self::new_unguarded(destination)
@@ -57,11 +55,11 @@ pub mod proxy {
         #[ink(message)]
         pub fn proxy_set_destination(&mut self, destination: AccountId) -> Result<(), Error> {
             if self.env().caller() != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             if !self.env().is_contract(&destination) {
-                return err!(Error::InvalidDestination);
+                return err!(self, Error::InvalidDestination);
             }
 
             self.destination = destination;
@@ -72,7 +70,7 @@ pub mod proxy {
         #[ink(message)]
         pub fn proxy_set_admin(&mut self, new_admin: AccountId) -> Result<(), Error> {
             if self.env().caller() != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             self.admin = new_admin;
@@ -83,7 +81,7 @@ pub mod proxy {
         pub fn proxy_withdraw(&mut self, amount: Balance) -> Result<(), Error> {
             let caller = self.env().caller();
             if caller != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             match self.env().transfer(caller, amount) {
@@ -96,7 +94,7 @@ pub mod proxy {
         pub fn proxy_terminate(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
             if caller != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             self.env().terminate_contract(caller);
@@ -111,12 +109,12 @@ pub mod proxy {
         #[ink(message)]
         pub fn proxy_set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
             if self.env().caller() != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             match ink::env::set_code_hash(&code_hash) {
                 Ok(()) => Ok(()),
-                Err(_) => err!(Error::SetCodeHashFailed),
+                Err(_) => err!(self, Error::SetCodeHashFailed),
             }
         }
 
@@ -202,10 +200,7 @@ pub mod proxy {
             reset_callee();
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from([
-                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
-                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-            ]));
+            set_caller(AccountId::from(INK_AUTHOR));
             let contract = Proxy::new(get_contract_account(0));
             // should construct successfully
         }

@@ -1,25 +1,46 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use self::common::{Common, CommonRef};
+
+pub const INK_AUTHOR: [u8; 32] = [
+    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133,
+    76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+]; // the account which can instantiate the contract
+
 /// Print and return an error in ink
 #[macro_export]
 macro_rules! err {
-    ($e:expr) => {{
-        let self_ = get_self!();
+    ($self_:ident, $err:expr) => {{
         ink::env::debug_println!(
-            "'{:?}' error in {:?}() at block {:?} with caller {:?}",
-            $e,
-            function_name!(),
-            self_.env().block_number(),
-            self_.env().caller(),
+            "ERROR: 
+    type: {:?}
+    block: {:?}
+    caller: {:?}
+",
+            $err,
+            $self_.env().block_number(),
+            $self_.env().caller(),
         );
-        Err($e)
+        Err($err)
     }};
 }
 
 #[macro_export]
 macro_rules! err_fn {
-    ($err:expr) => {
-        || get_self!().print_err($err, function_name!())
+    ($self_:ident, $err:expr) => {
+        || {
+            ink::env::debug_println!(
+                "ERROR: 
+        type: {:?}
+        block: {:?}
+        caller: {:?}
+    ",
+                $err,
+                $self_.env().block_number(),
+                $self_.env().caller(),
+            );
+            $err
+        }
     };
 }
 
@@ -36,19 +57,26 @@ macro_rules! lazy {
 #[ink::contract]
 pub mod common {
 
-    /// No fields are stored in the util contract as it's just filler
+    #[derive(Default)]
+/// No fields are stored in the util contract as it's just filler
     #[ink(storage)]
     pub struct Common {}
+
+    
 
     /// Implementation of the contract
     impl Common {
         #[ink(constructor)]
-        pub fn noop_ctor() -> Self {
+        pub fn new() -> Self {
             Self {}
         }
 
-        /// No-op function to fill the mandatory ink message requirement
+        /// Print and get the caller of this function
+        /// This will print and get the caller's account in byte format, e.g. [1,2,3...32]
         #[ink(message)]
-        pub fn noop_func(&self) {}
+        pub fn get_caller(&self) -> AccountId {
+            ink::env::debug_println!("caller: {:?}", self.env().caller());
+            self.env().caller()
+        }
     }
 }
