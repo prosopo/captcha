@@ -396,6 +396,13 @@ pub mod captcha {
             }
         }
 
+        fn get_provider_state(&self, provider: &Provider) -> ProviderState {
+            ProviderState {
+                payee: provider.payee,
+                status: provider.status,
+            }
+        }
+
         /// Configure a provider
         fn provider_configure(
             &mut self,
@@ -424,9 +431,6 @@ pub mod captcha {
             let old_provider = lookup.unwrap_or_else(|| self.default_provider());
 
             // setup the new provider with updated fields
-            if new {
-                self.provider_state_insert(&old_provider, &provider_account)?;
-            }
             let mut new_provider = Provider {
                 url: url.unwrap_or(old_provider.url.clone()),
                 fee: fee.unwrap_or(old_provider.fee),
@@ -476,15 +480,6 @@ pub mod captcha {
                 return err!(self, Error::ProviderFeeTooHigh);
             }
 
-            // update the dataset mapping to provider
-            // remove old mapping
-            self.datasets.remove(old_provider.dataset_id);
-            if new_provider.dataset_id != default_dataset_id {
-                // insert new mapping if not the default hash, as this is used as a placeholder value
-                self.datasets
-                    .insert(new_provider.dataset_id, &provider_account);
-            }
-
             let old_url_hash = self.hash_vec_u8(&old_provider.url);
             let new_url_hash = self.hash_vec_u8(&new_provider.url);
             if old_url_hash != new_url_hash {
@@ -500,14 +495,27 @@ pub mod captcha {
                 }
             }
 
+            // update the dataset mapping to provider
+            // remove old mapping
+            self.datasets.remove(old_provider.dataset_id);
+            if new_provider.dataset_id != default_dataset_id {
+                // insert new mapping if not the default hash, as this is used as a placeholder value
+                self.datasets
+                    .insert(new_provider.dataset_id, &provider_account);
+            }
+
             self.providers.insert(provider_account, &new_provider);
 
             // update the category if status or payee has changed
-            if old_provider.status != new_provider.status
-                || old_provider.payee != new_provider.payee
-            {
-                self.provider_state_remove(&old_provider, &provider_account)?;
+            if new {
                 self.provider_state_insert(&new_provider, &provider_account)?;
+            } else {
+                let old_provider_state = self.get_provider_state(&old_provider);
+                let new_provider_state = self.get_provider_state(&new_provider);
+                if old_provider_state != new_provider_state {
+                    self.provider_state_remove(&old_provider, &provider_account)?;
+                    self.provider_state_insert(&new_provider, &provider_account)?;
+                }
             }
 
             Ok(())
@@ -519,10 +527,7 @@ pub mod captcha {
             provider: &Provider,
             provider_account: &AccountId,
         ) -> Result<(), Error> {
-            let category = ProviderState {
-                status: provider.status,
-                payee: provider.payee,
-            };
+            let category = self.get_provider_state(&provider);
             let mut set = self.provider_accounts.get(category).unwrap_or_default();
             let removed = set.remove(provider_account);
             if !removed {
@@ -540,10 +545,7 @@ pub mod captcha {
             provider: &Provider,
             provider_account: &AccountId,
         ) -> Result<(), Error> {
-            let category = ProviderState {
-                status: provider.status,
-                payee: provider.payee,
-            };
+            let category = self.get_provider_state(&provider);
             let mut set = self.provider_accounts.get(category).unwrap_or_default();
             let inserted = set.insert(*provider_account);
             if !inserted {
@@ -2776,14 +2778,14 @@ pub mod captcha {
                 let url: Vec<u8> = vec![1, 2, 3];
                 let fee: u32 = 100;
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-                contract.provider_register(url.clone(), fee, Payee::Provider);
+                contract.provider_register(url.clone(), fee, Payee::Provider).unwrap();
                 ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
                 let balance = 20000000000000;
                 ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
-                contract.provider_update(url.clone(), fee, Payee::Provider);
+                contract.provider_update(url.clone(), fee, Payee::Provider).unwrap();
                 let root1 = str_to_hash("merkle tree1".to_string());
                 let root2 = str_to_hash("merkle tree2".to_string());
-                contract.provider_set_dataset(root1, root2);
+                contract.provider_set_dataset(root1, root2).unwrap();
 
                 // Register the dapp
                 let dapp_caller_account = AccountId::from([0x3; 32]);
