@@ -1,8 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-#[allow(unused_macros)]
-#[named_functions_macro::named_functions] // allows the use of the function_name!() macro
-#[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod proxy {
 
@@ -57,11 +54,11 @@ pub mod proxy {
         #[ink(message)]
         pub fn proxy_set_destination(&mut self, destination: AccountId) -> Result<(), Error> {
             if self.env().caller() != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             if !self.env().is_contract(&destination) {
-                return err!(Error::InvalidDestination);
+                return err!(self, Error::InvalidDestination);
             }
 
             self.destination = destination;
@@ -72,7 +69,7 @@ pub mod proxy {
         #[ink(message)]
         pub fn proxy_set_admin(&mut self, new_admin: AccountId) -> Result<(), Error> {
             if self.env().caller() != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             self.admin = new_admin;
@@ -83,7 +80,7 @@ pub mod proxy {
         pub fn proxy_withdraw(&mut self, amount: Balance) -> Result<(), Error> {
             let caller = self.env().caller();
             if caller != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             match self.env().transfer(caller, amount) {
@@ -96,7 +93,7 @@ pub mod proxy {
         pub fn proxy_terminate(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
             if caller != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             self.env().terminate_contract(caller);
@@ -111,12 +108,12 @@ pub mod proxy {
         #[ink(message)]
         pub fn proxy_set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
             if self.env().caller() != self.admin {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             match ink::env::set_code_hash(&code_hash) {
                 Ok(()) => Ok(()),
-                Err(_) => err!(Error::SetCodeHashFailed),
+                Err(_) => err!(self, Error::SetCodeHashFailed),
             }
         }
 

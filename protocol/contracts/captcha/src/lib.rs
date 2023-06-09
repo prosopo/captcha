@@ -401,7 +401,7 @@ pub mod captcha {
 
         fn check_provider_fee(&self, fee: u32) -> Result<(), Error> {
             if fee as u128 > self.max_provider_fee {
-                return err!(Error::ProviderFeeTooHigh);
+                return err!(self, Error::ProviderFeeTooHigh);
             }
             Ok(())
         }
@@ -461,7 +461,7 @@ pub mod captcha {
             if new_provider.dataset_id != default_dataset_id
                 && new_provider.dataset_id_content == new_provider.dataset_id
             {
-                return err!(Error::DatasetIdSolutionsSame);
+                return err!(self, Error::DatasetIdSolutionsSame);
             }
 
             // update the dataset mapping to provider
@@ -495,7 +495,7 @@ pub mod captcha {
             if old_url_hash != new_url_hash {
                 // updating the url, so check whether the new origin is available
                 if self.urls.contains(new_url_hash) {
-                    return err!(Error::ProviderUrlUsed);
+                    return err!(self, Error::ProviderUrlUsed);
                 } // else available
 
                 self.urls.remove(old_url_hash);
@@ -532,7 +532,7 @@ pub mod captcha {
             let removed = set.remove(provider_account);
             if !removed {
                 // expected provider to be in set
-                return err!(Error::ProviderDoesNotExist);
+                return err!(self, Error::ProviderDoesNotExist);
             }
             self.provider_accounts.insert(category, &set);
 
@@ -553,7 +553,7 @@ pub mod captcha {
             let inserted = set.insert(*provider_account);
             if !inserted {
                 // expected provider to not already be in set
-                return err!(Error::ProviderExists);
+                return err!(self, Error::ProviderExists);
             }
             self.provider_accounts.insert(category, &set);
 
@@ -571,7 +571,7 @@ pub mod captcha {
         ) -> Result<(), Error> {
             // this function is for registration only
             if self.get_provider(self.env().caller()).is_ok() {
-                return err!(Error::ProviderExists);
+                return err!(self, Error::ProviderExists);
             }
 
             self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None)
@@ -588,7 +588,7 @@ pub mod captcha {
         ) -> Result<(), Error> {
             // this function is for updating only, not registering
             if self.providers.get(self.env().caller()).is_none() {
-                return err!(Error::ProviderDoesNotExist);
+                return err!(self, Error::ProviderDoesNotExist);
             }
 
             self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None)
@@ -628,7 +628,7 @@ pub mod captcha {
         fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
             self.providers
                 .get(account)
-                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))
+                .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))
         }
 
         #[ink(message)]
@@ -660,7 +660,7 @@ pub mod captcha {
         /// Check the contract is a contract
         fn check_is_contract(&self, contract: AccountId) -> Result<(), Error> {
             if !self.env().is_contract(&contract) {
-                return err!(Error::InvalidContract);
+                return err!(self, Error::InvalidContract);
             }
 
             Ok(())
@@ -670,13 +670,13 @@ pub mod captcha {
         fn get_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
             self.dapps
                 .get(contract)
-                .ok_or_else(err_fn!(Error::DappDoesNotExist))
+                .ok_or_else(err_fn!(self, Error::DappDoesNotExist))
         }
 
         /// Check a dapp is missing / non-existent
         fn check_dapp_does_not_exist(&self, contract: AccountId) -> Result<(), Error> {
             if self.dapps.get(contract).is_some() {
-                return err!(Error::DappExists);
+                return err!(self, Error::DappExists);
             }
 
             Ok(())
@@ -687,7 +687,7 @@ pub mod captcha {
             let caller = self.env().caller();
             let dapp = self.get_dapp(contract)?;
             if dapp.owner != caller {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
 
             Ok(())
@@ -950,7 +950,7 @@ pub mod captcha {
 
             // check commitment doesn't already exist
             if self.captcha_solution_commitments.get(commit.id).is_some() {
-                return err!(Error::CommitAlreadyExists);
+                return err!(self, Error::CommitAlreadyExists);
             }
 
             self.record_commitment(commit.user, commit.id, commit);
@@ -984,12 +984,12 @@ pub mod captcha {
             let mut provider = self
                 .providers
                 .get(provider_account)
-                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+                .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?;
             if provider.fee != 0 {
                 let mut dapp = self
                     .dapps
                     .get(dapp_account)
-                    .ok_or_else(err_fn!(Error::DappDoesNotExist))?;
+                    .ok_or_else(err_fn!(self, Error::DappDoesNotExist))?;
 
                 let fee = Balance::from(provider.fee);
                 if provider.payee == Payee::Provider {
@@ -1053,11 +1053,11 @@ pub mod captcha {
             provider_id: AccountId,
         ) -> Result<Provider, Error> {
             if self.providers.get(provider_id).is_none() {
-                return err!(Error::ProviderDoesNotExist);
+                return err!(self, Error::ProviderDoesNotExist);
             }
             let provider = self.get_provider_details(provider_id)?;
             if provider.balance < self.provider_stake_threshold {
-                return err!(Error::ProviderInsufficientFunds);
+                return err!(self, Error::ProviderInsufficientFunds);
             }
             Ok(provider)
         }
@@ -1065,7 +1065,7 @@ pub mod captcha {
         fn validate_provider_active(&self, provider_id: AccountId) -> Result<Provider, Error> {
             let provider = self.validate_provider_exists_and_has_funds(provider_id)?;
             if provider.status != GovernanceStatus::Active {
-                return err!(Error::ProviderInactive);
+                return err!(self, Error::ProviderInactive);
             }
             Ok(provider)
         }
@@ -1073,17 +1073,17 @@ pub mod captcha {
         fn validate_dapp(&self, contract: AccountId) -> Result<Dapp, Error> {
             // Guard against dapps using service that are not registered
             if self.dapps.get(contract).is_none() {
-                return err!(Error::DappDoesNotExist);
+                return err!(self, Error::DappDoesNotExist);
             }
             // Guard against dapps using service that are Suspended or Deactivated
             let dapp = self.get_dapp_details(contract)?;
             if dapp.status != GovernanceStatus::Active {
-                return err!(Error::DappInactive);
+                return err!(self, Error::DappInactive);
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
             if dapp.balance < self.dapp_stake_threshold {
-                return err!(Error::DappInsufficientFunds);
+                return err!(self, Error::DappInsufficientFunds);
             }
             Ok(dapp)
         }
@@ -1096,7 +1096,7 @@ pub mod captcha {
             let provider_account = self
                 .datasets
                 .get(dataset_id)
-                .ok_or_else(err_fn!(Error::CaptchaDataDoesNotExist))?;
+                .ok_or_else(err_fn!(self, Error::CaptchaDataDoesNotExist))?;
             let provider = self.get_provider(provider_account)?;
             Ok(CaptchaData {
                 dataset_id,
@@ -1112,7 +1112,7 @@ pub mod captcha {
         pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
             self.dapp_users
                 .get(dapp_user_id)
-                .ok_or_else(err_fn!(Error::DappUserDoesNotExist))
+                .ok_or_else(err_fn!(self, Error::DappUserDoesNotExist))
         }
 
         /// Get a single provider's details
@@ -1122,7 +1122,7 @@ pub mod captcha {
         pub fn get_provider_details(&self, accountid: AccountId) -> Result<Provider, Error> {
             self.providers
                 .get(accountid)
-                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))
+                .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))
         }
 
         /// Get a single dapps details
@@ -1132,7 +1132,7 @@ pub mod captcha {
         pub fn get_dapp_details(&self, contract: AccountId) -> Result<Dapp, Error> {
             self.dapps
                 .get(contract)
-                .ok_or_else(err_fn!(Error::DappDoesNotExist))
+                .ok_or_else(err_fn!(self, Error::DappDoesNotExist))
         }
 
         /// Get a solution commitment
@@ -1148,12 +1148,12 @@ pub mod captcha {
                 .get(captcha_solution_commitment_id)
                 .is_none()
             {
-                return err!(Error::CommitDoesNotExist);
+                return err!(self, Error::CommitDoesNotExist);
             }
             let commitment = self
                 .captcha_solution_commitments
                 .get(captcha_solution_commitment_id)
-                .ok_or_else(err_fn!(Error::CommitDoesNotExist))?;
+                .ok_or_else(err_fn!(self, Error::CommitDoesNotExist))?;
 
             Ok(commitment)
         }
@@ -1186,7 +1186,7 @@ pub mod captcha {
                 if provider.is_none() {
                     continue;
                 }
-                providers.push(provider.ok_or_else(err_fn!(Error::ProviderDoesNotExist))?);
+                providers.push(provider.ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?);
             }
             Ok(providers)
         }
@@ -1207,7 +1207,7 @@ pub mod captcha {
                         continue;
                     }
                     let provider_ids = providers_set
-                        .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?
+                        .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?
                         .into_iter()
                         .collect();
                     providers.append(&mut self.list_providers_by_ids(provider_ids)?);
@@ -1254,11 +1254,11 @@ pub mod captcha {
 
                 // If the max is 0, then there are no active providers
                 if max == 0 {
-                    return err!(Error::NoActiveProviders);
+                    return err!(self, Error::NoActiveProviders);
                 }
 
                 if max < self.min_num_active_providers.into() {
-                    return err!(Error::NotEnoughActiveProviders);
+                    return err!(self, Error::NotEnoughActiveProviders);
                 }
 
                 // Get a random number between 0 and max
@@ -1282,11 +1282,11 @@ pub mod captcha {
 
                 // If the length is 0, then there are no active providers
                 if active_providers.is_empty() {
-                    return err!(Error::NoActiveProviders);
+                    return err!(self, Error::NoActiveProviders);
                 }
 
                 if active_providers.len() < self.min_num_active_providers.into() {
-                    return err!(Error::NotEnoughActiveProviders);
+                    return err!(self, Error::NotEnoughActiveProviders);
                 }
 
                 // Get a random number between 0 and the length of the active providers
@@ -1301,7 +1301,7 @@ pub mod captcha {
             let provider = self
                 .providers
                 .get(provider_id)
-                .ok_or_else(err_fn!(Error::ProviderDoesNotExist))?;
+                .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))?;
 
             let captcha_data = self.get_captcha_data(provider.dataset_id)?;
             let dataset_id_content = captcha_data.dataset_id_content;
@@ -1392,7 +1392,7 @@ pub mod captcha {
             let transfer_result =
                 ink::env::transfer::<ink::env::DefaultEnvironment>(self.env().caller(), amount);
             if transfer_result.is_err() {
-                return err!(Error::ContractTransferFailed);
+                return err!(self, Error::ContractTransferFailed);
             }
             Ok(())
         }
@@ -1405,10 +1405,10 @@ pub mod captcha {
             if let Err(e) = set_code_hash_result {
                 match e {
                     ink::env::Error::CodeNotFound => {
-                        return err!(Error::CodeNotFound);
+                        return err!(self, Error::CodeNotFound);
                     }
                     _ => {
-                        return err!(Error::Unknown);
+                        return err!(self, Error::Unknown);
                     }
                 }
             }
@@ -1431,14 +1431,14 @@ pub mod captcha {
         /// Is the specified account the admin for this contract?
         fn check_admin(&self, acc: AccountId) -> Result<(), Error> {
             if self.admin != acc {
-                return err!(Error::NotAuthorised);
+                return err!(self, Error::NotAuthorised);
             }
             Ok(())
         }
 
         fn check_not_admin(&self, acc: AccountId) -> Result<(), Error> {
             if self.admin == acc {
-                err!(Error::NotAuthorised)
+                err!(self, Error::NotAuthorised)
             } else {
                 Ok(())
             }
