@@ -64,7 +64,7 @@ pub mod common {
     /// Implementation of the contract
     impl Common {
         #[ink(constructor)]
-        pub fn new() -> Self {
+        pub fn default() -> Self {
             Self {}
         }
 
