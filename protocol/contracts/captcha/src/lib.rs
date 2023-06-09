@@ -366,12 +366,6 @@ pub mod captcha {
             Ok(())
         }
 
-        #[ink(message)]
-        pub fn get_caller(&self) -> AccountId {
-            debug!("caller: {:?}", self.env().caller());
-            self.env().caller()
-        }
-
         /// Print and return an error
         fn print_err(&self, err: Error, fn_name: &str) -> Error {
             debug!(
