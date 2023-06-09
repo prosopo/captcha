@@ -6,7 +6,7 @@ pub use self::proxy::{Proxy, ProxyRef};
 pub mod proxy {
 
     use common::err;
-    use common::INSTANTIATOR;
+    use common::INK_AUTHOR;
     #[allow(unused_imports)]
     use ink::env::debug_println as debug;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
@@ -37,8 +37,8 @@ pub mod proxy {
         /// later changed the `forward_to` address.
         #[ink(constructor)]
         pub fn new(destination: AccountId) -> Self {
-            let instantiator = AccountId::from(INSTANTIATOR);
-            if Self::env().caller() != instantiator {
+            let author = AccountId::from(INK_AUTHOR);
+            if Self::env().caller() != author {
                 panic!("Not authorised to instantiate this contract");
             }
             Self::new_unguarded(destination)
@@ -200,7 +200,7 @@ pub mod proxy {
             reset_callee();
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from(INSTANTIATOR));
+            set_caller(AccountId::from(INK_AUTHOR));
             let contract = Proxy::new(get_contract_account(0));
             // should construct successfully
         }

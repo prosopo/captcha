@@ -23,7 +23,7 @@ pub mod captcha {
     use common::err;
     use common::err_fn;
     use common::lazy;
-    use common::INSTANTIATOR;
+    use common::INK_AUTHOR;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
@@ -303,8 +303,8 @@ pub mod captcha {
             min_num_active_providers: u16,
             max_provider_fee: u32,
         ) -> Self {
-            let instantiator = AccountId::from(INSTANTIATOR);
-            if Self::env().caller() != instantiator {
+            let author = AccountId::from(INK_AUTHOR);
+            if Self::env().caller() != author {
                 panic!("Not authorised to instantiate this contract");
             }
             Self::new_unguarded(
@@ -1460,7 +1460,7 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from(INSTANTIATOR));
+            set_caller(AccountId::from(INK_AUTHOR));
             let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
             // should construct successfully
         }
