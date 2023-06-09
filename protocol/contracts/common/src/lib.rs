@@ -47,8 +47,12 @@ pub mod common {
             Self {}
         }
 
-        /// No-op function to fill the mandatory ink message requirement
+        /// Print and get the caller of this function
+        /// This will print and get the caller's account in byte format, e.g. [1,2,3...32]
         #[ink(message)]
-        pub fn noop_func(&self) {}
+        pub fn get_caller(&self) -> AccountId {
+            ink::env::debug_println!("caller: {:?}", self.env().caller());
+            self.env().caller()
+        }
     }
 }
