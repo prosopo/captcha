@@ -17,9 +17,6 @@
 
 pub use self::captcha::{Captcha, CaptchaRef};
 
-#[allow(unused_macros)]
-#[named_functions_macro::named_functions] // allows the use of the function_name!() macro
-#[inject_self_macro::inject_self] // allows the use of the get_self!() macro
 #[ink::contract]
 pub mod captcha {
 
@@ -364,18 +361,6 @@ pub mod captcha {
             }
 
             Ok(())
-        }
-
-        /// Print and return an error
-        fn print_err(&self, err: Error, fn_name: &str) -> Error {
-            debug!(
-                "ERROR in {}() at block {} with caller {:?}\n'{:?}'",
-                fn_name,
-                self.env().block_number(),
-                self.env().caller(),
-                err
-            );
-            err
         }
 
         #[ink(message)]
