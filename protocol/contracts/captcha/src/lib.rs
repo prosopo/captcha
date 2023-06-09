@@ -1199,9 +1199,6 @@ pub mod captcha {
             let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
             let provider = self.get_provider(provider_id)?;
 
-            let captcha_data = self.get_captcha_data(provider.dataset_id)?;
-            let dataset_id_content = captcha_data.dataset_id_content;
-
             Ok(RandomProvider {
                 provider_id,
                 provider,
