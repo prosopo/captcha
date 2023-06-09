@@ -81,12 +81,8 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
             throw new ProsopoContractError(error)
         }
     } catch (err) {
-        if (typeof err === 'object' && 'issue' in err && err.issue === 'OUTPUT_IS_NULL') {
-            logger.info('   - providerRegister: provider is not registered')
-        } else {
-            logger.debug('Unexpected error')
-            throw new ProsopoContractError(err)
-        }
+        logger.debug('Unexpected error')
+        throw new ProsopoContractError(err)
     }
     if (!providerExists) {
         await tasks.contract.tx.providerRegister(...providerRegisterArgs)

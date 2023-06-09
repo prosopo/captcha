@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x35a5b78497396b361e47db75d74207fc9106754574693e74ef90da038f7ec14b",
+    "hash": "0xc1b8d1802549cbd2a044301939d7db1ea1489e68ca75283fc4596738b0dcc23d",
     "language": "ink! 4.1.0",
     "compiler": "rustc 1.69.0",
     "build_info": {
@@ -29,7 +29,7 @@
         "args": [],
         "default": false,
         "docs": [],
-        "label": "new",
+        "label": "noop_ctor",
         "payable": false,
         "returnType": {
           "displayName": [
@@ -38,7 +38,7 @@
           ],
           "type": 0
         },
-        "selector": "0x9bae9d5e"
+        "selector": "0xe060b6f9"
       }
     ],
     "docs": [
@@ -49,38 +49,38 @@
         "displayName": [
           "AccountId"
         ],
-        "type": 4
+        "type": 3
       },
       "balance": {
         "displayName": [
           "Balance"
         ],
-        "type": 7
+        "type": 6
       },
       "blockNumber": {
         "displayName": [
           "BlockNumber"
         ],
-        "type": 10
+        "type": 9
       },
       "chainExtension": {
         "displayName": [
           "ChainExtension"
         ],
-        "type": 11
+        "type": 10
       },
       "hash": {
         "displayName": [
           "Hash"
         ],
-        "type": 8
+        "type": 7
       },
       "maxEventTopics": 4,
       "timestamp": {
         "displayName": [
           "Timestamp"
         ],
-        "type": 9
+        "type": 8
       }
     },
     "events": [],
@@ -96,10 +96,9 @@
         "args": [],
         "default": false,
         "docs": [
-          " Print and get the caller of this function",
-          " This will print and get the caller's account in byte format, e.g. [1,2,3...32]"
+          " No-op function to fill the mandatory ink message requirement"
         ],
-        "label": "get_caller",
+        "label": "noop_func",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -107,9 +106,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 3
+          "type": 0
         },
-        "selector": "0x8dd15f8f"
+        "selector": "0xc61a578c"
       }
     ]
   },
@@ -198,52 +197,10 @@
       "id": 3,
       "type": {
         "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 4
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 2
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 4
-          },
-          {
-            "name": "E",
-            "type": 2
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 4,
-      "type": {
-        "def": {
           "composite": {
             "fields": [
               {
-                "type": 5,
+                "type": 4,
                 "typeName": "[u8; 32]"
               }
             ]
@@ -257,18 +214,18 @@
       }
     },
     {
-      "id": 5,
+      "id": 4,
       "type": {
         "def": {
           "array": {
             "len": 32,
-            "type": 6
+            "type": 5
           }
         }
       }
     },
     {
-      "id": 6,
+      "id": 5,
       "type": {
         "def": {
           "primitive": "u8"
@@ -276,7 +233,7 @@
       }
     },
     {
-      "id": 7,
+      "id": 6,
       "type": {
         "def": {
           "primitive": "u128"
@@ -284,13 +241,13 @@
       }
     },
     {
-      "id": 8,
+      "id": 7,
       "type": {
         "def": {
           "composite": {
             "fields": [
               {
-                "type": 5,
+                "type": 4,
                 "typeName": "[u8; 32]"
               }
             ]
@@ -304,7 +261,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 8,
       "type": {
         "def": {
           "primitive": "u64"
@@ -312,7 +269,7 @@
       }
     },
     {
-      "id": 10,
+      "id": 9,
       "type": {
         "def": {
           "primitive": "u32"
@@ -320,7 +277,7 @@
       }
     },
     {
-      "id": 11,
+      "id": 10,
       "type": {
         "def": {
           "variant": {}
