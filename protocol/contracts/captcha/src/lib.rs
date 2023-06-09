@@ -336,16 +336,19 @@ pub mod captcha {
             }
         }
 
+        /// Get all payee options
         #[ink(message)]
         pub fn get_payees(&self) -> Vec<Payee> {
             vec![Payee::Dapp, Payee::Provider]
         }
 
+        /// Get all dapp payee options
         #[ink(message)]
         pub fn get_dapp_payees(&self) -> Vec<DappPayee> {
             vec![DappPayee::Dapp, DappPayee::Provider, DappPayee::Any]
         }
 
+        /// Get all status options
         #[ink(message)]
         pub fn get_statuses(&self) -> Vec<GovernanceStatus> {
             vec![GovernanceStatus::Active, GovernanceStatus::Inactive]
@@ -597,6 +600,7 @@ pub mod captcha {
             Ok(())
         }
 
+        /// Get an existing provider
         #[ink(message)]
         pub fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
             self.providers
@@ -604,6 +608,7 @@ pub mod captcha {
                 .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))
         }
 
+        /// Fund a provider
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
@@ -656,10 +661,6 @@ pub mod captcha {
             deactivate: bool,
             should_exist: bool,
         ) -> Result<(), Error> {
-            if !self.env().is_contract(&contract) {
-                return err!(self, Error::InvalidContract);
-            }
-
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
 
@@ -682,18 +683,6 @@ pub mod captcha {
                 ..old_dapp
             };
 
-            // check current contract for ownership
-            if !new {
-                self.check_dapp_owner_is_caller(contract, &new_dapp)?;
-            }
-
-            if let Some(payee) = payee {
-                new_dapp.payee = payee;
-            }
-            if let Some(owner) = owner {
-                new_dapp.owner = owner;
-            }
-
             // update the dapp funds
             new_dapp.balance += self.env().transferred_value();
 
@@ -704,13 +693,22 @@ pub mod captcha {
                 GovernanceStatus::Inactive
             };
 
+            // by here the new dapp has been configured
+
             if !new && old_dapp == new_dapp {
                 // nothing to do as no change
                 return Ok(());
             }
 
-            // owner of the dapp cannot be an admin
-            self.check_not_admin(new_dapp.owner)?;
+            // check the dapp is a contract
+            if !self.env().is_contract(&contract) {
+                return err!(self, Error::InvalidContract);
+            }
+
+            // check current contract for ownership
+            if !new {
+                self.check_dapp_owner_is_caller(contract, &new_dapp)?;
+            }
 
             // if the dapp is new then add it to the list of dapps
             if new {
@@ -1390,13 +1388,6 @@ pub mod captcha {
             Ok(())
         }
 
-        fn check_not_admin(&self, acc: AccountId) -> Result<(), Error> {
-            if self.admin == acc {
-                err!(self, Error::NotAuthorised)
-            } else {
-                Ok(())
-            }
-        }
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
@@ -1793,29 +1784,6 @@ pub mod captcha {
             }
 
             #[ink::test]
-            fn test_check_admin() {
-                // always set the caller to the unused account to start, avoid any mistakes with caller checks
-                set_caller(get_unused_account());
-
-                let mut contract = get_contract(0);
-                // try the first 10 accounts
-                for i in 0..9 {
-                    let acc = get_admin_account(i);
-                    if acc == contract.admin {
-                        assert!(contract.check_admin(acc).is_ok());
-                        assert!(contract.check_not_admin(acc).is_err());
-                        set_caller(acc);
-                        assert!(contract.check_caller_admin().is_ok());
-                    } else {
-                        assert!(contract.check_admin(acc).is_err());
-                        assert!(contract.check_not_admin(acc).is_ok());
-                        set_caller(acc);
-                        assert!(contract.check_caller_admin().is_err());
-                    }
-                }
-            }
-
-            #[ink::test]
             fn test_set_admin() {
                 // always set the caller to the unused account to start, avoid any mistakes with caller checks
                 set_caller(get_unused_account());
@@ -1826,13 +1794,11 @@ pub mod captcha {
                 assert_ne!(old_admin, new_admin);
 
                 contract.check_admin(old_admin).unwrap();
-                contract.check_not_admin(new_admin).unwrap();
 
                 set_caller(old_admin);
                 contract.set_admin(new_admin).unwrap();
 
                 contract.check_admin(new_admin).unwrap();
-                contract.check_not_admin(old_admin).unwrap();
             }
 
             #[ink::test]
@@ -1846,7 +1812,6 @@ pub mod captcha {
                 assert_ne!(old_admin, new_admin);
 
                 contract.check_admin(old_admin).unwrap();
-                contract.check_not_admin(new_admin).unwrap();
 
                 // can only call set_admin from the current admin account (old admin)
                 set_caller(new_admin);
