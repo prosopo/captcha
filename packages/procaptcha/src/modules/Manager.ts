@@ -47,8 +47,6 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
         }
         // then call the update function for the frontend to do the same
         onStateUpdate(nextState)
-
-        console.log('Procaptcha state update:', nextState, '\nResult:', state)
     }
 
     return updateCurrentState
@@ -72,9 +70,7 @@ export const Manager = (
             onError: (error) => {
                 alert(`${error?.message ?? 'An unexpected error occurred'}, please try again`)
             },
-            onHuman: (output) => {
-                console.log('onHuman event triggered', output)
-            },
+            onHuman: (output) => {},
             onExtensionNotFound: () => {
                 alert('No extension found')
             },
@@ -122,11 +118,9 @@ export const Manager = (
     const start = async () => {
         try {
             if (state.loading) {
-                console.log('Procaptcha already loading')
                 return
             }
             if (state.isHuman) {
-                console.log('already human')
                 return
             }
 
@@ -137,7 +131,6 @@ export const Manager = (
             // snapshot the config into the state
             const config = getConfig()
             updateState({ dappAccount: config.network.dappContract.address })
-            console.log('Starting procaptcha using config:', config)
 
             // allow UI to catch up with the loading state
             await sleep(100)
@@ -201,7 +194,6 @@ export const Manager = (
                 type: 'bytes',
             }
             const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
-            console.log('Signature:', signed)
 
             // get a random provider
             const getRandomProviderResponse = (
@@ -213,17 +205,16 @@ export const Manager = (
                 .unwrap()
                 .unwrap()
             const blockNumber = getRandomProviderResponse.blockNumber
-            console.log('provider', getRandomProviderResponse)
+
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             // get the provider api inst
             providerApi = await loadProviderApi(providerUrl)
-            console.log('providerApi', providerApi)
+
             // get the captcha challenge and begin the challenge
             const captchaApi = await loadCaptchaApi(contract, getRandomProviderResponse, providerApi)
 
-            console.log('captchaApi', captchaApi)
             const challenge: GetCaptchaResponse = await captchaApi.getCaptchaChallenge()
-            console.log('challenge', challenge)
+
             if (challenge.captchas.length <= 0) {
                 throw new Error('No captchas returned from provider')
             }
@@ -233,7 +224,6 @@ export const Manager = (
                 .map((captcha) => captcha.captcha.timeLimitMs || 30 * 1000)
                 .reduce((a, b) => a + b)
             const timeout = setTimeout(() => {
-                console.log('challenge expired after ' + timeMillis + 'ms')
                 events.onExpired()
                 // expired, disallow user's claim to be human
                 updateState({ isHuman: false, showModal: false, loading: false })
@@ -260,7 +250,6 @@ export const Manager = (
 
     const submit = async () => {
         try {
-            console.log('submitting solutions')
             // disable the time limit, user has submitted their solution in time
             clearTimeout()
 
@@ -337,7 +326,6 @@ export const Manager = (
     }
 
     const cancel = async () => {
-        console.log('cancel')
         // disable the time limit
         clearTimeout()
         // abandon the captcha process
@@ -359,11 +347,9 @@ export const Manager = (
         const solutions = state.solutions
         const solution = solutions[index]
         if (solution.includes(hash)) {
-            console.log('deselecting', hash)
             // remove the hash from the solution
             solution.splice(solution.indexOf(hash), 1)
         } else {
-            console.log('selecting', hash)
             // add the hash to the solution
             solution.push(hash)
         }
@@ -380,7 +366,7 @@ export const Manager = (
         if (state.index + 1 >= state.challenge.captchas.length) {
             throw new Error('cannot proceed to next round, already at last round')
         }
-        console.log('proceeding to next round')
+
         updateState({ index: state.index + 1 })
     }
 
@@ -445,7 +431,6 @@ export const Manager = (
         const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3()
         const account = await ext.getAccount(config)
 
-        console.log('Using account:', account)
         updateState({ account })
 
         return getAccount()
