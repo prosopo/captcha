@@ -6,8 +6,9 @@ pub use self::proxy::{Proxy, ProxyRef};
 pub mod proxy {
 
     use common::err;
-    #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
+    #[allow(unused_imports)] 
     use ink::env::debug_println as debug;
+    #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::traits::StorageLayout;
 
     #[ink(storage)]
