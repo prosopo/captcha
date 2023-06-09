@@ -129,7 +129,7 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct RandomProvider {
-        provider_id: AccountId,
+        provider_account: AccountId,
         provider: Provider,
         block_number: BlockNumber,
     }
@@ -139,7 +139,7 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct CaptchaData {
-        provider: AccountId,
+        provider_account: AccountId,
         dataset_id: Hash,
         dataset_id_content: Hash,
     }
@@ -151,11 +151,11 @@ pub mod captcha {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Commit {
         id: Hash,                       // the commitment id
-        user: AccountId,                // the user who submitted the commitment
+        user_account: AccountId,                // the user who submitted the commitment
         dataset_id: Hash,               // the dataset id
         status: CaptchaStatus,          // the status of the commitment
-        dapp: AccountId,                // the dapp which the user completed the captcha on
-        provider: AccountId,            // the provider who supplied the challenge
+        dapp_contract: AccountId,                // the dapp which the user completed the captcha on
+        provider_account: AccountId,            // the provider who supplied the challenge
         requested_at: BlockNumber,      // the block number at which the captcha was requested
         completed_at: BlockNumber,      // the block number at which the captcha was completed
         user_signature_part1: [u8; 32], // the user's signature of the commitment
@@ -195,7 +195,7 @@ pub mod captcha {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct LastCorrectCaptcha {
         pub before: BlockNumber, // the number of blocks before the current block that the last correct captcha was completed
-        pub dapp_id: AccountId,
+        pub dapp_contract: AccountId,
     }
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -216,9 +216,9 @@ pub mod captcha {
         provider_stake_threshold: Balance,
         dapp_stake_threshold: Balance,
         dapps: Mapping<AccountId, Dapp>,
-        dapp_accounts: Lazy<BTreeSet<AccountId>>,
-        captcha_solution_commitments: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
-        dapp_users: Mapping<AccountId, User>,
+        dapp_contracts: Lazy<BTreeSet<AccountId>>,
+        commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
+        users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
         max_user_history_len: u16, // the max number of captcha results to store in history for a user
         max_user_history_age: u16, // the max age, in blocks, of captcha results to store in history for a user
@@ -331,15 +331,15 @@ pub mod captcha {
                 provider_accounts: Default::default(),
                 urls: Default::default(),
                 datasets: Default::default(),
-                dapp_users: Default::default(),
+                users: Default::default(),
                 provider_stake_threshold,
                 dapp_stake_threshold,
                 dapps: Default::default(),
-                dapp_accounts: Default::default(),
+                dapp_contracts: Default::default(),
                 user_accounts: Default::default(),
                 max_user_history_len,
                 max_user_history_age,
-                captcha_solution_commitments: Default::default(),
+                commits: Default::default(),
                 min_num_active_providers,
                 max_provider_fee,
             }
@@ -720,7 +720,7 @@ pub mod captcha {
 
             // if the dapp is new then add it to the list of dapps
             if new {
-                lazy!(self.dapp_accounts, insert, contract);
+                lazy!(self.dapp_contracts, insert, contract);
             }
 
             // update the dapp in the mapping
@@ -782,7 +782,7 @@ pub mod captcha {
 
             // remove the dapp
             self.dapps.remove(contract);
-            lazy!(self.dapp_accounts, remove, &contract);
+            lazy!(self.dapp_contracts, remove, &contract);
 
             Ok(())
         }
@@ -812,7 +812,7 @@ pub mod captcha {
             // trim the history down to max age
             while !history.is_empty()
                 && self
-                    .captcha_solution_commitments
+                    .commits
                     .get(history.last().unwrap())
                     .unwrap()
                     .completed_at
@@ -826,13 +826,13 @@ pub mod captcha {
 
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_commitment(&mut self, account: AccountId, hash: Hash, result: &Commit) {
+        fn record_commitment(&mut self, user_account: AccountId, hash: Hash, result: &Commit) {
             let mut user = self
-                .dapp_users
-                .get(account)
-                .unwrap_or_else(|| self.create_new_dapp_user(account));
+                .users
+                .get(user_account)
+                .unwrap_or_else(|| self.create_new_user(user_account));
             // add the new commitment
-            self.captcha_solution_commitments.insert(hash, result);
+            self.commits.insert(hash, result);
             user.history.insert(0, hash);
 
             // trim the user history by len and age, removing any expired commitments
@@ -841,18 +841,18 @@ pub mod captcha {
             user.history = history;
             // remove the expired commitments
             for hash in expired.iter() {
-                self.captcha_solution_commitments.remove(hash);
+                self.commits.remove(hash);
             }
 
-            self.dapp_users.insert(account, &user);
+            self.users.insert(user_account, &user);
         }
 
         #[ink(message)]
         pub fn get_user_history_summary(
             &self,
-            account: AccountId,
+            user_account: AccountId,
         ) -> Result<UserHistorySummary, Error> {
-            let user = self.get_dapp_user(account)?;
+            let user = self.get_user(user_account)?;
             let (history, _expired) = self.trim_user_history(user.history);
 
             let mut summary = UserHistorySummary {
@@ -861,7 +861,7 @@ pub mod captcha {
                 score: 0,
             };
             for hash in history.iter() {
-                let result = self.captcha_solution_commitments.get(hash).unwrap();
+                let result = self.commits.get(hash).unwrap();
                 if result.status == CaptchaStatus::Approved {
                     summary.correct += 1;
                 } else if result.status == CaptchaStatus::Disapproved {
@@ -884,9 +884,9 @@ pub mod captcha {
         }
 
         /// Create a new dapp user if they do not already exist
-        fn create_new_dapp_user(&mut self, account: AccountId) -> User {
+        fn create_new_user(&mut self, user_account: AccountId) -> User {
             // create the user and add to our list of dapp users
-            let lookup = self.dapp_users.get(account);
+            let lookup = self.users.get(user_account);
             if let Some(user) = lookup {
                 return user;
             }
@@ -894,7 +894,7 @@ pub mod captcha {
             let user = User {
                 history: Default::default(),
             };
-            self.dapp_users.insert(account, &user);
+            self.users.insert(account, &user);
             let mut user_accounts = self.user_accounts.get_or_default();
             user_accounts.insert(account);
             self.user_accounts.set(&user_accounts);
@@ -905,7 +905,7 @@ pub mod captcha {
         fn provider_record_commit(&mut self, commit: &Commit) -> Result<(), Error> {
             let caller = self.env().caller();
             let provider = self.get_provider(caller)?;
-            let dapp = self.get_dapp(commit.dapp)?;
+            let dapp = self.get_dapp(commit.dapp_contract)?;
 
             // ensure the provider is active
             self.check_provider_active(&provider)?;
@@ -914,13 +914,13 @@ pub mod captcha {
             self.check_dapp_active(&dapp)?;
 
             // check commitment doesn't already exist
-            if self.captcha_solution_commitments.get(commit.id).is_some() {
+            if self.commits.get(commit.id).is_some() {
                 return err!(self, Error::CommitAlreadyExists);
             }
 
-            self.record_commitment(commit.user, commit.id, commit);
+            self.record_commitment(commit.user_account, commit.id, commit);
 
-            self.pay_fee(caller, commit.dapp)?;
+            self.pay_fee(caller, commit.dapp_contract)?;
 
             Ok(())
         }
@@ -945,12 +945,12 @@ pub mod captcha {
         fn pay_fee(
             &mut self,
             provider_account: AccountId,
-            dapp_account: AccountId,
+            dapp_contract: AccountId,
         ) -> Result<(), Error> {
             // error if the provider is not found
             let mut provider = self.get_provider(provider_account)?;
             // error if the dapp is not found
-            let mut dapp = self.get_dapp(dapp_account)?;
+            let mut dapp = self.get_dapp(dapp_contract)?;
 
             if provider.fee != 0 {
                 let fee = Balance::from(provider.fee);
@@ -963,7 +963,7 @@ pub mod captcha {
                     dapp.balance += fee;
                 }
                 self.providers.insert(provider_account, &provider);
-                self.dapps.insert(dapp_account, &dapp);
+                self.dapps.insert(dapp_contract, &dapp);
             }
             Ok(())
         }
@@ -974,23 +974,23 @@ pub mod captcha {
         #[ink(message)]
         pub fn dapp_operator_is_human_user(
             &self,
-            user: AccountId,
+            user_account: AccountId,
             threshold: u8,
         ) -> Result<bool, Error> {
-            Ok(self.get_user_history_summary(user)?.score > threshold)
+            Ok(self.get_user_history_summary(user_account)?.score > threshold)
         }
 
         /// Get the last correct captcha for a user
         #[ink(message)]
         pub fn dapp_operator_last_correct_captcha(
             &self,
-            user: AccountId,
+            user_account: AccountId,
         ) -> Result<LastCorrectCaptcha, Error> {
-            let user = self.get_dapp_user(user)?;
+            let user = self.get_user(user_account)?;
             let (history, _expired) = self.trim_user_history(user.history);
             let mut last_correct_captcha = None;
             for hash in history {
-                let entry = self.captcha_solution_commitments.get(hash).unwrap();
+                let entry = self.commits.get(hash).unwrap();
                 if entry.status == CaptchaStatus::Approved {
                     last_correct_captcha = Some(entry);
                     break;
@@ -1005,7 +1005,7 @@ pub mod captcha {
 
             Ok(LastCorrectCaptcha {
                 before: self.env().block_number() - last_correct_captcha.completed_at,
-                dapp_id: last_correct_captcha.dapp,
+                dapp_contract: last_correct_captcha.dapp_contract,
             })
         }
 
@@ -1043,7 +1043,7 @@ pub mod captcha {
             let provider = self.get_provider(provider_account)?;
             Ok(CaptchaData {
                 dataset_id,
-                provider: provider_account,
+                provider_account,
                 dataset_id_content: provider.dataset_id_content,
             })
         }
@@ -1052,9 +1052,9 @@ pub mod captcha {
         ///
         /// Returns an error if the user does not exist
         #[ink(message)]
-        pub fn get_dapp_user(&self, dapp_user_id: AccountId) -> Result<User, Error> {
-            self.dapp_users
-                .get(dapp_user_id)
+        pub fn get_user(&self, user_account: AccountId) -> Result<User, Error> {
+            self.users
+                .get(user_account)
                 .ok_or_else(err_fn!(self, Error::DappUserDoesNotExist))
         }
 
@@ -1062,12 +1062,12 @@ pub mod captcha {
         ///
         /// Returns an error if the commitment does not exist
         #[ink(message)]
-        pub fn get_captcha_solution_commitment(
+        pub fn get_commit(
             &self,
-            captcha_solution_commitment_id: Hash,
+            commit_id: Hash,
         ) -> Result<Commit, Error> {
-            self.captcha_solution_commitments
-                .get(captcha_solution_commitment_id)
+            self.commits
+                .get(commit_id)
                 .ok_or_else(err_fn!(self, Error::CommitDoesNotExist))
         }
 
@@ -1075,13 +1075,13 @@ pub mod captcha {
         ///
         /// Returns empty if none were matched
         #[ink(message)]
-        pub fn list_providers_by_ids(
+        pub fn list_providers_by_accounts(
             &self,
-            provider_ids: Vec<AccountId>,
+            provider_accounts: Vec<AccountId>,
         ) -> Result<Vec<Provider>, Error> {
             let mut providers = Vec::new();
-            for provider_id in provider_ids {
-                let provider = self.providers.get(provider_id);
+            for provider_account in provider_accounts {
+                let provider = self.providers.get(provider_account);
                 if provider.is_none() {
                     continue;
                 }
@@ -1107,8 +1107,8 @@ pub mod captcha {
                     if providers_set.is_none() {
                         continue;
                     }
-                    let provider_ids = providers_set.unwrap().into_iter().collect();
-                    providers.append(&mut self.list_providers_by_ids(provider_ids)?);
+                    let provider_accounts = providers_set.unwrap().into_iter().collect();
+                    providers.append(&mut self.list_providers_by_accounts(provider_accounts)?);
                 }
             }
             Ok(providers)
@@ -1121,9 +1121,9 @@ pub mod captcha {
         pub fn get_random_active_provider(
             &self,
             user_account: AccountId,
-            dapp_contract_account: AccountId,
+            dapp_contract: AccountId,
         ) -> Result<RandomProvider, Error> {
-            let dapp = self.get_dapp(dapp_contract_account)?;
+            let dapp = self.get_dapp(dapp_contract)?;
             self.check_dapp_active(&dapp)?;
             let status = GovernanceStatus::Active;
             let active_providers;
@@ -1161,7 +1161,7 @@ pub mod captcha {
                 }
 
                 // Get a random number between 0 and max
-                index = self.get_random_number(max as u128, user_account, dapp_contract_account);
+                index = self.get_random_number(max as u128, user_account, dapp_contract);
 
                 // Work out which BTreeset to get the provider from and modify the index accordingly
                 if index < active_providers_initial.len() as u128 {
@@ -1192,15 +1192,15 @@ pub mod captcha {
                 index = self.get_random_number(
                     active_providers.len() as u128,
                     user_account,
-                    dapp_contract_account,
+                    dapp_contract,
                 );
             }
 
-            let provider_id = active_providers.into_iter().nth(index as usize).unwrap();
-            let provider = self.get_provider(provider_id)?;
+            let provider_account = active_providers.into_iter().nth(index as usize).unwrap();
+            let provider = self.get_provider(provider_account)?;
 
             Ok(RandomProvider {
-                provider_id,
+                provider_account,
                 provider,
                 block_number: self.env().block_number(),
             })
@@ -1210,8 +1210,8 @@ pub mod captcha {
         ///
         /// Returns {Vec<AccountId>}
         #[ink(message)]
-        pub fn get_all_provider_ids(&self) -> Result<Vec<AccountId>, Error> {
-            let mut provider_ids = Vec::<AccountId>::new();
+        pub fn get_all_provider_accounts(&self) -> Result<Vec<AccountId>, Error> {
+            let mut provider_accounts = Vec::<AccountId>::new();
             for status in [GovernanceStatus::Active, GovernanceStatus::Inactive] {
                 for payee in [Payee::Provider, Payee::Dapp] {
                     let providers_set = self
@@ -1220,10 +1220,10 @@ pub mod captcha {
                     if providers_set.is_none() {
                         continue;
                     }
-                    provider_ids.append(&mut providers_set.unwrap().into_iter().collect());
+                    provider_accounts.append(&mut providers_set.unwrap().into_iter().collect());
                 }
             }
-            Ok(provider_ids)
+            Ok(provider_accounts)
         }
 
         /// Get a random number from 0 to `len` - 1 inclusive. The user account is added to the seed for additional random entropy.
@@ -1232,7 +1232,7 @@ pub mod captcha {
             &self,
             len: u128,
             user_account: AccountId,
-            dapp_account: AccountId,
+            dapp_contract: AccountId,
         ) -> u128 {
             if len == 0 {
                 panic!("Cannot generate a random number for a length of 0 or less");
@@ -1244,7 +1244,7 @@ pub mod captcha {
             let block_number: u32 = self.env().block_number();
             let block_timestamp: u64 = self.env().block_timestamp();
             let user_account_bytes: &[u8; ACCOUNT_SIZE] = user_account.as_ref();
-            let dapp_account_bytes: &[u8; ACCOUNT_SIZE] = dapp_account.as_ref();
+            let dapp_contract_bytes: &[u8; ACCOUNT_SIZE] = dapp_contract.as_ref();
             // pack all the data into a single byte array
             let block_number_arr: [u8; BLOCK_NUMBER_SIZE] = block_number.to_le_bytes();
             let block_timestamp_arr: [u8; BLOCK_TIMESTAMP_SIZE] = block_timestamp.to_le_bytes();
@@ -1260,7 +1260,7 @@ pub mod captcha {
                 ..BLOCK_NUMBER_SIZE + BLOCK_TIMESTAMP_SIZE + ACCOUNT_SIZE]
                 .copy_from_slice(user_account_bytes);
             bytes[BLOCK_TIMESTAMP_SIZE + BLOCK_NUMBER_SIZE + ACCOUNT_SIZE..]
-                .copy_from_slice(dapp_account_bytes);
+                .copy_from_slice(dapp_contract_bytes);
             // hash to ensure small changes (e.g. in the block timestamp) result in large change in the seed
             let mut hash_output = <Blake2x128 as HashOutput>::Type::default();
             <Blake2x128 as CryptoHash>::hash(&bytes, &mut hash_output);
@@ -1423,7 +1423,7 @@ pub mod captcha {
         }
 
         /// get the nth dapp account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
-        fn get_dapp_account(index: u128) -> AccountId {
+        fn get_dapp_contract(index: u128) -> AccountId {
             get_account(DAPP_ACCOUNT_PREFIX, index)
         }
 
@@ -1457,7 +1457,7 @@ pub mod captcha {
             // set the caller back to the unused acc
             set_caller(get_unused_account());
             // check the contract was created with the correct account
-            assert_eq!(contract.env().account_id(), account);
+            assert_eq!(contract.env().account_account(), account);
             contract
         }
 
@@ -1512,7 +1512,7 @@ pub mod captcha {
                     );
                 }
             }
-            assert_eq!(contract.dapp_accounts.get(), None);
+            assert_eq!(contract.dapp_contracts.get(), None);
             assert_eq!(contract.user_accounts.get(), None);
         }
 
@@ -1522,7 +1522,7 @@ pub mod captcha {
             for func in vec![
                 get_admin_account,
                 get_provider_account,
-                get_dapp_account,
+                get_dapp_contract,
                 get_user_account,
                 get_contract_account,
             ]
@@ -1539,7 +1539,7 @@ pub mod captcha {
             for i in 0..10 {
                 let contract = get_contract(i);
                 // check the account has funds. Will panic if not as no existential deposit == account not found
-                get_account_balance(contract.env().account_id()).unwrap();
+                get_account_balance(contract.env().account_account()).unwrap();
             }
         }
 
@@ -1552,7 +1552,7 @@ pub mod captcha {
             for func in vec![
                 get_admin_account,
                 get_provider_account,
-                get_dapp_account,
+                get_dapp_contract,
                 get_user_account,
                 get_contract_account,
             ]
@@ -1591,7 +1591,7 @@ pub mod captcha {
             // for the first 10 contracts
             for i in 0..9 {
                 let contract = get_contract(i);
-                let account = contract.env().account_id();
+                let account = contract.env().account_account();
                 assert!(
                     set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
                     "Duplicate account ID found: {:?}",
@@ -1641,7 +1641,7 @@ pub mod captcha {
             let mut contract = get_contract(0);
             set_caller(get_admin_account(0)); // an account which does have permission to call terminate
 
-            let contract_account = contract.env().account_id();
+            let contract_account = contract.env().account_account();
             let bal = get_account_balance(contract_account).unwrap();
             let admin = get_admin_account(0);
             let should_terminate = move || contract.terminate().unwrap();
@@ -1669,13 +1669,13 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             let mut contract = get_contract(0);
-            println!("contract {:?}", contract.env().account_id());
+            println!("contract {:?}", contract.env().account_account());
 
             // give the contract funds
-            set_account_balance(contract.env().account_id(), 10000000000);
+            set_account_balance(contract.env().account_account(), 10000000000);
             set_caller(get_admin_account(0)); // use the admin acc
             let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
-            let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
+            let contract_bal: u128 = get_account_balance(contract.env().account_account()).unwrap();
             let withdraw_amount: u128 = 1;
             contract.withdraw(withdraw_amount).unwrap();
             assert_eq!(
@@ -1683,7 +1683,7 @@ pub mod captcha {
                 admin_bal + withdraw_amount
             );
             assert_eq!(
-                get_account_balance(contract.env().account_id()).unwrap(),
+                get_account_balance(contract.env().account_account()).unwrap(),
                 contract_bal - withdraw_amount
             );
         }
@@ -1698,7 +1698,7 @@ pub mod captcha {
 
             set_caller(get_admin_account(0)); // use the admin acc
             let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
-            let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
+            let contract_bal = get_account_balance(contract.env().account_account()).unwrap();
             contract.withdraw(contract_bal + 1); // panics as bal would go below existential deposit
         }
 
@@ -1840,7 +1840,7 @@ pub mod captcha {
 
         /// Test list providers
         #[ink::test]
-        fn test_list_providers_by_ids() {
+        fn test_list_providers_by_accounts() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -1853,7 +1853,7 @@ pub mod captcha {
             let registered_provider_account = contract.providers.get(provider_account);
             assert!(registered_provider_account.is_some());
             let returned_list = contract
-                .list_providers_by_ids(vec![provider_account])
+                .list_providers_by_accounts(vec![provider_account])
                 .unwrap();
             assert!(returned_list == vec![registered_provider_account.unwrap()]);
         }
@@ -1908,7 +1908,7 @@ pub mod captcha {
         }
 
         /// Provider Register Helper
-        fn generate_provider_data(id: u8, port: &str, fee: u32) -> (AccountId, Vec<u8>, u32) {
+        fn generate_provider_data(account: u8, port: &str, fee: u32) -> (AccountId, Vec<u8>, u32) {
             let provider_account = AccountId::from([id; 32]);
             let url = port.as_bytes().to_vec();
 
@@ -2038,7 +2038,7 @@ pub mod captcha {
 
             let mut contract = get_contract(0);
             // give the contract some funds
-            set_account_balance(contract.env().account_id(), 1000000000);
+            set_account_balance(contract.env().account_account(), 1000000000);
             let (provider_account, url, fee) = generate_provider_data(0x2, "4242", 0);
             let balance: u128 = 10;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2107,7 +2107,7 @@ pub mod captcha {
             assert_eq!(dapp.status, GovernanceStatus::Inactive);
             assert_eq!(dapp.balance, balance);
             assert!(contract
-                .dapp_accounts
+                .dapp_contracts
                 .get()
                 .unwrap()
                 .contains(&dapp_contract));
@@ -2146,7 +2146,7 @@ pub mod captcha {
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance);
             assert!(contract
-                .dapp_accounts
+                .dapp_contracts
                 .get()
                 .unwrap()
                 .contains(&dapp_contract));
@@ -2201,7 +2201,7 @@ pub mod captcha {
             assert_eq!(dapp.status, GovernanceStatus::Active);
             assert_eq!(dapp.balance, balance_1 + balance_2);
             assert!(contract
-                .dapp_accounts
+                .dapp_contracts
                 .get()
                 .unwrap()
                 .contains(&dapp_contract_account));
@@ -2248,7 +2248,7 @@ pub mod captcha {
 
             let mut contract = get_contract(0);
             // give the contract some funds
-            set_account_balance(contract.env().account_id(), 1000000000);
+            set_account_balance(contract.env().account_account(), 1000000000);
             let caller = AccountId::from([0x2; 32]);
             let contract_account = AccountId::from([0x3; 32]);
             let callers_initial_balance =
@@ -2330,27 +2330,27 @@ pub mod captcha {
             contract.dapp_register(dapp_contract_account, DappPayee::Dapp);
 
             //Dapp User commit
-            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
 
             // Call from the provider account to mark the solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let solution_id = user_root;
+            let solution_account = user_root;
             contract.provider_commit(Commit {
                 dapp: dapp_contract_account,
                 dataset_id: user_root,
                 status: CaptchaStatus::Approved,
                 provider: provider_account,
-                user: dapp_user_account,
+                user: user_account,
                 completed_at: 0,
                 requested_at: 0,
-                id: solution_id,
+                id: solution_account,
                 user_signature_part1: [0x0; 32],
                 user_signature_part2: [0x0; 32],
             });
             let commitment = contract
-                .captcha_solution_commitments
-                .get(solution_id)
+                .commits
+                .get(solution_account)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
             let new_dapp_balance = contract.get_dapp(dapp_contract_account).unwrap().balance;
@@ -2366,16 +2366,16 @@ pub mod captcha {
                 dataset_id: user_root,
                 status: CaptchaStatus::Disapproved,
                 provider: provider_account,
-                user: dapp_user_account,
+                user: user_account,
                 completed_at: 0,
                 requested_at: 0,
-                id: solution_id,
+                id: solution_account,
                 user_signature_part1: [0x0; 32],
                 user_signature_part2: [0x0; 32],
             });
             let commitment = contract
-                .captcha_solution_commitments
-                .get(solution_id)
+                .commits
+                .get(solution_account)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
             assert_eq!(
@@ -2390,7 +2390,7 @@ pub mod captcha {
 
         /// Test provider cannot approve invalid solution id
         #[ink::test]
-        fn test_provider_approve_invalid_id() {
+        fn test_provider_approve_invalid_account() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
@@ -2430,22 +2430,22 @@ pub mod captcha {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(0);
 
             //Dapp User commit
-            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
 
             // Call from the provider account to mark the wrong solution as approved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let solution_id = str_to_hash("id that does not exist".to_string());
+            let solution_account = str_to_hash("id that does not exist".to_string());
 
             let result = contract.provider_commit(Commit {
                 dapp: dapp_contract_account,
                 dataset_id: user_root,
                 status: CaptchaStatus::Approved,
                 provider: provider_account,
-                user: dapp_user_account,
+                user: user_account,
                 completed_at: 0,
                 requested_at: 0,
-                id: solution_id,
+                id: solution_account,
                 user_signature_part1: [0x0; 32],
                 user_signature_part2: [0x0; 32],
             });
@@ -2496,29 +2496,29 @@ pub mod captcha {
                 .unwrap();
 
             //Dapp User commit
-            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_account = AccountId::from([0x5; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
 
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let solution_id = user_root;
+            let solution_account = user_root;
             contract
                 .provider_commit(Commit {
                     dapp: dapp_contract_account,
                     dataset_id: user_root,
                     status: CaptchaStatus::Disapproved,
                     provider: provider_account,
-                    user: dapp_user_account,
+                    user: user_account,
                     completed_at: 0,
                     requested_at: 0,
-                    id: solution_id,
+                    id: solution_account,
                     user_signature_part1: [0x0; 32],
                     user_signature_part2: [0x0; 32],
                 })
                 .unwrap();
             let commitment = contract
-                .captcha_solution_commitments
-                .get(solution_id)
+                .commits
+                .get(solution_account)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
             let new_dapp_balance = contract.get_dapp(dapp_contract_account).unwrap().balance;
@@ -2532,16 +2532,16 @@ pub mod captcha {
                 dataset_id: user_root,
                 status: CaptchaStatus::Approved,
                 provider: provider_account,
-                user: dapp_user_account,
+                user: user_account,
                 completed_at: 0,
                 requested_at: 0,
-                id: solution_id,
+                id: solution_account,
                 user_signature_part1: [0x0; 32],
                 user_signature_part2: [0x0; 32],
             });
             let commitment = contract
-                .captcha_solution_commitments
-                .get(solution_id)
+                .commits
+                .get(solution_account)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
             assert_eq!(
@@ -2595,46 +2595,46 @@ pub mod captcha {
                 .unwrap();
 
             //Dapp User commit
-            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_account = AccountId::from([0x5; 32]);
             // Call from the Dapp User Account
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(user_account);
             let user_root = str_to_hash("user merkle tree root".to_string());
 
             // Call from the provider account to mark the solution as disapproved
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
-            let solution_id = user_root;
+            let solution_account = user_root;
             contract.provider_commit(Commit {
                 dapp: dapp_contract_account,
                 dataset_id: user_root,
                 status: CaptchaStatus::Disapproved,
                 provider: provider_account,
-                user: dapp_user_account,
+                user: user_account,
                 completed_at: 0,
                 requested_at: 0,
-                id: solution_id,
+                id: solution_account,
                 user_signature_part1: [0x0; 32],
                 user_signature_part2: [0x0; 32],
             });
             let commitment = contract
-                .captcha_solution_commitments
-                .get(solution_id)
+                .commits
+                .get(solution_account)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
 
             // Now make sure that the dapp user does not pass the human test
-            let result = contract.dapp_operator_is_human_user(dapp_user_account, 80 * 2);
+            let result = contract.dapp_operator_is_human_user(user_account, 80 * 2);
             assert!(!result.unwrap());
         }
 
         /// Test non-existent dapp account has zero balance
         #[ink::test]
-        fn test_non_existent_dapp_account_has_zero_balance() {
-            let dapp_account = AccountId::from([0x2; 32]);
+        fn test_non_existent_dapp_contract_has_zero_balance() {
+            let dapp_contract = AccountId::from([0x2; 32]);
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
 
             let mut contract = get_contract(0);
-            contract.get_dapp(dapp_account).unwrap_err();
+            contract.get_dapp(dapp_contract).unwrap_err();
         }
 
         /// Test non-existent provider account has zero balance
@@ -2693,7 +2693,7 @@ pub mod captcha {
 
             let mut contract = get_contract(0);
             let provider_account = AccountId::from([0x2; 32]);
-            let dapp_user_account = AccountId::from([0x30; 32]);
+            let user_account = AccountId::from([0x30; 32]);
             let url: Vec<u8> = vec![1, 2, 3];
             let fee: u32 = 100;
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
@@ -2723,26 +2723,26 @@ pub mod captcha {
             ink::env::test::set_value_transferred::<ink::env::DefaultEnvironment>(balance);
             contract.dapp_register(dapp_contract_account, DappPayee::Any);
 
-            // Call from the dapp_user_account
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
+            // Call from the user_account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(user_account);
 
             // Call as dapp user and get a random provider
             let selected_provider =
-                contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
-            assert_eq!(selected_provider.unwrap().provider_id, provider_account);
+                contract.get_random_active_provider(user_account, dapp_contract_account);
+            assert_eq!(selected_provider.unwrap().provider_account, provider_account);
 
             // Switch the provider payee to Dapp
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
             contract.provider_update(url, fee, Payee::Dapp);
 
-            // Call from the dapp_user_account
-            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(dapp_user_account);
+            // Call from the user_account
+            ink::env::test::set_caller::<ink::env::DefaultEnvironment>(user_account);
 
             // Call as dapp user and get a random provider. Ensure that the provider is still
             // selected despite the payee change
             let selected_provider =
-                contract.get_random_active_provider(dapp_user_account, dapp_contract_account);
-            assert_eq!(selected_provider.unwrap().provider_id, provider_account);
+                contract.get_random_active_provider(user_account, dapp_contract_account);
+            assert_eq!(selected_provider.unwrap().provider_account, provider_account);
         }
 
         /// Test provider can supply a dapp user commit for themselves and approve or disapprove it
@@ -2787,14 +2787,14 @@ pub mod captcha {
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(provider_account);
 
             //Dapp User commit and approve
-            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_account = AccountId::from([0x5; 32]);
             let user_root1 = str_to_hash("user merkle tree root to approve".to_string());
             contract.provider_commit(Commit {
                 dapp: dapp_contract_account,
                 dataset_id: user_root1,
                 status: CaptchaStatus::Approved,
                 provider: provider_account,
-                user: dapp_user_account,
+                user: user_account,
                 completed_at: 0,
                 requested_at: 0,
                 id: user_root1,
@@ -2804,19 +2804,19 @@ pub mod captcha {
 
             // Get the commitment and make sure it is approved
             let commitment = contract
-                .get_captcha_solution_commitment(user_root1)
+                .get_commit(user_root1)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
 
             //Dapp User commit and disapprove
-            let dapp_user_account = AccountId::from([0x5; 32]);
+            let user_account = AccountId::from([0x5; 32]);
             let user_root2 = str_to_hash("user merkle tree root to disapprove".to_string());
             contract.provider_commit(Commit {
                 dapp: dapp_contract_account,
                 dataset_id: root2,
                 status: CaptchaStatus::Disapproved,
                 provider: provider_account,
-                user: dapp_user_account,
+                user: user_account,
                 completed_at: 0,
                 requested_at: 0,
                 id: user_root2,
@@ -2826,7 +2826,7 @@ pub mod captcha {
 
             // Get the commitment and make sure it is disapproved
             let commitment = contract
-                .get_captcha_solution_commitment(user_root2)
+                .get_commit(user_root2)
                 .unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
         }
@@ -2857,7 +2857,7 @@ pub mod captcha {
             contract.provider_set_dataset(root1, root2).ok();
 
             // Register the dapp
-            let dapp_user_account = AccountId::from([0x3; 32]);
+            let user_account = AccountId::from([0x3; 32]);
             let dapp_contract_account = AccountId::from([0x4; 32]);
             // Mark the the dapp account as being a contract on-chain
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>(dapp_contract_account);
@@ -2885,9 +2885,9 @@ pub mod captcha {
             // can only add data set after staking
             contract.provider_set_dataset(root1, root2).ok();
 
-            // Call from dapp_user_commit from provider_account2 to supply a commit for provider_account
+            // Call from user_commit from provider_account2 to supply a commit for provider_account
             // Should not be authorised
-            let dapp_user_account = AccountId::from([0x6; 32]);
+            let user_account = AccountId::from([0x6; 32]);
             let user_root = str_to_hash("user merkle tree root".to_string());
         }
 
