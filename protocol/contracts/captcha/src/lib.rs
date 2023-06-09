@@ -923,7 +923,7 @@ pub mod captcha {
 
             self.record_commitment(commit.user, commit.id, commit);
 
-            self.pay_fee(&caller, &commit.dapp)?;
+            self.pay_fee(caller, commit.dapp)?;
 
             Ok(())
         }
@@ -947,8 +947,8 @@ pub mod captcha {
         /// Transfer a balance from a provider to a dapp or from a dapp to a provider,
         fn pay_fee(
             &mut self,
-            provider_account: &AccountId,
-            dapp_account: &AccountId,
+            provider_account: AccountId,
+            dapp_account: AccountId,
         ) -> Result<(), Error> {
             // error if the provider is not found
             let mut provider = self.get_provider(provider_account)?;
@@ -965,8 +965,8 @@ pub mod captcha {
                     provider.balance -= fee;
                     dapp.balance += fee;
                 }
-                self.providers.insert(*provider_account, &provider);
-                self.dapps.insert(*dapp_account, &dapp);
+                self.providers.insert(provider_account, &provider);
+                self.dapps.insert(dapp_account, &dapp);
             }
             Ok(())
         }
@@ -1371,8 +1371,6 @@ pub mod captcha {
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
-
-        use crate::captcha::Error::{ProviderInactive, ProviderInsufficientFunds};
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
