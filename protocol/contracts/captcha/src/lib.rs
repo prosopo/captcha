@@ -383,10 +383,20 @@ pub mod captcha {
             dataset_id_content: Option<Hash>,
             should_exist: bool,
         ) -> Result<(), Error> {
-            let default_dataset_id = Hash::default();
             let provider_account = self.env().caller();
-            let lookup = self.get_provider(provider_account);
-            let new = lookup.is_err();
+            let lookup = self.providers.get(provider_account);
+            let new = lookup.is_none();
+
+            if new && should_exist {
+                // error if the provider should already exist, but doesn't
+                return err!(self, Error::ProviderDoesNotExist);
+            }
+            if !new && !should_exist {
+                // error if the provider should not exist but does
+                return err!(self, Error::ProviderExists);
+            }
+
+            let default_dataset_id = Hash::default();
             let old_provider = if new {
                 Provider {
                     status: GovernanceStatus::Inactive,
@@ -401,28 +411,21 @@ pub mod captcha {
                 lookup.unwrap()
             };
 
-            if new && should_exist {
-                // error if the provider should already exist, but doesn't
-                return err!(self, Error::ProviderDoesNotExist);
-            }
-            if !new && !should_exist {
-                // error if the provider should not exist but does
-                return err!(self, Error::ProviderExists);
-            }
-
+            // setup the new provider with updated fields
             if new {
                 self.provider_state_insert(&old_provider, &provider_account)?;
             }
-            let mut new_provider = old_provider.clone();
+            let mut new_provider = Provider {
+                url: url.unwrap_or(old_provider.url.clone()),
+                fee: fee.unwrap_or(old_provider.fee),
+                payee: payee.unwrap_or(old_provider.payee),
+                dataset_id: dataset_id.unwrap_or(old_provider.dataset_id),
+                dataset_id_content: dataset_id_content.unwrap_or(old_provider.dataset_id_content),
+                ..old_provider
+            };
 
-            // update the config
-            new_provider.url = url.unwrap_or(old_provider.url.clone());
-            new_provider.fee = fee.unwrap_or(old_provider.fee);
-            new_provider.payee = payee.unwrap_or(old_provider.payee);
+            // update the balance
             new_provider.balance += self.env().transferred_value();
-            new_provider.dataset_id = dataset_id.unwrap_or(old_provider.dataset_id);
-            new_provider.dataset_id_content =
-                dataset_id_content.unwrap_or(old_provider.dataset_id_content);
 
             // proceed only if there has been a change
             if old_provider == new_provider {
