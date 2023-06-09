@@ -5,6 +5,112 @@ import process from 'process';
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
 import { stdout, stderr, stdin } from 'process';
+import fs from 'fs'
+import 'dotenv/config'
+
+const contractSrcFileExtension = '.rs'
+const backupFileExtension = '.bak'
+
+const setEnvVariable = (filePath: string, name: string, value: string) => {
+    console.log("setting env variable", name, "in", filePath)
+    const content = fs.readFileSync(filePath, 'utf8')
+    const regex = new RegExp(`const\\s+${name}:([^=]+)=[^;]+;`, 'gms');
+    const result = content.replaceAll(regex, `const ${name}:$1= ${value};`)
+    if(content === result) {
+        // no change has been made
+        return
+    }
+    // else change has been made
+    // backup original file (if not already)
+    const backupFilePath = `${filePath}${backupFileExtension}`
+    if(!fs.existsSync(backupFilePath)) {
+        console.log("backing up", filePath)
+        fs.copyFileSync(filePath, backupFilePath)
+    }
+    // then overwrite original file with the new content
+    fs.writeFileSync(filePath, result)
+}
+
+const setEnvVariables = (filePath: string) => {
+    const stats = fs.lstatSync(filePath);
+    if(stats.isDirectory()) {
+        // recurse into directory
+        const files = fs.readdirSync(filePath);
+        files.forEach((file) => {
+            setEnvVariables(path.join(filePath, file))
+        })
+    } else if(stats.isFile()) {
+        // process file
+        if(filePath.endsWith(contractSrcFileExtension)) {
+            // loop through all env variables and set them
+            for(const [name, value] of Object.entries(process.env)) {
+                if (value === undefined) {
+                    continue;
+                }
+                // env vars have to start with the correct prefix, otherwise normal env vars (e.g. PWD, EDITOR, SHELL, etc.) would be propagated into the contract, which is not desired
+                if (name.startsWith('INK_')) {
+                    setEnvVariable(filePath, name, value)
+                }
+            }
+        }
+    } else {
+        throw new Error(`Unknown file type: ${filePath}`)
+    }
+}
+
+const unsetEnvVariables = (filePath: string) => {
+    if(!fs.existsSync(filePath)) {
+        // file no longer exists (was probably a backup file which got deleted)
+        return;
+    }
+    const stats = fs.lstatSync(filePath);
+    if(stats.isDirectory()) {
+        // recurse into directory
+        const files = fs.readdirSync(filePath);
+        files.forEach((file) => {
+            unsetEnvVariables(path.join(filePath, file))
+        })
+    } else if(stats.isFile()) {
+        // process file
+        if(filePath.endsWith(contractSrcFileExtension)) {
+            // check for backup version of the file
+            const backupFilePath = `${filePath}${backupFileExtension}`
+            if(fs.existsSync(backupFilePath)) {
+                // restore backup (copy without environment variables set)
+                console.log("unsetting env vars in", filePath)
+                fs.copyFileSync(backupFilePath, filePath)
+                fs.rmSync(backupFilePath, {
+                    force: true,
+                })
+            }
+        }
+    } else {
+        throw new Error(`Unknown file type: ${filePath}`)
+    }
+}
+
+const clearEnvBackupFiles = (filePath: string) => {
+    const stats = fs.lstatSync(filePath);
+    if(stats.isDirectory()) {
+        // recurse into directory
+        const files = fs.readdirSync(filePath);
+        files.forEach((file) => {
+            clearEnvBackupFiles(path.join(filePath, file))
+        })
+    } else if(stats.isFile()) {
+        // process file
+        // check for backup version of the file
+        if (filePath.endsWith(contractSrcFileExtension + backupFileExtension)) {
+            // remove backup
+            console.log("removing backup file", filePath)
+            fs.rmSync(filePath, {
+                force: true,
+            })
+        }
+    } else {
+        throw new Error(`Unknown file type: ${filePath}`)
+    }
+}
 
 const exec = (command: string, pipe?: boolean, returnOutput?: boolean) => {
 
@@ -260,14 +366,26 @@ export async function processArgs(args: string[]) {
             async (argv) => {
                 const contracts = argv.package as string[];
                 delete argv.package;
+                // clear any previous env backup files
+                clearEnvBackupFiles(contractsDir)
+                clearEnvBackupFiles(cratesDir)
+                // set the env variables using find and replace
+                setEnvVariables(contractsDir)
+                setEnvVariables(cratesDir)
+
                 for(const contract of contracts) {
                     if(contract === "common_dev") {
                         // skip common_dev contract as it is not a proper contract, only used for library purposes and does not build independently
                         console.log("Skipping common_dev contract");
                     } else {
-                        await execCargo(argv, 'contract build', `${contractsDir}/${contract}`)
+                        const contractPath = `${contractsDir}/${contract}`
+                        await execCargo(argv, 'contract build', contractPath)
                     }
                 }
+
+                // unset the env variables using the backups
+                unsetEnvVariables(contractsDir)
+                unsetEnvVariables(cratesDir)
             },
             []
         ).command(
@@ -316,7 +434,7 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                argv._.push("-- -D warnings")
+                argv._.push("-- -D warnings -A clippy::too_many_arguments")
                 await execCargo(argv, 'clippy')
             },
             []
