@@ -122,7 +122,6 @@ pub mod captcha {
         provider_id: AccountId,
         provider: Provider,
         block_number: BlockNumber,
-        dataset_id_content: Hash,
     }
 
     /// CaptchaData contains the hashed root of a Provider's dataset and is used to verify that
@@ -1222,7 +1221,6 @@ pub mod captcha {
                 provider_id,
                 provider,
                 block_number: self.env().block_number(),
-                dataset_id_content,
             })
         }
 
