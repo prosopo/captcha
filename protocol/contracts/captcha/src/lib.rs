@@ -638,9 +638,8 @@ pub mod captcha {
         }
 
         /// Check a dapp is owned by the caller
-        fn check_dapp_owner_is_caller(&self, contract: AccountId) -> Result<(), Error> {
+        fn check_dapp_owner_is_caller(&self, contract: AccountId, dapp: &Dapp) -> Result<(), Error> {
             let caller = self.env().caller();
-            let dapp = self.get_dapp(contract)?;
             if dapp.owner != caller {
                 return err!(self, Error::NotAuthorised);
             }
@@ -681,7 +680,7 @@ pub mod captcha {
 
             // check current contract for ownership
             if !new {
-                self.check_dapp_owner_is_caller(contract)?;
+                self.check_dapp_owner_is_caller(contract, &new_dapp)?;
             }
 
             if let Some(payee) = payee {
@@ -762,7 +761,7 @@ pub mod captcha {
             let dapp = self.get_dapp(contract)?;
 
             // check current contract for ownership
-            self.check_dapp_owner_is_caller(contract)?;
+            self.check_dapp_owner_is_caller(contract, &dapp)?;
 
             let balance = dapp.balance;
             if balance > 0 {
