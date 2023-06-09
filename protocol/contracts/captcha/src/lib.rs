@@ -827,10 +827,7 @@ pub mod captcha {
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
         fn record_commitment(&mut self, user_account: AccountId, hash: Hash, result: &Commit) {
-            let mut user = self
-                .users
-                .get(user_account)
-                .unwrap_or_else(|| self.create_new_user(user_account));
+            let mut user = self.get_user_or_create(user_account);
             // add the new commitment
             self.commits.insert(hash, result);
             user.history.insert(0, hash);
@@ -884,20 +881,19 @@ pub mod captcha {
         }
 
         /// Create a new dapp user if they do not already exist
-        fn create_new_user(&mut self, user_account: AccountId) -> User {
-            // create the user and add to our list of dapp users
+        fn get_user_or_create(&mut self, user_account: AccountId) -> User {
+            // return if already exists
             let lookup = self.users.get(user_account);
             if let Some(user) = lookup {
                 return user;
             }
 
+            // else build new
             let user = User {
                 history: Default::default(),
             };
-            self.users.insert(account, &user);
-            let mut user_accounts = self.user_accounts.get_or_default();
-            user_accounts.insert(account);
-            self.user_accounts.set(&user_accounts);
+            self.users.insert(user_account, &user);
+            lazy!(self.user_accounts, insert, &user_account);
             user
         }
 
