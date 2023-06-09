@@ -597,7 +597,8 @@ pub mod captcha {
             Ok(())
         }
 
-        fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
+        #[ink(message)]
+        pub fn get_provider(&self, account: AccountId) -> Result<Provider, Error> {
             self.providers
                 .get(account)
                 .ok_or_else(err_fn!(self, Error::ProviderDoesNotExist))
