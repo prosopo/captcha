@@ -22,7 +22,7 @@ cp ./dev/env.development ./dev/.env.development
 npm run setup:all
 ```
 
-In 4 different terminals run
+In different terminals run
 
 ## Terminal 1
 ```bash
