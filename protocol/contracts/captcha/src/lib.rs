@@ -115,6 +115,15 @@ pub mod captcha {
         dataset_id_content: Hash,
     }
 
+    impl Provider {
+        pub fn get_category(&self) -> ProviderCategory {
+            ProviderCategory {
+                payee: self.payee,
+                status: self.status,
+            }
+        }
+    }
+
     /// RandomProvider is selected randomly by the contract for the client side application
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
@@ -184,7 +193,7 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct LastCorrectCaptcha {
-        pub before: BlockNumber,
+        pub before: BlockNumber, // the number of blocks before the current block that the last correct captcha was completed
         pub dapp_id: AccountId,
     }
 
@@ -398,13 +407,6 @@ pub mod captcha {
             }
         }
 
-        fn get_provider_category(&self, provider: &Provider) -> ProviderCategory {
-            ProviderCategory {
-                payee: provider.payee,
-                status: provider.status,
-            }
-        }
-
         /// Configure a provider
         fn provider_configure(
             &mut self,
@@ -512,8 +514,8 @@ pub mod captcha {
             if new {
                 self.provider_category_add(&new_provider, &provider_account)?;
             } else {
-                let old_provider_category = self.get_provider_category(&old_provider);
-                let new_provider_category = self.get_provider_category(&new_provider);
+                let old_provider_category = old_provider.get_category();
+                let new_provider_category = new_provider.get_category();
                 if old_provider_category != new_provider_category {
                     self.provider_category_remove(&old_provider, &provider_account)?;
                     self.provider_category_add(&new_provider, &provider_account)?;
@@ -529,7 +531,7 @@ pub mod captcha {
             provider: &Provider,
             provider_account: &AccountId,
         ) -> Result<(), Error> {
-            let category = self.get_provider_category(&provider);
+            let category = provider.get_category();
             let mut set = self.provider_accounts.get(category).unwrap_or_default();
             let removed = set.remove(provider_account);
             if !removed {
@@ -547,7 +549,7 @@ pub mod captcha {
             provider: &Provider,
             provider_account: &AccountId,
         ) -> Result<(), Error> {
-            let category = self.get_provider_category(&provider);
+            let category = provider.get_category();
             let mut set = self.provider_accounts.get(category).unwrap_or_default();
             let inserted = set.insert(*provider_account);
             if !inserted {
