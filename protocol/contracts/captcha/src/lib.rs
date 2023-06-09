@@ -223,8 +223,10 @@ pub mod captcha {
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum Error {
-        /// Returned if calling account is not authorised to perform action
-        NotAuthorised,
+        /// Returned if the caller is not the admin
+        NotAdmin,
+        /// Returned if the caller is not the owner of the dapp
+        NotOwner,
         /// Returned when the contract to address transfer fails
         ContractTransferFailed,
         /// Returned if provider exists when it shouldn't
@@ -656,7 +658,7 @@ pub mod captcha {
         fn check_dapp_owner_is_caller(&self, dapp: &Dapp) -> Result<(), Error> {
             let caller = self.env().caller();
             if dapp.owner != caller {
-                return err!(self, Error::NotAuthorised);
+                return err!(self, Error::NotOwner);
             }
 
             Ok(())
@@ -1341,7 +1343,7 @@ pub mod captcha {
         /// Is the specified account the admin for this contract?
         fn check_admin(&self, acc: AccountId) -> Result<(), Error> {
             if self.admin != acc {
-                return err!(self, Error::NotAuthorised);
+                return err!(self, Error::NotAdmin);
             }
             Ok(())
         }
@@ -1653,7 +1655,7 @@ pub mod captcha {
             let new_code_hash = get_code_hash(1);
             assert_eq!(
                 contract.set_code_hash(new_code_hash),
-                Err(Error::NotAuthorised)
+                Err(Error::NotAdmin)
             );
         }
 
@@ -1684,7 +1686,7 @@ pub mod captcha {
             let mut contract = get_contract(0);
             set_caller(get_user_account(0)); // an account which does not have permission to call terminate
 
-            assert_eq!(contract.terminate().unwrap_err(), Error::NotAuthorised);
+            assert_eq!(contract.terminate().unwrap_err(), Error::NotAdmin);
         }
 
         #[ink::test]
@@ -1735,7 +1737,7 @@ pub mod captcha {
 
             // give the contract funds
             set_caller(get_user_account(0)); // use the admin acc
-            assert_eq!(contract.withdraw(1), Err(Error::NotAuthorised));
+            assert_eq!(contract.withdraw(1), Err(Error::NotAdmin));
         }
 
         #[ink::test]
