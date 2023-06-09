@@ -1455,8 +1455,6 @@ pub mod captcha {
         const CONTRACT_ACCOUNT_PREFIX: u8 = 0x05;
         const CODE_HASH_PREFIX: u8 = 0x06;
 
-        mod tests_inner {
-
             /// Imports all the definitions from the outer scope so we can use them here.
             use super::*;
 
@@ -3013,5 +3011,4 @@ pub mod captcha {
                 );
             }
         }
-    }
 }
