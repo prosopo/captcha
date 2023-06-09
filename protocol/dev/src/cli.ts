@@ -368,22 +368,26 @@ export async function processArgs(args: string[]) {
             async (argv) => {
                 const contracts = argv.package as string[];
                 delete argv.package;
+                // clear any previous env backup files
+                clearEnvBackupFiles(contractsDir)
+                clearEnvBackupFiles(cratesDir)
+                // set the env variables using find and replace
+                setEnvVariables(contractsDir)
+                setEnvVariables(cratesDir)
+
                 for(const contract of contracts) {
                     if(contract === "common_dev") {
                         // skip common_dev contract as it is not a proper contract, only used for library purposes and does not build independently
                         console.log("Skipping common_dev contract");
                     } else {
                         const contractPath = `${contractsDir}/${contract}`
-                        // clear any previous env backup files
-                        clearEnvBackupFiles(contractPath)
-                        // set the env variables using find and replace
-                        setEnvVariables(contractPath)
-                        // build the contract
                         await execCargo(argv, 'contract build', contractPath)
-                        // unset the env variables using the backups
-                        unsetEnvVariables(contractPath)
                     }
                 }
+
+                // unset the env variables using the backups
+                unsetEnvVariables(contractsDir)
+                unsetEnvVariables(cratesDir)
             },
             []
         ).command(
