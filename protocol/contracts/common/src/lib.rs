@@ -57,14 +57,17 @@ macro_rules! lazy {
 #[ink::contract]
 pub mod common {
 
-    /// No fields are stored in the util contract as it's just filler
+    #[derive(Default)]
+/// No fields are stored in the util contract as it's just filler
     #[ink(storage)]
     pub struct Common {}
+
+    
 
     /// Implementation of the contract
     impl Common {
         #[ink(constructor)]
-        pub fn default() -> Self {
+        pub fn new() -> Self {
             Self {}
         }
 
