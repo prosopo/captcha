@@ -125,6 +125,30 @@ pub mod captcha {
         }
     }
 
+    struct ProviderConfig {
+        pub payee: Option<Payee>,
+        pub fee: Option<u32>,
+        pub url: Option<Vec<u8>>,
+        pub dataset_id: Option<Hash>,
+        pub dataset_id_content: Option<Hash>,
+        pub deactivate: bool,
+        pub should_exist: bool,
+    }
+
+    impl Default for ProviderConfig {
+        fn default() -> Self {
+            Self {
+                payee: None,
+                fee: None,
+                url: None,
+                dataset_id: None,
+                dataset_id_content: None,
+                deactivate: false,
+                should_exist: true,
+            }
+        }
+    }
+
     /// RandomProvider is selected randomly by the contract for the client side application
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
@@ -408,23 +432,17 @@ pub mod captcha {
         /// Configure a provider
         fn provider_configure(
             &mut self,
-            url: Option<Vec<u8>>,
-            fee: Option<u32>,
-            payee: Option<Payee>,
-            deactivate: bool,
-            dataset_id: Option<Hash>,
-            dataset_id_content: Option<Hash>,
-            should_exist: bool,
+            config: ProviderConfig,
         ) -> Result<(), Error> {
             let provider_account = self.env().caller();
             let lookup = self.providers.get(provider_account);
             let new = lookup.is_none();
 
-            if new && should_exist {
+            if new && config.should_exist {
                 // error if the provider should already exist, but doesn't
                 return err!(self, Error::ProviderDoesNotExist);
             }
-            if !new && !should_exist {
+            if !new && !config.should_exist {
                 // error if the provider should not exist but does
                 return err!(self, Error::ProviderExists);
             }
@@ -434,11 +452,11 @@ pub mod captcha {
 
             // setup the new provider with updated fields
             let mut new_provider = Provider {
-                url: url.unwrap_or(old_provider.url.clone()),
-                fee: fee.unwrap_or(old_provider.fee),
-                payee: payee.unwrap_or(old_provider.payee),
-                dataset_id: dataset_id.unwrap_or(old_provider.dataset_id),
-                dataset_id_content: dataset_id_content.unwrap_or(old_provider.dataset_id_content),
+                url: config.url.unwrap_or(old_provider.url.clone()),
+                fee: config.fee.unwrap_or(old_provider.fee),
+                payee: config.payee.unwrap_or(old_provider.payee),
+                dataset_id: config.dataset_id.unwrap_or(old_provider.dataset_id),
+                dataset_id_content: config.dataset_id_content.unwrap_or(old_provider.dataset_id_content),
                 ..old_provider
             };
 
@@ -453,7 +471,7 @@ pub mod captcha {
             new_provider.status = if new_provider.balance >= self.provider_stake_threshold
                 && new_provider.dataset_id != default_dataset_id
                 && new_provider.dataset_id_content != default_dataset_id
-                && !deactivate
+                && !config.deactivate
             {
                 // then set the status to active
                 GovernanceStatus::Active
@@ -568,7 +586,13 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None, false)
+            self.provider_configure(ProviderConfig {
+                url: Some(url),
+                fee: Some(fee),
+                payee: Some(payee),
+                should_exist: false,
+                ..Default::default()
+            })
         }
 
         /// Update an existing provider, their url, fee and deposit funds
@@ -580,13 +604,23 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None, true)
+            self.provider_configure(ProviderConfig {
+                url: Some(url),
+                fee: Some(fee),
+                payee: Some(payee),
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// De-activate a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deactivate(&mut self) -> Result<(), Error> {
-            self.provider_configure(None, None, None, true, None, None, true)
+            self.provider_configure(ProviderConfig {
+                should_exist: true,
+                deactivate: true,
+                ..Default::default()
+            })
         }
 
         /// Unstake and deactivate the provider's service, returning stake
@@ -625,7 +659,10 @@ pub mod captcha {
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
-            self.provider_configure(None, None, None, false, None, None, true)
+            self.provider_configure(ProviderConfig {
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Add a new data set
@@ -636,15 +673,12 @@ pub mod captcha {
             dataset_id: Hash,
             dataset_id_content: Hash,
         ) -> Result<(), Error> {
-            self.provider_configure(
-                None,
-                None,
-                None,
-                false,
-                Some(dataset_id),
-                Some(dataset_id_content),
-                true,
-            )
+            self.provider_configure(ProviderConfig {
+                dataset_id: Some(dataset_id),
+                dataset_id_content: Some(dataset_id_content),
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Get an existing dapp
