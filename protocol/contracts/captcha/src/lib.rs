@@ -893,6 +893,7 @@ pub mod captcha {
             user
         }
 
+        /// Record a commit from a provider and user
         fn provider_record_commit(&mut self, commit: &Commit) -> Result<(), Error> {
             let caller = self.env().caller();
 
@@ -913,6 +914,7 @@ pub mod captcha {
             Ok(())
         }
 
+        /// Provider submits a captcha solution commitment
         #[ink(message)]
         pub fn provider_commit(&mut self, commit: Commit) -> Result<(), Error> {
             self.provider_record_commit(&commit)
@@ -971,6 +973,7 @@ pub mod captcha {
             Ok(self.get_user_history_summary(user)?.score > threshold)
         }
 
+        /// Get the last correct captcha for a user
         #[ink(message)]
         pub fn dapp_operator_last_correct_captcha(
             &self,
