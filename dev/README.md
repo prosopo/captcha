@@ -41,7 +41,9 @@ npm run start:demo
 
 Go to [http://localhost:3001](http://localhost:3001) in your browser.
 
-### Set up Containers
+### In-depth
+
+#### Set up Containers
 
 Setup your integration containers by running the following command from the root of
 the [scripts](https://github.com/prosopo/scripts) repository.
@@ -55,7 +57,7 @@ This does the following:
 1. Pulls and starts a substrate node container containing pre-deployed [protocol](https://github.com/prosopo/protocol/)
 2. Pulls and starts up a mongodb container.
 
-#### Substrate Container Details
+##### Substrate Container Details
 
 | Container Name                                                      | Description                                                                                   |
 |---------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
@@ -63,7 +65,7 @@ This does the following:
 | prosopo/substrate-contracts-node:v0.25                              | Substrate contracts node version 0.25 with no contracts.                                      |
 | prosopo/substrate-contracts-node:v0.24                              | Substrate contracts node version 0.24 with no contracts.                                      |
 
-### Install node modules
+#### Install node modules
 
 Install the node modules by running the following command from the root of the captcha workspace.
 
@@ -71,7 +73,7 @@ Install the node modules by running the following command from the root of the c
 npm i
 ```
 
-### Build all packages
+#### Build all packages
 
 Build all packages by running the following command from the root of the captcha workspace.
 
@@ -79,7 +81,7 @@ Build all packages by running the following command from the root of the captcha
 npm run bd dev
 ```
 
-### Deploy contracts (Optional)
+#### Deploy contracts (Optional)
 
 If you want to deploy your own protocol or dapp contract, you can do so by running the following command from the root
 of the captcha workspace. Any .env files will be updated with the new contract addresses.
@@ -90,12 +92,12 @@ npm run deploy_dapp
 npm run setup
 ```
 
-#### Env file
+##### Env file
 
 You must have a valid env file in `./packages/dev/` for these commands to work. You can use the
 file `./packages/env.development` as a template.
 
-### Set up a Provider and Register a Dapp
+#### Set up a Provider and Register a Dapp
 
 Providers are the nodes in the network that supply CAPTCHA. Run the following command from the root of the captcha
 workspace to register a Provider and a Dapp in the Protocol contract and start the Provider API.
