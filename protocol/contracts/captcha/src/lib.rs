@@ -1069,19 +1069,9 @@ pub mod captcha {
             &self,
             captcha_solution_commitment_id: Hash,
         ) -> Result<Commit, Error> {
-            if self
-                .captcha_solution_commitments
+            self.captcha_solution_commitments
                 .get(captcha_solution_commitment_id)
-                .is_none()
-            {
-                return err!(self, Error::CommitDoesNotExist);
-            }
-            let commitment = self
-                .captcha_solution_commitments
-                .get(captcha_solution_commitment_id)
-                .ok_or_else(err_fn!(self, Error::CommitDoesNotExist))?;
-
-            Ok(commitment)
+                .ok_or_else(err_fn!(self, Error::CommitDoesNotExist))
         }
 
         /// List providers given an array of account id
@@ -1118,9 +1108,7 @@ pub mod captcha {
                     if providers_set.is_none() {
                         continue;
                     }
-                    let provider_ids = providers_set.unwrap()
-                        .into_iter()
-                        .collect();
+                    let provider_ids = providers_set.unwrap().into_iter().collect();
                     providers.append(&mut self.list_providers_by_ids(provider_ids)?);
                 }
             }
@@ -1647,10 +1635,7 @@ pub mod captcha {
             set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
 
             let new_code_hash = get_code_hash(1);
-            assert_eq!(
-                contract.set_code_hash(new_code_hash),
-                Err(Error::NotAdmin)
-            );
+            assert_eq!(contract.set_code_hash(new_code_hash), Err(Error::NotAdmin));
         }
 
         #[ink::test]
