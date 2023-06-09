@@ -637,15 +637,6 @@ pub mod captcha {
                 .ok_or_else(err_fn!(self, Error::DappDoesNotExist))
         }
 
-        /// Check a dapp is missing / non-existent
-        fn check_dapp_does_not_exist(&self, contract: AccountId) -> Result<(), Error> {
-            if self.dapps.get(contract).is_some() {
-                return err!(self, Error::DappExists);
-            }
-
-            Ok(())
-        }
-
         /// Check a dapp is owned by the caller
         fn check_dapp_owner_is_caller(&self, contract: AccountId) -> Result<(), Error> {
             let caller = self.env().caller();
@@ -664,6 +655,7 @@ pub mod captcha {
             payee: Option<DappPayee>,
             owner: Option<AccountId>,
             deactivate: bool,
+            should_exist: bool,
         ) -> Result<(), Error> {
             if !self.env().is_contract(&contract) {
                 return err!(self, Error::InvalidContract);
@@ -671,6 +663,14 @@ pub mod captcha {
 
             let dapp_lookup = self.dapps.get(contract);
             let new = dapp_lookup.is_none();
+
+            if new && should_exist {
+                return err!(self, Error::DappDoesNotExist);
+            }
+            if !new && !should_exist {
+                return err!(self, Error::DappExists);
+            }
+
             let old_dapp = dapp_lookup.unwrap_or(Dapp {
                 owner: owner.unwrap_or(self.env().caller()),
                 balance: 0,
@@ -728,14 +728,11 @@ pub mod captcha {
             contract: AccountId,
             payee: DappPayee,
         ) -> Result<(), Error> {
-            // expect dapp to be new
-            self.check_dapp_does_not_exist(contract)?;
-
-            // configure the new dapp
             self.dapp_configure(
                 contract,
                 Some(payee),
                 None, // the caller is made the owner of the contract
+                false,
                 false,
             )
         }
@@ -749,24 +746,14 @@ pub mod captcha {
             payee: DappPayee,
             owner: AccountId,
         ) -> Result<(), Error> {
-            // expect dapp to exist
-            self.get_dapp(contract)?;
-
-            // configure the dapp
-            self.dapp_configure(contract, Some(payee), Some(owner), false)
+            self.dapp_configure(contract, Some(payee), Some(owner), false, true)
         }
 
         /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            if self.env().transferred_value() == 0 {
-                return Ok(());
-            }
-
-            self.get_dapp(contract)?; // only existing dapps can be used
-
-            self.dapp_configure(contract, None, None, false)
+            self.dapp_configure(contract, None, None, false, true)
         }
 
         /// Cancel services as a dapp, returning remaining tokens
@@ -794,9 +781,7 @@ pub mod captcha {
         /// Deactivate a dapp, leaving stake intact
         #[ink(message)]
         pub fn dapp_deactivate(&mut self, contract: AccountId) -> Result<(), Error> {
-            self.get_dapp(contract)?;
-
-            self.dapp_configure(contract, None, None, true)
+            self.dapp_configure(contract, None, None, true, true)
         }
 
         /// Trim the user history to the max length and age.
