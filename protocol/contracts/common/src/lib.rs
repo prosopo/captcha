@@ -1,5 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use self::common::{Common, CommonRef};
+
 /// Print and return an error in ink
 #[macro_export]
 macro_rules! err {
