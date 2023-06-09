@@ -43,7 +43,7 @@ pub mod common {
     /// Implementation of the contract
     impl Common {
         #[ink(constructor)]
-        pub fn noop_ctor() -> Self {
+        pub fn new() -> Self {
             Self {}
         }
 
