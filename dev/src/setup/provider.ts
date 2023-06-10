@@ -94,7 +94,11 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
         throw new ProsopoContractError(registeredProviderError)
     }
     logger.info('   - providerStake')
-    await tasks.contract.query.providerUpdate(...providerRegisterArgs)
+    const queryResultStake = await tasks.contract.query.providerUpdate(...providerRegisterArgs)
+    const errorStake = queryResultStake.value.err || queryResultStake.value.ok?.err
+    if (errorStake) {
+        throw new ProsopoContractError(errorStake)
+    }
     await tasks.contract.tx.providerUpdate(...providerRegisterArgs)
     logger.info('   - providerSetDataset')
     const datasetJSON = loadJSONFile(provider.datasetFile)
