@@ -19,11 +19,25 @@ pub use self::captcha::{Captcha, CaptchaRef};
 
 #[ink::contract]
 pub mod captcha {
+    
+    const ENV_AUTHOR_BYTES: [u8; 32] = [
+        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133,
+        76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+    ]; // the account which can instantiate the contract
+    const ENV_AUTHOR: AccountId = AccountId::from(ENV_AUTHOR_BYTES);
+    const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
+    const ENV_ADMIN: AccountId = AccountId::from(ENV_ADMIN_BYTES);
+
+    const ENV_MAX_PROVIDER_FEE: u32 = u32::MAX; // the maximum fee a provider can charge for a commit
+    const ENV_MIN_NUM_PROVIDERS: u16 = 0; // the minimum number of providers needed for the contract to function
+    const ENV_BLOCK_TIME: u32 = 6; // the time to complete a block, 6 seconds by default
+    const ENV_MAX_USER_HISTORY_AGE: u32 = 30*24*60*60; // the max age of a commit for a user before it is removed from the history, in seconds
+    const ENV_MAX_USER_HISTORY_LEN: u16 = 10; // the max number of commits stored for a single user
+    const ENV_MAX_USER_HISTORY_AGE_BLOCKS: u32 = ENV_MAX_USER_HISTORY_AGE / ENV_BLOCK_TIME + 1; // the max age of a commit for a user before it is removed from the history, in blocks
 
     use common::err;
     use common::err_fn;
     use common::lazy;
-    use common::INK_AUTHOR;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
@@ -252,7 +266,6 @@ pub mod captcha {
     // Contract storage
     #[ink(storage)]
     pub struct Captcha {
-        admin: AccountId, // the admin in control of this contract
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderCategory, BTreeSet<AccountId>>,
         urls: Mapping<Hash, AccountId>, // url hash mapped to provider account
@@ -264,10 +277,6 @@ pub mod captcha {
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
-        max_user_history_len: u16, // the max number of captcha results to store in history for a user
-        max_user_history_age: u16, // the max age, in blocks, of captcha results to store in history for a user
-        min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
-        max_provider_fee: u32,
     }
 
     /// The error types
@@ -347,7 +356,7 @@ pub mod captcha {
             min_num_active_providers: u16,
             max_provider_fee: u32,
         ) -> Self {
-            let author = AccountId::from(INK_AUTHOR);
+            let author = AccountId::from(ENV_AUTHOR);
             if Self::env().caller() != author {
                 panic!("Not authorised to instantiate this contract");
             }
@@ -1524,7 +1533,7 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from(INK_AUTHOR));
+            set_caller(AccountId::from(ENV_AUTHOR));
             let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
             // should construct successfully
         }

@@ -136,3 +136,5 @@ protocol/target/debug
 /.database_accounts.json
 
 chain-data
+
+!protocol/dev/.env
