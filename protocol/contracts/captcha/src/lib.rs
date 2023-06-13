@@ -23,14 +23,14 @@ pub mod captcha {
     const ENV_DAPP_STAKE_THRESHOLD: Balance = 1000000000;
     const ENV_PROVIDER_STAKE_THRESHOLD: Balance = 1000000000;
     const ENV_AUTHOR_BYTES: [u8; 32] = [
-        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133,
-        76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88,
+        133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
     ]; // the account which can instantiate the contract
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
     const ENV_MAX_PROVIDER_FEE: u32 = u32::MAX; // the maximum fee a provider can charge for a commit
     const ENV_MIN_NUM_ACTIVE_PROVIDERS: u16 = 0; // the minimum number of providers needed for the contract to function
     const ENV_BLOCK_TIME: u32 = 6; // the time to complete a block, 6 seconds by default
-    const ENV_MAX_USER_HISTORY_AGE: u32 = 30*24*60*60; // the max age of a commit for a user before it is removed from the history, in seconds
+    const ENV_MAX_USER_HISTORY_AGE: u32 = 30 * 24 * 60 * 60; // the max age of a commit for a user before it is removed from the history, in seconds
     const ENV_MAX_USER_HISTORY_LEN: u16 = 10; // the max number of commits stored for a single user
     const ENV_MAX_USER_HISTORY_AGE_BLOCKS: u32 = ENV_MAX_USER_HISTORY_AGE / ENV_BLOCK_TIME + 1; // the max age of a commit for a user before it is removed from the history, in blocks
 
@@ -345,17 +345,14 @@ pub mod captcha {
     impl Captcha {
         /// Constructor
         #[ink(constructor, payable)]
-        pub fn new(
-        ) -> Self {
+        pub fn new() -> Self {
             if Self::env().caller() != AccountId::from(ENV_AUTHOR_BYTES) {
                 panic!("Not authorised to instantiate this contract");
             }
-            Self::new_unguarded(
-            )
+            Self::new_unguarded()
         }
 
-        fn new_unguarded(
-        ) -> Self {
+        fn new_unguarded() -> Self {
             Self {
                 providers: Default::default(),
                 provider_accounts: Default::default(),
@@ -440,10 +437,7 @@ pub mod captcha {
         }
 
         /// Configure a provider
-        fn provider_configure(
-            &mut self,
-            config: ProviderConfig,
-        ) -> Result<(), Error> {
+        fn provider_configure(&mut self, config: ProviderConfig) -> Result<(), Error> {
             let provider_account = self.env().caller();
             let lookup = self.providers.get(provider_account);
             let new = lookup.is_none();
@@ -466,7 +460,9 @@ pub mod captcha {
                 fee: config.fee.unwrap_or(old_provider.fee),
                 payee: config.payee.unwrap_or(old_provider.payee),
                 dataset_id: config.dataset_id.unwrap_or(old_provider.dataset_id),
-                dataset_id_content: config.dataset_id_content.unwrap_or(old_provider.dataset_id_content),
+                dataset_id_content: config
+                    .dataset_id_content
+                    .unwrap_or(old_provider.dataset_id_content),
                 ..old_provider
             };
 
@@ -710,10 +706,7 @@ pub mod captcha {
         }
 
         /// Configure a dapp (existing or new)
-        fn dapp_configure(
-            &mut self,
-            config: DappConfig
-        ) -> Result<(), Error> {
+        fn dapp_configure(&mut self, config: DappConfig) -> Result<(), Error> {
             let dapp_lookup = self.dapps.get(config.contract);
             let new = dapp_lookup.is_none();
 
@@ -735,7 +728,8 @@ pub mod captcha {
             new_dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            new_dapp.status = if new_dapp.balance >= ENV_DAPP_STAKE_THRESHOLD && !config.deactivate {
+            new_dapp.status = if new_dapp.balance >= ENV_DAPP_STAKE_THRESHOLD && !config.deactivate
+            {
                 GovernanceStatus::Active
             } else {
                 GovernanceStatus::Inactive

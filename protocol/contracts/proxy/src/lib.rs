@@ -5,8 +5,8 @@ pub use self::proxy::{Proxy, ProxyRef};
 #[ink::contract]
 pub mod proxy {
     const ENV_AUTHOR_BYTES: [u8; 32] = [
-        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133,
-        76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88,
+        133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
     ]; // the account which can instantiate the contract
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
     const ENV_PROXY_DESTINATION_BYTES: [u8; 32] = [0; 32]; // the destination contract to forward to, set to 0 by default
@@ -19,9 +19,7 @@ pub mod proxy {
 
     #[ink(storage)]
     #[derive(Default)]
-    pub struct Proxy {
-
-    }
+    pub struct Proxy {}
 
     /// The errors that can be returned by the Proxy contract.
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -47,7 +45,7 @@ pub mod proxy {
         }
 
         fn new_unguarded() -> Self {
-            Self {    }
+            Self {}
         }
 
         #[ink(message)]
@@ -133,13 +131,15 @@ pub mod proxy {
                 .unwrap_or_else(|env_err| {
                     panic!(
                         "cross-contract call to {:?} failed due to {:?}",
-                        self.get_proxy_destination(), env_err
+                        self.get_proxy_destination(),
+                        env_err
                     )
                 })
                 .unwrap_or_else(|lang_err| {
                     panic!(
                         "cross-contract call to {:?} failed due to {:?}",
-                        self.get_proxy_destination(), lang_err
+                        self.get_proxy_destination(),
+                        lang_err
                     )
                 });
             unreachable!("the forwarded call will never return since `tail_call` was set");

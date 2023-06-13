@@ -53,11 +53,9 @@ macro_rules! lazy {
 pub mod common {
 
     #[derive(Default)]
-/// No fields are stored in the util contract as it's just filler
+    /// No fields are stored in the util contract as it's just filler
     #[ink(storage)]
     pub struct Common {}
-
-    
 
     /// Implementation of the contract
     impl Common {
