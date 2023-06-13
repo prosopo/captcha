@@ -107,7 +107,11 @@ jobs:
 
       - name: Run the cypress tests on client-example
         run: |
-          npm run start:provider && npm run start:server && npm run start:demo && npm run -w @prosopo/client-example cypress:run
+          cd captcha
+          npm run start:provider 1>/dev/null 2>&1 &
+          npm run start:server 1>/dev/null 2>&1 &
+          npm run start:demo 1>/dev/null 2>&1 &
+          npm run -w @prosopo/client-example cypress:run
 
       - name: Remove the docker containers
         run: |
