@@ -434,7 +434,7 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                argv._.push("-- -D warnings")
+                argv._.push("-- -D warnings -A clippy::too_many_arguments")
                 await execCargo(argv, 'clippy')
             },
             []
