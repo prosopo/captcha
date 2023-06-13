@@ -4,10 +4,8 @@ pub use self::proxy::{Proxy, ProxyRef};
 
 #[ink::contract]
 pub mod proxy {
-    const ENV_AUTHOR_BYTES: [u8; 32] = [
-        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88,
-        133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-    ]; // the account which can instantiate the contract
+    const ENV_AUTHOR_BYTES: [u8; 32] = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // the account which can instantiate the contract
+    // alice: [ 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125, ]
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
     const ENV_PROXY_DESTINATION_BYTES: [u8; 32] = [0; 32]; // the destination contract to forward to, set to 0 by default
 
@@ -205,7 +203,7 @@ pub mod proxy {
 
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
-            let contract = Proxy::new(get_contract_account(0));
+            let contract = Proxy::new();
             // should fail to construct and panic
         }
 
@@ -219,7 +217,7 @@ pub mod proxy {
             set_callee(get_contract_account(0));
 
             // check the caller is admin
-            assert_eq!(contract.get_admin(), get_admin_account(0));
+            assert_eq!(contract.get_admin(), AccountId::from(ENV_AUTHOR_BYTES));
         }
 
         #[ink::test]
@@ -230,15 +228,15 @@ pub mod proxy {
 
             let mut contract = get_contract_unguarded(0);
             set_callee(get_contract_account(0));
-            set_caller(get_admin_account(0)); // an account which does have permission to call proxy_terminate
+            let admin = contract.get_admin();
+            set_caller(admin); // an account which does have permission to call proxy_terminate
 
             let contract_account = contract.env().account_id();
             let bal = get_account_balance(contract_account).unwrap();
-            let admin = get_admin_account(0);
             let should_proxy_terminate = move || contract.proxy_terminate().unwrap();
             ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
                 should_proxy_terminate,
-                get_admin_account(0),
+                admin,
                 bal,
             );
         }
@@ -270,13 +268,14 @@ pub mod proxy {
 
             // give the contract funds
             set_account_balance(contract.env().account_id(), 10000000000);
-            set_caller(get_admin_account(0)); // use the admin acc
-            let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
+            let admin = contract.get_admin();
+            set_caller(admin); // use the admin acc
+            let admin_bal: u128 = get_account_balance(admin).unwrap();
             let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
             let proxy_withdraw_amount: u128 = 1;
             contract.proxy_withdraw(proxy_withdraw_amount).unwrap();
             assert_eq!(
-                get_account_balance(get_admin_account(0)).unwrap(),
+                get_account_balance(admin).unwrap(),
                 admin_bal + proxy_withdraw_amount
             );
             assert_eq!(
@@ -294,9 +293,9 @@ pub mod proxy {
 
             let mut contract = get_contract_unguarded(0);
             set_callee(get_contract_account(0));
-
-            set_caller(get_admin_account(0)); // use the admin acc
-            let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
+            let admin = contract.get_admin();
+            set_caller(admin); // use the admin acc
+            let admin_bal = get_account_balance(admin).unwrap();
             let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
             contract.proxy_withdraw(contract_bal + 1); // panics as bal would go below existential deposit
         }
@@ -316,7 +315,8 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_proxy_set_destination() {
+        fn test_proxy_set_code_hash() {
+
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
             reset_callee();
@@ -324,68 +324,17 @@ pub mod proxy {
             let mut contract = get_contract_unguarded(0);
             set_callee(get_contract_account(0));
 
-            let old_dest = contract.destination;
-            let new_dest = get_contract_account(1);
-            assert_ne!(old_dest, new_dest);
+            let new_code_hash = get_code_hash(1);
+            // TODO own_code_hash() and set_code_hash() are not implemented in ink! yet
+            // let old_code_hash = contract.env().own_code_hash().unwrap();
+            // assert_ne!(Hash::from(new_code_hash), old_code_hash);
 
-            set_caller(get_admin_account(0)); // use the admin acc
-            contract.proxy_set_destination(new_dest).unwrap();
-            assert_eq!(contract.destination, new_dest);
+            // set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
+
+            // assert_eq!(contract.proxy_set_code_hash(new_code_hash), Ok(()));
+
+            // assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
         }
-
-        #[ink::test]
-        fn test_proxy_set_destination_unauthorised() {
-            // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            reset_caller();
-            reset_callee();
-
-            let mut contract = get_contract_unguarded(0);
-            set_callee(get_contract_account(0));
-
-            set_caller(get_user_account(1)); // use the admin acc
-            assert_eq!(
-                contract.proxy_set_destination(get_contract_account(1)),
-                Err(Error::NotAuthorised)
-            );
-        }
-
-        #[ink::test]
-        fn test_proxy_set_destination_not_contract() {
-            // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            reset_caller();
-            reset_callee();
-
-            let mut contract = get_contract_unguarded(0);
-            set_callee(get_contract_account(0));
-
-            set_caller(get_admin_account(0)); // use the admin acc
-            assert_eq!(
-                // set dest to an account which is not a contract
-                contract.proxy_set_destination(get_admin_account(1)),
-                Err(Error::InvalidDestination)
-            );
-        }
-
-        // #[ink::test]
-        // fn test_proxy_set_code_hash() {
-
-        //     // always set the caller to the unused account to start, avoid any mistakes with caller checks
-        //     reset_caller();
-        //     reset_callee();
-
-        //     let mut contract = get_contract_unguarded(0);
-        //     set_callee(get_contract_account(0));
-
-        //     let new_code_hash = get_code_hash(1);
-        //     let old_code_hash = contract.env().own_code_hash().unwrap();
-        //     assert_ne!(Hash::from(new_code_hash), old_code_hash);
-
-        //     set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
-
-        //     assert_eq!(contract.proxy_set_code_hash(new_code_hash), Ok(()));
-
-        //     assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
-        // }
 
         #[ink::test]
         fn test_proxy_set_code_hash_unauthorised() {

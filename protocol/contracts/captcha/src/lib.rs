@@ -22,17 +22,14 @@ pub mod captcha {
 
     const ENV_DAPP_STAKE_THRESHOLD: Balance = 1000000000;
     const ENV_PROVIDER_STAKE_THRESHOLD: Balance = 1000000000;
-    const ENV_AUTHOR_BYTES: [u8; 32] = [
-        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88,
-        133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-    ]; // the account which can instantiate the contract
+    const ENV_AUTHOR_BYTES: [u8; 32] = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // the account which can instantiate the contract
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
     const ENV_MAX_PROVIDER_FEE: u32 = u32::MAX; // the maximum fee a provider can charge for a commit
     const ENV_MIN_NUM_ACTIVE_PROVIDERS: u16 = 0; // the minimum number of providers needed for the contract to function
-    const ENV_BLOCK_TIME: u32 = 6; // the time to complete a block, 6 seconds by default
-    const ENV_MAX_USER_HISTORY_AGE: u32 = 30 * 24 * 60 * 60; // the max age of a commit for a user before it is removed from the history, in seconds
+    const ENV_BLOCK_TIME: u16 = 6; // the time to complete a block, 6 seconds by default
+    const ENV_MAX_USER_HISTORY_AGE_SECONDS: u32 = 30 * 24 * 60 * 60; // the max age of a commit for a user before it is removed from the history, in seconds
     const ENV_MAX_USER_HISTORY_LEN: u16 = 10; // the max number of commits stored for a single user
-    const ENV_MAX_USER_HISTORY_AGE_BLOCKS: u32 = ENV_MAX_USER_HISTORY_AGE / ENV_BLOCK_TIME + 1; // the max age of a commit for a user before it is removed from the history, in blocks
+    const ENV_MAX_USER_HISTORY_AGE_BLOCKS: u32 = ENV_MAX_USER_HISTORY_AGE_SECONDS / (ENV_BLOCK_TIME as u32) + 1; // the max age of a commit for a user before it is removed from the history, in blocks
 
     use common::err;
     use common::err_fn;
@@ -404,6 +401,36 @@ pub mod captcha {
         #[ink(message)]
         pub fn get_dapp_stake_threshold(&self) -> Balance {
             ENV_DAPP_STAKE_THRESHOLD
+        }
+
+        #[ink(message)]
+        pub fn get_max_provider_fee(&self) -> u32 {
+            ENV_MAX_PROVIDER_FEE
+        }
+
+        #[ink(message)]
+        pub fn get_min_num_active_providers(&self) -> u16 {
+            ENV_MIN_NUM_ACTIVE_PROVIDERS
+        }
+
+        #[ink(message)]
+        pub fn get_block_time(&self) -> u16 {
+            ENV_BLOCK_TIME
+        }
+
+        #[ink(message)]
+        pub fn get_max_user_history_age_seconds(&self) -> u32 {
+            ENV_MAX_USER_HISTORY_AGE_SECONDS
+        }
+
+        #[ink(message)]
+        pub fn get_max_user_history_len(&self) -> u16 {
+            ENV_MAX_USER_HISTORY_LEN
+        }
+
+        #[ink(message)]
+        pub fn get_max_user_history_age_blocks(&self) -> u32 {
+            ENV_MAX_USER_HISTORY_AGE_BLOCKS
         }
 
         /// Convert a vec of u8 into a Hash
@@ -1398,7 +1425,7 @@ pub mod captcha {
 
         type Event = <Captcha as ::ink::reflect::ContractEventBase>::Type;
 
-        const STAKE_THRESHOLD: u128 = 1000000000000;
+        const STAKE_THRESHOLD: u128 = 1000000000;
 
         const set_caller: fn(AccountId) =
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
@@ -1488,7 +1515,7 @@ pub mod captcha {
             set_caller(get_admin_account(0));
             // now construct the contract instance
             let mut contract =
-                Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
+                Captcha::new_unguarded();
             // set the caller back to the unused acc
             set_caller(get_unused_account());
             // check the contract was created with the correct account
@@ -1502,8 +1529,8 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from(ENV_AUTHOR));
-            let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
+            set_caller(AccountId::from(ENV_AUTHOR_BYTES));
+            let contract = Captcha::new();
             // should construct successfully
         }
 
@@ -1515,7 +1542,7 @@ pub mod captcha {
 
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
-            let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
+            let contract = Captcha::new();
             // should fail to construct and panic
         }
 
@@ -1527,13 +1554,15 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // ctor params should be set
-            assert_eq!(contract.provider_stake_threshold, STAKE_THRESHOLD);
-            assert_eq!(contract.dapp_stake_threshold, STAKE_THRESHOLD);
-            assert_eq!(contract.admin, get_admin_account(0));
-            assert_eq!(contract.max_user_history_len, 10);
-            assert_eq!(contract.max_user_history_age, 255);
-            assert_eq!(contract.min_num_active_providers, 0);
-            assert_eq!(contract.max_provider_fee, 1000);
+            assert_eq!(contract.get_provider_stake_threshold(), STAKE_THRESHOLD);
+            assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
+            assert_eq!(contract.get_admin(), get_admin_account(0));
+            assert_eq!(contract.get_max_user_history_len(), 10);
+            assert_eq!(contract.get_max_user_history_age_seconds(), 30*24*60*60); // 30 days in seconds
+            assert_eq!(contract.get_max_user_history_age_blocks(), 30*24*60*60/6 + 1); // 30 days in blocks
+            assert_eq!(contract.get_block_time(), 6);
+            assert_eq!(contract.get_min_num_active_providers(), 0);
+            assert_eq!(contract.get_max_provider_fee(), u32::MAX);
 
             // default state should be set
             for payee in contract.get_payees().iter() {
@@ -1674,15 +1703,15 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             let mut contract = get_contract(0);
-            set_caller(get_admin_account(0)); // an account which does have permission to call terminate
+            let admin = contract.get_admin();
+            set_caller(admin); // an account which does have permission to call terminate
 
             let contract_account = contract.env().account_id();
             let bal = get_account_balance(contract_account).unwrap();
-            let admin = get_admin_account(0);
             let should_terminate = move || contract.terminate().unwrap();
             ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
                 should_terminate,
-                get_admin_account(0),
+                admin,
                 bal,
             );
         }
@@ -1708,13 +1737,13 @@ pub mod captcha {
 
             // give the contract funds
             set_account_balance(contract.env().account_id(), 10000000000);
-            set_caller(get_admin_account(0)); // use the admin acc
-            let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
+            set_caller(contract.get_admin()); // use the admin acc
+            let admin_bal: u128 = get_account_balance(contract.get_admin()).unwrap();
             let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
             let withdraw_amount: u128 = 1;
             contract.withdraw(withdraw_amount).unwrap();
             assert_eq!(
-                get_account_balance(get_admin_account(0)).unwrap(),
+                get_account_balance(contract.get_admin()).unwrap(),
                 admin_bal + withdraw_amount
             );
             assert_eq!(
@@ -1731,8 +1760,8 @@ pub mod captcha {
 
             let mut contract = get_contract(0);
 
-            set_caller(get_admin_account(0)); // use the admin acc
-            let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
+            set_caller(contract.get_admin()); // use the admin acc
+            let admin_bal = get_account_balance(contract.get_admin()).unwrap();
             let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
             contract.withdraw(contract_bal + 1); // panics as bal would go below existential deposit
         }
@@ -1750,41 +1779,6 @@ pub mod captcha {
         }
 
         #[ink::test]
-        fn test_set_admin() {
-            // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
-
-            let mut contract = get_contract(0);
-            let old_admin = contract.admin;
-            let new_admin = get_admin_account(1);
-            assert_ne!(old_admin, new_admin);
-
-            contract.check_admin(old_admin).unwrap();
-
-            set_caller(old_admin);
-            contract.set_admin(new_admin).unwrap();
-
-            contract.check_admin(new_admin).unwrap();
-        }
-
-        #[ink::test]
-        fn test_set_admin_unauthorised() {
-            // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
-
-            let mut contract = get_contract(0);
-            let old_admin = contract.admin;
-            let new_admin = get_admin_account(1);
-            assert_ne!(old_admin, new_admin);
-
-            contract.check_admin(old_admin).unwrap();
-
-            // can only call set_admin from the current admin account (old admin)
-            set_caller(new_admin);
-            contract.set_admin(new_admin).unwrap_err();
-        }
-
-        #[ink::test]
         fn test_ctor_caller_admin() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
@@ -1792,7 +1786,7 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // check the caller is admin
-            assert_eq!(contract.admin, get_admin_account(0));
+            assert_eq!(contract.get_admin(), get_admin_account(0));
         }
 
         /// Assert contract provider minimum stake default set from constructor.
