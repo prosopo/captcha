@@ -87,8 +87,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 resolve()
             }
             this.logger.info(`Mongo url: ${this.url}`)
-            mongoose.connect(this.url, { dbName: this.dbname })
-            this.connection = mongoose.connection
+            this.connection = mongoose.createConnection(this.url, { dbName: this.dbname })
             this.tables = {
                 captcha: this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
                 dataset: this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
@@ -104,7 +103,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     this.connection.models.Scheduler || this.connection.model('Scheduler', ScheduledTaskRecordSchema),
             }
             this.connection.once('open', resolve).on('error', (e) => {
-                this.logger.info(`mongoose connection  error`)
+                this.logger.warn(`mongoose connection error`)
                 if (e.message.code === 'ETIMEDOUT') {
                     this.logger.error(e)
                     mongoose.connect(this.url)
