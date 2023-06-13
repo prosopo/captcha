@@ -20,10 +20,24 @@ pub use self::captcha::{Captcha, CaptchaRef};
 #[ink::contract]
 pub mod captcha {
 
+    const ENV_DAPP_STAKE_THRESHOLD: Balance = 1000000000;
+    const ENV_PROVIDER_STAKE_THRESHOLD: Balance = 1000000000;
+    const ENV_AUTHOR_BYTES: [u8; 32] = [
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0,
+    ]; // the account which can instantiate the contract
+    const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
+    const ENV_MAX_PROVIDER_FEE: u32 = 1000000; // the maximum fee a provider can charge for a commit
+    const ENV_MIN_NUM_ACTIVE_PROVIDERS: u16 = 0; // the minimum number of providers needed for the contract to function
+    const ENV_BLOCK_TIME: u16 = 6; // the time to complete a block, 6 seconds by default
+    const ENV_MAX_USER_HISTORY_AGE_SECONDS: u32 = 30 * 24 * 60 * 60; // the max age of a commit for a user before it is removed from the history, in seconds
+    const ENV_MAX_USER_HISTORY_LEN: u16 = 10; // the max number of commits stored for a single user
+    const ENV_MAX_USER_HISTORY_AGE_BLOCKS: u32 =
+        ENV_MAX_USER_HISTORY_AGE_SECONDS / (ENV_BLOCK_TIME as u32) + 1; // the max age of a commit for a user before it is removed from the history, in blocks
+
     use common::err;
     use common::err_fn;
     use common::lazy;
-    use common::INK_AUTHOR;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
@@ -125,6 +139,30 @@ pub mod captcha {
         }
     }
 
+    struct ProviderConfig {
+        payee: Option<Payee>,
+        fee: Option<u32>,
+        url: Option<Vec<u8>>,
+        dataset_id: Option<Hash>,
+        dataset_id_content: Option<Hash>,
+        deactivate: bool,
+        should_exist: bool,
+    }
+
+    impl Default for ProviderConfig {
+        fn default() -> Self {
+            Self {
+                payee: None,
+                fee: None,
+                url: None,
+                dataset_id: None,
+                dataset_id_content: None,
+                deactivate: false,
+                should_exist: true,
+            }
+        }
+    }
+
     /// RandomProvider is selected randomly by the contract for the client side application
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
@@ -173,6 +211,26 @@ pub mod captcha {
         payee: DappPayee,
     }
 
+    struct DappConfig {
+        contract: AccountId,
+        payee: Option<DappPayee>,
+        owner: Option<AccountId>,
+        deactivate: bool,
+        should_exist: bool,
+    }
+
+    impl Default for DappConfig {
+        fn default() -> Self {
+            Self {
+                contract: AccountId::from([0u8; 32]),
+                payee: None,
+                owner: None,
+                deactivate: false,
+                should_exist: true,
+            }
+        }
+    }
+
     /// Users are the users of DApps that are required to be verified as human before they are
     /// allowed to interact with the DApps' contracts.
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
@@ -206,24 +264,18 @@ pub mod captcha {
     }
 
     // Contract storage
+    #[derive(Default)]
     #[ink(storage)]
     pub struct Captcha {
-        admin: AccountId, // the admin in control of this contract
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderCategory, BTreeSet<AccountId>>,
         urls: Mapping<Hash, AccountId>, // url hash mapped to provider account
         datasets: Mapping<Hash, AccountId>,
-        provider_stake_threshold: Balance,
-        dapp_stake_threshold: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_contracts: Lazy<BTreeSet<AccountId>>,
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
-        max_user_history_len: u16, // the max number of captcha results to store in history for a user
-        max_user_history_age: u16, // the max age, in blocks, of captcha results to store in history for a user
-        min_num_active_providers: u16, // the minimum number of active providers required to allow captcha services
-        max_provider_fee: u32,
     }
 
     /// The error types
@@ -295,54 +347,35 @@ pub mod captcha {
     impl Captcha {
         /// Constructor
         #[ink(constructor, payable)]
-        pub fn new(
-            provider_stake_threshold: Balance,
-            dapp_stake_threshold: Balance,
-            max_user_history_len: u16,
-            max_user_history_age: u16,
-            min_num_active_providers: u16,
-            max_provider_fee: u32,
-        ) -> Self {
-            let author = AccountId::from(INK_AUTHOR);
-            if Self::env().caller() != author {
+        pub fn new() -> Self {
+            if Self::env().caller() != AccountId::from(ENV_AUTHOR_BYTES) {
                 panic!("Not authorised to instantiate this contract");
             }
-            Self::new_unguarded(
-                provider_stake_threshold,
-                dapp_stake_threshold,
-                max_user_history_len,
-                max_user_history_age,
-                min_num_active_providers,
-                max_provider_fee,
-            )
+            Self::new_unguarded()
         }
 
-        fn new_unguarded(
-            provider_stake_threshold: Balance,
-            dapp_stake_threshold: Balance,
-            max_user_history_len: u16,
-            max_user_history_age: u16,
-            min_num_active_providers: u16,
-            max_provider_fee: u32,
-        ) -> Self {
+        fn new_unguarded() -> Self {
             Self {
-                admin: Self::env().caller(),
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 urls: Default::default(),
                 datasets: Default::default(),
                 users: Default::default(),
-                provider_stake_threshold,
-                dapp_stake_threshold,
                 dapps: Default::default(),
                 dapp_contracts: Default::default(),
                 user_accounts: Default::default(),
-                max_user_history_len,
-                max_user_history_age,
                 commits: Default::default(),
-                min_num_active_providers,
-                max_provider_fee,
             }
+        }
+
+        #[ink(message)]
+        pub fn get_author(&self) -> AccountId {
+            AccountId::from(ENV_AUTHOR_BYTES)
+        }
+
+        #[ink(message)]
+        pub fn get_admin(&self) -> AccountId {
+            AccountId::from(ENV_ADMIN_BYTES)
         }
 
         /// Get all payee options
@@ -366,13 +399,43 @@ pub mod captcha {
         /// Get contract provider minimum stake default.
         #[ink(message)]
         pub fn get_provider_stake_threshold(&self) -> Balance {
-            self.provider_stake_threshold
+            ENV_PROVIDER_STAKE_THRESHOLD
         }
 
         /// Get contract dapp minimum stake default.
         #[ink(message)]
         pub fn get_dapp_stake_threshold(&self) -> Balance {
-            self.dapp_stake_threshold
+            ENV_DAPP_STAKE_THRESHOLD
+        }
+
+        #[ink(message)]
+        pub fn get_max_provider_fee(&self) -> u32 {
+            ENV_MAX_PROVIDER_FEE
+        }
+
+        #[ink(message)]
+        pub fn get_min_num_active_providers(&self) -> u16 {
+            ENV_MIN_NUM_ACTIVE_PROVIDERS
+        }
+
+        #[ink(message)]
+        pub fn get_block_time(&self) -> u16 {
+            ENV_BLOCK_TIME
+        }
+
+        #[ink(message)]
+        pub fn get_max_user_history_age_seconds(&self) -> u32 {
+            ENV_MAX_USER_HISTORY_AGE_SECONDS
+        }
+
+        #[ink(message)]
+        pub fn get_max_user_history_len(&self) -> u16 {
+            ENV_MAX_USER_HISTORY_LEN
+        }
+
+        #[ink(message)]
+        pub fn get_max_user_history_age_blocks(&self) -> u32 {
+            ENV_MAX_USER_HISTORY_AGE_BLOCKS
         }
 
         /// Convert a vec of u8 into a Hash
@@ -406,25 +469,16 @@ pub mod captcha {
         }
 
         /// Configure a provider
-        fn provider_configure(
-            &mut self,
-            url: Option<Vec<u8>>,
-            fee: Option<u32>,
-            payee: Option<Payee>,
-            deactivate: bool,
-            dataset_id: Option<Hash>,
-            dataset_id_content: Option<Hash>,
-            should_exist: bool,
-        ) -> Result<(), Error> {
+        fn provider_configure(&mut self, config: ProviderConfig) -> Result<(), Error> {
             let provider_account = self.env().caller();
             let lookup = self.providers.get(provider_account);
             let new = lookup.is_none();
 
-            if new && should_exist {
+            if new && config.should_exist {
                 // error if the provider should already exist, but doesn't
                 return err!(self, Error::ProviderDoesNotExist);
             }
-            if !new && !should_exist {
+            if !new && !config.should_exist {
                 // error if the provider should not exist but does
                 return err!(self, Error::ProviderExists);
             }
@@ -434,11 +488,13 @@ pub mod captcha {
 
             // setup the new provider with updated fields
             let mut new_provider = Provider {
-                url: url.unwrap_or(old_provider.url.clone()),
-                fee: fee.unwrap_or(old_provider.fee),
-                payee: payee.unwrap_or(old_provider.payee),
-                dataset_id: dataset_id.unwrap_or(old_provider.dataset_id),
-                dataset_id_content: dataset_id_content.unwrap_or(old_provider.dataset_id_content),
+                url: config.url.unwrap_or(old_provider.url.clone()),
+                fee: config.fee.unwrap_or(old_provider.fee),
+                payee: config.payee.unwrap_or(old_provider.payee),
+                dataset_id: config.dataset_id.unwrap_or(old_provider.dataset_id),
+                dataset_id_content: config
+                    .dataset_id_content
+                    .unwrap_or(old_provider.dataset_id_content),
                 ..old_provider
             };
 
@@ -450,10 +506,10 @@ pub mod captcha {
             // has a balance >= provider_stake_threshold
             // has a dataset_id
             // has a dataset_id_content
-            new_provider.status = if new_provider.balance >= self.provider_stake_threshold
+            new_provider.status = if new_provider.balance >= ENV_PROVIDER_STAKE_THRESHOLD
                 && new_provider.dataset_id != default_dataset_id
                 && new_provider.dataset_id_content != default_dataset_id
-                && !deactivate
+                && !config.deactivate
             {
                 // then set the status to active
                 GovernanceStatus::Active
@@ -478,7 +534,7 @@ pub mod captcha {
             }
 
             // check the fee is not too high
-            if new_provider.fee > self.max_provider_fee {
+            if new_provider.fee > ENV_MAX_PROVIDER_FEE {
                 return err!(self, Error::ProviderFeeTooHigh);
             }
 
@@ -568,7 +624,13 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            self.provider_configure(Some(url), Some(fee), Some(payee), true, None, None, false)
+            self.provider_configure(ProviderConfig {
+                url: Some(url),
+                fee: Some(fee),
+                payee: Some(payee),
+                should_exist: false,
+                ..Default::default()
+            })
         }
 
         /// Update an existing provider, their url, fee and deposit funds
@@ -580,13 +642,23 @@ pub mod captcha {
             fee: u32,
             payee: Payee,
         ) -> Result<(), Error> {
-            self.provider_configure(Some(url), Some(fee), Some(payee), false, None, None, true)
+            self.provider_configure(ProviderConfig {
+                url: Some(url),
+                fee: Some(fee),
+                payee: Some(payee),
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// De-activate a provider by setting their status to Deactivated
         #[ink(message)]
         pub fn provider_deactivate(&mut self) -> Result<(), Error> {
-            self.provider_configure(None, None, None, true, None, None, true)
+            self.provider_configure(ProviderConfig {
+                should_exist: true,
+                deactivate: true,
+                ..Default::default()
+            })
         }
 
         /// Unstake and deactivate the provider's service, returning stake
@@ -625,7 +697,10 @@ pub mod captcha {
         #[ink(message)]
         #[ink(payable)]
         pub fn provider_fund(&mut self) -> Result<(), Error> {
-            self.provider_configure(None, None, None, false, None, None, true)
+            self.provider_configure(ProviderConfig {
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Add a new data set
@@ -636,15 +711,12 @@ pub mod captcha {
             dataset_id: Hash,
             dataset_id_content: Hash,
         ) -> Result<(), Error> {
-            self.provider_configure(
-                None,
-                None,
-                None,
-                false,
-                Some(dataset_id),
-                Some(dataset_id_content),
-                true,
-            )
+            self.provider_configure(ProviderConfig {
+                dataset_id: Some(dataset_id),
+                dataset_id_content: Some(dataset_id_content),
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Get an existing dapp
@@ -666,28 +738,21 @@ pub mod captcha {
         }
 
         /// Configure a dapp (existing or new)
-        fn dapp_configure(
-            &mut self,
-            contract: AccountId,
-            payee: Option<DappPayee>,
-            owner: Option<AccountId>,
-            deactivate: bool,
-            should_exist: bool,
-        ) -> Result<(), Error> {
-            let dapp_lookup = self.dapps.get(contract);
+        fn dapp_configure(&mut self, config: DappConfig) -> Result<(), Error> {
+            let dapp_lookup = self.dapps.get(config.contract);
             let new = dapp_lookup.is_none();
 
-            if new && should_exist {
+            if new && config.should_exist {
                 return err!(self, Error::DappDoesNotExist);
             }
-            if !new && !should_exist {
+            if !new && !config.should_exist {
                 return err!(self, Error::DappExists);
             }
 
             let old_dapp = dapp_lookup.unwrap_or_else(|| self.default_dapp());
             let mut new_dapp = Dapp {
-                payee: payee.unwrap_or(old_dapp.payee),
-                owner: owner.unwrap_or(old_dapp.owner),
+                payee: config.payee.unwrap_or(old_dapp.payee),
+                owner: config.owner.unwrap_or(old_dapp.owner),
                 ..old_dapp
             };
 
@@ -695,7 +760,8 @@ pub mod captcha {
             new_dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            new_dapp.status = if new_dapp.balance >= self.dapp_stake_threshold && !deactivate {
+            new_dapp.status = if new_dapp.balance >= ENV_DAPP_STAKE_THRESHOLD && !config.deactivate
+            {
                 GovernanceStatus::Active
             } else {
                 GovernanceStatus::Inactive
@@ -709,7 +775,7 @@ pub mod captcha {
             }
 
             // check the dapp is a contract
-            if !self.env().is_contract(&contract) {
+            if !self.env().is_contract(&config.contract) {
                 return err!(self, Error::InvalidContract);
             }
 
@@ -720,11 +786,11 @@ pub mod captcha {
 
             // if the dapp is new then add it to the list of dapps
             if new {
-                lazy!(self.dapp_contracts, insert, contract);
+                lazy!(self.dapp_contracts, insert, config.contract);
             }
 
             // update the dapp in the mapping
-            self.dapps.insert(contract, &new_dapp);
+            self.dapps.insert(config.contract, &new_dapp);
 
             Ok(())
         }
@@ -737,13 +803,12 @@ pub mod captcha {
             contract: AccountId,
             payee: DappPayee,
         ) -> Result<(), Error> {
-            self.dapp_configure(
+            self.dapp_configure(DappConfig {
                 contract,
-                Some(payee),
-                None, // the caller is made the owner of the contract
-                false,
-                false,
-            )
+                payee: Some(payee),
+                should_exist: false,
+                ..Default::default()
+            })
         }
 
         /// Update a dapp with new funds, setting status as appropriate
@@ -755,14 +820,24 @@ pub mod captcha {
             payee: DappPayee,
             owner: AccountId,
         ) -> Result<(), Error> {
-            self.dapp_configure(contract, Some(payee), Some(owner), false, true)
+            self.dapp_configure(DappConfig {
+                contract,
+                payee: Some(payee),
+                owner: Some(owner),
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Fund dapp account to pay for services, if the Dapp caller is registered in self.dapps
         #[ink(message)]
         #[ink(payable)]
         pub fn dapp_fund(&mut self, contract: AccountId) -> Result<(), Error> {
-            self.dapp_configure(contract, None, None, false, true)
+            self.dapp_configure(DappConfig {
+                contract,
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Cancel services as a dapp, returning remaining tokens
@@ -790,22 +865,27 @@ pub mod captcha {
         /// Deactivate a dapp, leaving stake intact
         #[ink(message)]
         pub fn dapp_deactivate(&mut self, contract: AccountId) -> Result<(), Error> {
-            self.dapp_configure(contract, None, None, true, true)
+            self.dapp_configure(DappConfig {
+                contract,
+                deactivate: true,
+                should_exist: true,
+                ..Default::default()
+            })
         }
 
         /// Trim the user history to the max length and age.
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             let block_number = self.env().block_number();
-            let max_age = if block_number < self.max_user_history_age as u32 {
+            let max_age = if block_number < ENV_MAX_USER_HISTORY_AGE_BLOCKS {
                 block_number
             } else {
-                self.max_user_history_age as u32
+                ENV_MAX_USER_HISTORY_AGE_BLOCKS
             };
             let age_threshold = block_number - max_age;
             let mut expired = Vec::new();
             // trim the history down to max length
-            while history.len() > self.max_user_history_len.into() {
+            while history.len() > ENV_MAX_USER_HISTORY_LEN.into() {
                 let hash = history.pop().unwrap();
                 expired.push(hash);
             }
@@ -1011,7 +1091,7 @@ pub mod captcha {
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
-            if dapp.balance < self.dapp_stake_threshold {
+            if dapp.balance < ENV_DAPP_STAKE_THRESHOLD {
                 return err!(self, Error::DappInsufficientFunds);
             }
             Ok(())
@@ -1021,7 +1101,7 @@ pub mod captcha {
             if provider.status != GovernanceStatus::Active {
                 return err!(self, Error::ProviderInactive);
             }
-            if provider.balance < self.provider_stake_threshold {
+            if provider.balance < ENV_PROVIDER_STAKE_THRESHOLD {
                 return err!(self, Error::ProviderInsufficientFunds);
             }
             Ok(())
@@ -1149,7 +1229,7 @@ pub mod captcha {
                     return err!(self, Error::NoActiveProviders);
                 }
 
-                if max < self.min_num_active_providers.into() {
+                if max < ENV_MIN_NUM_ACTIVE_PROVIDERS as usize {
                     return err!(self, Error::NotEnoughActiveProviders);
                 }
 
@@ -1177,7 +1257,7 @@ pub mod captcha {
                     return err!(self, Error::NoActiveProviders);
                 }
 
-                if active_providers.len() < self.min_num_active_providers.into() {
+                if active_providers.len() < ENV_MIN_NUM_ACTIVE_PROVIDERS as usize {
                     return err!(self, Error::NotEnoughActiveProviders);
                 }
 
@@ -1275,9 +1355,11 @@ pub mod captcha {
         /// Withdraw some funds from the contract to the specified destination
         #[ink(message)]
         pub fn withdraw(&mut self, amount: Balance) -> Result<(), Error> {
-            self.check_caller_admin()?;
+            let caller = self.env().caller();
+            self.check_is_admin(caller)?;
+
             let transfer_result =
-                ink::env::transfer::<ink::env::DefaultEnvironment>(self.env().caller(), amount);
+                ink::env::transfer::<ink::env::DefaultEnvironment>(caller, amount);
             if transfer_result.is_err() {
                 return err!(self, Error::ContractTransferFailed);
             }
@@ -1302,22 +1384,14 @@ pub mod captcha {
             Ok(())
         }
 
-        /// Set the admin for this contract
-        #[ink(message)]
-        pub fn set_admin(&mut self, new_admin: AccountId) -> Result<(), Error> {
-            self.check_caller_admin()?;
-            self.admin = new_admin;
-            Ok(())
-        }
-
         /// Is the caller the admin for this contract?
         fn check_caller_admin(&self) -> Result<(), Error> {
-            self.check_admin(self.env().caller())
+            self.check_is_admin(self.env().caller())
         }
 
         /// Is the specified account the admin for this contract?
-        fn check_admin(&self, acc: AccountId) -> Result<(), Error> {
-            if self.admin != acc {
+        fn check_is_admin(&self, acc: AccountId) -> Result<(), Error> {
+            if self.get_admin() != acc {
                 return err!(self, Error::NotAdmin);
             }
             Ok(())
@@ -1356,7 +1430,7 @@ pub mod captcha {
 
         type Event = <Captcha as ::ink::reflect::ContractEventBase>::Type;
 
-        const STAKE_THRESHOLD: u128 = 1000000000000;
+        const STAKE_THRESHOLD: u128 = 1000000000;
 
         const set_caller: fn(AccountId) =
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>;
@@ -1445,8 +1519,7 @@ pub mod captcha {
             // set the caller to the first admin
             set_caller(get_admin_account(0));
             // now construct the contract instance
-            let mut contract =
-                Captcha::new_unguarded(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
+            let mut contract = Captcha::new_unguarded();
             // set the caller back to the unused acc
             set_caller(get_unused_account());
             // check the contract was created with the correct account
@@ -1460,8 +1533,8 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from(INK_AUTHOR));
-            let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
+            set_caller(AccountId::from(ENV_AUTHOR_BYTES));
+            let contract = Captcha::new();
             // should construct successfully
         }
 
@@ -1473,7 +1546,7 @@ pub mod captcha {
 
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
-            let contract = Captcha::new(STAKE_THRESHOLD, STAKE_THRESHOLD, 10, 255, 0, 1000);
+            let contract = Captcha::new();
             // should fail to construct and panic
         }
 
@@ -1485,13 +1558,21 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // ctor params should be set
-            assert_eq!(contract.provider_stake_threshold, STAKE_THRESHOLD);
-            assert_eq!(contract.dapp_stake_threshold, STAKE_THRESHOLD);
-            assert_eq!(contract.admin, get_admin_account(0));
-            assert_eq!(contract.max_user_history_len, 10);
-            assert_eq!(contract.max_user_history_age, 255);
-            assert_eq!(contract.min_num_active_providers, 0);
-            assert_eq!(contract.max_provider_fee, 1000);
+            assert_eq!(contract.get_provider_stake_threshold(), STAKE_THRESHOLD);
+            assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
+            assert_eq!(contract.get_admin(), get_admin_account(0));
+            assert_eq!(contract.get_max_user_history_len(), 10);
+            assert_eq!(
+                contract.get_max_user_history_age_seconds(),
+                30 * 24 * 60 * 60
+            ); // 30 days in seconds
+            assert_eq!(
+                contract.get_max_user_history_age_blocks(),
+                30 * 24 * 60 * 60 / 6 + 1
+            ); // 30 days in blocks
+            assert_eq!(contract.get_block_time(), 6);
+            assert_eq!(contract.get_min_num_active_providers(), 0);
+            assert_eq!(contract.get_max_provider_fee(), 1000000);
 
             // default state should be set
             for payee in contract.get_payees().iter() {
@@ -1632,15 +1713,15 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             let mut contract = get_contract(0);
-            set_caller(get_admin_account(0)); // an account which does have permission to call terminate
+            let admin = contract.get_admin();
+            set_caller(admin); // an account which does have permission to call terminate
 
             let contract_account = contract.env().account_id();
             let bal = get_account_balance(contract_account).unwrap();
-            let admin = get_admin_account(0);
             let should_terminate = move || contract.terminate().unwrap();
             ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
                 should_terminate,
-                get_admin_account(0),
+                admin,
                 bal,
             );
         }
@@ -1666,13 +1747,13 @@ pub mod captcha {
 
             // give the contract funds
             set_account_balance(contract.env().account_id(), 10000000000);
-            set_caller(get_admin_account(0)); // use the admin acc
-            let admin_bal: u128 = get_account_balance(get_admin_account(0)).unwrap();
+            set_caller(contract.get_admin()); // use the admin acc
+            let admin_bal: u128 = get_account_balance(contract.get_admin()).unwrap();
             let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
             let withdraw_amount: u128 = 1;
             contract.withdraw(withdraw_amount).unwrap();
             assert_eq!(
-                get_account_balance(get_admin_account(0)).unwrap(),
+                get_account_balance(contract.get_admin()).unwrap(),
                 admin_bal + withdraw_amount
             );
             assert_eq!(
@@ -1689,8 +1770,8 @@ pub mod captcha {
 
             let mut contract = get_contract(0);
 
-            set_caller(get_admin_account(0)); // use the admin acc
-            let admin_bal = get_account_balance(get_admin_account(0)).unwrap();
+            set_caller(contract.get_admin()); // use the admin acc
+            let admin_bal = get_account_balance(contract.get_admin()).unwrap();
             let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
             contract.withdraw(contract_bal + 1); // panics as bal would go below existential deposit
         }
@@ -1708,41 +1789,6 @@ pub mod captcha {
         }
 
         #[ink::test]
-        fn test_set_admin() {
-            // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
-
-            let mut contract = get_contract(0);
-            let old_admin = contract.admin;
-            let new_admin = get_admin_account(1);
-            assert_ne!(old_admin, new_admin);
-
-            contract.check_admin(old_admin).unwrap();
-
-            set_caller(old_admin);
-            contract.set_admin(new_admin).unwrap();
-
-            contract.check_admin(new_admin).unwrap();
-        }
-
-        #[ink::test]
-        fn test_set_admin_unauthorised() {
-            // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            set_caller(get_unused_account());
-
-            let mut contract = get_contract(0);
-            let old_admin = contract.admin;
-            let new_admin = get_admin_account(1);
-            assert_ne!(old_admin, new_admin);
-
-            contract.check_admin(old_admin).unwrap();
-
-            // can only call set_admin from the current admin account (old admin)
-            set_caller(new_admin);
-            contract.set_admin(new_admin).unwrap_err();
-        }
-
-        #[ink::test]
         fn test_ctor_caller_admin() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
@@ -1750,7 +1796,7 @@ pub mod captcha {
             let mut contract = get_contract(0);
 
             // check the caller is admin
-            assert_eq!(contract.admin, get_admin_account(0));
+            assert_eq!(contract.get_admin(), get_admin_account(0));
         }
 
         /// Assert contract provider minimum stake default set from constructor.

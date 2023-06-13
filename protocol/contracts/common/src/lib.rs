@@ -2,11 +2,6 @@
 
 pub use self::common::{Common, CommonRef};
 
-pub const INK_AUTHOR: [u8; 32] = [
-    212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133,
-    76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-]; // the account which can instantiate the contract
-
 /// Print and return an error in ink
 #[macro_export]
 macro_rules! err {
@@ -58,11 +53,9 @@ macro_rules! lazy {
 pub mod common {
 
     #[derive(Default)]
-/// No fields are stored in the util contract as it's just filler
+    /// No fields are stored in the util contract as it's just filler
     #[ink(storage)]
     pub struct Common {}
-
-    
 
     /// Implementation of the contract
     impl Common {
