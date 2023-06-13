@@ -29,6 +29,7 @@
         "test": "react-scripts test",
         "eject": "react-scripts eject",
         "cypress:open": "cypress open",
+        "cypress:run": "cypress run",
         "lint:fix": "npx eslint . --fix"
     },
     "eslintConfig": {

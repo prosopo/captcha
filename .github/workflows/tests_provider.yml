@@ -105,6 +105,10 @@ jobs:
           cat .env.test
           npm run test
 
+      - name: Run the cypress tests on client-example
+        run: |
+          npm run start:provider && npm run start:server && npm run start:demo && npm run -w @prosopo/client-example cypress:run
+
       - name: Remove the docker containers
         run: |
           cd captcha

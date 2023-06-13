@@ -7,6 +7,7 @@ declare global {
     namespace Cypress {
         interface Chainable {
             clickIAmHuman(): Cypress.Chainable<any[]>
+            captchaImages(): Cypress.Chainable<JQuery<HTMLElement[]>>
         }
     }
 }
@@ -22,4 +23,20 @@ function clickIAmHuman() {
         .then((interception) => interception.response!.body.captchas.map(({ captcha }) => captcha))
 }
 
-Cypress.Commands.addAll({ clickIAmHuman })
+function captchaImages() {
+    cy.xpath("//p[contains(text(),'images containing')]")
+        .should('be.visible')
+        .wait(2000)
+        .parent()
+        .parent()
+        .children()
+        .next()
+        .next()
+        .children()
+        .first()
+        .children()
+        .as('captchaImages')
+    return cy.get('@captchaImages')
+}
+
+Cypress.Commands.addAll({ clickIAmHuman, captchaImages })
