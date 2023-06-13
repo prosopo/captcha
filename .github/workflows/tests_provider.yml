@@ -110,6 +110,11 @@ jobs:
           cd captcha
           docker compose --file ./docker/docker-compose.test.yml down
           docker compose --file ./docker/docker-compose.test.yml up -d
+          docker container ls
+
+      - name: Sleep for 10 seconds to give the containers time to start up
+        run: sleep 10s
+        shell: bash
 
       - name: Deploy the contracts and run the cypress tests on client-example
         run: |
