@@ -52,7 +52,6 @@ function startCypressTests() {
 
 startWebpackDevServer()
     .then(() => {
-        console.log('Promise resolved')
         startCypressTests()
             .then(() => {
                 console.log('Cypress tests finished')
