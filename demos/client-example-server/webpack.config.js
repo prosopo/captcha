@@ -64,15 +64,5 @@ module.exports = (env, argv) => {
                 },
             },
         ],
-        // externals: [
-        //     'mongodb-client-encryption',
-        //     'bson-ext',
-        //     'kerberos',
-        //     '@mongodb-js/zstd',
-        //     'snappy',
-        //     'snappy/package.json',
-        //     'bufferutil',
-        //     'utf-8-validate',
-        // ],
     }
 }
