@@ -27,7 +27,7 @@ pub mod captcha {
         0, 0,
     ]; // the account which can instantiate the contract
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
-    const ENV_MAX_PROVIDER_FEE: u32 = u32::MAX; // the maximum fee a provider can charge for a commit
+    const ENV_MAX_PROVIDER_FEE: u32 = 1000000; // the maximum fee a provider can charge for a commit
     const ENV_MIN_NUM_ACTIVE_PROVIDERS: u16 = 0; // the minimum number of providers needed for the contract to function
     const ENV_BLOCK_TIME: u16 = 6; // the time to complete a block, 6 seconds by default
     const ENV_MAX_USER_HISTORY_AGE_SECONDS: u32 = 30 * 24 * 60 * 60; // the max age of a commit for a user before it is removed from the history, in seconds
@@ -264,6 +264,7 @@ pub mod captcha {
     }
 
     // Contract storage
+    #[derive(Default)]
     #[ink(storage)]
     pub struct Captcha {
         providers: Mapping<AccountId, Provider>,
@@ -1571,7 +1572,7 @@ pub mod captcha {
             ); // 30 days in blocks
             assert_eq!(contract.get_block_time(), 6);
             assert_eq!(contract.get_min_num_active_providers(), 0);
-            assert_eq!(contract.get_max_provider_fee(), u32::MAX);
+            assert_eq!(contract.get_max_provider_fee(), 1000000);
 
             // default state should be set
             for payee in contract.get_payees().iter() {
