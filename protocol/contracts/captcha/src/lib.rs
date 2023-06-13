@@ -845,10 +845,10 @@ pub mod captcha {
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             let block_number = self.env().block_number();
-            let max_age = if block_number < ENV_MAX_USER_HISTORY_AGE_BLOCKS as u32 {
+            let max_age = if block_number < ENV_MAX_USER_HISTORY_AGE_BLOCKS {
                 block_number
             } else {
-                ENV_MAX_USER_HISTORY_AGE_BLOCKS as u32
+                ENV_MAX_USER_HISTORY_AGE_BLOCKS
             };
             let age_threshold = block_number - max_age;
             let mut expired = Vec::new();

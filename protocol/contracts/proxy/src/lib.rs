@@ -180,7 +180,7 @@ pub mod proxy {
         /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
         fn get_contract_unguarded(index: u128) -> Proxy {
             get_contract(index, |index| {
-                Proxy::new_unguarded(get_contract_account(index))
+                Proxy::new_unguarded()
             })
         }
 
@@ -191,8 +191,8 @@ pub mod proxy {
             reset_callee();
 
             // only able to instantiate from the alice account
-            set_caller(ENV_AUTHOR);
-            let contract = Proxy::new(get_contract_account(0));
+            set_caller(AccountId::from(ENV_AUTHOR_BYTES));
+            let contract = Proxy::new();
             // should construct successfully
         }
 
@@ -210,39 +210,6 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_proxy_set_admin() {
-            // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            reset_caller();
-            reset_callee();
-
-            let mut contract = get_contract_unguarded(0);
-            set_callee(get_contract_account(0));
-            let old_admin = contract.ADMIN;
-            let new_admin = get_admin_account(1);
-            assert_ne!(old_admin, new_admin);
-
-            set_caller(old_admin);
-            contract.proxy_set_admin(new_admin).unwrap();
-        }
-
-        #[ink::test]
-        fn test_proxy_set_admin_unauthorised() {
-            // always set the caller to the unused account to start, avoid any mistakes with caller checks
-            reset_caller();
-            reset_callee();
-
-            let mut contract = get_contract_unguarded(0);
-            set_callee(get_contract_account(0));
-            let old_admin = contract.ADMIN;
-            let new_admin = get_admin_account(1);
-            assert_ne!(old_admin, new_admin);
-
-            // can only call proxy_set_admin from the current admin account (old admin)
-            set_caller(new_admin);
-            contract.proxy_set_admin(new_admin).unwrap_err();
-        }
-
-        #[ink::test]
         fn test_ctor_caller_admin() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
@@ -252,7 +219,7 @@ pub mod proxy {
             set_callee(get_contract_account(0));
 
             // check the caller is admin
-            assert_eq!(contract.ADMIN, get_admin_account(0));
+            assert_eq!(contract.get_admin(), get_admin_account(0));
         }
 
         #[ink::test]
