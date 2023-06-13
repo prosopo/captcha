@@ -22,14 +22,18 @@ pub mod captcha {
 
     const ENV_DAPP_STAKE_THRESHOLD: Balance = 1000000000;
     const ENV_PROVIDER_STAKE_THRESHOLD: Balance = 1000000000;
-    const ENV_AUTHOR_BYTES: [u8; 32] = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // the account which can instantiate the contract
+    const ENV_AUTHOR_BYTES: [u8; 32] = [
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0,
+    ]; // the account which can instantiate the contract
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
     const ENV_MAX_PROVIDER_FEE: u32 = u32::MAX; // the maximum fee a provider can charge for a commit
     const ENV_MIN_NUM_ACTIVE_PROVIDERS: u16 = 0; // the minimum number of providers needed for the contract to function
     const ENV_BLOCK_TIME: u16 = 6; // the time to complete a block, 6 seconds by default
     const ENV_MAX_USER_HISTORY_AGE_SECONDS: u32 = 30 * 24 * 60 * 60; // the max age of a commit for a user before it is removed from the history, in seconds
     const ENV_MAX_USER_HISTORY_LEN: u16 = 10; // the max number of commits stored for a single user
-    const ENV_MAX_USER_HISTORY_AGE_BLOCKS: u32 = ENV_MAX_USER_HISTORY_AGE_SECONDS / (ENV_BLOCK_TIME as u32) + 1; // the max age of a commit for a user before it is removed from the history, in blocks
+    const ENV_MAX_USER_HISTORY_AGE_BLOCKS: u32 =
+        ENV_MAX_USER_HISTORY_AGE_SECONDS / (ENV_BLOCK_TIME as u32) + 1; // the max age of a commit for a user before it is removed from the history, in blocks
 
     use common::err;
     use common::err_fn;
@@ -1514,8 +1518,7 @@ pub mod captcha {
             // set the caller to the first admin
             set_caller(get_admin_account(0));
             // now construct the contract instance
-            let mut contract =
-                Captcha::new_unguarded();
+            let mut contract = Captcha::new_unguarded();
             // set the caller back to the unused acc
             set_caller(get_unused_account());
             // check the contract was created with the correct account
@@ -1558,8 +1561,14 @@ pub mod captcha {
             assert_eq!(contract.get_dapp_stake_threshold(), STAKE_THRESHOLD);
             assert_eq!(contract.get_admin(), get_admin_account(0));
             assert_eq!(contract.get_max_user_history_len(), 10);
-            assert_eq!(contract.get_max_user_history_age_seconds(), 30*24*60*60); // 30 days in seconds
-            assert_eq!(contract.get_max_user_history_age_blocks(), 30*24*60*60/6 + 1); // 30 days in blocks
+            assert_eq!(
+                contract.get_max_user_history_age_seconds(),
+                30 * 24 * 60 * 60
+            ); // 30 days in seconds
+            assert_eq!(
+                contract.get_max_user_history_age_blocks(),
+                30 * 24 * 60 * 60 / 6 + 1
+            ); // 30 days in blocks
             assert_eq!(contract.get_block_time(), 6);
             assert_eq!(contract.get_min_num_active_providers(), 0);
             assert_eq!(contract.get_max_provider_fee(), u32::MAX);

@@ -4,8 +4,11 @@ pub use self::proxy::{Proxy, ProxyRef};
 
 #[ink::contract]
 pub mod proxy {
-    const ENV_AUTHOR_BYTES: [u8; 32] = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // the account which can instantiate the contract
-    // alice: [ 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125, ]
+    const ENV_AUTHOR_BYTES: [u8; 32] = [
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0,
+    ]; // the account which can instantiate the contract
+       // alice: [ 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125, ]
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
     const ENV_PROXY_DESTINATION_BYTES: [u8; 32] = [0; 32]; // the destination contract to forward to, set to 0 by default
 
@@ -177,9 +180,7 @@ pub mod proxy {
 
         /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
         fn get_contract_unguarded(index: u128) -> Proxy {
-            get_contract(index, |index| {
-                Proxy::new_unguarded()
-            })
+            get_contract(index, |index| Proxy::new_unguarded())
         }
 
         #[ink::test]
@@ -316,7 +317,6 @@ pub mod proxy {
 
         #[ink::test]
         fn test_proxy_set_code_hash() {
-
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
             reset_callee();
