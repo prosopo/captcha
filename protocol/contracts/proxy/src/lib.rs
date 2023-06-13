@@ -4,17 +4,12 @@ pub use self::proxy::{Proxy, ProxyRef};
 
 #[ink::contract]
 pub mod proxy {
-    
     const ENV_AUTHOR_BYTES: [u8; 32] = [
         212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133,
         76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
     ]; // the account which can instantiate the contract
-    const ENV_AUTHOR: AccountId = AccountId::from(ENV_AUTHOR_BYTES);
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
-    const ENV_ADMIN: AccountId = AccountId::from(ENV_ADMIN_BYTES);
-
     const ENV_PROXY_DESTINATION_BYTES: [u8; 32] = [0; 32]; // the destination contract to forward to, set to 0 by default
-    const ENV_PROXY_DESTINATION: AccountId = AccountId::from(ENV_PROXY_DESTINATION_BYTES);
 
     use common::err;
     #[allow(unused_imports)]
@@ -45,7 +40,7 @@ pub mod proxy {
         /// later changed the `forward_to` address.
         #[ink(constructor)]
         pub fn new() -> Self {
-            if Self::env().caller() != ENV_AUTHOR {
+            if Self::env().caller() != AccountId::from(ENV_AUTHOR_BYTES) {
                 panic!("Not authorised to instantiate this contract");
             }
             Self::new_unguarded()
@@ -56,11 +51,31 @@ pub mod proxy {
         }
 
         #[ink(message)]
-        pub fn proxy_withdraw(&mut self, amount: Balance) -> Result<(), Error> {
-            let caller = self.env().caller();
-            if caller != ENV_ADMIN {
+        pub fn get_author(&self) -> AccountId {
+            AccountId::from(ENV_AUTHOR_BYTES)
+        }
+
+        #[ink(message)]
+        pub fn get_admin(&self) -> AccountId {
+            AccountId::from(ENV_ADMIN_BYTES)
+        }
+
+        #[ink(message)]
+        pub fn get_proxy_destination(&self) -> AccountId {
+            AccountId::from(ENV_PROXY_DESTINATION_BYTES)
+        }
+
+        fn check_is_admin(&self, account: AccountId) -> Result<(), Error> {
+            if account != self.get_admin() {
                 return err!(self, Error::NotAuthorised);
             }
+            Ok(())
+        }
+
+        #[ink(message)]
+        pub fn proxy_withdraw(&mut self, amount: Balance) -> Result<(), Error> {
+            let caller = self.env().caller();
+            self.check_is_admin(caller)?;
 
             match self.env().transfer(caller, amount) {
                 Ok(()) => Ok(()),
@@ -71,9 +86,7 @@ pub mod proxy {
         #[ink(message)]
         pub fn proxy_terminate(&mut self) -> Result<(), Error> {
             let caller = self.env().caller();
-            if caller != ENV_ADMIN {
-                return err!(self, Error::NotAuthorised);
-            }
+            self.check_is_admin(caller)?;
 
             self.env().terminate_contract(caller);
             // unreachable
@@ -86,7 +99,7 @@ pub mod proxy {
         /// account_id, if the code is not found, and for any other unknown ink errors
         #[ink(message)]
         pub fn proxy_set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
-            if self.env().caller() != ENV_ADMIN {
+            if self.env().caller() != self.get_admin() {
                 return err!(self, Error::NotAuthorised);
             }
 
@@ -108,7 +121,7 @@ pub mod proxy {
         #[ink(message, payable, selector = _)]
         pub fn proxy_forward(&self) -> u32 {
             ink::env::call::build_call::<ink::env::DefaultEnvironment>()
-                .call(ENV_PROXY_DESTINATION)
+                .call(self.get_proxy_destination())
                 .transferred_value(self.env().transferred_value())
                 .gas_limit(0)
                 .call_flags(
@@ -120,13 +133,13 @@ pub mod proxy {
                 .unwrap_or_else(|env_err| {
                     panic!(
                         "cross-contract call to {:?} failed due to {:?}",
-                        ENV_PROXY_DESTINATION, env_err
+                        self.get_proxy_destination(), env_err
                     )
                 })
                 .unwrap_or_else(|lang_err| {
                     panic!(
                         "cross-contract call to {:?} failed due to {:?}",
-                        ENV_PROXY_DESTINATION, lang_err
+                        self.get_proxy_destination(), lang_err
                     )
                 });
             unreachable!("the forwarded call will never return since `tail_call` was set");

@@ -19,17 +19,16 @@ pub use self::captcha::{Captcha, CaptchaRef};
 
 #[ink::contract]
 pub mod captcha {
-    
+
+    const ENV_DAPP_STAKE_THRESHOLD: Balance = 1000000000;
+    const ENV_PROVIDER_STAKE_THRESHOLD: Balance = 1000000000;
     const ENV_AUTHOR_BYTES: [u8; 32] = [
         212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133,
         76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
     ]; // the account which can instantiate the contract
-    const ENV_AUTHOR: AccountId = AccountId::from(ENV_AUTHOR_BYTES);
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
-    const ENV_ADMIN: AccountId = AccountId::from(ENV_ADMIN_BYTES);
-
     const ENV_MAX_PROVIDER_FEE: u32 = u32::MAX; // the maximum fee a provider can charge for a commit
-    const ENV_MIN_NUM_PROVIDERS: u16 = 0; // the minimum number of providers needed for the contract to function
+    const ENV_MIN_NUM_ACTIVE_PROVIDERS: u16 = 0; // the minimum number of providers needed for the contract to function
     const ENV_BLOCK_TIME: u32 = 6; // the time to complete a block, 6 seconds by default
     const ENV_MAX_USER_HISTORY_AGE: u32 = 30*24*60*60; // the max age of a commit for a user before it is removed from the history, in seconds
     const ENV_MAX_USER_HISTORY_LEN: u16 = 10; // the max number of commits stored for a single user
@@ -270,8 +269,6 @@ pub mod captcha {
         provider_accounts: Mapping<ProviderCategory, BTreeSet<AccountId>>,
         urls: Mapping<Hash, AccountId>, // url hash mapped to provider account
         datasets: Mapping<Hash, AccountId>,
-        provider_stake_threshold: Balance,
-        dapp_stake_threshold: Balance,
         dapps: Mapping<AccountId, Dapp>,
         dapp_contracts: Lazy<BTreeSet<AccountId>>,
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
@@ -349,53 +346,37 @@ pub mod captcha {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn new(
-            provider_stake_threshold: Balance,
-            dapp_stake_threshold: Balance,
-            max_user_history_len: u16,
-            max_user_history_age: u16,
-            min_num_active_providers: u16,
-            max_provider_fee: u32,
         ) -> Self {
-            let author = AccountId::from(ENV_AUTHOR);
-            if Self::env().caller() != author {
+            if Self::env().caller() != AccountId::from(ENV_AUTHOR_BYTES) {
                 panic!("Not authorised to instantiate this contract");
             }
             Self::new_unguarded(
-                provider_stake_threshold,
-                dapp_stake_threshold,
-                max_user_history_len,
-                max_user_history_age,
-                min_num_active_providers,
-                max_provider_fee,
             )
         }
 
         fn new_unguarded(
-            provider_stake_threshold: Balance,
-            dapp_stake_threshold: Balance,
-            max_user_history_len: u16,
-            max_user_history_age: u16,
-            min_num_active_providers: u16,
-            max_provider_fee: u32,
         ) -> Self {
             Self {
-                admin: Self::env().caller(),
                 providers: Default::default(),
                 provider_accounts: Default::default(),
                 urls: Default::default(),
                 datasets: Default::default(),
                 users: Default::default(),
-                provider_stake_threshold,
-                dapp_stake_threshold,
                 dapps: Default::default(),
                 dapp_contracts: Default::default(),
                 user_accounts: Default::default(),
-                max_user_history_len,
-                max_user_history_age,
                 commits: Default::default(),
-                min_num_active_providers,
-                max_provider_fee,
             }
+        }
+
+        #[ink(message)]
+        pub fn get_author(&self) -> AccountId {
+            AccountId::from(ENV_AUTHOR_BYTES)
+        }
+
+        #[ink(message)]
+        pub fn get_admin(&self) -> AccountId {
+            AccountId::from(ENV_ADMIN_BYTES)
         }
 
         /// Get all payee options
@@ -419,13 +400,13 @@ pub mod captcha {
         /// Get contract provider minimum stake default.
         #[ink(message)]
         pub fn get_provider_stake_threshold(&self) -> Balance {
-            self.provider_stake_threshold
+            ENV_PROVIDER_STAKE_THRESHOLD
         }
 
         /// Get contract dapp minimum stake default.
         #[ink(message)]
         pub fn get_dapp_stake_threshold(&self) -> Balance {
-            self.dapp_stake_threshold
+            ENV_DAPP_STAKE_THRESHOLD
         }
 
         /// Convert a vec of u8 into a Hash
@@ -497,7 +478,7 @@ pub mod captcha {
             // has a balance >= provider_stake_threshold
             // has a dataset_id
             // has a dataset_id_content
-            new_provider.status = if new_provider.balance >= self.provider_stake_threshold
+            new_provider.status = if new_provider.balance >= ENV_PROVIDER_STAKE_THRESHOLD
                 && new_provider.dataset_id != default_dataset_id
                 && new_provider.dataset_id_content != default_dataset_id
                 && !config.deactivate
@@ -525,7 +506,7 @@ pub mod captcha {
             }
 
             // check the fee is not too high
-            if new_provider.fee > self.max_provider_fee {
+            if new_provider.fee > ENV_MAX_PROVIDER_FEE {
                 return err!(self, Error::ProviderFeeTooHigh);
             }
 
@@ -754,7 +735,7 @@ pub mod captcha {
             new_dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            new_dapp.status = if new_dapp.balance >= self.dapp_stake_threshold && !config.deactivate {
+            new_dapp.status = if new_dapp.balance >= ENV_DAPP_STAKE_THRESHOLD && !config.deactivate {
                 GovernanceStatus::Active
             } else {
                 GovernanceStatus::Inactive
@@ -870,15 +851,15 @@ pub mod captcha {
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             let block_number = self.env().block_number();
-            let max_age = if block_number < self.max_user_history_age as u32 {
+            let max_age = if block_number < ENV_MAX_USER_HISTORY_AGE_BLOCKS as u32 {
                 block_number
             } else {
-                self.max_user_history_age as u32
+                ENV_MAX_USER_HISTORY_AGE_BLOCKS as u32
             };
             let age_threshold = block_number - max_age;
             let mut expired = Vec::new();
             // trim the history down to max length
-            while history.len() > self.max_user_history_len.into() {
+            while history.len() > ENV_MAX_USER_HISTORY_LEN.into() {
                 let hash = history.pop().unwrap();
                 expired.push(hash);
             }
@@ -1084,7 +1065,7 @@ pub mod captcha {
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
-            if dapp.balance < self.dapp_stake_threshold {
+            if dapp.balance < ENV_DAPP_STAKE_THRESHOLD {
                 return err!(self, Error::DappInsufficientFunds);
             }
             Ok(())
@@ -1094,7 +1075,7 @@ pub mod captcha {
             if provider.status != GovernanceStatus::Active {
                 return err!(self, Error::ProviderInactive);
             }
-            if provider.balance < self.provider_stake_threshold {
+            if provider.balance < ENV_PROVIDER_STAKE_THRESHOLD {
                 return err!(self, Error::ProviderInsufficientFunds);
             }
             Ok(())
@@ -1222,7 +1203,7 @@ pub mod captcha {
                     return err!(self, Error::NoActiveProviders);
                 }
 
-                if max < self.min_num_active_providers.into() {
+                if max < ENV_MIN_NUM_ACTIVE_PROVIDERS as usize {
                     return err!(self, Error::NotEnoughActiveProviders);
                 }
 
@@ -1250,7 +1231,7 @@ pub mod captcha {
                     return err!(self, Error::NoActiveProviders);
                 }
 
-                if active_providers.len() < self.min_num_active_providers.into() {
+                if active_providers.len() < ENV_MIN_NUM_ACTIVE_PROVIDERS as usize {
                     return err!(self, Error::NotEnoughActiveProviders);
                 }
 
@@ -1348,9 +1329,11 @@ pub mod captcha {
         /// Withdraw some funds from the contract to the specified destination
         #[ink(message)]
         pub fn withdraw(&mut self, amount: Balance) -> Result<(), Error> {
-            self.check_caller_admin()?;
+            let caller = self.env().caller();
+            self.check_is_admin(caller)?;
+
             let transfer_result =
-                ink::env::transfer::<ink::env::DefaultEnvironment>(self.env().caller(), amount);
+                ink::env::transfer::<ink::env::DefaultEnvironment>(caller, amount);
             if transfer_result.is_err() {
                 return err!(self, Error::ContractTransferFailed);
             }
@@ -1375,22 +1358,14 @@ pub mod captcha {
             Ok(())
         }
 
-        /// Set the admin for this contract
-        #[ink(message)]
-        pub fn set_admin(&mut self, new_admin: AccountId) -> Result<(), Error> {
-            self.check_caller_admin()?;
-            self.admin = new_admin;
-            Ok(())
-        }
-
         /// Is the caller the admin for this contract?
         fn check_caller_admin(&self) -> Result<(), Error> {
-            self.check_admin(self.env().caller())
+            self.check_is_admin(self.env().caller())
         }
 
         /// Is the specified account the admin for this contract?
-        fn check_admin(&self, acc: AccountId) -> Result<(), Error> {
-            if self.admin != acc {
+        fn check_is_admin(&self, acc: AccountId) -> Result<(), Error> {
+            if self.get_admin() != acc {
                 return err!(self, Error::NotAdmin);
             }
             Ok(())
