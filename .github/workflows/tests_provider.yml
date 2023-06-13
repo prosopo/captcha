@@ -105,11 +105,15 @@ jobs:
           cat .env.test
           npm run test
 
-      - name: Run the cypress tests on client-example
+      - name: Reset the docker containers
         run: |
           cd captcha
           docker compose --file ./docker/docker-compose.test.yml down
           docker compose --file ./docker/docker-compose.test.yml up -d
+
+      - name: Deploy the contracts and run the cypress tests on client-example
+        run: |
+          cd captcha
           npm run deploy_protocol
           npm run deploy_dapp
           npm run setup
