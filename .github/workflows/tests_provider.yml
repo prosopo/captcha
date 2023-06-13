@@ -108,6 +108,10 @@ jobs:
       - name: Run the cypress tests on client-example
         run: |
           cd captcha
+          docker compose --file ./docker/docker-compose.test.yml down
+          npm run deploy_protocol
+          npm run deploy_dapp
+          npm run setup
           npm run start:provider 1>provider.log 2>&1 &
           npm run start:server 1>server.log 2>&1 &
           npm run -w @prosopo/client-example test
