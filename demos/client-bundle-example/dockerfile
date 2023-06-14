@@ -1,0 +1,14 @@
+# Use official Nginx image as the base
+FROM nginx:alpine
+
+# Copy nginx configuration
+COPY demos/client-bundle-example/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy the build output to replace the default nginx contents.
+COPY demos/client-bundle-example/src /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx when the container starts.
+CMD ["nginx", "-g", "daemon off;"]

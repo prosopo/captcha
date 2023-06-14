@@ -1,0 +1,24 @@
+version: '3'
+services:
+    web:
+        build:
+            context: ../
+            dockerfile: demos/client-bundle-example/dockerfile
+        volumes:
+            - ./client-bundle-example:/usr/share/nginx/html
+        ports:
+            - '80:80'
+    backend:
+        build:
+            context: ../../
+            dockerfile: demos/client-example-server/dockerfile
+        volumes:
+            - ./client-example-server:/app
+        ports:
+            - '5000:5000'
+    db:
+        image: mongo:4.2-bionic
+        volumes:
+            - mongodb_data:/data/db
+volumes:
+    mongodb_data:

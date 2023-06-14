@@ -1,0 +1,21 @@
+# Use official Node.js LTS version as base image
+FROM node:14-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy package*.json from your server application and the packages directory
+COPY ./demos/client-example-server/package*.json ./
+COPY ./packages/ ./packages/
+
+# Install app dependencies
+RUN npm install
+
+# Bundle app source
+COPY ./demos/client-example-server/ .
+
+# Expose the port the app runs in
+EXPOSE 5000
+
+# The command to start the Node.js app
+CMD [ "node", "app.js" ]
