@@ -123,6 +123,7 @@ protocol/target/ink/*/release
 protocol/target/ink/*/wasm32-unknown-unknown
 protocol/target/ink/*/CACHEDIR.TAG
 protocol/target/**/.rustc_info.json
+protocol/target/debug
 
 /db/
 /data/
@@ -135,3 +136,5 @@ protocol/target/**/.rustc_info.json
 /.database_accounts.json
 
 chain-data
+
+!protocol/dev/.env
