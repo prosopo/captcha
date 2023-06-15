@@ -21,11 +21,11 @@
   },
   "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
-    "@727-ventures/typechain-types": "^1.0.0-beta.1",
-    "@polkadot/api": "10.8.1",
-    "@polkadot/api-contract": "10.8.1",
-    "@polkadot/types": "10.8.1",
-    "@polkadot/types-codec": "10.8.1",
+    "@727-ventures/typechain-types": "file:../../../typechain-polkadot/packages/typechain-types",
+    "@polkadot/api": "10.9.1",
+    "@polkadot/api-contract": "10.9.1",
+    "@polkadot/types": "10.9.1",
+    "@polkadot/types-codec": "10.9.1",
     "@prosopo/common": "^0.1.11",
     "consola": "^2.15.3",
     "zod": "^3.17.9"
