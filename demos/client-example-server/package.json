@@ -4,8 +4,8 @@
   "description": "Backend for client-example",
   "main": "build/app.js",
   "scripts": {
-    "start": "npm run build && node ./dist/app.js",
-    "build": "tsc --build --verbose",
+    "start": "webpack serve",
+    "build": "webpack --mode=production",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:fix": "npx eslint . --fix"
   },
@@ -27,7 +27,10 @@
     "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^6.7.0",
+    "mongoose": "^7.2.0",
     "mongoose-sequence": "^5.3.1"
+  },
+  "devDependencies": {
+    "ts-loader": "^9.4.3"
   }
 }

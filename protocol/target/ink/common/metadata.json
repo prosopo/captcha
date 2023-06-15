@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xc1b8d1802549cbd2a044301939d7db1ea1489e68ca75283fc4596738b0dcc23d",
+    "hash": "0xb2c6ebca13fe9efc872d43161577d4ff07ed5ce24c17248ce547e1e26c731422",
     "language": "ink! 4.1.0",
     "compiler": "rustc 1.69.0",
     "build_info": {
@@ -29,7 +29,7 @@
         "args": [],
         "default": false,
         "docs": [],
-        "label": "noop_ctor",
+        "label": "new",
         "payable": false,
         "returnType": {
           "displayName": [
@@ -38,7 +38,7 @@
           ],
           "type": 0
         },
-        "selector": "0xe060b6f9"
+        "selector": "0x9bae9d5e"
       }
     ],
     "docs": [
@@ -49,38 +49,38 @@
         "displayName": [
           "AccountId"
         ],
-        "type": 3
+        "type": 4
       },
       "balance": {
         "displayName": [
           "Balance"
         ],
-        "type": 6
+        "type": 7
       },
       "blockNumber": {
         "displayName": [
           "BlockNumber"
         ],
-        "type": 9
+        "type": 10
       },
       "chainExtension": {
         "displayName": [
           "ChainExtension"
         ],
-        "type": 10
+        "type": 11
       },
       "hash": {
         "displayName": [
           "Hash"
         ],
-        "type": 7
+        "type": 8
       },
       "maxEventTopics": 4,
       "timestamp": {
         "displayName": [
           "Timestamp"
         ],
-        "type": 8
+        "type": 9
       }
     },
     "events": [],
@@ -96,9 +96,10 @@
         "args": [],
         "default": false,
         "docs": [
-          " No-op function to fill the mandatory ink message requirement"
+          " Print and get the caller of this function",
+          " This will print and get the caller's account in byte format, e.g. [1,2,3...32]"
         ],
-        "label": "noop_func",
+        "label": "get_caller",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -106,9 +107,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 0
+          "type": 3
         },
-        "selector": "0xc61a578c"
+        "selector": "0x8dd15f8f"
       }
     ]
   },
@@ -197,10 +198,52 @@
       "id": 3,
       "type": {
         "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 4
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 2
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 4
+          },
+          {
+            "name": "E",
+            "type": 2
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "type": {
+        "def": {
           "composite": {
             "fields": [
               {
-                "type": 4,
+                "type": 5,
                 "typeName": "[u8; 32]"
               }
             ]
@@ -214,21 +257,13 @@
       }
     },
     {
-      "id": 4,
+      "id": 5,
       "type": {
         "def": {
           "array": {
             "len": 32,
-            "type": 5
+            "type": 6
           }
-        }
-      }
-    },
-    {
-      "id": 5,
-      "type": {
-        "def": {
-          "primitive": "u8"
         }
       }
     },
@@ -236,7 +271,7 @@
       "id": 6,
       "type": {
         "def": {
-          "primitive": "u128"
+          "primitive": "u8"
         }
       }
     },
@@ -244,10 +279,18 @@
       "id": 7,
       "type": {
         "def": {
+          "primitive": "u128"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": {
+        "def": {
           "composite": {
             "fields": [
               {
-                "type": 4,
+                "type": 5,
                 "typeName": "[u8; 32]"
               }
             ]
@@ -261,7 +304,7 @@
       }
     },
     {
-      "id": 8,
+      "id": 9,
       "type": {
         "def": {
           "primitive": "u64"
@@ -269,7 +312,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 10,
       "type": {
         "def": {
           "primitive": "u32"
@@ -277,7 +320,7 @@
       }
     },
     {
-      "id": 10,
+      "id": 11,
       "type": {
         "def": {
           "variant": {}
