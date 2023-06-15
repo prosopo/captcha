@@ -148,6 +148,8 @@ export const Manager = (
             // account has been found, check if account is already marked as human
             // first, ask the smart contract
             const contract = await loadContract()
+
+            console.log('contract', contract)
             // We don't need to show CAPTCHA challenges if the user is determined as human by the contract
             let contractIsHuman = false
             try {
@@ -202,6 +204,8 @@ export const Manager = (
             }
             const signed = await account.extension!.signer!.signRaw!(payload as unknown as SignerPayloadRaw)
             console.log('Signature:', signed)
+
+            console.log('dappContract', config.network.dappContract.name)
 
             // get a random provider
             const getRandomProviderResponse = (

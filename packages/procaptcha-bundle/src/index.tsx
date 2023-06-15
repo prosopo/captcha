@@ -36,7 +36,7 @@ function getConfig() {
         web2: true,
         dappName: 'Prosopo',
         network: {
-            endpoint: 'ws://127.0.0.1:9944',
+            endpoint: 'wss://rococo-contracts-rpc.polkadot.io:443',
             prosopoContract: {
                 address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
                 name: 'prosopo',

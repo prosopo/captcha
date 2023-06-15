@@ -20,7 +20,11 @@ import { sendFunds } from '../setup'
 require('dotenv').config()
 
 async function main(account: string) {
-    const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
+    const pair = await getPair(
+        getPairType(),
+        getSs58Format(),
+        'aunt dignity toddler arrange general blouse defy vintage vibrant volume toilet pattern'
+    )
     const env = new Environment(pair, defaultConfig())
     await env.isReady()
     await sendFunds(env, account, 'Provider', new BN(100000000000000000))

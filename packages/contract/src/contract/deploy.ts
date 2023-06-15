@@ -142,6 +142,15 @@ export async function dryRunDeploy(
             ]
 
             const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
+
+            console.log({
+                gasLimit: dryRunResult.gasRequired,
+                storageDepositLimit: dryRunResult.storageDeposit.isCharge ? dryRunResult.storageDeposit.asCharge : null,
+                //storageDepositLimit: null,
+                value: message.isPayable ? value : undefined,
+                salt,
+            })
+
             contract = code.tx[method](
                 {
                     gasLimit: dryRunResult.gasRequired,

@@ -11,11 +11,15 @@ import { AbiJSON, Wasm } from '../../util'
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
-    const pair = await getPair(pairType, ss58Format, '//Alice')
+    const pair = await getPair(
+        pairType,
+        ss58Format,
+        'aunt dignity toddler arrange general blouse defy vintage vibrant volume toilet pattern'
+    )
     const env = new Environment(pair, defaultConfig())
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
-    const params = ['1000000000000000', 1000, process.env.PROTOCOL_CONTRACT_ADDRESS, 50, 1000000]
+    const params = ['2', 1, process.env.PROTOCOL_CONTRACT_ADDRESS, 50, 1000000]
     const deployer = new ContractDeployer(env.api, abi, wasm, env.pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()
 }

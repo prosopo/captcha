@@ -34,7 +34,7 @@ function getDefaultProvider(): IProviderAccount {
         url: process.env.API_PORT ? `http://localhost:${process.env.API_PORT}` : 'http://localhost:3000',
         fee: 10,
         payee: ArgumentTypes.Payee.dapp,
-        stake: Math.pow(10, 13),
+        stake: 0,
         datasetFile: path.resolve('./data/captchas.json'),
         address: process.env.PROVIDER_ADDRESS || '',
         secret: getSecret(),
@@ -44,9 +44,9 @@ function getDefaultProvider(): IProviderAccount {
 
 function getDefaultDapp(): IDappAccount {
     return {
-        secret: '//Eve',
+        secret: 'aunt dignity toddler arrange general blouse defy vintage vibrant volume toilet pattern',
         contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
-        fundAmount: Math.pow(10, 12),
+        fundAmount: 0,
     }
 }
 
@@ -104,13 +104,13 @@ export async function setup() {
 
         const pairType = getPairType()
         const ss58Format = getSs58Format()
-        const secret = '//Alice'
+        const secret = 'aunt dignity toddler arrange general blouse defy vintage vibrant volume toilet pattern'
         const pair = await getPair(pairType, ss58Format, secret)
         const env = new Environment(pair, defaultConfig())
         await env.isReady()
 
         const dappStakeDefault = (await env.contractInterface['dappStakeThreshold']()).muln(2)
-        defaultDapp.fundAmount = BN.max(dappStakeDefault, new BN(defaultDapp.fundAmount))
+        defaultDapp.fundAmount = new BN(0)
         defaultProvider.secret = mnemonic
 
         env.logger.info(`Registering provider... ${defaultProvider.address}`)

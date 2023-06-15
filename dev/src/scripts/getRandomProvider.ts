@@ -21,7 +21,11 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 async function main() {
-    const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
+    const pair = await getPair(
+        getPairType(),
+        getSs58Format(),
+        'aunt dignity toddler arrange general blouse defy vintage vibrant volume toilet pattern'
+    )
     const env = new Environment(pair, defaultConfig())
     await env.isReady()
     const tasks = new Tasks(env)

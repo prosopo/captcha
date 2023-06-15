@@ -14,6 +14,7 @@ export async function setupDapp(env: ProsopoEnvironment, dapp: IDappAccount): Pr
             logger.info('   - dapp is already registered')
         } catch (e) {
             logger.info('   - dappRegister')
+            logger.info('   - dappRegister', dapp)
             await tasks.contract.tx.dappRegister(dapp.contractAccount, DappPayee.dapp)
             logger.info('   - dappFund')
             await tasks.contract.tx.dappFund(dapp.contractAccount, { value: dapp.fundAmount })
