@@ -27,8 +27,8 @@
     }
   },
   "dependencies": {
-    "@727-ventures/typechain-polkadot": "file:../../../typechain-polkadot/packages/typechain-polkadot",
-    "@727-ventures/typechain-types": "file:../../../typechain-polkadot/packages/typechain-types",
+    "@727-ventures/typechain-polkadot": "1.1.0",
+    "@727-ventures/typechain-types": "1.1.0",
     "@polkadot/api": "10.9.1",
     "@polkadot/api-contract": "10.9.1",
     "@polkadot/keyring": "12.3.2",
