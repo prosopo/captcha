@@ -98,7 +98,7 @@ async function start(nodeEnv: string) {
     // accept multiple paths for locations of files
     const paths = env.config.server.fileServePaths
     // if single path given convert to array
-    const locations = Array.isArray(paths) ? paths : [paths]
+    const locations = JSON.parse(paths)
     startFileSrv(port, locations)
 }
 
