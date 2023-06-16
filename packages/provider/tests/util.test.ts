@@ -35,7 +35,7 @@ describe('UTIL FUNCTIONS', () => {
         expect(shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9])).to.not.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9])
     })
     it('correctly hex hashes a string', () => {
-        expect(hexHash('https://localhost:8282')).to.equal(
+        expect(hexHash('https://localhost:9229')).to.equal(
             '0x09fd51a0d9e0d07be9aaab0643e1152c22cd11d9d128235552d476256b7351de'
         )
     })

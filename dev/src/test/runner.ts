@@ -47,7 +47,7 @@ const testConfig = {
     },
     server: {
         baseURL: 'http://localhost',
-        port: 8282,
+        port: 9229,
         fileServePaths: [],
     },
     batchCommit: {

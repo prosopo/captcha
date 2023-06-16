@@ -52,7 +52,7 @@ describe('CONTRACT HELPERS', function () {
     it('Properly encodes `Hash` arguments when passed unhashed', async function (done) {
         try {
             log.info('env ready')
-            const args = ['https://localhost:8282']
+            const args = ['https://localhost:9229']
             const methodObj = {
                 args: [{ type: { type: 'Hash', info: TypeDefInfo.UInt }, name: '' }],
                 docs: [],
