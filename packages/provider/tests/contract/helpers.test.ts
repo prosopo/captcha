@@ -69,7 +69,7 @@ describe('CONTRACT HELPERS', function () {
                 },
             }
             expect(encodeStringArgs(env.contractInterface.abi, methodObj, args)[0].toString()).to.equal(
-                hexToU8a('0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a38323832').toString()
+                hexToU8a('0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a39323239').toString()
             )
             log.info('end of test')
             done()
