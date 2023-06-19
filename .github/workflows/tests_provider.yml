@@ -126,6 +126,7 @@ jobs:
           npm run deploy_dapp
           npm run setup
           npm run start:provider 1>provider.log 2>&1 &
+          cd demos/client-example-server && NODE_ENV=test npm run build && cd ../..
           npm run start:server 1>server.log 2>&1 &
           sleep 30s
           cat provider.log
