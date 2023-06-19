@@ -121,7 +121,7 @@ Try registering a provider on the command line.
 ```bash
 npm run cli provider_register -- \
 --fee 10 \
---origin https://localhost:8282 \
+--origin https://localhost:9229 \
 --payee Provider \
 --address YOUR_PROVIDER_ADDRESS
 ````
@@ -131,7 +131,7 @@ Send a stake (`value`) and/or update one of the values previously set when regis
 ```bash
 npm run cli provider_update -- \
 --fee 10 \
---origin https://localhost:8282 \
+--origin https://localhost:9229 \
 --payee Provider \
 --address YOUR_PROVIDER_ADDRESS \
 --value 10
@@ -160,7 +160,7 @@ Using [Polkadot apps](https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9
 ### Register a provider
 
 ```bash
-npm run cli -- provider_register --fee=10 --origin=https://localhost:8282 --payee=Provider --address ADDRESS
+npm run cli -- provider_register --fee=10 --origin=https://localhost:9229 --payee=Provider --address ADDRESS
 ```
 
 | Param   | Description                                                                |
@@ -173,7 +173,7 @@ npm run cli -- provider_register --fee=10 --origin=https://localhost:8282 --paye
 ### Update a provider and optionally stake
 
 ```bash
-npm run cli -- provider_update --fee=10 --origin=https://localhost:8282 --payee=Provider --address ADDRESS --value STAKE_VALUE
+npm run cli -- provider_update --fee=10 --origin=https://localhost:9229 --payee=Provider --address ADDRESS --value STAKE_VALUE
 ```
 
 Params are the same as `provider_register` with the addition of `value`
