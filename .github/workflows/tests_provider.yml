@@ -124,6 +124,9 @@ jobs:
           npm run setup
           npm run start:provider 1>provider.log 2>&1 &
           npm run start:server 1>server.log 2>&1 &
+          sleep 30s
+          cat provider.log
+          cat server.log
           npm run -w @prosopo/client-example test
 
       - name: Remove the docker containers
