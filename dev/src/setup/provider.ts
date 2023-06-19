@@ -99,8 +99,6 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
     await tasks.contract.tx.providerUpdate(...providerRegisterArgs)
 
     logger.info('   - providerSetDataset')
-
-    await tasks.contract.tx.providerUpdate(...providerRegisterArgs)
     const datasetJSON = loadJSONFile(provider.datasetFile)
     await tasks.providerSetDatasetFromFile(datasetJSON)
 }
