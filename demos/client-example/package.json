@@ -30,7 +30,7 @@
     },
     "scripts": {
         "start": "webpack serve",
-        "build": "NODE_ENV=production react-scripts build",
+        "build": "webpack build",
         "test": "ts-node src/test",
         "eject": "react-scripts eject",
         "cypress:open": "cypress open",

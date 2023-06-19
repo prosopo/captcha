@@ -122,16 +122,16 @@ jobs:
           cp demos/client-example-server/env.development demos/client-example-server/.env.test
           cp demos/client-example/env.development demos/client-example/.env.test
           cp dev/env.test packages/cli/.env.test
-          npm run deploy_protocol
-          npm run deploy_dapp
-          npm run setup
-          npm run start:provider 1>provider.log 2>&1 &
+          NODE_ENV=test npm run deploy_protocol
+          NODE_ENV=test npm run deploy_dapp
+          NODE_ENV=test npm run setup
+          NODE_ENV=test npm run start:provider 1>provider.log 2>&1 &
           cd demos/client-example-server && NODE_ENV=test npm run build && cd ../..
-          npm run start:server 1>server.log 2>&1 &
-          sleep 30s
+          NODE_ENV=test npm run start:server 1>server.log 2>&1 &
+          sleep 20s
           cat provider.log
           cat server.log
-          npm run -w @prosopo/client-example test
+          NODE_ENV=test npm run -w @prosopo/client-example test
 
       - name: Remove the docker containers
         run: |

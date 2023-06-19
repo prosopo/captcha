@@ -92,6 +92,7 @@ module.exports = (env, argv) => {
       ],
     },
     plugins: [
+
       new InterpolateHtmlPlugin({PUBLIC_URL: '' }),
       new HtmlWebpackPlugin({
         template: './public/index.html',
@@ -100,7 +101,7 @@ module.exports = (env, argv) => {
       }),
       new webpack.DefinePlugin({
         'process.env.PUBLIC_URL': PUBLIC_URL,
-        'process.env.REACT_APP_SERVER_URL': JSON.stringify(process.env.REACT_APP_SERVER_URL || 'http://localhost:7272'),
+        'process.env.REACT_APP_SERVER_URL': JSON.stringify(process.env.REACT_APP_SERVER_URL || 'http://localhost:9228'),
         'process.env.REACT_APP_WEB2': JSON.stringify(process.env.REACT_APP_WEB2 || 'true'),
         'process.env.REACT_APP_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.REACT_APP_SUBSTRATE_ENDPOINT || 'http://localhost:9944'),
         'process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || ''),

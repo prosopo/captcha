@@ -78,7 +78,7 @@ module.exports = (env, argv) => {
                 'process.env.REACT_APP_SERVER_URL': JSON.stringify(
                     process.env.REACT_APP_SERVER_URL || 'https://localhost'
                 ),
-                'process.env.REACT_APP_SERVER_PORT': JSON.stringify(process.env.REACT_APP_SERVER_PORT || '7272'),
+                'process.env.REACT_APP_SERVER_PORT': JSON.stringify(process.env.REACT_APP_SERVER_PORT || '9228'),
                 'process.env.LOG_LEVEL': JSON.stringify(process.env.LOG_LEVEL || 'info'),
                 'process.env.REACT_APP_SOLUTION_THRESHOLD': JSON.stringify(
                     process.env.REACT_APP_SOLUTION_THRESHOLD || '80'
