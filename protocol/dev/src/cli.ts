@@ -173,6 +173,33 @@ export async function processArgs(args: string[]) {
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name);
     const packages = [...crates, ...contracts]
+    const outputDir = path.join(repoDir, 'target/ink')
+    const ignoredContractsBuild = ['common_dev'] // contracts to ignore when building
+
+    console.log(`repoDir: ${repoDir}`)
+    console.log(`contractsDir: ${contractsDir}`)
+    console.log(`cratesDir: ${cratesDir}`)
+    console.log(`outputDir: ${outputDir}`)
+    
+    const getContractsToBuild = (contracts: string[]): string[] => {
+        // ignore contracts which should not be built
+        return contracts.filter(contract => !ignoredContractsBuild.includes(contract))
+    }
+
+    const moveMetadata = (contracts: string[]) => {
+        for(const contract of contracts) {
+            console.log(`moving metadata for ${contract} contract`)
+            
+            const metadataPath = `${outputDir}/${contract}/metadata.json`
+            const exists = fs.existsSync(metadataPath);
+            console.log(`${metadataPath} exists: ${exists}`)
+            if(exists) {
+                // move the metadata to be named after the contract
+                const newPath = `${outputDir}/${contract}.json`
+                fs.renameSync(metadataPath, newPath);
+            }
+        }
+    }
 
     const addPackageOption = (yargs: yargs.Argv, customPackages?: string[]) => {
         return yargs
@@ -364,7 +391,7 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                const contracts = argv.package as string[];
+                const contracts = getContractsToBuild(argv.package as string[]);
                 delete argv.package;
                 // clear any previous env backup files
                 clearEnvBackupFiles(contractsDir)
@@ -374,18 +401,16 @@ export async function processArgs(args: string[]) {
                 setEnvVariables(cratesDir)
 
                 for(const contract of contracts) {
-                    if(contract === "common_dev") {
-                        // skip common_dev contract as it is not a proper contract, only used for library purposes and does not build independently
-                        console.log("Skipping common_dev contract");
-                    } else {
-                        const contractPath = `${contractsDir}/${contract}`
-                        await execCargo(argv, 'contract build', contractPath)
-                    }
+                    const contractPath = `${contractsDir}/${contract}`
+                    await execCargo(argv, 'contract build', contractPath)
                 }
 
                 // unset the env variables using the backups
                 unsetEnvVariables(contractsDir)
                 unsetEnvVariables(cratesDir)
+
+                // move metadata.json to <contract_name>.json
+                moveMetadata(contracts)
             },
             []
         ).command(
