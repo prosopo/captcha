@@ -67,7 +67,7 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
         provider.fee,
         provider.payee,
         {
-            value: provider.stake,
+            value: 0,
         },
     ]
     let providerExists = false
@@ -91,12 +91,21 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
     )(provider.address)
     logger.info(registeredProvider)
     logger.info('   - providerStake')
+    const providerUpdateArgs: Parameters<typeof tasks.contract.query.providerUpdate> = [
+        Array.from(hexToU8a(stringToHexPadded(provider.url))),
+        provider.fee,
+        provider.payee,
+        {
+            value: provider.stake,
+        },
+    ]
+
     const queryProviderUpdate = await wrapQuery(
         tasks.contract.query.providerUpdate,
         tasks.contract.query
-    )(...providerRegisterArgs)
+    )(...providerUpdateArgs)
 
-    await tasks.contract.tx.providerUpdate(...providerRegisterArgs)
+    await tasks.contract.tx.providerUpdate(...providerUpdateArgs)
 
     logger.info('   - providerSetDataset')
     const datasetJSON = loadJSONFile(provider.datasetFile)
