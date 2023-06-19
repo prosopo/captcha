@@ -131,7 +131,10 @@ jobs:
           sleep 20s
           cat provider.log
           cat server.log
-          NODE_ENV=test npm run -w @prosopo/client-example test
+          NODE_ENV=test npm run -w @prosopo/client-example build
+          sleep 20s
+          NODE_ENV=test npm run -w @prosopo/client-example cypress:run
+          
 
       - name: Remove the docker containers
         run: |
