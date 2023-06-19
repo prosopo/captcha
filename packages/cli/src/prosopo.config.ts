@@ -18,7 +18,7 @@ import { getLogLevel } from './process.env'
 
 export default (): ProsopoConfig => ({
     logLevel: getLogLevel(),
-    defaultEnvironment: EnvironmentTypes.development, //TODO change to NODE_ENV
+    defaultEnvironment: (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypes.development, //TODO change to DEFAULT_ENVIRONMENT
     account: {
         password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
     },
@@ -63,8 +63,8 @@ export default (): ProsopoConfig => ({
         basePath: '',
     },
     server: {
-        baseURL: process.env.API_BASE_URL || '', // TODO add env var
-        port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229, // TODO add env var
-        fileServePaths: process.env.FILE_SERVE_PATHS || "[]", // TODO add env var
+        baseURL: process.env.API_BASE_URL || '',
+        port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,
+        fileServePaths: process.env.FILE_SERVE_PATHS || '[]',
     },
 })

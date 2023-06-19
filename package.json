@@ -75,6 +75,7 @@
     "setup:all": "npm run deploy_protocol && npm run deploy_dapp && npm run setup",
     "start:provider": "npm -w @prosopo/cli run start",
     "start:server": "npm -w @prosopo/client-example-server run start",
+    "dev:server": "npm -w @prosopo/client-example-server run dev",
     "start:demo": "npm -w @prosopo/client-example run start",
     "start:bundle": "npm -w client-bundle-example run start",
     "provider": "npm -w @prosopo/provider run cli",

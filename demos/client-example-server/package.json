@@ -2,10 +2,12 @@
   "name": "@prosopo/client-example-server",
   "version": "0.1.11",
   "description": "Backend for client-example",
-  "main": "build/app.js",
+  "main": "dist/app.js",
   "scripts": {
-    "start": "webpack serve --mode=production",
-    "build": "webpack --mode=production",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/app.ts",
+    "start": "node ./dist/prosopo_client_example_server.main.bundle.js",
+    "build": "webpack build",
+    "build:dev": "webpack build --mode=development",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:fix": "npx eslint . --fix"
   },
@@ -24,13 +26,16 @@
     "@prosopo/contract": "^0.1.11",
     "@prosopo/server": "^0.1.11",
     "@prosopo/types": "^0.1.11",
+    "@typegoose/auto-increment": "3.3.0",
     "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.2.0",
-    "mongoose-sequence": "^5.3.1"
+    "mongoose": "^7.2.0"
   },
   "devDependencies": {
-    "ts-loader": "^9.4.3"
+    "ts-loader": "^9.4.3",
+    "ts-node": "^10.9.1",
+    "nodemon": "^2.0.22"
   }
 }
