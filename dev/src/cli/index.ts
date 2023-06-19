@@ -9,6 +9,7 @@ import { updateEnvFiles } from '../util/updateEnv'
 import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
+import { exec } from 'child_process'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -125,6 +126,17 @@ export async function processArgs(args) {
                 const outPath = path.resolve(argv.out)
                 // pass in relative path as typechain will resolve it relative to the cwd
                 await importContract(argv.in, argv.out)
+            },
+        })
+        .command({
+            command: 'import_all_contracts',
+            describe: 'Update all contracts into the contract package.',
+            builder: (yargs) => yargs,
+            handler: async (argv) => {
+                const contracts = ["captcha", "proxy"];
+                for (const contract of contracts) {
+                    await exec(`cd ${__dirname}/../.. && node dist/cli/index.js import_contract --in=../protocol/target/ink/${contract} --out=../packages/contract/src/typechain/${contract}`)
+                }
             },
         })
 

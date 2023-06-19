@@ -10,7 +10,7 @@ export async function setupDapp(env: ProsopoEnvironment, dapp: IDappAccount): Pr
         const tasks = new Tasks(env)
 
         try {
-            ;(await tasks.contract.query.getDappDetails(dapp.contractAccount)).value.unwrap().unwrap()
+            ;(await tasks.contract.query.getDapp(dapp.contractAccount)).value.unwrap().unwrap()
             logger.info('   - dapp is already registered')
         } catch (e) {
             logger.info('   - dappRegister')

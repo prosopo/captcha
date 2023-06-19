@@ -107,9 +107,8 @@ export type Dapp = {
 }
 
 export type RandomProvider = {
-	providerId: AccountId,
+	providerAccount: AccountId,
 	provider: Provider,
 	blockNumber: number,
-	datasetIdContent: Hash
 }
 
