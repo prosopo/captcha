@@ -7,7 +7,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const InterpolateHtmlPlugin = require('interpolate-html-plugin')
 loadEnv(rootDir)
 const PUBLIC_URL = process.env.PUBLIC_URL || '/';
-const devMode = process.env.NODE_ENV !== "production";
+const devMode = process.env.NODE_ENV === "development";
 console.log('PUBLIC_URL', PUBLIC_URL)
 console.log('devMode', devMode)
 
