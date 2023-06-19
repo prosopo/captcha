@@ -88,7 +88,7 @@ jobs:
           cd captcha
           echo $(npx tsc --version)
           cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
-          cp env.development .env.test
+          cp env.test .env.test
           echo "NODE_ENV=test" >> $GITHUB_ENV
           echo $NODE_ENV
         
@@ -119,6 +119,9 @@ jobs:
       - name: Deploy the contracts and run the cypress tests on client-example
         run: |
           cd captcha
+          cp demos/client-example-server/env.development demos/client-example-server/.env.test
+          cp demos/client-example/env.development demos/client-example/.env.test
+          cp dev/env.test packages/cli/.env.test
           npm run deploy_protocol
           npm run deploy_dapp
           npm run setup
