@@ -24,11 +24,11 @@ import { loadJSONFile } from '@prosopo/cli'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
-        const providerDetails = (await env.contractInterface.query.getProviderDetails(account.address)).value
+        const provider = (await env.contractInterface.query.getProvider(account.address)).value
             .unwrap()
             .unwrap()
-        console.log(providerDetails.status)
-        if (providerDetails.status.toString() === 'Active') {
+        console.log(provider.status)
+        if (provider.status.toString() === 'Active') {
             env.logger.info('Provider exists and is active, skipping registration.')
             return
         }
