@@ -192,7 +192,6 @@ export async function processArgs(args: string[]) {
             
             const metadataPath = `${outputDir}/${contract}/metadata.json`
             const exists = fs.existsSync(metadataPath);
-            console.log(`${metadataPath} exists: ${exists}`)
             if(exists) {
                 // move the metadata to be named after the contract
                 const newPath = `${outputDir}/${contract}.json`
