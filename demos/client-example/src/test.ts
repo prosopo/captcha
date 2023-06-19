@@ -14,11 +14,12 @@ function startWebpackDevServer() {
         let resolved = false
         let rejected = false
         process.env.PORT = '3001'
-        const reactScriptsProcess = spawn('react-scripts', ['start'])
+        process.env.NODE_ENV = 'test'
+        const reactScriptsProcess = spawn('webpack', ['serve'])
         reactScriptsProcess.stdout.pipe(process.stdout)
         reactScriptsProcess.stdout.addListener('data', (chunk) => {
             const msg = chunk.toString()
-            if (msg.indexOf('No issues found.') >= 0) {
+            if (msg.indexOf('compiled successfully') >= 0) {
                 resolved = true
                 resolve()
             } else if (!resolved && msg.indexOf('webpack:') >= 0) {
