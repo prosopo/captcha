@@ -194,7 +194,7 @@ export async function processArgs(args: string[]) {
             const exists = fs.existsSync(metadataPath);
             if(exists) {
                 // move the metadata to be named after the contract
-                const newPath = `${outputDir}/${contract}.json`
+                const newPath = `${outputDir}/${contract}/${contract}.json`
                 fs.renameSync(metadataPath, newPath);
             }
         }
