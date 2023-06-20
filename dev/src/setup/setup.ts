@@ -11,18 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ArgumentTypes } from '@prosopo/types'
 import { BN } from '@polkadot/util'
-import { ProsopoEnvError, getPair } from '@prosopo/common'
-import { generateMnemonic } from '@prosopo/contract'
-import { defaultConfig, getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
 import { Environment } from '@prosopo/env'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
+import { ProsopoEnvError, getPair } from '@prosopo/common'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { defaultConfig, getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
+import { generateMnemonic } from '@prosopo/contract'
+import { registerProvider } from './provider'
+import { setupDapp } from './dapp'
 import fse from 'fs-extra'
 import path from 'path'
-import { setupDapp } from './dapp'
-import { registerProvider } from './provider'
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { ArgumentTypes } from '@prosopo/types'
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
@@ -51,10 +51,14 @@ function getDefaultDapp(): IDappAccount {
 }
 
 async function copyEnvFile() {
-    const rootDir = getRootDir()
-    const tplEnvFile = getEnvFile(rootDir, 'env')
-    const envFile = getEnvFile(rootDir, '.env')
-    await fse.copy(tplEnvFile, envFile, { overwrite: false })
+    try {
+        const rootDir = getRootDir()
+        const tplEnvFile = getEnvFile(rootDir, 'env')
+        const envFile = getEnvFile(rootDir, '.env')
+        await fse.copy(tplEnvFile, envFile, { overwrite: false })
+    } catch (err) {
+        console.log(err)
+    }
 }
 
 function updateEnvFileVar(source: string, name: string, value: string) {
