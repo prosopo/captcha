@@ -6,7 +6,17 @@ import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
 import { stdout, stderr, stdin } from 'process';
 import fs from 'fs'
-import 'dotenv/config'
+import { config } from 'dotenv'
+
+config({ path: `.env.${process.env.NODE_ENV}` })
+console.log("env:", process.env.NODE_ENV)
+const env = Object.keys(process.env)
+  .filter(key => key.startsWith("ENV_"))
+  .reduce((obj, key) => {
+    obj[key] = process.env[key];
+    return obj;
+  }, {});
+console.log("env vars:", env)
 
 const contractSrcFileExtension = '.rs'
 const backupFileExtension = '.bak'
