@@ -137,13 +137,16 @@ export async function processArgs(args) {
                 for (const contract of contracts) {
                     const inDir = `../protocol/target/ink/${contract}`
                     const outDir = `../packages/contract/src/typechain/${contract}`
-                    // await exec(`mkdir -p ${outDir}`)
-                    // await exec(`mkdir -p ${inDir}`)
-                    console.log(`${outDir}`)
-                    console.log(`${inDir}`)
+                    await exec(`mkdir -p ${outDir}`)
+                    await exec(`mkdir -p ${inDir}`)
+                    // console.log(`${outDir}`)
+                    // console.log(`${inDir}`)
                     await exec(`node dist/cli/index.js import_contract --in=${inDir} --out=${outDir}`)
-                    await exec(`cp -r ../packages/contract/src/typechain/captcha/types-arguments ../packages/types/src/contract/typechain/captcha/types-arguments`)
-                    await exec(`cp -r ../packages/contract/src/typechain/captcha/types-returns ../packages/types/src/contract/typechain/captcha/types-returns`)
+                    // console.log(`${path.resolve('../packages/contract/src/typechain/captcha/types-arguments')}`)
+                    // console.log(`${path.resolve('../packages/types/src/contract/typechain/captcha/types-arguments')}`)
+                    await exec(`mkdir -p ../packages/types/src/contract/typechain/captcha`)
+                    await exec(`cp -rv ../packages/contract/src/typechain/captcha/types-arguments ../packages/types/src/contract/typechain/captcha`)
+                    await exec(`cp -rv ../packages/contract/src/typechain/captcha/types-returns ../packages/types/src/contract/typechain/captcha`)
                 }
             },
         })

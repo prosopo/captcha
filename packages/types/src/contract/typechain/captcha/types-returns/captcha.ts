@@ -1,18 +1,37 @@
 import type BN from 'bn.js';
 import type {ReturnNumber} from '@727-ventures/typechain-types';
 
-export type AccountId = string | number[]
-
 export type Hash = string | number[]
+
+export type AccountId = string | number[]
 
 export enum LangError {
 	couldNotReadInput = 'CouldNotReadInput'
 }
 
+export enum Payee {
+	provider = 'Provider',
+	dapp = 'Dapp'
+}
+
+export enum DappPayee {
+	provider = 'Provider',
+	dapp = 'Dapp',
+	any = 'Any'
+}
+
+export enum GovernanceStatus {
+	active = 'Active',
+	inactive = 'Inactive'
+}
+
 export enum Error {
-	notAuthorised = 'NotAuthorised',
+	notAdmin = 'NotAdmin',
+	notOwner = 'NotOwner',
 	contractTransferFailed = 'ContractTransferFailed',
+	providerAccountExists = 'ProviderAccountExists',
 	providerExists = 'ProviderExists',
+	providerAccountDoesNotExist = 'ProviderAccountDoesNotExist',
 	providerDoesNotExist = 'ProviderDoesNotExist',
 	providerInsufficientFunds = 'ProviderInsufficientFunds',
 	providerInactive = 'ProviderInactive',
@@ -34,59 +53,7 @@ export enum Error {
 	noCorrectCaptcha = 'NoCorrectCaptcha',
 	notEnoughActiveProviders = 'NotEnoughActiveProviders',
 	providerFeeTooHigh = 'ProviderFeeTooHigh',
-	commitAlreadyExists = 'CommitAlreadyExists',
-	captchaSolutionCommitmentAlreadyExists = 'CaptchaSolutionCommitmentAlreadyExists',
-	verifyFailed = 'VerifyFailed'
-}
-
-export enum Payee {
-	provider = 'Provider',
-	dapp = 'Dapp'
-}
-
-export enum DappPayee {
-	provider = 'Provider',
-	dapp = 'Dapp',
-	any = 'Any'
-}
-
-export enum GovernanceStatus {
-	active = 'Active',
-	inactive = 'Inactive'
-}
-
-export type Commit = {
-	id: Hash,
-	user: AccountId,
-	datasetId: Hash,
-	status: CaptchaStatus,
-	dapp: AccountId,
-	provider: AccountId,
-	requestedAt: number,
-	completedAt: number,
-	userSignaturePart1: Array<number>,
-	userSignaturePart2: Array<number>
-}
-
-export enum CaptchaStatus {
-	pending = 'Pending',
-	approved = 'Approved',
-	disapproved = 'Disapproved'
-}
-
-export type LastCorrectCaptcha = {
-	before: number,
-	dappId: AccountId
-}
-
-export type CaptchaData = {
-	provider: AccountId,
-	datasetId: Hash,
-	datasetIdContent: Hash
-}
-
-export type User = {
-	history: Array<Hash>
+	commitAlreadyExists = 'CommitAlreadyExists'
 }
 
 export type Provider = {
@@ -106,9 +73,49 @@ export type Dapp = {
 	payee: DappPayee
 }
 
+export type UserHistorySummary = {
+	correct: number,
+	incorrect: number,
+	score: number
+}
+
+export type Commit = {
+	id: Hash,
+	userAccount: AccountId,
+	datasetId: Hash,
+	status: CaptchaStatus,
+	dappContract: AccountId,
+	providerAccount: AccountId,
+	requestedAt: number,
+	completedAt: number,
+	userSignaturePart1: Array<number>,
+	userSignaturePart2: Array<number>
+}
+
+export enum CaptchaStatus {
+	pending = 'Pending',
+	approved = 'Approved',
+	disapproved = 'Disapproved'
+}
+
+export type LastCorrectCaptcha = {
+	before: number,
+	dappContract: AccountId
+}
+
+export type CaptchaData = {
+	providerAccount: AccountId,
+	datasetId: Hash,
+	datasetIdContent: Hash
+}
+
+export type User = {
+	history: Array<Hash>
+}
+
 export type RandomProvider = {
 	providerAccount: AccountId,
 	provider: Provider,
-	blockNumber: number,
+	blockNumber: number
 }
 
