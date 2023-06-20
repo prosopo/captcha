@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 23.0.4, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 47.3 47.3" style="enable-background:new 0 0 47.3 47.3;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#6F48FA;}
+	.st1{fill:url(#SVGID_1_);}
+</style>
+<title>features-icon-2</title>
+<g>
+	<path class="st0" d="M2.6,24.3l21.7-0.2c-11.9,0-21.6-9.7-21.6-21.6"/>
+	<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="2.6" y1="35.1" x2="24.3" y2="35.1">
+		<stop  offset="0" style="stop-color:#FF557A"/>
+		<stop  offset="0.2326" style="stop-color:#FA5979"/>
+		<stop  offset="1" style="stop-color:#F85A79"/>
+	</linearGradient>
+	<path class="st1" d="M2.6,46l21.7-0.2c-11.9,0-21.6-9.7-21.6-21.6"/>
+	<path class="st0" d="M24.3,24.3L46,24.1c-11.9,0-21.6-9.7-21.6-21.6"/>
+	<path class="st0" d="M24.3,46L46,45.8c-11.9,0-21.6-9.7-21.6-21.6"/>
+</g>
+</svg>

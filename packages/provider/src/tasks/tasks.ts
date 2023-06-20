@@ -20,11 +20,13 @@ import {
     CaptchaStates,
     CaptchaStatus,
     CaptchaWithProof,
+    Dapp,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
     Hash,
     PendingCaptchaRequest,
+    Provider,
     RandomProvider,
 } from '@prosopo/types'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
@@ -48,6 +50,7 @@ import { SubmittableResult } from '@polkadot/api'
 import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
+import { wrapQuery } from '@prosopo/contract'
 import consola from 'consola'
 
 /**
@@ -93,8 +96,8 @@ export class Tasks {
         }
 
         await this.db?.storeDataset(dataset)
-
-        return (await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {})).result
+        const txResult = await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {})
+        return txResult.result
     }
 
     // Other tasks
@@ -223,7 +226,7 @@ export class Tasks {
      * Validate that the dapp is active in the contract
      */
     async dappIsActive(dappAccount: string): Promise<boolean> {
-        const dapp = (await this.contract.methods.getDappDetails(dappAccount, {})).value.unwrap().unwrap()
+        const dapp: Dapp = await wrapQuery(this.contract.query.getDappDetails, this.contract.query)(dappAccount)
         //dapp.status.isActive doesn't work: https://substrate.stackexchange.com/questions/6333/how-do-we-work-with-polkadot-js-enums-in-typescript
         return dapp.status.toString() === 'Active'
     }
@@ -232,7 +235,10 @@ export class Tasks {
      * Validate that the provider is active in the contract
      */
     async providerIsActive(providerAccount: string): Promise<boolean> {
-        const provider = (await this.contract.methods.getProviderDetails(providerAccount, {})).value.unwrap().unwrap()
+        const provider: Provider = await wrapQuery(
+            this.contract.query.getProviderDetails,
+            this.contract.query
+        )(providerAccount)
         return provider.status.toString() === 'Active'
     }
 

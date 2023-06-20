@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
-import { hexToNumber, hexToString, isHex, u8aToHex } from '@polkadot/util'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
+import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex } from '@polkadot/util'
 
 const ss58Format = 42
 const arg = process.argv.slice(2)[0].trim()
@@ -50,3 +50,5 @@ if (argIsHex) {
     console.log(`Hashing string ${arg} using blake2AsHex`)
     console.log(blake2AsHex(arg))
 }
+
+console.log(`hexToU8a(stringToHex(arg)) ${hexToU8a(stringToHex(arg))}`)

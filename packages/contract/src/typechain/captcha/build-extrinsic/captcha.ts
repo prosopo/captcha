@@ -10,8 +10,8 @@ import type { ApiPromise } from '@polkadot/api';
 
 
 export default class Methods {
-	private __nativeContract : ContractPromise;
-	private __apiPromise: ApiPromise;
+	readonly __nativeContract : ContractPromise;
+	readonly __apiPromise: ApiPromise;
 
 	constructor(
 		nativeContract : ContractPromise,
