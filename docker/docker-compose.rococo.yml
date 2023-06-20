@@ -1,7 +1,7 @@
 version: '3.8'
 services:
     database:
-        image: mongo:5.0.4
+        image: mongo:4.4.8
         # volumes:
         #   - ./db:/data/db
         ports:
