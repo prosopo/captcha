@@ -113,7 +113,7 @@ describe('BATCH TESTS', function () {
 
             const providerTasks = await getSignedTasks(env, providerAccount)
             const providerDetails = (
-                await providerTasks.contract.query.getProviderDetails(accountAddress(providerAccount))
+                await providerTasks.contract.query.getProvider(accountAddress(providerAccount))
             ).value
                 .unwrap()
                 .unwrap()
@@ -146,10 +146,10 @@ describe('BATCH TESTS', function () {
                     const userSignature = signer.sign(stringToHex(requestHash))
                     const commit: UserCommitmentRecord = {
                         id: commitmentId,
-                        user: accountAddress(dappUser),
-                        provider: accountAddress(providerAccount),
+                        userAccount: accountAddress(dappUser),
+                        providerAccount: accountAddress(providerAccount),
                         datasetId: providerDetails.datasetId.toString(),
-                        dapp: accountContract(dappAccount),
+                        dappContract: accountContract(dappAccount),
                         status,
                         requestedAt,
                         completedAt,
@@ -268,7 +268,7 @@ describe('BATCH TESTS', function () {
                         const approved = count % 2 === 0 ? 'Approved' : 'Disapproved'
                         env.logger.debug(`Getting commitmentId ${commitment.id} from contract`)
                         const contractCommitment = (
-                            await contractApi.query.getCaptchaSolutionCommitment(commitment.id)
+                            await contractApi.query.getCommit(commitment.id)
                         ).value
                             .unwrap()
                             .unwrap()
