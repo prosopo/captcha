@@ -14,20 +14,17 @@ const log = logger(LogLevel.Info, 'dev.deploy')
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
-    const pair = await getPair(pairType, ss58Format, '//Alice')
+    const pair = await getPair(
+        pairType,
+        ss58Format,
+        'spoil hen genius trust wonder bottom property virtual sunset depend hobby glide'
+    )
     const env = new Environment(pair, defaultConfig())
     await env.isReady()
     log.debug(reverseHexString(env.api.createType('u16', 10).toHex().toString()), 'max_user_history_len')
     log.debug(reverseHexString(env.api.createType('BlockNumber', 32).toHex().toString()), 'max_user_history_age')
     log.debug(reverseHexString(env.api.createType('u16', 1).toHex().toString()), 'min_num_active_providers')
-    const params = [
-        env.api.consts.balances.existentialDeposit, // provider_stake_threshold Balance
-        env.api.consts.balances.existentialDeposit, // dapp_stake_threshold Balance
-        env.api.createType('u16', 10), // max_user_history_len u16
-        env.api.createType('BlockNumber', 32), // max_user_history_age BlockNumber
-        env.api.createType('u16', 1), // min_num_active_providers u16
-        oneUnit(env.api).divn(1000), // max_provider_fee Balance
-    ]
+    const params = []
 
     const deployer = new ContractDeployer(env.api, abi, wasm, env.pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()

@@ -20,11 +20,10 @@ pub use self::captcha::{Captcha, CaptchaRef};
 #[ink::contract]
 pub mod captcha {
 
-    const ENV_DAPP_STAKE_THRESHOLD: Balance = 1000000000;
-    const ENV_PROVIDER_STAKE_THRESHOLD: Balance = 1000000000;
+    const ENV_DAPP_STAKE_THRESHOLD: Balance = 0;
+    const ENV_PROVIDER_STAKE_THRESHOLD: Balance = 0;
     const ENV_AUTHOR_BYTES: [u8; 32] = [
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0,
+        8,12,184,26,128,36,34,5,18,42,190,63,189,102,49,193,158,14,11,216,28,219,158,38,217,194,144,9,217,161,26,29
     ]; // the account which can instantiate the contract
     const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
     const ENV_MAX_PROVIDER_FEE: u32 = 1000000; // the maximum fee a provider can charge for a commit
