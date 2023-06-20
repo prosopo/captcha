@@ -348,8 +348,10 @@ pub mod captcha {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn new() -> Self {
-            if Self::env().caller() != AccountId::from(ENV_AUTHOR_BYTES) {
-                panic!("Not authorised to instantiate this contract");
+            let author = AccountId::from(ENV_AUTHOR_BYTES);
+            let caller = Self::env().caller();
+            if caller != author {
+                panic!("Not authorised to instantiate this contract: {:?} != {:?}", caller, author);
             }
             Self::new_unguarded()
         }
