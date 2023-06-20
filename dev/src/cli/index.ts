@@ -9,7 +9,7 @@ import { updateEnvFiles } from '../util/updateEnv'
 import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
-import { exec } from 'child_process'
+import { exec } from '../util'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -135,7 +135,15 @@ export async function processArgs(args) {
             handler: async (argv) => {
                 const contracts = ["captcha", "proxy"];
                 for (const contract of contracts) {
-                    await exec(`cd ${__dirname}/../.. && node dist/cli/index.js import_contract --in=../protocol/target/ink/${contract} --out=../packages/contract/src/typechain/${contract}`)
+                    const inDir = `../protocol/target/ink/${contract}`
+                    const outDir = `../packages/contract/src/typechain/${contract}`
+                    // await exec(`mkdir -p ${outDir}`)
+                    // await exec(`mkdir -p ${inDir}`)
+                    console.log(`${outDir}`)
+                    console.log(`${inDir}`)
+                    await exec(`node dist/cli/index.js import_contract --in=${inDir} --out=${outDir}`)
+                    await exec(`cp -r ../packages/contract/src/typechain/captcha/types-arguments ../packages/types/src/contract/typechain/captcha/types-arguments`)
+                    await exec(`cp -r ../packages/contract/src/typechain/captcha/types-returns ../packages/types/src/contract/typechain/captcha/types-returns`)
                 }
             },
         })
