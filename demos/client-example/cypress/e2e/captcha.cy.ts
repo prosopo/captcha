@@ -3,7 +3,7 @@
 import '@cypress/xpath'
 describe('Captchas', () => {
     beforeEach(() => {
-        cy.visit('http://localhost:3001')
+        cy.visit('http://[::1]:3001')
     })
 
     it("Captchas load when 'I am human' is pressed", async () => {
