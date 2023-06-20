@@ -133,7 +133,9 @@ jobs:
           cat server.log
           NODE_ENV=test npm run -w @prosopo/client-example build
           sleep 20s
-          NODE_ENV=test npm run -w @prosopo/client-example start &
+          NODE_ENV=test npm run -w @prosopo/client-example start 1>client-example.log 2>&1 &
+          sleep 20s
+          cat client-example.log
           NODE_ENV=test npm run -w @prosopo/client-example cypress:run
           
 
