@@ -7,13 +7,13 @@ const PUBLIC_URL = process.env.PUBLIC_URL || '/';
 const libraryName = 'prosopo_client_example_bundle'
 const mode = 'development'
 loadEnv()
-module.exports =  {
+module.exports  = (env, argv) => {
+  return {
     mode: mode,
     target: 'web',
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
-      fallback: {
-      },
+      fallback: {},
     },
     entry: './src/index.tsx',
     output: {
@@ -68,7 +68,7 @@ module.exports =  {
       ],
     },
     plugins: [
-      new InterpolateHtmlPlugin({PUBLIC_URL: '' }),
+      new InterpolateHtmlPlugin({PUBLIC_URL: ''}),
       new HtmlWebpackPlugin({
         template: './public/index.html',
         filename: './index.html',
@@ -85,3 +85,4 @@ module.exports =  {
     ]
   }
 
+}
