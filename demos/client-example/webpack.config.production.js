@@ -7,6 +7,7 @@ const PUBLIC_URL = process.env.PUBLIC_URL || '/';
 const libraryName = 'prosopo_client_example_bundle'
 const mode = 'production'
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
 
 // plugin that exits the process once compilation is done
 const donePlugin =   {
@@ -100,6 +101,13 @@ module.exports  = (env, argv) => {
         'process.env.REACT_APP_SUBSTRATE_ENDPOINT': JSON.stringify(process.env.REACT_APP_SUBSTRATE_ENDPOINT || 'http://localhost:9944'),
         'process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || ''),
         'process.env.REACT_APP_DAPP_CONTRACT_ADDRESS': JSON.stringify(process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || ''),
+      }),
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true,
+          },
+        },
       }),
     ]
   }
