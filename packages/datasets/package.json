@@ -29,7 +29,7 @@
     }
   },
   "dependencies": {
-    "@polkadot/util": "12.2.2",
+    "@polkadot/util": "12.3.2",
     "@prosopo/common": "^0.1.11",
     "@prosopo/contract": "^0.1.11",
     "@prosopo/types": "^0.1.11",

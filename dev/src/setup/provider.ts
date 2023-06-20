@@ -14,20 +14,19 @@
 import { Environment } from '@prosopo/env'
 import { IProviderAccount } from '@prosopo/types'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { ProsopoContractError, stringToHexPadded } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds'
 import { hexToU8a } from '@polkadot/util'
 import { loadJSONFile } from '@prosopo/cli'
+import { stringToHexPadded, wrapQuery } from '@prosopo/contract'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
         const provider = (await env.contractInterface.query.getProvider(account.address)).value
             .unwrap()
             .unwrap()
-        console.log(provider.status)
         if (provider.status.toString() === 'Active') {
             env.logger.info('Provider exists and is active, skipping registration.')
             return
@@ -68,34 +67,46 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
         provider.fee,
         provider.payee,
         {
-            value: provider.stake,
+            value: 0,
         },
     ]
     let providerExists = false
     try {
-        const queryResult = await tasks.contract.query.providerRegister(...providerRegisterArgs)
-        const error = queryResult.value.err || queryResult.value.ok?.err
-        if (error && error == 'ProviderExists') {
+        await wrapQuery(tasks.contract.query.providerRegister, tasks.contract.query)(...providerRegisterArgs)
+    } catch (e) {
+        if (e === 'ProviderExists') {
+            logger.info('Provider already exists')
             providerExists = true
-        } else if (error) {
-            throw new ProsopoContractError(error)
+        } else {
+            throw e
         }
-    } catch (err) {
-        logger.debug('Unexpected error')
-        throw new ProsopoContractError(err)
     }
+
     if (!providerExists) {
         await tasks.contract.tx.providerRegister(...providerRegisterArgs)
     }
-
-    const registeredProvider = await env.contractInterface.query.getProviderDetails(provider.address)
-    const registeredProviderError = registeredProvider.value.err || registeredProvider.value.ok?.err
-    if (registeredProviderError) {
-        throw new ProsopoContractError(registeredProviderError)
-    }
+    const registeredProvider = await wrapQuery(
+        tasks.contract.query.getProvider,
+        tasks.contract.query
+    )(provider.address)
+    logger.info(registeredProvider)
     logger.info('   - providerStake')
-    await tasks.contract.query.providerUpdate(...providerRegisterArgs)
-    await tasks.contract.tx.providerUpdate(...providerRegisterArgs)
+    const providerUpdateArgs: Parameters<typeof tasks.contract.query.providerUpdate> = [
+        Array.from(hexToU8a(stringToHexPadded(provider.url))),
+        provider.fee,
+        provider.payee,
+        {
+            value: provider.stake,
+        },
+    ]
+
+    const queryProviderUpdate = await wrapQuery(
+        tasks.contract.query.providerUpdate,
+        tasks.contract.query
+    )(...providerUpdateArgs)
+
+    await tasks.contract.tx.providerUpdate(...providerUpdateArgs)
+
     logger.info('   - providerSetDataset')
     const datasetJSON = loadJSONFile(provider.datasetFile)
     await tasks.providerSetDatasetFromFile(datasetJSON)
