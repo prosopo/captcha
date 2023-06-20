@@ -1,38 +1,14 @@
 const {loadEnv} = require('@prosopo/cli')
 const path = require('path')
-const rootDir = path.resolve(__dirname, '.')
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const InterpolateHtmlPlugin = require('interpolate-html-plugin')
-loadEnv(rootDir)
 const PUBLIC_URL = process.env.PUBLIC_URL || '/';
-const devMode = process.env.NODE_ENV === "development";
-console.log('PUBLIC_URL', PUBLIC_URL)
-console.log('devMode', devMode)
-
-// plugin that exits the process once compilation is done
-const donePlugin =   {
-  apply: (compiler) => {
-    compiler.hooks.done.tap('DonePlugin', (stats) => {
-      console.log('Compile is done !')
-      setTimeout(() => {
-        process.exit(0)
-      })
-    })
-  },
-}
-
-// plugins that are only used in production
-const productionPlugins = devMode ? [] : [
-  new MiniCssExtractPlugin(),
-  donePlugin
-]
-
-module.exports = (env, argv) => {
-  const libraryName = 'prosopo_client_example_bundle'
-  return {
-    mode: devMode ? 'development' : 'production',
+const libraryName = 'prosopo_client_example_bundle'
+const mode = 'development'
+loadEnv()
+module.exports =  {
+    mode: mode,
     target: 'web',
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
@@ -67,7 +43,7 @@ module.exports = (env, argv) => {
           // type: "javascript/auto",
           test: /\.(sa|sc|c)ss$/i,
           use: [
-            devMode ? "style-loader" : MiniCssExtractPlugin.loader,
+            "style-loader",
             "css-loader",
             "postcss-loader",
             "sass-loader",
@@ -92,7 +68,6 @@ module.exports = (env, argv) => {
       ],
     },
     plugins: [
-
       new InterpolateHtmlPlugin({PUBLIC_URL: '' }),
       new HtmlWebpackPlugin({
         template: './public/index.html',
@@ -107,7 +82,6 @@ module.exports = (env, argv) => {
         'process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS': JSON.stringify(process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || ''),
         'process.env.REACT_APP_DAPP_CONTRACT_ADDRESS': JSON.stringify(process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || ''),
       }),
-      ...productionPlugins
     ]
   }
-}
+

@@ -29,8 +29,8 @@
         "interpolate-html-plugin": "^4.0.0"
     },
     "scripts": {
-        "start": "webpack serve",
-        "build": "webpack build",
+        "start": "webpack serve --config webpack.config.base.js",
+        "build": "webpack build --config webpack.config.production.js",
         "test": "ts-node src/test",
         "eject": "react-scripts eject",
         "cypress:open": "cypress open",
