@@ -9,27 +9,29 @@ import fs from 'fs'
 import { config } from 'dotenv'
 
 config({ path: `.env.${process.env.NODE_ENV}` })
-console.log("env:", process.env.NODE_ENV)
-const env = Object.keys(process.env)
-  .filter(key => key.startsWith("ENV_"))
-  .reduce((obj, key) => {
-    obj[key] = process.env[key];
-    return obj;
-  }, {});
-console.log("env vars:", env)
+console.log("NODE_ENV:", process.env.NODE_ENV)
+// const env = Object.keys(process.env)
+//   .filter(key => key.startsWith("ENV_"))
+//   .reduce((obj, key) => {
+//     obj[key] = process.env[key];
+//     return obj;
+//   }, {});
+// console.log("env vars:", env)
 
 const contractSrcFileExtension = '.rs'
 const backupFileExtension = '.bak'
 
 const setEnvVariable = (filePath: string, name: string, value: string) => {
-    console.log("setting env variable", name, "in", filePath)
+    // console.log("setting env variable", name, "in", filePath)
     const content = fs.readFileSync(filePath, 'utf8')
     const regex = new RegExp(`const\\s+${name}:([^=]+)=[^;]+;`, 'gms');
-    const result = content.replaceAll(regex, `const ${name}:$1= ${value};`)
-    if(content === result) {
-        // no change has been made
+    const regexMatch = regex.test(content)
+    if(!regexMatch) {
+        // console.log("could not set env variable", name, "in", filePath)
         return
     }
+    const result = content.replaceAll(regex, `const ${name}:$1= ${value};`)
+    console.log("set env variable", name, "in", filePath)
     // else change has been made
     // backup original file (if not already)
     const backupFilePath = `${filePath}${backupFileExtension}`
@@ -58,7 +60,7 @@ const setEnvVariables = (filePath: string) => {
                     continue;
                 }
                 // env vars have to start with the correct prefix, otherwise normal env vars (e.g. PWD, EDITOR, SHELL, etc.) would be propagated into the contract, which is not desired
-                if (name.startsWith('INK_')) {
+                if (name.startsWith('ENV_')) {
                     setEnvVariable(filePath, name, value)
                 }
             }
