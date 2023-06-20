@@ -90,7 +90,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         // There must exist a dapp that is staked who can use the service
         const dappContractAccount = await getUser(env, AccountKey.dappsWithStake)
         const tasks = await getSignedTasks(env, providerAccount)
-        const providerDetails = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+        const providerDetails = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
         //await sleep(132000)
@@ -229,18 +229,18 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+        const provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
         const completedAt = (await env.api.rpc.chain.getBlock()).block.header.number.toNumber()
         const requestedAt = completedAt - 1
         const providerTasks = await getSignedTasks(env, providerAccount)
         const commit = {
-            dapp: accountContract(dappContractAccount),
+            dappContract: accountContract(dappContractAccount),
             datasetId: provider.datasetId,
             id: commitmentId,
-            provider: accountAddress(providerAccount),
-            user: accountAddress(dappUserAccount),
+            providerAccount: accountAddress(providerAccount),
+            userAccount: accountAddress(dappUserAccount),
             status: CaptchaStatus.approved,
             requestedAt,
             completedAt,
@@ -281,7 +281,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+        const provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
 
@@ -289,11 +289,11 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const requestedAt = completedAt - 1
         const providerTasks = await getSignedTasks(env, providerAccount)
         await providerTasks.contract.tx.providerCommit({
-            dapp: accountContract(dappContractAccount),
+            dappContract: accountContract(dappContractAccount),
             datasetId: provider.datasetId.toString(),
             id: commitmentId,
-            provider: accountAddress(providerAccount),
-            user: accountAddress(dappUserAccount),
+            providerAccount: accountAddress(providerAccount),
+            userAccount: accountAddress(dappUserAccount),
             status: CaptchaStatus.disapproved,
             requestedAt,
             completedAt,
@@ -321,7 +321,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+        const provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
 
@@ -329,11 +329,11 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const requestedAt = completedAt - 1
         const providerTasks = await getSignedTasks(env, providerAccount)
         await providerTasks.contract.tx.providerCommit({
-            dapp: accountContract(dappContractAccount),
+            dappContract: accountContract(dappContractAccount),
             datasetId: provider.datasetId.toString(),
             id: commitmentId,
-            provider: accountAddress(providerAccount),
-            user: accountAddress(dappUserAccount),
+            providerAccount: accountAddress(providerAccount),
+            userAccount: accountAddress(dappUserAccount),
             status: CaptchaStatus.approved,
             completedAt,
             requestedAt,
@@ -341,7 +341,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
         })
 
-        const commitment = (await providerTasks.contract.query.getCaptchaSolutionCommitment(commitmentId)).value
+        const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value
             .unwrap()
             .unwrap()
 
@@ -365,7 +365,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
             const tasks = await getSignedTasks(env, providerAccount)
 
-            const result = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            const result = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
                 .unwrap()
                 .unwrap()
             expect(result).to.have.a.property('status')
@@ -379,7 +379,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(env, providerAccount)
 
-        const result = (await tasks.contract.query.getAllProviderIds()).value.unwrap().unwrap()
+        const result = (await tasks.contract.query.getAllProviderAccounts()).value.unwrap().unwrap()
 
         expect(result).to.be.an('array')
     })
@@ -410,7 +410,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const contractAddress = instantiateEvent?.event.data['contract'].toString()
         const result = (await tasks.contract.tx.dappRegister(contractAddress, DappPayee.dapp)).result
         expect(result?.isError).to.be.false
-        const dapp = (await tasks.contract.query.getDappDetails(contractAddress)).value.unwrap().unwrap()
+        const dapp = (await tasks.contract.query.getDapp(contractAddress)).value.unwrap().unwrap()
         expect(dapp.owner).to.equal(accountAddress(newAccount))
     })
 
@@ -429,7 +429,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(env, dappAccount)
 
-        const result: any = (await tasks.contract.query.getDappDetails(accountContract(dappAccount))).value
+        const result: any = (await tasks.contract.query.getDapp(accountContract(dappAccount))).value
             .unwrap()
             .unwrap()
 
@@ -441,10 +441,10 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const tasks = await getSignedTasks(env, dappAccount)
         const value = createType(env.contractInterface.abi.registry, 'u128', '10')
         const dappContractAddress = accountContract(dappAccount)
-        const dappBefore = (await tasks.contract.query.getDappDetails(dappContractAddress)).value.unwrap().unwrap()
+        const dappBefore = (await tasks.contract.query.getDapp(dappContractAddress)).value.unwrap().unwrap()
         const result = (await tasks.contract.tx.dappFund(dappContractAddress, { value })).result
         expect(result?.isError).to.be.false
-        const dappAfter = (await tasks.contract.query.getDappDetails(dappContractAddress)).value.unwrap().unwrap()
+        const dappAfter = (await tasks.contract.query.getDapp(dappContractAddress)).value.unwrap().unwrap()
         expect(dappBefore.balance.toNumber() + value.toNumber()).to.equal(dappAfter.balance.toNumber())
     })
 
@@ -466,7 +466,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
         const dappUserTasks = await getSignedTasks(env, dappUserAccount)
-        const provider = (await dappUserTasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+        const provider = (await dappUserTasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
 
@@ -493,7 +493,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
-        const provider = (await dappUserTasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+        const provider = (await dappUserTasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
 
@@ -502,11 +502,11 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         // next part contains internal contract calls that must be run by provider
         const providerTasks = await getSignedTasks(env, providerAccount)
         await providerTasks.contract.tx.providerCommit({
-            dapp: accountContract(dappContractAccount),
+            dappContract: accountContract(dappContractAccount),
             datasetId: provider.datasetId.toString(),
             id: commitmentId,
-            provider: accountAddress(providerAccount),
-            user: accountAddress(dappUserAccount),
+            providerAccount: accountAddress(providerAccount),
+            userAccount: accountAddress(dappUserAccount),
             status: CaptchaStatus.approved,
             completedAt,
             requestedAt,
@@ -514,7 +514,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
         })
 
-        const commitment = (await providerTasks.contract.query.getCaptchaSolutionCommitment(commitmentId)).value
+        const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value
             .unwrap()
             .unwrap()
 
@@ -658,18 +658,18 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
-            const provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+            const provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
                 .unwrap()
                 .unwrap()
             const providerTasks = await getSignedTasks(env, providerAccount)
             const completedAt = (await env.api.rpc.chain.getBlock()).block.header.number.toNumber()
             const requestedAt = completedAt - 1
             const commit = {
-                dapp: accountContract(dappAccount),
+                dappContract: accountContract(dappAccount),
                 datasetId: provider.datasetId.toString(),
                 id: initialCommitmentId,
-                provider: accountAddress(providerAccount),
-                user: accountAddress(dappUserAccount),
+                providerAccount: accountAddress(providerAccount),
+                userAccount: accountAddress(dappUserAccount),
                 status: CaptchaStatus.approved,
                 completedAt,
                 requestedAt,
@@ -687,7 +687,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
             expect(tree).to.deep.equal(initialTree)
             expect(commitmentId).to.equal(initialCommitmentId)
-            const commitment = (await tasks.contract.query.getCaptchaSolutionCommitment(commitmentId)).value
+            const commitment = (await tasks.contract.query.getCommit(commitmentId)).value
                 .unwrap()
                 .unwrap()
             expect(commitment).to.not.be.undefined
@@ -832,7 +832,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(env, providerAccount)
 
-        let provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+        let provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
 
@@ -842,7 +842,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             })
         ).result
         expect(resultProviderUpdate1?.isError).to.be.false
-        provider = (await tasks.contract.query.getProviderDetails(accountAddress(providerAccount))).value
+        provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
             .unwrap()
             .unwrap()
         expect(provider.status).to.equal('Inactive')
@@ -894,7 +894,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
     // it('Calculate captcha solution on the basis of Dapp users provided solutions', async (): Promise<void> => {
     //     const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
     //     const providerTasks = await getSignedTasks(env, providerAccount)
-    //     const providerDetails = await providerTasks.contractApi.getProviderDetails(accountAddress(providerAccount))
+    //     const providerDetails = await providerTasks.contractApi.getProvider(accountAddress(providerAccount))
     //     const dappAccount = await getUser(env, AccountKey.dapps)
     //
     //     const randomCaptchasResult = await providerTasks.db.getRandomCaptcha(false, providerDetails.datasetId)
@@ -929,7 +929,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
     //             expect(userSolution?.processed).to.be.true
     //         }
     //
-    //         const providerDetailsNew = await providerTasks.contractApi.getProviderDetails(
+    //         const providerDetailsNew = await providerTasks.contractApi.getProvider(
     //             accountAddress(providerAccount)
     //         )
     //
