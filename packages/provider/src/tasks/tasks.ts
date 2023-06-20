@@ -185,9 +185,9 @@ export class Tasks {
         if (pendingRequest) {
             const commit: UserCommitmentRecord = {
                 id: commitmentId,
-                user: userAccount,
-                dapp: dappAccount,
-                provider: this.contract.pair.address,
+                userAccount: userAccount,
+                dappContract: dappAccount,
+                providerAccount: this.contract.pair.address,
                 datasetId: provider.datasetId.toString(),
                 status: CaptchaStatus.pending,
                 userSignature: Array.from(userSignature),

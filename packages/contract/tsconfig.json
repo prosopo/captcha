@@ -6,9 +6,7 @@
   },
   "include": [
     "./src/**/*.ts",
-    "./src/abi/*.json",
-    "./src/typechain/captcha/data/*.json",
-    "./src/typechain/captcha/event-data/*.json"
+    "./src/**/*.json",
   ],
   "references": [
     {
