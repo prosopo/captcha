@@ -774,11 +774,6 @@ pub mod captcha {
                 return Ok(());
             }
 
-            // check the dapp is a contract
-            if !self.env().is_contract(&config.contract) {
-                return err!(self, Error::InvalidContract);
-            }
-
             // check current contract for ownership
             if !new {
                 self.check_dapp_owner_is_caller(&new_dapp)?;
@@ -2296,11 +2291,6 @@ pub mod captcha {
 
             // Mark the the dapp account as being a contract on-chain
             ink::env::test::set_contract::<ink::env::DefaultEnvironment>(contract_account);
-
-            // Make sure the dapp account is a contract
-            let result =
-                ink::env::test::is_contract::<ink::env::DefaultEnvironment>(contract_account);
-            assert!(result);
 
             // Call from the dapp account
             ink::env::test::set_caller::<ink::env::DefaultEnvironment>(caller);
