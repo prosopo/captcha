@@ -45,9 +45,6 @@ module.exports  = (env, argv) => {
       publicPath: PUBLIC_URL,
 
     },
-    devServer: {
-      port: process.env.REACT_APP_PORT,
-    },
     module: {
       rules: [
         {

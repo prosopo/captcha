@@ -131,12 +131,12 @@ jobs:
           sleep 20s
           cat provider.log
           cat server.log
-          NODE_ENV=test npm run -w @prosopo/client-example build
-          cd demos/client-example && NODE_ENV=test npm run start 1>../../client-example.log 2>&1 &
+          cd demos/client-example && NODE_ENV=test npm run build && cd ../..
+          cd demos/client-example && `NODE_ENV=test npm run start 1>../../client-example.log 2>&1 &` && cd ../..
           ls
           sleep 30s
           cat client-example.log
-          NODE_ENV=test npm run -w @prosopo/client-example cypress:run
+          cd demos/client-example && NODE_ENV=test npm run cypress:run
           
 
       - name: Remove the docker containers
