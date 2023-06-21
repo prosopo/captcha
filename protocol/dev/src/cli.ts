@@ -441,8 +441,8 @@ export async function processArgs(args: string[]) {
                 }
 
                 // unset the env variables using the backups
-                // unsetEnvVariables(contractsDir)
-                // unsetEnvVariables(cratesDir)
+                unsetEnvVariables(contractsDir)
+                unsetEnvVariables(cratesDir)
 
                 // move metadata.json to <contract_name>.json
                 moveMetadata(contracts)
