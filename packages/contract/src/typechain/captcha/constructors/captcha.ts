@@ -23,20 +23,8 @@ export default class Constructors {
 	/**
 	* new
 	*
-	* @param { (string | number | BN) } providerStakeThreshold,
-	* @param { (string | number | BN) } dappStakeThreshold,
-	* @param { (number | string | BN) } maxUserHistoryLen,
-	* @param { (number | string | BN) } maxUserHistoryAge,
-	* @param { (number | string | BN) } minNumActiveProviders,
-	* @param { (string | number | BN) } maxProviderFee,
 	*/
    	async "new" (
-		providerStakeThreshold: (string | number | BN),
-		dappStakeThreshold: (string | number | BN),
-		maxUserHistoryLen: (number | string | BN),
-		maxUserHistoryAge: (number | string | BN),
-		minNumActiveProviders: (number | string | BN),
-		maxProviderFee: (string | number | BN),
 		__options ? : ConstructorOptions,
    	) {
    		const __contract = JSON.parse(ContractFile);
@@ -44,7 +32,7 @@ export default class Constructors {
 		const gasLimit = (await _genValidGasLimitAndValue(this.nativeAPI, __options)).gasLimit as WeightV2;
 
 		const storageDepositLimit = __options?.storageDepositLimit;
-			const tx = code.tx["new"]!({ gasLimit, storageDepositLimit, value: __options?.value }, providerStakeThreshold, dappStakeThreshold, maxUserHistoryLen, maxUserHistoryAge, minNumActiveProviders, maxProviderFee);
+			const tx = code.tx["new"]!({ gasLimit, storageDepositLimit, value: __options?.value }, );
 			let response;
 
 			try {

@@ -35,10 +35,10 @@ export interface UserCommitmentRecord extends Omit<ArgumentTypes.Commit, 'userSi
 }
 
 export const UserCommitmentSchema = z.object({
-    user: z.string(),
-    dapp: z.string(),
+    userAccount: z.string(),
+    dappContract: z.string(),
     datasetId: z.string(),
-    provider: z.string(),
+    providerAccount: z.string(),
     id: z.string(),
     status: z.nativeEnum(ArgumentTypes.CaptchaStatus),
     userSignature: z.array(z.number()),
@@ -87,9 +87,9 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
 })
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
-    user: { type: String, required: true },
-    dapp: { type: String, required: true },
-    provider: { type: String, required: true },
+    userAccount: { type: String, required: true },
+    dappContract: { type: String, required: true },
+    providerAccount: { type: String, required: true },
     datasetId: { type: String, required: true },
     id: { type: String, required: true },
     status: { type: String, required: true },
