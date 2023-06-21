@@ -53,7 +53,7 @@ macro_rules! lazy {
 pub mod common {
 
     /// get the account id in byte array format
-    pub fn account_id_bytes<'a>(account: &'a AccountId) -> &[u8; 32] {
+    pub fn account_id_bytes(account: &AccountId) -> &[u8; 32] {
         AsRef::<[u8; 32]>::as_ref(account)
     }
 
