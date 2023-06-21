@@ -22,6 +22,7 @@ import { hexToU8a } from '@polkadot/util'
 import { loadJSONFile } from '@prosopo/cli'
 import { stringToHexPadded, wrapQuery } from '@prosopo/contract'
 import { BN } from '@polkadot/util'
+import { ReturnNumber } from '@727-ventures/typechain-types'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
@@ -39,8 +40,9 @@ export async function registerProvider(env: Environment, account: IProviderAccou
         const providerKeyringPair: KeyringPair = env.keyring.addFromMnemonic(account.secret)
 
         account.address = providerKeyringPair.address
-        const stakeAmountNumber: number = await wrapQuery(env.contractInterface.query.getProviderStakeThreshold, env.contractInterface.query)()
-        const stakeAmount = new BN(stakeAmountNumber)
+
+        const result: ReturnNumber = await wrapQuery(env.contractInterface.query.getProviderStakeThreshold, env.contractInterface.query)()
+        const stakeAmount = result.rawNumber
 
         // use the minimum stake amount from the contract to create a reasonable stake amount
         account.stake = getStakeAmount(env, stakeAmount)
