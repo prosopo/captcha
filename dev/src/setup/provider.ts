@@ -39,7 +39,8 @@ export async function registerProvider(env: Environment, account: IProviderAccou
         const providerKeyringPair: KeyringPair = env.keyring.addFromMnemonic(account.secret)
 
         account.address = providerKeyringPair.address
-        const stakeAmount: BN = new BN(1000000000)
+        const stakeAmountNumber: number = await wrapQuery(env.contractInterface.query.getProviderStakeThreshold, env.contractInterface.query)()
+        const stakeAmount = new BN(stakeAmountNumber)
 
         // use the minimum stake amount from the contract to create a reasonable stake amount
         account.stake = getStakeAmount(env, stakeAmount)
