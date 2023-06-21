@@ -417,7 +417,7 @@ pub mod captcha {
         /// the minimum number of providers needed for the contract to function
         #[ink(message)]
         pub fn get_min_num_active_providers(&self) -> u16 {
-            let env_min_num_active_providers: u16 = 1;
+            let env_min_num_active_providers: u16 = 0;
             env_min_num_active_providers
         }
 
@@ -431,7 +431,7 @@ pub mod captcha {
         /// the max age of a commit for a user before it is removed from the history, in seconds
         #[ink(message)]
         pub fn get_max_user_history_age_seconds(&self) -> u32 {
-            let env_max_user_history_age_seconds: u32 = 32 * 6;
+            let env_max_user_history_age_seconds: u32 = 30 * 24 * 60 * 60; // 30 days in seconds
             env_max_user_history_age_seconds
         }
 
