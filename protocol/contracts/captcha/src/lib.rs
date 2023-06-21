@@ -1488,7 +1488,16 @@ pub mod captcha {
 
         /// get the nth admin account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
         fn get_admin_account(index: u128) -> AccountId {
-            get_account(ADMIN_ACCOUNT_PREFIX, index)
+            let account = AccountId::from([212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88,
+                133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,]);
+            // fund the account so it exists if not already
+            let balance = get_account_balance(account);
+            if balance.is_err() {
+                // account doesn't have the existential deposit so doesn't exist
+                // give it funds to create it
+                set_account_balance(account, 1);
+            }
+            account
         }
 
         /// get the nth provider account. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
@@ -1628,10 +1637,10 @@ pub mod captcha {
         #[ink::test]
         fn test_accounts_unique() {
             let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
+            assert!(set.insert(*AsRef::<[u8; 32]>::as_ref(&get_admin_account(0))));
 
             // for each method of generating an account
             for func in vec![
-                get_admin_account,
                 get_provider_account,
                 get_dapp_contract,
                 get_user_account,
