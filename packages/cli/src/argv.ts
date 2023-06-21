@@ -135,7 +135,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         desc: 'The value to stake in the contract',
                     }),
             async (argv) => {
-                const provider = (await tasks.contract.query.getProviderDetails(argv.address, {})).value
+                const provider = (await tasks.contract.query.getProvider(argv.address, {})).value
                     .unwrap()
                     .unwrap()
                 if (provider && (argv.origin || argv.fee || argv.payee || argv.value)) {
@@ -233,7 +233,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = (await tasks.contract.query.getProviderDetails(argv.address, {})).value
+                    const result = (await tasks.contract.query.getProvider(argv.address, {})).value
                         .unwrap()
                         .unwrap()
 
@@ -255,7 +255,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = (await tasks.contract.query.getDappDetails(argv.address)).value.unwrap().unwrap()
+                    const result = (await tasks.contract.query.getDapp(argv.address)).value.unwrap().unwrap()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {

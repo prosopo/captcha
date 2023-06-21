@@ -21,27 +21,23 @@ export default class Methods {
 		this.__apiPromise = apiPromise;
 	}
 	/**
-	 * verifySr25519
+	 * getAuthor
 	 *
-	 * @param { Array<(number | string | BN)> } signature,
-	 * @param { Array<(number | string | BN)> } payload,
 	*/
-	"verifySr25519" (
-		signature: Array<(number | string | BN)>,
-		payload: Array<(number | string | BN)>,
+	"getAuthor" (
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "verifySr25519", [signature, payload], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getAuthor", [], __options);
 	}
 
 	/**
-	 * getCaller
+	 * getAdmin
 	 *
 	*/
-	"getCaller" (
+	"getAdmin" (
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getCaller", [], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getAdmin", [], __options);
 	}
 
 	/**
@@ -92,6 +88,66 @@ export default class Methods {
 		__options: GasLimit,
 	){
 		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getDappStakeThreshold", [], __options);
+	}
+
+	/**
+	 * getMaxProviderFee
+	 *
+	*/
+	"getMaxProviderFee" (
+		__options: GasLimit,
+	){
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getMaxProviderFee", [], __options);
+	}
+
+	/**
+	 * getMinNumActiveProviders
+	 *
+	*/
+	"getMinNumActiveProviders" (
+		__options: GasLimit,
+	){
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getMinNumActiveProviders", [], __options);
+	}
+
+	/**
+	 * getBlockTime
+	 *
+	*/
+	"getBlockTime" (
+		__options: GasLimit,
+	){
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getBlockTime", [], __options);
+	}
+
+	/**
+	 * getMaxUserHistoryAgeSeconds
+	 *
+	*/
+	"getMaxUserHistoryAgeSeconds" (
+		__options: GasLimit,
+	){
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getMaxUserHistoryAgeSeconds", [], __options);
+	}
+
+	/**
+	 * getMaxUserHistoryLen
+	 *
+	*/
+	"getMaxUserHistoryLen" (
+		__options: GasLimit,
+	){
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getMaxUserHistoryLen", [], __options);
+	}
+
+	/**
+	 * getMaxUserHistoryAgeBlocks
+	 *
+	*/
+	"getMaxUserHistoryAgeBlocks" (
+		__options: GasLimit,
+	){
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getMaxUserHistoryAgeBlocks", [], __options);
 	}
 
 	/**
@@ -147,6 +203,18 @@ export default class Methods {
 	}
 
 	/**
+	 * getProvider
+	 *
+	 * @param { ArgumentTypes.AccountId } account,
+	*/
+	"getProvider" (
+		account: ArgumentTypes.AccountId,
+		__options: GasLimit,
+	){
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getProvider", [account], __options);
+	}
+
+	/**
 	 * providerFund
 	 *
 	*/
@@ -165,9 +233,21 @@ export default class Methods {
 	"providerSetDataset" (
 		datasetId: ArgumentTypes.Hash,
 		datasetIdContent: ArgumentTypes.Hash,
-		__options: GasLimit,
+		__options: GasLimitAndRequiredValue,
 	){
 		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "providerSetDataset", [datasetId, datasetIdContent], __options);
+	}
+
+	/**
+	 * getDapp
+	 *
+	 * @param { ArgumentTypes.AccountId } contract,
+	*/
+	"getDapp" (
+		contract: ArgumentTypes.AccountId,
+		__options: GasLimit,
+	){
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getDapp", [contract], __options);
 	}
 
 	/**
@@ -237,6 +317,18 @@ export default class Methods {
 	}
 
 	/**
+	 * getUserHistorySummary
+	 *
+	 * @param { ArgumentTypes.AccountId } userAccount,
+	*/
+	"getUserHistorySummary" (
+		userAccount: ArgumentTypes.AccountId,
+		__options: GasLimit,
+	){
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getUserHistorySummary", [userAccount], __options);
+	}
+
+	/**
 	 * providerCommit
 	 *
 	 * @param { ArgumentTypes.Commit } commit,
@@ -263,27 +355,27 @@ export default class Methods {
 	/**
 	 * dappOperatorIsHumanUser
 	 *
-	 * @param { ArgumentTypes.AccountId } user,
+	 * @param { ArgumentTypes.AccountId } userAccount,
 	 * @param { (number | string | BN) } threshold,
 	*/
 	"dappOperatorIsHumanUser" (
-		user: ArgumentTypes.AccountId,
+		userAccount: ArgumentTypes.AccountId,
 		threshold: (number | string | BN),
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "dappOperatorIsHumanUser", [user, threshold], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "dappOperatorIsHumanUser", [userAccount, threshold], __options);
 	}
 
 	/**
 	 * dappOperatorLastCorrectCaptcha
 	 *
-	 * @param { ArgumentTypes.AccountId } user,
+	 * @param { ArgumentTypes.AccountId } userAccount,
 	*/
 	"dappOperatorLastCorrectCaptcha" (
-		user: ArgumentTypes.AccountId,
+		userAccount: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "dappOperatorLastCorrectCaptcha", [user], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "dappOperatorLastCorrectCaptcha", [userAccount], __options);
 	}
 
 	/**
@@ -299,87 +391,39 @@ export default class Methods {
 	}
 
 	/**
-	 * getDappUser
+	 * getUser
 	 *
-	 * @param { ArgumentTypes.AccountId } dappUserId,
+	 * @param { ArgumentTypes.AccountId } userAccount,
 	*/
-	"getDappUser" (
-		dappUserId: ArgumentTypes.AccountId,
+	"getUser" (
+		userAccount: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getDappUser", [dappUserId], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getUser", [userAccount], __options);
 	}
 
 	/**
-	 * getProviderDetails
+	 * getCommit
 	 *
-	 * @param { ArgumentTypes.AccountId } accountid,
+	 * @param { ArgumentTypes.Hash } commitId,
 	*/
-	"getProviderDetails" (
-		accountid: ArgumentTypes.AccountId,
+	"getCommit" (
+		commitId: ArgumentTypes.Hash,
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getProviderDetails", [accountid], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getCommit", [commitId], __options);
 	}
 
 	/**
-	 * getDappDetails
+	 * listProvidersByAccounts
 	 *
-	 * @param { ArgumentTypes.AccountId } contract,
+	 * @param { Array<ArgumentTypes.AccountId> } providerAccounts,
 	*/
-	"getDappDetails" (
-		contract: ArgumentTypes.AccountId,
+	"listProvidersByAccounts" (
+		providerAccounts: Array<ArgumentTypes.AccountId>,
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getDappDetails", [contract], __options);
-	}
-
-	/**
-	 * getCaptchaSolutionCommitment
-	 *
-	 * @param { ArgumentTypes.Hash } captchaSolutionCommitmentId,
-	*/
-	"getCaptchaSolutionCommitment" (
-		captchaSolutionCommitmentId: ArgumentTypes.Hash,
-		__options: GasLimit,
-	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getCaptchaSolutionCommitment", [captchaSolutionCommitmentId], __options);
-	}
-
-	/**
-	 * getDappBalance
-	 *
-	 * @param { ArgumentTypes.AccountId } dapp,
-	*/
-	"getDappBalance" (
-		dapp: ArgumentTypes.AccountId,
-		__options: GasLimit,
-	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getDappBalance", [dapp], __options);
-	}
-
-	/**
-	 * getProviderBalance
-	 *
-	 * @param { ArgumentTypes.AccountId } provider,
-	*/
-	"getProviderBalance" (
-		provider: ArgumentTypes.AccountId,
-		__options: GasLimit,
-	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getProviderBalance", [provider], __options);
-	}
-
-	/**
-	 * listProvidersByIds
-	 *
-	 * @param { Array<ArgumentTypes.AccountId> } providerIds,
-	*/
-	"listProvidersByIds" (
-		providerIds: Array<ArgumentTypes.AccountId>,
-		__options: GasLimit,
-	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "listProvidersByIds", [providerIds], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "listProvidersByAccounts", [providerAccounts], __options);
 	}
 
 	/**
@@ -398,24 +442,24 @@ export default class Methods {
 	 * getRandomActiveProvider
 	 *
 	 * @param { ArgumentTypes.AccountId } userAccount,
-	 * @param { ArgumentTypes.AccountId } dappContractAccount,
+	 * @param { ArgumentTypes.AccountId } dappContract,
 	*/
 	"getRandomActiveProvider" (
 		userAccount: ArgumentTypes.AccountId,
-		dappContractAccount: ArgumentTypes.AccountId,
+		dappContract: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getRandomActiveProvider", [userAccount, dappContractAccount], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getRandomActiveProvider", [userAccount, dappContract], __options);
 	}
 
 	/**
-	 * getAllProviderIds
+	 * getAllProviderAccounts
 	 *
 	*/
-	"getAllProviderIds" (
+	"getAllProviderAccounts" (
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getAllProviderIds", [], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getAllProviderAccounts", [], __options);
 	}
 
 	/**
@@ -423,15 +467,15 @@ export default class Methods {
 	 *
 	 * @param { (string | number | BN) } len,
 	 * @param { ArgumentTypes.AccountId } userAccount,
-	 * @param { ArgumentTypes.AccountId } dappAccount,
+	 * @param { ArgumentTypes.AccountId } dappContract,
 	*/
 	"getRandomNumber" (
 		len: (string | number | BN),
 		userAccount: ArgumentTypes.AccountId,
-		dappAccount: ArgumentTypes.AccountId,
+		dappContract: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getRandomNumber", [len, userAccount, dappAccount], __options);
+		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "getRandomNumber", [len, userAccount, dappContract], __options);
 	}
 
 	/**
@@ -466,18 +510,6 @@ export default class Methods {
 		__options: GasLimit,
 	){
 		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "setCodeHash", [codeHash], __options);
-	}
-
-	/**
-	 * setAdmin
-	 *
-	 * @param { ArgumentTypes.AccountId } newAdmin,
-	*/
-	"setAdmin" (
-		newAdmin: ArgumentTypes.AccountId,
-		__options: GasLimit,
-	){
-		return buildSubmittableExtrinsic( this.__apiPromise, this.__nativeContract, "setAdmin", [newAdmin], __options);
 	}
 
 }

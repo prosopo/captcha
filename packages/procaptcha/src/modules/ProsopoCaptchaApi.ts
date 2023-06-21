@@ -70,7 +70,7 @@ export class ProsopoCaptchaApi {
         // TODO make sure root is equal to root on the provider
         const proofLength = captchaChallenge.captchas[0].proof.length
 
-        if (provider.datasetIdContent.toString() !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
+        if (provider.provider.datasetIdContent.toString() !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_DATASET_CONTENT_ID')
         }
 

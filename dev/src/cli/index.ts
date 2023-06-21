@@ -9,6 +9,7 @@ import { updateEnvFiles } from '../util/updateEnv'
 import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
+import { exec } from '../util'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -125,6 +126,28 @@ export async function processArgs(args) {
                 const outPath = path.resolve(argv.out)
                 // pass in relative path as typechain will resolve it relative to the cwd
                 await importContract(argv.in, argv.out)
+            },
+        })
+        .command({
+            command: 'import_all_contracts',
+            describe: 'Update all contracts into the contract package.',
+            builder: (yargs) => yargs,
+            handler: async (argv) => {
+                const contracts = ["captcha", "proxy"];
+                for (const contract of contracts) {
+                    const inDir = `../protocol/target/ink/${contract}`
+                    const outDir = `../packages/contract/src/typechain/${contract}`
+                    await exec(`mkdir -p ${outDir}`)
+                    await exec(`mkdir -p ${inDir}`)
+                    // console.log(`${outDir}`)
+                    // console.log(`${inDir}`)
+                    await exec(`node dist/cli/index.js import_contract --in=${inDir} --out=${outDir}`)
+                    // console.log(`${path.resolve('../packages/contract/src/typechain/captcha/types-arguments')}`)
+                    // console.log(`${path.resolve('../packages/types/src/contract/typechain/captcha/types-arguments')}`)
+                    await exec(`mkdir -p ../packages/types/src/contract/typechain/captcha`)
+                    await exec(`cp -rv ../packages/contract/src/typechain/captcha/types-arguments ../packages/types/src/contract/typechain/captcha`)
+                    await exec(`cp -rv ../packages/contract/src/typechain/captcha/types-returns ../packages/types/src/contract/typechain/captcha`)
+                }
             },
         })
 
