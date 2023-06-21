@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xb36d47829ebc9cdd3c91e60cb9f5068b70eb04e66ff48670c3b085b10d26b91f",
+    "hash": "0x68f6da46db169556d49c6ad8450a02dff03cde501dcec7e5a172537d4f9cbf72",
     "language": "ink! 4.1.0",
     "compiler": "rustc 1.69.0",
     "build_info": {
@@ -95,7 +95,9 @@
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " the account which can instantiate the contract"
+        ],
         "label": "get_author",
         "mutates": false,
         "payable": false,
@@ -111,7 +113,9 @@
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " the admin which can control this contract. set to author/instantiator by default"
+        ],
         "label": "get_admin",
         "mutates": false,
         "payable": false,
@@ -217,7 +221,9 @@
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " the maximum fee a provider can charge for a commit"
+        ],
         "label": "get_max_provider_fee",
         "mutates": false,
         "payable": false,
@@ -233,7 +239,9 @@
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " the minimum number of providers needed for the contract to function"
+        ],
         "label": "get_min_num_active_providers",
         "mutates": false,
         "payable": false,
@@ -249,7 +257,9 @@
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " the time to complete a block, 6 seconds by default"
+        ],
         "label": "get_block_time",
         "mutates": false,
         "payable": false,
@@ -265,7 +275,9 @@
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " the max age of a commit for a user before it is removed from the history, in seconds"
+        ],
         "label": "get_max_user_history_age_seconds",
         "mutates": false,
         "payable": false,
@@ -281,7 +293,9 @@
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " the max number of commits stored for a single user"
+        ],
         "label": "get_max_user_history_len",
         "mutates": false,
         "payable": false,
@@ -297,7 +311,9 @@
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " the max age of a commit for a user before it is removed from the history, in blocks"
+        ],
         "label": "get_max_user_history_age_blocks",
         "mutates": false,
         "payable": false,
