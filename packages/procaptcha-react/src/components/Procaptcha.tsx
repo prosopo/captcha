@@ -115,6 +115,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const callbacks = props.callbacks || {}
 
     const [state, updateState] = useProcaptcha()
+    console.log('state', state)
     const manager = Manager(config, state, updateState, callbacks)
 
     return (
@@ -168,7 +169,13 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                     }}
                                 >
                                     <Checkbox
-                                        onChange={manager.start}
+                                        onChange={(e) => {
+                                            console.log('what')
+                                            manager
+                                                .start()
+                                                .then((r) => console.log('start', r))
+                                                .catch((e) => console.log('error', e))
+                                        }}
                                         checked={state.isHuman}
                                         inputProps={{ 'aria-label': 'controlled' }}
                                         sx={{

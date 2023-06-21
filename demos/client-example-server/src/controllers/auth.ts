@@ -20,18 +20,18 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
         } else if (
             req.body.email &&
             req.body.password &&
-            req.body.prosopo &&
-            req.body.prosopo[ApiParams.user] &&
-            req.body.prosopo[ApiParams.dapp] &&
-            req.body.prosopo[ApiParams.blockNumber]
+            req.body['procaptcha-response'] &&
+            req.body['procaptcha-response'][ApiParams.user] &&
+            req.body['procaptcha-response'][ApiParams.dapp] &&
+            req.body['procaptcha-response'][ApiParams.blockNumber]
         ) {
             if (
                 await prosopoServer.isVerified(
-                    req.body.prosopo[ApiParams.user],
-                    req.body.prosopo[ApiParams.providerUrl],
-                    req.body.prosopo[ApiParams.dapp],
-                    req.body.prosopo[ApiParams.commitmentId],
-                    req.body.prosopo[ApiParams.blockNumber]
+                    req.body['procaptcha-response'][ApiParams.user],
+                    req.body['procaptcha-response'][ApiParams.providerUrl],
+                    req.body['procaptcha-response'][ApiParams.dapp],
+                    req.body['procaptcha-response'][ApiParams.commitmentId],
+                    req.body['procaptcha-response'][ApiParams.blockNumber]
                 )
             ) {
                 // password hash
@@ -83,18 +83,18 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
                 if (
                     req.body.email &&
                     req.body.password &&
-                    req.body.prosopo &&
-                    req.body.prosopo[ApiParams.user] &&
-                    req.body.prosopo[ApiParams.dapp] &&
-                    req.body.prosopo[ApiParams.blockNumber]
+                    req.body['procaptcha-response'] &&
+                    req.body['procaptcha-response'][ApiParams.user] &&
+                    req.body['procaptcha-response'][ApiParams.dapp] &&
+                    req.body['procaptcha-response'][ApiParams.blockNumber]
                 ) {
                     if (
                         await prosopoServer.isVerified(
-                            req.body.prosopo[ApiParams.user],
-                            req.body.prosopo[ApiParams.providerUrl],
-                            req.body.prosopo[ApiParams.dapp],
-                            req.body.prosopo[ApiParams.commitmentId],
-                            req.body.prosopo[ApiParams.blockNumber]
+                            req.body['procaptcha-response'][ApiParams.user],
+                            req.body['procaptcha-response'][ApiParams.providerUrl],
+                            req.body['procaptcha-response'][ApiParams.dapp],
+                            req.body['procaptcha-response'][ApiParams.commitmentId],
+                            req.body['procaptcha-response'][ApiParams.blockNumber]
                         )
                     ) {
                         // password hash
