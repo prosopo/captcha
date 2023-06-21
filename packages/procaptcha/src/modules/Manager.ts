@@ -10,7 +10,7 @@ import {
 import { ApiPromise, Keyring } from '@polkadot/api'
 import { CaptchaSolution, ContractAbi, RandomProvider } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
-import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
+import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client'
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -205,14 +205,10 @@ export const Manager = (
             console.log('Signature:', signed)
 
             // get a random provider
-            const getRandomProviderResponse = (
-                await contract.query.getRandomActiveProvider(
-                    account.account.address,
-                    config.network.dappContract.address
-                )
-            ).value
-                .unwrap()
-                .unwrap()
+            const getRandomProviderResponse: RandomProvider = await wrapQuery(
+                contract.query.getRandomActiveProvider,
+                contract.query
+            )(account.account.address, config.network.dappContract.address)
             const blockNumber = getRandomProviderResponse.blockNumber
             console.log('provider', getRandomProviderResponse)
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
