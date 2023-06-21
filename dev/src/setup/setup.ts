@@ -18,11 +18,12 @@ import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { ProsopoEnvError, getPair } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { defaultConfig, getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
-import { generateMnemonic } from '@prosopo/contract'
+import { generateMnemonic, wrapQuery } from '@prosopo/contract'
 import { registerProvider } from './provider'
 import { setupDapp } from './dapp'
 import fse from 'fs-extra'
 import path from 'path'
+import { ReturnNumber } from '@727-ventures/typechain-types'
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
@@ -112,6 +113,17 @@ export async function setup() {
         const pair = await getPair(pairType, ss58Format, secret)
         const env = new Environment(pair, defaultConfig())
         await env.isReady()
+
+        const result: ReturnNumber = await wrapQuery(env.contractInterface.query.getDappStakeThreshold, env.contractInterface.query)()
+        const stakeAmount = result.rawNumber
+        let fundAmount: BN = new BN(0);
+        if(typeof defaultDapp.fundAmount === 'number') {
+            fundAmount = new BN(defaultDapp.fundAmount)
+        } else {
+            fundAmount = defaultDapp.fundAmount
+        }
+        
+        defaultDapp.fundAmount = BN.max(stakeAmount, fundAmount)
 
         defaultProvider.secret = mnemonic
 
