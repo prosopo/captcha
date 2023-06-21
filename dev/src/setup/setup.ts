@@ -113,8 +113,6 @@ export async function setup() {
         const env = new Environment(pair, defaultConfig())
         await env.isReady()
 
-        const dappStakeDefault = (await env.contractInterface['dappStakeThreshold']()).muln(2)
-        defaultDapp.fundAmount = BN.max(dappStakeDefault, new BN(defaultDapp.fundAmount))
         defaultProvider.secret = mnemonic
 
         env.logger.info(`Registering provider... ${defaultProvider.address}`)

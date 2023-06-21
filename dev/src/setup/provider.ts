@@ -21,6 +21,7 @@ import { getSendAmount, getStakeAmount, sendFunds } from './funds'
 import { hexToU8a } from '@polkadot/util'
 import { loadJSONFile } from '@prosopo/cli'
 import { stringToHexPadded, wrapQuery } from '@prosopo/contract'
+import { BN } from '@polkadot/util'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
@@ -38,8 +39,7 @@ export async function registerProvider(env: Environment, account: IProviderAccou
         const providerKeyringPair: KeyringPair = env.keyring.addFromMnemonic(account.secret)
 
         account.address = providerKeyringPair.address
-
-        const stakeAmount = await env.contractInterface['providerStakeThreshold']()
+        const stakeAmount: BN = new BN(1000000000)
 
         // use the minimum stake amount from the contract to create a reasonable stake amount
         account.stake = getStakeAmount(env, stakeAmount)
