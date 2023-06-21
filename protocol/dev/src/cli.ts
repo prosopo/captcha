@@ -23,14 +23,37 @@ const backupFileExtension = '.bak'
 
 const setEnvVariable = (filePath: string, name: string, value: string) => {
     // console.log("setting env variable", name, "in", filePath)
-    const content = fs.readFileSync(filePath, 'utf8')
-    const regex = new RegExp(`const\\s+${name}:([^=]+)=[^;]+;`, 'gms');
-    const regexMatch = regex.test(content)
-    if(!regexMatch) {
-        // console.log("could not set env variable", name, "in", filePath)
+    let content = fs.readFileSync(filePath, 'utf8')
+    let result = content
+    // find and replace every declaration of the env variable
+    // e.g.
+    //
+    // let ENV_ABC: u32 = 0;
+    //
+    // and ENV_ABC=3 in .env
+    // becomes
+    //
+    // let ENV_ABC: u32 = 3;
+    //
+    
+    // names could be lower, upper or specific case
+    const names = [... new Set([name, name.toLowerCase(), name.toUpperCase()])]
+    for(const name of names) {
+        for(const declaration of ['let', 'const']) {
+            const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gms');
+            const regexMatch = regex.test(result)
+            if(!regexMatch) {
+                // console.log('no match for', regex, 'in', filePath);
+                continue;
+            }
+            // console.log('match for', regex, 'in', filePath);
+            result = result.replaceAll(regex, `${declaration} ${name}:$1= ${value};`)
+        }
+    }
+    if(result === content) {
+        // no change has been made
         return
     }
-    const result = content.replaceAll(regex, `const ${name}:$1= ${value};`)
     console.log("set env variable", name, "in", filePath)
     // else change has been made
     // backup original file (if not already)
@@ -404,6 +427,7 @@ export async function processArgs(args: string[]) {
             async (argv) => {
                 const contracts = getContractsToBuild(argv.package as string[]);
                 delete argv.package;
+
                 // clear any previous env backup files
                 clearEnvBackupFiles(contractsDir)
                 clearEnvBackupFiles(cratesDir)
@@ -417,8 +441,8 @@ export async function processArgs(args: string[]) {
                 }
 
                 // unset the env variables using the backups
-                unsetEnvVariables(contractsDir)
-                unsetEnvVariables(cratesDir)
+                // unsetEnvVariables(contractsDir)
+                // unsetEnvVariables(cratesDir)
 
                 // move metadata.json to <contract_name>.json
                 moveMetadata(contracts)

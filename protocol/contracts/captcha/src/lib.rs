@@ -19,21 +19,10 @@ pub use self::captcha::{Captcha, CaptchaRef};
 
 #[ink::contract]
 pub mod captcha {
-
-    const ENV_DAPP_STAKE_THRESHOLD: Balance = 1000000000;
-    const ENV_PROVIDER_STAKE_THRESHOLD: Balance = 1000000000;
     const ENV_AUTHOR_BYTES: [u8; 32] = [
         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0,
     ]; // the account which can instantiate the contract
-    const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
-    const ENV_MAX_PROVIDER_FEE: u32 = 1000000; // the maximum fee a provider can charge for a commit
-    const ENV_MIN_NUM_ACTIVE_PROVIDERS: u16 = 0; // the minimum number of providers needed for the contract to function
-    const ENV_BLOCK_TIME: u16 = 6; // the time to complete a block, 6 seconds by default
-    const ENV_MAX_USER_HISTORY_AGE_SECONDS: u32 = 30 * 24 * 60 * 60; // the max age of a commit for a user before it is removed from the history, in seconds
-    const ENV_MAX_USER_HISTORY_LEN: u16 = 10; // the max number of commits stored for a single user
-    const ENV_MAX_USER_HISTORY_AGE_BLOCKS: u32 =
-        ENV_MAX_USER_HISTORY_AGE_SECONDS / (ENV_BLOCK_TIME as u32) + 1; // the max age of a commit for a user before it is removed from the history, in blocks
 
     use common::err;
     use common::err_fn;
@@ -351,7 +340,10 @@ pub mod captcha {
             let author = AccountId::from(ENV_AUTHOR_BYTES);
             let caller = Self::env().caller();
             if caller != author {
-                panic!("Not authorised to instantiate this contract: {:?} != {:?}", caller, author);
+                panic!(
+                    "Not authorised to instantiate this contract: {:?} != {:?}",
+                    caller, author
+                );
             }
             Self::new_unguarded()
         }
@@ -370,14 +362,17 @@ pub mod captcha {
             }
         }
 
+        /// the account which can instantiate the contract
         #[ink(message)]
         pub fn get_author(&self) -> AccountId {
             AccountId::from(ENV_AUTHOR_BYTES)
         }
 
+        /// the admin which can control this contract. set to author/instantiator by default
         #[ink(message)]
         pub fn get_admin(&self) -> AccountId {
-            AccountId::from(ENV_ADMIN_BYTES)
+            let env_admin_bytes: [u8; 32] = ENV_AUTHOR_BYTES;
+            AccountId::from(env_admin_bytes)
         }
 
         /// Get all payee options
@@ -401,43 +396,58 @@ pub mod captcha {
         /// Get contract provider minimum stake default.
         #[ink(message)]
         pub fn get_provider_stake_threshold(&self) -> Balance {
-            ENV_PROVIDER_STAKE_THRESHOLD
+            let env_provider_stake_threshold: Balance = 1000000000;
+            env_provider_stake_threshold
         }
 
         /// Get contract dapp minimum stake default.
         #[ink(message)]
         pub fn get_dapp_stake_threshold(&self) -> Balance {
-            ENV_DAPP_STAKE_THRESHOLD
+            let env_dapp_stake_threshold: Balance = 1000000000;
+            env_dapp_stake_threshold
         }
 
+        /// the maximum fee a provider can charge for a commit
         #[ink(message)]
         pub fn get_max_provider_fee(&self) -> u32 {
-            ENV_MAX_PROVIDER_FEE
+            let env_max_provider_fee: u32 = 1000000;
+            env_max_provider_fee
         }
 
+        /// the minimum number of providers needed for the contract to function
         #[ink(message)]
         pub fn get_min_num_active_providers(&self) -> u16 {
-            ENV_MIN_NUM_ACTIVE_PROVIDERS
+            let env_min_num_active_providers: u16 = 1;
+            env_min_num_active_providers
         }
 
+        /// the time to complete a block, 6 seconds by default
         #[ink(message)]
         pub fn get_block_time(&self) -> u16 {
-            ENV_BLOCK_TIME
+            let env_block_time: u16 = 6;
+            env_block_time
         }
 
+        /// the max age of a commit for a user before it is removed from the history, in seconds
         #[ink(message)]
         pub fn get_max_user_history_age_seconds(&self) -> u32 {
-            ENV_MAX_USER_HISTORY_AGE_SECONDS
+            let env_max_user_history_age_seconds: u32 = 32 * 6;
+            env_max_user_history_age_seconds
         }
 
+        /// the max number of commits stored for a single user
         #[ink(message)]
         pub fn get_max_user_history_len(&self) -> u16 {
-            ENV_MAX_USER_HISTORY_LEN
+            let env_max_user_history_len: u16 = 10;
+            env_max_user_history_len
         }
 
+        /// the max age of a commit for a user before it is removed from the history, in blocks
         #[ink(message)]
         pub fn get_max_user_history_age_blocks(&self) -> u32 {
-            ENV_MAX_USER_HISTORY_AGE_BLOCKS
+            let env_max_user_history_age_blocks: u32 =
+                self.get_max_user_history_age_seconds() / (self.get_block_time() as u32) + 1;
+            env_max_user_history_age_blocks
         }
 
         /// Convert a vec of u8 into a Hash
@@ -508,7 +518,7 @@ pub mod captcha {
             // has a balance >= provider_stake_threshold
             // has a dataset_id
             // has a dataset_id_content
-            new_provider.status = if new_provider.balance >= ENV_PROVIDER_STAKE_THRESHOLD
+            new_provider.status = if new_provider.balance >= self.get_provider_stake_threshold()
                 && new_provider.dataset_id != default_dataset_id
                 && new_provider.dataset_id_content != default_dataset_id
                 && !config.deactivate
@@ -536,7 +546,7 @@ pub mod captcha {
             }
 
             // check the fee is not too high
-            if new_provider.fee > ENV_MAX_PROVIDER_FEE {
+            if new_provider.fee > self.get_max_provider_fee() {
                 return err!(self, Error::ProviderFeeTooHigh);
             }
 
@@ -762,12 +772,12 @@ pub mod captcha {
             new_dapp.balance += self.env().transferred_value();
 
             // update the dapp status
-            new_dapp.status = if new_dapp.balance >= ENV_DAPP_STAKE_THRESHOLD && !config.deactivate
-            {
-                GovernanceStatus::Active
-            } else {
-                GovernanceStatus::Inactive
-            };
+            new_dapp.status =
+                if new_dapp.balance >= self.get_dapp_stake_threshold() && !config.deactivate {
+                    GovernanceStatus::Active
+                } else {
+                    GovernanceStatus::Inactive
+                };
 
             // by here the new dapp has been configured
 
@@ -874,15 +884,15 @@ pub mod captcha {
         /// Returns the history and expired hashes.
         fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
             let block_number = self.env().block_number();
-            let max_age = if block_number < ENV_MAX_USER_HISTORY_AGE_BLOCKS {
+            let max_age = if block_number < self.get_max_user_history_age_blocks() {
                 block_number
             } else {
-                ENV_MAX_USER_HISTORY_AGE_BLOCKS
+                self.get_max_user_history_age_blocks()
             };
             let age_threshold = block_number - max_age;
             let mut expired = Vec::new();
             // trim the history down to max length
-            while history.len() > ENV_MAX_USER_HISTORY_LEN.into() {
+            while history.len() > self.get_max_user_history_len().into() {
                 let hash = history.pop().unwrap();
                 expired.push(hash);
             }
@@ -1088,7 +1098,7 @@ pub mod captcha {
             }
             // Make sure the Dapp can pay the transaction fees of the user and potentially the
             // provider, if their fee > 0
-            if dapp.balance < ENV_DAPP_STAKE_THRESHOLD {
+            if dapp.balance < self.get_dapp_stake_threshold() {
                 return err!(self, Error::DappInsufficientFunds);
             }
             Ok(())
@@ -1098,7 +1108,7 @@ pub mod captcha {
             if provider.status != GovernanceStatus::Active {
                 return err!(self, Error::ProviderInactive);
             }
-            if provider.balance < ENV_PROVIDER_STAKE_THRESHOLD {
+            if provider.balance < self.get_provider_stake_threshold() {
                 return err!(self, Error::ProviderInsufficientFunds);
             }
             Ok(())
@@ -1226,7 +1236,7 @@ pub mod captcha {
                     return err!(self, Error::NoActiveProviders);
                 }
 
-                if max < ENV_MIN_NUM_ACTIVE_PROVIDERS as usize {
+                if max < self.get_min_num_active_providers() as usize {
                     return err!(self, Error::NotEnoughActiveProviders);
                 }
 
@@ -1254,7 +1264,7 @@ pub mod captcha {
                     return err!(self, Error::NoActiveProviders);
                 }
 
-                if active_providers.len() < ENV_MIN_NUM_ACTIVE_PROVIDERS as usize {
+                if active_providers.len() < self.get_min_num_active_providers() as usize {
                     return err!(self, Error::NotEnoughActiveProviders);
                 }
 
