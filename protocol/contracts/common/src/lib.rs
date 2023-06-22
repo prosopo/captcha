@@ -82,8 +82,15 @@ pub mod common {
         #[ink(message)]
         pub fn get_caller_bytes(&self) -> [u8; 32] {
             let caller = self.env().caller();
-            ink::env::debug_println!("caller: {:?}", caller);
-            *account_id_bytes(&caller)
+            self.get_account_bytes(caller)
+        }
+
+        /// Print and get the caller bytes of this function
+        /// This will print and get the caller's account in byte format, e.g. [1,2,3...32]
+        #[ink(message)]
+        pub fn get_account_bytes(&self, account: AccountId) -> [u8; 32] {
+            ink::env::debug_println!("account: {:?}", account);
+            *account_id_bytes(&account)
         }
     }
 }
