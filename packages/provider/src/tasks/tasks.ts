@@ -41,11 +41,11 @@ import {
     parseCaptchaDataset,
 } from '@prosopo/datasets'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
+import { Header, SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockNumber } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
-import { SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { SubmittableResult } from '@polkadot/api'
 import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
 import { hexToU8a, stringToHex } from '@polkadot/util'
@@ -97,7 +97,9 @@ export class Tasks {
 
         await this.db?.storeDataset(dataset)
 
-        const txResult = await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, { value: 0})
+        const txResult = await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {
+            value: 0,
+        })
         return txResult.result
     }
 
@@ -374,9 +376,7 @@ export class Tasks {
     async calculateCaptchaSolutions(): Promise<number> {
         try {
             // Get the current datasetId from the contract
-            const provider = (
-                await this.contract.methods.getProvider(this.contract.pair.address, {})
-            ).value
+            const provider = (await this.contract.methods.getProvider(this.contract.pair.address, {})).value
                 .unwrap()
                 .unwrap()
 
@@ -440,13 +440,18 @@ export class Tasks {
     /**
      * Block by block search for blockNo
      */
-    async isRecentBlock(contract, header, blockNo: number, depth = this.captchaSolutionConfig.captchaBlockRecency) {
+    async isRecentBlock(
+        contract,
+        header: Header,
+        blockNo: number,
+        depth = this.captchaSolutionConfig.captchaBlockRecency
+    ) {
         if (depth == 0) {
             return false
         }
 
-        const headerBlockNo: number = header.number.toPrimitive()
-        if (headerBlockNo == blockNo) {
+        const headerBlockNo = header.number.toNumber()
+        if (headerBlockNo === blockNo) {
             return true
         }
 

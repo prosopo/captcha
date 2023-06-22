@@ -28,6 +28,9 @@ export default class ProviderApi extends HttpClientBase {
     private network: ProsopoNetwork
 
     constructor(network: ProsopoNetwork, providerUrl: string) {
+        if (!providerUrl.startsWith('http')) {
+            providerUrl = `https://${providerUrl}`
+        }
         console.log('ProviderApi', providerUrl)
         super(providerUrl)
         this.network = network
