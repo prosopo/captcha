@@ -2,7 +2,7 @@
   "name": "client-bundle-example",
   "main": "index.js",
   "scripts": {
-    "start": "light-server -s ./src -p 8080 -w \"**/*.html,**/*.css,**/*.js,**/*.gz\""
+    "start": "light-server -s ./src -p 9230 -w \"**/*.html,**/*.css,**/*.js,**/*.gz\""
   },
   "dependencies": {
     "dotenv": "^16.0.1",
