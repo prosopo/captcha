@@ -213,7 +213,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             await tasks.contract.tx.providerRegister(_url, PROVIDER_FEE, PROVIDER_PAYEE)
 
-            const provider = (await tasks.contract.query.getProviderDetails(accountAddress(account))).value
+            const provider = (await tasks.contract.query.getProvider(accountAddress(account))).value
                 .unwrap()
                 .unwrap()
             //console.log('Registered provider', provider)
@@ -338,7 +338,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             await tasks.contract.tx.dappRegister(contractAddress, DappPayee.dapp)
 
-            const dapp = await tasks.contract.query.getDappDetails(contractAddress)
+            const dapp = await tasks.contract.query.getDapp(contractAddress)
 
             this.mockEnv.logger.debug('Dapp registered', dapp.value.unwrap().unwrap())
 

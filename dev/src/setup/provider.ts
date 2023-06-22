@@ -21,13 +21,15 @@ import { getSendAmount, getStakeAmount, sendFunds } from './funds'
 import { hexToU8a } from '@polkadot/util'
 import { loadJSONFile } from '@prosopo/cli'
 import { stringToHexPadded, wrapQuery } from '@prosopo/contract'
+import { BN } from '@polkadot/util'
+import { ReturnNumber } from '@727-ventures/typechain-types'
 
 export async function registerProvider(env: Environment, account: IProviderAccount) {
     try {
-        const providerDetails = (await env.contractInterface.query.getProviderDetails(account.address)).value
+        const provider = (await env.contractInterface.query.getProvider(account.address)).value
             .unwrap()
             .unwrap()
-        if (providerDetails.status.toString() === 'Active') {
+        if (provider.status.toString() === 'Active') {
             env.logger.info('Provider exists and is active, skipping registration.')
             return
         }
@@ -39,7 +41,8 @@ export async function registerProvider(env: Environment, account: IProviderAccou
 
         account.address = providerKeyringPair.address
 
-        const stakeAmount = await env.contractInterface['providerStakeThreshold']()
+        const result: ReturnNumber = await wrapQuery(env.contractInterface.query.getProviderStakeThreshold, env.contractInterface.query)()
+        const stakeAmount = result.rawNumber
 
         // use the minimum stake amount from the contract to create a reasonable stake amount
         account.stake = getStakeAmount(env, stakeAmount)
@@ -86,7 +89,7 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
         await tasks.contract.tx.providerRegister(...providerRegisterArgs)
     }
     const registeredProvider = await wrapQuery(
-        tasks.contract.query.getProviderDetails,
+        tasks.contract.query.getProvider,
         tasks.contract.query
     )(provider.address)
     logger.info(registeredProvider)

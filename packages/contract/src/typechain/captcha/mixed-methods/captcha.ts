@@ -38,29 +38,25 @@ export default class Methods {
 	}
 
 	/**
-	* verifySr25519
-	*
-	* @param { Array<(number | string | BN)> } signature,
-	* @param { Array<(number | string | BN)> } payload,
-	* @returns { Result<Result<null, ReturnTypes.Error>, ReturnTypes.LangError> }
-	*/
-	"verifySr25519" (
-		signature: Array<(number | string | BN)>,
-		payload: Array<(number | string | BN)>,
-		__options: GasLimit,
-	): Promise< QueryReturnType< Result<Result<null, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "verifySr25519", [signature, payload], __options, (result) => { return handleReturnType(result, getTypeDescription(16, DATA_TYPE_DESCRIPTIONS)); });
-	}
-
-	/**
-	* getCaller
+	* getAuthor
 	*
 	* @returns { Result<ReturnTypes.AccountId, ReturnTypes.LangError> }
 	*/
-	"getCaller" (
+	"getAuthor" (
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<ReturnTypes.AccountId, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getCaller", [], __options, (result) => { return handleReturnType(result, getTypeDescription(19, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getAuthor", [], __options, (result) => { return handleReturnType(result, getTypeDescription(13, DATA_TYPE_DESCRIPTIONS)); });
+	}
+
+	/**
+	* getAdmin
+	*
+	* @returns { Result<ReturnTypes.AccountId, ReturnTypes.LangError> }
+	*/
+	"getAdmin" (
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<ReturnTypes.AccountId, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getAdmin", [], __options, (result) => { return handleReturnType(result, getTypeDescription(13, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -71,7 +67,7 @@ export default class Methods {
 	"getPayees" (
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Array<ReturnTypes.Payee>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getPayees", [], __options, (result) => { return handleReturnType(result, getTypeDescription(20, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getPayees", [], __options, (result) => { return handleReturnType(result, getTypeDescription(14, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -82,7 +78,7 @@ export default class Methods {
 	"getDappPayees" (
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Array<ReturnTypes.DappPayee>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getDappPayees", [], __options, (result) => { return handleReturnType(result, getTypeDescription(23, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getDappPayees", [], __options, (result) => { return handleReturnType(result, getTypeDescription(17, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -93,7 +89,7 @@ export default class Methods {
 	"getStatuses" (
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Array<ReturnTypes.GovernanceStatus>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getStatuses", [], __options, (result) => { return handleReturnType(result, getTypeDescription(26, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getStatuses", [], __options, (result) => { return handleReturnType(result, getTypeDescription(20, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -104,7 +100,7 @@ export default class Methods {
 	"getProviderStakeThreshold" (
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<ReturnNumber, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getProviderStakeThreshold", [], __options, (result) => { return handleReturnType(result, getTypeDescription(29, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getProviderStakeThreshold", [], __options, (result) => { return handleReturnType(result, getTypeDescription(23, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -115,7 +111,73 @@ export default class Methods {
 	"getDappStakeThreshold" (
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<ReturnNumber, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getDappStakeThreshold", [], __options, (result) => { return handleReturnType(result, getTypeDescription(29, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getDappStakeThreshold", [], __options, (result) => { return handleReturnType(result, getTypeDescription(23, DATA_TYPE_DESCRIPTIONS)); });
+	}
+
+	/**
+	* getMaxProviderFee
+	*
+	* @returns { Result<number, ReturnTypes.LangError> }
+	*/
+	"getMaxProviderFee" (
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<number, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getMaxProviderFee", [], __options, (result) => { return handleReturnType(result, getTypeDescription(24, DATA_TYPE_DESCRIPTIONS)); });
+	}
+
+	/**
+	* getMinNumActiveProviders
+	*
+	* @returns { Result<number, ReturnTypes.LangError> }
+	*/
+	"getMinNumActiveProviders" (
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<number, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getMinNumActiveProviders", [], __options, (result) => { return handleReturnType(result, getTypeDescription(25, DATA_TYPE_DESCRIPTIONS)); });
+	}
+
+	/**
+	* getBlockTime
+	*
+	* @returns { Result<number, ReturnTypes.LangError> }
+	*/
+	"getBlockTime" (
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<number, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getBlockTime", [], __options, (result) => { return handleReturnType(result, getTypeDescription(25, DATA_TYPE_DESCRIPTIONS)); });
+	}
+
+	/**
+	* getMaxUserHistoryAgeSeconds
+	*
+	* @returns { Result<number, ReturnTypes.LangError> }
+	*/
+	"getMaxUserHistoryAgeSeconds" (
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<number, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getMaxUserHistoryAgeSeconds", [], __options, (result) => { return handleReturnType(result, getTypeDescription(24, DATA_TYPE_DESCRIPTIONS)); });
+	}
+
+	/**
+	* getMaxUserHistoryLen
+	*
+	* @returns { Result<number, ReturnTypes.LangError> }
+	*/
+	"getMaxUserHistoryLen" (
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<number, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getMaxUserHistoryLen", [], __options, (result) => { return handleReturnType(result, getTypeDescription(25, DATA_TYPE_DESCRIPTIONS)); });
+	}
+
+	/**
+	* getMaxUserHistoryAgeBlocks
+	*
+	* @returns { Result<number, ReturnTypes.LangError> }
+	*/
+	"getMaxUserHistoryAgeBlocks" (
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<number, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getMaxUserHistoryAgeBlocks", [], __options, (result) => { return handleReturnType(result, getTypeDescription(24, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -183,6 +245,19 @@ export default class Methods {
 	}
 
 	/**
+	* getProvider
+	*
+	* @param { ArgumentTypes.AccountId } account,
+	* @returns { Result<Result<ReturnTypes.Provider, ReturnTypes.Error>, ReturnTypes.LangError> }
+	*/
+	"getProvider" (
+		account: ArgumentTypes.AccountId,
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<Result<ReturnTypes.Provider, ReturnTypes.Error>, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getProvider", [account], __options, (result) => { return handleReturnType(result, getTypeDescription(30, DATA_TYPE_DESCRIPTIONS)); });
+	}
+
+	/**
 	* providerFund
 	*
 	* @returns { void }
@@ -205,11 +280,24 @@ export default class Methods {
 	"providerSetDataset" (
 		datasetId: ArgumentTypes.Hash,
 		datasetIdContent: ArgumentTypes.Hash,
-		__options: GasLimit,
+		__options: GasLimitAndRequiredValue,
 	){
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "providerSetDataset", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
 		}, [datasetId, datasetIdContent], __options);
+	}
+
+	/**
+	* getDapp
+	*
+	* @param { ArgumentTypes.AccountId } contract,
+	* @returns { Result<Result<ReturnTypes.Dapp, ReturnTypes.Error>, ReturnTypes.LangError> }
+	*/
+	"getDapp" (
+		contract: ArgumentTypes.AccountId,
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<Result<ReturnTypes.Dapp, ReturnTypes.Error>, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getDapp", [contract], __options, (result) => { return handleReturnType(result, getTypeDescription(33, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -294,6 +382,19 @@ export default class Methods {
 	}
 
 	/**
+	* getUserHistorySummary
+	*
+	* @param { ArgumentTypes.AccountId } userAccount,
+	* @returns { Result<Result<ReturnTypes.UserHistorySummary, ReturnTypes.Error>, ReturnTypes.LangError> }
+	*/
+	"getUserHistorySummary" (
+		userAccount: ArgumentTypes.AccountId,
+		__options: GasLimit,
+	): Promise< QueryReturnType< Result<Result<ReturnTypes.UserHistorySummary, ReturnTypes.Error>, ReturnTypes.LangError> > >{
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getUserHistorySummary", [userAccount], __options, (result) => { return handleReturnType(result, getTypeDescription(36, DATA_TYPE_DESCRIPTIONS)); });
+	}
+
+	/**
 	* providerCommit
 	*
 	* @param { ArgumentTypes.Commit } commit,
@@ -326,29 +427,29 @@ export default class Methods {
 	/**
 	* dappOperatorIsHumanUser
 	*
-	* @param { ArgumentTypes.AccountId } user,
+	* @param { ArgumentTypes.AccountId } userAccount,
 	* @param { (number | string | BN) } threshold,
 	* @returns { Result<Result<boolean, ReturnTypes.Error>, ReturnTypes.LangError> }
 	*/
 	"dappOperatorIsHumanUser" (
-		user: ArgumentTypes.AccountId,
+		userAccount: ArgumentTypes.AccountId,
 		threshold: (number | string | BN),
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<boolean, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "dappOperatorIsHumanUser", [user, threshold], __options, (result) => { return handleReturnType(result, getTypeDescription(33, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "dappOperatorIsHumanUser", [userAccount, threshold], __options, (result) => { return handleReturnType(result, getTypeDescription(42, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
 	* dappOperatorLastCorrectCaptcha
 	*
-	* @param { ArgumentTypes.AccountId } user,
+	* @param { ArgumentTypes.AccountId } userAccount,
 	* @returns { Result<Result<ReturnTypes.LastCorrectCaptcha, ReturnTypes.Error>, ReturnTypes.LangError> }
 	*/
 	"dappOperatorLastCorrectCaptcha" (
-		user: ArgumentTypes.AccountId,
+		userAccount: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.LastCorrectCaptcha, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "dappOperatorLastCorrectCaptcha", [user], __options, (result) => { return handleReturnType(result, getTypeDescription(36, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "dappOperatorLastCorrectCaptcha", [userAccount], __options, (result) => { return handleReturnType(result, getTypeDescription(45, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -361,98 +462,46 @@ export default class Methods {
 		datasetId: ArgumentTypes.Hash,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.CaptchaData, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getCaptchaData", [datasetId], __options, (result) => { return handleReturnType(result, getTypeDescription(39, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getCaptchaData", [datasetId], __options, (result) => { return handleReturnType(result, getTypeDescription(48, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
-	* getDappUser
+	* getUser
 	*
-	* @param { ArgumentTypes.AccountId } dappUserId,
+	* @param { ArgumentTypes.AccountId } userAccount,
 	* @returns { Result<Result<ReturnTypes.User, ReturnTypes.Error>, ReturnTypes.LangError> }
 	*/
-	"getDappUser" (
-		dappUserId: ArgumentTypes.AccountId,
+	"getUser" (
+		userAccount: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.User, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getDappUser", [dappUserId], __options, (result) => { return handleReturnType(result, getTypeDescription(42, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getUser", [userAccount], __options, (result) => { return handleReturnType(result, getTypeDescription(51, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
-	* getProviderDetails
+	* getCommit
 	*
-	* @param { ArgumentTypes.AccountId } accountid,
-	* @returns { Result<Result<ReturnTypes.Provider, ReturnTypes.Error>, ReturnTypes.LangError> }
-	*/
-	"getProviderDetails" (
-		accountid: ArgumentTypes.AccountId,
-		__options: GasLimit,
-	): Promise< QueryReturnType< Result<Result<ReturnTypes.Provider, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getProviderDetails", [accountid], __options, (result) => { return handleReturnType(result, getTypeDescription(45, DATA_TYPE_DESCRIPTIONS)); });
-	}
-
-	/**
-	* getDappDetails
-	*
-	* @param { ArgumentTypes.AccountId } contract,
-	* @returns { Result<Result<ReturnTypes.Dapp, ReturnTypes.Error>, ReturnTypes.LangError> }
-	*/
-	"getDappDetails" (
-		contract: ArgumentTypes.AccountId,
-		__options: GasLimit,
-	): Promise< QueryReturnType< Result<Result<ReturnTypes.Dapp, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getDappDetails", [contract], __options, (result) => { return handleReturnType(result, getTypeDescription(48, DATA_TYPE_DESCRIPTIONS)); });
-	}
-
-	/**
-	* getCaptchaSolutionCommitment
-	*
-	* @param { ArgumentTypes.Hash } captchaSolutionCommitmentId,
+	* @param { ArgumentTypes.Hash } commitId,
 	* @returns { Result<Result<ReturnTypes.Commit, ReturnTypes.Error>, ReturnTypes.LangError> }
 	*/
-	"getCaptchaSolutionCommitment" (
-		captchaSolutionCommitmentId: ArgumentTypes.Hash,
+	"getCommit" (
+		commitId: ArgumentTypes.Hash,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.Commit, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getCaptchaSolutionCommitment", [captchaSolutionCommitmentId], __options, (result) => { return handleReturnType(result, getTypeDescription(51, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getCommit", [commitId], __options, (result) => { return handleReturnType(result, getTypeDescription(54, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
-	* getDappBalance
+	* listProvidersByAccounts
 	*
-	* @param { ArgumentTypes.AccountId } dapp,
-	* @returns { Result<Result<ReturnNumber, ReturnTypes.Error>, ReturnTypes.LangError> }
-	*/
-	"getDappBalance" (
-		dapp: ArgumentTypes.AccountId,
-		__options: GasLimit,
-	): Promise< QueryReturnType< Result<Result<ReturnNumber, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getDappBalance", [dapp], __options, (result) => { return handleReturnType(result, getTypeDescription(53, DATA_TYPE_DESCRIPTIONS)); });
-	}
-
-	/**
-	* getProviderBalance
-	*
-	* @param { ArgumentTypes.AccountId } provider,
-	* @returns { Result<Result<ReturnNumber, ReturnTypes.Error>, ReturnTypes.LangError> }
-	*/
-	"getProviderBalance" (
-		provider: ArgumentTypes.AccountId,
-		__options: GasLimit,
-	): Promise< QueryReturnType< Result<Result<ReturnNumber, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getProviderBalance", [provider], __options, (result) => { return handleReturnType(result, getTypeDescription(53, DATA_TYPE_DESCRIPTIONS)); });
-	}
-
-	/**
-	* listProvidersByIds
-	*
-	* @param { Array<ArgumentTypes.AccountId> } providerIds,
+	* @param { Array<ArgumentTypes.AccountId> } providerAccounts,
 	* @returns { Result<Result<Array<ReturnTypes.Provider>, ReturnTypes.Error>, ReturnTypes.LangError> }
 	*/
-	"listProvidersByIds" (
-		providerIds: Array<ArgumentTypes.AccountId>,
+	"listProvidersByAccounts" (
+		providerAccounts: Array<ArgumentTypes.AccountId>,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<Array<ReturnTypes.Provider>, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "listProvidersByIds", [providerIds], __options, (result) => { return handleReturnType(result, getTypeDescription(55, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "listProvidersByAccounts", [providerAccounts], __options, (result) => { return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -465,33 +514,33 @@ export default class Methods {
 		statuses: Array<ArgumentTypes.GovernanceStatus>,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<Array<ReturnTypes.Provider>, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "listProvidersByStatus", [statuses], __options, (result) => { return handleReturnType(result, getTypeDescription(55, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "listProvidersByStatus", [statuses], __options, (result) => { return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
 	* getRandomActiveProvider
 	*
 	* @param { ArgumentTypes.AccountId } userAccount,
-	* @param { ArgumentTypes.AccountId } dappContractAccount,
+	* @param { ArgumentTypes.AccountId } dappContract,
 	* @returns { Result<Result<ReturnTypes.RandomProvider, ReturnTypes.Error>, ReturnTypes.LangError> }
 	*/
 	"getRandomActiveProvider" (
 		userAccount: ArgumentTypes.AccountId,
-		dappContractAccount: ArgumentTypes.AccountId,
+		dappContract: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.RandomProvider, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getRandomActiveProvider", [userAccount, dappContractAccount], __options, (result) => { return handleReturnType(result, getTypeDescription(58, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getRandomActiveProvider", [userAccount, dappContract], __options, (result) => { return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
-	* getAllProviderIds
+	* getAllProviderAccounts
 	*
 	* @returns { Result<Result<Array<ReturnTypes.AccountId>, ReturnTypes.Error>, ReturnTypes.LangError> }
 	*/
-	"getAllProviderIds" (
+	"getAllProviderAccounts" (
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<Array<ReturnTypes.AccountId>, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getAllProviderIds", [], __options, (result) => { return handleReturnType(result, getTypeDescription(61, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getAllProviderAccounts", [], __options, (result) => { return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -499,16 +548,16 @@ export default class Methods {
 	*
 	* @param { (string | number | BN) } len,
 	* @param { ArgumentTypes.AccountId } userAccount,
-	* @param { ArgumentTypes.AccountId } dappAccount,
+	* @param { ArgumentTypes.AccountId } dappContract,
 	* @returns { Result<ReturnNumber, ReturnTypes.LangError> }
 	*/
 	"getRandomNumber" (
 		len: (string | number | BN),
 		userAccount: ArgumentTypes.AccountId,
-		dappAccount: ArgumentTypes.AccountId,
+		dappContract: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<ReturnNumber, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getRandomNumber", [len, userAccount, dappAccount], __options, (result) => { return handleReturnType(result, getTypeDescription(29, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getRandomNumber", [len, userAccount, dappContract], __options, (result) => { return handleReturnType(result, getTypeDescription(23, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -552,21 +601,6 @@ export default class Methods {
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "setCodeHash", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
 		}, [codeHash], __options);
-	}
-
-	/**
-	* setAdmin
-	*
-	* @param { ArgumentTypes.AccountId } newAdmin,
-	* @returns { void }
-	*/
-	"setAdmin" (
-		newAdmin: ArgumentTypes.AccountId,
-		__options: GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "setAdmin", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [newAdmin], __options);
 	}
 
 }
