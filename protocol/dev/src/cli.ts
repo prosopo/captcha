@@ -7,19 +7,24 @@ import { spawn } from 'child_process'
 import { stdout, stderr, stdin } from 'process';
 import fs from 'fs'
 import { config } from 'dotenv'
-
-config({ path: `.env.${process.env.NODE_ENV}` })
-console.log("NODE_ENV:", process.env.NODE_ENV)
-// const env = Object.keys(process.env)
-//   .filter(key => key.startsWith("ENV_"))
-//   .reduce((obj, key) => {
-//     obj[key] = process.env[key];
-//     return obj;
-//   }, {});
-// console.log("env vars:", env)
+import { hexToU8a } from '@polkadot/util'
 
 const contractSrcFileExtension = '.rs'
 const backupFileExtension = '.bak'
+
+// add in the git commit to env
+const addGitCommitIdToEnv = async () => {
+    // get the git commit id
+    const gitCommitIdResult = await exec('git rev-parse HEAD')
+    const gitCommitId = gitCommitIdResult.stdout.trim()
+    // console.log("git commit id:", gitCommitId)
+    const gitCommitIdBytes = hexToU8a(gitCommitId)
+    // console.log("git commit id bytes:", gitCommitIdBytes)
+    const gitCommitIdBytesString = "[" + gitCommitIdBytes.toString() + "]"
+    // console.log("git commit id byte string:", gitCommitIdBytesString)
+    // add it to the env
+    process.env['ENV_GIT_COMMIT_ID'] = gitCommitIdBytesString
+}
 
 const setEnvVariable = (filePath: string, name: string, value: string) => {
     // console.log("setting env variable", name, "in", filePath)
@@ -147,7 +152,11 @@ const clearEnvBackupFiles = (filePath: string) => {
     }
 }
 
-const exec = (command: string, pipe?: boolean, returnOutput?: boolean) => {
+const exec = (command: string, pipe?: boolean): Promise<{
+    stdout: string,
+    stderr: string,
+    code: number | null,
+}> => {
 
     console.log(`> ${command}`)
 
@@ -172,12 +181,11 @@ const exec = (command: string, pipe?: boolean, returnOutput?: boolean) => {
 
     return new Promise((resolve, reject) => {
         prc.on('close', function (code) {
-            console.log("")
-            const output = returnOutput ? {
+            const output = {
                 stdout: stdoutData.join(''),
                 stderr: stderrData.join(''),
                 code,
-            } : undefined;
+            };
             if (code === 0) {
                 resolve(output);
             } else {
@@ -188,10 +196,21 @@ const exec = (command: string, pipe?: boolean, returnOutput?: boolean) => {
 }
 
 export async function processArgs(args: string[]) {
+    await addGitCommitIdToEnv()
     // const parsed = await yargs.option('logLevel', {
     //     describe: 'set log level',
     //     choices: Object.keys(LogLevel),
     // }).argv
+
+    config({ path: `.env.${process.env.NODE_ENV}` })
+    console.log("NODE_ENV:", process.env.NODE_ENV)
+    // const env = Object.keys(process.env)
+    // .filter(key => key.startsWith("ENV_"))
+    // .reduce((obj, key) => {
+    //     obj[key] = process.env[key];
+    //     return obj;
+    // }, {});
+    // console.log("env vars:", env)
 
     // const logger = consola.create({ level: LogLevel[parsed.logLevel || 'Info'] })
 
