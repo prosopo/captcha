@@ -402,6 +402,7 @@ export function picassoCanvas(roundNumber, seed, params) {
         }
         return x64hash128(canvasElt.toDataURL(), seed)
     } catch (e) {
+        console.log(e)
         throw new ProsopoEnvError(e)
     }
 }

@@ -8,7 +8,8 @@ const path = require('path')
 const { JsonAccessOptimizer } = require('webpack-json-access-optimizer')
 const { ProvidePlugin } = require('webpack')
 const { loadEnv } = require('@prosopo/cli')
-
+const { logger } = require('@prosopo/common')
+const log = logger(`Info`, `webpack.config.js`)
 const moduleDirs = [
     path.resolve(__dirname, 'node_modules'),
     path.resolve(__dirname, '../../node_modules'),
@@ -89,7 +90,7 @@ const allowList = [
 ]
 // Create a regex that captures packages that are NOT in the allow list
 const externalsRegex = `(?!${allowList.map((item) => item.replace('/', '\\/')).join('|')})`
-console.log('externalsRegex', externalsRegex)
+log.info('externalsRegex', externalsRegex)
 
 loadEnv()
 
@@ -159,7 +160,7 @@ module.exports = (env, argv) => {
             new webpack.DefinePlugin({
                 'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
                 'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
-                'process.env.DAPP_CONTRACT_ADDRESS': JSON.stringify(process.env.DAPP_CONTRACT_ADDRESS),
+                'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
             }),
             // new webpack.optimize.SplitChunksPlugin(),
             new CompressionPlugin(),
@@ -175,7 +176,7 @@ module.exports = (env, argv) => {
             {
                 apply: (compiler) => {
                     compiler.hooks.done.tap('DonePlugin', (stats) => {
-                        console.log('Compile is done !')
+                        log.info('Compile is done !')
                         setTimeout(() => {
                             process.exit(0)
                         })

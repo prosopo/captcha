@@ -69,6 +69,7 @@ export class ProsopoCaptchaApi {
     public verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: GetCaptchaResponse): void {
         // TODO make sure root is equal to root on the provider
         const proofLength = captchaChallenge.captchas[0].proof.length
+        console.log(provider.provider)
 
         if (provider.provider.datasetIdContent.toString() !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_DATASET_CONTENT_ID')
@@ -84,7 +85,7 @@ export class ProsopoCaptchaApi {
                 throw new ProsopoEnvError('CAPTCHA.INVALID_CAPTCHA_CHALLENGE')
             }
         }
-
+        console.log('CAPTCHA.CHALLENGE_VERIFIED')
         return
     }
 
@@ -102,6 +103,7 @@ export class ProsopoCaptchaApi {
         tree.build(captchasHashed)
         const commitmentId = tree.root!.hash
 
+        console.log('solveCaptchaChallenge commitmentId', commitmentId)
         const tx: ContractSubmittableResult | undefined = undefined
 
         let signature: string | undefined = undefined

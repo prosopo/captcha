@@ -11,7 +11,7 @@ import './App.css'
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
-    'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization'
+    'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization',
 }
 
 function App() {
@@ -66,12 +66,11 @@ function App() {
             email,
             name,
             password,
-            prosopo: procaptchaOutput,
+            'procaptcha-response': procaptchaOutput,
         }
         fetch(`${serverUrl}/${urlPath}`, {
             method: 'POST',
             headers: {
-                Origin: 'http://localhost:3001', // TODO: change this to env var
                 ...corsHeaders,
                 'Content-Type': 'application/json',
             },
