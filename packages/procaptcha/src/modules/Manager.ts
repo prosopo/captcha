@@ -137,8 +137,7 @@ export const Manager = (
 
             // snapshot the config into the state
             const config = getConfig()
-            // updateState({ dappAccount: config.network.dappContract.address })
-            console.log('Starting procaptcha using config:', config)
+            updateState({ dappAccount: config.network.dappContract.address })
 
             // allow UI to catch up with the loading state
             await sleep(100)
