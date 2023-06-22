@@ -28,7 +28,7 @@ export default () =>
         dappName: process.env.REACT_APP_DAPP_NAME || 'client-example-server',
         networks: {
             development: {
-                endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://localhost:9944',
+                endpoint: process.env.REACT_APP_SUBSTRATE_NODE_URL || 'ws://localhost:9944',
                 prosopoContract: {
                     address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
                     name: 'prosopo',
