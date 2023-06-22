@@ -76,3 +76,15 @@ ARGS_OWNER=5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY # Alice's account
 ARGS_PROVIDER_STAKE_DEFAULT=2000000000000
 ENDOWMENT=1000000000000
 ```
+
+## Deploy to rococo with proxy
+1. convert the author account (our shared account) from ss58 format to u8[]
+2. set the env variables to that author
+3. build captcha contract
+4. deploy captcha contract on jsapps
+5. get address of captcha contract from jsapps
+6. convert from ss58 to u8[]
+7. put that u8[] in the env variable for proxy destination
+8. build the proxy contract
+9. deploy proxy contract
+10. voila
