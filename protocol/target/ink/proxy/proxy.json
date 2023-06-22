@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xcec48bc59dcd9766720c289bed5549b1f83499ab209f25556ae1b36e2272c08f",
+    "hash": "0x5a692e8d5a484189374a77e1ea8a6f7f40c9ab7462497427f70095999f07fa5b",
     "language": "ink! 4.1.0",
     "compiler": "rustc 1.69.0",
     "build_info": {
@@ -112,7 +112,9 @@
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " the admin which can control this contract. set to author/instantiator by default"
+        ],
         "label": "get_admin",
         "mutates": false,
         "payable": false,
