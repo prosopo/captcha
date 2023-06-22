@@ -120,7 +120,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             'Update a Provider',
             (yargs) =>
                 yargs
-                    .option('origin', {
+                    .option('url', {
                         type: 'string',
                         demand: false,
                         desc: 'The provider service origin (URI)',
@@ -142,9 +142,9 @@ export function processArgs(args, env: ProsopoEnvironment) {
                     }),
             async (argv) => {
                 const provider = (await tasks.contract.query.getProvider(argv.address, {})).value.unwrap().unwrap()
-                if (provider && (argv.origin || argv.fee || argv.payee || argv.value)) {
+                if (provider && (argv.url || argv.fee || argv.payee || argv.value)) {
                     const result = await tasks.contract.tx.providerUpdate(
-                        argv.origin || provider.url,
+                        argv.url || provider.url,
                         argv.fee || provider.fee,
                         argv.payee || provider.payee,
                         argv.value || 0
