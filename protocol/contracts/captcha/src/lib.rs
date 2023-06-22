@@ -362,6 +362,16 @@ pub mod captcha {
             }
         }
 
+        /// Get the git commit id from when this contract was built
+        #[ink(message)]
+        pub fn get_git_commit_id(&self) -> [u8; 20] {
+            let env_git_commit_id: [u8; 20] = [
+                246, 103, 20, 204, 216, 217, 107, 3, 196, 247, 37, 201, 202, 147, 117, 92, 178, 37,
+                60, 56,
+            ];
+            env_git_commit_id
+        }
+
         /// the account which can instantiate the contract
         #[ink(message)]
         pub fn get_author(&self) -> AccountId {
