@@ -1,10 +1,6 @@
 {
   "source": {
-<<<<<<<< HEAD:dev/src/contract/sources/captcha/4920101a4b960bdbf5c7cab05c25a0ff5671fd36/captcha.json
-    "hash": "0xfec9e968604566c1cc72a300e8b1322cc424cd584dd638c8e4040c9b8d040612",
-========
-    "hash": "0x8f3b4235735274414d2b47a16b8e2924f6c035bcec3545b3e5d6c6bcff3e1211",
->>>>>>>> main:dev/src/contract/sources/captcha/b0e624f6b982f26ae80d463445d958410bda3844/captcha.json
+    "hash": "0x200fd70925e6c836028b0d7e8e6385eadc4b8feb518274039c97c1086ea4d64d",
     "language": "ink! 4.1.0",
     "compiler": "rustc 1.69.0",
     "build_info": {
@@ -100,15 +96,9 @@
         "args": [],
         "default": false,
         "docs": [
-<<<<<<<< HEAD:dev/src/contract/sources/captcha/4920101a4b960bdbf5c7cab05c25a0ff5671fd36/captcha.json
           " Get the git commit id from when this contract was built"
         ],
         "label": "get_git_commit_id",
-========
-          " the account which can instantiate the contract"
-        ],
-        "label": "get_author",
->>>>>>>> main:dev/src/contract/sources/captcha/b0e624f6b982f26ae80d463445d958410bda3844/captcha.json
         "mutates": false,
         "payable": false,
         "returnType": {
