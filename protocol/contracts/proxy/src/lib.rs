@@ -66,7 +66,10 @@ pub mod proxy {
 
         #[ink(message)]
         pub fn get_proxy_destination(&self) -> AccountId {
-            let env_proxy_destination_bytes: [u8; 32] = [0; 32]; // the destination contract to forward to, set to 0 by default
+            let env_proxy_destination_bytes: [u8; 32] = [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0,
+            ]; // the destination contract to forward to, set to 0 by default
             AccountId::from(env_proxy_destination_bytes)
         }
 
