@@ -169,13 +169,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                     }}
                                 >
                                     <Checkbox
-                                        onChange={(e) => {
-                                            console.log('what')
-                                            manager
-                                                .start()
-                                                .then((r) => console.log('start', r))
-                                                .catch((e) => console.log('error', e))
-                                        }}
+                                        onChange={manager.start}
                                         checked={state.isHuman}
                                         inputProps={{ 'aria-label': 'controlled' }}
                                         sx={{
