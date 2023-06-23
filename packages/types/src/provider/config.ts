@@ -24,14 +24,29 @@ export enum EnvironmentTypes {
     development = 'development',
 }
 
-export const DatabaseConfigSchema = z.object({
-    [EnvironmentTypes.development]: z.object({
-        type: z.nativeEnum(DatabaseTypes),
-        endpoint: z.string(),
-        dbname: z.string(),
-        authSource: z.string(),
-    }),
-})
+const EnvironmentTypesSchema = z.nativeEnum(EnvironmentTypes)
+
+export enum NetworkNames {
+    development = 'development',
+    rococo = 'rococo',
+    kusama = 'kusama',
+    polkadot = 'polkadot',
+    shiden = 'shiden',
+}
+
+const NetworkNamesSchema = z.nativeEnum(NetworkNames)
+
+export const DatabaseConfigSchema = z
+    .record(
+        EnvironmentTypesSchema,
+        z.object({
+            type: z.nativeEnum(DatabaseTypes),
+            endpoint: z.string(),
+            dbname: z.string(),
+            authSource: z.string(),
+        })
+    )
+    .optional()
 
 export const BatchCommitConfigSchema = z.object({
     interval: z.number().positive(),
@@ -42,47 +57,77 @@ export type BatchCommitConfig = z.infer<typeof BatchCommitConfigSchema>
 
 export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 
-export const ProsopoConfigSchema = z.object({
+export const ProsopoBaseConfigSchema = z.object({
     logLevel: z.nativeEnum(LogLevel),
-    defaultEnvironment: z.nativeEnum(EnvironmentTypes),
+    defaultEnvironment: z.nativeEnum(EnvironmentTypes).default(EnvironmentTypes.development),
     account: z.object({
         password: z.string().optional(),
     }),
-    networks: z.object({
-        development: z.object({
-            endpoint: z.string().url(),
-            contract: z.object({
-                address: z.string(),
-                name: z.string(),
-            }),
-            accounts: z.array(z.string()),
-        }),
+})
+
+export const ProsopoNetworkConfigSchema = z
+    .record(
+        NetworkNamesSchema,
+        z
+            .object({
+                endpoint: z.string().url(),
+                contract: z.object({
+                    address: z.string(),
+                    name: z.string(),
+                }),
+                accounts: z.array(z.string()),
+            })
+            .required()
+    )
+    .default({
+        development: {
+            endpoint: 'ws://127.0.0.1:9944',
+            contract: {
+                address: '',
+                name: '',
+            },
+            accounts: [''],
+        },
+    })
+
+export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
+    z.object({
+        networks: ProsopoNetworkConfigSchema,
+        database: DatabaseConfigSchema.optional(),
+    })
+)
+
+export type ProsopoBasicConfig = z.infer<typeof ProsopoBasicConfigSchema>
+
+export const ProsopoCaptchaCountConfigSchema = z.object({
+    solved: z.object({
+        count: z.number().positive(),
     }),
-    captchas: z.object({
-        solved: z.object({
-            count: z.number().positive(),
-        }),
-        unsolved: z.object({
-            count: z.number().nonnegative(),
-        }),
-    }),
-    captchaSolutions: z.object({
-        requiredNumberOfSolutions: z.number().positive().min(2),
-        solutionWinningPercentage: z.number().positive().max(100),
-        captchaFilePath: z.string(),
-        captchaBlockRecency: z.number().positive().min(2),
-    }),
-    batchCommit: BatchCommitConfigSchema,
-    database: DatabaseConfigSchema,
-    assets: z.object({
-        absolutePath: z.string(),
-        basePath: z.string(),
-    }),
-    server: z.object({
-        baseURL: z.string().url(),
-        port: z.number().optional().default(9229),
-        fileServePaths: z.string(),
+    unsolved: z.object({
+        count: z.number().nonnegative(),
     }),
 })
+
+export const ProsopoImageServerConfigSchema = z.object({
+    baseURL: z.string().url(),
+    port: z.number().optional().default(9229),
+    fileServePaths: z.string(),
+})
+
+export const ProsopoCaptchaSolutionConfigSchema = z.object({
+    requiredNumberOfSolutions: z.number().positive().min(2),
+    solutionWinningPercentage: z.number().positive().max(100),
+    captchaFilePath: z.string(),
+    captchaBlockRecency: z.number().positive().min(2),
+})
+
+export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
+    z.object({
+        captchas: ProsopoCaptchaCountConfigSchema,
+        captchaSolutions: ProsopoCaptchaSolutionConfigSchema,
+        batchCommit: BatchCommitConfigSchema,
+        server: ProsopoImageServerConfigSchema,
+    })
+)
 
 export type ProsopoConfig = z.infer<typeof ProsopoConfigSchema>

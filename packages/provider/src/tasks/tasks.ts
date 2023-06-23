@@ -44,7 +44,7 @@ import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Header, SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockNumber } from '@prosopo/contract'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import { ProviderEnvironment } from '@prosopo/types-env'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 import { SubmittableResult } from '@polkadot/api'
 import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
@@ -67,7 +67,7 @@ export class Tasks {
 
     logger: Logger
 
-    constructor(env: ProsopoEnvironment) {
+    constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {
             throw new ProsopoEnvError(
                 'CONTRACT.CONTRACT_UNDEFINED',

@@ -58,10 +58,6 @@ export default (): ProsopoConfig => ({
         interval: 300, // TODO add env var
         maxBatchExtrinsicPercentage: 59, // TODO add env var
     },
-    assets: {
-        absolutePath: '',
-        basePath: '',
-    },
     server: {
         baseURL: process.env.API_BASE_URL || '',
         port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,

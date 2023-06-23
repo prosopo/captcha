@@ -18,10 +18,10 @@ import { Database } from '@prosopo/types-database' // config
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { Logger } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoBasicConfig } from '@prosopo/types'
 import { WsProvider } from '@polkadot/rpc-provider'
 export interface ProsopoEnvironment {
-    config: ProsopoConfig
+    config: ProsopoBasicConfig
     db: Database | undefined
     contractInterface: any
     contractAddress: string

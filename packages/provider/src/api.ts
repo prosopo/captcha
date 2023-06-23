@@ -23,7 +23,7 @@ import {
 import { CaptchaRequestBody } from '@prosopo/types'
 import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types/provider/index'
 import { ProsopoApiError } from '@prosopo/common'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from './tasks/tasks'
 import { UserCommitmentRecord } from '@prosopo/types-database'
 import { parseBlockNumber } from './util'
@@ -37,7 +37,7 @@ import express, { Router } from 'express'
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
  * @param {Environment} env - The Prosopo environment
  */
-export function prosopoRouter(env: ProsopoEnvironment): Router {
+export function prosopoRouter(env: ProviderEnvironment): Router {
     const router = express.Router()
     const tasks = new Tasks(env)
 

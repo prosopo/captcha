@@ -13,10 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-// declare module "*.json" {
-//   const value: any;
-//   export default value;
-// }
 
 import { Captcha, MerkleProof } from '@prosopo/types'
 

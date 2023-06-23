@@ -16,7 +16,7 @@ import { BatchCommitments } from '@prosopo/provider'
 import { Compact, u128 } from '@polkadot/types'
 import { PayeeSchema } from '@prosopo/types'
 import { ProsopoEnvError, logger as getLogger } from '@prosopo/common'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { cwd } from 'process'
 import { encodeStringAddress } from '@prosopo/provider'
@@ -73,7 +73,7 @@ const validateScheduleExpression = (argv) => {
     }
 }
 
-export function processArgs(args, env: ProsopoEnvironment) {
+export function processArgs(args, env: ProviderEnvironment) {
     const tasks = new Tasks(env)
     const logger = getLogger(env.config.logLevel, 'CLI')
     return yargs
