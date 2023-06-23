@@ -14,7 +14,7 @@
 import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount, Payee } from '@prosopo/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../src/index'
 import { getPair } from '@prosopo/common'
 
@@ -45,7 +45,7 @@ export const DAPP: IDappAccount = {
     fundAmount: new BN(1000000000000000),
 }
 
-export async function getSignedTasks(env: ProsopoEnvironment, account: Account): Promise<Tasks> {
+export async function getSignedTasks(env: ProviderEnvironment, account: Account): Promise<Tasks> {
     const ss58Format = 42
     const pair = await getPair('sr25519' as KeypairType, ss58Format, accountMnemonic(account))
 
