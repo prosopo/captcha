@@ -20,7 +20,7 @@ import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel } from 'consola'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { ProsopoBasicConfig, ProsopoBasicConfigSchema } from '@prosopo/types'
+import { ProsopoBasicConfig } from '@prosopo/types'
 import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -41,7 +41,7 @@ export class Environment implements ProsopoEnvironment {
     api: ApiPromise
 
     constructor(pair: KeyringPair, config: ProsopoBasicConfig) {
-        this.config = ProsopoBasicConfigSchema.parse(config)
+        this.config = config
         this.defaultEnvironment = this.config.defaultEnvironment
         this.pair = pair
         this.logger = logger(this.config.logLevel, `ProsopoEnvironment`)
