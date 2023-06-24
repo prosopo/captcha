@@ -1,7 +1,7 @@
-import { ApiParams, EnvironmentTypes } from '@prosopo/types'
+import { ApiParams, EnvironmentTypes, ProcaptchaOutput } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 import { Procaptcha } from '@prosopo/procaptcha-react'
-import { ProcaptchaConfigOptional, ProcaptchaOutput } from '@prosopo/procaptcha'
+import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { createRoot } from 'react-dom/client'
 
 function getConfig(siteKey?: string): ProcaptchaConfigOptional {
