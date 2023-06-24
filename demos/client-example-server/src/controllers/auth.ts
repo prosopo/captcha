@@ -1,6 +1,6 @@
 import { ApiParams } from '@prosopo/types'
 import { Connection } from 'mongoose'
-import { ProcaptchaResponse } from '@prosopo/procaptcha'
+import { ProcaptchaResponse } from '@prosopo/types'
 import { ProsopoServer } from '@prosopo/server'
 import { UserInterface } from '../models/user'
 import { z } from 'zod'

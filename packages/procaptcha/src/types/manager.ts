@@ -1,9 +1,8 @@
-import { ApiParams, ProcaptchaClientConfig } from '@prosopo/types'
 import { GetCaptchaResponse } from '@prosopo/api'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
+import { ProcaptchaClientConfig, ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi'
 import { TCaptchaSubmitResult } from './client'
-import { z } from 'zod'
 /**
  * House the account and associated extension.
  */
@@ -62,28 +61,3 @@ export interface ProcaptchaEvents {
     onExpired: () => void
     onFailed: () => void
 }
-
-/**
- * The information produced by procaptcha on completion of the captcha process,
- * whether verified by smart contract, a pending commitment in the cache of a
- * provider or a captcha challenge.
- */
-export interface ProcaptchaOutput {
-    [ApiParams.commitmentId]?: string
-    [ApiParams.providerUrl]?: string
-    [ApiParams.dapp]: string
-    [ApiParams.user]: string
-    [ApiParams.blockNumber]?: number
-}
-
-export const ProcaptchaOutputSchema = z.object({
-    [ApiParams.commitmentId]: z.string().optional(),
-    [ApiParams.providerUrl]: z.string().optional(),
-    [ApiParams.dapp]: z.string(),
-    [ApiParams.user]: z.string(),
-    [ApiParams.blockNumber]: z.number().optional(),
-})
-
-export const ProcaptchaResponse = z.object({
-    [ApiParams.procaptchaResponse]: ProcaptchaOutputSchema,
-})
