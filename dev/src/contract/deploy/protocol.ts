@@ -1,9 +1,9 @@
 import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
-import { ContractDeployer, oneUnit } from '@prosopo/contract'
-import { Environment } from '@prosopo/env'
+import { ContractDeployer } from '@prosopo/contract'
 import { LogLevel, logger, reverseHexString } from '@prosopo/common'
+import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
 import { getPair } from '@prosopo/common'
 import { randomAsHex } from '@polkadot/util-crypto'
@@ -15,7 +15,7 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
     const pair = await getPair(pairType, ss58Format, '//Alice')
-    const env = new Environment(pair, defaultConfig())
+    const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     log.debug(reverseHexString(env.api.createType('u16', 10).toHex().toString()), 'max_user_history_len')
     log.debug(reverseHexString(env.api.createType('BlockNumber', 32).toHex().toString()), 'max_user_history_age')
