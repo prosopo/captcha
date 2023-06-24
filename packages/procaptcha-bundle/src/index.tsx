@@ -1,25 +1,30 @@
-import { ApiParams } from '@prosopo/types'
+import { ApiParams, EnvironmentTypes } from '@prosopo/types'
+import { LogLevel } from '@prosopo/common'
 import { Procaptcha } from '@prosopo/procaptcha-react'
-import { ProcaptchaOutput } from '@prosopo/procaptcha'
+import { ProcaptchaConfigOptional, ProcaptchaOutput } from '@prosopo/procaptcha'
 import { createRoot } from 'react-dom/client'
 
-function getConfig(siteKey?: string) {
+function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     if (!siteKey) {
         siteKey = process.env.PROSOPO_SITE_KEY || ''
     }
     return {
+        logLevel: LogLevel.Info,
+        defaultEnvironment: (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypes.development,
         userAccountAddress: '',
         web2: true,
         dappName: 'Prosopo',
-        network: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://127.0.0.1:9944',
-            contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
-                name: 'prosopo',
-            },
-            dappAccount: {
-                address: siteKey, //prosopo site key
-                name: 'dapp',
+        account: {
+            address: siteKey,
+        },
+        networks: {
+            [EnvironmentTypes.development]: {
+                endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://127.0.0.1:9944',
+                contract: {
+                    address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
+                    name: 'prosopo',
+                },
+                accounts: [],
             },
         },
         solutionThreshold: 80,

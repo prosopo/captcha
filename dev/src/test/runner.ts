@@ -12,6 +12,7 @@ const testConfig = {
     defaultEnvironment: EnvironmentTypes.development,
     account: {
         password: '',
+        address: '',
     },
     networks: {
         development: {
@@ -48,7 +49,7 @@ const testConfig = {
     server: {
         baseURL: 'http://localhost',
         port: 9229,
-        fileServePaths: "[]",
+        fileServePaths: '[]',
     },
     batchCommit: {
         interval: 1000000,

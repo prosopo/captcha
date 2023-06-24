@@ -163,7 +163,7 @@ export type ProsopoClientConfig = z.infer<typeof ProsopoClientConfigSchema>
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.merge(
     z.object({
-        accountCreator: AccountCreatorConfigSchema,
+        accountCreator: AccountCreatorConfigSchema.optional(),
     })
 )
 
