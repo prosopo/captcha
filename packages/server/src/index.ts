@@ -4,7 +4,7 @@ import { ContractAbi, NetworkConfig, ProsopoServerConfig, RandomProvider } from 
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, logger } from '@prosopo/common'
-import { ProcaptchaOutput } from '@prosopo/procaptcha'
+import { ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
@@ -37,7 +37,7 @@ export class ProsopoServer {
             this.network = this.config.networks[this.defaultEnvironment]
             this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment].endpoint)
             this.prosopoContractAddress = this.config.networks[this.defaultEnvironment].contract.address
-            this.dappContractAddress = this.config.networks[this.defaultEnvironment].dappAccount.address
+            this.dappContractAddress = this.config.account.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
             this.logger = logger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
