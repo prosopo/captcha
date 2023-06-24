@@ -161,6 +161,8 @@ module.exports = (env, argv) => {
                 'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
                 'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
                 'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
+                'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
+                'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
             }),
             // new webpack.optimize.SplitChunksPlugin(),
             new CompressionPlugin(),
