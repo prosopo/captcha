@@ -4,23 +4,22 @@
 // REACT_APP_DAPP_CONTRACT_ADDRESS=5FzjruAqyhRGV81pMb4yznNS7t52hNB8u2VC2N1P22j5QLY9
 // https://create-react-app.dev/docs/adding-custom-environment-variables/
 
+import { EnvironmentTypes } from '@prosopo/types'
+import { LogLevel } from '@prosopo/common'
 import { ProsopoClientConfig } from '@prosopo/procaptcha'
 
 const config: ProsopoClientConfig = {
+    userAccountAddress: '',
     solutionThreshold: 80,
     web2: process.env.REACT_APP_WEB2 === 'true',
-    defaultEnvironment: 'development',
-    logLevel: 'info',
+    defaultEnvironment: EnvironmentTypes.development,
+    logLevel: LogLevel.Info,
     networks: {
         development: {
             endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
-            prosopoContract: {
+            contract: {
                 address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
                 name: 'prosopo',
-            },
-            dappContract: {
-                address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
-                name: 'dapp',
             },
         },
     },

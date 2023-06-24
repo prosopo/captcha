@@ -1,14 +1,19 @@
 import {
     Account,
     ProcaptchaCallbacks,
-    ProcaptchaConfig,
     ProcaptchaConfigOptional,
     ProcaptchaEvents,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
 } from '../types/manager'
 import { ApiPromise, Keyring } from '@polkadot/api'
-import { CaptchaSolution, ContractAbi, RandomProvider } from '@prosopo/types'
+import {
+    CaptchaSolution,
+    ContractAbi,
+    ProcaptchaClientConfig,
+    ProsopoClientConfig,
+    RandomProvider,
+} from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
@@ -52,6 +57,14 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
     }
 
     return updateCurrentState
+}
+
+export const getNetwork = (config: ProsopoClientConfig) => {
+    const network = config.networks[config.defaultEnvironment]
+    if (!network) {
+        throw new Error(`No network found for environment ${config.defaultEnvironment}`)
+    }
+    return network
 }
 
 /**
@@ -104,8 +117,7 @@ export const Manager = (
      * @returns the config for procaptcha
      */
     const getConfig = () => {
-        const config: ProcaptchaConfig = {
-            web2: false,
+        const config: ProcaptchaClientConfig = {
             userAccountAddress: '',
             ...configOptional,
         }
@@ -137,7 +149,7 @@ export const Manager = (
 
             // snapshot the config into the state
             const config = getConfig()
-            updateState({ dappAccount: config.network.dappContract.address })
+            updateState({ dappAccount: config.account.address })
 
             // allow UI to catch up with the loading state
             await sleep(100)
@@ -164,7 +176,7 @@ export const Manager = (
                 updateState({ isHuman: true, loading: false })
                 events.onHuman({
                     user: account.account.address,
-                    dapp: config.network.dappContract.address,
+                    dapp: config.account.address,
                 })
                 return
             }
@@ -184,7 +196,7 @@ export const Manager = (
                         events.onHuman({
                             providerUrl: providerUrlFromStorage,
                             user: account.account.address,
-                            dapp: config.network.dappContract.address,
+                            dapp: config.account.address,
                             commitmentId: verifyDappUserResponse.commitmentId,
                         })
                         return
@@ -207,7 +219,7 @@ export const Manager = (
             const getRandomProviderResponse: RandomProvider = await wrapQuery(
                 contract.query.getRandomActiveProvider,
                 contract.query
-            )(account.account.address, config.network.dappContract.address)
+            )(account.account.address, config.account.address)
             const blockNumber = getRandomProviderResponse.blockNumber
             console.log('provider', getRandomProviderResponse)
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
@@ -393,7 +405,7 @@ export const Manager = (
             provider,
             providerApi,
             config.web2,
-            config.network.dappContract.address
+            config.account.address
         )
 
         updateState({ captchaApi })
@@ -403,8 +415,8 @@ export const Manager = (
 
     const loadProviderApi = async (providerUrl: string) => {
         const config = getConfig()
-        const providerApi = new ProviderApi(config.network, providerUrl)
-        return providerApi
+        const network = getNetwork(config)
+        return new ProviderApi(network, providerUrl, config.account.address)
     }
 
     const clearTimeout = () => {
@@ -476,14 +488,15 @@ export const Manager = (
      */
     const loadContract = async (): Promise<ProsopoCaptchaContract> => {
         const config = getConfig()
-        const api = await ApiPromise.create({ provider: new WsProvider(config.network.endpoint) })
+        const network = getNetwork(config)
+        const api = await ApiPromise.create({ provider: new WsProvider(network.endpoint) })
         // TODO create a shared keyring that's stored somewhere
         const type = 'sr25519'
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
         return new ProsopoCaptchaContract(
             api,
             abiJson as ContractAbi,
-            config.network.prosopoContract.address,
+            network.contract.address,
             keyring.addFromAddress(getAccount().account.address),
             'prosopo',
             0

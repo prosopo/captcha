@@ -13,6 +13,5 @@
 // limitations under the License.
 export * from './accounts'
 export * from './api'
-export * from './config'
 export * from './scheduler'
 export * from './argv'

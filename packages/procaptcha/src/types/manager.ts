@@ -1,11 +1,9 @@
-import { ApiParams } from '@prosopo/types'
+import { ApiParams, ProcaptchaClientConfig } from '@prosopo/types'
 import { GetCaptchaResponse } from '@prosopo/api'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { Optional } from './utils'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi'
-import { ProsopoNetwork } from '@prosopo/api'
 import { TCaptchaSubmitResult } from './client'
-
+import { z } from 'zod'
 /**
  * House the account and associated extension.
  */
@@ -15,23 +13,10 @@ export interface Account {
 }
 
 /**
- * The configuration of Procaptcha. This is passed it to Procaptcha as a prop.
- * Values here are not updated by Procaptcha and are considered immutable from
- * within Procaptcha.
- */
-export interface ProcaptchaConfig {
-    userAccountAddress: string // address of the user's account, undefined if not set / in web2 mode
-    web2: boolean // set to true to use the web2 version of Procaptcha, else web3 version
-    dappName: string // the name of the dapp accessing accounts (e.g. Prosopo)
-    network: ProsopoNetwork // the network to use, e.g. "moonbeam", "edgeware", etc
-    solutionThreshold: number // the threshold of solutions solved by the user to be considered human
-}
-
-/**
  * The config to be passed to procaptcha. Some fields can be optional, e.g.
  * userAccountAddress and web2, depending on the mode of Procaptcha (web2 or web3).
  */
-export type ProcaptchaConfigOptional = Optional<Optional<ProcaptchaConfig, 'userAccountAddress'>, 'web2'>
+export type ProcaptchaConfigOptional = ProcaptchaClientConfig
 
 /**
  * The state of Procaptcha. This is mutated as required to reflect the captcha
@@ -90,3 +75,15 @@ export interface ProcaptchaOutput {
     [ApiParams.user]: string
     [ApiParams.blockNumber]?: number
 }
+
+export const ProcaptchaOutputSchema = z.object({
+    [ApiParams.commitmentId]: z.string().optional(),
+    [ApiParams.providerUrl]: z.string().optional(),
+    [ApiParams.dapp]: z.string(),
+    [ApiParams.user]: z.string(),
+    [ApiParams.blockNumber]: z.number().optional(),
+})
+
+export const ProcaptchaResponse = z.object({
+    [ApiParams.procaptchaResponse]: ProcaptchaOutputSchema,
+})

@@ -13,27 +13,32 @@
 // limitations under the License.
 // import {ProsopoConfig} from './types';
 
-import { ProsopoServerConfig } from '@prosopo/api'
+import { LogLevel } from '@prosopo/common'
+import { ProsopoServerConfig } from '@prosopo/types'
 
 export default () =>
     ({
-        logLevel: process.env.LOG_LEVEL || 'debug',
+        logLevel: process.env.LOG_LEVEL || LogLevel.Debug,
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT || 'development', // enviromental variables - TODO: check through other repos
         web2: process.env.REACT_APP_WEB2 || true,
         serverUrl:
             process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_PORT
                 ? `${process.env.REACT_APP_SERVER_URL}:${process.env.REACT_APP_SERVER_PORT}`
-                : 'http://localhost:5000',
+                : 'http://localhost:9228',
         solutionThreshold: process.env.REACT_APP_SOLUTION_THRESHOLD || 0.5,
         dappName: process.env.REACT_APP_DAPP_NAME || 'client-example-server',
+        account: {
+            password: '',
+            address: process.env.REACT_APP_SERVER_ACCOUNT_ADDRESS || '',
+        },
         networks: {
             development: {
                 endpoint: process.env.REACT_APP_SUBSTRATE_NODE_URL || 'ws://localhost:9944',
-                prosopoContract: {
+                contract: {
                     address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
                     name: 'prosopo',
                 },
-                dappContract: {
+                dappAccount: {
                     address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
                     name: 'dapp',
                 },
@@ -41,14 +46,15 @@ export default () =>
             },
             shiden: {
                 endpoint: 'wss://shiden.public.blastapi.io',
-                prosopoContract: {
+                contract: {
                     address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
                     name: 'prosopo',
                 },
-                dappContract: {
+                dappAccount: {
                     address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
                     name: 'dapp',
                 },
+                accounts: [],
             },
         },
     } as ProsopoServerConfig)

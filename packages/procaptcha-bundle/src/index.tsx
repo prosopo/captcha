@@ -1,3 +1,4 @@
+import { ApiParams } from '@prosopo/types'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaOutput } from '@prosopo/procaptcha'
 import { createRoot } from 'react-dom/client'
@@ -12,11 +13,11 @@ function getConfig(siteKey?: string) {
         dappName: 'Prosopo',
         network: {
             endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://127.0.0.1:9944',
-            prosopoContract: {
+            contract: {
                 address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
                 name: 'prosopo',
             },
-            dappContract: {
+            dappAccount: {
                 address: siteKey, //prosopo site key
                 name: 'dapp',
             },
@@ -54,8 +55,7 @@ export function render() {
                         // add the payload to the form
                         const input = document.createElement('input')
                         input.type = 'hidden'
-                        input.name = 'procaptcha-response'
-                        input.value = JSON.stringify(payload)
+                        ;(input.name = ApiParams.procaptchaResponse), (input.value = JSON.stringify(payload))
                         form.appendChild(input)
                     })
                 }

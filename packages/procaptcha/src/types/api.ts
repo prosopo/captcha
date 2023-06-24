@@ -18,8 +18,7 @@
 //   export default value;
 // }
 
-import { Captcha, MerkleProof } from '@prosopo/types'
-import { ProsopoServerConfig } from '@prosopo/api'
+import { Captcha, EnvironmentTypes, MerkleProof, ProsopoServerConfig } from '@prosopo/types'
 
 export interface ProsopoRandomProviderResponse {
     providerId: string
@@ -73,5 +72,7 @@ export interface AccountCreatorConfig {
 }
 
 export interface ProsopoClientConfig extends ProsopoServerConfig {
+    defaultEnvironment: EnvironmentTypes
+    userAccountAddress: string
     accountCreator: AccountCreatorConfig
 }

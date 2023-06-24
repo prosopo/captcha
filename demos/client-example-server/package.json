@@ -24,6 +24,7 @@
   "dependencies": {
     "@prosopo/api": "^0.1.11",
     "@prosopo/contract": "^0.1.11",
+    "@prosopo/procaptcha": "^0.1.11",
     "@prosopo/server": "^0.1.11",
     "@prosopo/types": "^0.1.11",
     "@typegoose/auto-increment": "3.3.0",
@@ -31,7 +32,8 @@
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.2.0"
+    "mongoose": "^7.2.0",
+    "zod": "^3.17.9"
   },
   "devDependencies": {
     "ts-loader": "^9.4.3",

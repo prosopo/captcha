@@ -1,12 +1,13 @@
 import { ApiPromise } from '@polkadot/api'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
-import { ContractAbi, RandomProvider } from '@prosopo/types'
+import { ContractAbi, NetworkConfig, ProsopoServerConfig, RandomProvider } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, logger } from '@prosopo/common'
+import { ProcaptchaOutput } from '@prosopo/procaptcha'
 import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
-import { ProsopoNetwork, ProsopoServerConfig, ProviderApi } from '@prosopo/api'
+import { ProviderApi } from '@prosopo/api'
 import { WsProvider } from '@polkadot/rpc-provider'
 
 export class ProsopoServer {
@@ -23,7 +24,7 @@ export class ProsopoServer {
     keyring: Keyring
     pair: KeyringPair
     api: ApiPromise
-    network: ProsopoNetwork
+    network: NetworkConfig
 
     constructor(mnemonic: string, config: ProsopoServerConfig) {
         this.config = config
@@ -35,9 +36,9 @@ export class ProsopoServer {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.network = this.config.networks[this.defaultEnvironment]
             this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment].endpoint)
-            this.prosopoContractAddress = this.config.networks[this.defaultEnvironment].prosopoContract.address
-            this.dappContractAddress = this.config.networks[this.defaultEnvironment].dappContract.address
-            this.contractName = this.config.networks[this.defaultEnvironment].prosopoContract.name
+            this.prosopoContractAddress = this.config.networks[this.defaultEnvironment].contract.address
+            this.dappContractAddress = this.config.networks[this.defaultEnvironment].dappAccount.address
+            this.contractName = this.config.networks[this.defaultEnvironment].contract.name
             this.logger = logger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
@@ -54,7 +55,7 @@ export class ProsopoServer {
     }
 
     public async getProviderApi(providerUrl: string) {
-        return new ProviderApi(this.network, providerUrl)
+        return new ProviderApi(this.network, providerUrl, this.config.account.address)
     }
 
     async isReady() {
@@ -77,13 +78,8 @@ export class ProsopoServer {
         this.pair = this.keyring.addFromMnemonic(mnemonic)
     }
 
-    public async isVerified(
-        user: string,
-        providerUrl: string,
-        dapp: string,
-        commitmentId: string,
-        blockNumber: string
-    ): Promise<boolean> {
+    public async isVerified(payload: ProcaptchaOutput): Promise<boolean> {
+        const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
         // first check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
         const block = (await this.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash

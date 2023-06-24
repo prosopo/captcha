@@ -22,6 +22,10 @@ export enum DatabaseTypes {
 
 export enum EnvironmentTypes {
     development = 'development',
+    rococo = 'rococo',
+    kusama = 'kusama',
+    polkadot = 'polkadot',
+    shiden = 'shiden',
 }
 
 const EnvironmentTypesSchema = z.nativeEnum(EnvironmentTypes)
@@ -60,39 +64,39 @@ export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 export const ProsopoBaseConfigSchema = z.object({
     logLevel: z.nativeEnum(LogLevel),
     defaultEnvironment: z.nativeEnum(EnvironmentTypes).default(EnvironmentTypes.development),
+    // The account with which to query the contract and sign transactions
     account: z.object({
+        address: z.string(),
+        secret: z.string().optional(),
         password: z.string().optional(),
     }),
 })
 
-export const ProsopoNetworkConfigSchema = z
-    .record(
-        NetworkNamesSchema,
-        z
-            .object({
-                endpoint: z.string().url(),
-                contract: z.object({
-                    address: z.string(),
-                    name: z.string(),
-                }),
-                accounts: z.array(z.string()),
-            })
-            .required()
-    )
-    .default({
-        development: {
-            endpoint: 'ws://127.0.0.1:9944',
-            contract: {
-                address: '',
-                name: '',
-            },
-            accounts: [''],
+export const NetworkConfigSchema = z.object({
+    endpoint: z.string().url(),
+    contract: z.object({
+        address: z.string(),
+        name: z.string(),
+    }),
+    accounts: z.array(z.string()),
+})
+
+export type NetworkConfig = z.infer<typeof NetworkConfigSchema>
+
+export const ProsopoNetworksSchema = z.record(NetworkNamesSchema, NetworkConfigSchema.required()).default({
+    development: {
+        endpoint: 'ws://127.0.0.1:9944',
+        contract: {
+            address: '',
+            name: '',
         },
-    })
+        accounts: [''],
+    },
+})
 
 export const ProsopoBasicConfigSchema = ProsopoBaseConfigSchema.merge(
     z.object({
-        networks: ProsopoNetworkConfigSchema,
+        networks: ProsopoNetworksSchema,
         database: DatabaseConfigSchema.optional(),
     })
 )
@@ -120,6 +124,50 @@ export const ProsopoCaptchaSolutionConfigSchema = z.object({
     captchaFilePath: z.string(),
     captchaBlockRecency: z.number().positive().min(2),
 })
+
+export const ProsopoServerConfigSchema = ProsopoBasicConfigSchema.merge(
+    z.object({
+        userAccountAddress: z.string().optional(),
+        web2: z.boolean(),
+        serverUrl: z.string().url(),
+        solutionThreshold: z.number().positive(),
+        dappName: z.string(),
+    })
+)
+
+export type ProsopoServerConfig = z.infer<typeof ProsopoServerConfigSchema>
+
+export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
+    z.object({
+        userAccountAddress: z.string().optional(),
+        web2: z.boolean(),
+        solutionThreshold: z.number().positive(),
+        dappName: z.string(),
+    })
+)
+
+export const AccountCreatorConfigSchema = z.object({
+    area: z.object({
+        width: z.number().positive(),
+        height: z.number().positive(),
+    }),
+    offsetParameter: z.number().positive(),
+    multiplier: z.number().positive(),
+    fontSizeFactor: z.number().positive(),
+    maxShadowBlur: z.number().positive(),
+    numberOfRounds: z.number().positive(),
+    seed: z.number().positive(),
+})
+
+export type ProsopoClientConfig = z.infer<typeof ProsopoClientConfigSchema>
+
+export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.merge(
+    z.object({
+        accountCreator: AccountCreatorConfigSchema,
+    })
+)
+
+export type ProcaptchaClientConfig = z.infer<typeof ProcaptchaConfigSchema>
 
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
     z.object({

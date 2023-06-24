@@ -1,12 +1,14 @@
-import { Account, ProcaptchaConfig } from '../types'
+import { Account } from '../types'
 import { ApiPromise, Keyring } from '@polkadot/api'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { KeyringPair } from '@polkadot/keyring/types'
+import { ProcaptchaClientConfig } from '@prosopo/types'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
+import { getNetwork } from '@prosopo/procaptcha/modules/index'
 import { hexHash } from '@prosopo/common'
 import { picassoCanvas } from '../modules/canvas'
 import { stringToU8a, u8aToHex } from '@polkadot/util'
@@ -20,8 +22,9 @@ type AccountWithKeyPair = InjectedAccount & { keypair: KeyringPair }
  * Class for interfacing with web3 accounts.
  */
 export default class ExtWeb2 extends Extension {
-    public async getAccount(config: ProcaptchaConfig): Promise<Account> {
-        const wsProvider = new WsProvider(config.network.endpoint)
+    public async getAccount(config: ProcaptchaClientConfig): Promise<Account> {
+        const network = getNetwork(config)
+        const wsProvider = new WsProvider(network.endpoint)
 
         const account = await this.createAccount(wsProvider)
         const extension: InjectedExtension = await this.createExtension(account)

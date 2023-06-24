@@ -71,22 +71,12 @@ export interface AccountCreatorConfig {
 
 export interface ProsopoNetwork {
     endpoint: string
-    prosopoContract: {
+    contract: {
         address: string
         name: string
     }
-    dappContract: {
+    dappAccount: {
         address: string
         name: string
     }
-}
-
-export interface ProsopoServerConfig {
-    logLevel: string
-    defaultEnvironment: string
-    web2: boolean
-    serverUrl: string
-    solutionThreshold: number
-    dappName: string
-    networks: { [key: string]: ProsopoNetwork }
 }

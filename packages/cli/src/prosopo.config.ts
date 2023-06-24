@@ -20,6 +20,7 @@ export default (): ProsopoConfig => ({
     logLevel: getLogLevel(),
     defaultEnvironment: (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypes.development, //TODO change to DEFAULT_ENVIRONMENT
     account: {
+        address: process.env.PROVIDER_ADDRESS || '',
         password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
     },
     networks: {
