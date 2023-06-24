@@ -51,7 +51,7 @@ export class Environment implements ProsopoEnvironment {
             this.config.networks &&
             this.config.networks[this.defaultEnvironment]
         ) {
-            this.logger.info(`Endpoint: ${this.config.networks[this.defaultEnvironment].endpoint}`)
+            this.logger.info(`Endpoint: ${this.config.networks[this.defaultEnvironment]?.endpoint}`)
             this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment]?.endpoint)
             this.contractAddress = this.config.networks[this.defaultEnvironment]?.contract.address || ''
             this.contractName = this.config.networks[this.defaultEnvironment]?.contract.name || ''
