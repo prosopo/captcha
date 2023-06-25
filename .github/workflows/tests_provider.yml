@@ -121,6 +121,7 @@ jobs:
           cd captcha
           cp demos/client-example-server/env.development demos/client-example-server/.env.test
           cp demos/client-example/env.development demos/client-example/.env.test
+          cp dev/env.test dev/.env.test
           cp dev/env.test packages/cli/.env.test
           NODE_ENV=test npm run deploy_protocol
           NODE_ENV=test npm run deploy_dapp

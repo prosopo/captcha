@@ -45,7 +45,7 @@ function getDefaultProvider(): IProviderAccount {
 function getDefaultDapp(): IDappAccount {
     return {
         secret: '//Eve',
-        contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
+        contractAccount: process.env.DAPP_SITE_KEY || '',
         fundAmount: Math.pow(10, 12),
     }
 }
@@ -102,8 +102,8 @@ export async function setup() {
         console.log('Writing .env file...')
         await copyEnvFile()
 
-        if (!process.env.DAPP_CONTRACT_ADDRESS) {
-            throw new ProsopoEnvError('DEVELOPER.DAPP_CONTRACT_ADDRESS_MISSING')
+        if (!process.env.DAPP_SITE_KEY) {
+            throw new ProsopoEnvError('DEVELOPER.DAPP_SITE_KEY_MISSING')
         }
 
         const pairType = getPairType()
@@ -135,7 +135,7 @@ export async function setup() {
 
         await registerProvider(env, defaultProvider)
 
-        defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS
+        defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
 
         defaultDapp.pair = await getPair(pairType, ss58Format, defaultDapp.secret)
 

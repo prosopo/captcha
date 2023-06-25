@@ -80,11 +80,8 @@ module.exports = (env, argv) => {
                 'process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS': JSON.stringify(
                     process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || ''
                 ),
-                'process.env.REACT_APP_DAPP_CONTRACT_ADDRESS': JSON.stringify(
-                    process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || ''
-                ),
+                'process.env.REACT_APP_DAPP_SITE_KEY': JSON.stringify(process.env.REACT_APP_DAPP_SITE_KEY || ''),
                 'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT || ''),
-                'process.env.REACT_APP_SITE_KEY': JSON.stringify(process.env.REACT_APP_SITE_KEY || ''),
             }),
         ],
     }

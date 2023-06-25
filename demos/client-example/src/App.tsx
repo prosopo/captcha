@@ -131,7 +131,7 @@ function App() {
     const config: ProcaptchaConfigOptional = {
         userAccountAddress: account,
         account: {
-            address: process.env.REACT_APP_SITE_KEY || undefined,
+            address: process.env.REACT_APP_DAPP_SITE_KEY || undefined,
         },
         web2: process.env.REACT_APP_WEB2 === 'true',
         dappName: 'client-example',

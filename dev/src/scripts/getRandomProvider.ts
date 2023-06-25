@@ -26,7 +26,7 @@ async function main() {
     await env.isReady()
     const tasks = new Tasks(env)
     const [mnemonic, address] = (await generateMnemonic(env.keyring)) || ['', '']
-    const dappContractAccount = process.env.DAPP_CONTRACT_ADDRESS || ''
+    const dappContractAccount = process.env.DAPP_SITE_KEY || ''
     const provider = (await tasks.contract.query.getRandomActiveProvider(address, dappContractAccount)).value
         .unwrap()
         .unwrap()

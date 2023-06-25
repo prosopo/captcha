@@ -39,7 +39,7 @@ export default () =>
                     name: 'prosopo',
                 },
                 dappAccount: {
-                    address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
+                    address: process.env.REACT_APP_DAPP_SITE_KEY,
                     name: 'dapp',
                 },
                 accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
@@ -51,7 +51,7 @@ export default () =>
                     name: 'prosopo',
                 },
                 dappAccount: {
-                    address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
+                    address: process.env.REACT_APP_DAPP_SITE_KEY,
                     name: 'dapp',
                 },
                 accounts: [],

@@ -77,6 +77,7 @@ export const Manager = (
     callbacks: ProcaptchaCallbacks
 ) => {
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
+
     const events: ProcaptchaEvents = Object.assign(
         {
             onAccountNotFound: (address) => {
@@ -121,6 +122,7 @@ export const Manager = (
             userAccountAddress: '',
             ...configOptional,
         }
+        console.log(config)
         // overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user changes account in the middle of the captcha process.
         if (state.account) {
             config.userAccountAddress = state.account.account.address

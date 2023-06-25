@@ -111,6 +111,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
 }
 
 export const Procaptcha = (props: ProcaptchaProps) => {
+    console.log('config', props.config)
     const config = props.config
     const callbacks = props.callbacks || {}
 

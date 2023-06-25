@@ -56,12 +56,15 @@ export function render() {
                 const form = getParentForm(element)
                 // add a listener to the onSubmit event of the form
                 if (form) {
-                    form.addEventListener('submit', (e) => {
+                    form.addEventListener('submit', (event) => {
+                        event.preventDefault()
                         // add the payload to the form
                         const input = document.createElement('input')
                         input.type = 'hidden'
                         ;(input.name = ApiParams.procaptchaResponse), (input.value = JSON.stringify(payload))
                         form.appendChild(input)
+                        // submit the form
+                        form.submit()
                     })
                 }
             },
