@@ -141,7 +141,13 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                     border={1}
                     borderColor="grey.300"
                     borderRadius={2}
-                    sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        backgroundColor: 'white',
+                    }}
                 >
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                         <Box
