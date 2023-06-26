@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/contract",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "scripts": {
@@ -11,6 +11,7 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [ "dist" ],
   "exports": {
     ".": "./dist/index.js",
     "./types": "./dist/types/index.js",

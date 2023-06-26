@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/client-example-server",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Backend for client-example",
   "main": "dist/app.js",
   "scripts": {
