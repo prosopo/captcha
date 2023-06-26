@@ -13,20 +13,20 @@
 // limitations under the License.
 
 import { ApiPromise } from '@polkadot/api'
-import { AssetsResolver, ContractAbi, EnvironmentTypes, ProsopoConfig } from '@prosopo/types'
+import { AssetsResolver, ContractAbi, EnvironmentTypes } from '@prosopo/types'
 import { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LocalAssetsResolver } from './assets'
 import { LogLevel } from 'consola'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { ProsopoBasicConfig } from '@prosopo/types'
 import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { WsProvider } from '@polkadot/rpc-provider'
 
 export class Environment implements ProsopoEnvironment {
-    config: ProsopoConfig
+    config: ProsopoBasicConfig
     db: Database | undefined
     contractInterface: ProsopoCaptchaContract
     contractAddress: string
@@ -40,33 +40,29 @@ export class Environment implements ProsopoEnvironment {
     pair: KeyringPair
     api: ApiPromise
 
-    constructor(pair: KeyringPair, config: ProsopoConfig) {
+    constructor(pair: KeyringPair, config: ProsopoBasicConfig) {
         this.config = config
+        this.defaultEnvironment = this.config.defaultEnvironment
         this.pair = pair
         this.logger = logger(this.config.logLevel, `ProsopoEnvironment`)
         if (
             this.config.defaultEnvironment &&
-            Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
+            Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment) &&
+            this.config.networks &&
+            this.config.networks[this.defaultEnvironment]
         ) {
-            this.defaultEnvironment = this.config.defaultEnvironment
-            this.logger.info(`Endpoint: ${this.config.networks[this.defaultEnvironment].endpoint}`)
-            this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment].endpoint)
-            this.contractAddress = this.config.networks[this.defaultEnvironment].contract.address
-            this.contractName = this.config.networks[this.defaultEnvironment].contract.name
+            this.logger.info(`Endpoint: ${this.config.networks[this.defaultEnvironment]?.endpoint}`)
+            this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment]?.endpoint)
+            this.contractAddress = this.config.networks[this.defaultEnvironment]?.contract.address || ''
+            this.contractName = this.config.networks[this.defaultEnvironment]?.contract.name || ''
 
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
             })
             this.keyring.addPair(this.pair)
-
             this.abi = abiJson as ContractAbi
             this.importDatabase().catch((err) => {
                 this.logger.error(err)
-            })
-            this.assetsResolver = new LocalAssetsResolver({
-                absolutePath: this.config.assets.absolutePath,
-                basePath: this.config.assets.basePath,
-                serverBaseURL: this.config.server.baseURL,
             })
         } else {
             throw new ProsopoEnvError(
@@ -140,20 +136,27 @@ export class Environment implements ProsopoEnvironment {
     async importDatabase(): Promise<void> {
         try {
             if (this.config.database) {
-                const ProsopoDatabase = Databases[this.config.database[this.defaultEnvironment].type]
-                this.db = await ProsopoDatabase.create(
-                    this.config.database[this.defaultEnvironment].endpoint,
-                    this.config.database[this.defaultEnvironment].dbname,
-                    this.logger,
-                    this.config.database[this.defaultEnvironment].authSource
-                )
+                const dbConfig = this.config.database[this.defaultEnvironment]
+                if (dbConfig) {
+                    const ProsopoDatabase = Databases[dbConfig.type]
+                    this.db = await ProsopoDatabase.create(
+                        dbConfig.endpoint,
+                        dbConfig.dbname,
+                        this.logger,
+                        dbConfig.authSource
+                    )
+                }
             }
         } catch (err) {
             throw new ProsopoEnvError(
                 err,
                 'DATABASE.DATABASE_IMPORT_FAILED',
                 {},
-                this.config.database[this.defaultEnvironment].type
+                this.config.database
+                    ? this.config.database[this.defaultEnvironment]
+                        ? this.config.database[this.defaultEnvironment]?.type
+                        : undefined
+                    : undefined
             )
         }
     }

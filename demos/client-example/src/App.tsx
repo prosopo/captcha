@@ -1,17 +1,14 @@
-import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
-import { useState } from 'react'
-
-import { ProcaptchaOutput } from '@prosopo/procaptcha'
-
-import { ExtensionAccountSelect } from '@prosopo/procaptcha-react/dist/components'
-import { Procaptcha } from '@prosopo/procaptcha-react/dist/components'
-
 import './App.css'
+import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
+import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
+import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react/dist/components'
+import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { useState } from 'react'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
-    'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization'
+    'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization',
 }
 
 function App() {
@@ -66,12 +63,11 @@ function App() {
             email,
             name,
             password,
-            prosopo: procaptchaOutput,
+            [ApiParams.procaptchaResponse]: procaptchaOutput,
         }
         fetch(`${serverUrl}/${urlPath}`, {
             method: 'POST',
             headers: {
-                Origin: 'http://localhost:3001', // TODO: change this to env var
                 ...corsHeaders,
                 'Content-Type': 'application/json',
             },
@@ -129,19 +125,38 @@ function App() {
         alert('Challenge has expired')
     }
 
-    const config = {
+    const config: ProcaptchaConfigOptional = {
         userAccountAddress: account,
+        account: {
+            address: process.env.REACT_APP_DAPP_SITE_KEY || undefined,
+        },
         web2: process.env.REACT_APP_WEB2 === 'true',
-        dappName: 'Prosopo',
-        network: {
-            endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
-            prosopoContract: {
-                address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
-                name: 'prosopo',
+        dappName: 'client-example',
+        defaultEnvironment:
+            (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
+        accountCreator: {
+            area: { width: 300, height: 300 },
+            offsetParameter: 2001000001,
+            multiplier: 15000,
+            fontSizeFactor: 1.5,
+            maxShadowBlur: 50,
+            numberOfRounds: 5,
+            seed: 42,
+        },
+        networks: {
+            development: {
+                endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
+                contract: {
+                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+                    name: 'prosopo',
+                },
             },
-            dappContract: {
-                address: process.env.REACT_APP_DAPP_CONTRACT_ADDRESS,
-                name: 'dapp',
+            rococo: {
+                endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || 'wss://rococo-contracts-rpc.polkadot.io:443',
+                contract: {
+                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+                    name: 'prosopo',
+                },
             },
         },
         solutionThreshold: 80,

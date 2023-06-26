@@ -16,13 +16,13 @@
 
 import { CronJob } from 'cron'
 
-import { Environment } from '@prosopo/env'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoConfig } from '@prosopo/types'
+import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from './tasks/tasks'
 
 export default async function (pair: KeyringPair, config: ProsopoConfig) {
-    const env = new Environment(pair, config)
+    const env = new ProviderEnvironment(pair, config)
 
     await env.isReady()
 

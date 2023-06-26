@@ -46,9 +46,18 @@ if (argIsHex) {
     console.log(hexToString(arg))
     console.log(`Decoding hex ${arg} to number`)
     console.log(hexToNumber(arg))
+    console.log(`Uint8Array ${hexToU8a(stringToHex(arg))}`)
 } else {
     console.log(`Hashing string ${arg} using blake2AsHex`)
     console.log(blake2AsHex(arg))
 }
 
-console.log(`hexToU8a(stringToHex(arg)) ${hexToU8a(stringToHex(arg))}`)
+try {
+    const u8a = new Uint8Array(JSON.parse(arg))
+    console.log(`Found uint8array ${u8a}`)
+    const hex = u8aToHex(u8a)
+    console.log(`Hex version ${hex}`)
+    console.log(`Encoded address ${encodeAddress(hex, ss58Format)}`)
+} catch (e) {
+    console.log(`Not a uint8array ${e}`)
+}
