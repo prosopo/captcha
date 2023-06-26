@@ -1,20 +1,25 @@
 FROM mongo:latest
 
-# work in the prosopo folder
-WORKDIR /prosopo
+RUN mkdir -p /app/nvm
+ENV NVM_DIR /app/nvm
+ENV NODE_VERSION 18.0.0
 
-# install dependencies
-# curl for downloading the mongodb gpg key
-RUN apt-get update && apt-get install -y \
-    curl
+RUN apt-get update
+RUN apt-get install -y curl
 
-# install nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+# Install nvm with node and npm
+RUN curl https://raw.githubusercontent.com/creationix/nvm/v0.39.3/install.sh | bash \
+    && . $NVM_DIR/nvm.sh \
+    && nvm install $NODE_VERSION \
+    && nvm alias default $NODE_VERSION \
+    && nvm use default
 
-# install nodejs
-RUN nvm install node
-RUN export NVM_DIR="$HOME/.nvm" \
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
+# work in the app folder
+WORKDIR /app
 # copy in the dist folder
+COPY ./packages /app/packages
+COPY ./node_modules /app/node_modules
+COPY ./docker/images/script.sh /app/script.sh
+COPY ./docker/images/script.js /app/script.js
+
+ENTRYPOINT [ "bash", "/app/script.sh"]
