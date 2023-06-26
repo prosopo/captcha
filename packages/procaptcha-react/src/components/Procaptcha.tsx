@@ -146,6 +146,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         flexWrap: 'wrap',
+                        color: 'black',
                         backgroundColor: 'white',
                     }}
                 >
