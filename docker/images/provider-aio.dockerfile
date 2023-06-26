@@ -20,6 +20,5 @@ WORKDIR /app
 COPY ./packages /app/packages
 COPY ./node_modules /app/node_modules
 COPY ./docker/images/script.sh /app/script.sh
-COPY ./docker/images/script.js /app/script.js
 
 ENTRYPOINT [ "bash", "/app/script.sh"]
