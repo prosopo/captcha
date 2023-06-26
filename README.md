@@ -11,7 +11,7 @@ Prosopo captcha can be easily implemented in your application via a script tag o
 ## Add the Procaptcha Widget to your Web page via a script tag
 
 Procaptcha requires two small pieces of client side code to render a captcha widget on an HTML page. First, you must
-include the Procaptcha JavaScript resource somewhere in your HTML page. The <script> must be loaded via HTTPS and can be
+include the Procaptcha JavaScript resource somewhere in your HTML page. The `<script>` must be loaded via HTTPS and can be
 placed anywhere on the page. Inside the <head> tag or immediately after the .procaptcha container are both fine.
 
 ```html
@@ -24,7 +24,7 @@ typically a <div> (but can be any element) and must have class `procaptcha` and 
 public
 site key.
 
-```html
+```html 
 
 <body>
 <div class="procaptcha" data-sitekey="your_site_key"></div>

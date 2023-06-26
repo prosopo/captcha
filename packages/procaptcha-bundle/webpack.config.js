@@ -209,7 +209,7 @@ module.exports = (env, argv) => {
             //         {}
             //     ),
             // },
-
+            noEmitOnErrors: true,
             minimize: isProduction,
             minimizer: isProduction
                 ? [
