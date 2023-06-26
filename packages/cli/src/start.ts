@@ -61,6 +61,11 @@ function startFileSrv(port: number | string, locations: string[]) {
 
     locations.forEach((loc) => {
         // allow local filesystem lookup at each location
+        // http://localhost:3000/a.jpg
+        // serve path set to /
+        // url: pronode1.duckdns.org/img/a.jpg
+        // serve path set to /img
+        // url: pronode1.duckdns.org/a.jpg`
         app.use('/', express.static(loc))
     })
 
@@ -75,20 +80,13 @@ function startFileSrv(port: number | string, locations: string[]) {
 async function start(nodeEnv: string) {
     loadEnv()
 
-    let env: ProsopoEnvironment
+    const ss58Format = getSs58Format()
+    const pairType = getPairType()
+    const secret = getSecret()
+    const config = getConfig()
+    const pair = await getPair(pairType, ss58Format, secret)
 
-    if (nodeEnv !== 'test') {
-        const ss58Format = getSs58Format()
-        const pairType = getPairType()
-        const secret = getSecret()
-        const config = getConfig()
-        const pair = await getPair(pairType, ss58Format, secret)
-
-        env = new Environment(pair, config)
-    } else {
-        // env = new MockEnvironment();
-        return
-    }
+    const env = new Environment(pair, config)
 
     await env.isReady()
     startApi(env)
@@ -98,7 +96,8 @@ async function start(nodeEnv: string) {
     // accept multiple paths for locations of files
     const paths = env.config.server.fileServePaths
     // if single path given convert to array
-    const locations = Array.isArray(paths) ? paths : [paths]
+    const parsed: string | string[] = JSON.parse(paths)
+    const locations = Array.isArray(parsed) ? parsed : [parsed]
     startFileSrv(port, locations)
 }
 

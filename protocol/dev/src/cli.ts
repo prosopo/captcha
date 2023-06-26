@@ -6,20 +6,60 @@ import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
 import { stdout, stderr, stdin } from 'process';
 import fs from 'fs'
-import 'dotenv/config'
+import { config } from 'dotenv'
+import { hexToU8a } from '@polkadot/util'
 
 const contractSrcFileExtension = '.rs'
 const backupFileExtension = '.bak'
 
+// add in the git commit to env
+const addGitCommitIdToEnv = async () => {
+    // get the git commit id
+    const gitCommitIdResult = await exec('git rev-parse HEAD')
+    const gitCommitId = gitCommitIdResult.stdout.trim()
+    // console.log("git commit id:", gitCommitId)
+    const gitCommitIdBytes = hexToU8a(gitCommitId)
+    // console.log("git commit id bytes:", gitCommitIdBytes)
+    const gitCommitIdBytesString = "[" + gitCommitIdBytes.toString() + "]"
+    // console.log("git commit id byte string:", gitCommitIdBytesString)
+    // add it to the env
+    process.env['ENV_GIT_COMMIT_ID'] = gitCommitIdBytesString
+}
+
 const setEnvVariable = (filePath: string, name: string, value: string) => {
-    console.log("setting env variable", name, "in", filePath)
-    const content = fs.readFileSync(filePath, 'utf8')
-    const regex = new RegExp(`const\\s+${name}:([^=]+)=[^;]+;`, 'gms');
-    const result = content.replaceAll(regex, `const ${name}:$1= ${value};`)
-    if(content === result) {
+    // console.log("setting env variable", name, "in", filePath)
+    let content = fs.readFileSync(filePath, 'utf8')
+    let result = content
+    // find and replace every declaration of the env variable
+    // e.g.
+    //
+    // let ENV_ABC: u32 = 0;
+    //
+    // and ENV_ABC=3 in .env
+    // becomes
+    //
+    // let ENV_ABC: u32 = 3;
+    //
+    
+    // names could be lower, upper or specific case
+    const names = [... new Set([name, name.toLowerCase(), name.toUpperCase()])]
+    for(const name of names) {
+        for(const declaration of ['let', 'const']) {
+            const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gms');
+            const regexMatch = regex.test(result)
+            if(!regexMatch) {
+                // console.log('no match for', regex, 'in', filePath);
+                continue;
+            }
+            // console.log('match for', regex, 'in', filePath);
+            result = result.replaceAll(regex, `${declaration} ${name}:$1= ${value};`)
+        }
+    }
+    if(result === content) {
         // no change has been made
         return
     }
+    console.log("set env variable", name, "in", filePath)
     // else change has been made
     // backup original file (if not already)
     const backupFilePath = `${filePath}${backupFileExtension}`
@@ -48,7 +88,7 @@ const setEnvVariables = (filePath: string) => {
                     continue;
                 }
                 // env vars have to start with the correct prefix, otherwise normal env vars (e.g. PWD, EDITOR, SHELL, etc.) would be propagated into the contract, which is not desired
-                if (name.startsWith('INK_')) {
+                if (name.startsWith('ENV_')) {
                     setEnvVariable(filePath, name, value)
                 }
             }
@@ -112,7 +152,11 @@ const clearEnvBackupFiles = (filePath: string) => {
     }
 }
 
-const exec = (command: string, pipe?: boolean, returnOutput?: boolean) => {
+const exec = (command: string, pipe?: boolean): Promise<{
+    stdout: string,
+    stderr: string,
+    code: number | null,
+}> => {
 
     console.log(`> ${command}`)
 
@@ -137,12 +181,11 @@ const exec = (command: string, pipe?: boolean, returnOutput?: boolean) => {
 
     return new Promise((resolve, reject) => {
         prc.on('close', function (code) {
-            console.log("")
-            const output = returnOutput ? {
+            const output = {
                 stdout: stdoutData.join(''),
                 stderr: stderrData.join(''),
                 code,
-            } : undefined;
+            };
             if (code === 0) {
                 resolve(output);
             } else {
@@ -153,10 +196,21 @@ const exec = (command: string, pipe?: boolean, returnOutput?: boolean) => {
 }
 
 export async function processArgs(args: string[]) {
+    await addGitCommitIdToEnv()
     // const parsed = await yargs.option('logLevel', {
     //     describe: 'set log level',
     //     choices: Object.keys(LogLevel),
     // }).argv
+
+    config({ path: `.env.${process.env.NODE_ENV}` })
+    console.log("NODE_ENV:", process.env.NODE_ENV)
+    // const env = Object.keys(process.env)
+    // .filter(key => key.startsWith("ENV_"))
+    // .reduce((obj, key) => {
+    //     obj[key] = process.env[key];
+    //     return obj;
+    // }, {});
+    // console.log("env vars:", env)
 
     // const logger = consola.create({ level: LogLevel[parsed.logLevel || 'Info'] })
 
@@ -173,6 +227,32 @@ export async function processArgs(args: string[]) {
         .filter(dirent => dirent.isDirectory())
         .map(dirent => dirent.name);
     const packages = [...crates, ...contracts]
+    const outputDir = path.join(repoDir, 'target/ink')
+    const ignoredContractsBuild = ['common_dev'] // contracts to ignore when building
+
+    console.log(`repoDir: ${repoDir}`)
+    console.log(`contractsDir: ${contractsDir}`)
+    console.log(`cratesDir: ${cratesDir}`)
+    console.log(`outputDir: ${outputDir}`)
+    
+    const getContractsToBuild = (contracts: string[]): string[] => {
+        // ignore contracts which should not be built
+        return contracts.filter(contract => !ignoredContractsBuild.includes(contract))
+    }
+
+    const moveMetadata = (contracts: string[]) => {
+        for(const contract of contracts) {
+            console.log(`moving metadata for ${contract} contract`)
+            
+            const metadataPath = `${outputDir}/${contract}/metadata.json`
+            const exists = fs.existsSync(metadataPath);
+            if(exists) {
+                // move the metadata to be named after the contract
+                const newPath = `${outputDir}/${contract}/${contract}.json`
+                fs.renameSync(metadataPath, newPath);
+            }
+        }
+    }
 
     const addPackageOption = (yargs: yargs.Argv, customPackages?: string[]) => {
         return yargs
@@ -364,8 +444,9 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                const contracts = argv.package as string[];
+                const contracts = getContractsToBuild(argv.package as string[]);
                 delete argv.package;
+
                 // clear any previous env backup files
                 clearEnvBackupFiles(contractsDir)
                 clearEnvBackupFiles(cratesDir)
@@ -374,18 +455,16 @@ export async function processArgs(args: string[]) {
                 setEnvVariables(cratesDir)
 
                 for(const contract of contracts) {
-                    if(contract === "common_dev") {
-                        // skip common_dev contract as it is not a proper contract, only used for library purposes and does not build independently
-                        console.log("Skipping common_dev contract");
-                    } else {
-                        const contractPath = `${contractsDir}/${contract}`
-                        await execCargo(argv, 'contract build', contractPath)
-                    }
+                    const contractPath = `${contractsDir}/${contract}`
+                    await execCargo(argv, 'contract build', contractPath)
                 }
 
                 // unset the env variables using the backups
                 unsetEnvVariables(contractsDir)
                 unsetEnvVariables(cratesDir)
+
+                // move metadata.json to <contract_name>.json
+                moveMetadata(contracts)
             },
             []
         ).command(

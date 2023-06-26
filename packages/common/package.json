@@ -14,9 +14,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@polkadot/keyring": "12.2.2",
-    "@polkadot/util": "12.2.2",
-    "@polkadot/util-crypto": "12.2.2",
+    "@polkadot/keyring": "12.3.2",
+    "@polkadot/util": "12.3.2",
+    "@polkadot/util-crypto": "12.3.2",
     "@types/react": "^18.0.25",
     "consola": "^2.15.3",
     "dotenv": "^16.0.1",

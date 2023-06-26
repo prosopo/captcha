@@ -23,7 +23,7 @@
 //     const env = new Environment(undefined)
 //     await env.isReady()
 //     const contractApi = new ProsopoContractApi(env)
-//     const serviceOrigin = 'http://localhost:8282'
+//     const serviceOrigin = 'http://localhost:9229'
 //     const dappContract = '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y'
 //     const mnemonic = '//Alice'
 //

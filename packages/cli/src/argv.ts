@@ -20,7 +20,9 @@ import { ProsopoEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { cwd } from 'process'
 import { encodeStringAddress } from '@prosopo/provider'
+import { hexToU8a } from '@polkadot/util'
 import { loadJSONFile } from './files'
+import { stringToHexPadded, wrapQuery } from '@prosopo/contract'
 import parser from 'cron-parser'
 import pm2 from 'pm2'
 const yargs = require('yargs')
@@ -76,7 +78,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
             'Register a Provider',
             (yargs) =>
                 yargs
-                    .option('origin', {
+                    .option('url', {
                         type: 'string',
                         demand: true,
                         desc: 'The provider service origin (URI)',
@@ -92,11 +94,20 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                     }),
             async (argv) => {
-                const result = await tasks.contract.tx.providerRegister(argv.origin, argv.fee, argv.payee)
+                const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
+                    Array.from(hexToU8a(stringToHexPadded(argv.url))),
+                    argv.fee,
+                    argv.payee,
+                    {
+                        value: 0,
+                    },
+                ]
+                await wrapQuery(tasks.contract.query.providerRegister, tasks.contract.query)(...providerRegisterArgs)
+                const result = await tasks.contract.tx.providerRegister(...providerRegisterArgs)
 
                 logger.info(JSON.stringify(result, null, 2))
             },
-            [validateAddress, validatePayee]
+            [validatePayee]
         )
         .command(
             'provider_update',
@@ -124,7 +135,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                         desc: 'The value to stake in the contract',
                     }),
             async (argv) => {
-                const provider = (await tasks.contract.query.getProviderDetails(argv.address, {})).value
+                const provider = (await tasks.contract.query.getProvider(argv.address, {})).value
                     .unwrap()
                     .unwrap()
                 if (provider && (argv.origin || argv.fee || argv.payee || argv.value)) {
@@ -222,7 +233,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = (await tasks.contract.query.getProviderDetails(argv.address, {})).value
+                    const result = (await tasks.contract.query.getProvider(argv.address, {})).value
                         .unwrap()
                         .unwrap()
 
@@ -244,7 +255,7 @@ export function processArgs(args, env: ProsopoEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = (await tasks.contract.query.getDappDetails(argv.address)).value.unwrap().unwrap()
+                    const result = (await tasks.contract.query.getDapp(argv.address)).value.unwrap().unwrap()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {

@@ -29,7 +29,7 @@ export const accountContract = function (account: Account): string {
 export type Account = [mnemonic: string, address: string, contractAddress?: string]
 
 export const PROVIDER: IProviderAccount = {
-    url: 'http://localhost:8282',
+    url: 'http://localhost:9229',
     fee: 10,
     payee: Payee.dapp,
     stake: new BN(1000000000000000),

@@ -9,6 +9,7 @@
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
     "dependencies": {
+        "@polkadot/util": "^12.3.2",
         "child_process": "^1.0.2",
         "consola": "^2.15.3",
         "dotenv": "^16.1.4",

@@ -18,9 +18,11 @@ import { ApiPromise } from '@polkadot/api'
 import { BN } from '@polkadot/util'
 import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
 import { ContractPromise } from '@polkadot/api-contract'
+import { Error, LangError } from '../typechain/captcha/types-returns/captcha'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, logger, snakeToCamelCase } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers'
+import { QueryReturnType, Result, SignAndSendSuccessResponse } from '@727-ventures/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { firstValueFrom } from 'rxjs'
@@ -28,50 +30,57 @@ import { getPrimitiveStorageFields, getPrimitiveStorageValue, getPrimitiveTypes,
 import { useWeightImpl } from './useWeight'
 import Contract from '../typechain/captcha/contracts/captcha'
 import MixedMethods from '../typechain/captcha/mixed-methods/captcha'
+import QueryMethods from '../typechain/captcha/query/captcha'
+import TxSignAndSendMethods from '../typechain/captcha/tx-sign-and-send/captcha'
 import type { ContractOptions } from '@polkadot/api-contract/types'
 
-// export type QueryReturnTypeInner<T> = T extends QueryReturnType<
-//     Result<Result<infer U, ReturnTypes.Error>, ReturnTypes.LangError>
-// >
-//     ? U
-//     : never
-//
-// const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnType>(
-//     methodName: string,
-//     fn: (...args: QueryFunctionArgs) => QueryFunctionReturnType,
-//     queryMethods: QueryMethods
-// ) => {
-//     return async (...args: QueryFunctionArgs): Promise<QueryReturnTypeInner<QueryFunctionReturnType>> => {
-//         console.log('in wrapped query')
-//         const result = (await fn.bind({ this: queryMethods })(...args)) as QueryReturnType<
-//             Result<Result<QueryReturnTypeInner<QueryFunctionReturnType>, ReturnTypes.Error>, ReturnTypes.LangError>
-//         >
-//         if (result.value.err) {
-//             throw new ProsopoContractError(result.value.err.toString(), fn.name, {
-//                 result: JSON.stringify(result),
-//             })
-//         }
-//         return result.value.unwrap().unwrap() as QueryReturnTypeInner<QueryFunctionReturnType>
-//     }
-// }
-//
-// const wrapTx = <QueryFunctionArgs extends any[], QueryFunctionReturnType, TxFunctionReturnType>(
-//     methodName: string,
-//     queryFn: (...args: QueryFunctionArgs) => QueryFunctionReturnType,
-//     txFn: (...args: QueryFunctionArgs) => TxFunctionReturnType,
-//     queryMethods: QueryMethods,
-//     txMethods: TxSignAndSendMethods
-// ) => {
-//     return async (...args: QueryFunctionArgs): Promise<TxFunctionReturnType> => {
-//         await wrapQuery(methodName, queryFn, queryMethods)(...args)
-//         const txResult = (await txFn.bind({ this: txMethods })(...args)) as SignAndSendSuccessResponse
-//         if (!txResult || txResult.result?.isError) {
-//             throw new ProsopoContractError('CONTRACT.TX_ERROR', methodName, {}, { result: txResult.result?.toHuman() })
-//         }
-//
-//         return txResult as TxFunctionReturnType
-//     }
-// }
+export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
+
+export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnType>(
+    fn: (...args: QueryFunctionArgs) => QueryFunctionReturnType,
+    queryMethods: QueryMethods
+) => {
+    return async (...args: QueryFunctionArgs): Promise<QueryReturnTypeInner<QueryFunctionReturnType>> => {
+        let result: QueryReturnType<Result<Result<QueryReturnTypeInner<QueryFunctionReturnType>, Error>, LangError>>
+        try {
+            result = (await fn.bind(queryMethods)(...args)) as QueryReturnType<
+                Result<Result<QueryReturnTypeInner<QueryFunctionReturnType>, Error>, LangError>
+            >
+        } catch (e) {
+            throw new ProsopoContractError(e._asError, fn.name, undefined, {
+                args: args,
+            })
+        }
+        if (result && result.value.err) {
+            throw new ProsopoContractError(result.value.err.toString(), fn.name, {
+                result: JSON.stringify(result),
+            })
+        }
+        if (result.value) {
+            return result.value.unwrapRecursively() as QueryReturnTypeInner<QueryFunctionReturnType>
+        }
+        throw new ProsopoContractError('CONTRACT.QUERY_ERROR', fn.name, {}, { result: JSON.stringify(result) })
+    }
+}
+
+const wrapTx = <TxFunctionArgs extends any[], TxFunctionReturnType>(
+    methodName: string,
+    txFn: (...args: TxFunctionArgs) => TxFunctionReturnType,
+    txMethods: TxSignAndSendMethods
+) => {
+    return async (...args: TxFunctionArgs): Promise<TxFunctionReturnType> => {
+        const txResult = (await txFn.bind(txMethods)(...args)) as SignAndSendSuccessResponse
+        if (!txResult || txResult.result?.isError) {
+            throw new ProsopoContractError('CONTRACT.TX_ERROR', methodName, {}, { result: txResult.result?.toHuman() })
+        }
+
+        return txResult as TxFunctionReturnType
+    }
+}
+
+const methodNamesArr = Object.getOwnPropertyNames(QueryMethods.prototype).filter((name) => name !== 'constructor')
+
+type MethodNames = (typeof methodNamesArr)[number]
 
 export class ProsopoCaptchaContract extends Contract {
     api: ApiPromise
@@ -102,7 +111,6 @@ export class ProsopoCaptchaContract extends Contract {
         this.logger = logger(logLevel || LogLevel.Info, `${ProsopoCaptchaContract.name}.${contractName}`)
         this.json = AbiMetaDataSpec.parse(this.abi.json)
         this.createStorageGetters()
-        //this.wrapContractMethods()
     }
 
     /**
@@ -134,42 +142,6 @@ export class ProsopoCaptchaContract extends Contract {
             return (await methods[methodName]()).value.unwrap().unwrap() as T
         }
     }
-
-    // /** Wrap the contract methods and throw contract errors.
-    //  * Contract methods are stored in ProsopoCaptchaContract.prototype[message.method].
-    //  * Method names are stored in this.abi.messages.map((message) => { message.method }).
-    //  */
-    // private wrapContractMethods(): void {
-    //     try {
-    //         console.log('wrapping methods')
-    //         this.abi.messages.map((message) => {
-    //             const methodName = message.method
-    //             console.log('wrapping', methodName)
-    //             // Wrap each of the abi method functions in the contract, and handle errors
-    //             this.tx[methodName] = wrapTx(
-    //                 methodName,
-    //                 this.query[methodName],
-    //                 this.tx[methodName],
-    //                 this.query,
-    //                 this.tx
-    //             )
-    //             this.query[methodName] = wrapQuery(methodName, this.query[methodName], this.query)
-    //             if (typeof this.tx[methodName] === 'function') {
-    //                 this.methods[methodName] = wrapTx(
-    //                     methodName,
-    //                     this.query[methodName],
-    //                     this.tx[methodName],
-    //                     this.query,
-    //                     this.tx
-    //                 )
-    //             } else {
-    //                 this.methods[methodName] = wrapQuery(methodName, this.query[methodName], this.query)
-    //             }
-    //         })
-    //     } catch (e) {
-    //         throw new ProsopoContractError(e)
-    //     }
-    // }
 
     /**
      * Get the extrinsic for submitting in a transaction

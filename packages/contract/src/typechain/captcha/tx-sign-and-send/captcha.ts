@@ -14,9 +14,9 @@ import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/captcha.json';
 
 
 export default class Methods {
-	private __nativeContract : ContractPromise;
-	private __keyringPair : KeyringPair;
-	private __apiPromise: ApiPromise;
+	readonly __nativeContract : ContractPromise;
+	readonly __keyringPair : KeyringPair;
+	readonly __apiPromise: ApiPromise;
 
 	constructor(
 		apiPromise: ApiPromise,
@@ -29,29 +29,25 @@ export default class Methods {
 	}
 
 	/**
-	* verifySr25519
+	* getAuthor
 	*
-	* @param { Array<(number | string | BN)> } signature,
-	* @param { Array<(number | string | BN)> } payload,
 	*/
-	"verifySr25519" (
-		signature: Array<(number | string | BN)>,
-		payload: Array<(number | string | BN)>,
+	"getAuthor" (
 		__options ? : GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "verifySr25519", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getAuthor", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [signature, payload], __options);
+		}, [], __options);
 	}
 
 	/**
-	* getCaller
+	* getAdmin
 	*
 	*/
-	"getCaller" (
+	"getAdmin" (
 		__options ? : GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getCaller", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getAdmin", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
 		}, [], __options);
 	}
@@ -117,6 +113,78 @@ export default class Methods {
 	}
 
 	/**
+	* getMaxProviderFee
+	*
+	*/
+	"getMaxProviderFee" (
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getMaxProviderFee", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
+		}, [], __options);
+	}
+
+	/**
+	* getMinNumActiveProviders
+	*
+	*/
+	"getMinNumActiveProviders" (
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getMinNumActiveProviders", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
+		}, [], __options);
+	}
+
+	/**
+	* getBlockTime
+	*
+	*/
+	"getBlockTime" (
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getBlockTime", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
+		}, [], __options);
+	}
+
+	/**
+	* getMaxUserHistoryAgeSeconds
+	*
+	*/
+	"getMaxUserHistoryAgeSeconds" (
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getMaxUserHistoryAgeSeconds", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
+		}, [], __options);
+	}
+
+	/**
+	* getMaxUserHistoryLen
+	*
+	*/
+	"getMaxUserHistoryLen" (
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getMaxUserHistoryLen", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
+		}, [], __options);
+	}
+
+	/**
+	* getMaxUserHistoryAgeBlocks
+	*
+	*/
+	"getMaxUserHistoryAgeBlocks" (
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getMaxUserHistoryAgeBlocks", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
+		}, [], __options);
+	}
+
+	/**
 	* providerRegister
 	*
 	* @param { Array<(number | string | BN)> } url,
@@ -177,6 +245,20 @@ export default class Methods {
 	}
 
 	/**
+	* getProvider
+	*
+	* @param { ArgumentTypes.AccountId } account,
+	*/
+	"getProvider" (
+		account: ArgumentTypes.AccountId,
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getProvider", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
+		}, [account], __options);
+	}
+
+	/**
 	* providerFund
 	*
 	*/
@@ -197,11 +279,25 @@ export default class Methods {
 	"providerSetDataset" (
 		datasetId: ArgumentTypes.Hash,
 		datasetIdContent: ArgumentTypes.Hash,
-		__options ? : GasLimit,
+		__options ? : GasLimitAndRequiredValue,
 	){
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "providerSetDataset", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
 		}, [datasetId, datasetIdContent], __options);
+	}
+
+	/**
+	* getDapp
+	*
+	* @param { ArgumentTypes.AccountId } contract,
+	*/
+	"getDapp" (
+		contract: ArgumentTypes.AccountId,
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getDapp", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
+		}, [contract], __options);
 	}
 
 	/**
@@ -281,6 +377,20 @@ export default class Methods {
 	}
 
 	/**
+	* getUserHistorySummary
+	*
+	* @param { ArgumentTypes.AccountId } userAccount,
+	*/
+	"getUserHistorySummary" (
+		userAccount: ArgumentTypes.AccountId,
+		__options ? : GasLimit,
+	){
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getUserHistorySummary", (events: EventRecord) => {
+			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
+		}, [userAccount], __options);
+	}
+
+	/**
 	* providerCommit
 	*
 	* @param { ArgumentTypes.Commit } commit,
@@ -311,31 +421,31 @@ export default class Methods {
 	/**
 	* dappOperatorIsHumanUser
 	*
-	* @param { ArgumentTypes.AccountId } user,
+	* @param { ArgumentTypes.AccountId } userAccount,
 	* @param { (number | string | BN) } threshold,
 	*/
 	"dappOperatorIsHumanUser" (
-		user: ArgumentTypes.AccountId,
+		userAccount: ArgumentTypes.AccountId,
 		threshold: (number | string | BN),
 		__options ? : GasLimit,
 	){
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "dappOperatorIsHumanUser", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [user, threshold], __options);
+		}, [userAccount, threshold], __options);
 	}
 
 	/**
 	* dappOperatorLastCorrectCaptcha
 	*
-	* @param { ArgumentTypes.AccountId } user,
+	* @param { ArgumentTypes.AccountId } userAccount,
 	*/
 	"dappOperatorLastCorrectCaptcha" (
-		user: ArgumentTypes.AccountId,
+		userAccount: ArgumentTypes.AccountId,
 		__options ? : GasLimit,
 	){
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "dappOperatorLastCorrectCaptcha", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [user], __options);
+		}, [userAccount], __options);
 	}
 
 	/**
@@ -353,101 +463,45 @@ export default class Methods {
 	}
 
 	/**
-	* getDappUser
+	* getUser
 	*
-	* @param { ArgumentTypes.AccountId } dappUserId,
+	* @param { ArgumentTypes.AccountId } userAccount,
 	*/
-	"getDappUser" (
-		dappUserId: ArgumentTypes.AccountId,
+	"getUser" (
+		userAccount: ArgumentTypes.AccountId,
 		__options ? : GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getDappUser", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getUser", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [dappUserId], __options);
+		}, [userAccount], __options);
 	}
 
 	/**
-	* getProviderDetails
+	* getCommit
 	*
-	* @param { ArgumentTypes.AccountId } accountid,
+	* @param { ArgumentTypes.Hash } commitId,
 	*/
-	"getProviderDetails" (
-		accountid: ArgumentTypes.AccountId,
+	"getCommit" (
+		commitId: ArgumentTypes.Hash,
 		__options ? : GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getProviderDetails", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getCommit", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [accountid], __options);
+		}, [commitId], __options);
 	}
 
 	/**
-	* getDappDetails
+	* listProvidersByAccounts
 	*
-	* @param { ArgumentTypes.AccountId } contract,
+	* @param { Array<ArgumentTypes.AccountId> } providerAccounts,
 	*/
-	"getDappDetails" (
-		contract: ArgumentTypes.AccountId,
+	"listProvidersByAccounts" (
+		providerAccounts: Array<ArgumentTypes.AccountId>,
 		__options ? : GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getDappDetails", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "listProvidersByAccounts", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [contract], __options);
-	}
-
-	/**
-	* getCaptchaSolutionCommitment
-	*
-	* @param { ArgumentTypes.Hash } captchaSolutionCommitmentId,
-	*/
-	"getCaptchaSolutionCommitment" (
-		captchaSolutionCommitmentId: ArgumentTypes.Hash,
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getCaptchaSolutionCommitment", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [captchaSolutionCommitmentId], __options);
-	}
-
-	/**
-	* getDappBalance
-	*
-	* @param { ArgumentTypes.AccountId } dapp,
-	*/
-	"getDappBalance" (
-		dapp: ArgumentTypes.AccountId,
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getDappBalance", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [dapp], __options);
-	}
-
-	/**
-	* getProviderBalance
-	*
-	* @param { ArgumentTypes.AccountId } provider,
-	*/
-	"getProviderBalance" (
-		provider: ArgumentTypes.AccountId,
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getProviderBalance", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [provider], __options);
-	}
-
-	/**
-	* listProvidersByIds
-	*
-	* @param { Array<ArgumentTypes.AccountId> } providerIds,
-	*/
-	"listProvidersByIds" (
-		providerIds: Array<ArgumentTypes.AccountId>,
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "listProvidersByIds", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [providerIds], __options);
+		}, [providerAccounts], __options);
 	}
 
 	/**
@@ -468,26 +522,26 @@ export default class Methods {
 	* getRandomActiveProvider
 	*
 	* @param { ArgumentTypes.AccountId } userAccount,
-	* @param { ArgumentTypes.AccountId } dappContractAccount,
+	* @param { ArgumentTypes.AccountId } dappContract,
 	*/
 	"getRandomActiveProvider" (
 		userAccount: ArgumentTypes.AccountId,
-		dappContractAccount: ArgumentTypes.AccountId,
+		dappContract: ArgumentTypes.AccountId,
 		__options ? : GasLimit,
 	){
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getRandomActiveProvider", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [userAccount, dappContractAccount], __options);
+		}, [userAccount, dappContract], __options);
 	}
 
 	/**
-	* getAllProviderIds
+	* getAllProviderAccounts
 	*
 	*/
-	"getAllProviderIds" (
+	"getAllProviderAccounts" (
 		__options ? : GasLimit,
 	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getAllProviderIds", (events: EventRecord) => {
+		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getAllProviderAccounts", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
 		}, [], __options);
 	}
@@ -497,17 +551,17 @@ export default class Methods {
 	*
 	* @param { (string | number | BN) } len,
 	* @param { ArgumentTypes.AccountId } userAccount,
-	* @param { ArgumentTypes.AccountId } dappAccount,
+	* @param { ArgumentTypes.AccountId } dappContract,
 	*/
 	"getRandomNumber" (
 		len: (string | number | BN),
 		userAccount: ArgumentTypes.AccountId,
-		dappAccount: ArgumentTypes.AccountId,
+		dappContract: ArgumentTypes.AccountId,
 		__options ? : GasLimit,
 	){
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "getRandomNumber", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [len, userAccount, dappAccount], __options);
+		}, [len, userAccount, dappContract], __options);
 	}
 
 	/**
@@ -548,20 +602,6 @@ export default class Methods {
 		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "setCodeHash", (events: EventRecord) => {
 			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
 		}, [codeHash], __options);
-	}
-
-	/**
-	* setAdmin
-	*
-	* @param { ArgumentTypes.AccountId } newAdmin,
-	*/
-	"setAdmin" (
-		newAdmin: ArgumentTypes.AccountId,
-		__options ? : GasLimit,
-	){
-		return txSignAndSend( this.__apiPromise, this.__nativeContract, this.__keyringPair, "setAdmin", (events: EventRecord) => {
-			return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS);
-		}, [newAdmin], __options);
 	}
 
 }

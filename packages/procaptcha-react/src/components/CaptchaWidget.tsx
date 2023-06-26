@@ -33,7 +33,7 @@ const getHash = (item: any) => {
 }
 
 export const CaptchaWidget = (props: CaptchaWidgetProps) => {
-    // console.log('CaptchaWidget', props)
+    // env
     const { challenge, solution, onClick } = props
     const items = challenge.captcha.items
     const theme: Theme = useTheme()

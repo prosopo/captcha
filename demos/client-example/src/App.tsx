@@ -8,6 +8,12 @@ import { Procaptcha } from '@prosopo/procaptcha-react/dist/components'
 
 import './App.css'
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
+    'Access-Control-Allow-Headers': 'Origin, Content-Type, X-Auth-Token, Authorization'
+}
+
 function App() {
     const [email, setEmail] = useState<string>('')
     const [name, setName] = useState<string>('')
@@ -31,6 +37,8 @@ function App() {
         fetch(`${serverUrl}/private`, {
             method: 'GET',
             headers: {
+                Origin: 'http://localhost:3001', // TODO: change this to env var
+                ...corsHeaders,
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
             },
@@ -63,6 +71,8 @@ function App() {
         fetch(`${serverUrl}/${urlPath}`, {
             method: 'POST',
             headers: {
+                Origin: 'http://localhost:3001', // TODO: change this to env var
+                ...corsHeaders,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload),

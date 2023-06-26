@@ -35,11 +35,9 @@ export const ExtensionAccountSelect = ({
 
     useEffect(() => {
         const prom = web3Enable(dappName).then(() => {
-            console.log('subscribe')
             return web3AccountsSubscribe(setAccounts)
         })
         return () => {
-            console.log('unsubscribe')
             prom.then((unsub) => unsub())
         }
     }, [])
@@ -55,10 +53,8 @@ export const ExtensionAccountSelect = ({
             isOptionEqualToValue={(option, value) => option.address === value.address}
             onChange={(event: SyntheticEvent<Element, Event>, value: InjectedAccountWithMeta | null) => {
                 if (value) {
-                    console.log('Selected account:', value)
                     onChange(value.address)
                 } else {
-                    console.log('Deselected account')
                     onChange('')
                 }
             }}

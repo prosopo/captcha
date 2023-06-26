@@ -1,11 +1,11 @@
 {
   "source": {
-    "hash": "0xb76394571ca57606baef1ba8e80019f20df5f254e2b81725ee89a83e03ffb3f3",
+    "hash": "0x200fd70925e6c836028b0d7e8e6385eadc4b8feb518274039c97c1086ea4d64d",
     "language": "ink! 4.1.0",
-    "compiler": "rustc 1.68.0",
+    "compiler": "rustc 1.69.0",
     "build_info": {
-      "build_mode": "Release",
-      "cargo_contract_version": "2.2.1",
+      "build_mode": "Debug",
+      "cargo_contract_version": "2.0.0-rc.1",
       "rust_toolchain": "stable-x86_64-unknown-linux-gnu",
       "wasm_opt_settings": {
         "keep_debug_symbols": false,
@@ -26,62 +26,7 @@
   "spec": {
     "constructors": [
       {
-        "args": [
-          {
-            "label": "provider_stake_threshold",
-            "type": {
-              "displayName": [
-                "Balance"
-              ],
-              "type": 3
-            }
-          },
-          {
-            "label": "dapp_stake_threshold",
-            "type": {
-              "displayName": [
-                "Balance"
-              ],
-              "type": 3
-            }
-          },
-          {
-            "label": "max_user_history_len",
-            "type": {
-              "displayName": [
-                "u16"
-              ],
-              "type": 10
-            }
-          },
-          {
-            "label": "max_user_history_age",
-            "type": {
-              "displayName": [
-                "u16"
-              ],
-              "type": 10
-            }
-          },
-          {
-            "label": "min_num_active_providers",
-            "type": {
-              "displayName": [
-                "u16"
-              ],
-              "type": 10
-            }
-          },
-          {
-            "label": "max_provider_fee",
-            "type": {
-              "displayName": [
-                "Balance"
-              ],
-              "type": 3
-            }
-          }
-        ],
+        "args": [],
         "default": false,
         "docs": [
           "Constructor"
@@ -93,7 +38,7 @@
             "ink_primitives",
             "ConstructorResult"
           ],
-          "type": 11
+          "type": 10
         },
         "selector": "0x9bae9d5e"
       }
@@ -104,38 +49,38 @@
         "displayName": [
           "AccountId"
         ],
-        "type": 0
+        "type": 7
       },
       "balance": {
         "displayName": [
           "Balance"
         ],
-        "type": 3
+        "type": 0
       },
       "blockNumber": {
         "displayName": [
           "BlockNumber"
         ],
-        "type": 4
+        "type": 1
       },
       "chainExtension": {
         "displayName": [
           "ChainExtension"
         ],
-        "type": 64
+        "type": 67
       },
       "hash": {
         "displayName": [
           "Hash"
         ],
-        "type": 6
+        "type": 4
       },
       "maxEventTopics": 4,
       "timestamp": {
         "displayName": [
           "Timestamp"
         ],
-        "type": 63
+        "type": 66
       }
     },
     "events": [],
@@ -144,38 +89,70 @@
         "ink",
         "LangError"
       ],
-      "type": 13
+      "type": 12
     },
     "messages": [
       {
-        "args": [
-          {
-            "label": "signature",
-            "type": {
-              "displayName": [],
-              "type": 14
-            }
-          },
-          {
-            "label": "payload",
-            "type": {
-              "displayName": [],
-              "type": 15
-            }
-          }
-        ],
+        "args": [],
         "default": false,
         "docs": [
-          " Verify a signature. The payload is a blake128 hash of the payload wrapped in the Byte tag. E.g.",
-          "     message=hello",
-          "     hash=blake128(message) // 0x1234... (32 bytes)",
-          "     payload=<Bytes>0x1234...</Bytes> (32 bytes + 15 bytes (tags) + 2 bytes (multihash notation) = 49 bytes)",
-          "",
-          " Read more about multihash notation here https://w3c-ccg.github.io/multihash/index.xml#mh-example (adds two bytes to identify type and length of hash function)",
-          "",
-          " Note the signature must be sr25519 type."
+          " Get the git commit id from when this contract was built"
         ],
-        "label": "verify_sr25519",
+        "label": "get_git_commit_id",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 13
+        },
+        "selector": "0x3685e994"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " the account which can instantiate the contract"
+        ],
+        "label": "get_author",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 15
+        },
+        "selector": "0x1b6e3f0b"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " the admin which can control this contract. set to author/instantiator by default"
+        ],
+        "label": "get_admin",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 15
+        },
+        "selector": "0x57b8a8a7"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Get all payee options"
+        ],
+        "label": "get_payees",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -185,13 +162,15 @@
           ],
           "type": 16
         },
-        "selector": "0x6ed3bda3"
+        "selector": "0xf334a6d7"
       },
       {
         "args": [],
         "default": false,
-        "docs": [],
-        "label": "get_caller",
+        "docs": [
+          " Get all dapp payee options"
+        ],
+        "label": "get_dapp_payees",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -201,44 +180,14 @@
           ],
           "type": 19
         },
-        "selector": "0x8dd15f8f"
-      },
-      {
-        "args": [],
-        "default": false,
-        "docs": [],
-        "label": "get_payees",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 20
-        },
-        "selector": "0xf334a6d7"
-      },
-      {
-        "args": [],
-        "default": false,
-        "docs": [],
-        "label": "get_dapp_payees",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 23
-        },
         "selector": "0xcce851af"
       },
       {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " Get all status options"
+        ],
         "label": "get_statuses",
         "mutates": false,
         "payable": false,
@@ -247,7 +196,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 26
+          "type": 22
         },
         "selector": "0xd39608f0"
       },
@@ -265,7 +214,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 29
+          "type": 25
         },
         "selector": "0x3e7e8941"
       },
@@ -283,9 +232,117 @@
             "ink",
             "MessageResult"
           ],
-          "type": 29
+          "type": 25
         },
         "selector": "0xc9834fee"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " the maximum fee a provider can charge for a commit"
+        ],
+        "label": "get_max_provider_fee",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 26
+        },
+        "selector": "0xd799cf93"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " the minimum number of providers needed for the contract to function"
+        ],
+        "label": "get_min_num_active_providers",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 27
+        },
+        "selector": "0xa200bea1"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " the time to complete a block, 6 seconds by default"
+        ],
+        "label": "get_block_time",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 27
+        },
+        "selector": "0x8d3f151d"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " the max age of a commit for a user before it is removed from the history, in seconds"
+        ],
+        "label": "get_max_user_history_age_seconds",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 26
+        },
+        "selector": "0xcab4fa0a"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " the max number of commits stored for a single user"
+        ],
+        "label": "get_max_user_history_len",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 27
+        },
+        "selector": "0xfb715e71"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " the max age of a commit for a user before it is removed from the history, in blocks"
+        ],
+        "label": "get_max_user_history_age_blocks",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 26
+        },
+        "selector": "0x6f3337c3"
       },
       {
         "args": [
@@ -295,7 +352,7 @@
               "displayName": [
                 "Vec"
               ],
-              "type": 5
+              "type": 2
             }
           },
           {
@@ -304,7 +361,7 @@
               "displayName": [
                 "u32"
               ],
-              "type": 4
+              "type": 1
             }
           },
           {
@@ -313,7 +370,7 @@
               "displayName": [
                 "Payee"
               ],
-              "type": 22
+              "type": 18
             }
           }
         ],
@@ -329,7 +386,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0xc66f9a2a"
       },
@@ -341,7 +398,7 @@
               "displayName": [
                 "Vec"
               ],
-              "type": 5
+              "type": 2
             }
           },
           {
@@ -350,7 +407,7 @@
               "displayName": [
                 "u32"
               ],
-              "type": 4
+              "type": 1
             }
           },
           {
@@ -359,7 +416,7 @@
               "displayName": [
                 "Payee"
               ],
-              "type": 22
+              "type": 18
             }
           }
         ],
@@ -375,7 +432,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0xd2f70de8"
       },
@@ -393,7 +450,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0xa65232da"
       },
@@ -411,14 +468,44 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x5eff53cf"
       },
       {
+        "args": [
+          {
+            "label": "account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Get an existing provider"
+        ],
+        "label": "get_provider",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 32
+        },
+        "selector": "0x457c7444"
+      },
+      {
         "args": [],
         "default": false,
-        "docs": [],
+        "docs": [
+          " Fund a provider"
+        ],
         "label": "provider_fund",
         "mutates": true,
         "payable": true,
@@ -427,7 +514,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x54ee83bb"
       },
@@ -439,7 +526,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 6
+              "type": 4
             }
           },
           {
@@ -448,7 +535,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 6
+              "type": 4
             }
           }
         ],
@@ -458,13 +545,13 @@
         ],
         "label": "provider_set_dataset",
         "mutates": true,
-        "payable": false,
+        "payable": true,
         "returnType": {
           "displayName": [
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0xb0e7ab99"
       },
@@ -476,7 +563,35 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Get an existing dapp"
+        ],
+        "label": "get_dapp",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 35
+        },
+        "selector": "0xf96477c0"
+      },
+      {
+        "args": [
+          {
+            "label": "contract",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
             }
           },
           {
@@ -485,7 +600,7 @@
               "displayName": [
                 "DappPayee"
               ],
-              "type": 25
+              "type": 21
             }
           }
         ],
@@ -501,7 +616,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x42b45efa"
       },
@@ -513,7 +628,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           },
           {
@@ -522,7 +637,7 @@
               "displayName": [
                 "DappPayee"
               ],
-              "type": 25
+              "type": 21
             }
           },
           {
@@ -531,7 +646,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           }
         ],
@@ -547,7 +662,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x5dbfa904"
       },
@@ -559,7 +674,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           }
         ],
@@ -575,7 +690,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x55da62a9"
       },
@@ -587,7 +702,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           }
         ],
@@ -603,7 +718,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0xdc7da4d5"
       },
@@ -615,7 +730,7 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           }
         ],
@@ -631,9 +746,35 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x94718d6f"
+      },
+      {
+        "args": [
+          {
+            "label": "user_account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 7
+            }
+          }
+        ],
+        "default": false,
+        "docs": [],
+        "label": "get_user_history_summary",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 38
+        },
+        "selector": "0x3be12ad6"
       },
       {
         "args": [
@@ -643,12 +784,14 @@
               "displayName": [
                 "Commit"
               ],
-              "type": 30
+              "type": 41
             }
           }
         ],
         "default": false,
-        "docs": [],
+        "docs": [
+          " Provider submits a captcha solution commitment"
+        ],
         "label": "provider_commit",
         "mutates": true,
         "payable": false,
@@ -657,7 +800,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x57876316"
       },
@@ -669,7 +812,7 @@
               "displayName": [
                 "Vec"
               ],
-              "type": 32
+              "type": 43
             }
           }
         ],
@@ -685,19 +828,19 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0xc8d4b3b2"
       },
       {
         "args": [
           {
-            "label": "user",
+            "label": "user_account",
             "type": {
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           },
           {
@@ -706,7 +849,7 @@
               "displayName": [
                 "u8"
               ],
-              "type": 2
+              "type": 3
             }
           }
         ],
@@ -724,24 +867,26 @@
             "ink",
             "MessageResult"
           ],
-          "type": 33
+          "type": 44
         },
         "selector": "0xbe7b6ef9"
       },
       {
         "args": [
           {
-            "label": "user",
+            "label": "user_account",
             "type": {
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           }
         ],
         "default": false,
-        "docs": [],
+        "docs": [
+          " Get the last correct captcha for a user"
+        ],
         "label": "dapp_operator_last_correct_captcha",
         "mutates": false,
         "payable": false,
@@ -750,7 +895,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 36
+          "type": 47
         },
         "selector": "0xbe930f18"
       },
@@ -762,7 +907,7 @@
               "displayName": [
                 "Hash"
               ],
-              "type": 6
+              "type": 4
             }
           }
         ],
@@ -780,19 +925,19 @@
             "ink",
             "MessageResult"
           ],
-          "type": 39
+          "type": 50
         },
         "selector": "0x7a54158d"
       },
       {
         "args": [
           {
-            "label": "dapp_user_id",
+            "label": "user_account",
             "type": {
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           }
         ],
@@ -802,7 +947,7 @@
           "",
           " Returns an error if the user does not exist"
         ],
-        "label": "get_dapp_user",
+        "label": "get_user",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -810,79 +955,19 @@
             "ink",
             "MessageResult"
           ],
-          "type": 42
+          "type": 53
         },
-        "selector": "0x42dd7f6b"
+        "selector": "0xa4ca534e"
       },
       {
         "args": [
           {
-            "label": "accountid",
-            "type": {
-              "displayName": [
-                "AccountId"
-              ],
-              "type": 0
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " Get a single provider's details",
-          "",
-          " Returns an error if the user does not exist"
-        ],
-        "label": "get_provider_details",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 45
-        },
-        "selector": "0x812d61e2"
-      },
-      {
-        "args": [
-          {
-            "label": "contract",
-            "type": {
-              "displayName": [
-                "AccountId"
-              ],
-              "type": 0
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " Get a single dapps details",
-          "",
-          " Returns an error if the dapp does not exist"
-        ],
-        "label": "get_dapp_details",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 48
-        },
-        "selector": "0xb3dfdaf9"
-      },
-      {
-        "args": [
-          {
-            "label": "captcha_solution_commitment_id",
+            "label": "commit_id",
             "type": {
               "displayName": [
                 "Hash"
               ],
-              "type": 6
+              "type": 4
             }
           }
         ],
@@ -892,7 +977,7 @@
           "",
           " Returns an error if the commitment does not exist"
         ],
-        "label": "get_captcha_solution_commitment",
+        "label": "get_commit",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -900,72 +985,14 @@
             "ink",
             "MessageResult"
           ],
-          "type": 51
+          "type": 56
         },
-        "selector": "0x028ebe00"
+        "selector": "0x5329f551"
       },
       {
         "args": [
           {
-            "label": "dapp",
-            "type": {
-              "displayName": [
-                "AccountId"
-              ],
-              "type": 0
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " Returns the account balance for the specified `dapp`.",
-          ""
-        ],
-        "label": "get_dapp_balance",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 53
-        },
-        "selector": "0xf8fd5066"
-      },
-      {
-        "args": [
-          {
-            "label": "provider",
-            "type": {
-              "displayName": [
-                "AccountId"
-              ],
-              "type": 0
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " Returns the account balance for the specified `provider`.",
-          ""
-        ],
-        "label": "get_provider_balance",
-        "mutates": false,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 53
-        },
-        "selector": "0x998d522c"
-      },
-      {
-        "args": [
-          {
-            "label": "provider_ids",
+            "label": "provider_accounts",
             "type": {
               "displayName": [
                 "Vec"
@@ -980,7 +1007,7 @@
           "",
           " Returns empty if none were matched"
         ],
-        "label": "list_providers_by_ids",
+        "label": "list_providers_by_accounts",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -988,9 +1015,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 55
+          "type": 58
         },
-        "selector": "0xd542160b"
+        "selector": "0x52f0d2cb"
       },
       {
         "args": [
@@ -1000,7 +1027,7 @@
               "displayName": [
                 "Vec"
               ],
-              "type": 27
+              "type": 23
             }
           }
         ],
@@ -1018,7 +1045,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 55
+          "type": 58
         },
         "selector": "0x54b28ab4"
       },
@@ -1030,16 +1057,16 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           },
           {
-            "label": "dapp_contract_account",
+            "label": "dapp_contract",
             "type": {
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           }
         ],
@@ -1057,7 +1084,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 58
+          "type": 61
         },
         "selector": "0x4aee5bad"
       },
@@ -1069,7 +1096,7 @@
           "",
           " Returns {Vec<AccountId>}"
         ],
-        "label": "get_all_provider_ids",
+        "label": "get_all_provider_accounts",
         "mutates": false,
         "payable": false,
         "returnType": {
@@ -1077,9 +1104,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 61
+          "type": 64
         },
-        "selector": "0xd2ed90d7"
+        "selector": "0x5052021f"
       },
       {
         "args": [
@@ -1089,7 +1116,7 @@
               "displayName": [
                 "u128"
               ],
-              "type": 3
+              "type": 0
             }
           },
           {
@@ -1098,16 +1125,16 @@
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           },
           {
-            "label": "dapp_account",
+            "label": "dapp_contract",
             "type": {
               "displayName": [
                 "AccountId"
               ],
-              "type": 0
+              "type": 7
             }
           }
         ],
@@ -1123,7 +1150,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 29
+          "type": 25
         },
         "selector": "0x2306aecd"
       },
@@ -1141,7 +1168,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x476d839f"
       },
@@ -1153,7 +1180,7 @@
               "displayName": [
                 "Balance"
               ],
-              "type": 3
+              "type": 0
             }
           }
         ],
@@ -1169,7 +1196,7 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x410fcc9d"
       },
@@ -1179,7 +1206,7 @@
             "label": "code_hash",
             "type": {
               "displayName": [],
-              "type": 1
+              "type": 5
             }
           }
         ],
@@ -1195,37 +1222,9 @@
             "ink",
             "MessageResult"
           ],
-          "type": 16
+          "type": 29
         },
         "selector": "0x9e5c5758"
-      },
-      {
-        "args": [
-          {
-            "label": "new_admin",
-            "type": {
-              "displayName": [
-                "AccountId"
-              ],
-              "type": 0
-            }
-          }
-        ],
-        "default": false,
-        "docs": [
-          " Set the admin for this contract"
-        ],
-        "label": "set_admin",
-        "mutates": true,
-        "payable": false,
-        "returnType": {
-          "displayName": [
-            "ink",
-            "MessageResult"
-          ],
-          "type": 16
-        },
-        "selector": "0x798dcad5"
       }
     ]
   },
@@ -1234,15 +1233,6 @@
       "layout": {
         "struct": {
           "fields": [
-            {
-              "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 0
-                }
-              },
-              "name": "admin"
-            },
             {
               "layout": {
                 "root": {
@@ -1272,7 +1262,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x1840c684",
-                              "ty": 3
+                              "ty": 0
                             }
                           },
                           "name": "balance"
@@ -1281,7 +1271,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x1840c684",
-                              "ty": 4
+                              "ty": 1
                             }
                           },
                           "name": "fee"
@@ -1309,7 +1299,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x1840c684",
-                              "ty": 5
+                              "ty": 2
                             }
                           },
                           "name": "url"
@@ -1318,7 +1308,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x1840c684",
-                              "ty": 6
+                              "ty": 4
                             }
                           },
                           "name": "dataset_id"
@@ -1327,7 +1317,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x1840c684",
-                              "ty": 6
+                              "ty": 4
                             }
                           },
                           "name": "dataset_id_content"
@@ -1347,7 +1337,7 @@
                   "layout": {
                     "leaf": {
                       "key": "0x10b13b19",
-                      "ty": 7
+                      "ty": 6
                     }
                   },
                   "root_key": "0x10b13b19"
@@ -1361,7 +1351,7 @@
                   "layout": {
                     "leaf": {
                       "key": "0xb27496e1",
-                      "ty": 0
+                      "ty": 7
                     }
                   },
                   "root_key": "0xb27496e1"
@@ -1375,31 +1365,13 @@
                   "layout": {
                     "leaf": {
                       "key": "0x193fd9ad",
-                      "ty": 0
+                      "ty": 7
                     }
                   },
                   "root_key": "0x193fd9ad"
                 }
               },
               "name": "datasets"
-            },
-            {
-              "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 3
-                }
-              },
-              "name": "provider_stake_threshold"
-            },
-            {
-              "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 3
-                }
-              },
-              "name": "dapp_stake_threshold"
             },
             {
               "layout": {
@@ -1430,7 +1402,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x4ddf16e1",
-                              "ty": 3
+                              "ty": 0
                             }
                           },
                           "name": "balance"
@@ -1439,7 +1411,7 @@
                           "layout": {
                             "leaf": {
                               "key": "0x4ddf16e1",
-                              "ty": 0
+                              "ty": 7
                             }
                           },
                           "name": "owner"
@@ -1481,14 +1453,14 @@
                 "root": {
                   "layout": {
                     "leaf": {
-                      "key": "0x15899ddc",
-                      "ty": 7
+                      "key": "0xa6faeb75",
+                      "ty": 6
                     }
                   },
-                  "root_key": "0x15899ddc"
+                  "root_key": "0xa6faeb75"
                 }
               },
-              "name": "dapp_accounts"
+              "name": "dapp_contracts"
             },
             {
               "layout": {
@@ -1499,8 +1471,8 @@
                         {
                           "layout": {
                             "leaf": {
-                              "key": "0x77ca8522",
-                              "ty": 6
+                              "key": "0xa403ce74",
+                              "ty": 4
                             }
                           },
                           "name": "id"
@@ -1508,17 +1480,17 @@
                         {
                           "layout": {
                             "leaf": {
-                              "key": "0x77ca8522",
-                              "ty": 0
+                              "key": "0xa403ce74",
+                              "ty": 7
                             }
                           },
-                          "name": "user"
+                          "name": "user_account"
                         },
                         {
                           "layout": {
                             "leaf": {
-                              "key": "0x77ca8522",
-                              "ty": 6
+                              "key": "0xa403ce74",
+                              "ty": 4
                             }
                           },
                           "name": "dataset_id"
@@ -1526,7 +1498,7 @@
                         {
                           "layout": {
                             "enum": {
-                              "dispatchKey": "0x77ca8522",
+                              "dispatchKey": "0xa403ce74",
                               "name": "CaptchaStatus",
                               "variants": {
                                 "0": {
@@ -1549,26 +1521,26 @@
                         {
                           "layout": {
                             "leaf": {
-                              "key": "0x77ca8522",
-                              "ty": 0
+                              "key": "0xa403ce74",
+                              "ty": 7
                             }
                           },
-                          "name": "dapp"
+                          "name": "dapp_contract"
                         },
                         {
                           "layout": {
                             "leaf": {
-                              "key": "0x77ca8522",
-                              "ty": 0
+                              "key": "0xa403ce74",
+                              "ty": 7
                             }
                           },
-                          "name": "provider"
+                          "name": "provider_account"
                         },
                         {
                           "layout": {
                             "leaf": {
-                              "key": "0x77ca8522",
-                              "ty": 4
+                              "key": "0xa403ce74",
+                              "ty": 1
                             }
                           },
                           "name": "requested_at"
@@ -1576,8 +1548,8 @@
                         {
                           "layout": {
                             "leaf": {
-                              "key": "0x77ca8522",
-                              "ty": 4
+                              "key": "0xa403ce74",
+                              "ty": 1
                             }
                           },
                           "name": "completed_at"
@@ -1587,12 +1559,12 @@
                             "array": {
                               "layout": {
                                 "leaf": {
-                                  "key": "0x77ca8522",
-                                  "ty": 2
+                                  "key": "0xa403ce74",
+                                  "ty": 3
                                 }
                               },
                               "len": 32,
-                              "offset": "0x77ca8522"
+                              "offset": "0xa403ce74"
                             }
                           },
                           "name": "user_signature_part1"
@@ -1602,12 +1574,12 @@
                             "array": {
                               "layout": {
                                 "leaf": {
-                                  "key": "0x77ca8522",
-                                  "ty": 2
+                                  "key": "0xa403ce74",
+                                  "ty": 3
                                 }
                               },
                               "len": 32,
-                              "offset": "0x77ca8522"
+                              "offset": "0xa403ce74"
                             }
                           },
                           "name": "user_signature_part2"
@@ -1616,10 +1588,10 @@
                       "name": "Commit"
                     }
                   },
-                  "root_key": "0x77ca8522"
+                  "root_key": "0xa403ce74"
                 }
               },
-              "name": "captcha_solution_commitments"
+              "name": "commits"
             },
             {
               "layout": {
@@ -1630,7 +1602,7 @@
                         {
                           "layout": {
                             "leaf": {
-                              "key": "0x01f0163a",
+                              "key": "0x918cf262",
                               "ty": 9
                             }
                           },
@@ -1640,10 +1612,10 @@
                       "name": "User"
                     }
                   },
-                  "root_key": "0x01f0163a"
+                  "root_key": "0x918cf262"
                 }
               },
-              "name": "dapp_users"
+              "name": "users"
             },
             {
               "layout": {
@@ -1651,49 +1623,13 @@
                   "layout": {
                     "leaf": {
                       "key": "0x2057813a",
-                      "ty": 7
+                      "ty": 6
                     }
                   },
                   "root_key": "0x2057813a"
                 }
               },
               "name": "user_accounts"
-            },
-            {
-              "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 10
-                }
-              },
-              "name": "max_user_history_len"
-            },
-            {
-              "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 10
-                }
-              },
-              "name": "max_user_history_age"
-            },
-            {
-              "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 10
-                }
-              },
-              "name": "min_num_active_providers"
-            },
-            {
-              "layout": {
-                "leaf": {
-                  "key": "0x00000000",
-                  "ty": 3
-                }
-              },
-              "name": "max_provider_fee"
             }
           ],
           "name": "Captcha"
@@ -1707,51 +1643,12 @@
       "id": 0,
       "type": {
         "def": {
-          "composite": {
-            "fields": [
-              {
-                "type": 1,
-                "typeName": "[u8; 32]"
-              }
-            ]
-          }
-        },
-        "path": [
-          "ink_primitives",
-          "types",
-          "AccountId"
-        ]
-      }
-    },
-    {
-      "id": 1,
-      "type": {
-        "def": {
-          "array": {
-            "len": 32,
-            "type": 2
-          }
-        }
-      }
-    },
-    {
-      "id": 2,
-      "type": {
-        "def": {
-          "primitive": "u8"
-        }
-      }
-    },
-    {
-      "id": 3,
-      "type": {
-        "def": {
           "primitive": "u128"
         }
       }
     },
     {
-      "id": 4,
+      "id": 1,
       "type": {
         "def": {
           "primitive": "u32"
@@ -1759,23 +1656,31 @@
       }
     },
     {
-      "id": 5,
+      "id": 2,
       "type": {
         "def": {
           "sequence": {
-            "type": 2
+            "type": 3
           }
         }
       }
     },
     {
-      "id": 6,
+      "id": 3,
+      "type": {
+        "def": {
+          "primitive": "u8"
+        }
+      }
+    },
+    {
+      "id": 4,
       "type": {
         "def": {
           "composite": {
             "fields": [
               {
-                "type": 1,
+                "type": 5,
                 "typeName": "[u8; 32]"
               }
             ]
@@ -1789,7 +1694,18 @@
       }
     },
     {
-      "id": 7,
+      "id": 5,
+      "type": {
+        "def": {
+          "array": {
+            "len": 32,
+            "type": 3
+          }
+        }
+      }
+    },
+    {
+      "id": 6,
       "type": {
         "def": {
           "composite": {
@@ -1803,7 +1719,7 @@
         "params": [
           {
             "name": "T",
-            "type": 0
+            "type": 7
           }
         ],
         "path": [
@@ -1812,11 +1728,31 @@
       }
     },
     {
+      "id": 7,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "type": 5,
+                "typeName": "[u8; 32]"
+              }
+            ]
+          }
+        },
+        "path": [
+          "ink_primitives",
+          "types",
+          "AccountId"
+        ]
+      }
+    },
+    {
       "id": 8,
       "type": {
         "def": {
           "sequence": {
-            "type": 0
+            "type": 7
           }
         }
       }
@@ -1826,7 +1762,7 @@
       "type": {
         "def": {
           "sequence": {
-            "type": 6
+            "type": 4
           }
         }
       }
@@ -1835,20 +1771,12 @@
       "id": 10,
       "type": {
         "def": {
-          "primitive": "u16"
-        }
-      }
-    },
-    {
-      "id": 11,
-      "type": {
-        "def": {
           "variant": {
             "variants": [
               {
                 "fields": [
                   {
-                    "type": 12
+                    "type": 11
                   }
                 ],
                 "index": 0,
@@ -1857,7 +1785,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -1869,11 +1797,11 @@
         "params": [
           {
             "name": "T",
-            "type": 12
+            "type": 11
           },
           {
             "name": "E",
-            "type": 13
+            "type": 12
           }
         ],
         "path": [
@@ -1882,7 +1810,7 @@
       }
     },
     {
-      "id": 12,
+      "id": 11,
       "type": {
         "def": {
           "tuple": []
@@ -1890,7 +1818,7 @@
       }
     },
     {
-      "id": 13,
+      "id": 12,
       "type": {
         "def": {
           "variant": {
@@ -1909,12 +1837,54 @@
       }
     },
     {
+      "id": 13,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 14
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 14
+          },
+          {
+            "name": "E",
+            "type": 12
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
       "id": 14,
       "type": {
         "def": {
           "array": {
-            "len": 64,
-            "type": 2
+            "len": 20,
+            "type": 3
           }
         }
       }
@@ -1923,11 +1893,42 @@
       "id": 15,
       "type": {
         "def": {
-          "array": {
-            "len": 49,
-            "type": 2
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 7
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
           }
-        }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 7
+          },
+          {
+            "name": "E",
+            "type": 12
+          }
+        ],
+        "path": [
+          "Result"
+        ]
       }
     },
     {
@@ -1948,7 +1949,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -1964,7 +1965,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 12
           }
         ],
         "path": [
@@ -1976,264 +1977,14 @@
       "id": 17,
       "type": {
         "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 12
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 18
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 12
-          },
-          {
-            "name": "E",
-            "type": 18
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 18,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "index": 0,
-                "name": "NotAuthorised"
-              },
-              {
-                "index": 1,
-                "name": "ContractTransferFailed"
-              },
-              {
-                "index": 2,
-                "name": "ProviderExists"
-              },
-              {
-                "index": 3,
-                "name": "ProviderDoesNotExist"
-              },
-              {
-                "index": 4,
-                "name": "ProviderInsufficientFunds"
-              },
-              {
-                "index": 5,
-                "name": "ProviderInactive"
-              },
-              {
-                "index": 6,
-                "name": "ProviderUrlUsed"
-              },
-              {
-                "index": 7,
-                "name": "DappExists"
-              },
-              {
-                "index": 8,
-                "name": "DappDoesNotExist"
-              },
-              {
-                "index": 9,
-                "name": "DappInactive"
-              },
-              {
-                "index": 10,
-                "name": "DappInsufficientFunds"
-              },
-              {
-                "index": 11,
-                "name": "CaptchaDataDoesNotExist"
-              },
-              {
-                "index": 12,
-                "name": "CommitDoesNotExist"
-              },
-              {
-                "index": 13,
-                "name": "DappUserDoesNotExist"
-              },
-              {
-                "index": 14,
-                "name": "NoActiveProviders"
-              },
-              {
-                "index": 15,
-                "name": "DatasetIdSolutionsSame"
-              },
-              {
-                "index": 16,
-                "name": "CodeNotFound"
-              },
-              {
-                "index": 17,
-                "name": "Unknown"
-              },
-              {
-                "index": 18,
-                "name": "InvalidContract"
-              },
-              {
-                "index": 19,
-                "name": "InvalidPayee"
-              },
-              {
-                "index": 20,
-                "name": "InvalidCaptchaStatus"
-              },
-              {
-                "index": 21,
-                "name": "NoCorrectCaptcha"
-              },
-              {
-                "index": 22,
-                "name": "NotEnoughActiveProviders"
-              },
-              {
-                "index": 23,
-                "name": "ProviderFeeTooHigh"
-              },
-              {
-                "index": 24,
-                "name": "CommitAlreadyExists"
-              },
-              {
-                "index": 25,
-                "name": "CaptchaSolutionCommitmentAlreadyExists"
-              },
-              {
-                "index": 26,
-                "name": "VerifyFailed"
-              }
-            ]
-          }
-        },
-        "path": [
-          "captcha",
-          "captcha",
-          "Error"
-        ]
-      }
-    },
-    {
-      "id": 19,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 0
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 0
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 20,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 21
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 21
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 21,
-      "type": {
-        "def": {
           "sequence": {
-            "type": 22
+            "type": 18
           }
         }
       }
     },
     {
-      "id": 22,
+      "id": 18,
       "type": {
         "def": {
           "variant": {
@@ -2257,7 +2008,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 19,
       "type": {
         "def": {
           "variant": {
@@ -2265,7 +2016,7 @@
               {
                 "fields": [
                   {
-                    "type": 24
+                    "type": 20
                   }
                 ],
                 "index": 0,
@@ -2274,7 +2025,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -2286,11 +2037,11 @@
         "params": [
           {
             "name": "T",
-            "type": 24
+            "type": 20
           },
           {
             "name": "E",
-            "type": 13
+            "type": 12
           }
         ],
         "path": [
@@ -2299,17 +2050,17 @@
       }
     },
     {
-      "id": 24,
+      "id": 20,
       "type": {
         "def": {
           "sequence": {
-            "type": 25
+            "type": 21
           }
         }
       }
     },
     {
-      "id": 25,
+      "id": 21,
       "type": {
         "def": {
           "variant": {
@@ -2337,7 +2088,7 @@
       }
     },
     {
-      "id": 26,
+      "id": 22,
       "type": {
         "def": {
           "variant": {
@@ -2345,7 +2096,7 @@
               {
                 "fields": [
                   {
-                    "type": 27
+                    "type": 23
                   }
                 ],
                 "index": 0,
@@ -2354,7 +2105,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -2366,11 +2117,11 @@
         "params": [
           {
             "name": "T",
-            "type": 27
+            "type": 23
           },
           {
             "name": "E",
-            "type": 13
+            "type": 12
           }
         ],
         "path": [
@@ -2379,17 +2130,17 @@
       }
     },
     {
-      "id": 27,
+      "id": 23,
       "type": {
         "def": {
           "sequence": {
-            "type": 28
+            "type": 24
           }
         }
       }
     },
     {
-      "id": 28,
+      "id": 24,
       "type": {
         "def": {
           "variant": {
@@ -2413,7 +2164,7 @@
       }
     },
     {
-      "id": 29,
+      "id": 25,
       "type": {
         "def": {
           "variant": {
@@ -2421,7 +2172,7 @@
               {
                 "fields": [
                   {
-                    "type": 3
+                    "type": 0
                   }
                 ],
                 "index": 0,
@@ -2430,7 +2181,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -2442,11 +2193,145 @@
         "params": [
           {
             "name": "T",
-            "type": 3
+            "type": 0
           },
           {
             "name": "E",
-            "type": 13
+            "type": 12
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 1
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 1
+          },
+          {
+            "name": "E",
+            "type": 12
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 27,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 28
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 28
+          },
+          {
+            "name": "E",
+            "type": 12
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "type": {
+        "def": {
+          "primitive": "u16"
+        }
+      }
+    },
+    {
+      "id": 29,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 30
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 30
+          },
+          {
+            "name": "E",
+            "type": 12
           }
         ],
         "path": [
@@ -2458,56 +2343,596 @@
       "id": 30,
       "type": {
         "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 11
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 31
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 11
+          },
+          {
+            "name": "E",
+            "type": 31
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 31,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "index": 0,
+                "name": "NotAdmin"
+              },
+              {
+                "index": 1,
+                "name": "NotOwner"
+              },
+              {
+                "index": 2,
+                "name": "ContractTransferFailed"
+              },
+              {
+                "index": 3,
+                "name": "ProviderAccountExists"
+              },
+              {
+                "index": 4,
+                "name": "ProviderExists"
+              },
+              {
+                "index": 5,
+                "name": "ProviderAccountDoesNotExist"
+              },
+              {
+                "index": 6,
+                "name": "ProviderDoesNotExist"
+              },
+              {
+                "index": 7,
+                "name": "ProviderInsufficientFunds"
+              },
+              {
+                "index": 8,
+                "name": "ProviderInactive"
+              },
+              {
+                "index": 9,
+                "name": "ProviderUrlUsed"
+              },
+              {
+                "index": 10,
+                "name": "DappExists"
+              },
+              {
+                "index": 11,
+                "name": "DappDoesNotExist"
+              },
+              {
+                "index": 12,
+                "name": "DappInactive"
+              },
+              {
+                "index": 13,
+                "name": "DappInsufficientFunds"
+              },
+              {
+                "index": 14,
+                "name": "CaptchaDataDoesNotExist"
+              },
+              {
+                "index": 15,
+                "name": "CommitDoesNotExist"
+              },
+              {
+                "index": 16,
+                "name": "DappUserDoesNotExist"
+              },
+              {
+                "index": 17,
+                "name": "NoActiveProviders"
+              },
+              {
+                "index": 18,
+                "name": "DatasetIdSolutionsSame"
+              },
+              {
+                "index": 19,
+                "name": "CodeNotFound"
+              },
+              {
+                "index": 20,
+                "name": "Unknown"
+              },
+              {
+                "index": 21,
+                "name": "InvalidContract"
+              },
+              {
+                "index": 22,
+                "name": "InvalidPayee"
+              },
+              {
+                "index": 23,
+                "name": "InvalidCaptchaStatus"
+              },
+              {
+                "index": 24,
+                "name": "NoCorrectCaptcha"
+              },
+              {
+                "index": 25,
+                "name": "NotEnoughActiveProviders"
+              },
+              {
+                "index": 26,
+                "name": "ProviderFeeTooHigh"
+              },
+              {
+                "index": 27,
+                "name": "CommitAlreadyExists"
+              }
+            ]
+          }
+        },
+        "path": [
+          "captcha",
+          "captcha",
+          "Error"
+        ]
+      }
+    },
+    {
+      "id": 32,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 33
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 33
+          },
+          {
+            "name": "E",
+            "type": 12
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 33,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 34
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 31
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 34
+          },
+          {
+            "name": "E",
+            "type": 31
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 34,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "status",
+                "type": 24,
+                "typeName": "GovernanceStatus"
+              },
+              {
+                "name": "balance",
+                "type": 0,
+                "typeName": "Balance"
+              },
+              {
+                "name": "fee",
+                "type": 1,
+                "typeName": "u32"
+              },
+              {
+                "name": "payee",
+                "type": 18,
+                "typeName": "Payee"
+              },
+              {
+                "name": "url",
+                "type": 2,
+                "typeName": "Vec<u8>"
+              },
+              {
+                "name": "dataset_id",
+                "type": 4,
+                "typeName": "Hash"
+              },
+              {
+                "name": "dataset_id_content",
+                "type": 4,
+                "typeName": "Hash"
+              }
+            ]
+          }
+        },
+        "path": [
+          "captcha",
+          "captcha",
+          "Provider"
+        ]
+      }
+    },
+    {
+      "id": 35,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 36
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 36
+          },
+          {
+            "name": "E",
+            "type": 12
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 36,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 37
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 31
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 37
+          },
+          {
+            "name": "E",
+            "type": 31
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 37,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "status",
+                "type": 24,
+                "typeName": "GovernanceStatus"
+              },
+              {
+                "name": "balance",
+                "type": 0,
+                "typeName": "Balance"
+              },
+              {
+                "name": "owner",
+                "type": 7,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "payee",
+                "type": 21,
+                "typeName": "DappPayee"
+              }
+            ]
+          }
+        },
+        "path": [
+          "captcha",
+          "captcha",
+          "Dapp"
+        ]
+      }
+    },
+    {
+      "id": 38,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 39
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 39
+          },
+          {
+            "name": "E",
+            "type": 12
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 39,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 40
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 31
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 40
+          },
+          {
+            "name": "E",
+            "type": 31
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 40,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "correct",
+                "type": 28,
+                "typeName": "u16"
+              },
+              {
+                "name": "incorrect",
+                "type": 28,
+                "typeName": "u16"
+              },
+              {
+                "name": "score",
+                "type": 3,
+                "typeName": "u8"
+              }
+            ]
+          }
+        },
+        "path": [
+          "captcha",
+          "captcha",
+          "UserHistorySummary"
+        ]
+      }
+    },
+    {
+      "id": 41,
+      "type": {
+        "def": {
           "composite": {
             "fields": [
               {
                 "name": "id",
-                "type": 6,
+                "type": 4,
                 "typeName": "Hash"
               },
               {
-                "name": "user",
-                "type": 0,
+                "name": "user_account",
+                "type": 7,
                 "typeName": "AccountId"
               },
               {
                 "name": "dataset_id",
-                "type": 6,
+                "type": 4,
                 "typeName": "Hash"
               },
               {
                 "name": "status",
-                "type": 31,
+                "type": 42,
                 "typeName": "CaptchaStatus"
               },
               {
-                "name": "dapp",
-                "type": 0,
+                "name": "dapp_contract",
+                "type": 7,
                 "typeName": "AccountId"
               },
               {
-                "name": "provider",
-                "type": 0,
+                "name": "provider_account",
+                "type": 7,
                 "typeName": "AccountId"
               },
               {
                 "name": "requested_at",
-                "type": 4,
+                "type": 1,
                 "typeName": "BlockNumber"
               },
               {
                 "name": "completed_at",
-                "type": 4,
+                "type": 1,
                 "typeName": "BlockNumber"
               },
               {
                 "name": "user_signature_part1",
-                "type": 1,
+                "type": 5,
                 "typeName": "[u8; 32]"
               },
               {
                 "name": "user_signature_part2",
-                "type": 1,
+                "type": 5,
                 "typeName": "[u8; 32]"
               }
             ]
@@ -2521,7 +2946,7 @@
       }
     },
     {
-      "id": 31,
+      "id": 42,
       "type": {
         "def": {
           "variant": {
@@ -2549,434 +2974,54 @@
       }
     },
     {
-      "id": 32,
-      "type": {
-        "def": {
-          "sequence": {
-            "type": 30
-          }
-        }
-      }
-    },
-    {
-      "id": 33,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 34
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 34
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 34,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 35
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 18
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 35
-          },
-          {
-            "name": "E",
-            "type": 18
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 35,
-      "type": {
-        "def": {
-          "primitive": "bool"
-        }
-      }
-    },
-    {
-      "id": 36,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 37
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 37
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 37,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 38
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 18
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 38
-          },
-          {
-            "name": "E",
-            "type": 18
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 38,
-      "type": {
-        "def": {
-          "composite": {
-            "fields": [
-              {
-                "name": "before",
-                "type": 4,
-                "typeName": "BlockNumber"
-              },
-              {
-                "name": "dapp_id",
-                "type": 0,
-                "typeName": "AccountId"
-              }
-            ]
-          }
-        },
-        "path": [
-          "captcha",
-          "captcha",
-          "LastCorrectCaptcha"
-        ]
-      }
-    },
-    {
-      "id": 39,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 40
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 40
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 40,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 41
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 18
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 41
-          },
-          {
-            "name": "E",
-            "type": 18
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
-      "id": 41,
-      "type": {
-        "def": {
-          "composite": {
-            "fields": [
-              {
-                "name": "provider",
-                "type": 0,
-                "typeName": "AccountId"
-              },
-              {
-                "name": "dataset_id",
-                "type": 6,
-                "typeName": "Hash"
-              },
-              {
-                "name": "dataset_id_content",
-                "type": 6,
-                "typeName": "Hash"
-              }
-            ]
-          }
-        },
-        "path": [
-          "captcha",
-          "captcha",
-          "CaptchaData"
-        ]
-      }
-    },
-    {
-      "id": 42,
-      "type": {
-        "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 43
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
-          }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 43
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
-        "path": [
-          "Result"
-        ]
-      }
-    },
-    {
       "id": 43,
       "type": {
         "def": {
-          "variant": {
-            "variants": [
-              {
-                "fields": [
-                  {
-                    "type": 44
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 18
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
-              }
-            ]
+          "sequence": {
+            "type": 41
           }
-        },
-        "params": [
-          {
-            "name": "T",
-            "type": 44
-          },
-          {
-            "name": "E",
-            "type": 18
-          }
-        ],
-        "path": [
-          "Result"
-        ]
+        }
       }
     },
     {
       "id": 44,
       "type": {
         "def": {
-          "composite": {
-            "fields": [
+          "variant": {
+            "variants": [
               {
-                "name": "history",
-                "type": 9,
-                "typeName": "Vec<Hash>"
+                "fields": [
+                  {
+                    "type": 45
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
               }
             ]
           }
         },
+        "params": [
+          {
+            "name": "T",
+            "type": 45
+          },
+          {
+            "name": "E",
+            "type": 12
+          }
+        ],
         "path": [
-          "captcha",
-          "captcha",
-          "User"
+          "Result"
         ]
       }
     },
@@ -2998,7 +3043,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 31
                   }
                 ],
                 "index": 1,
@@ -3014,7 +3059,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 31
           }
         ],
         "path": [
@@ -3026,12 +3071,20 @@
       "id": 46,
       "type": {
         "def": {
+          "primitive": "bool"
+        }
+      }
+    },
+    {
+      "id": 47,
+      "type": {
+        "def": {
           "variant": {
             "variants": [
               {
                 "fields": [
                   {
-                    "type": 47
+                    "type": 48
                   }
                 ],
                 "index": 0,
@@ -3040,7 +3093,7 @@
               {
                 "fields": [
                   {
-                    "type": 18
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -3052,66 +3105,15 @@
         "params": [
           {
             "name": "T",
-            "type": 47
+            "type": 48
           },
           {
             "name": "E",
-            "type": 18
+            "type": 12
           }
         ],
         "path": [
           "Result"
-        ]
-      }
-    },
-    {
-      "id": 47,
-      "type": {
-        "def": {
-          "composite": {
-            "fields": [
-              {
-                "name": "status",
-                "type": 28,
-                "typeName": "GovernanceStatus"
-              },
-              {
-                "name": "balance",
-                "type": 3,
-                "typeName": "Balance"
-              },
-              {
-                "name": "fee",
-                "type": 4,
-                "typeName": "u32"
-              },
-              {
-                "name": "payee",
-                "type": 22,
-                "typeName": "Payee"
-              },
-              {
-                "name": "url",
-                "type": 5,
-                "typeName": "Vec<u8>"
-              },
-              {
-                "name": "dataset_id",
-                "type": 6,
-                "typeName": "Hash"
-              },
-              {
-                "name": "dataset_id_content",
-                "type": 6,
-                "typeName": "Hash"
-              }
-            ]
-          }
-        },
-        "path": [
-          "captcha",
-          "captcha",
-          "Provider"
         ]
       }
     },
@@ -3133,7 +3135,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 31
                   }
                 ],
                 "index": 1,
@@ -3149,7 +3151,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 31
           }
         ],
         "path": [
@@ -3161,12 +3163,38 @@
       "id": 49,
       "type": {
         "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "before",
+                "type": 1,
+                "typeName": "BlockNumber"
+              },
+              {
+                "name": "dapp_contract",
+                "type": 7,
+                "typeName": "AccountId"
+              }
+            ]
+          }
+        },
+        "path": [
+          "captcha",
+          "captcha",
+          "LastCorrectCaptcha"
+        ]
+      }
+    },
+    {
+      "id": 50,
+      "type": {
+        "def": {
           "variant": {
             "variants": [
               {
                 "fields": [
                   {
-                    "type": 50
+                    "type": 51
                   }
                 ],
                 "index": 0,
@@ -3175,7 +3203,7 @@
               {
                 "fields": [
                   {
-                    "type": 18
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -3187,51 +3215,15 @@
         "params": [
           {
             "name": "T",
-            "type": 50
+            "type": 51
           },
           {
             "name": "E",
-            "type": 18
+            "type": 12
           }
         ],
         "path": [
           "Result"
-        ]
-      }
-    },
-    {
-      "id": 50,
-      "type": {
-        "def": {
-          "composite": {
-            "fields": [
-              {
-                "name": "status",
-                "type": 28,
-                "typeName": "GovernanceStatus"
-              },
-              {
-                "name": "balance",
-                "type": 3,
-                "typeName": "Balance"
-              },
-              {
-                "name": "owner",
-                "type": 0,
-                "typeName": "AccountId"
-              },
-              {
-                "name": "payee",
-                "type": 25,
-                "typeName": "DappPayee"
-              }
-            ]
-          }
-        },
-        "path": [
-          "captcha",
-          "captcha",
-          "Dapp"
         ]
       }
     },
@@ -3253,7 +3245,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 31
                   }
                 ],
                 "index": 1,
@@ -3269,7 +3261,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 31
           }
         ],
         "path": [
@@ -3281,41 +3273,30 @@
       "id": 52,
       "type": {
         "def": {
-          "variant": {
-            "variants": [
+          "composite": {
+            "fields": [
               {
-                "fields": [
-                  {
-                    "type": 30
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
+                "name": "provider_account",
+                "type": 7,
+                "typeName": "AccountId"
               },
               {
-                "fields": [
-                  {
-                    "type": 18
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
+                "name": "dataset_id",
+                "type": 4,
+                "typeName": "Hash"
+              },
+              {
+                "name": "dataset_id_content",
+                "type": 4,
+                "typeName": "Hash"
               }
             ]
           }
         },
-        "params": [
-          {
-            "name": "T",
-            "type": 30
-          },
-          {
-            "name": "E",
-            "type": 18
-          }
-        ],
         "path": [
-          "Result"
+          "captcha",
+          "captcha",
+          "CaptchaData"
         ]
       }
     },
@@ -3337,7 +3318,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -3353,7 +3334,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 12
           }
         ],
         "path": [
@@ -3370,7 +3351,7 @@
               {
                 "fields": [
                   {
-                    "type": 3
+                    "type": 55
                   }
                 ],
                 "index": 0,
@@ -3379,7 +3360,7 @@
               {
                 "fields": [
                   {
-                    "type": 18
+                    "type": 31
                   }
                 ],
                 "index": 1,
@@ -3391,11 +3372,11 @@
         "params": [
           {
             "name": "T",
-            "type": 3
+            "type": 55
           },
           {
             "name": "E",
-            "type": 18
+            "type": 31
           }
         ],
         "path": [
@@ -3407,41 +3388,20 @@
       "id": 55,
       "type": {
         "def": {
-          "variant": {
-            "variants": [
+          "composite": {
+            "fields": [
               {
-                "fields": [
-                  {
-                    "type": 56
-                  }
-                ],
-                "index": 0,
-                "name": "Ok"
-              },
-              {
-                "fields": [
-                  {
-                    "type": 13
-                  }
-                ],
-                "index": 1,
-                "name": "Err"
+                "name": "history",
+                "type": 9,
+                "typeName": "Vec<Hash>"
               }
             ]
           }
         },
-        "params": [
-          {
-            "name": "T",
-            "type": 56
-          },
-          {
-            "name": "E",
-            "type": 13
-          }
-        ],
         "path": [
-          "Result"
+          "captcha",
+          "captcha",
+          "User"
         ]
       }
     },
@@ -3463,7 +3423,7 @@
               {
                 "fields": [
                   {
-                    "type": 18
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -3479,7 +3439,7 @@
           },
           {
             "name": "E",
-            "type": 18
+            "type": 12
           }
         ],
         "path": [
@@ -3491,10 +3451,42 @@
       "id": 57,
       "type": {
         "def": {
-          "sequence": {
-            "type": 47
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 41
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 31
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
           }
-        }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 41
+          },
+          {
+            "name": "E",
+            "type": 31
+          }
+        ],
+        "path": [
+          "Result"
+        ]
       }
     },
     {
@@ -3515,7 +3507,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -3531,7 +3523,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 12
           }
         ],
         "path": [
@@ -3557,7 +3549,7 @@
               {
                 "fields": [
                   {
-                    "type": 18
+                    "type": 31
                   }
                 ],
                 "index": 1,
@@ -3573,7 +3565,7 @@
           },
           {
             "name": "E",
-            "type": 18
+            "type": 31
           }
         ],
         "path": [
@@ -3585,36 +3577,10 @@
       "id": 60,
       "type": {
         "def": {
-          "composite": {
-            "fields": [
-              {
-                "name": "provider_id",
-                "type": 0,
-                "typeName": "AccountId"
-              },
-              {
-                "name": "provider",
-                "type": 47,
-                "typeName": "Provider"
-              },
-              {
-                "name": "block_number",
-                "type": 4,
-                "typeName": "BlockNumber"
-              },
-              {
-                "name": "dataset_id_content",
-                "type": 6,
-                "typeName": "Hash"
-              }
-            ]
+          "sequence": {
+            "type": 34
           }
-        },
-        "path": [
-          "captcha",
-          "captcha",
-          "RandomProvider"
-        ]
+        }
       }
     },
     {
@@ -3635,7 +3601,7 @@
               {
                 "fields": [
                   {
-                    "type": 13
+                    "type": 12
                   }
                 ],
                 "index": 1,
@@ -3651,7 +3617,7 @@
           },
           {
             "name": "E",
-            "type": 13
+            "type": 12
           }
         ],
         "path": [
@@ -3668,6 +3634,121 @@
               {
                 "fields": [
                   {
+                    "type": 63
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 31
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 63
+          },
+          {
+            "name": "E",
+            "type": 31
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 63,
+      "type": {
+        "def": {
+          "composite": {
+            "fields": [
+              {
+                "name": "provider_account",
+                "type": 7,
+                "typeName": "AccountId"
+              },
+              {
+                "name": "provider",
+                "type": 34,
+                "typeName": "Provider"
+              },
+              {
+                "name": "block_number",
+                "type": 1,
+                "typeName": "BlockNumber"
+              }
+            ]
+          }
+        },
+        "path": [
+          "captcha",
+          "captcha",
+          "RandomProvider"
+        ]
+      }
+    },
+    {
+      "id": 64,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 65
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 12
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 65
+          },
+          {
+            "name": "E",
+            "type": 12
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 65,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
                     "type": 8
                   }
                 ],
@@ -3677,7 +3758,7 @@
               {
                 "fields": [
                   {
-                    "type": 18
+                    "type": 31
                   }
                 ],
                 "index": 1,
@@ -3693,7 +3774,7 @@
           },
           {
             "name": "E",
-            "type": 18
+            "type": 31
           }
         ],
         "path": [
@@ -3702,7 +3783,7 @@
       }
     },
     {
-      "id": 63,
+      "id": 66,
       "type": {
         "def": {
           "primitive": "u64"
@@ -3710,7 +3791,7 @@
       }
     },
     {
-      "id": 64,
+      "id": 67,
       "type": {
         "def": {
           "variant": {}

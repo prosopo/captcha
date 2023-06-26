@@ -20,11 +20,13 @@ import {
     CaptchaStates,
     CaptchaStatus,
     CaptchaWithProof,
+    Dapp,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
     Hash,
     PendingCaptchaRequest,
+    Provider,
     RandomProvider,
 } from '@prosopo/types'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
@@ -48,6 +50,7 @@ import { SubmittableResult } from '@polkadot/api'
 import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
+import { wrapQuery } from '@prosopo/contract'
 import consola from 'consola'
 
 /**
@@ -94,7 +97,8 @@ export class Tasks {
 
         await this.db?.storeDataset(dataset)
 
-        return (await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {})).result
+        const txResult = await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, { value: 0})
+        return txResult.result
     }
 
     // Other tasks
@@ -169,7 +173,7 @@ export class Tasks {
         const { storedCaptchas, receivedCaptchas, captchaIds } =
             await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas)
         const { tree, commitmentId } = await this.buildTreeAndGetCommitmentId(receivedCaptchas)
-        const providerDetails = (await this.contract.methods.getProviderDetails(this.contract.pair.address, {})).value
+        const provider = (await this.contract.methods.getProvider(this.contract.pair.address, {})).value
             .unwrap()
             .unwrap()
         const pendingRecord = await this.db.getDappUserPending(requestHash)
@@ -185,10 +189,10 @@ export class Tasks {
         if (pendingRequest) {
             const commit: UserCommitmentRecord = {
                 id: commitmentId,
-                user: userAccount,
-                dapp: dappAccount,
-                provider: this.contract.pair.address,
-                datasetId: providerDetails.datasetId.toString(),
+                userAccount: userAccount,
+                dappContract: dappAccount,
+                providerAccount: this.contract.pair.address,
+                datasetId: provider.datasetId.toString(),
                 status: CaptchaStatus.pending,
                 userSignature: Array.from(userSignature),
                 requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
@@ -223,7 +227,7 @@ export class Tasks {
      * Validate that the dapp is active in the contract
      */
     async dappIsActive(dappAccount: string): Promise<boolean> {
-        const dapp = (await this.contract.methods.getDappDetails(dappAccount, {})).value.unwrap().unwrap()
+        const dapp: Dapp = await wrapQuery(this.contract.query.getDapp, this.contract.query)(dappAccount)
         //dapp.status.isActive doesn't work: https://substrate.stackexchange.com/questions/6333/how-do-we-work-with-polkadot-js-enums-in-typescript
         return dapp.status.toString() === 'Active'
     }
@@ -232,7 +236,10 @@ export class Tasks {
      * Validate that the provider is active in the contract
      */
     async providerIsActive(providerAccount: string): Promise<boolean> {
-        const provider = (await this.contract.methods.getProviderDetails(providerAccount, {})).value.unwrap().unwrap()
+        const provider: Provider = await wrapQuery(
+            this.contract.query.getProvider,
+            this.contract.query
+        )(providerAccount)
         return provider.status.toString() === 'Active'
     }
 
@@ -367,15 +374,15 @@ export class Tasks {
     async calculateCaptchaSolutions(): Promise<number> {
         try {
             // Get the current datasetId from the contract
-            const providerDetails = (
-                await this.contract.methods.getProviderDetails(this.contract.pair.address, {})
+            const provider = (
+                await this.contract.methods.getProvider(this.contract.pair.address, {})
             ).value
                 .unwrap()
                 .unwrap()
 
             // Get any unsolved CAPTCHA challenges from the database for this datasetId
             const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(
-                providerDetails.datasetId.toString(),
+                provider.datasetId.toString(),
                 CaptchaStates.Unsolved
             )
 
@@ -405,7 +412,7 @@ export class Tasks {
                         const commitmentIds = solutions
                             .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
                             .map((s) => s.commitmentId)
-                        const dataset = await this.db.getDataset(providerDetails.datasetId.toString())
+                        const dataset = await this.db.getDataset(provider.datasetId.toString())
                         dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
                         // store new solutions in database
                         await this.providerSetDataset(dataset)

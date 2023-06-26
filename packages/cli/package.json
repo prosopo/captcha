@@ -7,14 +7,15 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
-    "cli": "node ./dist/cli/cli.js",
+    "cli": "node ./dist/cli.js",
     "start": "node ./dist/start.js",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.0.1",
-    "@polkadot/util-crypto": "12.2.2",
+    "@polkadot/util-crypto": "12.3.2",
     "@prosopo/common": "^0.1.11",
     "@prosopo/env": "^0.1.11",
     "@prosopo/provider": "^0.1.11",

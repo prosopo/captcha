@@ -22,9 +22,9 @@ export default class Contract {
 	readonly address : string;
 	readonly signer : KeyringPair;
 
-	private nativeContract : ContractPromise;
-	private nativeAPI : ApiPromise;
-	private contractAbi: Abi;
+	readonly nativeContract : ContractPromise;
+	readonly nativeAPI : ApiPromise;
+	readonly contractAbi: Abi;
 
 	/**
 	 * @constructor

@@ -14,8 +14,9 @@
 import { ApiPromise, WsProvider } from '@polkadot/api'
 
 const providers = {
-    local: { endpoint: 'ws://substrate-node:9944' },
-    //'polkadot': {'endpoint': 'wss://rpc.polkadot.io'}
+    //local: { endpoint: 'ws://substrate-node:9944' },
+    //polkadot: { endpoint: 'wss://rpc.polkadot.io' },
+    rococo: { endpoint: 'wss://rococo-contracts-rpc.polkadot.io:443' },
 }
 
 async function run() {
@@ -23,7 +24,7 @@ async function run() {
     for (const provider in providers) {
         const wsProvider = new WsProvider(providers[provider].endpoint)
         const api = await ApiPromise.create({ provider: wsProvider })
-        const result = await api.query.contracts.contractInfoOf('5CYKEXWU3L4zWregopd2bTjoZLH9yHBpfXaqkFaTfxacaSA1')
+        const result = await api.query.contracts.contractInfoOf('5FSXVEshU8nQEwCgDwsuPxuNLb9gi4xbEYZPY8GQ7jqqvuGR')
         console.log(result.toHuman())
         process.exit()
     }

@@ -1,2 +1,3 @@
-import "cypress-promise/register";
-import "./commands";
+import './commands'
+import '@cypress/xpath'
+import 'cypress-promise/register'

@@ -16,8 +16,10 @@
 import { Environment } from '@prosopo/env'
 import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { getPair } from '@prosopo/common'
+import { loadEnv } from './env'
 import { processArgs } from './argv'
 async function main() {
+    loadEnv()
     const secret = getSecret()
     const ss58Format = getSs58Format()
     const pairType = getPairType()
@@ -25,6 +27,8 @@ async function main() {
     const pair = await getPair(pairType, ss58Format, secret)
 
     console.log(`Pair address: ${pair.address}`)
+
+    console.log(`Contract address: ${process.env.PROTOCOL_CONTRACT_ADDRESS}`)
 
     const env = new Environment(pair, config)
 

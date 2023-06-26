@@ -25,7 +25,6 @@ export class HttpClientBase {
     }
 
     protected responseHandler = (response: AxiosResponse) => {
-        console.log('API REQUEST', response.request)
         return response.data
     }
 

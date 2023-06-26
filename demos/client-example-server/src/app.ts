@@ -1,5 +1,6 @@
 import { ProsopoServer } from '@prosopo/server'
 import connectionFactory from './utils/connection'
+import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 import memoryServerSetup from './utils/database'
@@ -21,6 +22,8 @@ async function main() {
 
     const app = express()
 
+    app.use(cors({ origin: true, credentials: true }))
+
     app.use(express.urlencoded({ extended: true }))
 
     app.use(express.json())
@@ -37,6 +40,7 @@ async function main() {
     })
 
     const uri = await memoryServerSetup()
+    console.log('mongo uri', uri)
     const mongoose = connectionFactory(uri)
     if (!process.env.REACT_APP_SERVER_MNEMONIC) {
         throw new Error('No mnemonic found')

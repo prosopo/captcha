@@ -88,7 +88,7 @@ jobs:
           cd captcha
           echo $(npx tsc --version)
           cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
-          cp env.development .env.test
+          cp env.test .env.test
           echo "NODE_ENV=test" >> $GITHUB_ENV
           echo $NODE_ENV
         
@@ -104,6 +104,40 @@ jobs:
           docker container ls
           cat .env.test
           npm run test
+
+      - name: Reset the docker containers
+        run: |
+          cd captcha
+          docker compose --file ./docker/docker-compose.test.yml down
+          docker compose --file ./docker/docker-compose.test.yml up -d
+          docker container ls
+
+      - name: Sleep for 10 seconds to give the containers time to start up
+        run: sleep 10s
+        shell: bash
+
+      - name: Deploy the contracts and run the cypress tests on client-example
+        run: |
+          cd captcha
+          cp demos/client-example-server/env.development demos/client-example-server/.env.test
+          cp demos/client-example/env.development demos/client-example/.env.test
+          cp dev/env.test packages/cli/.env.test
+          NODE_ENV=test npm run deploy_protocol
+          NODE_ENV=test npm run deploy_dapp
+          NODE_ENV=test npm run setup
+          NODE_ENV=test npm run start:provider 1>provider.log 2>&1 &
+          cd demos/client-example-server && NODE_ENV=test npm run build && cd ../..
+          NODE_ENV=test npm run start:server 1>server.log 2>&1 &
+          sleep 20s
+          cat provider.log
+          cat server.log
+          cd demos/client-example && NODE_ENV=test npm run build && cd ../..
+          cd demos/client-example && `NODE_ENV=test npm run start 1>../../client-example.log 2>&1 &` && cd ../..
+          ls
+          sleep 30s
+          cat client-example.log
+          cd demos/client-example && NODE_ENV=test npm run cypress:run
+          
 
       - name: Remove the docker containers
         run: |

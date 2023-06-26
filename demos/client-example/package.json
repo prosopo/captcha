@@ -18,16 +18,24 @@
         "web-vitals": "^2.1.4"
     },
     "devDependencies": {
-        "cypress": "^10.8.0",
+        "@cypress/xpath": "^2.0.3",
+        "@types/node": "^20.3.1",
+        "css-loader": "^6.8.1",
+        "cypress": "^12.14.0",
         "cypress-promise": "^1.1.0",
-        "eslint-config-react-app": "^7.0.1"
+        "eslint-config-react-app": "^7.0.1",
+        "html-loader": "^4.2.0",
+        "html-webpack-plugin": "^5.5.3",
+        "interpolate-html-plugin": "^4.0.0",
+        "mini-css-extract-plugin": "^2.7.6"
     },
     "scripts": {
-        "start": "PORT=3001 react-scripts start",
-        "build": "NODE_ENV=production react-scripts build",
-        "test": "react-scripts test",
+        "start": "webpack serve --config webpack.config.base.js",
+        "build": "webpack build --config webpack.config.production.js",
+        "test": "ts-node src/test",
         "eject": "react-scripts eject",
         "cypress:open": "cypress open",
+        "cypress:run": "cypress run",
         "lint:fix": "npx eslint . --fix"
     },
     "eslintConfig": {
