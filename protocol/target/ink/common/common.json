@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xb2c6ebca13fe9efc872d43161577d4ff07ed5ce24c17248ce547e1e26c731422",
+    "hash": "0xd4e95fc6f30feb8d666adf443609223d33c6888f77715c16aa8ad05957a8dd9e",
     "language": "ink! 4.1.0",
     "compiler": "rustc 1.69.0",
     "build_info": {
@@ -55,32 +55,32 @@
         "displayName": [
           "Balance"
         ],
-        "type": 7
+        "type": 10
       },
       "blockNumber": {
         "displayName": [
           "BlockNumber"
         ],
-        "type": 10
+        "type": 13
       },
       "chainExtension": {
         "displayName": [
           "ChainExtension"
         ],
-        "type": 11
+        "type": 14
       },
       "hash": {
         "displayName": [
           "Hash"
         ],
-        "type": 8
+        "type": 11
       },
       "maxEventTopics": 4,
       "timestamp": {
         "displayName": [
           "Timestamp"
         ],
-        "type": 9
+        "type": 12
       }
     },
     "events": [],
@@ -110,6 +110,72 @@
           "type": 3
         },
         "selector": "0x8dd15f8f"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Print and get the caller bytes of this function",
+          " This will print and get the caller's account in byte format, e.g. [1,2,3...32]"
+        ],
+        "label": "get_caller_bytes",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 7
+        },
+        "selector": "0x0a7ff7cd"
+      },
+      {
+        "args": [
+          {
+            "label": "account",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 4
+            }
+          }
+        ],
+        "default": false,
+        "docs": [
+          " Print and get the caller bytes of this function",
+          " This will print and get the caller's account in byte format, e.g. [1,2,3...32]"
+        ],
+        "label": "get_account_bytes",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 7
+        },
+        "selector": "0xf2f184d4"
+      },
+      {
+        "args": [],
+        "default": false,
+        "docs": [
+          " Get the git commit id from when this contract was built"
+        ],
+        "label": "get_git_commit_id",
+        "mutates": false,
+        "payable": false,
+        "returnType": {
+          "displayName": [
+            "ink",
+            "MessageResult"
+          ],
+          "type": 8
+        },
+        "selector": "0x3685e994"
       }
     ]
   },
@@ -279,12 +345,107 @@
       "id": 7,
       "type": {
         "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 5
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 2
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 5
+          },
+          {
+            "name": "E",
+            "type": 2
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "type": {
+        "def": {
+          "variant": {
+            "variants": [
+              {
+                "fields": [
+                  {
+                    "type": 9
+                  }
+                ],
+                "index": 0,
+                "name": "Ok"
+              },
+              {
+                "fields": [
+                  {
+                    "type": 2
+                  }
+                ],
+                "index": 1,
+                "name": "Err"
+              }
+            ]
+          }
+        },
+        "params": [
+          {
+            "name": "T",
+            "type": 9
+          },
+          {
+            "name": "E",
+            "type": 2
+          }
+        ],
+        "path": [
+          "Result"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "type": {
+        "def": {
+          "array": {
+            "len": 20,
+            "type": 6
+          }
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": {
+        "def": {
           "primitive": "u128"
         }
       }
     },
     {
-      "id": 8,
+      "id": 11,
       "type": {
         "def": {
           "composite": {
@@ -304,7 +465,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 12,
       "type": {
         "def": {
           "primitive": "u64"
@@ -312,7 +473,7 @@
       }
     },
     {
-      "id": 10,
+      "id": 13,
       "type": {
         "def": {
           "primitive": "u32"
@@ -320,7 +481,7 @@
       }
     },
     {
-      "id": 11,
+      "id": 14,
       "type": {
         "def": {
           "variant": {}

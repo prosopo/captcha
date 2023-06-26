@@ -6,13 +6,6 @@ import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './ca
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw)
-    // console.log(dataset.captchas[0])
-    // dataset.captchas.map((captcha: CaptchaWithoutId) => {
-    //     if (captcha.target === 'car') {
-    //         console.log(captcha)
-    //     }
-    // })
-    // process.exit(0)
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(

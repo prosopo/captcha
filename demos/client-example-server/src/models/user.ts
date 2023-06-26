@@ -19,6 +19,9 @@ const UserSchema = new Schema<UserInterface>({
         type: mongoose.SchemaTypes.String,
         required: true,
     },
+    id: {
+        type: mongoose.SchemaTypes.Number,
+    },
 })
 
 export default UserSchema

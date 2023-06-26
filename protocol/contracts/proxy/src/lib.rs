@@ -9,8 +9,6 @@ pub mod proxy {
         0, 0,
     ]; // the account which can instantiate the contract
        // alice: [ 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125, ]
-    const ENV_ADMIN_BYTES: [u8; 32] = ENV_AUTHOR_BYTES; // the admin which can control this contract. set to author/instantiator by default
-    const ENV_PROXY_DESTINATION_BYTES: [u8; 32] = [0; 32]; // the destination contract to forward to, set to 0 by default
 
     use common::err;
     #[allow(unused_imports)]
@@ -39,8 +37,13 @@ pub mod proxy {
         /// later changed the `forward_to` address.
         #[ink(constructor)]
         pub fn new() -> Self {
-            if Self::env().caller() != AccountId::from(ENV_AUTHOR_BYTES) {
-                panic!("Not authorised to instantiate this contract");
+            let author = AccountId::from(ENV_AUTHOR_BYTES);
+            let caller = Self::env().caller();
+            if caller != author {
+                panic!(
+                    "Not authorised to instantiate this contract: {:?} != {:?}",
+                    caller, author
+                );
             }
             Self::new_unguarded()
         }
@@ -49,19 +52,35 @@ pub mod proxy {
             Self {}
         }
 
+        /// Get the git commit id from when this contract was built
+        #[ink(message)]
+        pub fn get_git_commit_id(&self) -> [u8; 20] {
+            let env_git_commit_id: [u8; 20] = [
+                246, 103, 20, 204, 216, 217, 107, 3, 196, 247, 37, 201, 202, 147, 117, 92, 178, 37,
+                60, 56,
+            ];
+            env_git_commit_id
+        }
+
         #[ink(message)]
         pub fn get_author(&self) -> AccountId {
             AccountId::from(ENV_AUTHOR_BYTES)
         }
 
+        /// the admin which can control this contract. set to author/instantiator by default
         #[ink(message)]
         pub fn get_admin(&self) -> AccountId {
-            AccountId::from(ENV_ADMIN_BYTES)
+            let env_admin_bytes: [u8; 32] = ENV_AUTHOR_BYTES;
+            AccountId::from(env_admin_bytes)
         }
 
         #[ink(message)]
         pub fn get_proxy_destination(&self) -> AccountId {
-            AccountId::from(ENV_PROXY_DESTINATION_BYTES)
+            let env_proxy_destination_bytes: [u8; 32] = [
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0,
+            ]; // the destination contract to forward to, set to 0 by default
+            AccountId::from(env_proxy_destination_bytes)
         }
 
         fn check_is_admin(&self, account: AccountId) -> Result<(), Error> {
