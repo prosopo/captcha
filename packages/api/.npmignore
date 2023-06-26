@@ -5,6 +5,7 @@
 tsconfig.json
 tsconfig.*.json
 tsconfig.tsbuildinfo
+env.production
 env.development
 env.test
 .env.*
