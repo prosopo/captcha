@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/client-example-server",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Backend for client-example",
   "main": "dist/app.js",
   "scripts": {
@@ -22,11 +22,11 @@
   },
   "homepage": "https://github.com/prosopo/client-example-server#readme",
   "dependencies": {
-    "@prosopo/api": "^0.1.13",
-    "@prosopo/contract": "^0.1.13",
-    "@prosopo/procaptcha": "^0.1.13",
-    "@prosopo/server": "^0.1.13",
-    "@prosopo/types": "^0.1.13",
+    "@prosopo/api": "^0.1.14",
+    "@prosopo/contract": "^0.1.14",
+    "@prosopo/procaptcha": "^0.1.14",
+    "@prosopo/server": "^0.1.14",
+    "@prosopo/types": "^0.1.14",
     "@typegoose/auto-increment": "3.3.0",
     "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",

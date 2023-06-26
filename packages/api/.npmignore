@@ -6,3 +6,4 @@ tsconfig.json
 tsconfig.tsbuildinfo
 env.development
 env.test
+.env.*

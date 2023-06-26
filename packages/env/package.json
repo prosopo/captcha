@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/env",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Path env prosopo environment",
   "main": "dist/index.js",
   "scripts": {
@@ -13,12 +13,12 @@
   "dependencies": {
     "dotenv": "^16.0.1",
     "@polkadot/util-crypto": "12.3.2",
-    "@prosopo/common": "^0.1.13",
-    "@prosopo/contract": "^0.1.13",
-    "@prosopo/database": "^0.1.13",
-    "@prosopo/types": "^0.1.13",
-    "@prosopo/types-database": "^0.1.13",
-    "@prosopo/types-env": "^0.1.13"
+    "@prosopo/common": "^0.1.14",
+    "@prosopo/contract": "^0.1.14",
+    "@prosopo/database": "^0.1.14",
+    "@prosopo/types": "^0.1.14",
+    "@prosopo/types-database": "^0.1.14",
+    "@prosopo/types-env": "^0.1.14"
   },
   "devDependencies": {
     "typescript": "^4.9.4"
