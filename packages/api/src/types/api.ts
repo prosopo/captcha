@@ -13,10 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
-// declare module "*.json" {
-//   const value: any;
-//   export default value;
-// }
 
 import { Captcha, MerkleProof } from '@prosopo/types'
 
@@ -75,22 +71,12 @@ export interface AccountCreatorConfig {
 
 export interface ProsopoNetwork {
     endpoint: string
-    prosopoContract: {
+    contract: {
         address: string
         name: string
     }
-    dappContract: {
+    dappAccount: {
         address: string
         name: string
     }
-}
-
-export interface ProsopoServerConfig {
-    logLevel: string
-    defaultEnvironment: string
-    web2: boolean
-    serverUrl: string
-    solutionThreshold: number
-    dappName: string
-    networks: { [key: string]: ProsopoNetwork }
 }

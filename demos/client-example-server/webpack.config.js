@@ -6,6 +6,7 @@ const webpack = require('webpack')
 loadEnv(rootDir)
 const log = logger(process.env.LOG_LEVEL || 'info', 'webpack.config.js')
 const mode = process.env.NODE_ENV || 'development'
+log.info('REACT_APP_SUBSTRATE_NODE_URL:', process.env.REACT_APP_SUBSTRATE_NODE_URL)
 log.log('Mode:', mode)
 module.exports = (env, argv) => {
     const libraryName = 'prosopo_client_example_server'
@@ -61,9 +62,7 @@ module.exports = (env, argv) => {
                 'process.env.REACT_APP_API_PATH_PREFIX': JSON.stringify(
                     process.env.REACT_APP_API_PATH_PREFIX || '/v1/prosopo'
                 ),
-                'process.env.REACT_APP_DAPP_CONTRACT_ADDRESS': JSON.stringify(
-                    process.env.REACT_APP_DAPP_CONTRACT_ADDRESS || ''
-                ),
+                'process.env.REACT_APP_DAPP_SITE_KEY': JSON.stringify(process.env.REACT_APP_DAPP_SITE_KEY || ''),
                 'process.env.REACT_APP_SUBSTRATE_NODE_URL': JSON.stringify(
                     process.env.REACT_APP_SUBSTRATE_NODE_URL || 'ws://localhost:9944'
                 ),

@@ -1,0 +1,10 @@
+/node_modules/
+/src/
+/tests/
+/artifacts/
+tsconfig.json
+tsconfig.tsbuildinfo
+env.development
+env.test
+.env.*
+webpack.*

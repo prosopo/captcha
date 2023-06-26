@@ -53,8 +53,10 @@ export const ExtensionAccountSelect = ({
             isOptionEqualToValue={(option, value) => option.address === value.address}
             onChange={(event: SyntheticEvent<Element, Event>, value: InjectedAccountWithMeta | null) => {
                 if (value) {
+                    console.log('Selected account:', value)
                     onChange(value.address)
                 } else {
+                    console.log('Deselected account')
                     onChange('')
                 }
             }}

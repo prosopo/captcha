@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
-import { AssetsResolver } from '@prosopo/types'
+import { AssetsResolver, EnvironmentTypes } from '@prosopo/types'
 import { ContractAbi } from '@prosopo/types'
 import { Database } from '@prosopo/types-database' // config
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { Logger } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoBasicConfig } from '@prosopo/types'
 import { WsProvider } from '@polkadot/rpc-provider'
 export interface ProsopoEnvironment {
-    config: ProsopoConfig
+    config: ProsopoBasicConfig
     db: Database | undefined
     contractInterface: any
     contractAddress: string
-    defaultEnvironment: string
+    defaultEnvironment: EnvironmentTypes
     contractName: string
     abi: ContractAbi
     logger: Logger

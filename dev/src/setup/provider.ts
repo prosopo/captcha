@@ -11,24 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Environment } from '@prosopo/env'
 import { IProviderAccount } from '@prosopo/types'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import { ProviderEnvironment } from '@prosopo/types-env'
+import { ReturnNumber } from '@727-ventures/typechain-types'
 import { Tasks } from '@prosopo/provider'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds'
 import { hexToU8a } from '@polkadot/util'
 import { loadJSONFile } from '@prosopo/cli'
 import { stringToHexPadded, wrapQuery } from '@prosopo/contract'
-import { BN } from '@polkadot/util'
-import { ReturnNumber } from '@727-ventures/typechain-types'
 
-export async function registerProvider(env: Environment, account: IProviderAccount) {
+export async function registerProvider(env: ProviderEnvironment, account: IProviderAccount) {
     try {
-        const provider = (await env.contractInterface.query.getProvider(account.address)).value
-            .unwrap()
-            .unwrap()
+        const provider = (await env.contractInterface.query.getProvider(account.address)).value.unwrap().unwrap()
         if (provider.status.toString() === 'Active') {
             env.logger.info('Provider exists and is active, skipping registration.')
             return
@@ -41,7 +37,10 @@ export async function registerProvider(env: Environment, account: IProviderAccou
 
         account.address = providerKeyringPair.address
 
-        const result: ReturnNumber = await wrapQuery(env.contractInterface.query.getProviderStakeThreshold, env.contractInterface.query)()
+        const result: ReturnNumber = await wrapQuery(
+            env.contractInterface.query.getProviderStakeThreshold,
+            env.contractInterface.query
+        )()
         const stakeAmount = result.rawNumber
 
         // use the minimum stake amount from the contract to create a reasonable stake amount
@@ -57,7 +56,7 @@ export async function registerProvider(env: Environment, account: IProviderAccou
     }
 }
 
-export async function setupProvider(env: ProsopoEnvironment, provider: IProviderAccount): Promise<void> {
+export async function setupProvider(env: ProviderEnvironment, provider: IProviderAccount): Promise<void> {
     if (!provider.pair) {
         throw new ProsopoEnvError('DEVELOPER.MISSING_PROVIDER_PAIR', undefined, undefined, { provider })
     }
@@ -88,10 +87,7 @@ export async function setupProvider(env: ProsopoEnvironment, provider: IProvider
     if (!providerExists) {
         await tasks.contract.tx.providerRegister(...providerRegisterArgs)
     }
-    const registeredProvider = await wrapQuery(
-        tasks.contract.query.getProvider,
-        tasks.contract.query
-    )(provider.address)
+    const registeredProvider = await wrapQuery(tasks.contract.query.getProvider, tasks.contract.query)(provider.address)
     logger.info(registeredProvider)
     logger.info('   - providerStake')
     const providerUpdateArgs: Parameters<typeof tasks.contract.query.providerUpdate> = [
