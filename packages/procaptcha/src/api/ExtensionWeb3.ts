@@ -1,6 +1,7 @@
-import { Account, ProcaptchaConfig } from '../types'
+import { Account } from '../types'
 import { AccountNotFoundError, ExtensionNotFoundError } from './errors'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
+import { ProcaptchaClientConfig } from '@prosopo/types'
 import { web3Enable } from '@polkadot/extension-dapp'
 import Extension from './Extension'
 
@@ -8,7 +9,7 @@ import Extension from './Extension'
  * Class for interfacing with web3 accounts.
  */
 export default class ExtWeb3 extends Extension {
-    public async getAccount(config: ProcaptchaConfig): Promise<Account> {
+    public async getAccount(config: ProcaptchaClientConfig): Promise<Account> {
         const { dappName, userAccountAddress: address } = config
 
         if (!address) {

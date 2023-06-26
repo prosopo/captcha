@@ -11,17 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { getPair } from '@prosopo/common'
-import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
+import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { Environment } from '@prosopo/env'
+import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
+import { getPair } from '@prosopo/common'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
 async function main() {
     const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
-    const env = new Environment(pair, defaultConfig())
+    const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     const tasks = new Tasks(env)
     const dappAccounts = await tasks.contract['dappAccounts']()

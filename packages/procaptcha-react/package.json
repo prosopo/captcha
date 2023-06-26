@@ -28,19 +28,20 @@
         "@prosopo/procaptcha": "^0.1.11",
         "i18next": "^22.5.0",
         "react": "^18.2.0",
-        "react-dom": "^18.2.0"
+        "react-dom": "^18.2.0",
+        "zod": "^3.17.9"
     },
     "devDependencies": {
         "typescript": "^4.9.4"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/prosopo/procaptcha-react.git"
+        "url": "git+https://github.com/prosopo/captcha.git"
     },
     "bugs": {
-        "url": "https://github.com/prosopo/procaptcha-react/issues"
+        "url": "https://github.com/prosopo/captcha/issues"
     },
-    "homepage": "https://github.com/prosopo/procaptcha-react#readme",
+    "homepage": "https://github.com/prosopo/captcha#readme",
     "description": "",
     "publishConfig": {
         "registry": "https://registry.npmjs.org"

@@ -1,97 +1,67 @@
-# Captcha
-Prosopo captcha protection for verifying human users on web applications.
+# Prosopo Procaptcha
 
-# TODO the below instructions are out of date
+Prosopo Procaptcha is a drop-replacement for reCAPTCHA and hCaptcha that protects user privacy and collects zero data.
 
-- [provider](https://github.com/prosopo/provider)
-- [contract](https://github.com/prosopo/contract)
-- [procaptcha](https://github.com/prosopo/procaptcha)
-- [procaptcha-react](https://github.com/prosopo/procaptcha-react)
-- [client-example](https://github.com/prosopo/client-example)
-- [demo-nft-marketplace](https://github.com/prosopo/demo-nft-marketplace)
+Sign up at [Prosopo](https://prosopo.io/signup) to get your sitekey today. You need a sitekey to use this library.
 
-# Prerequisites
-- ability to run bash scripts
-- docker (tested on v20.10.8 / v20.10.11/ v20.10.14, used 4CPUs, 6GB of memory, 2GB of swap)
-- [docker compose v2+](https://www.docker.com/blog/announcing-compose-v2-general-availability/)
-- [script repository](https://github.com/prosopo/scripts) cloned locally 
+# Implementation
 
-# Usage
+Prosopo captcha can be easily implemented in your application via a script tag or a React component.
 
-```bash
-git clone git@github.com:prosopo/workspaces.git
-````
+## Add the Procaptcha Widget to your Web page via a script tag
 
-## Development Environment Set Up
+Procaptcha requires two small pieces of client side code to render a captcha widget on an HTML page. First, you must
+include the Procaptcha JavaScript resource somewhere in your HTML page. The <script> must be loaded via HTTPS and can be
+placed anywhere on the page. Inside the <head> tag or immediately after the .procaptcha container are both fine.
 
-The following instructions explain how to set up a developer environment in which changes can be made to the various JavaScript packages.
+```html
 
-
-### Pull Submodules
-
-Start by pulling submodules. Run the following command from the root of the integration repository.
-
-```bash
-git submodule update --init --recursive --force --checkout
+<script src="https://js.prosopo.io/procaptcha_bundle.main.bundle.js" async defer></script>
 ```
 
-### Set up Containers
+Second, you must add an empty DOM container where the Procaptcha widget will be inserted automatically. The container is
+typically a <div> (but can be any element) and must have class `procaptcha` and a `data-sitekey` attribute set to your
+public
+site key.
 
-Setup your integration containers by running the following command from the root of the [scripts](https://github.com/prosopo/scripts) repository.
+```html
 
-```bash
-docker compose --file ./docker/docker-compose.development.yml up -d
+<body>
+<div class="procaptcha" data-sitekey="your_site_key"></div>
+</body>
 ```
 
-This does the following:
+Typically, you'll want to include the empty .procaptcha container inside an HTML form. When a captcha is successfully
+solved, a hidden JSON payload will automatically be added to your form that you can then POST to your server for verification.
+You can retrieve it server side with POST parameter `procaptcha-response`.
 
-1. Pulls and starts a substrate node container containing pre-deployed [protocol](https://github.com/prosopo/protocol/), [dapp-example](https://github.com/prosopo/dapp-example), and [demo-nft-marketplace](https://github.com/prosopo/demo-nft-marketplace) contracts.
-2. Pulls and starts up a mongodb container.
+Here's a full example where Procaptcha is being used to protect a signup form from automated abuse. When the form is
+submitted, the `procaptcha-response` token will be included with the email and password POST data after the captcha is
+solved.
 
-### Install node modules
-
-Install the node modules and build the workspace by running the following command from the root of the integration repository.
-
-```bash
-npm i && npm run build
+```html
+<html>
+  <head>
+    <title>Procaptcha Demo</title>
+    <script src="https://js.prosopo.io/procaptcha_bundle.main.bundle.js" async defer></script>
+  </head>
+  <body>
+    <form action="" method="POST">
+      <input type="text" name="email" placeholder="Email" />
+      <input type="password" name="password" placeholder="Password" />
+      <div class="procaptcha" data-sitekey="your_site_key"></div>
+      <br />
+      <input type="submit" value="Submit" />
+    </form>
+  </body>
+</html>
 ```
 
-### Set up a Provider
+## Add the Procaptcha Widget to your Web page using a React Component
 
-Providers are the nodes in the network that supply CATPCHA. Run the following command from the root of the integration repository to register a Provider and a Dapp in the Protocol contract and start the Provider API.
-
-```bash
-npm run setup && npm run start
-```
-
-You can simply run `npm run start` on subsequent runs.
-
-#### Command Details
-| Command         | Description                                                |
-|-----------------|------------------------------------------------------------|
-| `npm run setup` | Registers the Provider and a Dapp in the Protocol contract |
-| `npm run start` | Starts the provider API                                    |
-
-### Debugging and Testing a Frontend App
-
-You can now start one of the frontend demos to begin receiving CAPTCHA challenges in the browser. See the READMEs in each of the demos for information on how to run them.
-
-- [demo-nft-marketplace](https://github.com/prosopo/demo-nft-marketplace) (full marketplace)
-- [client-example](https://github.com/prosopo/client-example) (minimal implementation)
+TODO
 
 
-### Running Tests
 
-Stop your development environment, if it is running.
 
-```bash
-docker compose --file docker-compose.development.yml down
-```
 
-Set up the test environment and run the tests by running the following command from the root of the integration repository.
-
-```bash
-npm run test
-```
-
-This will create a test docker environment, register a test Provider, and create a test `env` file before running the tests in [provider](https://github.com/prosopo/provider).

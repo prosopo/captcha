@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with procaptcha.  If not, see <http://www.gnu.org/licenses/>.
 import {
+    AccountId,
     ApiPaths,
     CaptchaSolution,
     CaptchaSolutionBody,
@@ -21,22 +22,28 @@ import {
     RandomProvider,
     VerifySolutionBodyType,
 } from '@prosopo/types'
-import { CaptchaSolutionResponse, GetCaptchaResponse, ProsopoNetwork, VerificationResponse } from '../types'
+import { CaptchaSolutionResponse, GetCaptchaResponse, VerificationResponse } from '../types'
+import { NetworkConfig } from '@prosopo/types'
 import HttpClientBase from './HttpClientBase'
 
 export default class ProviderApi extends HttpClientBase {
-    private network: ProsopoNetwork
+    private network: NetworkConfig
+    private account: AccountId
 
-    constructor(network: ProsopoNetwork, providerUrl: string) {
+    constructor(network: NetworkConfig, providerUrl: string, account: AccountId) {
+        if (!providerUrl.startsWith('http')) {
+            providerUrl = `https://${providerUrl}`
+        }
         console.log('ProviderApi', providerUrl)
         super(providerUrl)
         this.network = network
+        this.account = account
     }
 
     public getCaptchaChallenge(userAccount: string, randomProvider: RandomProvider): Promise<GetCaptchaResponse> {
         const { provider } = randomProvider
         const { blockNumber } = randomProvider
-        const dappAccount = this.network.dappContract.address
+        const dappAccount = this.account
         const url = `${ApiPaths.GetCaptchaChallenge}/${provider.datasetId}/${userAccount}/${dappAccount}/${blockNumber
             .toString()
             .replace(/,/g, '')}`
@@ -55,7 +62,7 @@ export default class ProviderApi extends HttpClientBase {
             captchas,
             requestHash,
             user: userAccount,
-            dapp: this.network.dappContract.address,
+            dapp: this.account,
             salt,
             signature,
         })

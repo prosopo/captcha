@@ -6,11 +6,12 @@
       "es6",
       "dom"
     ],
+    "resolveJsonModule": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "composite": true,
     "jsx": "react-jsx",
-    "types": ["cypress", "cypress-xpath", "node"]
+    "types": ["cypress", "@cypress/xpath", "node"]
   },
   "ts-node": {
     // these options are overrides used only by ts-node

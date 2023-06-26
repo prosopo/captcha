@@ -1,8 +1,24 @@
 <html>
 <head>
-    <script src="procaptcha_bundle.main.bundle.js?render=5FUiGh7zLC21m5gvu4kUK2qVbyPJUPUmRArQDr1csDPjqJPd"></script>
+    <link href="//cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <title>Procaptcha demo: Simple page</title>
+    <script src="procaptcha_bundle.main.bundle.js" async defer></script>
 </head>
 <body>
-<div id="procaptcha"></div>
+<div class="mui-container">
+    <form action="?" class="mui-form">
+        <legend>Login</legend>
+        <div class="mui-textfield mui-textfield--float-label">
+            <label>Email Address</label>
+            <input type="email" required>
+        </div>
+        <div class="mui-textfield mui-textfield--float-label">
+            <label>Password</label>
+            <input type="password" required>
+        </div>
+        <div class="procaptcha" data-sitekey="YOUR_SITE_KEY"></div>
+        <input type="submit" class="mui-btn mui-btn--raised">
+    </form>
+</div>
 </body>
 </html>
