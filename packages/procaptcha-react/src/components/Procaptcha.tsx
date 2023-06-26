@@ -148,7 +148,6 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         flexWrap: 'wrap',
-                        color: 'black',
                         backgroundColor: 'white',
                     }}
                 >
@@ -195,7 +194,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                     </Box>
                                 </Box>
                             </Box>
-                            <Box p={1}>
+                            <Box p={1} sx={{ color: 'black' }}>
                                 <Typography>I am a human</Typography>
                             </Box>
                         </Box>
