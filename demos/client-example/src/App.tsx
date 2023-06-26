@@ -1,12 +1,9 @@
-import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
-import { useState } from 'react'
-
-import { ProcaptchaConfigOptional, ProcaptchaOutput } from '@prosopo/procaptcha'
-
-import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react/dist/components'
-
 import './App.css'
-import { ApiParams, EnvironmentTypes } from '@prosopo/types'
+import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
+import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
+import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react/dist/components'
+import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
+import { useState } from 'react'
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*', // Required for CORS support to work
@@ -135,7 +132,8 @@ function App() {
         },
         web2: process.env.REACT_APP_WEB2 === 'true',
         dappName: 'client-example',
-        defaultEnvironment: (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypes.development,
+        defaultEnvironment:
+            (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         accountCreator: {
             area: { width: 300, height: 300 },
             offsetParameter: 2001000001,

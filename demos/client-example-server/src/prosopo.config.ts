@@ -13,13 +13,13 @@
 // limitations under the License.
 // import {ProsopoConfig} from './types';
 
+import { EnvironmentTypesSchema, ProsopoServerConfig } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
-import { ProsopoServerConfig } from '@prosopo/types'
 
 export default () =>
     ({
         logLevel: process.env.LOG_LEVEL || LogLevel.Debug,
-        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT || 'development', // enviromental variables - TODO: check through other repos
+        defaultEnvironment: process.env.DEFAULT_ENVIRONMENT || EnvironmentTypesSchema.enum.development, // enviromental variables
         web2: process.env.REACT_APP_WEB2 || true,
         serverUrl:
             process.env.REACT_APP_SERVER_URL && process.env.REACT_APP_SERVER_PORT
