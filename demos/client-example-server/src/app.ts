@@ -1,4 +1,6 @@
 import { ProsopoServer } from '@prosopo/server'
+import { getPair } from '@prosopo/common'
+import { getPairType, getSs58Format } from '@prosopo/cli'
 import connectionFactory from './utils/connection'
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -49,8 +51,10 @@ async function main() {
     const config = prosopoConfig()
 
     console.log('config', config)
-
-    const prosopoServer = new ProsopoServer(process.env.REACT_APP_SERVER_MNEMONIC, config)
+    const pairType = getPairType()
+    const ss58Format = getSs58Format()
+    const pair = await getPair(pairType, ss58Format, process.env.REACT_APP_SERVER_MNEMONIC)
+    const prosopoServer = new ProsopoServer(pair, config)
 
     app.use(routesFactory(mongoose, prosopoServer))
 
