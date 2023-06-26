@@ -71,7 +71,7 @@
     "stash:clear": "npm run --silent gitmod -- git stash clear",
     "version": "npm --no-git-tag-version --allow-same-version --workspaces --workspaces-update version",
     "publish:dry-run": "npm --workspaces publish --dry-run",
-    "publish": "npm --workspaces publish",
+    "publish": "npm --workspaces publish --access=public",
     "ls:ws": "npm run --workspaces env | grep npm_package_name | cut -d '=' -f 2",
     "cli": "npm -w @prosopo/cli run cli",
     "setup": "npm -w @prosopo/dev run setup",

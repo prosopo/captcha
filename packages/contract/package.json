@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/contract",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "author": "PROSOPO LIMITED <info@prosopo.io>",
   "license": "Apache-2.0",
   "scripts": {
@@ -11,7 +11,9 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": [ "dist" ],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": "./dist/index.js",
     "./types": "./dist/types/index.js",
@@ -39,8 +41,8 @@
     "@polkadot/types-create": "10.9.1",
     "@polkadot/util": "12.3.2",
     "@polkadot/util-crypto": "12.3.2",
-    "@prosopo/common": "^0.1.11",
-    "@prosopo/types": "^0.1.11",
+    "@prosopo/common": "^0.1.13",
+    "@prosopo/types": "^0.1.13",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
