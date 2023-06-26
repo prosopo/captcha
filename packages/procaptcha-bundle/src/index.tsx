@@ -1,4 +1,4 @@
-import { ApiParams, EnvironmentTypes, ProcaptchaOutput } from '@prosopo/types'
+import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
@@ -10,7 +10,8 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     }
     return {
         logLevel: LogLevel.Info,
-        defaultEnvironment: (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypes.development,
+        defaultEnvironment:
+            (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         userAccountAddress: '',
         web2: true,
         dappName: 'Prosopo',
@@ -18,7 +19,7 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
             address: siteKey,
         },
         networks: {
-            [EnvironmentTypes.development]: {
+            [EnvironmentTypesSchema.enum.development]: {
                 endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://127.0.0.1:9944',
                 contract: {
                     address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
