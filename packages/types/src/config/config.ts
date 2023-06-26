@@ -115,15 +115,14 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
     z.object({
         userAccountAddress: z.string().optional(),
         web2: z.boolean(),
-        solutionThreshold: z.number().positive(),
+        solutionThreshold: z.number().positive().max(100),
         dappName: z.string(),
     })
 )
 
-export const ProsopoServerConfigSchema = ProsopoBasicConfigSchema.merge(
+export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
     z.object({
         serverUrl: z.string().url(),
-        solutionThreshold: z.number().positive().max(100),
     })
 )
 

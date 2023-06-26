@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client'
 
 function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     if (!siteKey) {
-        siteKey = process.env.PROSOPO_SITE_KEY || ''
+        siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || ''
     }
     return {
         logLevel: LogLevel.Info,
