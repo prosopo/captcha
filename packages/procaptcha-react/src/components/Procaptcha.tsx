@@ -194,8 +194,8 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                     </Box>
                                 </Box>
                             </Box>
-                            <Box p={1} sx={{ color: 'black' }}>
-                                <Typography>I am a human</Typography>
+                            <Box p={1}>
+                                <Typography sx={{ color: 'black' }}>I am a human</Typography>
                             </Box>
                         </Box>
                         {/* <Box p={1}>
