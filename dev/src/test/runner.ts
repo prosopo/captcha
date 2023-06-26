@@ -1,4 +1,4 @@
-import { DatabaseTypes, EnvironmentTypes, ProsopoConfigSchema } from '@prosopo/types'
+import { DatabaseTypes, EnvironmentTypesSchema, ProsopoConfigSchema } from '@prosopo/types'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
 import { getLogLevel, loadEnv } from '@prosopo/cli'
 import { glob } from 'glob'
@@ -9,7 +9,7 @@ const logLevel = getLogLevel()
 const testConfig = {
     logLevel,
     contract: { abi: '../contract/src/abi/prosopo.json' }, // Deprecated for abiJson.
-    defaultEnvironment: EnvironmentTypes.development,
+    defaultEnvironment: EnvironmentTypesSchema.enum.development,
     account: {
         password: '',
         address: '',
@@ -40,7 +40,7 @@ const testConfig = {
         captchaBlockRecency: 10,
     },
     database: {
-        development: { type: DatabaseTypes.mongoMemory, endpoint: '', dbname: 'prosopo', authSource: '' },
+        development: { type: DatabaseTypes.enum.mongoMemory, endpoint: '', dbname: 'prosopo', authSource: '' },
     },
     assets: {
         absolutePath: '',

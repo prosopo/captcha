@@ -122,7 +122,6 @@ export const Manager = (
             userAccountAddress: '',
             ...configOptional,
         }
-        console.log(config)
         // overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user changes account in the middle of the captcha process.
         if (state.account) {
             config.userAccountAddress = state.account.account.address

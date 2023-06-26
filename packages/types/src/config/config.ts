@@ -15,36 +15,22 @@
 import { LogLevel } from '@prosopo/common'
 import { z } from 'zod'
 
-export enum DatabaseTypes {
-    mongo = 'mongo',
-    mongoMemory = 'mongoMemory',
-}
+export const DatabaseTypes = z.enum(['mongo', 'mongoMemory'])
 
-export enum EnvironmentTypes {
-    development = 'development',
-    rococo = 'rococo',
-    kusama = 'kusama',
-    polkadot = 'polkadot',
-    shiden = 'shiden',
-}
+export const EnvironmentTypesSchema = z.enum(['development', 'rococo', 'kusama', 'polkadot', 'shiden'])
 
-const EnvironmentTypesSchema = z.nativeEnum(EnvironmentTypes)
+export type EnvironmentTypes = z.infer<typeof EnvironmentTypesSchema>
 
-export enum NetworkNames {
-    development = 'development',
-    rococo = 'rococo',
-    kusama = 'kusama',
-    polkadot = 'polkadot',
-    shiden = 'shiden',
-}
+// TODO decide if environment should be development / staging / production instead of rococo / kusama / polkadot
+export const NetworkNamesSchema = EnvironmentTypesSchema
 
-const NetworkNamesSchema = z.nativeEnum(NetworkNames)
+export type NetworkNames = typeof NetworkNamesSchema
 
 export const DatabaseConfigSchema = z
     .record(
         EnvironmentTypesSchema,
         z.object({
-            type: z.nativeEnum(DatabaseTypes),
+            type: z.string(),
             endpoint: z.string(),
             dbname: z.string(),
             authSource: z.string(),
@@ -63,7 +49,7 @@ export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 
 export const ProsopoBaseConfigSchema = z.object({
     logLevel: z.nativeEnum(LogLevel),
-    defaultEnvironment: z.nativeEnum(EnvironmentTypes).default(EnvironmentTypes.development),
+    defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.development),
     // The account with which to query the contract and sign transactions
     account: z.object({
         address: z.string(),
@@ -125,18 +111,6 @@ export const ProsopoCaptchaSolutionConfigSchema = z.object({
     captchaBlockRecency: z.number().positive().min(2),
 })
 
-export const ProsopoServerConfigSchema = ProsopoBasicConfigSchema.merge(
-    z.object({
-        userAccountAddress: z.string().optional(),
-        web2: z.boolean(),
-        serverUrl: z.string().url(),
-        solutionThreshold: z.number().positive(),
-        dappName: z.string(),
-    })
-)
-
-export type ProsopoServerConfig = z.infer<typeof ProsopoServerConfigSchema>
-
 export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
     z.object({
         userAccountAddress: z.string().optional(),
@@ -145,6 +119,15 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
         dappName: z.string(),
     })
 )
+
+export const ProsopoServerConfigSchema = ProsopoBasicConfigSchema.merge(
+    z.object({
+        serverUrl: z.string().url(),
+        solutionThreshold: z.number().positive().max(100),
+    })
+)
+
+export type ProsopoServerConfig = z.infer<typeof ProsopoServerConfigSchema>
 
 export const AccountCreatorConfigSchema = z.object({
     area: z.object({

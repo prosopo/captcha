@@ -35,11 +35,9 @@ export const ExtensionAccountSelect = ({
 
     useEffect(() => {
         const prom = web3Enable(dappName).then(() => {
-            console.log('subscribe')
             return web3AccountsSubscribe(setAccounts)
         })
         return () => {
-            console.log('unsubscribe')
             prom.then((unsub) => unsub())
         }
     }, [])

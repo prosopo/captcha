@@ -13,12 +13,13 @@
 // limitations under the License.
 // import {ProsopoConfig} from './types';
 
-import { DatabaseTypes, EnvironmentTypes, ProsopoConfig } from '@prosopo/types'
+import { DatabaseTypes, EnvironmentTypes, EnvironmentTypesSchema, ProsopoConfig } from '@prosopo/types'
 import { getLogLevel } from './process.env'
 
 export default (): ProsopoConfig => ({
     logLevel: getLogLevel(),
-    defaultEnvironment: (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypes.development,
+    defaultEnvironment:
+        (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
     account: {
         address: process.env.PROVIDER_ADDRESS || '',
         password: process.env.PROVIDER_ACCOUNT_PASSWORD || undefined,
@@ -49,7 +50,7 @@ export default (): ProsopoConfig => ({
     },
     database: {
         development: {
-            type: DatabaseTypes.mongo,
+            type: DatabaseTypes.enum.mongo,
             endpoint: `mongodb://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}`,
             dbname: process.env.DATABASE_NAME || '',
             authSource: 'admin',

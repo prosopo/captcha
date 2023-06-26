@@ -82,9 +82,6 @@ export default class ExtWeb2 extends Extension {
         const browserEntropy = await this.getFingerprint()
         const canvasEntropy = picassoCanvas(params.numberOfRounds, params.seed, params)
         const entropy = hexHash([canvasEntropy, browserEntropy].join(''), 128).slice(2)
-        console.log('canvas entropy', canvasEntropy)
-        console.log('browserEntropy', browserEntropy)
-        console.log('entropy', entropy)
         const u8Entropy = stringToU8a(entropy)
         const mnemonic = entropyToMnemonic(u8Entropy)
 

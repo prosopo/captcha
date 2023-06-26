@@ -15,6 +15,6 @@ import { DatabaseTypes } from '@prosopo/types'
 import { ProsopoDatabase as MongoDatabase } from './mongo'
 import { MongoMemoryDatabase } from './mongoMemory'
 export const Databases = {
-    [DatabaseTypes.mongo]: MongoDatabase,
-    [DatabaseTypes.mongoMemory]: MongoMemoryDatabase,
+    [DatabaseTypes.Values.mongo]: MongoDatabase,
+    [DatabaseTypes.Values.mongoMemory]: MongoMemoryDatabase,
 }

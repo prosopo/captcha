@@ -18,7 +18,7 @@
 //   export default value;
 // }
 
-import { Captcha, EnvironmentTypes, MerkleProof, ProsopoServerConfig } from '@prosopo/types'
+import { Captcha, MerkleProof } from '@prosopo/types'
 
 export interface ProsopoRandomProviderResponse {
     providerId: string
@@ -59,20 +59,4 @@ export interface CaptchaSolutionResponse {
     status: string
     partialFee: string
     solutionApproved: boolean
-}
-
-export interface AccountCreatorConfig {
-    area: { width: number; height: number }
-    offsetParameter: number
-    multiplier: number
-    fontSizeFactor: number
-    maxShadowBlur: number
-    numberOfRounds: number
-    seed: number
-}
-
-export interface ProsopoClientConfig extends ProsopoServerConfig {
-    defaultEnvironment: EnvironmentTypes
-    userAccountAddress: string
-    accountCreator: AccountCreatorConfig
 }
