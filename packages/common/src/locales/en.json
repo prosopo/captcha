@@ -102,7 +102,7 @@
         "PARAMETER_ERROR": "Invalid parameter"
     },
     "DEVELOPER": {
-        "DAPP_CONTRACT_ADDRESS_MISSING": "DAPP_CONTRACT_ADDRESS is not set in .env file.",
+        "DAPP_SITE_KEY_MISSING": "DAPP_SITE_KEY is not set in .env file.",
         "BALANCE_TOO_LOW": "{{mnemonic}} balance too low: {{balance}}",
         "CAPTCHA_ID_MISSING": "Cannot find captcha data id",
         "COMMITMENT_ID_MISSING": "Commitment id missing",

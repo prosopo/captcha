@@ -1,10 +1,10 @@
 import { Dapp, IDappAccount } from '@prosopo/types'
 import { DappPayee } from '@prosopo/types/dist/contract/typechain/captcha/types-arguments/captcha'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { wrapQuery } from '@prosopo/contract'
 
-export async function setupDapp(env: ProsopoEnvironment, dapp: IDappAccount): Promise<void> {
+export async function setupDapp(env: ProviderEnvironment, dapp: IDappAccount): Promise<void> {
     const logger = env.logger
     if (dapp.pair) {
         await env.changeSigner(dapp.pair)

@@ -1,18 +1,18 @@
 import { Abi } from '@polkadot/api-contract'
-import { AccountId, EventRecord } from '@polkadot/types/interfaces'
-import { randomAsHex } from '@polkadot/util-crypto'
-import { getPair } from '@prosopo/common'
-import { ContractDeployer } from '@prosopo/contract'
-import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
-import { Environment } from '@prosopo/env'
-import path from 'path'
 import { AbiJSON, Wasm } from '../../util'
+import { AccountId, EventRecord } from '@polkadot/types/interfaces'
+import { ContractDeployer } from '@prosopo/contract'
+import { ProviderEnvironment } from '@prosopo/env'
+import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
+import { getPair } from '@prosopo/common'
+import { randomAsHex } from '@polkadot/util-crypto'
+import path from 'path'
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
     const pair = await getPair(pairType, ss58Format, '//Alice')
-    const env = new Environment(pair, defaultConfig())
+    const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
     const params = ['1000000000000000', 1000, process.env.PROTOCOL_CONTRACT_ADDRESS, 50, 1000000]

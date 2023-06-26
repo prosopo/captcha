@@ -13,7 +13,7 @@
 // limitations under the License.
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
-import { Environment } from '@prosopo/env'
+import { ProviderEnvironment } from '@prosopo/env'
 import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { getPair } from '@prosopo/common'
 import { loadEnv } from './env'
@@ -30,7 +30,7 @@ async function main() {
 
     console.log(`Contract address: ${process.env.PROTOCOL_CONTRACT_ADDRESS}`)
 
-    const env = new Environment(pair, config)
+    const env = new ProviderEnvironment(pair, config)
 
     await env.isReady()
 

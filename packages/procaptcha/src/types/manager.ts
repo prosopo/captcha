@@ -1,11 +1,8 @@
-import { ApiParams } from '@prosopo/types'
 import { GetCaptchaResponse } from '@prosopo/api'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
-import { Optional } from './utils'
+import { ProcaptchaClientConfig, ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi'
-import { ProsopoNetwork } from '@prosopo/api'
 import { TCaptchaSubmitResult } from './client'
-
 /**
  * House the account and associated extension.
  */
@@ -15,23 +12,10 @@ export interface Account {
 }
 
 /**
- * The configuration of Procaptcha. This is passed it to Procaptcha as a prop.
- * Values here are not updated by Procaptcha and are considered immutable from
- * within Procaptcha.
- */
-export interface ProcaptchaConfig {
-    userAccountAddress: string // address of the user's account, undefined if not set / in web2 mode
-    web2: boolean // set to true to use the web2 version of Procaptcha, else web3 version
-    dappName: string // the name of the dapp accessing accounts (e.g. Prosopo)
-    network: ProsopoNetwork // the network to use, e.g. "moonbeam", "edgeware", etc
-    solutionThreshold: number // the threshold of solutions solved by the user to be considered human
-}
-
-/**
  * The config to be passed to procaptcha. Some fields can be optional, e.g.
  * userAccountAddress and web2, depending on the mode of Procaptcha (web2 or web3).
  */
-export type ProcaptchaConfigOptional = Optional<Optional<ProcaptchaConfig, 'userAccountAddress'>, 'web2'>
+export type ProcaptchaConfigOptional = ProcaptchaClientConfig
 
 /**
  * The state of Procaptcha. This is mutated as required to reflect the captcha
@@ -76,17 +60,4 @@ export interface ProcaptchaEvents {
     onExtensionNotFound: () => void
     onExpired: () => void
     onFailed: () => void
-}
-
-/**
- * The information produced by procaptcha on completion of the captcha process,
- * whether verified by smart contract, a pending commitment in the cache of a
- * provider or a captcha challenge.
- */
-export interface ProcaptchaOutput {
-    [ApiParams.commitmentId]?: string
-    [ApiParams.providerUrl]?: string
-    [ApiParams.dapp]: string
-    [ApiParams.user]: string
-    [ApiParams.blockNumber]?: number
 }

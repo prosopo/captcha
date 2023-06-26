@@ -22,7 +22,7 @@ import { Error, LangError } from '../typechain/captcha/types-returns/captcha'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, logger, snakeToCamelCase } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers'
-import { QueryReturnType, Result, SignAndSendSuccessResponse } from '@727-ventures/typechain-types'
+import { QueryReturnType, Result } from '@727-ventures/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers'
 import { firstValueFrom } from 'rxjs'
@@ -31,7 +31,6 @@ import { useWeightImpl } from './useWeight'
 import Contract from '../typechain/captcha/contracts/captcha'
 import MixedMethods from '../typechain/captcha/mixed-methods/captcha'
 import QueryMethods from '../typechain/captcha/query/captcha'
-import TxSignAndSendMethods from '../typechain/captcha/tx-sign-and-send/captcha'
 import type { ContractOptions } from '@polkadot/api-contract/types'
 
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
@@ -62,25 +61,6 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
         throw new ProsopoContractError('CONTRACT.QUERY_ERROR', fn.name, {}, { result: JSON.stringify(result) })
     }
 }
-
-const wrapTx = <TxFunctionArgs extends any[], TxFunctionReturnType>(
-    methodName: string,
-    txFn: (...args: TxFunctionArgs) => TxFunctionReturnType,
-    txMethods: TxSignAndSendMethods
-) => {
-    return async (...args: TxFunctionArgs): Promise<TxFunctionReturnType> => {
-        const txResult = (await txFn.bind(txMethods)(...args)) as SignAndSendSuccessResponse
-        if (!txResult || txResult.result?.isError) {
-            throw new ProsopoContractError('CONTRACT.TX_ERROR', methodName, {}, { result: txResult.result?.toHuman() })
-        }
-
-        return txResult as TxFunctionReturnType
-    }
-}
-
-const methodNamesArr = Object.getOwnPropertyNames(QueryMethods.prototype).filter((name) => name !== 'constructor')
-
-type MethodNames = (typeof methodNamesArr)[number]
 
 export class ProsopoCaptchaContract extends Contract {
     api: ApiPromise

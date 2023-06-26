@@ -14,9 +14,9 @@ DEPLOY_RESULT=$(/usr/src/docker/contracts.deploy.contract.sh \
   --use-salt \
   --build | tee "$tty")
 echo "$DEPLOY_RESULT"
-DAPP_CONTRACT_ADDRESS=$(echo "$DEPLOY_RESULT" | tail -1)
-if [[ $DAPP_CONTRACT_ADDRESS == "Contract failed to deploy" ]]; then
+DAPP_SITE_KEY=$(echo "$DEPLOY_RESULT" | tail -1)
+if [[ $DAPP_SITE_KEY == "Contract failed to deploy" ]]; then
   echo "$DEPLOY_RESULT"
   exit 1
 fi
-echo "DAPP_CONTRACT_ADDRESS=$DAPP_CONTRACT_ADDRESS" > /usr/src/.env
+echo "DAPP_SITE_KEY=$DAPP_SITE_KEY" > /usr/src/.env

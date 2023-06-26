@@ -30,6 +30,7 @@ export enum ApiParams {
     captchas = 'captchas',
     commitmentId = 'commitmentId',
     providerUrl = 'providerUrl',
+    procaptchaResponse = 'procaptcha-response',
 }
 
 export interface DappUserSolutionResult {

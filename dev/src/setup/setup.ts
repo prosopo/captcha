@@ -13,17 +13,16 @@
 // limitations under the License.
 import { ArgumentTypes } from '@prosopo/types'
 import { BN } from '@polkadot/util'
-import { Environment } from '@prosopo/env'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { ProsopoEnvError, getPair } from '@prosopo/common'
-import { ProsopoEnvironment } from '@prosopo/types-env'
+import { ProviderEnvironment } from '@prosopo/env'
+import { ReturnNumber } from '@727-ventures/typechain-types'
 import { defaultConfig, getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
 import { generateMnemonic, wrapQuery } from '@prosopo/contract'
 import { registerProvider } from './provider'
 import { setupDapp } from './dapp'
 import fse from 'fs-extra'
 import path from 'path'
-import { ReturnNumber } from '@727-ventures/typechain-types'
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
@@ -46,7 +45,7 @@ function getDefaultProvider(): IProviderAccount {
 function getDefaultDapp(): IDappAccount {
     return {
         secret: '//Eve',
-        contractAccount: process.env.DAPP_CONTRACT_ADDRESS || '',
+        contractAccount: process.env.DAPP_SITE_KEY || '',
         fundAmount: Math.pow(10, 12),
     }
 }
@@ -83,7 +82,7 @@ async function updateEnvFile(vars: Record<string, string>) {
     await fse.writeFile(envFile, readEnvFile)
 }
 
-async function registerDapp(env: ProsopoEnvironment, dapp: IDappAccount) {
+async function registerDapp(env: ProviderEnvironment, dapp: IDappAccount) {
     await setupDapp(env, dapp)
 }
 
@@ -103,26 +102,29 @@ export async function setup() {
         console.log('Writing .env file...')
         await copyEnvFile()
 
-        if (!process.env.DAPP_CONTRACT_ADDRESS) {
-            throw new ProsopoEnvError('DEVELOPER.DAPP_CONTRACT_ADDRESS_MISSING')
+        if (!process.env.DAPP_SITE_KEY) {
+            throw new ProsopoEnvError('DEVELOPER.DAPP_SITE_KEY_MISSING')
         }
 
         const pairType = getPairType()
         const ss58Format = getSs58Format()
         const secret = '//Alice'
         const pair = await getPair(pairType, ss58Format, secret)
-        const env = new Environment(pair, defaultConfig())
+        const env = new ProviderEnvironment(pair, defaultConfig())
         await env.isReady()
 
-        const result: ReturnNumber = await wrapQuery(env.contractInterface.query.getDappStakeThreshold, env.contractInterface.query)()
+        const result: ReturnNumber = await wrapQuery(
+            env.contractInterface.query.getDappStakeThreshold,
+            env.contractInterface.query
+        )()
         const stakeAmount = result.rawNumber
-        let fundAmount: BN = new BN(0);
-        if(typeof defaultDapp.fundAmount === 'number') {
+        let fundAmount: BN = new BN(0)
+        if (typeof defaultDapp.fundAmount === 'number') {
             fundAmount = new BN(defaultDapp.fundAmount)
         } else {
             fundAmount = defaultDapp.fundAmount
         }
-        
+
         defaultDapp.fundAmount = BN.max(stakeAmount, fundAmount)
 
         defaultProvider.secret = mnemonic
@@ -133,7 +135,7 @@ export async function setup() {
 
         await registerProvider(env, defaultProvider)
 
-        defaultDapp.contractAccount = process.env.DAPP_CONTRACT_ADDRESS
+        defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
 
         defaultDapp.pair = await getPair(pairType, ss58Format, defaultDapp.secret)
 

@@ -16,7 +16,7 @@ The following env vars will need to be set in a `.env` file for this example to 
 ```bash
 REACT_APP_API_BASE_URL
 REACT_APP_API_PATH_PREFIX
-REACT_APP_DAPP_CONTRACT_ADDRESS
+REACT_APP_DAPP_SITE_KEY
 ```
 
 If using
@@ -26,7 +26,7 @@ these variables will be as follows:
 ```bash
 REACT_APP_API_BASE_URL=http://localhost:3000
 REACT_APP_API_PATH_PREFIX=/v1/prosopo
-REACT_APP_DAPP_CONTRACT_ADDRESS=5Go2hCf1WHzKqt1HGCUwhKfUS85477HUHgvaKkMJRYBfyiUP
+REACT_APP_DAPP_SITE_KEY=5Go2hCf1WHzKqt1HGCUwhKfUS85477HUHgvaKkMJRYBfyiUP
 ```
 
 ## Implementation

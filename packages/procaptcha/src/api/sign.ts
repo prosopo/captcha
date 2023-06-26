@@ -6,10 +6,7 @@ export function sign(message: string, account): { messageHash: string; signature
     const keyring = new Keyring({ type: 'ecdsa' })
     const pair = keyring.addFromUri('//Alice')
     const sig = pair.sign(message)
-
     const signature = u8aToHex(sig)
-
     const messageHash = blake2AsHex(message)
-
     return { messageHash, signature }
 }

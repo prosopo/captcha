@@ -1,5 +1,6 @@
 import { LogLevel, logger } from '@prosopo/common'
 import { deployDapp, deployProtocol } from '../contract/deploy/index'
+import { exec } from '../util'
 import { getLogLevel } from '@prosopo/cli'
 import { importContract } from '../contract'
 import { loadEnv } from '@prosopo/cli'
@@ -9,7 +10,6 @@ import { updateEnvFiles } from '../util/updateEnv'
 import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
-import { exec } from '../util'
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -72,12 +72,7 @@ export async function processArgs(args) {
                 log.info('contract address', dappContractAddress)
                 if (argv.update_env) {
                     await updateEnvFiles(
-                        [
-                            'DAPP_CONTRACT_ADDRESS',
-                            'REACT_APP_DAPP_CONTRACT_ADDRESS',
-                            'NEXT_PUBLIC_DAPP_CONTRACT_ADDRESS',
-                            'PROSOPO_SITE_KEY',
-                        ],
+                        ['DAPP_SITE_KEY', 'REACT_APP_DAPP_SITE_KEY', 'NEXT_PUBLIC_DAPP_SITE_KEY', 'PROSOPO_SITE_KEY'],
                         dappContractAddress.toString(),
                         log
                     )
@@ -133,7 +128,7 @@ export async function processArgs(args) {
             describe: 'Update all contracts into the contract package.',
             builder: (yargs) => yargs,
             handler: async (argv) => {
-                const contracts = ["captcha", "proxy"];
+                const contracts = ['captcha', 'proxy']
                 for (const contract of contracts) {
                     const inDir = `../protocol/target/ink/${contract}`
                     const outDir = `../packages/contract/src/typechain/${contract}`
@@ -145,8 +140,12 @@ export async function processArgs(args) {
                     // console.log(`${path.resolve('../packages/contract/src/typechain/captcha/types-arguments')}`)
                     // console.log(`${path.resolve('../packages/types/src/contract/typechain/captcha/types-arguments')}`)
                     await exec(`mkdir -p ../packages/types/src/contract/typechain/captcha`)
-                    await exec(`cp -rv ../packages/contract/src/typechain/captcha/types-arguments ../packages/types/src/contract/typechain/captcha`)
-                    await exec(`cp -rv ../packages/contract/src/typechain/captcha/types-returns ../packages/types/src/contract/typechain/captcha`)
+                    await exec(
+                        `cp -rv ../packages/contract/src/typechain/captcha/types-arguments ../packages/types/src/contract/typechain/captcha`
+                    )
+                    await exec(
+                        `cp -rv ../packages/contract/src/typechain/captcha/types-returns ../packages/types/src/contract/typechain/captcha`
+                    )
                 }
             },
         })

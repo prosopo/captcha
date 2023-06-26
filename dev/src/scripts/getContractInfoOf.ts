@@ -13,20 +13,42 @@
 // limitations under the License.
 import { ApiPromise, WsProvider } from '@polkadot/api'
 
+const yargs = require('yargs')
+
 const providers = {
-    //local: { endpoint: 'ws://substrate-node:9944' },
-    //polkadot: { endpoint: 'wss://rpc.polkadot.io' },
+    local: { endpoint: 'ws://substrate-node:9944' },
+    polkadot: { endpoint: 'wss://rpc.polkadot.io' },
     rococo: { endpoint: 'wss://rococo-contracts-rpc.polkadot.io:443' },
 }
 
-async function run() {
-    // Construct
-    for (const provider in providers) {
-        const wsProvider = new WsProvider(providers[provider].endpoint)
-        const api = await ApiPromise.create({ provider: wsProvider })
-        const result = await api.query.contracts.contractInfoOf('5FSXVEshU8nQEwCgDwsuPxuNLb9gi4xbEYZPY8GQ7jqqvuGR')
+async function getContractInfoOf(contractAddress: string, provider: string) {
+    const wsProvider = new WsProvider(providers[provider].endpoint)
+    const api = await ApiPromise.create({ provider: wsProvider })
+    return await api.query.contracts.contractInfoOf(contractAddress)
+}
+
+async function run(argv) {
+    const parsed = yargs(argv)
+        .usage('Usage:  [options]')
+        .option('contract', {
+            type: 'string',
+            demand: true,
+            desc: 'The contract to get the info of',
+        })
+        .option('network', {
+            type: 'string',
+            demand: false,
+            desc: 'The network to use',
+        })
+        .parse()
+    return await getContractInfoOf(parsed.contract, parsed.network)
+}
+run(process.argv.slice(2))
+    .then((result) => {
         console.log(result.toHuman())
         process.exit()
-    }
-}
-run()
+    })
+    .catch((error) => {
+        console.error(error)
+        process.exit(1)
+    })

@@ -17,9 +17,9 @@ import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN, stringToU8a } from '@polkadot/util'
 import { ContractDeployer, ProsopoContractError } from '@prosopo/contract'
 import { DappPayee, Payee } from '@prosopo/types'
-import { Environment } from '@prosopo/env'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts'
+import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, TranslationKey, getPair } from '@prosopo/common'
 import { Tasks } from '../../src/tasks'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds'
@@ -51,7 +51,7 @@ export class IDatabasePopulatorMethods {
 }
 
 class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods {
-    private mockEnv: Environment
+    private mockEnv: MockEnvironment
 
     private _registeredProviders: Account[] = []
 
@@ -213,9 +213,7 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
 
             await tasks.contract.tx.providerRegister(_url, PROVIDER_FEE, PROVIDER_PAYEE)
 
-            const provider = (await tasks.contract.query.getProvider(accountAddress(account))).value
-                .unwrap()
-                .unwrap()
+            const provider = (await tasks.contract.query.getProvider(accountAddress(account))).value.unwrap().unwrap()
             //console.log('Registered provider', provider)
             if (!noPush) {
                 this._registeredProviders.push(account)

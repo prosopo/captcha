@@ -1,4 +1,5 @@
-import { Account, ProcaptchaConfig } from '../types'
+import { Account } from '../types'
+import { ProcaptchaClientConfig } from '@prosopo/types'
 
 /**
  * Class to interface with accounts.
@@ -11,5 +12,5 @@ export default abstract class Extension {
      * @returns the account
      * @throws if the account is not found
      */
-    public abstract getAccount(config: ProcaptchaConfig): Promise<Account>
+    public abstract getAccount(config: ProcaptchaClientConfig): Promise<Account>
 }

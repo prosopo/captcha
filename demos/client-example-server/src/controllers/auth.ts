@@ -1,11 +1,18 @@
-import bcrypt from 'bcryptjs'
-
-import jwt from 'jsonwebtoken'
-
 import { ApiParams } from '@prosopo/types'
 import { Connection } from 'mongoose'
+import { ProcaptchaResponse } from '@prosopo/types'
 import { ProsopoServer } from '@prosopo/server'
 import { UserInterface } from '../models/user'
+import { z } from 'zod'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+
+const SubscribeBodySpec = ProcaptchaResponse.merge(
+    z.object({
+        email: z.string().email(),
+        password: z.string(),
+    })
+)
 
 const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, res, next) => {
     try {
@@ -14,54 +21,34 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
         const dbUser = await User.findOne({
             email: req.body.email,
         })
+        const payload = SubscribeBodySpec.parse(req.body)
         await prosopoServer.isReady()
         if (dbUser) {
             return res.status(409).json({ message: 'email already exists' })
-        } else if (
-            req.body.email &&
-            req.body.password &&
-            req.body.prosopo &&
-            req.body.prosopo[ApiParams.user] &&
-            req.body.prosopo[ApiParams.dapp] &&
-            req.body.prosopo[ApiParams.blockNumber]
-        ) {
-            if (
-                await prosopoServer.isVerified(
-                    req.body.prosopo[ApiParams.user],
-                    req.body.prosopo[ApiParams.providerUrl],
-                    req.body.prosopo[ApiParams.dapp],
-                    req.body.prosopo[ApiParams.commitmentId],
-                    req.body.prosopo[ApiParams.blockNumber]
-                )
-            ) {
-                // password hash
-                bcrypt.hash(req.body.password, 12, (err, passwordHash) => {
-                    if (err) {
-                        return res.status(500).json({ message: 'couldnt hash the password' })
-                    } else if (passwordHash) {
-                        return User.create({
-                            email: req.body.email,
-                            name: req.body.name,
-                            password: passwordHash,
+        }
+
+        if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
+            // password hash
+            bcrypt.hash(req.body.password, 12, (err, passwordHash) => {
+                if (err) {
+                    return res.status(500).json({ message: 'couldnt hash the password' })
+                } else if (passwordHash) {
+                    return User.create({
+                        email: req.body.email,
+                        name: req.body.name,
+                        password: passwordHash,
+                    })
+                        .then(() => {
+                            res.status(200).json({ message: 'user created' })
                         })
-                            .then(() => {
-                                res.status(200).json({ message: 'user created' })
-                            })
-                            .catch((err) => {
-                                console.log(err)
-                                res.status(502).json({ message: 'error while creating the user' })
-                            })
-                    }
-                })
-            } else {
-                res.status(401).json({ message: 'user has not completed a captcha' })
-            }
-        } else if (!req.body.password) {
-            return res.status(400).json({ message: 'password not provided' })
-        } else if (!req.body.email) {
-            return res.status(400).json({ message: 'email not provided' })
+                        .catch((err) => {
+                            console.log(err)
+                            res.status(502).json({ message: 'error while creating the user' })
+                        })
+                }
+            })
         } else {
-            return res.status(500).json({ message: 'internal server error' })
+            res.status(401).json({ message: 'user has not completed a captcha' })
         }
     } catch (err) {
         console.error('error', err)
@@ -80,38 +67,23 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
             if (!dbUser) {
                 return res.status(404).json({ message: 'user not found' })
             } else {
-                if (
-                    req.body.email &&
-                    req.body.password &&
-                    req.body.prosopo &&
-                    req.body.prosopo[ApiParams.user] &&
-                    req.body.prosopo[ApiParams.dapp] &&
-                    req.body.prosopo[ApiParams.blockNumber]
-                ) {
-                    if (
-                        await prosopoServer.isVerified(
-                            req.body.prosopo[ApiParams.user],
-                            req.body.prosopo[ApiParams.providerUrl],
-                            req.body.prosopo[ApiParams.dapp],
-                            req.body.prosopo[ApiParams.commitmentId],
-                            req.body.prosopo[ApiParams.blockNumber]
-                        )
-                    ) {
-                        // password hash
-                        bcrypt.compare(req.body.password, dbUser.password, (err, compareRes) => {
-                            if (err) {
-                                // error while comparing
-                                res.status(502).json({ message: 'error while checking user password' })
-                            } else if (compareRes) {
-                                // password match
-                                const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' })
-                                res.status(200).json({ message: 'user logged in', token: token })
-                            } else {
-                                // password doesnt match
-                                res.status(401).json({ message: 'invalid credentials' })
-                            }
-                        })
-                    }
+                const payload = SubscribeBodySpec.parse(req.body)
+
+                if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
+                    // password hash
+                    bcrypt.compare(req.body.password, dbUser.password, (err, compareRes) => {
+                        if (err) {
+                            // error while comparing
+                            res.status(502).json({ message: 'error while checking user password' })
+                        } else if (compareRes) {
+                            // password match
+                            const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' })
+                            res.status(200).json({ message: 'user logged in', token: token })
+                        } else {
+                            // password doesnt match
+                            res.status(401).json({ message: 'invalid credentials' })
+                        }
+                    })
                 }
             }
         })
