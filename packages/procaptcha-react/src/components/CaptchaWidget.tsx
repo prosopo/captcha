@@ -37,6 +37,7 @@ export const CaptchaWidget = (props: CaptchaWidgetProps) => {
     const { challenge, solution, onClick } = props
     const items = challenge.captcha.items
     const theme: Theme = useTheme()
+    const isTouchDevice = 'ontouchstart' in window
 
     return (
         <>
@@ -71,13 +72,15 @@ export const CaptchaWidget = (props: CaptchaWidgetProps) => {
                         >
                             <Box
                                 sx={{ cursor: 'pointer', height: '100%', width: '100%' }}
-                                onClick={() => onClick(hash)}
+                                onClick={isTouchDevice ? undefined : () => onClick(hash)}
+                                onTouchStart={isTouchDevice ? () => onClick(hash) : undefined}
                             >
                                 <Box sx={{ border: 1, borderColor: 'lightgray' }}>
                                     <img
                                         style={{
                                             width: '100%', // image should be full width / height of the item
                                             backgroundColor: 'lightgray', // colour of the bands when letterboxing and image
+                                            opacity: solution.includes(hash) && isTouchDevice ? '50%' : '100%', // iphone workaround
                                             display: 'block', // removes whitespace below imgs
                                             objectFit: 'contain', // contain the entire image in the img tag
                                             aspectRatio: '1/1', // force AR to be 1, letterboxing images with different aspect ratios
