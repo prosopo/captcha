@@ -1569,7 +1569,7 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from(ENV_AUTHOR_BYTES));
+            set_caller(AccountId::from(get_admin_account(0)));
             let contract = Captcha::new();
             // should construct successfully
         }
@@ -1629,13 +1629,8 @@ pub mod captcha {
         /// Test accounts are funded with existential deposit
         #[ink::test]
         fn test_accounts_funded() {
-            for func in vec![
-                get_admin_account,
-                get_provider_account,
-                get_dapp_contract,
-                get_user_account,
-                get_contract_account,
-            ]
+            let list: Vec<fn(u128) -> AccountId> = vec![get_admin_account, get_provider_account, get_dapp_contract, get_user_account, get_contract_account];
+            for func in list
             .iter()
             {
                 for i in 0..10 {
@@ -1660,12 +1655,11 @@ pub mod captcha {
             assert!(set.insert(*AsRef::<[u8; 32]>::as_ref(&get_admin_account(0))));
 
             // for each method of generating an account
-            for func in vec![
-                get_provider_account,
-                get_dapp_contract,
-                get_user_account,
-                get_contract_account,
-            ]
+            let list: Vec<fn(u128) -> AccountId> = vec![get_provider_account,
+            get_dapp_contract,
+            get_user_account,
+            get_contract_account,];
+            for func in list
             .iter()
             {
                 // try the first 10 accounts
