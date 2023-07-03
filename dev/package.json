@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/dev",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Dev tools for working with prosopo packages",
   "main": "dist/index.js",
   "scripts": {
