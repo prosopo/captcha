@@ -197,6 +197,7 @@ export class Tasks {
                 requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
                 completedAt: blockNumber,
                 processed: false,
+                batched: false,
             }
             await this.db.storeDappUserSolution(receivedCaptchas, commit)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {

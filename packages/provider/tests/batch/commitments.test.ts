@@ -16,7 +16,7 @@ import { AccountKey } from '../dataUtils/DatabaseAccounts'
 import { ApiPromise } from '@polkadot/api'
 import { ArgumentTypes, CaptchaSolution, CaptchaStatus, ProsopoConfigSchema, ScheduledTaskNames } from '@prosopo/types'
 import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
-import { BatchCommitments } from '../../src/batch'
+import { BatchCommitmentsTask } from '../../src/batch'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, getPair } from '@prosopo/common'
@@ -102,11 +102,10 @@ describe('BATCH TESTS', function () {
 
             // Batcher must be created with the provider account as the pair on the contractApi, otherwise the batcher
             // will fail with `ProviderDoesNotExist` error.
-            const batcher = new BatchCommitments(
+            const batcher = new BatchCommitmentsTask(
                 env.config.batchCommit,
                 await env.getContractApi(),
                 env.db,
-                2,
                 BigInt(startNonce.toNumber()),
                 env.logger
             )
@@ -155,6 +154,7 @@ describe('BATCH TESTS', function () {
                         completedAt,
                         userSignature: Array.from(userSignature),
                         processed: false,
+                        batched: false,
                     }
                     await providerTasks.db.storeDappUserSolution([captchaSolution], commit)
                     if (status === CaptchaStatus.approved) {
@@ -174,8 +174,8 @@ describe('BATCH TESTS', function () {
                 expect(commitmentsFromDbBeforeProcessing).to.be.empty
 
                 // Mark the commitments as processed
-                await providerTasks.db.flagUsedDappUserCommitments(commitmentIds)
-                await providerTasks.db.flagUsedDappUserSolutions(commitmentIds)
+                await providerTasks.db.flagProcessedDappUserCommitments(commitmentIds)
+                await providerTasks.db.flagProcessedDappUserSolutions(commitmentIds)
 
                 // Check the commitments are returned from the db as they are now processed
                 const commitmentsFromDbBeforeBatching = (await batcher.getCommitments()).filter(
@@ -191,7 +191,7 @@ describe('BATCH TESTS', function () {
                 ).to.equal(Math.round(commitmentCount / 2))
 
                 // Commit the commitments to the contract
-                await batcher.runBatch()
+                await batcher.run()
 
                 // Get the batcher result from the db
                 // Records should look like this in the db
@@ -232,29 +232,13 @@ describe('BATCH TESTS', function () {
                         (commitment) => processedCommitmentIds.indexOf(commitment.id.toString()) > -1
                     )
 
-                    // Try to get the solutions from the db
-                    const solutionsFromDbAfter = (await env.db.getProcessedDappUserSolutions()).filter(
-                        (solution) => processedCommitmentIds.indexOf(solution.commitmentId) === -1
+                    // Try to get unbatched commitments after batching
+                    const commitmentsFromDbAfter = (await env.db.getUnbatchedDappUserCommitments()).filter(
+                        (solution) => processedCommitmentIds.indexOf(solution.id) === -1
                     )
 
-                    // Check the processed solutions are no longer in the db
-                    expect(solutionsFromDbAfter).to.be.empty
-
-                    // Try to get the commitments from the db
-                    const commitmentsFromDbAfter = (await env.db.getProcessedDappUserCommitments()).filter(
-                        (commitment) => processedCommitmentIds.indexOf(commitment.id.toString()) === -1
-                    )
-
-                    // Check the processed commitments are no longer in the db
-                    // console.log('commitmentsFromDbAfter.length', commitmentsFromDbAfter.length)
-                    // console.log('processedCommitmentIds.length', processedCommitmentIds.length)
-                    // console.log(
-                    //     'commitmentsFromDbBeforeBatching.length - processedCommitmentIds.length',
-                    //     commitmentsFromDbBeforeBatching.length - processedCommitmentIds.length
-                    // )
-                    expect(commitmentsFromDbAfter.length).to.equal(
-                        commitmentsFromDbBeforeBatching.length - processedCommitmentIds.length
-                    )
+                    // There should be no unbatched commitments
+                    expect(commitmentsFromDbAfter).to.be.empty
 
                     // We have to wait for batched commitments to become available on-chain
                     const waitTime = calcInterval(contractApi.api as ApiPromise).toNumber() * 2
@@ -267,9 +251,7 @@ describe('BATCH TESTS', function () {
                     for (const commitment of processedCommitments) {
                         const approved = count % 2 === 0 ? 'Approved' : 'Disapproved'
                         env.logger.debug(`Getting commitmentId ${commitment.id} from contract`)
-                        const contractCommitment = (
-                            await contractApi.query.getCommit(commitment.id)
-                        ).value
+                        const contractCommitment = (await contractApi.query.getCommit(commitment.id)).value
                             .unwrap()
                             .unwrap()
                         expect(contractCommitment).to.be.not.empty

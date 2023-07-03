@@ -1,4 +1,4 @@
-import { CaptchaStates } from '@prosopo/types/datasets'
+import { CaptchaStates } from '@prosopo/types'
 import { ProsopoEnvError, logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env/provider'
 import { ScheduledTaskNames } from '@prosopo/types'
@@ -14,7 +14,7 @@ export class CalculateSolutionsTask extends Tasks {
     /**
      * Apply new captcha solutions to captcha dataset and recalculate merkle tree
      */
-    async calculateCaptchaSolutions(): Promise<number> {
+    async run(): Promise<number> {
         try {
             const taskRunning = await checkIfTaskIsRunning(ScheduledTaskNames.CalculateSolution, this.db)
             if (!taskRunning) {
@@ -60,9 +60,9 @@ export class CalculateSolutionsTask extends Tasks {
                             // store new solutions in database
                             await this.providerSetDataset(dataset)
                             // mark user solutions as used to calculate new solutions
-                            await this.db.flagUsedDappUserSolutions(captchaIdsToUpdate)
+                            await this.db.flagProcessedDappUserSolutions(captchaIdsToUpdate)
                             // mark user commitments as used to calculate new solutions
-                            await this.db.flagUsedDappUserCommitments(commitmentIds)
+                            await this.db.flagProcessedDappUserCommitments(commitmentIds)
                             // remove old captcha challenges from database
                             await this.db.removeCaptchas(captchaIdsToUpdate)
                             return solutionsToUpdate.rows().length

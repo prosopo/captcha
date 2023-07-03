@@ -19,7 +19,7 @@ import { randomAsHex } from '@polkadot/util-crypto'
 const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'providerCommitMany'
 
-export class BatchCommitments {
+export class BatchCommitmentsTask {
     contract: ProsopoCaptchaContract
     db: Database
     batchCommitConfig: BatchCommitConfig
@@ -29,7 +29,6 @@ export class BatchCommitments {
         batchCommitConfig: BatchCommitConfig,
         contractApi: ProsopoCaptchaContract,
         db: Database,
-        concurrent: number,
         startNonce: bigint,
         logger: Logger
     ) {
@@ -39,7 +38,7 @@ export class BatchCommitments {
         this.logger = logger
         this.nonce = startNonce
     }
-    async runBatch(): Promise<void> {
+    async run(): Promise<void> {
         // create a task id
         const taskId = randomAsHex(32)
         const taskRunning = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, this.db)
@@ -62,8 +61,8 @@ export class BatchCommitments {
                         const { extrinsics, ids: commitmentIds } = await this.createExtrinsics(commitments)
                         // commit and get the Ids of the commitments that were committed on-chain
                         await batch(this.contract.contract, this.contract.pair, extrinsics, this.logger)
-                        // remove commitments
-                        await this.removeCommitmentsAndSolutions(commitmentIds)
+                        // flag commitments as batched
+                        await this.flagBatchedCommitments(commitmentIds)
                         // update last commit time and store the commitmentIds that were batched
                         await this.db.storeScheduledTaskStatus(
                             taskId,
@@ -189,19 +188,16 @@ export class BatchCommitments {
     }
 
     async getCommitments(): Promise<UserCommitmentRecord[]> {
-        // get commitments that have already been used to generate a solution
-        return await this.db.getProcessedDappUserCommitments()
+        // get commitments that have not yet been batched on-chain
+        return await this.db.getUnbatchedDappUserCommitments()
     }
 
-    async removeCommitmentsAndSolutions(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
-        const removeSolutionsResult = await this.db.removeProcessedDappUserSolutions(commitmentIds)
-        const removeCommitmentsResult = await this.db.removeProcessedDappUserCommitments(commitmentIds)
-        this.logger.info('Deleted user solutions', removeSolutionsResult)
-        this.logger.info('Deleted user commitments', removeCommitmentsResult)
+    async flagBatchedCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+        await this.db.flagBatchedDappUserCommitments(commitmentIds)
     }
 
     convertCommit(commitment: UserCommitmentRecord): Commit {
-        const { processed, userSignature, requestedAt, completedAt, ...commit } = commitment
+        const { batched, processed, userSignature, requestedAt, completedAt, ...commit } = commitment
 
         return {
             ...commit,

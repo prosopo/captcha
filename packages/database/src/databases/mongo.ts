@@ -393,6 +393,20 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
     }
 
+    /** @description Get Dapp User captcha commitments from the commitments table that have not been batched on-chain
+     */
+    async getUnbatchedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+        const docs = await this.tables?.commitment.find({ batched: false }).lean()
+        return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
+    }
+
+    /** @description Get Dapp User captcha commitments from the commitments table that have been batched on-chain
+     */
+    async getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+        const docs = await this.tables?.commitment.find({ batched: true }).lean()
+        return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
+    }
+
     /** @description Remove processed Dapp User captcha solutions from the user solution table
      */
     async removeProcessedDappUserSolutions(commitmentIds: string[]): Promise<DeleteResult | undefined> {
@@ -635,7 +649,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag a dapp user's solutions as used by calculated solution
      * @param {string[]} captchaIds
      */
-    async flagUsedDappUserSolutions(captchaIds: string[]): Promise<void> {
+    async flagProcessedDappUserSolutions(captchaIds: ArgumentTypes.Hash[]): Promise<void> {
         try {
             await this.tables?.usersolution
                 ?.updateMany({ captchaId: { $in: captchaIds } }, { $set: { processed: true } }, { upsert: false })
@@ -649,11 +663,26 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag dapp users' commitments as used by calculated solution
      * @param {string[]} commitmentIds
      */
-    async flagUsedDappUserCommitments(commitmentIds: string[]): Promise<void> {
+    async flagProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
         try {
             const distinctCommitmentIds = [...new Set(commitmentIds)]
             await this.tables?.commitment
                 ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { processed: true } }, { upsert: false })
+                .lean()
+        } catch (err) {
+            throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
+        }
+    }
+
+    /**
+     * @description Flag dapp users' commitments as used by calculated solution
+     * @param {string[]} commitmentIds
+     */
+    async flagBatchedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+        try {
+            const distinctCommitmentIds = [...new Set(commitmentIds)]
+            await this.tables?.commitment
+                ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { batched: true } }, { upsert: false })
                 .lean()
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)

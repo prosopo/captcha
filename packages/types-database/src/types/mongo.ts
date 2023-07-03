@@ -32,6 +32,7 @@ import { z } from 'zod'
 export interface UserCommitmentRecord extends Omit<ArgumentTypes.Commit, 'userSignaturePart1' | 'userSignaturePart2'> {
     userSignature: number[]
     processed: boolean
+    batched: boolean
 }
 
 export const UserCommitmentSchema = z.object({
@@ -45,6 +46,7 @@ export const UserCommitmentSchema = z.object({
     completedAt: z.number(),
     requestedAt: z.number(),
     processed: z.boolean(),
+    batched: z.boolean(),
 }) satisfies z.ZodType<UserCommitmentRecord>
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -248,9 +250,15 @@ export interface Database {
 
     getProcessedDappUserCommitments(): Promise<UserCommitmentRecord[]>
 
-    flagUsedDappUserSolutions(captchaIds: string[]): Promise<void>
+    getUnbatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>
 
-    flagUsedDappUserCommitments(commitmentIds: string[]): Promise<void>
+    getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]>
+
+    flagProcessedDappUserSolutions(captchaIds: ArgumentTypes.Hash[]): Promise<void>
+
+    flagProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void>
+
+    flagBatchedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void>
 
     getLastBatchCommitTime(): Promise<Date>
 
