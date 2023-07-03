@@ -1629,10 +1629,14 @@ pub mod captcha {
         /// Test accounts are funded with existential deposit
         #[ink::test]
         fn test_accounts_funded() {
-            let list: Vec<fn(u128) -> AccountId> = vec![get_admin_account, get_provider_account, get_dapp_contract, get_user_account, get_contract_account];
-            for func in list
-            .iter()
-            {
+            let list: Vec<fn(u128) -> AccountId> = vec![
+                get_admin_account,
+                get_provider_account,
+                get_dapp_contract,
+                get_user_account,
+                get_contract_account,
+            ];
+            for func in list.iter() {
                 for i in 0..10 {
                     let account = func(i);
                     // check the account has funds. Will panic if not as no existential deposit == account not found
@@ -1655,13 +1659,13 @@ pub mod captcha {
             assert!(set.insert(*AsRef::<[u8; 32]>::as_ref(&get_admin_account(0))));
 
             // for each method of generating an account
-            let list: Vec<fn(u128) -> AccountId> = vec![get_provider_account,
-            get_dapp_contract,
-            get_user_account,
-            get_contract_account,];
-            for func in list
-            .iter()
-            {
+            let list: Vec<fn(u128) -> AccountId> = vec![
+                get_provider_account,
+                get_dapp_contract,
+                get_user_account,
+                get_contract_account,
+            ];
+            for func in list.iter() {
                 // try the first 10 accounts
                 for i in 0..10 {
                     let account = func(i);
