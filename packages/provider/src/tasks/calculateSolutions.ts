@@ -1,10 +1,10 @@
 import { CaptchaStates } from '@prosopo/types'
 import { ProsopoEnvError, logger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env/provider'
+import { ProviderEnvironment } from '@prosopo/types-env'
 import { ScheduledTaskNames } from '@prosopo/types'
 import { Tasks } from './tasks'
 import { calculateNewSolutions, checkIfTaskIsRunning, updateSolutions } from '../util'
-import { captchaSort } from '@prosopo/datasets/js'
+import { captchaSort } from '@prosopo/datasets'
 export class CalculateSolutionsTask extends Tasks {
     constructor(env: ProviderEnvironment) {
         super(env)
