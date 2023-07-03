@@ -26,10 +26,10 @@
     "@polkadot/keyring": "12.3.2",
     "@polkadot/rpc-provider": "10.9.1",
     "@polkadot/types": "10.9.1",
-    "@prosopo/api": "^0.1.15",
-    "@prosopo/contract": "^0.1.15",
-    "@prosopo/procaptcha": "^0.1.15",
-    "@prosopo/types": "^0.1.15"
+    "@prosopo/api": "^0.1.16",
+    "@prosopo/contract": "^0.1.16",
+    "@prosopo/procaptcha": "^0.1.16",
+    "@prosopo/types": "^0.1.16"
   },
   "devDependencies": {
     "typescript": "^4.9.4"

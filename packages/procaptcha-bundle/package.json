@@ -21,8 +21,8 @@
         "> 0.5%, last 2 versions, not dead"
     ],
     "dependencies": {
-        "@prosopo/common": "^0.1.15",
-        "@prosopo/procaptcha-react": "^0.1.15"
+        "@prosopo/common": "^0.1.16",
+        "@prosopo/procaptcha-react": "^0.1.16"
     },
     "repository": {
         "type": "git",
