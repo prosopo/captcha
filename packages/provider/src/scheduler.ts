@@ -13,20 +13,18 @@
 // limitations under the License.
 // [object Object]
 // SPDX-License-Identifier: Apache-2.0
-
+import { CalculateSolutionsTask } from './tasks/calculateSolutions'
 import { CronJob } from 'cron'
-
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoConfig } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
-import { Tasks } from './tasks/tasks'
 
 export default async function (pair: KeyringPair, config: ProsopoConfig) {
     const env = new ProviderEnvironment(pair, config)
 
     await env.isReady()
 
-    const tasks = new Tasks(env)
+    const tasks = new CalculateSolutionsTask(env)
     const job = new CronJob(process.argv[2], () => {
         env.logger.debug('It works....')
         tasks.calculateCaptchaSolutions().catch((err) => {

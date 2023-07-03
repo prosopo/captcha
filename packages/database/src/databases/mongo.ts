@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
+    ArgumentTypes,
     Captcha,
     CaptchaSolution,
     CaptchaStates,
@@ -26,6 +27,7 @@ import {
     ScheduledTaskResult,
     ScheduledTaskStatus,
 } from '@prosopo/types'
+import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
 import {
     CaptchaRecordSchema,
     Database,
@@ -44,11 +46,8 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
-import { isHex } from '@polkadot/util'
-
-import { ArgumentTypes } from '@prosopo/types'
-import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
 import { DeleteResult } from 'mongodb'
+import { isHex } from '@polkadot/util'
 import mongoose, { Connection } from 'mongoose'
 
 mongoose.set('strictQuery', false)
@@ -678,11 +677,26 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     /**
+     * @description Get a scheduled task by ID
+     */
+    async getScheduledTaskById(id: string): Promise<ScheduledTaskRecord | undefined> {
+        const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler?.findOne({ _id: id }).lean()
+        return cursor ? cursor : undefined
+    }
+
+    /**
      * @description Get the last batch commit time or return 0 if none
      */
-    async getLastScheduledTask(task: ScheduledTaskNames): Promise<ScheduledTaskRecord | undefined> {
+    async getLastScheduledTask(
+        task: ScheduledTaskNames,
+        status?: ScheduledTaskStatus
+    ): Promise<ScheduledTaskRecord | undefined> {
+        const lookup = { processName: task }
+        if (status) {
+            lookup['status'] = status
+        }
         const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler
-            ?.findOne({ processName: task })
+            ?.findOne(lookup)
             .sort({ datetime: -1 })
             .lean()
         return cursor ? cursor : undefined

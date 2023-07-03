@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { BatchCommitments } from '@prosopo/provider'
+import { CalculateSolutionsTask } from '@prosopo/provider'
 import { Compact, u128 } from '@polkadot/types'
 import { PayeeSchema } from '@prosopo/types'
 import { ProsopoEnvError, logger as getLogger } from '@prosopo/common'
@@ -364,7 +365,8 @@ export function processArgs(args, env: ProviderEnvironment) {
                         )
                     })
                 } else {
-                    const result = await tasks.calculateCaptchaSolutions()
+                    const calculateSolutionsTask = new CalculateSolutionsTask(env)
+                    const result = await calculateSolutionsTask.calculateCaptchaSolutions()
                     logger.info(`Updated ${result} captcha solutions`)
                 }
             },
