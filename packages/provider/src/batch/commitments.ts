@@ -13,7 +13,7 @@ import { Logger } from '@prosopo/common'
 import { ProsopoCaptchaContract, ProsopoContractError, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
-import { checkIfTaskIsRunning } from '@prosopo/provider'
+import { checkIfTaskIsRunning } from '../util'
 import { randomAsHex } from '@polkadot/util-crypto'
 
 const BN_TEN_THOUSAND = new BN(10_000)
