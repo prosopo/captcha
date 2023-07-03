@@ -34,6 +34,10 @@ pub mod captcha {
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
+    use ink::storage::traits::{
+        StorageKey,
+        ManualKey
+    };
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
@@ -255,7 +259,7 @@ pub mod captcha {
     // Contract storage
     #[derive(Default)]
     #[ink(storage)]
-    pub struct Captcha {
+    pub struct Captcha<KEY: StorageKey = ManualKey<0xABCDEF01>> {
         providers: Mapping<AccountId, Provider>,
         provider_accounts: Mapping<ProviderCategory, BTreeSet<AccountId>>,
         urls: Mapping<Hash, AccountId>, // url hash mapped to provider account
