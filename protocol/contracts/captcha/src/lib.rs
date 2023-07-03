@@ -1569,7 +1569,7 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from(get_admin_account(0)));
+            set_caller(get_admin_account(0));
             let contract = Captcha::new();
             // should construct successfully
         }
