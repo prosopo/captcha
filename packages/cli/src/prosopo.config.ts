@@ -51,7 +51,7 @@ export default (): ProsopoConfig => ({
     database: {
         development: {
             type: DatabaseTypes.enum.mongo,
-            endpoint: `mongodb://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}`,
+            endpoint: `mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/?retryWrites=true&w=majority`,
             dbname: process.env.DATABASE_NAME || '',
             authSource: 'admin',
         },
