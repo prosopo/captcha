@@ -5,7 +5,7 @@ services:
       context: ..
       dockerfile: ./docker/images/provider.dockerfile
     env_file:
-      - .env.provider
+      - ../.env.provider
     ports:
       - "9229:9229"
       - "80:80"

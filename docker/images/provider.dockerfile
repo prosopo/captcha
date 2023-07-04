@@ -20,7 +20,8 @@ COPY ./tsconfig.json ./
 COPY ./tsconfig.build.json ./
 
 RUN npm i
-RUN npm run bd dev
+RUN npm run -w @prosopo/provider build
+RUN npm run -w @prosopo/cli build
 
 EXPOSE 9229 80 443
 
