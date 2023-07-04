@@ -19,10 +19,6 @@ pub use self::captcha::{Captcha, CaptchaRef};
 
 #[ink::contract]
 pub mod captcha {
-    const ENV_AUTHOR_BYTES: [u8; 32] = [
-        212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88,
-        133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-    ]; // the account which can instantiate the contract
 
     use common::err;
     use common::err_fn;
@@ -341,7 +337,7 @@ pub mod captcha {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn new() -> Self {
-            let author = AccountId::from(ENV_AUTHOR_BYTES);
+            let author = AccountId::from(Self::get_author_bytes());
             let caller = Self::env().caller();
             if caller != author {
                 panic!(
@@ -376,17 +372,29 @@ pub mod captcha {
             env_git_commit_id
         }
 
+        fn get_author_bytes() -> [u8; 32] {
+            let env_author_bytes: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ]; // the account which can instantiate the contract
+            env_author_bytes
+        }
+
         /// the account which can instantiate the contract
         #[ink(message)]
         pub fn get_author(&self) -> AccountId {
-            AccountId::from(ENV_AUTHOR_BYTES)
+            AccountId::from(Self::get_author_bytes())
+        }
+
+        fn get_admin_bytes(&self) -> [u8; 32] {
+            let env_admin_bytes: [u8; 32] = Self::get_author_bytes();
+            env_admin_bytes
         }
 
         /// the admin which can control this contract. set to author/instantiator by default
         #[ink(message)]
         pub fn get_admin(&self) -> AccountId {
-            let env_admin_bytes: [u8; 32] = ENV_AUTHOR_BYTES;
-            AccountId::from(env_admin_bytes)
+            AccountId::from(self.get_admin_bytes())
         }
 
         /// Get all payee options
@@ -1565,7 +1573,7 @@ pub mod captcha {
             set_caller(get_unused_account());
 
             // only able to instantiate from the alice account
-            set_caller(AccountId::from(ENV_AUTHOR_BYTES));
+            set_caller(get_admin_account(0));
             let contract = Captcha::new();
             // should construct successfully
         }
@@ -1625,15 +1633,14 @@ pub mod captcha {
         /// Test accounts are funded with existential deposit
         #[ink::test]
         fn test_accounts_funded() {
-            for func in vec![
+            let list: Vec<fn(u128) -> AccountId> = vec![
                 get_admin_account,
                 get_provider_account,
                 get_dapp_contract,
                 get_user_account,
                 get_contract_account,
-            ]
-            .iter()
-            {
+            ];
+            for func in list.iter() {
                 for i in 0..10 {
                     let account = func(i);
                     // check the account has funds. Will panic if not as no existential deposit == account not found
@@ -1656,14 +1663,13 @@ pub mod captcha {
             assert!(set.insert(*AsRef::<[u8; 32]>::as_ref(&get_admin_account(0))));
 
             // for each method of generating an account
-            for func in vec![
+            let list: Vec<fn(u128) -> AccountId> = vec![
                 get_provider_account,
                 get_dapp_contract,
                 get_user_account,
                 get_contract_account,
-            ]
-            .iter()
-            {
+            ];
+            for func in list.iter() {
                 // try the first 10 accounts
                 for i in 0..10 {
                     let account = func(i);
