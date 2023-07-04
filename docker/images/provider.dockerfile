@@ -21,7 +21,7 @@ COPY ./tsconfig.build.json ./
 
 RUN echo $(ls -la)
 
-RUN npm i
+RUN npm i --force
 RUN npm run -w @prosopo/provider build
 RUN npm run -w @prosopo/cli build
 
