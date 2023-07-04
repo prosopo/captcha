@@ -33,7 +33,8 @@
     "@prosopo/common": "^0.1.15",
     "@prosopo/contract": "^0.1.15",
     "@prosopo/types": "^0.1.15",
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "ts-node": "^10.9.1"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.0",

@@ -1,0 +1,1106 @@
+{
+  "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+  "captchas": [
+    {
+      "salt": "0x01",
+      "solution": [
+        "0x05091030b0194cf5a1b059e5674588fa62f8fcc95d2c37b8a00363822da00c9e",
+        "0x9b3fb6bf7cfc0ca8e6715bdc23a41fa4a6eaa1cc2e08363051ab4cb18e8326bb",
+        "0xabaebe0601780f717be6fd6166ea1f5d5c3d14d69b72e82b2680bf8790d81d70"
+      ],
+      "timeLimit": 20,
+      "items": [
+        {
+          "hash": "0x96e336b3a736566736ef4a2cb2f71f31492de08010f5d4d071c7a4d16a911e55",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x05091030b0194cf5a1b059e5674588fa62f8fcc95d2c37b8a00363822da00c9e",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x9b3fb6bf7cfc0ca8e6715bdc23a41fa4a6eaa1cc2e08363051ab4cb18e8326bb",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xabaebe0601780f717be6fd6166ea1f5d5c3d14d69b72e82b2680bf8790d81d70",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x6ded34173b4d4f29142fdd267a757cbd67d7bf658b555a9715a7799a726d92df",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xbe18f40b90e0cdd9dda77b7ca3bd14a29cc85b57241b104a34db3442064fb3c0",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xdec3aa6053d6699b9a6ecd5de081940f0f197ed848a42ccd828e89f941235926",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xfa36fecae98675524d19650a9331bc53d55a2ea885eb2748fb9841afbf837f84",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xfe059081c9d82baef2228ca0ae2d24fefff834e8e168f7b5dc8b45ec4ebcb81d",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.09.jpeg",
+          "type": "image"
+        }
+      ],
+      "target": "bus",
+      "captchaId": "0x33324804260eb539ac33599c44fc97373148c4aee09e7480b0a8cfc18f4574f8",
+      "captchaContentId": "0x0bd1f2c28ba5b80997163e057eb857b5a2e0214b4a539124e4470aa90449b8f4",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x02",
+      "solution": [
+        "0x96e336b3a736566736ef4a2cb2f71f31492de08010f5d4d071c7a4d16a911e55",
+        "0xfa36fecae98675524d19650a9331bc53d55a2ea885eb2748fb9841afbf837f84",
+        "0xfe059081c9d82baef2228ca0ae2d24fefff834e8e168f7b5dc8b45ec4ebcb81d"
+      ],
+      "items": [
+        {
+          "hash": "0x96e336b3a736566736ef4a2cb2f71f31492de08010f5d4d071c7a4d16a911e55",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x05091030b0194cf5a1b059e5674588fa62f8fcc95d2c37b8a00363822da00c9e",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x9b3fb6bf7cfc0ca8e6715bdc23a41fa4a6eaa1cc2e08363051ab4cb18e8326bb",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xabaebe0601780f717be6fd6166ea1f5d5c3d14d69b72e82b2680bf8790d81d70",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x6ded34173b4d4f29142fdd267a757cbd67d7bf658b555a9715a7799a726d92df",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xbe18f40b90e0cdd9dda77b7ca3bd14a29cc85b57241b104a34db3442064fb3c0",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xdec3aa6053d6699b9a6ecd5de081940f0f197ed848a42ccd828e89f941235926",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xfa36fecae98675524d19650a9331bc53d55a2ea885eb2748fb9841afbf837f84",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xfe059081c9d82baef2228ca0ae2d24fefff834e8e168f7b5dc8b45ec4ebcb81d",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.09.jpeg",
+          "type": "image"
+        }
+      ],
+      "target": "train",
+      "captchaId": "0xdf72e4588427592ac91c9e0f63f01a9713e9f04da0bf8551b6fffab5d6a4d66f",
+      "captchaContentId": "0x578d398e0db39049fdd97135fef2d985ccba7a7c482267aa9cd79a841ac10fc0",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x03",
+      "solution": [],
+      "items": [
+        {
+          "hash": "0x96e336b3a736566736ef4a2cb2f71f31492de08010f5d4d071c7a4d16a911e55",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x05091030b0194cf5a1b059e5674588fa62f8fcc95d2c37b8a00363822da00c9e",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x9b3fb6bf7cfc0ca8e6715bdc23a41fa4a6eaa1cc2e08363051ab4cb18e8326bb",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xabaebe0601780f717be6fd6166ea1f5d5c3d14d69b72e82b2680bf8790d81d70",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x6ded34173b4d4f29142fdd267a757cbd67d7bf658b555a9715a7799a726d92df",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xbe18f40b90e0cdd9dda77b7ca3bd14a29cc85b57241b104a34db3442064fb3c0",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xdec3aa6053d6699b9a6ecd5de081940f0f197ed848a42ccd828e89f941235926",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xfa36fecae98675524d19650a9331bc53d55a2ea885eb2748fb9841afbf837f84",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xfe059081c9d82baef2228ca0ae2d24fefff834e8e168f7b5dc8b45ec4ebcb81d",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.09.jpeg",
+          "type": "image"
+        }
+      ],
+      "target": "car",
+      "captchaId": "0x3872714eed3646f64034b8122f248126a4f7151f114fa72ff3f91470a7ff6df6",
+      "captchaContentId": "0xb79b557a793c13ffff9812b13833a04540bee12e3ea0c4876e9db04acdb55051",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x05",
+      "items": [
+        {
+          "hash": "0x96e336b3a736566736ef4a2cb2f71f31492de08010f5d4d071c7a4d16a911e55",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.01.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x05091030b0194cf5a1b059e5674588fa62f8fcc95d2c37b8a00363822da00c9e",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.02.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x9b3fb6bf7cfc0ca8e6715bdc23a41fa4a6eaa1cc2e08363051ab4cb18e8326bb",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.03.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xabaebe0601780f717be6fd6166ea1f5d5c3d14d69b72e82b2680bf8790d81d70",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.04.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0x6ded34173b4d4f29142fdd267a757cbd67d7bf658b555a9715a7799a726d92df",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.05.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xbe18f40b90e0cdd9dda77b7ca3bd14a29cc85b57241b104a34db3442064fb3c0",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.06.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xdec3aa6053d6699b9a6ecd5de081940f0f197ed848a42ccd828e89f941235926",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.07.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xfa36fecae98675524d19650a9331bc53d55a2ea885eb2748fb9841afbf837f84",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.08.jpeg",
+          "type": "image"
+        },
+        {
+          "hash": "0xfe059081c9d82baef2228ca0ae2d24fefff834e8e168f7b5dc8b45ec4ebcb81d",
+          "data": "https://prosopo.github.io/demo-datasets/img/01.09.jpeg",
+          "type": "image"
+        }
+      ],
+      "target": "plane",
+      "captchaId": "0x7765e69746b985d1ecf86e59bced28b2d6e4532c56896a362cfcbacc265da054",
+      "captchaContentId": "0x38281d45191a2e6922758b5afb25760c4e74781b1269dc57cd7203302ae27503",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x01",
+      "solution": [
+        "0x4ff56bb64db6bf8d2da9e0e41e899c0f29e4f857b55a0f3e6b0dd2b74ab2de0a",
+        "0xa523158bea4556c82b25dee7915f25389f6e11d79666a0f9987ff45755ba87be",
+        "0xe269a4d7a2257412f3cd89a3a35c086ae23205db4559a2c91aef41a7e05b5e57"
+      ],
+      "items": [
+        {
+          "hash": "0x131e0d0227ac2e907a12a25ddc6ef0604a44b77b4c588bfc4fb63794a513df83",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_5.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xbe46849030260c39eef1cf2c5fd3855bef597d46049216851bdaf47efab43664",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_24.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x4ff56bb64db6bf8d2da9e0e41e899c0f29e4f857b55a0f3e6b0dd2b74ab2de0a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_27.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa523158bea4556c82b25dee7915f25389f6e11d79666a0f9987ff45755ba87be",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_28.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xd5cf2919b366879fe33306ba7bd3486a0a92b2d0ef67965c2b0c3338c1c62817",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_22.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xfb3d323f655c0f322bbcd5acc8a62978b33e2f17e2593a3b9e9f690485ae70ec",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_32.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5a46e6ea9c761583e2880a30471427c34ee765c763b8cccb7aa12dc3061bdd4b",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_26.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x594b242ce43c66d60925a55781bdee393877bca20d7c1454a406060151918e3f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_44.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xe269a4d7a2257412f3cd89a3a35c086ae23205db4559a2c91aef41a7e05b5e57",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_51.png",
+          "type": "image"
+        }
+      ],
+      "target": "dog",
+      "captchaId": "0x9c7110878c44210d3c7757d50974e4cdb06fe9ed2bb23f0a7003faf55ece9977",
+      "captchaContentId": "0xc907990639d825720ab841d94eca62679bbdaab4823eb790d73e6342accc2d41",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x02",
+      "solution": [
+        "0x131e0d0227ac2e907a12a25ddc6ef0604a44b77b4c588bfc4fb63794a513df83",
+        "0xbe46849030260c39eef1cf2c5fd3855bef597d46049216851bdaf47efab43664",
+        "0xd5cf2919b366879fe33306ba7bd3486a0a92b2d0ef67965c2b0c3338c1c62817"
+      ],
+      "items": [
+        {
+          "hash": "0x131e0d0227ac2e907a12a25ddc6ef0604a44b77b4c588bfc4fb63794a513df83",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_5.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xbe46849030260c39eef1cf2c5fd3855bef597d46049216851bdaf47efab43664",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_24.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x4ff56bb64db6bf8d2da9e0e41e899c0f29e4f857b55a0f3e6b0dd2b74ab2de0a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_27.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa523158bea4556c82b25dee7915f25389f6e11d79666a0f9987ff45755ba87be",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_28.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xd5cf2919b366879fe33306ba7bd3486a0a92b2d0ef67965c2b0c3338c1c62817",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_22.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xfb3d323f655c0f322bbcd5acc8a62978b33e2f17e2593a3b9e9f690485ae70ec",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_32.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5a46e6ea9c761583e2880a30471427c34ee765c763b8cccb7aa12dc3061bdd4b",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_26.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x594b242ce43c66d60925a55781bdee393877bca20d7c1454a406060151918e3f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_44.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xe269a4d7a2257412f3cd89a3a35c086ae23205db4559a2c91aef41a7e05b5e57",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_51.png",
+          "type": "image"
+        }
+      ],
+      "target": "cat",
+      "captchaId": "0x8775c213e26c17ec0e2b0081fcf2b2beb62648c2c59e486a77056476c15ef934",
+      "captchaContentId": "0x169c010030d4165c921ce7be28d0c4b5ef290524ba2fb3bda59b74853e7e012d",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x03",
+      "items": [
+        {
+          "hash": "0x131e0d0227ac2e907a12a25ddc6ef0604a44b77b4c588bfc4fb63794a513df83",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_5.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xbe46849030260c39eef1cf2c5fd3855bef597d46049216851bdaf47efab43664",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_24.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x4ff56bb64db6bf8d2da9e0e41e899c0f29e4f857b55a0f3e6b0dd2b74ab2de0a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_27.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa523158bea4556c82b25dee7915f25389f6e11d79666a0f9987ff45755ba87be",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_28.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xd5cf2919b366879fe33306ba7bd3486a0a92b2d0ef67965c2b0c3338c1c62817",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_22.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xfb3d323f655c0f322bbcd5acc8a62978b33e2f17e2593a3b9e9f690485ae70ec",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_32.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5a46e6ea9c761583e2880a30471427c34ee765c763b8cccb7aa12dc3061bdd4b",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_26.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x594b242ce43c66d60925a55781bdee393877bca20d7c1454a406060151918e3f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_44.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xe269a4d7a2257412f3cd89a3a35c086ae23205db4559a2c91aef41a7e05b5e57",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_51.png",
+          "type": "image"
+        }
+      ],
+      "target": "horse",
+      "captchaId": "0x0bba79a601e2b73ed53424750f0ebb286c0a4391dfa3268b14ef8073f1593d57",
+      "captchaContentId": "0x1577f9a10fbea3d2cd1ca102f11e409668153fbb1f788e5366f0494bd46b0d2c",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x01",
+      "solution": [
+        "0x1e52c506264d67ba391d284f5e4c658719c5fd103d127a106b19b1d0e9dc1d4f",
+        "0x6268f9fe9033f65b6f44820c016a4691f5677f982d5531350c2d272bec1d6d60"
+      ],
+      "items": [
+        {
+          "hash": "0x1e52c506264d67ba391d284f5e4c658719c5fd103d127a106b19b1d0e9dc1d4f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_4.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xef8fb6ba0c9849f6b462326129bd82e0d22aaf41f195492573aa0e75c7303568",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_15.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5a46e6ea9c761583e2880a30471427c34ee765c763b8cccb7aa12dc3061bdd4b",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_26.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x3823a951c0f734e2853c171ccb45ffef6cbabe2db8e44373481f798e9e54bed5",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_94.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xcc8601fced686065c4673cc1375a1bf7b6e06ffeab3d4db9495fb55702df41c4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_95.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x3631b988baf3a904a33fb2aa90ee5037c4948298d4fa7583f6b7fc0d3bcc7dbd",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_20.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x75df5bfc506beaa5f10cf70814d7ca2982d548dd9862b08bc8239bdacb8efb8e",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_79.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x6268f9fe9033f65b6f44820c016a4691f5677f982d5531350c2d272bec1d6d60",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_85.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa020771c955e2ee507d55b962f1f233d2f9f1768f390a9280c28d25d8f2d567a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_90.png",
+          "type": "image"
+        }
+      ],
+      "target": "plane",
+      "captchaId": "0xf74970cbcd8ffdf9ef2eb16e3d18f3bd2d057a95f731bfc40e2c5c73e758f6db",
+      "captchaContentId": "0xf9a86d3122f9b2ecf759956bd20c627359486d665fbcc8390548754f10dbd777",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x02",
+      "solution": [
+        "0x75df5bfc506beaa5f10cf70814d7ca2982d548dd9862b08bc8239bdacb8efb8e",
+        "0xa020771c955e2ee507d55b962f1f233d2f9f1768f390a9280c28d25d8f2d567a",
+        "0xcc8601fced686065c4673cc1375a1bf7b6e06ffeab3d4db9495fb55702df41c4"
+      ],
+      "items": [
+        {
+          "hash": "0x1e52c506264d67ba391d284f5e4c658719c5fd103d127a106b19b1d0e9dc1d4f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_4.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xef8fb6ba0c9849f6b462326129bd82e0d22aaf41f195492573aa0e75c7303568",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_15.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5a46e6ea9c761583e2880a30471427c34ee765c763b8cccb7aa12dc3061bdd4b",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_26.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x3823a951c0f734e2853c171ccb45ffef6cbabe2db8e44373481f798e9e54bed5",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_94.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xcc8601fced686065c4673cc1375a1bf7b6e06ffeab3d4db9495fb55702df41c4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_95.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x3631b988baf3a904a33fb2aa90ee5037c4948298d4fa7583f6b7fc0d3bcc7dbd",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_20.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x75df5bfc506beaa5f10cf70814d7ca2982d548dd9862b08bc8239bdacb8efb8e",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_79.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x6268f9fe9033f65b6f44820c016a4691f5677f982d5531350c2d272bec1d6d60",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_85.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa020771c955e2ee507d55b962f1f233d2f9f1768f390a9280c28d25d8f2d567a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_90.png",
+          "type": "image"
+        }
+      ],
+      "target": "dog",
+      "captchaId": "0x0f6ec4638be7b6f2d6715a8234321598327b824c86cb828f734b3fb707932a4e",
+      "captchaContentId": "0x1118d255dd5989bbabe912dc084feb7eb23091153b3b8eed7e1c07179555ef66",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x03",
+      "solution": [
+        "0x3631b988baf3a904a33fb2aa90ee5037c4948298d4fa7583f6b7fc0d3bcc7dbd",
+        "0x3823a951c0f734e2853c171ccb45ffef6cbabe2db8e44373481f798e9e54bed5",
+        "0x5a46e6ea9c761583e2880a30471427c34ee765c763b8cccb7aa12dc3061bdd4b"
+      ],
+      "items": [
+        {
+          "hash": "0x1e52c506264d67ba391d284f5e4c658719c5fd103d127a106b19b1d0e9dc1d4f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_4.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xef8fb6ba0c9849f6b462326129bd82e0d22aaf41f195492573aa0e75c7303568",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_15.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5a46e6ea9c761583e2880a30471427c34ee765c763b8cccb7aa12dc3061bdd4b",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_26.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x3823a951c0f734e2853c171ccb45ffef6cbabe2db8e44373481f798e9e54bed5",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_94.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xcc8601fced686065c4673cc1375a1bf7b6e06ffeab3d4db9495fb55702df41c4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_95.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x3631b988baf3a904a33fb2aa90ee5037c4948298d4fa7583f6b7fc0d3bcc7dbd",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_20.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x75df5bfc506beaa5f10cf70814d7ca2982d548dd9862b08bc8239bdacb8efb8e",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_79.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x6268f9fe9033f65b6f44820c016a4691f5677f982d5531350c2d272bec1d6d60",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_85.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa020771c955e2ee507d55b962f1f233d2f9f1768f390a9280c28d25d8f2d567a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_90.png",
+          "type": "image"
+        }
+      ],
+      "target": "horse",
+      "captchaId": "0xc4048421882fbf36e242ff97e4670a05afc9cba456b33efe2f043b753626e032",
+      "captchaContentId": "0x604fb7385a3a8cd1429c92569dc879f6ff96afee7560f558a2367848497578b2",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x04",
+      "items": [
+        {
+          "hash": "0x1e52c506264d67ba391d284f5e4c658719c5fd103d127a106b19b1d0e9dc1d4f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_4.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xef8fb6ba0c9849f6b462326129bd82e0d22aaf41f195492573aa0e75c7303568",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_15.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5a46e6ea9c761583e2880a30471427c34ee765c763b8cccb7aa12dc3061bdd4b",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_26.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x3823a951c0f734e2853c171ccb45ffef6cbabe2db8e44373481f798e9e54bed5",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_94.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xcc8601fced686065c4673cc1375a1bf7b6e06ffeab3d4db9495fb55702df41c4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_95.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x3631b988baf3a904a33fb2aa90ee5037c4948298d4fa7583f6b7fc0d3bcc7dbd",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_20.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x75df5bfc506beaa5f10cf70814d7ca2982d548dd9862b08bc8239bdacb8efb8e",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_79.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x6268f9fe9033f65b6f44820c016a4691f5677f982d5531350c2d272bec1d6d60",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_85.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa020771c955e2ee507d55b962f1f233d2f9f1768f390a9280c28d25d8f2d567a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_90.png",
+          "type": "image"
+        }
+      ],
+      "target": "bird",
+      "captchaId": "0xeb9a4e3845c3dcafe6ea7ca3b8988e5ab86a9901fa5027cfa03d541cc89e4008",
+      "captchaContentId": "0xcdda441aa1bab37c696541e219ce1a9bcb3fd50f991c6592b209336a30086695",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x01",
+      "solution": [
+        "0x2bfaf40fdd4c4608a435420cf8e5ceea9eba6c95c10e40747dce040e6717cabe",
+        "0x7ed3f3a320b39157eaeee4b88faf436d95a80b3d9eff6582970dcd8c996976f4",
+        "0xa4b7edf9324173eaede105dfa66175be48340eefad9d139595c97ff999a188b8"
+      ],
+      "items": [
+        {
+          "hash": "0x46a682c6f2dac118110e1d633caa577690e5428232f41c9ae4f7742f66349744",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_82.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa4b7edf9324173eaede105dfa66175be48340eefad9d139595c97ff999a188b8",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_78.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xe61857c06704ff95175ad8659abbbed617dc832b3390669754ef07fcaa98a597",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_89.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5e5912ce314ced9343d9b3438cf686b6fe9e7e02389291e3e062f4262c20a528",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_61.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x643d46be074110da9f90353c6e7b77a2e2ecc844c517efc14899bcefc2f3cbb1",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_69.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xd49a0f5a57584806e9f96e950039b72e762253d46d3767d442fc19e5c7c62d1f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_71.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x7ed3f3a320b39157eaeee4b88faf436d95a80b3d9eff6582970dcd8c996976f4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_33.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xe2831f9d30fdfe311369a2f02bff50622b8d0fe2bd3d6b8a01baef9e6e3f6af9",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_25.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x2bfaf40fdd4c4608a435420cf8e5ceea9eba6c95c10e40747dce040e6717cabe",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_21.png",
+          "type": "image"
+        }
+      ],
+      "target": "cat",
+      "captchaId": "0xafeaf0ff5ad977f3432a7b2b12c54db86fa4957f4d830d3ac47032e6cb0a8908",
+      "captchaContentId": "0xf8f44cd6d6d62435a0dd6112900e50fa019e82cf81cc252803d4e48734fd6cc7",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x01",
+      "solution": [
+        "0x46a682c6f2dac118110e1d633caa577690e5428232f41c9ae4f7742f66349744",
+        "0x5e5912ce314ced9343d9b3438cf686b6fe9e7e02389291e3e062f4262c20a528",
+        "0x643d46be074110da9f90353c6e7b77a2e2ecc844c517efc14899bcefc2f3cbb1"
+      ],
+      "items": [
+        {
+          "hash": "0x46a682c6f2dac118110e1d633caa577690e5428232f41c9ae4f7742f66349744",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_82.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa4b7edf9324173eaede105dfa66175be48340eefad9d139595c97ff999a188b8",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_78.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xe61857c06704ff95175ad8659abbbed617dc832b3390669754ef07fcaa98a597",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_89.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5e5912ce314ced9343d9b3438cf686b6fe9e7e02389291e3e062f4262c20a528",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_61.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x643d46be074110da9f90353c6e7b77a2e2ecc844c517efc14899bcefc2f3cbb1",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_69.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xd49a0f5a57584806e9f96e950039b72e762253d46d3767d442fc19e5c7c62d1f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_71.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x7ed3f3a320b39157eaeee4b88faf436d95a80b3d9eff6582970dcd8c996976f4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_33.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xe2831f9d30fdfe311369a2f02bff50622b8d0fe2bd3d6b8a01baef9e6e3f6af9",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_25.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x2bfaf40fdd4c4608a435420cf8e5ceea9eba6c95c10e40747dce040e6717cabe",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_21.png",
+          "type": "image"
+        }
+      ],
+      "target": "plane",
+      "captchaId": "0x3226acb453ddf0c8fe07a78b18093e9dc0e2ad0594cf4f2839277bb7ef73598a",
+      "captchaContentId": "0x704db41ab3c241992a7c5c8239d181ceb6eec9172f02addd6a5f252e38d1f142",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x01",
+      "solution": [
+        "0xd49a0f5a57584806e9f96e950039b72e762253d46d3767d442fc19e5c7c62d1f",
+        "0xe2831f9d30fdfe311369a2f02bff50622b8d0fe2bd3d6b8a01baef9e6e3f6af9",
+        "0xe61857c06704ff95175ad8659abbbed617dc832b3390669754ef07fcaa98a597"
+      ],
+      "items": [
+        {
+          "hash": "0x46a682c6f2dac118110e1d633caa577690e5428232f41c9ae4f7742f66349744",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_82.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa4b7edf9324173eaede105dfa66175be48340eefad9d139595c97ff999a188b8",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_78.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xe61857c06704ff95175ad8659abbbed617dc832b3390669754ef07fcaa98a597",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_89.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x5e5912ce314ced9343d9b3438cf686b6fe9e7e02389291e3e062f4262c20a528",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_61.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x643d46be074110da9f90353c6e7b77a2e2ecc844c517efc14899bcefc2f3cbb1",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_69.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xd49a0f5a57584806e9f96e950039b72e762253d46d3767d442fc19e5c7c62d1f",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_71.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x7ed3f3a320b39157eaeee4b88faf436d95a80b3d9eff6582970dcd8c996976f4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_33.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xe2831f9d30fdfe311369a2f02bff50622b8d0fe2bd3d6b8a01baef9e6e3f6af9",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_25.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x2bfaf40fdd4c4608a435420cf8e5ceea9eba6c95c10e40747dce040e6717cabe",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_21.png",
+          "type": "image"
+        }
+      ],
+      "target": "car",
+      "captchaId": "0x913f2a84cf1e51009eb6785429efed12ac9aa43aab026f38d9891f2546922a70",
+      "captchaContentId": "0x733ab41f5dd1209ce22b45230c67618f5495875fbaeca40ec1cb994811ee85b6",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x010101",
+      "solution": [
+        "0x7ed3f3a320b39157eaeee4b88faf436d95a80b3d9eff6582970dcd8c996976f4",
+        "0xa4b7edf9324173eaede105dfa66175be48340eefad9d139595c97ff999a188b8",
+        "0xc2d03a53ff057f5a2c6f46ca830c5f8a233fb9a3ee561578b83c89cf09c1f8b1"
+      ],
+      "items": [
+        {
+          "hash": "0xce9358701f9095fd68bbdf75c961032a18b1d5bad288d99988a3e9848359a2d0",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_16.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xefe80829c296bbe390dde416b6fea2d2b53410c6cffd65000efbe22cb77dde54",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_17.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x4ff56bb64db6bf8d2da9e0e41e899c0f29e4f857b55a0f3e6b0dd2b74ab2de0a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_27.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x7ed3f3a320b39157eaeee4b88faf436d95a80b3d9eff6582970dcd8c996976f4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_33.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x18ad206ff2308f7ab68309953afdd731291f041c419cad4d2325d1a5db79b8fe",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_40.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x6393925c19adc0506341888868be75ce0c7824a6be39549ad236560440f21ba0",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_52.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa4b7edf9324173eaede105dfa66175be48340eefad9d139595c97ff999a188b8",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_78.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xc2d03a53ff057f5a2c6f46ca830c5f8a233fb9a3ee561578b83c89cf09c1f8b1",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_93.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xc1500e538df7e2fa287fe006c1b41c0b4ba4048ef58cb93926c3ff6f8e0e4f39",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_70.png",
+          "type": "image"
+        }
+      ],
+      "target": "cat",
+      "captchaId": "0x1e11b80577ac97d7625fd78100f83b9e0eb14c43914303b927b355e38142aaca",
+      "captchaContentId": "0x3a25d1a32746645a979b524e3b249c36e164b6cb6c12edd84efdb562f662cc47",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x020202",
+      "solution": [
+        "0x6393925c19adc0506341888868be75ce0c7824a6be39549ad236560440f21ba0",
+        "0xc1500e538df7e2fa287fe006c1b41c0b4ba4048ef58cb93926c3ff6f8e0e4f39",
+        "0xefe80829c296bbe390dde416b6fea2d2b53410c6cffd65000efbe22cb77dde54"
+      ],
+      "items": [
+        {
+          "hash": "0xce9358701f9095fd68bbdf75c961032a18b1d5bad288d99988a3e9848359a2d0",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_16.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xefe80829c296bbe390dde416b6fea2d2b53410c6cffd65000efbe22cb77dde54",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_17.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x4ff56bb64db6bf8d2da9e0e41e899c0f29e4f857b55a0f3e6b0dd2b74ab2de0a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_27.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x7ed3f3a320b39157eaeee4b88faf436d95a80b3d9eff6582970dcd8c996976f4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_33.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x18ad206ff2308f7ab68309953afdd731291f041c419cad4d2325d1a5db79b8fe",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_40.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x6393925c19adc0506341888868be75ce0c7824a6be39549ad236560440f21ba0",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_52.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa4b7edf9324173eaede105dfa66175be48340eefad9d139595c97ff999a188b8",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_78.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xc2d03a53ff057f5a2c6f46ca830c5f8a233fb9a3ee561578b83c89cf09c1f8b1",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_93.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xc1500e538df7e2fa287fe006c1b41c0b4ba4048ef58cb93926c3ff6f8e0e4f39",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_70.png",
+          "type": "image"
+        }
+      ],
+      "target": "deer",
+      "captchaId": "0xaf54c130a72d091438c3016cbda63dc624df44e5ed53074d9de2eb1643d0564d",
+      "captchaContentId": "0x28002ef68c6db7ee475bdd5536002db90604d5597c5d3faa7181303724c142a0",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    },
+    {
+      "salt": "0x030303",
+      "items": [
+        {
+          "hash": "0xce9358701f9095fd68bbdf75c961032a18b1d5bad288d99988a3e9848359a2d0",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_16.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xefe80829c296bbe390dde416b6fea2d2b53410c6cffd65000efbe22cb77dde54",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_17.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x4ff56bb64db6bf8d2da9e0e41e899c0f29e4f857b55a0f3e6b0dd2b74ab2de0a",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_27.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x7ed3f3a320b39157eaeee4b88faf436d95a80b3d9eff6582970dcd8c996976f4",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_33.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x18ad206ff2308f7ab68309953afdd731291f041c419cad4d2325d1a5db79b8fe",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_40.png",
+          "type": "image"
+        },
+        {
+          "hash": "0x6393925c19adc0506341888868be75ce0c7824a6be39549ad236560440f21ba0",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_52.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xa4b7edf9324173eaede105dfa66175be48340eefad9d139595c97ff999a188b8",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_78.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xc2d03a53ff057f5a2c6f46ca830c5f8a233fb9a3ee561578b83c89cf09c1f8b1",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_93.png",
+          "type": "image"
+        },
+        {
+          "hash": "0xc1500e538df7e2fa287fe006c1b41c0b4ba4048ef58cb93926c3ff6f8e0e4f39",
+          "data": "https://prosopo.github.io/demo-datasets/img/test_image_png_70.png",
+          "type": "image"
+        }
+      ],
+      "target": "dog",
+      "captchaId": "0x3975ce81d54749be6d04c7ebee1e1528b4a1899622f5fee49cd6b7ea52756b8f",
+      "captchaContentId": "0xf724d6973324b3933c18e4e9af9053fba8fd01a28132c56ed0e942afa412fc31",
+      "datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+      "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    }
+  ],
+  "format": "SelectAll",
+  "timeLimit": 30,
+  "solutionTree": [
+    [
+      "0x33324804260eb539ac33599c44fc97373148c4aee09e7480b0a8cfc18f4574f8",
+      "0xdf72e4588427592ac91c9e0f63f01a9713e9f04da0bf8551b6fffab5d6a4d66f",
+      "0x3872714eed3646f64034b8122f248126a4f7151f114fa72ff3f91470a7ff6df6",
+      "0x7765e69746b985d1ecf86e59bced28b2d6e4532c56896a362cfcbacc265da054",
+      "0x9c7110878c44210d3c7757d50974e4cdb06fe9ed2bb23f0a7003faf55ece9977",
+      "0x8775c213e26c17ec0e2b0081fcf2b2beb62648c2c59e486a77056476c15ef934",
+      "0x0bba79a601e2b73ed53424750f0ebb286c0a4391dfa3268b14ef8073f1593d57",
+      "0xf74970cbcd8ffdf9ef2eb16e3d18f3bd2d057a95f731bfc40e2c5c73e758f6db",
+      "0x0f6ec4638be7b6f2d6715a8234321598327b824c86cb828f734b3fb707932a4e",
+      "0xc4048421882fbf36e242ff97e4670a05afc9cba456b33efe2f043b753626e032",
+      "0xeb9a4e3845c3dcafe6ea7ca3b8988e5ab86a9901fa5027cfa03d541cc89e4008",
+      "0xafeaf0ff5ad977f3432a7b2b12c54db86fa4957f4d830d3ac47032e6cb0a8908",
+      "0x3226acb453ddf0c8fe07a78b18093e9dc0e2ad0594cf4f2839277bb7ef73598a",
+      "0x913f2a84cf1e51009eb6785429efed12ac9aa43aab026f38d9891f2546922a70",
+      "0x1e11b80577ac97d7625fd78100f83b9e0eb14c43914303b927b355e38142aaca",
+      "0xaf54c130a72d091438c3016cbda63dc624df44e5ed53074d9de2eb1643d0564d",
+      "0x3975ce81d54749be6d04c7ebee1e1528b4a1899622f5fee49cd6b7ea52756b8f"
+    ],
+    [
+      "0xfdf55849b4a46c9ad6cdd65654afe58d83148bcfb45a0799ff30d496996b16db",
+      "0x7e50f7e84b847014bd6b9c977d2b7156529a592ebea465dbeb32be93e4082eb6",
+      "0x459791fef924d145f7e362a08756f20d1d92fae80ba12f660824578911cb61ca",
+      "0x376259c504b204bb27eab4e07134289233e5d97522fea11f2794bd90bcee9169",
+      "0xa99d4489e0e8193b850a692238dd116eb8f036c40330552e3fc18d57c80006f5",
+      "0x3cfd0d70c2dcdf8d547379980e85d757f2290ff57b0edbeb3dcdf938f72628c5",
+      "0x9afca54ecf51cf5edca9fd7e3d2cac72aeb6f7e30bc766965597a8672a08f59e",
+      "0x52094ad1d577d5234fa81c51742e4d36f3604f5bea8c154994ff626e8dfa0bd4",
+      "0x26718f092c6bffac8c39f96d3642e0ab1a0f94c97259534ae44d900624bc7066"
+    ],
+    [
+      "0x58d8b21188481f9a1e2f82ec0aa5a63da3eb11f803ef304fa7105014805f4b60",
+      "0x6122c692c04db75444f942d87e5fa0b45ed0296eeafb7221130260581391ef07",
+      "0x74ed057b300a1b47df473f43c0101b9047167ccc421518f3e88e37e78ec094f2",
+      "0xedff2aec4c74ac99c62365d6137af1c13a95f9c4ffe30fceb61cb089d11ab5cd",
+      "0x27b6f5056973b36626dfb3cc856110c8a6de88b3e71084f4b08297c0dfd1d08a"
+    ],
+    [
+      "0xf727d102247d4b3afcc4d65f407c541580620c17daee9a4df84dc85699a5b4a1",
+      "0xe165cc8a6e466eaa07680b4e8638ebc7eb5c68ad99bae8e56e4065caee9c6046",
+      "0xc081f8d9991ab548a0f5c035347a58c64da985192508f040c8fd83a825fd4aae"
+    ],
+    [
+      "0x4523fd65ac88815aea8d429147e0651945639dcbf631a07ef1af4ba8a237f9fd",
+      "0xb76e301df7a2b4e99468c3ace4ff652d116c69b942d26c1a5f340145d2d20059"
+    ],
+    [
+      "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d"
+    ]
+  ],
+  "contentTree": [
+    [
+      "0x0bd1f2c28ba5b80997163e057eb857b5a2e0214b4a539124e4470aa90449b8f4",
+      "0x578d398e0db39049fdd97135fef2d985ccba7a7c482267aa9cd79a841ac10fc0",
+      "0xb79b557a793c13ffff9812b13833a04540bee12e3ea0c4876e9db04acdb55051",
+      "0x38281d45191a2e6922758b5afb25760c4e74781b1269dc57cd7203302ae27503",
+      "0xc907990639d825720ab841d94eca62679bbdaab4823eb790d73e6342accc2d41",
+      "0x169c010030d4165c921ce7be28d0c4b5ef290524ba2fb3bda59b74853e7e012d",
+      "0x1577f9a10fbea3d2cd1ca102f11e409668153fbb1f788e5366f0494bd46b0d2c",
+      "0xf9a86d3122f9b2ecf759956bd20c627359486d665fbcc8390548754f10dbd777",
+      "0x1118d255dd5989bbabe912dc084feb7eb23091153b3b8eed7e1c07179555ef66",
+      "0x604fb7385a3a8cd1429c92569dc879f6ff96afee7560f558a2367848497578b2",
+      "0xcdda441aa1bab37c696541e219ce1a9bcb3fd50f991c6592b209336a30086695",
+      "0xf8f44cd6d6d62435a0dd6112900e50fa019e82cf81cc252803d4e48734fd6cc7",
+      "0x704db41ab3c241992a7c5c8239d181ceb6eec9172f02addd6a5f252e38d1f142",
+      "0x733ab41f5dd1209ce22b45230c67618f5495875fbaeca40ec1cb994811ee85b6",
+      "0x3a25d1a32746645a979b524e3b249c36e164b6cb6c12edd84efdb562f662cc47",
+      "0x28002ef68c6db7ee475bdd5536002db90604d5597c5d3faa7181303724c142a0",
+      "0xf724d6973324b3933c18e4e9af9053fba8fd01a28132c56ed0e942afa412fc31"
+    ],
+    [
+      "0xfd9d06d8d63e62a50f0fb428b08a1b2c42931c7a842a77a8f92bd64f0ea53e81",
+      "0xe84adb2bf8fe40b2d9dc4e8e3a4bac8dc0ebb01702d75b454c34e471c802011e",
+      "0xc9c980d236096215e75b8fe433e9b1d3faa930b0418b9785109680e339765722",
+      "0x62b65e5a34e175a19eaa861c6adb54777a7f9b5622b024e0a2a87244284e0dc3",
+      "0xd300e3c695d9cbf20701e3d15f83a8dcfa35ffa9fe5373ae733281cdff622adf",
+      "0x6352b3bd833d2c81890024f86d536eaf034d01cb05cf446c6d5d5fce29d51843",
+      "0x8a038cdd64bad7591d7ddef6abb9e049af3bf851287751ee89ed90ba60f17f4e",
+      "0xcde44138b26e10e753bc32d9fc9d0f2546c56059618d6be1e5b7b32929e25110",
+      "0x9e2c127d727d05481d13b3a58fb6be97b87c90d997115247801443758e028fcd"
+    ],
+    [
+      "0xe5535b05ee99c5164266c7f3f95465ab9fc8e1c3e80c4d1b7eabf892dc4e6704",
+      "0x18f35c7b758eb79f906f058088dddc971ef21d04e2df330960e4ecb781c7232e",
+      "0x6080527162319e87e2e4ea5bae42d7d5509d4289a5af95c4c60cc060273e2cd5",
+      "0xa448c7425a11748d8017cf4515e978795e5a3edf51e9800e96e1b0a95356febe",
+      "0x294c4d91822caeb0102d276088acbc6caff78cda1b6a28d7198f2cb22c8aa261"
+    ],
+    [
+      "0x382af1fb84cb2cfcbd11acbc0fd3ddd137ba8ac24f9f323c4fac0d441e56fa4f",
+      "0xafa08f875b37e07c2ddfb68549342630c3c925bff4f55de6c070b5787edd7f21",
+      "0x30b9cd76245013e6f3aeed3268b50eed22a30963d8dbda56e0240e420be37522"
+    ],
+    [
+      "0xd6c56019190801bfd6211c700617a2fbeef64b67b313ee5da3782daabef26447",
+      "0xcb1b1a11d0ca3af808878c00512933eb256a463770c03a54be3692e3aa8d235a"
+    ],
+    [
+      "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+    ]
+  ],
+  "datasetContentId": "0x164a8e119a487b14e637b101993fb4fc3061951318595917cd03d1ebfc300c05"
+}

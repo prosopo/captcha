@@ -1,3 +1,4 @@
+import * as fs from 'fs'
 import { Captcha, CaptchaWithoutId } from '@prosopo/types'
 import { CaptchaMerkleTree } from './merkle'
 import { Dataset, DatasetRaw } from '@prosopo/types'
@@ -61,3 +62,16 @@ export async function addItemHashesAndSolutionHashesToDataset(datasetRaw: Datase
         ),
     } as Dataset
 }
+
+// Read the JSON file
+const rawdata = fs.readFileSync('captchas.json')
+const datasetRaw: DatasetRaw = JSON.parse(rawdata.toString())
+
+buildDataset(datasetRaw)
+    .then((dataset) => {
+        fs.writeFileSync('buildDataset.json', JSON.stringify(dataset, null, 2))
+        console.log("Dataset successfully written to 'buildDataset.json'.")
+    })
+    .catch((err) => {
+        console.error(err)
+    })
