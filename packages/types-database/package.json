@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/types-database",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Types for prosopo database",
   "main": "dist/index.js",
   "scripts": {
@@ -22,8 +22,8 @@
   "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
     "@polkadot/types": "10.9.1",
-    "@prosopo/common": "^0.1.15",
-    "@prosopo/types": "^0.1.15",
+    "@prosopo/common": "^0.1.16",
+    "@prosopo/types": "^0.1.16",
     "mongodb": "4.8.1",
     "mongoose": "^7.2.0",
     "zod": "^3.17.9"

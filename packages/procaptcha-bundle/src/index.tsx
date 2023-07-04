@@ -65,7 +65,9 @@ export function render() {
                         ;(input.name = ApiParams.procaptchaResponse), (input.value = JSON.stringify(payload))
                         form.appendChild(input)
                         // submit the form
-                        form.submit()
+                        const procaptchaEvent = new Event('procaptchaSubmit')
+                        // Dispatch the event.
+                        element.dispatchEvent(procaptchaEvent)
                     })
                 }
             },
