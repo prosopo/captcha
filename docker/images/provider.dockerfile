@@ -19,6 +19,8 @@ COPY ./package.json ./
 COPY ./tsconfig.json ./
 COPY ./tsconfig.build.json ./
 
+RUN echo $(ls -la)
+
 RUN npm i
 RUN npm run -w @prosopo/provider build
 RUN npm run -w @prosopo/cli build
