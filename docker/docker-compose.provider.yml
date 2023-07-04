@@ -4,23 +4,8 @@ services:
     build:
       context: ..
       dockerfile: ./docker/images/provider.dockerfile
-    environment:
-      - NODE_ENV=production
-      - DAPP_SITE_KEY=$DAPP_SITE_KEY
-      - SUBDOMAIN=$SUBDOMAIN
-      - DOMAIN=$DOMAIN
-      - DATABASE_PASSWORD=$DATABASE_PASSWORD
-      - DATABASE_USERNAME=$DATABASE_USERNAME
-      - DATABASE_NAME=$DATABASE_NAME
-      - DATABASE_HOST=$DATABASE_HOST
-      - DATABASE_PORT=$DATABASE_PORT
-      - API_PORT=$API_PORT
-      - PAIR_TYPE=$PAIR_TYPE
-      - SS58_FORMAT=$SS58_FORMAT
-      - PROVIDER_ADDRESS=$PROVIDER_ADDRESS
-      - PROVIDER_JSON=$PROVIDER_JSON
-      - PROVIDER_ACCOUNT_PASSWORD=$PROVIDER_ACCOUNT_PASSWORD
-      - PROTOCOL_CONTRACT_ADDRESS=$PROTOCOL_CONTRACT_ADDRESS
+    env_file:
+      - .env.provider
     ports:
       - "9229:9229"
       - "80:80"
