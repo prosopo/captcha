@@ -381,14 +381,14 @@ export class Tasks {
             return false
         }
 
-        const headerBlockNo = header.number.toNumber()
+        const headerBlockNo = header.number.toPrimitive()
         if (headerBlockNo === blockNo) {
             return true
         }
 
         const parent = await contract.api.rpc.chain.getBlock(header.parentHash)
 
-        return this.isRecentBlock(contract, (parent.toHuman() as any).block.header, blockNo, depth - 1)
+        return this.isRecentBlock(contract, parent.block.header, blockNo, depth - 1)
     }
 
     /**

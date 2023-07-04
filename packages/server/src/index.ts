@@ -13,7 +13,6 @@ import { WsProvider } from '@polkadot/rpc-provider'
 export class ProsopoServer {
     config: ProsopoServerConfig
     contract: ProsopoCaptchaContract
-    mnemonic: string
     prosopoContractAddress: string
     dappContractAddress: string
     defaultEnvironment: string
@@ -26,9 +25,9 @@ export class ProsopoServer {
     api: ApiPromise
     network: NetworkConfig
 
-    constructor(mnemonic: string, config: ProsopoServerConfig) {
+    constructor(pair: KeyringPair, config: ProsopoServerConfig) {
         this.config = config
-        this.mnemonic = mnemonic
+        this.pair = pair
         if (
             this.config.defaultEnvironment &&
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
@@ -69,13 +68,15 @@ export class ProsopoServer {
     }
 
     async getSigner(): Promise<void> {
-        this.api = await ApiPromise.create({ provider: this.wsProvider })
-        await this.api.isReadyOrError
-        const { mnemonic } = this
-        if (!mnemonic) {
-            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED')
+        if (!this.api) {
+            this.api = await ApiPromise.create({ provider: this.wsProvider })
         }
-        this.pair = this.keyring.addFromMnemonic(mnemonic)
+        await this.api.isReadyOrError
+        try {
+            this.pair = this.keyring.addPair(this.pair)
+        } catch (err) {
+            throw new ProsopoEnvError('CONTRACT.SIGNER_UNDEFINED', this.getSigner.name, {}, err)
+        }
     }
 
     public async isVerified(payload: ProcaptchaOutput): Promise<boolean> {

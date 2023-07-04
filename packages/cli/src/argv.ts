@@ -144,11 +144,17 @@ export function processArgs(args, env: ProviderEnvironment) {
             async (argv) => {
                 const provider = (await tasks.contract.query.getProvider(argv.address, {})).value.unwrap().unwrap()
                 if (provider && (argv.url || argv.fee || argv.payee || argv.value)) {
+                    await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
+                        argv.url || provider.url,
+                        argv.fee || provider.fee,
+                        argv.payee || provider.payee,
+                        { value: argv.value || 0 }
+                    )
                     const result = await tasks.contract.tx.providerUpdate(
                         argv.url || provider.url,
                         argv.fee || provider.fee,
                         argv.payee || provider.payee,
-                        argv.value || 0
+                        { value: argv.value || 0 }
                     )
 
                     logger.info(JSON.stringify(result, null, 2))

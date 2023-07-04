@@ -23,6 +23,7 @@
   "homepage": "https://github.com/prosopo/client-example-server#readme",
   "dependencies": {
     "@prosopo/api": "^0.1.16",
+    "@prosopo/cli": "^0.1.16",
     "@prosopo/contract": "^0.1.16",
     "@prosopo/procaptcha": "^0.1.16",
     "@prosopo/server": "^0.1.16",

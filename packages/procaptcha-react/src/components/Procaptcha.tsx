@@ -137,7 +137,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                 )}
             </Backdrop>
 
-            <Box p={1} sx={{ maxWidth: '600px', minWidth: '200px' }} data-cy={'button-human'}>
+            <Box p={1} sx={{ maxWidth: '300px', minWidth: '200px' }} data-cy={'button-human'}>
                 <Box
                     p={1}
                     border={1}
@@ -148,7 +148,6 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         flexWrap: 'wrap',
-                        color: 'black',
                         backgroundColor: 'white',
                     }}
                 >
@@ -196,7 +195,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                                 </Box>
                             </Box>
                             <Box p={1}>
-                                <Typography>I am a human</Typography>
+                                <Typography color="common.black">I am a human</Typography>
                             </Box>
                         </Box>
                         {/* <Box p={1}>
