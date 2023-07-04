@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   provider:
+    image: prosopo/provider:latest
     build:
       context: ..
       dockerfile: ./docker/images/provider.dockerfile
@@ -10,4 +11,3 @@ services:
       - "9229:9229"
       - "80:80"
       - "443:443"
-

@@ -27,4 +27,4 @@ RUN npm run -w @prosopo/cli build
 
 EXPOSE 9229 80 443
 
-ENTRYPOINT [ "npm", "run", "start:provider" ]
+CMD exec /bin/bash -c "npm run start:provider"
