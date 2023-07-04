@@ -263,12 +263,12 @@ export interface Database {
 
     getLastBatchCommitTime(): Promise<Date>
 
-    getLastScheduledTask(
+    getLastScheduledTaskStatus(
         task: ScheduledTaskNames,
         status?: ScheduledTaskStatus
     ): Promise<ScheduledTaskRecord | undefined>
 
-    getScheduledTaskById(id: string): Promise<ScheduledTaskRecord | undefined>
+    getScheduledTaskStatus(taskId: string, status: ScheduledTaskStatus): Promise<ScheduledTaskRecord | undefined>
 
     storeScheduledTaskStatus(
         taskId: `0x${string}`,

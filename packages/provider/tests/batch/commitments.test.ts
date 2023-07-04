@@ -204,7 +204,7 @@ describe('BATCH TESTS', function () {
                 //                     '0x68b0425027636a9130fae67b6cad16a3686e0ce4afd7bc01ecc2504558cbde23',
                 //                     '0x38ed96eeb240c2c3b5dbb7d29fad276317b5a6bb30094ddf0b845585503dd830', ...
 
-                const batcherResult = await env.db.getLastScheduledTask(ScheduledTaskNames.BatchCommitment)
+                const batcherResult = await env.db.getLastScheduledTaskStatus(ScheduledTaskNames.BatchCommitment)
                 console.log('batcherResult', batcherResult)
                 if (
                     !batcherResult ||
@@ -248,7 +248,7 @@ describe('BATCH TESTS', function () {
                         count++
                     }
                     // Check the last batch commitment time
-                    const lastBatchCommit = await providerTasks.db.getLastScheduledTask(
+                    const lastBatchCommit = await providerTasks.db.getLastScheduledTaskStatus(
                         ScheduledTaskNames.BatchCommitment
                     )
                     expect(lastBatchCommit).to.be.not.empty

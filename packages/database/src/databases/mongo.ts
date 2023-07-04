@@ -706,17 +706,22 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     /**
-     * @description Get a scheduled task by ID
+     * @description Get a scheduled task status record by task ID and status
      */
-    async getScheduledTaskById(id: string): Promise<ScheduledTaskRecord | undefined> {
-        const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler?.findOne({ _id: id }).lean()
+    async getScheduledTaskStatus(
+        taskId: string,
+        status: ScheduledTaskStatus
+    ): Promise<ScheduledTaskRecord | undefined> {
+        const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler
+            ?.find({ taskId: taskId, status: status })
+            .lean()
         return cursor ? cursor : undefined
     }
 
     /**
-     * @description Get the last batch commit time or return 0 if none
+     * @description Get the most recent scheduled task status record for a given task
      */
-    async getLastScheduledTask(
+    async getLastScheduledTaskStatus(
         task: ScheduledTaskNames,
         status?: ScheduledTaskStatus
     ): Promise<ScheduledTaskRecord | undefined> {
