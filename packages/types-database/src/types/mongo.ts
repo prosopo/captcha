@@ -99,6 +99,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     completedAt: { type: Number, required: true },
     userSignature: { type: [Number], required: true },
     processed: { type: Boolean, required: true },
+    batched: { type: Boolean, required: true },
 })
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({

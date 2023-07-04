@@ -163,29 +163,17 @@ describe('BATCH TESTS', function () {
                     await sleep(10)
                     const userSolutions = await providerTasks.db.getDappUserSolutionById(commitmentId)
                     expect(userSolutions).to.be.not.empty
+                    const commitRecord = await providerTasks.db.getDappUserCommitmentById(commitmentId)
+                    expect(commitRecord).to.be.not.empty
                 }
-
                 // Try to get commitments that are ready to be batched
-                const commitmentsFromDbBeforeProcessing = (await batcher.getCommitments()).filter(
-                    (solution) => commitmentIds.indexOf(solution.id.toString()) > -1
-                )
+                const commitmentsBeforeBatching = await batcher.getCommitments()
 
-                // Check the commitments are not returned from the db as they are not yet processed
-                expect(commitmentsFromDbBeforeProcessing).to.be.empty
-
-                // Mark the commitments as processed
-                await providerTasks.db.flagProcessedDappUserCommitments(commitmentIds)
-                await providerTasks.db.flagProcessedDappUserSolutions(commitmentIds)
-
-                // Check the commitments are returned from the db as they are now processed
-                const commitmentsFromDbBeforeBatching = (await batcher.getCommitments()).filter(
-                    (solution) => commitmentIds.indexOf(solution.id.toString()) > -1
-                )
-                expect(commitmentsFromDbBeforeBatching.length).to.be.equal(commitmentCount)
+                expect(commitmentsBeforeBatching.length).to.be.equal(commitmentCount)
 
                 // n/2 commitments should be approved and n/2 disapproved
                 expect(
-                    commitmentsFromDbBeforeBatching
+                    commitmentsBeforeBatching
                         .map((c) => +(c.status === ArgumentTypes.CaptchaStatus.approved))
                         .reduce((prev, next) => prev + next)
                 ).to.equal(Math.round(commitmentCount / 2))
@@ -228,17 +216,18 @@ describe('BATCH TESTS', function () {
 
                 if (batcherResult && batcherResult.result && batcherResult.result.data) {
                     const processedCommitmentIds = batcherResult.result.data.commitmentIds
-                    const processedCommitments = commitmentsFromDbBeforeBatching.filter(
+                    const processedCommitments = commitmentsBeforeBatching.filter(
                         (commitment) => processedCommitmentIds.indexOf(commitment.id.toString()) > -1
                     )
 
                     // Try to get unbatched commitments after batching
-                    const commitmentsFromDbAfter = (await env.db.getUnbatchedDappUserCommitments()).filter(
-                        (solution) => processedCommitmentIds.indexOf(solution.id) === -1
-                    )
+                    const commitmentsFromDbAfter = await env.db.getUnbatchedDappUserCommitments()
 
-                    // There should be no unbatched commitments
-                    expect(commitmentsFromDbAfter).to.be.empty
+                    // Check that the number of batched commitments is equal to the number of commitments that were
+                    // processed by the batcher
+                    expect(commitmentsBeforeBatching.length - processedCommitments.length).to.equal(
+                        commitmentsFromDbAfter.length
+                    )
 
                     // We have to wait for batched commitments to become available on-chain
                     const waitTime = calcInterval(contractApi.api as ApiPromise).toNumber() * 2
