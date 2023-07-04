@@ -21,7 +21,9 @@ COPY ./tsconfig.build.json ./
 
 RUN echo $(ls -la)
 
-RUN npm i --force
+RUN npm cache clean --force && \
+        npm install -g npm@latest && \
+        npm install
 RUN npm run -w @prosopo/provider build
 RUN npm run -w @prosopo/cli build
 
