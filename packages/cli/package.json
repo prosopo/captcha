@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/cli",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Path env prosopo environment",
   "main": "dist/index.js",
   "scripts": {
@@ -16,10 +16,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "@polkadot/util-crypto": "12.3.2",
-    "@prosopo/common": "^0.1.15",
-    "@prosopo/env": "^0.1.15",
-    "@prosopo/provider": "^0.1.15",
-    "@prosopo/types": "^0.1.15"
+    "@prosopo/common": "^0.1.16",
+    "@prosopo/env": "^0.1.16",
+    "@prosopo/provider": "^0.1.16",
+    "@prosopo/types": "^0.1.16"
   },
   "devDependencies": {
     "typescript": "^4.9.4"
