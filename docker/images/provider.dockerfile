@@ -14,7 +14,7 @@ RUN echo $(caddy version)
 
 WORKDIR /usr/src/app
 
-COPY ./packages/ .
+COPY ./packages ./packages
 COPY ./package.json ./
 COPY ./tsconfig.json ./
 COPY ./tsconfig.build.json ./
