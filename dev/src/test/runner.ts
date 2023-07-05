@@ -40,7 +40,7 @@ const testConfig = {
         captchaBlockRecency: 10,
     },
     database: {
-        development: { type: DatabaseTypes.enum.mongoMemory, endpoint: '', dbname: 'prosopo', authSource: '' },
+        development: { type: DatabaseTypes.enum.mongoMemory, endpoint: '', dbname: 'prosopo_test', authSource: '' },
     },
     assets: {
         absolutePath: '',

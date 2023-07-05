@@ -95,6 +95,7 @@ export async function processArgs(args) {
             handler: async () => {
                 log.info('Running tests')
                 await runTests()
+                process.exit(0)
             },
         })
         .command({

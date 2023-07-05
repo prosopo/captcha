@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
+    ArgumentTypes,
     Captcha,
     CaptchaSolution,
     CaptchaStates,
@@ -26,6 +27,7 @@ import {
     ScheduledTaskResult,
     ScheduledTaskStatus,
 } from '@prosopo/types'
+import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
 import {
     CaptchaRecordSchema,
     Database,
@@ -44,11 +46,8 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
-import { isHex } from '@polkadot/util'
-
-import { ArgumentTypes } from '@prosopo/types'
-import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
 import { DeleteResult } from 'mongodb'
+import { isHex } from '@polkadot/util'
 import mongoose, { Connection } from 'mongoose'
 
 mongoose.set('strictQuery', false)
@@ -394,6 +393,20 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
     }
 
+    /** @description Get Dapp User captcha commitments from the commitments table that have not been batched on-chain
+     */
+    async getUnbatchedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+        const docs = await this.tables?.commitment.find({ batched: false }).lean()
+        return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
+    }
+
+    /** @description Get Dapp User captcha commitments from the commitments table that have been batched on-chain
+     */
+    async getBatchedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+        const docs = await this.tables?.commitment.find({ batched: true }).lean()
+        return docs ? docs.map((doc) => UserCommitmentSchema.parse(doc)) : []
+    }
+
     /** @description Remove processed Dapp User captcha solutions from the user solution table
      */
     async removeProcessedDappUserSolutions(commitmentIds: string[]): Promise<DeleteResult | undefined> {
@@ -636,7 +649,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag a dapp user's solutions as used by calculated solution
      * @param {string[]} captchaIds
      */
-    async flagUsedDappUserSolutions(captchaIds: string[]): Promise<void> {
+    async flagProcessedDappUserSolutions(captchaIds: ArgumentTypes.Hash[]): Promise<void> {
         try {
             await this.tables?.usersolution
                 ?.updateMany({ captchaId: { $in: captchaIds } }, { $set: { processed: true } }, { upsert: false })
@@ -650,11 +663,26 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag dapp users' commitments as used by calculated solution
      * @param {string[]} commitmentIds
      */
-    async flagUsedDappUserCommitments(commitmentIds: string[]): Promise<void> {
+    async flagProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
         try {
             const distinctCommitmentIds = [...new Set(commitmentIds)]
             await this.tables?.commitment
                 ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { processed: true } }, { upsert: false })
+                .lean()
+        } catch (err) {
+            throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
+        }
+    }
+
+    /**
+     * @description Flag dapp users' commitments as used by calculated solution
+     * @param {string[]} commitmentIds
+     */
+    async flagBatchedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+        try {
+            const distinctCommitmentIds = [...new Set(commitmentIds)]
+            await this.tables?.commitment
+                ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { batched: true } }, { upsert: false })
                 .lean()
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
@@ -678,11 +706,31 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     /**
-     * @description Get the last batch commit time or return 0 if none
+     * @description Get a scheduled task status record by task ID and status
      */
-    async getLastScheduledTask(task: ScheduledTaskNames): Promise<ScheduledTaskRecord | undefined> {
+    async getScheduledTaskStatus(
+        taskId: string,
+        status: ScheduledTaskStatus
+    ): Promise<ScheduledTaskRecord | undefined> {
         const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler
-            ?.findOne({ processName: task })
+            ?.find({ taskId: taskId, status: status })
+            .lean()
+        return cursor ? cursor : undefined
+    }
+
+    /**
+     * @description Get the most recent scheduled task status record for a given task
+     */
+    async getLastScheduledTaskStatus(
+        task: ScheduledTaskNames,
+        status?: ScheduledTaskStatus
+    ): Promise<ScheduledTaskRecord | undefined> {
+        const lookup = { processName: task }
+        if (status) {
+            lookup['status'] = status
+        }
+        const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler
+            ?.findOne(lookup)
             .sort({ datetime: -1 })
             .lean()
         return cursor ? cursor : undefined

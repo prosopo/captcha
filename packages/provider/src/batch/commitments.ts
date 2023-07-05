@@ -1,18 +1,25 @@
 import { ApiPromise } from '@polkadot/api'
-import { ArgumentTypes, Commit } from '@prosopo/types'
+import {
+    ArgumentTypes,
+    BatchCommitConfig,
+    Commit,
+    ExtrinsicBatch,
+    ScheduledTaskNames,
+    ScheduledTaskStatus,
+} from '@prosopo/types'
 import { BN } from '@polkadot/util'
-import { BatchCommitConfig, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger } from '@prosopo/common'
 import { ProsopoCaptchaContract, ProsopoContractError, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
+import { checkIfTaskIsRunning } from '../util'
 import { randomAsHex } from '@polkadot/util-crypto'
 
 const BN_TEN_THOUSAND = new BN(10_000)
 const CONTRACT_METHOD_NAME = 'providerCommitMany'
 
-export class BatchCommitments {
+export class BatchCommitmentsTask {
     contract: ProsopoCaptchaContract
     db: Database
     batchCommitConfig: BatchCommitConfig
@@ -22,7 +29,6 @@ export class BatchCommitments {
         batchCommitConfig: BatchCommitConfig,
         contractApi: ProsopoCaptchaContract,
         db: Database,
-        concurrent: number,
         startNonce: bigint,
         logger: Logger
     ) {
@@ -32,51 +38,56 @@ export class BatchCommitments {
         this.logger = logger
         this.nonce = startNonce
     }
-    async runBatch(): Promise<void> {
+    async run(): Promise<void> {
         // create a task id
         const taskId = randomAsHex(32)
-        if (await this.batchIntervalExceeded()) {
-            try {
-                // update last commit time
-                await this.db.storeScheduledTaskStatus(
-                    taskId,
-                    ScheduledTaskNames.BatchCommitment,
-                    ScheduledTaskStatus.Running
-                )
-                //get commitments
-                const commitments = await this.getCommitments()
-                if (commitments.length > 0) {
-                    this.logger.info(`Found ${commitments.length} commitments to commit`)
-                    // get the extrinsics that are to be batched and an id associated with each one
-                    const { extrinsics, ids: commitmentIds } = await this.createExtrinsics(commitments)
-                    // commit and get the Ids of the commitments that were committed on-chain
-                    await batch(this.contract.contract, this.contract.pair, extrinsics, this.logger)
-                    // remove commitments
-                    await this.removeCommitmentsAndSolutions(commitmentIds)
-                    // update last commit time and store the commitmentIds that were batched
+        const taskRunning = await checkIfTaskIsRunning(ScheduledTaskNames.BatchCommitment, this.db)
+        // taskRunning and intervalExceeded checks separated over multiple lines to avoid race conditions between providers
+        if (!taskRunning) {
+            const intervalExceeded = await this.batchIntervalExceeded()
+            if (intervalExceeded) {
+                try {
+                    // update last commit time
                     await this.db.storeScheduledTaskStatus(
                         taskId,
                         ScheduledTaskNames.BatchCommitment,
-                        ScheduledTaskStatus.Completed,
+                        ScheduledTaskStatus.Running
+                    )
+                    //get commitments
+                    const commitments = await this.getCommitments()
+                    if (commitments.length > 0) {
+                        this.logger.info(`Found ${commitments.length} commitments to commit`)
+                        // get the extrinsics that are to be batched and an id associated with each one
+                        const { extrinsics, ids: commitmentIds } = await this.createExtrinsics(commitments)
+                        // commit and get the Ids of the commitments that were committed on-chain
+                        await batch(this.contract.contract, this.contract.pair, extrinsics, this.logger)
+                        // flag commitments as batched
+                        await this.flagBatchedCommitments(commitmentIds)
+                        // update last commit time and store the commitmentIds that were batched
+                        await this.db.storeScheduledTaskStatus(
+                            taskId,
+                            ScheduledTaskNames.BatchCommitment,
+                            ScheduledTaskStatus.Completed,
+                            {
+                                data: {
+                                    commitmentIds: commitments
+                                        .filter((commitment) => commitmentIds.indexOf(commitment.id) > -1)
+                                        .map((c) => c.id),
+                                },
+                            }
+                        )
+                    }
+                } catch (e) {
+                    this.logger.error(e)
+                    await this.db.storeScheduledTaskStatus(
+                        taskId,
+                        ScheduledTaskNames.BatchCommitment,
+                        ScheduledTaskStatus.Failed,
                         {
-                            data: {
-                                commitmentIds: commitments
-                                    .filter((commitment) => commitmentIds.indexOf(commitment.id) > -1)
-                                    .map((c) => c.id),
-                            },
+                            error: JSON.stringify(e && e.message ? e.message : e),
                         }
                     )
                 }
-            } catch (e) {
-                this.logger.error(e)
-                await this.db.storeScheduledTaskStatus(
-                    taskId,
-                    ScheduledTaskNames.BatchCommitment,
-                    ScheduledTaskStatus.Failed,
-                    {
-                        error: JSON.stringify(e && e.message ? e.message : e),
-                    }
-                )
             }
         }
     }
@@ -177,19 +188,16 @@ export class BatchCommitments {
     }
 
     async getCommitments(): Promise<UserCommitmentRecord[]> {
-        // get commitments that have already been used to generate a solution
-        return await this.db.getProcessedDappUserCommitments()
+        // get commitments that have not yet been batched on-chain
+        return await this.db.getUnbatchedDappUserCommitments()
     }
 
-    async removeCommitmentsAndSolutions(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
-        const removeSolutionsResult = await this.db.removeProcessedDappUserSolutions(commitmentIds)
-        const removeCommitmentsResult = await this.db.removeProcessedDappUserCommitments(commitmentIds)
-        this.logger.info('Deleted user solutions', removeSolutionsResult)
-        this.logger.info('Deleted user commitments', removeCommitmentsResult)
+    async flagBatchedCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+        await this.db.flagBatchedDappUserCommitments(commitmentIds)
     }
 
     convertCommit(commitment: UserCommitmentRecord): Commit {
-        const { processed, userSignature, requestedAt, completedAt, ...commit } = commitment
+        const { batched, processed, userSignature, requestedAt, completedAt, ...commit } = commitment
 
         return {
             ...commit,
