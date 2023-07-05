@@ -18,7 +18,7 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./provider.Caddyfile:/etc/caddy/Caddyfile
+      - ./docker/provider.Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
 volumes:
