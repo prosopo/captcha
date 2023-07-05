@@ -16,6 +16,17 @@
 import { DatabaseTypes, EnvironmentTypes, EnvironmentTypesSchema, ProsopoConfig } from '@prosopo/types'
 import { getLogLevel } from './process.env'
 
+function getMongoURI(): string {
+    const protocol = process.env.DATABASE_PROTOCOL || 'mongodb'
+    const mongoSrv = protocol === 'mongodb+srv'
+    const password = process.env.DATABASE_PASSWORD || ''
+    const username = process.env.DATABASE_USERNAME || ''
+    const host = process.env.DATABASE_HOST || 'localhost'
+    const port = mongoSrv ? '' : process.env.DATABASE_PORT ? process.env.DATABASE_PORT : 27017
+    const retries = mongoSrv ? '?retryWrites=true&w=majority' : ''
+    return `${protocol}://${username}:${password}@${host}:${port}/${retries}`
+}
+
 export default (): ProsopoConfig => ({
     logLevel: getLogLevel(),
     defaultEnvironment:
@@ -26,7 +37,7 @@ export default (): ProsopoConfig => ({
     },
     networks: {
         development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944', // TODO accept array of endpoints. Wsprovider takes array and has failover.
+            endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944', // TODO accept array of endpoints. WsProvider takes array and has failover.
             contract: {
                 address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
                 name: 'prosopo',
@@ -51,7 +62,7 @@ export default (): ProsopoConfig => ({
     database: {
         development: {
             type: DatabaseTypes.enum.mongo,
-            endpoint: `mongodb+srv://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/?retryWrites=true&w=majority`,
+            endpoint: getMongoURI(),
             dbname: process.env.DATABASE_NAME || '',
             authSource: 'admin',
         },

@@ -16,12 +16,13 @@ WORKDIR /usr/src/app
 
 COPY ./packages ./packages/
 COPY ./package.json ./
+COPY ./package-lock.json ./
 COPY ./tsconfig.json ./
 COPY ./tsconfig.build.json ./
 
 RUN echo $(ls -la)
 
-RUN npm cache clean --force && \
+RUN npm cache clean --force &&  \
         npm install -g npm@latest && \
         npm install
 RUN npm run -w @prosopo/provider build
