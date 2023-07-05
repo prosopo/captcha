@@ -9,6 +9,18 @@ services:
       - ../.env.provider
     ports:
       - "9229:9229"
+    tty: true
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
       - "80:80"
       - "443:443"
-    tty: true
+      - "443:443/udp"
+    volumes:
+      - ./provider.Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+    caddy_data:
+    caddy_config:

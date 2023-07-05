@@ -15,7 +15,7 @@
 
 pronode3.prosopo.io {
         # Set this path to your site's directory.
-        reverse_proxy localhost:9229
+        reverse_proxy provider:9229
 
         # Enable the static file server.
         file_server
