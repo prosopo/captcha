@@ -52,9 +52,10 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
  */
 export function parseAndSortCaptchaSolutions(captchaJSON: CaptchaSolution[]): CaptchaSolution[] {
     try {
-        const parsed = CaptchaSolutionArraySchema.parse(captchaJSON)
-        parsed.map((captcha) => ({ ...captcha, solution: captcha.solution.sort() }))
-        return parsed
+        return CaptchaSolutionArraySchema.parse(captchaJSON).map((captcha) => ({
+            ...captcha,
+            solution: captcha.solution.sort(),
+        }))
     } catch (err) {
         throw new ProsopoEnvError(err, 'ERRORS.CAPTCHA.PARSE_ERROR')
     }
