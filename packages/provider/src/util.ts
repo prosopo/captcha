@@ -113,9 +113,9 @@ export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], lo
  * Otherwise, the batch task is not running, return false.
  */
 export async function checkIfTaskIsRunning(taskName: ScheduledTaskNames, db: Database): Promise<boolean> {
-    const runningTask = await db.getLastScheduledTask(taskName, ScheduledTaskStatus.Running)
+    const runningTask = await db.getLastScheduledTaskStatus(taskName, ScheduledTaskStatus.Running)
     if (runningTask) {
-        const completedTask = await db.getScheduledTaskById(runningTask.taskId)
+        const completedTask = await db.getScheduledTaskStatus(runningTask.taskId, ScheduledTaskStatus.Completed)
         return !completedTask
     }
     return false
