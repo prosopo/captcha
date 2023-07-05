@@ -17,8 +17,8 @@ services:
       - external
   database:
     image: mongo:5.0.4
-    # volumes:
-    #   - ./db:/data/db
+    volumes:
+      - /data/db:/data/db
     ports:
       - "27017:27017"
     env_file:
