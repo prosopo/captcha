@@ -13,23 +13,38 @@
 // limitations under the License.
 // [object Object]
 // SPDX-License-Identifier: Apache-2.0
-
+import { BatchCommitmentsTask } from './batch/commitments'
+import { CalculateSolutionsTask } from './tasks/calculateSolutions'
 import { CronJob } from 'cron'
-
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoConfig } from '@prosopo/types'
+import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { Tasks } from './tasks/tasks'
 
-export default async function (pair: KeyringPair, config: ProsopoConfig) {
+export async function calculateSolutionsScheduler(pair: KeyringPair, config: ProsopoConfig) {
     const env = new ProviderEnvironment(pair, config)
-
     await env.isReady()
-
-    const tasks = new Tasks(env)
+    const tasks = new CalculateSolutionsTask(env)
     const job = new CronJob(process.argv[2], () => {
-        env.logger.debug('It works....')
-        tasks.calculateCaptchaSolutions().catch((err) => {
+        env.logger.debug('CalculateSolutionsTask....')
+        tasks.run().catch((err) => {
+            env.logger.error(err)
+        })
+    })
+
+    job.start()
+}
+
+export async function batchCommitScheduler(pair: KeyringPair, config: ProsopoConfig) {
+    const env = new ProviderEnvironment(pair, config)
+    await env.isReady()
+    if (env.db === undefined) {
+        throw new ProsopoEnvError('DATABASE.DATABASE_UNDEFINED')
+    }
+    const tasks = new BatchCommitmentsTask(config.batchCommit, env.contractInterface, env.db, 0n, env.logger)
+    const job = new CronJob(process.argv[2], () => {
+        env.logger.debug('BatchCommitmentsTask....')
+        tasks.run().catch((err) => {
             env.logger.error(err)
         })
     })

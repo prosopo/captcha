@@ -11,7 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Captcha, CaptchaSolution } from '@prosopo/types'
+import { Captcha, CaptchaSolution, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
+import { Database } from '@prosopo/types-database/types'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import { arrayJoin } from '@prosopo/common'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
@@ -103,4 +104,19 @@ export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], lo
         }
         return captcha
     })
+}
+
+/**
+ * Check if there is a batch running.
+ * If the batch task is running and not completed, return true.
+ * If the batch task is running and completed, return false.
+ * Otherwise, the batch task is not running, return false.
+ */
+export async function checkIfTaskIsRunning(taskName: ScheduledTaskNames, db: Database): Promise<boolean> {
+    const runningTask = await db.getLastScheduledTaskStatus(taskName, ScheduledTaskStatus.Running)
+    if (runningTask) {
+        const completedTask = await db.getScheduledTaskStatus(runningTask.taskId, ScheduledTaskStatus.Completed)
+        return !completedTask
+    }
+    return false
 }

@@ -17,7 +17,6 @@ import {
     CaptchaConfig,
     CaptchaSolution,
     CaptchaSolutionConfig,
-    CaptchaStates,
     CaptchaStatus,
     CaptchaWithProof,
     Dapp,
@@ -33,7 +32,6 @@ import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import {
     CaptchaMerkleTree,
     buildDataset,
-    captchaSort,
     compareCaptchaSolutions,
     computeCaptchaSolutionHash,
     computePendingRequestHash,
@@ -47,11 +45,10 @@ import { ProsopoCaptchaContract, getBlockNumber } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 import { SubmittableResult } from '@polkadot/api'
-import { calculateNewSolutions, shuffleArray, updateSolutions } from '../util'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
+import { shuffleArray } from '../util'
 import { wrapQuery } from '@prosopo/contract'
-import consola from 'consola'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -200,6 +197,7 @@ export class Tasks {
                 requestedAt: pendingRecord.requestedAtBlock, // TODO is this correct or should it be block number?
                 completedAt: blockNumber,
                 processed: false,
+                batched: false,
             }
             await this.db.storeDappUserSolution(receivedCaptchas, commit)
             if (compareCaptchaSolutions(receivedCaptchas, storedCaptchas)) {
@@ -368,73 +366,6 @@ export class Tasks {
         const currentBlockNumber = await getBlockNumber(this.contract.api)
         await this.db.storeDappUserPending(userAccount, requestHash, salt, deadlineTs, currentBlockNumber.toNumber())
         return { captchas, requestHash }
-    }
-
-    /**
-     * Apply new captcha solutions to captcha dataset and recalculate merkle tree
-     */
-    async calculateCaptchaSolutions(): Promise<number> {
-        try {
-            // Get the current datasetId from the contract
-            const provider = (await this.contract.methods.getProvider(this.contract.pair.address, {})).value
-                .unwrap()
-                .unwrap()
-
-            // Get any unsolved CAPTCHA challenges from the database for this datasetId
-            const unsolvedCaptchas = await this.db.getAllCaptchasByDatasetId(
-                provider.datasetId.toString(),
-                CaptchaStates.Unsolved
-            )
-
-            // edge case when a captcha dataset contains no unsolved CAPTCHA challenges
-            if (!unsolvedCaptchas) {
-                return 0
-            }
-
-            // Sort the unsolved CAPTCHA challenges by their captchaId
-            const unsolvedSorted = unsolvedCaptchas.sort(captchaSort)
-            consola.info(`There are ${unsolvedSorted.length} unsolved CAPTCHA challenges`)
-
-            // Get the solution configuration from the config file
-            const requiredNumberOfSolutions = this.captchaSolutionConfig.requiredNumberOfSolutions
-            const winningPercentage = this.captchaSolutionConfig.solutionWinningPercentage
-            const winningNumberOfSolutions = Math.round(requiredNumberOfSolutions * (winningPercentage / 100))
-            if (unsolvedSorted && unsolvedSorted.length > 0) {
-                const captchaIds = unsolvedSorted.map((captcha) => captcha.captchaId)
-                const solutions = (await this.db.getAllDappUserSolutions(captchaIds)) || []
-                const solutionsToUpdate = calculateNewSolutions(solutions, winningNumberOfSolutions)
-                if (solutionsToUpdate.rows().length > 0) {
-                    consola.info(
-                        `There are ${solutionsToUpdate.rows().length} CAPTCHA challenges to update with solutions`
-                    )
-                    try {
-                        const captchaIdsToUpdate = [...solutionsToUpdate['captchaId'].values()]
-                        const commitmentIds = solutions
-                            .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
-                            .map((s) => s.commitmentId)
-                        const dataset = await this.db.getDataset(provider.datasetId.toString())
-                        dataset.captchas = updateSolutions(solutionsToUpdate, dataset.captchas, this.logger)
-                        // store new solutions in database
-                        await this.providerSetDataset(dataset)
-                        // mark user solutions as used to calculate new solutions
-                        await this.db.flagUsedDappUserSolutions(captchaIdsToUpdate)
-                        // mark user commitments as used to calculate new solutions
-                        await this.db.flagUsedDappUserCommitments(commitmentIds)
-                        // remove old captcha challenges from database
-                        await this.db.removeCaptchas(captchaIdsToUpdate)
-                        return solutionsToUpdate.rows().length
-                    } catch (error) {
-                        consola.error(error)
-                    }
-                }
-                return 0
-            } else {
-                consola.info(`There are no CAPTCHA challenges that require their solutions to be updated`)
-                return 0
-            }
-        } catch (error) {
-            throw new ProsopoEnvError(error, 'GENERAL.CALCULATE_CAPTCHA_SOLUTION')
-        }
     }
 
     /**

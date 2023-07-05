@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { BatchCommitments } from '@prosopo/provider'
+import { BatchCommitmentsTask } from '@prosopo/provider'
+import { CalculateSolutionsTask } from '@prosopo/provider'
 import { Compact, u128 } from '@polkadot/types'
 import { PayeeSchema } from '@prosopo/types'
 import { ProsopoEnvError, logger as getLogger } from '@prosopo/common'
@@ -370,7 +371,8 @@ export function processArgs(args, env: ProviderEnvironment) {
                         )
                     })
                 } else {
-                    const result = await tasks.calculateCaptchaSolutions()
+                    const calculateSolutionsTask = new CalculateSolutionsTask(env)
+                    const result = await calculateSolutionsTask.run()
                     logger.info(`Updated ${result} captcha solutions`)
                 }
             },
@@ -413,15 +415,14 @@ export function processArgs(args, env: ProviderEnvironment) {
                     })
                 } else {
                     if (env.db) {
-                        const batchCommitter = new BatchCommitments(
+                        const batchCommitter = new BatchCommitmentsTask(
                             env.config.batchCommit,
                             env.contractInterface,
                             env.db,
-                            2,
                             0n,
                             env.logger
                         )
-                        const result = await batchCommitter.runBatch()
+                        const result = await batchCommitter.run()
                         logger.info(`Batch commit complete: ${result}`)
                     } else {
                         logger.error('No database configured')
