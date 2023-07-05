@@ -46,6 +46,11 @@ services:
       - caddy_config:/config
     networks:
       - external
+networks:
+    internal:
+        name: internal
+    external:
+        name: external
 volumes:
     caddy_data:
     caddy_config:
