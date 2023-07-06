@@ -2,7 +2,6 @@ import { ProsopoEnvError } from '@prosopo/common'
 import fs, { WriteStream, createWriteStream } from 'fs'
 
 export function loadJSONFile(filePath: string, logger?: any) {
-    // const parsedFilePath = handleFileProtocol(filePath, logger)
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'))
     } catch (err) {

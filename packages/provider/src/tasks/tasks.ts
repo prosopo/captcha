@@ -83,6 +83,7 @@ export class Tasks {
 
     async providerSetDatasetFromFile(file: JSON): Promise<SubmittableResult | undefined> {
         const datasetRaw = parseCaptchaDataset(file)
+        this.logger.debug('Parsed raw data set')
         return await this.providerSetDataset(datasetRaw)
     }
 

@@ -46,7 +46,7 @@ export default (): ProsopoConfig => ({
         captchaBlockRecency: 10, // TODO add env var
         requiredNumberOfSolutions: 3, // TODO add env var
         solutionWinningPercentage: 80, // TODO add env var
-        captchaFilePath: '../../data/captchas.json', // TODO add env var
+        captchaFilePath: '../../data/captchas_big.json', // TODO add env var
     },
     database: {
         development: {

@@ -46,7 +46,7 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
-import { DeleteResult } from 'mongodb'
+import { DeleteResult, ServerApiVersion } from 'mongodb'
 import { isHex } from '@polkadot/util'
 import mongoose, { Connection } from 'mongoose'
 
@@ -85,8 +85,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             if (this.connection) {
                 resolve()
             }
-            this.logger.info(`Mongo url: ${this.url}`)
-            this.connection = mongoose.createConnection(this.url, { dbName: this.dbname })
+            this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
+            this.connection = mongoose.createConnection(this.url, {
+                dbName: this.dbname,
+                serverApi: ServerApiVersion.v1,
+            })
             this.tables = {
                 captcha: this.connection.models.Captcha || this.connection.model('Captcha', CaptchaRecordSchema),
                 dataset: this.connection.models.Dataset || this.connection.model('Dataset', DatasetRecordSchema),
