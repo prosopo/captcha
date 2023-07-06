@@ -14,7 +14,7 @@
 import { ArgumentTypes } from '@prosopo/types'
 import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
-import { ProsopoEnvError, getPair } from '@prosopo/common'
+import { LogLevel, ProsopoEnvError, logger as getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { defaultConfig, getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
@@ -23,6 +23,7 @@ import { registerProvider } from './provider'
 import { setupDapp } from './dapp'
 import fse from 'fs-extra'
 import path from 'path'
+const logger = getLogger(LogLevel.Info, 'setup')
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
@@ -57,7 +58,7 @@ async function copyEnvFile() {
         const envFile = getEnvFile(rootDir, '.env')
         await fse.copy(tplEnvFile, envFile, { overwrite: false })
     } catch (err) {
-        console.log(err)
+        logger.debug(err)
     }
 }
 
@@ -91,15 +92,15 @@ export async function setup() {
     const defaultDapp = getDefaultDapp()
     if (defaultProvider.secret) {
         const hasProviderAccount = defaultProvider.address && defaultProvider.secret
-        console.log('ENVIRONMENT', process.env.NODE_ENV)
+        logger.debug('ENVIRONMENT', process.env.NODE_ENV)
 
         const [mnemonic, address] = !hasProviderAccount
             ? await generateMnemonic()
             : [defaultProvider.secret, defaultProvider.address]
 
-        console.log(`Address: ${address}`)
-        console.log(`Mnemonic: ${mnemonic}`)
-        console.log('Writing .env file...')
+        logger.debug(`Address: ${address}`)
+        logger.debug(`Mnemonic: ${mnemonic}`)
+        logger.debug('Writing .env file...')
         await copyEnvFile()
 
         if (!process.env.DAPP_SITE_KEY) {
@@ -159,6 +160,6 @@ export async function setup() {
 //     console.info('Running setup as main process')
 //
 //     setup()
-//         .then((r) => console.log('Setup done'))
+//         .then((r) => logger.debug('Setup done'))
 //         .catch((e) => console.error(e))
 // }

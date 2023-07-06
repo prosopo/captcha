@@ -4,7 +4,7 @@ import { ProsopoEnvError } from '@prosopo/common'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
 import cliProgress from 'cli-progress'
 
-export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Dataset> {
+export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
     const captchaPromises = datasetRaw.captchas.map(async (captcha) => {
         const items = await Promise.all(captcha.items.map(async (item) => computeItemHash(item)))
         return {
@@ -12,11 +12,7 @@ export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promis
             items,
         } as Captcha
     })
-    const captchas = await trackPromisesProgress<Captcha>(captchaPromises)
-    return {
-        ...datasetRaw,
-        captchas,
-    }
+    return captchaPromises
 }
 
 /**
@@ -24,7 +20,18 @@ export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promis
  * @param datasetOriginal
  */
 export async function validateDatasetContent(datasetOriginal: Dataset): Promise<boolean> {
-    const dataset = await hashDatasetItems(datasetOriginal)
+    const captchaPromises = await hashDatasetItems(datasetOriginal)
+    let captchas: Captcha[]
+    if (cliProgress) {
+        captchas = await trackPromisesProgress<Captcha>(captchaPromises)
+    } else {
+        captchas = await Promise.all(captchaPromises)
+    }
+
+    const dataset = {
+        ...datasetOriginal,
+        captchas,
+    }
     // compare each of the Item hashes in each of the captchas in the dataset to each of the item hashes in each of the
     // captchas in datasetOriginal
     const hashes = dataset.captchas.map((captcha) => {
