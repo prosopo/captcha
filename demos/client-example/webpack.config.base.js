@@ -84,5 +84,10 @@ module.exports = (env, argv) => {
                 'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT || ''),
             }),
         ],
+        externals: [
+            {
+                'cli-progress': 'cli-progress',
+            }
+        ]
     }
 }
