@@ -341,9 +341,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
         })
 
-        const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value
-            .unwrap()
-            .unwrap()
+        const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value.unwrap().unwrap()
 
         // check the timestamp
         const completedAtCheck = parseInt(commitment.completedAt.toString().replace(',', ''))
@@ -429,9 +427,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(env, dappAccount)
 
-        const result: any = (await tasks.contract.query.getDapp(accountContract(dappAccount))).value
-            .unwrap()
-            .unwrap()
+        const result: any = (await tasks.contract.query.getDapp(accountContract(dappAccount))).value.unwrap().unwrap()
 
         expect(result).to.have.a.property('status')
     })
@@ -514,9 +510,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             userSignaturePart2: [...userSignature.slice(userSignature.length / 2)],
         })
 
-        const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value
-            .unwrap()
-            .unwrap()
+        const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value.unwrap().unwrap()
 
         // next part contains internal contract calls that must be run by provider
         const blockHash = await env.api.rpc.chain.getBlockHash(commitment.completedAt)
@@ -687,9 +681,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
             expect(tree).to.deep.equal(initialTree)
             expect(commitmentId).to.equal(initialCommitmentId)
-            const commitment = (await tasks.contract.query.getCommit(commitmentId)).value
-                .unwrap()
-                .unwrap()
+            const commitment = (await tasks.contract.query.getCommit(commitmentId)).value.unwrap().unwrap()
             expect(commitment).to.not.be.undefined
         } catch (e) {
             console.log(e)
@@ -750,28 +742,21 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // NOTE this test can fail if the contract contains Providers that
-            // are not present in the database
+            // are not present in the database. It can also fail if the contract
+            // contains providers that have loaded a different dataset to the
+            // one imported from captchasData (above)
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             const dappUserAccount = await getUser(env, AccountKey.dappUsers)
-
             const dappAccount = await getUser(env, AccountKey.dappsWithStake)
-
             // there must be at least one provider in the contract and db
             const _unused = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
             const dappUserTasks = await getSignedTasks(env, dappUserAccount)
             const solvedCaptchaCount = env.config.captchas.solved.count
             const unsolvedCaptchaCount = env.config.captchas.unsolved.count
-
-            console.log(
-                'userAccount',
-                accountAddress(dappUserAccount),
-                'dappContractAccount',
-                accountContract(dappAccount)
-            )
             const { provider } = (
                 await dappUserTasks.contract.query.getRandomActiveProvider(
                     accountAddress(dappUserAccount),
@@ -832,9 +817,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(env, providerAccount)
 
-        let provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
-            .unwrap()
-            .unwrap()
+        let provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value.unwrap().unwrap()
 
         const resultProviderUpdate1 = (
             await tasks.contract.tx.providerUpdate(provider.url, provider.fee as unknown as number, PROVIDER_PAYEE, {
@@ -842,9 +825,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             })
         ).result
         expect(resultProviderUpdate1?.isError).to.be.false
-        provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value
-            .unwrap()
-            .unwrap()
+        provider = (await tasks.contract.query.getProvider(accountAddress(providerAccount))).value.unwrap().unwrap()
         expect(provider.status).to.equal('Inactive')
         const resultproviderUpdate2 = (
             await tasks.contract.tx.providerUpdate(provider.url, provider.fee as unknown as number, PROVIDER_PAYEE, {

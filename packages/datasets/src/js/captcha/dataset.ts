@@ -42,7 +42,7 @@ export async function validateDatasetContent(datasetOriginal: Dataset): Promise<
 }
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
-    const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw)
+    const dataset = await addSolutionHashesToDataset(datasetRaw)
 
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
@@ -82,7 +82,7 @@ export async function buildCaptchaTree(
     }
 }
 
-export async function addItemHashesAndSolutionHashesToDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
+export async function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
     const captchaPromises = datasetRaw.captchas.map(async (captcha) => {
         //const items = await Promise.all(captcha.items.map(async (item) => await computeItemHash(item)))
         return {

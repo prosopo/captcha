@@ -94,7 +94,6 @@ export class Tasks {
         }
 
         await this.db?.storeDataset(dataset)
-
         const txResult = await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {
             value: 0,
         })

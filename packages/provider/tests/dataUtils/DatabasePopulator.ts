@@ -15,12 +15,13 @@ import { Abi } from '@polkadot/api-contract'
 import { Account, accountAddress, accountContract, accountMnemonic } from '../accounts'
 import { AnyNumber } from '@polkadot/types-codec/types'
 import { BN, stringToU8a } from '@polkadot/util'
-import { ContractDeployer, ProsopoContractError } from '@prosopo/contract'
+import { ContractDeployer, ProsopoContractError, wrapQuery } from '@prosopo/contract'
 import { DappPayee, Payee } from '@prosopo/types'
 import { EventRecord } from '@polkadot/types/interfaces'
 import { IDatabaseAccounts } from './DatabaseAccounts'
 import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, TranslationKey, getPair } from '@prosopo/common'
+import { ReturnNumber } from '@727-ventures/typechain-types'
 import { Tasks } from '../../src/tasks'
 import { sendFunds as _sendFunds, getSendAmount, getStakeAmount } from './funds'
 import { captchaData } from '../data/captchas'
@@ -81,8 +82,12 @@ class DatabasePopulator implements IDatabaseAccounts, IDatabasePopulatorMethods 
         this._isReady = this.mockEnv.isReady().then(() => {
             try {
                 const tasks = new Tasks(this.mockEnv)
-                return tasks.contract.query.getProviderStakeThreshold().then((res) => {
-                    this.providerStakeDefault = new BN(res.value.unwrap().toNumber())
+                const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
+                    tasks.contract.query.getProviderStakeThreshold,
+                    tasks.contract.query
+                )()
+                return promiseStakeDefault.then((res) => {
+                    this.providerStakeDefault = new BN(res.toNumber())
                     this.stakeAmount = getStakeAmount(env, this.providerStakeDefault)
                     this.sendAmount = getSendAmount(env, this.stakeAmount)
                 })
