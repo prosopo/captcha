@@ -13,22 +13,23 @@
 // limitations under the License.
 // import { prosopoMiddleware } from '../api';
 // import { LocalAssetsResolver } from '../assets';
+import { LogLevel, getPair, logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
-import { getPair } from '@prosopo/common'
 import { loadEnv } from './env'
 import { processArgs } from './argv'
 async function main() {
     loadEnv()
+    const log = logger(LogLevel.Info, 'cli')
     const secret = getSecret()
     const ss58Format = getSs58Format()
     const pairType = getPairType()
     const config = getConfig()
     const pair = await getPair(pairType, ss58Format, secret)
 
-    console.log(`Pair address: ${pair.address}`)
+    log.info(`Pair address: ${pair.address}`)
 
-    console.log(`Contract address: ${process.env.PROTOCOL_CONTRACT_ADDRESS}`)
+    log.info(`Contract address: ${process.env.PROTOCOL_CONTRACT_ADDRESS}`)
 
     const env = new ProviderEnvironment(pair, config)
 
