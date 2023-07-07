@@ -1,6 +1,6 @@
+import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoServer } from '@prosopo/server'
 import { getPair } from '@prosopo/common'
-import { getPairType, getSs58Format } from '@prosopo/cli'
 import connectionFactory from './utils/connection'
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -51,8 +51,8 @@ async function main() {
     const config = prosopoConfig()
 
     console.log('config', config)
-    const pairType = getPairType()
-    const ss58Format = getSs58Format()
+    const pairType = (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
+    const ss58Format = parseInt(process.env.SS58_FORMAT || '') || 42
     const pair = await getPair(pairType, ss58Format, process.env.REACT_APP_SERVER_MNEMONIC)
     const prosopoServer = new ProsopoServer(pair, config)
 

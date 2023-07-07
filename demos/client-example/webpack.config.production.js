@@ -106,5 +106,10 @@ module.exports = (env, argv) => {
                 },
             }),
         ],
+        externals: [
+            {
+                'cli-progress': 'cli-progress',
+            }
+        ]
     }
 }

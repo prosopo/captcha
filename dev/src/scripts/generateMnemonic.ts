@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { LogLevel, logger as getLogger } from '@prosopo/common'
 import { generateMnemonic } from '@prosopo/contract'
+
+const logger = getLogger(LogLevel.Info, 'generateMnemonic')
 
 async function mnemonic() {
     const [mnemonic, address] = await generateMnemonic()
-    console.log(`Address: ${address}`)
-    console.log(`Mnemonic: ${mnemonic}`)
+    logger.debug(`Address: ${address}`)
+    logger.debug(`Mnemonic: ${mnemonic}`)
 }
 
 mnemonic()

@@ -1,11 +1,48 @@
-import { Captcha, CaptchaWithoutId } from '@prosopo/types'
+import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
 import { CaptchaMerkleTree } from './merkle'
-import { Dataset, DatasetRaw } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
 
+export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
+    return datasetRaw.captchas.map(async (captcha) => {
+        const items = await Promise.all(captcha.items.map(async (item) => computeItemHash(item)))
+        return {
+            ...captcha,
+            items,
+        } as Captcha
+    })
+}
+
+/**
+ * Take a dataset and hash all the items, making sure that the existing captchaIds and item hashes are correct
+ * @param datasetOriginal
+ */
+export async function validateDatasetContent(datasetOriginal: Dataset): Promise<boolean> {
+    const captchaPromises = await hashDatasetItems(datasetOriginal)
+    const captchas = await Promise.all(captchaPromises)
+    const dataset = {
+        ...datasetOriginal,
+        captchas,
+    }
+    // compare each of the Item hashes in each of the captchas in the dataset to each of the item hashes in each of the
+    // captchas in datasetOriginal
+    const hashes = dataset.captchas.map((captcha) => {
+        const captchaRaw = datasetOriginal.captchas.find((captchaRaw) =>
+            'captchaId' in captchaRaw ? captchaRaw.captchaId === captcha.captchaId : false
+        )
+        if (captchaRaw) {
+            return captcha.items.every((item, index) => item.hash === captchaRaw.items[index].hash)
+        } else {
+            return false
+        }
+    })
+
+    return hashes.every((hash) => hash)
+}
+
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
-    const dataset = await addItemHashesAndSolutionHashesToDataset(datasetRaw)
+    const dataset = await addSolutionHashesToDataset(datasetRaw)
+
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(
@@ -44,20 +81,21 @@ export async function buildCaptchaTree(
     }
 }
 
-export async function addItemHashesAndSolutionHashesToDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
+export async function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
+    const captchaPromises = datasetRaw.captchas.map(async (captcha) => {
+        //const items = await Promise.all(captcha.items.map(async (item) => await computeItemHash(item)))
+        return {
+            ...captcha,
+            items: captcha.items,
+            // some captcha challenges will not have a solution
+            ...(captcha.solution !== undefined && { solution: matchItemsToSolutions(captcha.solution, captcha.items) }),
+        }
+    })
+
+    const captchas = await Promise.all(captchaPromises)
+
     return {
         ...datasetRaw,
-        captchas: await Promise.all(
-            datasetRaw.captchas.map(async (captcha) => {
-                const items = await Promise.all(captcha.items.map(async (item) => await computeItemHash(item)))
-
-                return {
-                    ...captcha,
-                    items,
-                    // some captcha challenges will not have a solution
-                    ...(captcha.solution !== undefined && { solution: matchItemsToSolutions(captcha.solution, items) }),
-                }
-            })
-        ),
-    } as Dataset
+        captchas,
+    }
 }
