@@ -112,6 +112,7 @@
     "eslint-plugin-unused-imports": "^2.0.0",
     "nodemon": "^2.0.20",
     "npm-check-updates": "^15.3.4",
+    "prettier": "2.8.8",
     "tsc-alias": "^1.8.6",
     "tsconfig-paths-webpack-plugin": "^4.0.1",
     "tslib": "^2.5.2",

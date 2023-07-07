@@ -85,7 +85,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             if (this.connection) {
                 resolve()
             }
-            this.logger.info(`Mongo url: ${this.url}`)
+            this.logger.info(`Mongo url: ${this.url.replace(/\w+:\w+/, '<Credentials>')}`)
             this.connection = mongoose.createConnection(this.url, {
                 dbName: this.dbname,
                 serverApi: ServerApiVersion.v1,

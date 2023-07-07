@@ -194,6 +194,7 @@ export function processArgs(args, env: ProviderEnvironment) {
             async (argv) => {
                 try {
                     const jsonFile = loadJSONFile(argv.file, logger) as JSON
+                    logger.info(`Loaded JSON from ${argv.file}`)
                     const result = await tasks.providerSetDatasetFromFile(jsonFile)
 
                     logger.info(JSON.stringify(result, null, 2))
