@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { glob } from 'glob'
 import fs from 'fs'
 
 const searchPaths = [
@@ -64,8 +65,8 @@ const header = `// Copyright 2021-2023 Prosopo (UK) Ltd.
 
 // for each file, check if file starts with // Copyright (C) Prosopo (UK) Ltd.
 for (const file of files) {
-    //check if file is a file, not a directory
     if (fs.lstatSync(file).isFile()) {
+        //check if file is a file, not a directory
         const fileContents = fs.readFileSync(file, 'utf8')
         const lines = fileContents.split('\n')
         if (lines[0].startsWith('// Copyright')) {
@@ -81,7 +82,8 @@ for (const file of files) {
                 }
             }
             if (!line.startsWith('//')) {
-                line = lines[count - 1]
+                count = count - 1
+                line = lines[count]
             }
             if (
                 line.endsWith('If not, see <http://www.gnu.org/licenses/>.') ||
@@ -90,6 +92,7 @@ for (const file of files) {
                 const newFileContents = `${header}\n${lines.slice(count + 1).join('\n')}`
 
                 if (newFileContents !== fileContents) {
+                    //console.log(newFileContents)
                     fs.writeFileSync(file, newFileContents)
                     console.log('File Updated:', file)
                 }
@@ -97,6 +100,7 @@ for (const file of files) {
         } else {
             // if it doesn't, add it
             const newFileContents = `${header}\n${fileContents}`
+            //console.log(newFileContents)
             fs.writeFileSync(file, newFileContents)
             console.log('File Updated:', file)
         }
