@@ -2,22 +2,15 @@ import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
 import { CaptchaMerkleTree } from './merkle'
 import { ProsopoEnvError } from '@prosopo/common'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
-let cliProgress: any
-try {
-    cliProgress = 'cli-progress'
-} catch (err) {
-    /* empty */
-}
 
 export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
-    const captchaPromises = datasetRaw.captchas.map(async (captcha) => {
+    return datasetRaw.captchas.map(async (captcha) => {
         const items = await Promise.all(captcha.items.map(async (item) => computeItemHash(item)))
         return {
             ...captcha,
             items,
         } as Captcha
     })
-    return captchaPromises
 }
 
 /**
@@ -26,13 +19,7 @@ export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promis
  */
 export async function validateDatasetContent(datasetOriginal: Dataset): Promise<boolean> {
     const captchaPromises = await hashDatasetItems(datasetOriginal)
-    let captchas: Captcha[]
-    if (cliProgress) {
-        captchas = await trackPromisesProgress<Captcha>(captchaPromises)
-    } else {
-        captchas = await Promise.all(captchaPromises)
-    }
-
+    const captchas = await Promise.all(captchaPromises)
     const dataset = {
         ...datasetOriginal,
         captchas,
@@ -111,23 +98,4 @@ export async function addSolutionHashesToDataset(datasetRaw: DatasetRaw): Promis
         ...datasetRaw,
         captchas,
     }
-}
-
-export async function trackPromisesProgress<T>(promisesArray: Promise<T>[]): Promise<T[]> {
-    let doneCount = 0
-    const bar = new cliProgress.SingleBar({ forceRedraw: true }, cliProgress.Presets.shades_classic)
-    // start the progress bar with a total value of promisesArray.length and start value of 0
-    bar.start(promisesArray.length, doneCount)
-
-    const handleProgress = (result: T) => {
-        doneCount++
-        // bar.update does not work here
-        bar.start(promisesArray.length, doneCount)
-        return result
-    }
-
-    return await Promise.all(promisesArray.map((p) => p.then(handleProgress))).then((results: T[]): T[] => {
-        bar.stop()
-        return results
-    })
 }
