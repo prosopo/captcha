@@ -2,7 +2,12 @@ import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
 import { CaptchaMerkleTree } from './merkle'
 import { ProsopoEnvError } from '@prosopo/common'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
-import cliProgress from 'cli-progress'
+let cliProgress: any
+try {
+    cliProgress = 'cli-progress'
+} catch (err) {
+    /* empty */
+}
 
 export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
     const captchaPromises = datasetRaw.captchas.map(async (captcha) => {
