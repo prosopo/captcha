@@ -6,4 +6,4 @@ COPY ./packages/cli/dist/bundle/ ./
 
 EXPOSE 9229 80 443
 
-CMD exec /bin/bash -c "npm run start"
+CMD exec /bin/bash -c "node ./dist/bundle/provider_cli_bundle.main.bundle.js --api"

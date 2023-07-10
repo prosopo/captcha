@@ -21,6 +21,8 @@ const moduleDirs = [
     path.resolve(__dirname, '../procaptcha-react/node_modules'),
 ]
 
+console.log(`Env is ${process.env.NODE_ENV}`)
+
 const allowList = [
     '@emotion/cache',
     '@emotion/react',
@@ -161,7 +163,7 @@ module.exports = (env, argv) => {
         plugins: [
             //new BundleAnalyzerPlugin(),
             new webpack.DefinePlugin({
-                'process.env.NODE_ENV': JSON.stringify('development'),
+                'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
                 'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
                 'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
             }),

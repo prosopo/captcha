@@ -6,7 +6,6 @@ import path from 'path'
 export function loadEnv(rootDir?: string, filename?: string, filePath?: string) {
     const envPath = getEnvFile(path.resolve(rootDir || '.'), filename, filePath)
     const args = { path: envPath }
-    logger(LogLevel.Info, 'cli.env').info(`Env path:  ${envPath}`)
     dotenv.config(args)
 }
 
