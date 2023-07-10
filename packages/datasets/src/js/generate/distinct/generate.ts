@@ -1,7 +1,7 @@
 import fs from "fs";
 import seedrandom from "seedrandom";
 import bcrypt from 'bcrypt'
-import { CaptchaItemTypes, CaptchaTypes, Item, CaptchaWithoutId, RawSolution, LabelledItem, UnlabelledItem, Captchas } from "@prosopo/types";
+import { CaptchaItemTypes, CaptchaTypes, Item, CaptchaWithoutId, RawSolution, LabelledItem, Captchas } from "@prosopo/types";
 
 export interface Args {
     labels: string, // path to the labels file
@@ -53,7 +53,7 @@ export default async (args: Args) => {
 
     // load the map to get the labelled and unlabelled data
     const labelled: LabelledItem[] = JSON.parse(fs.readFileSync(labelledMapFile, "utf8"))
-    const unlabelled: UnlabelledItem[] = JSON.parse(fs.readFileSync(unlabelledMapFile, "utf8"))
+    const unlabelled: Item[] = JSON.parse(fs.readFileSync(unlabelledMapFile, "utf8"))
 
     // check for duplicates
     const all = new Set<string>()

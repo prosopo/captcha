@@ -35,12 +35,8 @@ export interface HashedItem extends Omit<Item, 'hash'> {
     hash: string
 }
 
-export interface LabelledItem extends UnlabelledItem {
+export interface LabelledItem extends Item {
     label: string,
-}
-
-export interface UnlabelledItem {
-    data: string,
 }
 
 export interface Captchas {

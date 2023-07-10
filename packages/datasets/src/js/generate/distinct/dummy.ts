@@ -1,6 +1,6 @@
 // generate some dummy data for testing the generate fns
 
-import { LabelledItem, UnlabelledItem } from '@prosopo/types';
+import { LabelledItem, Item, CaptchaItemTypes } from '@prosopo/types';
 import fs from 'fs'
 
 const nLabels = 4;
@@ -8,19 +8,21 @@ const nLabelledImages = 100;
 const nUnlabelledImages = 100;
 
 const labelledImages: LabelledItem[] = [];
-const unlabelledImages: UnlabelledItem[] = [];
+const unlabelledImages: Item[] = [];
 
 for(let i = 0; i < nLabelledImages; i++) {
     const label = i % nLabels;
     labelledImages.push({
         label: label.toString(),
         data: `abc${i}`,
+        type: CaptchaItemTypes.Image
     })
 }
 
 for(let i = 0; i < nUnlabelledImages; i++) {
     unlabelledImages.push({
         data: `def${i}`,
+        type: CaptchaItemTypes.Image
     })
 }
 
