@@ -83,6 +83,7 @@ export class Tasks {
 
     async providerSetDatasetFromFile(file: JSON): Promise<SubmittableResult | undefined> {
         const datasetRaw = parseCaptchaDataset(file)
+        this.logger.debug('Parsed raw data set')
         return await this.providerSetDataset(datasetRaw)
     }
 
@@ -93,7 +94,6 @@ export class Tasks {
         }
 
         await this.db?.storeDataset(dataset)
-
         const txResult = await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {
             value: 0,
         })
