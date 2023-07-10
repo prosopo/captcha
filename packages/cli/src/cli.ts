@@ -11,13 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// import { prosopoMiddleware } from '../api';
-// import { LocalAssetsResolver } from '../assets';
 import { LogLevel, getPair, logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { loadEnv } from './env'
 import { processArgs } from './argv'
+import { start } from './start'
 async function main() {
     loadEnv()
     const log = logger(LogLevel.Info, 'cli')
@@ -35,7 +34,11 @@ async function main() {
 
     await env.isReady()
 
-    await processArgs(process.argv.slice(2), env)
+    const processedArgs = await processArgs(process.argv.slice(2), env)
+
+    if (processedArgs.api) {
+        await start(env)
+    }
 
     process.exit()
 }
