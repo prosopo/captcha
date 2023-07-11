@@ -33,11 +33,17 @@ export default async (args: Args) => {
     fs.writeFileSync(mapFile, '[\n')
 
     // for each label
+    let first = true;
     for (const label of labels) {
         // find all the images
         const images: string[] = fs.readdirSync(`${dataDir}/${label}`)
         // for each image
         for (const image of images) {
+            if (!first) {
+                // prepend a comma if not the first line
+                fs.appendFileSync(mapFile, ',')
+                first = false
+            }
             // copy the image to the output directory
             const extension = image.split('.').pop()
             // read file to bytes
@@ -52,7 +58,7 @@ export default async (args: Args) => {
                 data: name,
                 label,
             }
-            fs.appendFileSync(mapFile, `${JSON.stringify(entry)},\n`)
+            fs.appendFileSync(mapFile, `${JSON.stringify(entry)}\n`)
         }
     }
 
