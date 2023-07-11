@@ -1,5 +1,5 @@
-import generateDistinct from "./distinct/generate.js"
-import generateUnion from "./union/generate.js"
+import generateDistinct from "./distinct/cli.js"
+import generateUnion from "./union/cli.js"
 
 export default {
     command: "generate",
@@ -52,7 +52,6 @@ export default {
             })
             .options("labels", {
                 type: "string",
-                demand: true,
                 description: "Path to the labels file. This is a file containing a list of labels which unlabelled data will be assigned to.",
             })
     },

@@ -32,9 +32,6 @@ export default async (args: Args) => {
         throw new Error(`Unlabelled map file does not exist: ${unlabelledMapFile}`)
     }
     const labelsFile: string = args.labels
-    if(!fs.existsSync(labelsFile)) {
-        throw new Error(`Labels file does not exist: ${labelsFile}`)
-    }
     const seed: number = args.seed || 0
     const size: number = args.size || 9
     const minCorrect: number = args.minCorrect || 0
@@ -46,14 +43,27 @@ export default async (args: Args) => {
 
     const uint32 = () => Math.abs(random.int32())
 
-    // load the labels from file
-    // these are the labels that unlabelled data will be assigned to
-    // note that these can be differen to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
-    const labels = JSON.parse(fs.readFileSync(labelsFile, "utf8"))
-
     // load the map to get the labelled and unlabelled data
     const labelled: LabelledItem[] = JSON.parse(fs.readFileSync(labelledMapFile, "utf8"))
     const unlabelled: Item[] = JSON.parse(fs.readFileSync(unlabelledMapFile, "utf8"))
+
+    // split the labelled data by label
+    const labelToImages: { [label: string]: string[] } = {}
+    for (const entry of labelled) {
+        labelToImages[entry.label] = labelToImages[entry.label] || []
+        labelToImages[entry.label].push(entry.data)
+    }
+    const targets = Object.keys(labelToImages)
+
+    // load the labels from file
+    // these are the labels that unlabelled data will be assigned to
+    // note that these can be differen to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
+    const labels: string[] = []
+    if(fs.existsSync(labelsFile)) {
+        labels.push(...[...JSON.parse(fs.readFileSync(labelsFile, "utf8"))])
+    } else {
+        labels.push(...[...targets])
+    }
 
     // check for duplicates
     const all = new Set<string>()
@@ -70,14 +80,6 @@ export default async (args: Args) => {
         all.add(entry.data)
     }
     all.clear()
-
-    // split the labelled data by label
-    const labelToImages: { [label: string]: string[] } = {}
-    for (const entry of labelled) {
-        labelToImages[entry.label] = labelToImages[entry.label] || []
-        labelToImages[entry.label].push(entry.data)
-    }
-    const targets = Object.keys(labelToImages)
 
     // generate n solved captchas
     const solvedCaptchas: CaptchaWithoutId[] = []
