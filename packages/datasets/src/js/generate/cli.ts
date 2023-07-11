@@ -30,16 +30,6 @@ export default {
                 demand: true,
                 description: 'Path to the file containing list of images url which are unlabelled',
             })
-            .option('min-correct', {
-                type: 'number',
-                default: 0,
-                description: 'Minimum number of target images in each captcha',
-            })
-            .option('max-correct', {
-                type: 'number',
-                default: 0,
-                description: 'Maximum number of target images in each captcha',
-            })
             .option('seed', {
                 type: 'number',
                 default: 0,

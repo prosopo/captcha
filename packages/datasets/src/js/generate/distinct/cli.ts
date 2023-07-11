@@ -18,6 +18,16 @@ export default {
                 default: 0,
                 description: 'Number of captchas to generate that are unsolved',
             })
+            .option('min-correct', {
+                type: 'number',
+                default: 0,
+                description: 'Minimum number of target images in each captcha',
+            })
+            .option('max-correct', {
+                type: 'number',
+                default: 0,
+                description: 'Maximum number of target images in each captcha',
+            })
     },
     handler: async (argv: yargs.Argv) => {
         await generate(argsSchema.parse(argv))

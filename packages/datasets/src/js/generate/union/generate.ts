@@ -1,52 +1,10 @@
-export interface Args {
-    labels: string // path to the labels file
-    output: string // path to the output file
-    labelled: string // path to the file containing map of image urls to labels
-    unlabelled: string // path to the file containing list of unlabelled image urls
-    minCorrect?: number // minimum number of correct/target images in each captcha
-    minIncorrect?: number // maximum number of incorrect images in each captcha
-    minLabelled?: number // minimum number of labelled (incorrect + correct) images in each captcha
-    maxLabelled?: number // maximum number of labelled (incorrect + correct) images in each captcha
-    seed?: number // seed for the random number generator
-    size?: number // number of images in each captcha
-    count?: number // number of captchas to generate
-}
-
-interface LabelledItem extends UnlabelledItem {
-    label: string
-}
-
-interface UnlabelledItem {
-    data: string
-}
-
-interface CaptchaItem {
-    type: CaptchaDataType
-    data: string
-}
-
-interface Captcha {
-    salt: string
-    target: string
-    items: CaptchaItem[]
-    correct: string[]
-    unlabelled: string[]
-}
-
-interface Captchas {
-    captchas: Captcha[]
-    format: CaptchaFormat
-}
-
-type CaptchaFormat = 'SelectAll'
-
-type CaptchaDataType = 'image'
+import { Args } from './args'
 
 export default async (args: Args) => {
     const outputFile: string = args.output
-    const labelledMapFile: string = args.labelled
-    const unlabelledMapFile: string = args.unlabelled
-    const labelsFile: string = args.labels
+    const labelledMapFile: string | undefined = args.labelled
+    const unlabelledMapFile: string | undefined = args.unlabelled
+    const labelsFile: string | undefined = args.labels
     const seed: number = args.seed || 0
     const size: number = args.size || 9
     const minCorrect: number = Math.max(args.minCorrect || 0, 1) // at least 1 correct image

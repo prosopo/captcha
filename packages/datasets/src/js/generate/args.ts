@@ -7,8 +7,6 @@ export const argsSchema = z.object({
     output: z.string(),
     labelled: z.string().optional(),
     unlabelled: z.string().optional(),
-    minCorrect: z.number().optional(),
-    maxCorrect: z.number().optional(),
     seed: z.number().optional(),
     size: z.number().optional(),
     overwrite: z.boolean().optional(),
