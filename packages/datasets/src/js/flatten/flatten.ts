@@ -35,7 +35,7 @@ export default async (args: Args) => {
     fs.writeFileSync(mapFile, '[\n')
 
     // for each label
-    let first = true;
+    let first = true
     for (const label of labels) {
         // find all the images
         const images: string[] = fs.readdirSync(`${dataDir}/${label}`)
@@ -44,8 +44,8 @@ export default async (args: Args) => {
             if (!first) {
                 // prepend a comma if not the first line
                 fs.appendFileSync(mapFile, ',')
-                first = false
             }
+            first = false
             // copy the image to the output directory
             const extension = image.split('.').pop()
             // read file to bytes
