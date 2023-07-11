@@ -29,3 +29,5 @@ for (let i = 0; i < nUnlabelledImages; i++) {
 fs.writeFileSync('labelled.json', JSON.stringify(labelledImages))
 fs.writeFileSync('unlabelled.json', JSON.stringify(unlabelledImages))
 fs.writeFileSync('labels.json', JSON.stringify(Array.from(Array(nLabels).keys()).map((x) => x.toString())))
+
+process.exit(0)
