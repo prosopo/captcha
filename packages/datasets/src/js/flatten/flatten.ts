@@ -1,12 +1,7 @@
+import { Args } from './args'
 import { blake2b } from '@noble/hashes/blake2b'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
-
-export interface Args {
-    data: string // path to the data directory
-    output: string // path to put the output directory + map file
-    overwrite?: boolean // overwrite the output directory if it already exists
-}
 
 export default async (args: Args) => {
     console.log('flattening...')

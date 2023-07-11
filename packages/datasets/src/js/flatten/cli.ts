@@ -1,10 +1,12 @@
+import { argsSchema } from './args.js'
 import flatten from './flatten.js'
+import yargs from 'yargs'
 
 export default {
     command: 'flatten',
     describe:
         'Restructure a directory containing directories for each image classification into a single directory with a file containing the labels',
-    builder: (yargs: any) => {
+    builder: (yargs: yargs.Argv) => {
         return yargs
             .option('data', {
                 type: 'string',
@@ -24,7 +26,7 @@ export default {
                 description: 'Overwrite the output file if it already exists',
             })
     },
-    handler: async (argv: any) => {
-        await flatten(argv)
+    handler: async (argv: yargs.Argv) => {
+        await flatten(argsSchema.parse(argv))
     },
 }

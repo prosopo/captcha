@@ -8,7 +8,7 @@ import {
     LabelledItem,
     RawSolution,
 } from '@prosopo/types'
-import { checkDuplicates } from '../../util'
+import { checkDuplicates } from '../util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
