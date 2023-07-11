@@ -48,7 +48,7 @@ export default async (args: Args) => {
             fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
             // add the image to the map file
             const entry = {
-                name,
+                'data': name,
                 label,
             }
             fs.appendFileSync(mapFile, `${JSON.stringify(entry)},\n`)
