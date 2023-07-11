@@ -1,10 +1,12 @@
+import { argsSchema } from './args'
 import generate from './generate'
+import yargs from 'yargs'
 
 export default {
     command: 'distinct',
     describe:
         'Generate distinct captchas producing captcha challenges comprising 2 rounds, one labelled and one unlabelled',
-    builder: (yargs: any) => {
+    builder: (yargs: yargs.Argv) => {
         return yargs
             .option('solved', {
                 type: 'number',
@@ -16,23 +18,8 @@ export default {
                 default: 0,
                 description: 'Number of captchas to generate that are unsolved',
             })
-            .option('allow-duplicates', {
-                type: 'boolean',
-                default: false,
-                description: 'Allow duplicates in the data (labelled and unlabelled)',
-            })
-            .option('allow-duplicates-labelled', {
-                type: 'boolean',
-                default: false,
-                description: 'Allow duplicates in the labelled data',
-            })
-            .option('allow-duplicates-unlabelled', {
-                type: 'boolean',
-                default: false,
-                description: 'Allow duplicates in the unlabelled data',
-            })
     },
-    handler: async (argv: any) => {
-        await generate(argv)
+    handler: async (argv: yargs.Argv) => {
+        await generate(argsSchema.parse(argv))
     },
 }

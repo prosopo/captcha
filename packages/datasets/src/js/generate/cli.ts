@@ -59,6 +59,21 @@ export default {
                 type: 'string',
                 description: 'Prefix to add to the start of each image url',
             })
+            .option('allow-duplicates', {
+                type: 'boolean',
+                default: false,
+                description: 'Allow duplicates in the data (labelled and unlabelled)',
+            })
+            .option('allow-duplicates-labelled', {
+                type: 'boolean',
+                default: false,
+                description: 'Allow duplicates in the labelled data',
+            })
+            .option('allow-duplicates-unlabelled', {
+                type: 'boolean',
+                default: false,
+                description: 'Allow duplicates in the unlabelled data',
+            })
     },
     handler: async (argv: any) => {
         throw new Error('Please specify a command')

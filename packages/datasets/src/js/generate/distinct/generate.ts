@@ -1,3 +1,4 @@
+import { Args } from './args'
 import {
     CaptchaItemTypes,
     CaptchaTypes,
@@ -7,54 +8,10 @@ import {
     LabelledItem,
     RawSolution,
 } from '@prosopo/types'
+import { checkDuplicates } from '../../util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
-
-export interface Args {
-    labels: string // path to the labels file
-    output: string // path to the output file
-    labelled: string // path to the file containing map of image urls to labels
-    unlabelled: string // path to the file containing list of unlabelled image urls
-    minCorrect?: number // minimum number of target images in each captcha
-    maxCorrect?: number // maximum number of target images in each captcha
-    seed?: number // seed for the random number generator
-    size?: number // number of images in each captcha
-    solved?: number // number of captchas to generate that are solved
-    unsolved?: number // number of captchas to generate that are unsolved
-    overwrite?: boolean // overwrite the output file if it already exists
-    hostPrefix?: string // prefix to add to the start of each image url
-    allowDuplicates?: boolean // allow duplicates in the data (labelled and unlabelled)
-    allowDuplicatesLabelled?: boolean // allow duplicates in the labelled data
-    allowDuplicatesUnlabelled?: boolean // allow duplicates in the unlabelled data
-}
-
-export const checkDuplicates = (
-    labelled: LabelledItem[],
-    unlabelled: Item[],
-    options: {
-        allowDuplicatesLabelled?: boolean
-        allowDuplicatesUnlabelled?: boolean
-    }
-) => {
-    // check for duplicates
-    const all = new Set<string>()
-    if (!options.allowDuplicatesLabelled) {
-        for (const entry of labelled) {
-            if (all.has(entry.data)) {
-                throw new Error(`Duplicate data entry in labelled data: ${JSON.stringify(entry)}`)
-            }
-            all.add(entry.data)
-        }
-    }
-    if (!options.allowDuplicatesUnlabelled) {
-        for (const entry of unlabelled) {
-            if (all.has(entry.data)) {
-                throw new Error(`Duplicate data entry in unlabelled data: ${JSON.stringify(entry)}`)
-            }
-        }
-    }
-}
 
 export default async (args: Args) => {
     const outputFile: string = args.output
@@ -62,16 +19,16 @@ export default async (args: Args) => {
     if (!overwrite && fs.existsSync(outputFile)) {
         throw new Error(`Output file already exists: ${outputFile}`)
     }
-    const labelledMapFile: string = args.labelled
-    if (!fs.existsSync(labelledMapFile)) {
+    const labelledMapFile: string | undefined = args.labelled
+    if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
         throw new Error(`Labelled map file does not exist: ${labelledMapFile}`)
     }
-    const unlabelledMapFile: string = args.unlabelled
-    if (!fs.existsSync(unlabelledMapFile)) {
+    const unlabelledMapFile: string | undefined = args.unlabelled
+    if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
         throw new Error(`Unlabelled map file does not exist: ${unlabelledMapFile}`)
     }
 
-    const labelsFile: string = args.labels
+    const labelsFile: string | undefined = args.labels
     const seed: number = args.seed || 0
     const size: number = args.size || 9
     const minCorrect: number = args.minCorrect || 0
@@ -87,8 +44,8 @@ export default async (args: Args) => {
     const uint32 = () => Math.abs(random.int32())
 
     // load the map to get the labelled and unlabelled data
-    const labelled: LabelledItem[] = JSON.parse(fs.readFileSync(labelledMapFile, 'utf8'))
-    const unlabelled: Item[] = JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8'))
+    const labelled: LabelledItem[] = labelledMapFile ? JSON.parse(fs.readFileSync(labelledMapFile, 'utf8')) : []
+    const unlabelled: Item[] = unlabelledMapFile ? JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')) : []
 
     // check for duplicates
     checkDuplicates(labelled, unlabelled, {
@@ -108,7 +65,7 @@ export default async (args: Args) => {
     // these are the labels that unlabelled data will be assigned to
     // note that these can be differen to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
     const labels: string[] = []
-    if (fs.existsSync(labelsFile)) {
+    if (labelsFile && fs.existsSync(labelsFile)) {
         labels.push(...[...JSON.parse(fs.readFileSync(labelsFile, 'utf8'))])
     } else {
         labels.push(...[...targets])
