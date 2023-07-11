@@ -9,6 +9,8 @@ export interface Args {
 }
 
 export default async (args: Args) => {
+    console.log('flattening...')
+
     const dataDir: string = args.data
     if (!fs.existsSync(dataDir)) {
         throw new Error(`Data directory does not exist: ${dataDir}`)
@@ -63,4 +65,7 @@ export default async (args: Args) => {
     }
 
     fs.appendFileSync(mapFile, ']\n')
+
+    // check json is valid
+    JSON.parse(fs.readFileSync(mapFile, 'utf8'))
 }
