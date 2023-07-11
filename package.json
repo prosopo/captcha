@@ -3,7 +3,6 @@
   "version": "0.1.16",
   "stableVersion": "0.0.0",
   "author": "Prosopo",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/prosopo/captcha.git"

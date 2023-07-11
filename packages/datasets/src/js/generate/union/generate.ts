@@ -1,49 +1,46 @@
-import fs from "fs";
-import bcrypt from 'bcrypt'
-
 export interface Args {
-    labels: string, // path to the labels file
-    output: string, // path to the output file
-    labelled: string, // path to the file containing map of image urls to labels
-    unlabelled: string, // path to the file containing list of unlabelled image urls
-    minCorrect?: number, // minimum number of correct/target images in each captcha
-    minIncorrect?: number, // maximum number of incorrect images in each captcha
-    minLabelled?: number, // minimum number of labelled (incorrect + correct) images in each captcha
-    maxLabelled?: number, // maximum number of labelled (incorrect + correct) images in each captcha
-    seed?: number, // seed for the random number generator
-    size?: number, // number of images in each captcha
-    count?: number, // number of captchas to generate
+    labels: string // path to the labels file
+    output: string // path to the output file
+    labelled: string // path to the file containing map of image urls to labels
+    unlabelled: string // path to the file containing list of unlabelled image urls
+    minCorrect?: number // minimum number of correct/target images in each captcha
+    minIncorrect?: number // maximum number of incorrect images in each captcha
+    minLabelled?: number // minimum number of labelled (incorrect + correct) images in each captcha
+    maxLabelled?: number // maximum number of labelled (incorrect + correct) images in each captcha
+    seed?: number // seed for the random number generator
+    size?: number // number of images in each captcha
+    count?: number // number of captchas to generate
 }
 
 interface LabelledItem extends UnlabelledItem {
-    label: string,
+    label: string
 }
 
 interface UnlabelledItem {
-    data: string,
+    data: string
 }
 
 interface CaptchaItem {
-    type: CaptchaDataType,
-    data: string,
+    type: CaptchaDataType
+    data: string
 }
 
 interface Captcha {
-    salt: string,
-    target: string,
-    items: CaptchaItem[],
-    correct: string[],
-    unlabelled: string[],
+    salt: string
+    target: string
+    items: CaptchaItem[]
+    correct: string[]
+    unlabelled: string[]
 }
 
 interface Captchas {
-    captchas: Captcha[],
-    format: CaptchaFormat,
+    captchas: Captcha[]
+    format: CaptchaFormat
 }
 
-type CaptchaFormat = "SelectAll"
+type CaptchaFormat = 'SelectAll'
 
-type CaptchaDataType = "image";
+type CaptchaDataType = 'image'
 
 export default async (args: Args) => {
     const outputFile: string = args.output
@@ -116,7 +113,7 @@ export default async (args: Args) => {
     //         const image = random.choice(labelToImages[target])
     //         correctItems.add(image)
     //     }
-        
+
     //     // get the incorrect items
     //     const incorrectItems = new Set<string>()
     //     while (incorrectItems.size < nIncorrect) {

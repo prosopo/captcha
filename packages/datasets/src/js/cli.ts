@@ -1,9 +1,9 @@
 // Take a set of data and generate a bunch of captchas
 
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-import generate from "./generate/cli";
-import flatten from "./flatten/cli";
+import { hideBin } from 'yargs/helpers'
+import flatten from './flatten/cli'
+import generate from './generate/cli'
+import yargs from 'yargs'
 
 const main = async () => {
     const args = await yargs(hideBin(process.argv))
@@ -15,10 +15,12 @@ const main = async () => {
         .parse()
 }
 
-main().then(() => {
-    console.log("done");
-    process.exit(0);
-}).catch((err) => {
-    console.error("error:", err);
-    process.exit(1);
-})
+main()
+    .then(() => {
+        console.log('done')
+        process.exit(0)
+    })
+    .catch((err) => {
+        console.error('error:', err)
+        process.exit(1)
+    })
