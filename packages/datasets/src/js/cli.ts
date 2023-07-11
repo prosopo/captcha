@@ -7,6 +7,9 @@ import yargs from 'yargs'
 
 const main = async () => {
     const args = await yargs(hideBin(process.argv))
+        .middleware((argv) => {
+            console.log('argv:', argv)
+        })
         .help()
         .command(generate)
         .command(flatten)

@@ -70,7 +70,6 @@ export default async (args: Args) => {
     if (!fs.existsSync(unlabelledMapFile)) {
         throw new Error(`Unlabelled map file does not exist: ${unlabelledMapFile}`)
     }
-    console.log(args)
 
     const labelsFile: string = args.labels
     const seed: number = args.seed || 0
