@@ -24,6 +24,36 @@ export interface Args {
     unsolved?: number // number of captchas to generate that are unsolved
     overwrite?: boolean // overwrite the output file if it already exists
     hostPrefix?: string // prefix to add to the start of each image url
+    allowDuplicates?: boolean // allow duplicates in the data (labelled and unlabelled)
+    allowDuplicatesLabelled?: boolean // allow duplicates in the labelled data
+    allowDuplicatesUnlabelled?: boolean // allow duplicates in the unlabelled data
+}
+
+export const checkDuplicates = (
+    labelled: LabelledItem[],
+    unlabelled: Item[],
+    options: {
+        allowDuplicatesLabelled?: boolean
+        allowDuplicatesUnlabelled?: boolean
+    }
+) => {
+    // check for duplicates
+    const all = new Set<string>()
+    if (!options.allowDuplicatesLabelled) {
+        for (const entry of labelled) {
+            if (all.has(entry.data)) {
+                throw new Error(`Duplicate data entry in labelled data: ${JSON.stringify(entry)}`)
+            }
+            all.add(entry.data)
+        }
+    }
+    if (!options.allowDuplicatesUnlabelled) {
+        for (const entry of unlabelled) {
+            if (all.has(entry.data)) {
+                throw new Error(`Duplicate data entry in unlabelled data: ${JSON.stringify(entry)}`)
+            }
+        }
+    }
 }
 
 export default async (args: Args) => {
@@ -52,12 +82,20 @@ export default async (args: Args) => {
     const hostPrefix: string = args.hostPrefix || ''
     const random = seedrandom(seed.toString())
     const saltRounds = 10
+    const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
+    const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
 
     const uint32 = () => Math.abs(random.int32())
 
     // load the map to get the labelled and unlabelled data
     const labelled: LabelledItem[] = JSON.parse(fs.readFileSync(labelledMapFile, 'utf8'))
     const unlabelled: Item[] = JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8'))
+
+    // check for duplicates
+    checkDuplicates(labelled, unlabelled, {
+        allowDuplicatesLabelled,
+        allowDuplicatesUnlabelled,
+    })
 
     // split the labelled data by label
     const labelToImages: { [label: string]: string[] } = {}
@@ -76,21 +114,6 @@ export default async (args: Args) => {
     } else {
         labels.push(...[...targets])
     }
-
-    // check for duplicates
-    const all = new Set<string>()
-    for (const entry of labelled) {
-        if (all.has(entry.data)) {
-            throw new Error(`Duplicate data entry in labelled data: ${JSON.stringify(entry)}`)
-        }
-        all.add(entry.data)
-    }
-    for (const entry of unlabelled) {
-        if (!all.has(entry.data)) {
-            all.add(entry.data)
-        }
-    }
-    all.clear()
 
     // generate n solved captchas
     const solvedCaptchas: CaptchaWithoutId[] = []
