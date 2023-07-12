@@ -1,4 +1,5 @@
 import { Args } from './args'
+import { CaptchaItemTypes, LabelledItem } from '@prosopo/types'
 import { blake2b } from '@noble/hashes/blake2b'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
@@ -51,9 +52,11 @@ export default async (args: Args) => {
             const name = `${hex}.${extension}`
             fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
             // add the image to the map file
-            const entry = {
+            const entry: LabelledItem = {
                 data: name,
+                type: CaptchaItemTypes.Image,
                 label,
+                hash: u8aToHex(hash),
             }
             fs.appendFileSync(mapFile, `${JSON.stringify(entry)}\n`)
         }

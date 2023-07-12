@@ -16,6 +16,7 @@ for (let i = 0; i < nLabelledImages; i++) {
         label: label.toString(),
         data: `abc${i}`,
         type: CaptchaItemTypes.Image,
+        hash: `abc${i}hash`,
     })
 }
 

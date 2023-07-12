@@ -33,13 +33,13 @@ export interface HashedItem extends Omit<Item, 'hash'> {
     hash: string
 }
 
-export interface LabelledItem extends Item {
-    label: string,
+export interface LabelledItem extends HashedItem {
+    label: string
 }
 
 export interface Captchas {
-    captchas: CaptchaWithoutId[],
-    format: CaptchaTypes,
+    captchas: CaptchaWithoutId[]
+    format: CaptchaTypes
 }
 
 type CaptchaWithoutIdBase = {
