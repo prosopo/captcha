@@ -1,6 +1,8 @@
 'use client'
 
 import { Button, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material'
+import { GetProviderApi } from '@/services/provider-api/provider-api'
+import { useGlobalState } from '@/contexts/PolkadotAccountContext'
 import { useRouter } from 'next/navigation'
 import React, { FormEvent, useState } from 'react'
 
@@ -10,8 +12,18 @@ interface HomePageState {
 }
 
 export default function HomePage() {
+    const { currentAccount, setCurrentAccount } = useGlobalState()
     const [state, setState] = useState<HomePageState>({ network: 'rococo', providerUrl: '' })
     const router = useRouter()
+
+    async function CheckIfProviderIsRunning(url: string): Promise<boolean> {
+        console.log(`Checking if provider at ${url} is running...`)
+        const provider = GetProviderApi(url, currentAccount)
+        // Request captcha
+        // if captcha is give, return true
+        // else error, catch error and return false
+        return url !== 'notrunning'
+    }
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setState({
@@ -30,22 +42,20 @@ export default function HomePage() {
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
-        // replace with actual function for checking if provider is running
-        const isProviderRunning = await checkIfProviderIsRunning(state.providerUrl)
+        const isProviderRunning = await CheckIfProviderIsRunning(state.providerUrl)
         if (!isProviderRunning) {
             alert('Error: Provider is not running.')
             return
         }
 
-        // replace with actual function for checking if provider is registered in contract
-        const isProviderRegistered = await checkIfProviderIsRegistered(state.network, state.providerUrl)
+        const isProviderRegistered = await checkIfProviderIsRegistered(state.network, state.providerUrl, currentAccount)
         if (!isProviderRegistered) {
             alert('Provider is running but not registered.')
-            router.push('/register-provider') // Redirect to register provider page
+            router.push('/register-provider')
             return
         }
 
-        router.push('/provider-profile') // Redirect to provider profile page
+        router.push('/provider-profile/profile-summary')
     }
 
     return (
@@ -60,14 +70,18 @@ export default function HomePage() {
 }
 
 // Dummy functions. Replace these with actual implementation.
-async function checkIfProviderIsRunning(url: string): Promise<boolean> {
-    console.log(`Checking if provider at ${url} is running...`)
-    // Implement your API call here
-    return true // This is a dummy value
-}
 
-async function checkIfProviderIsRegistered(network: string, url: string): Promise<boolean> {
-    console.log(`Checking if provider at ${url} is registered in ${network} network...`)
-    // Implement your API call here
-    return true // This is a dummy value
+async function checkIfProviderIsRegistered(
+    contractAddress: string,
+    network: string,
+    accountId: string
+): Promise<boolean> {
+    console.log(`Checking if provider is registered in ${network} network...`)
+    return true
+    // try {
+    //     await getContractApi(accountId)
+    //     return true
+    // } catch (e) {
+    //     return false
+    // }
 }

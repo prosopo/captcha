@@ -1,8 +1,17 @@
+'use client'
+
+import GenericForm from '@/components/content-edit-form'
+import React from 'react'
+
+interface EnvironmentVariables {
+    [key: string]: string
+}
+
 export default function ProfileSummary() {
-    return (
-        <div>
-            <h1>Profile Summary</h1>
-            <p>This is the profile summary page.</p>
-        </div>
-    )
+    const handleSubmit = (values: { [key: string]: string }) => {
+        console.log(values)
+        // ... Add your API call here
+    }
+
+    return <GenericForm initialValues={initialValues} onSubmit={handleSubmit} />
 }

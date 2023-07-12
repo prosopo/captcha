@@ -1,4 +1,5 @@
-// src/context/GlobalStateContext.tsx
+'use client'
+
 import React, { ReactNode, createContext, useContext, useState } from 'react'
 
 interface GlobalStateContextProps {
