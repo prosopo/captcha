@@ -25,6 +25,22 @@ export default function HomePage() {
         return url !== 'notrunning'
     }
 
+    async function CheckIfProviderIsRegistered(
+        url: string,
+        contractAddress: string,
+        network: string,
+        accountId: string
+    ): Promise<boolean> {
+        console.log(`Checking if provider is registered in ${network} network...`)
+        return url !== 'notregistered'
+        // try {
+        //     await getContractApi(accountId)
+        //     return true
+        // } catch (e) {
+        //     return false
+        // }
+    }
+
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setState({
             ...state,
@@ -48,7 +64,12 @@ export default function HomePage() {
             return
         }
 
-        const isProviderRegistered = await checkIfProviderIsRegistered(state.network, state.providerUrl, currentAccount)
+        const isProviderRegistered = await CheckIfProviderIsRegistered(
+            state.providerUrl,
+            state.network,
+            state.providerUrl,
+            currentAccount
+        )
         if (!isProviderRegistered) {
             alert('Provider is running but not registered.')
             router.push('/register-provider')
@@ -70,18 +91,3 @@ export default function HomePage() {
 }
 
 // Dummy functions. Replace these with actual implementation.
-
-async function checkIfProviderIsRegistered(
-    contractAddress: string,
-    network: string,
-    accountId: string
-): Promise<boolean> {
-    console.log(`Checking if provider is registered in ${network} network...`)
-    return true
-    // try {
-    //     await getContractApi(accountId)
-    //     return true
-    // } catch (e) {
-    //     return false
-    // }
-}
