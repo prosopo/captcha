@@ -24,6 +24,7 @@ for (let i = 0; i < nUnlabelledImages; i++) {
     unlabelledImages.push({
         data: `def${i}`,
         type: CaptchaItemTypes.Image,
+        hash: `def${i}hash`,
     })
 }
 

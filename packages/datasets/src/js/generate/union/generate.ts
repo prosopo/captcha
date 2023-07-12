@@ -1,6 +1,6 @@
 import { Args } from './args'
 import { CaptchaItemTypes, CaptchaTypes, CaptchaWithoutId, Item, LabelledItem, RawSolution } from '@prosopo/types'
-import { checkDuplicates } from '../util'
+import { checkDuplicates, itemLookupByData, prefixHost } from '../util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
@@ -60,6 +60,11 @@ export default async (args: Args) => {
         allowDuplicatesLabelled,
         allowDuplicatesUnlabelled,
     })
+
+    // concat labelled and unlabelled in a type safe way
+    const allItems: (Item | LabelledItem)[] = [...labelled, ...unlabelled]
+    // create a lookup by data field
+    const itemLookup = itemLookupByData(allItems)
 
     // split the labelled data by label
     const labelToImages: { [label: string]: string[] } = {}
@@ -121,21 +126,24 @@ export default async (args: Args) => {
         for (const item of correctItems) {
             items.push({
                 type: CaptchaItemTypes.Image,
-                data: item,
+                data: prefixHost(hostPrefix, item),
+                hash: itemLookup[item].hash,
             })
         }
         // add the incorrect items
         for (const item of incorrectItems) {
             items.push({
                 type: CaptchaItemTypes.Image,
-                data: item,
+                data: prefixHost(hostPrefix, item),
+                hash: itemLookup[item].hash,
             })
         }
         // add the unlabelled items
         for (const item of unlabelledItems) {
             items.push({
                 type: CaptchaItemTypes.Image,
-                data: item,
+                data: prefixHost(hostPrefix, item),
+                hash: itemLookup[item].hash,
             })
         }
         // shuffle the items

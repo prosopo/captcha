@@ -162,7 +162,7 @@ export async function computeItemHash(item: Item): Promise<HashedItem> {
  */
 export function matchItemsToSolutions(
     solutions: RawSolution[] | HashedSolution[],
-    items: Item[] | undefined
+    items: HashedItem[] | undefined
 ): HashedSolution[] {
     return (
         solutions?.map((solution: string | number) => {

@@ -44,7 +44,7 @@ export interface Captchas {
 
 type CaptchaWithoutIdBase = {
     salt: string
-    items: Item[]
+    items: HashedItem[]
     target: string
     solved?: boolean
     timeLimitMs?: number
@@ -111,7 +111,7 @@ export const CaptchaSchema = z.object({
 })
 
 export const CaptchaItemSchema = z.object({
-    hash: z.string().optional(),
+    hash: z.string(),
     data: z.string(),
     type: z.nativeEnum(CaptchaItemTypes),
 })

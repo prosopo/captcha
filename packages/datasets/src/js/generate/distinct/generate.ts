@@ -4,12 +4,11 @@ import {
     CaptchaTypes,
     CaptchaWithoutId,
     Captchas,
-    HashedItem,
     Item,
     LabelledItem,
     RawSolution,
 } from '@prosopo/types'
-import { checkDuplicates } from '../util'
+import { checkDuplicates, itemLookupByData, prefixHost } from '../util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
@@ -54,14 +53,10 @@ export default async (args: Args) => {
         allowDuplicatesUnlabelled,
     })
 
-    // Create a lookup of all the items by item.data to the item
-    const itemLookup: { [data: string]: Item | LabelledItem | HashedItem } = {}
-    for (const item of labelled) {
-        itemLookup[item.data] = item
-    }
-    for (const item of unlabelled) {
-        itemLookup[item.data] = item
-    }
+    // concat labelled and unlabelled in a type safe way
+    const allItems: (Item | LabelledItem)[] = [...labelled, ...unlabelled]
+    // create a lookup by data field
+    const itemLookup = itemLookupByData(allItems)
 
     // split the labelled data by label
     const labelToImages: { [label: string]: Item[] } = {}
@@ -210,8 +205,4 @@ export default async (args: Args) => {
         format: CaptchaTypes.SelectAll,
     }
     fs.writeFileSync(outputFile, JSON.stringify(output))
-}
-
-function prefixHost(hostPrefix: string, item: string): string {
-    return `${hostPrefix}${hostPrefix.endsWith('/') ? '' : '/'}${item}`
 }

@@ -36,9 +36,11 @@ async function main() {
 
     await env.isReady()
 
-    await processArgs(process.argv.slice(2), env)
+    const args = await processArgs(process.argv.slice(2), env)
 
-    process.exit()
+    log.info('args:', args)
+
+    return
 }
 
 // if main node process
@@ -46,8 +48,10 @@ if (typeof require !== 'undefined' && require.main === module) {
     main()
         .then(() => {
             log.info('done')
+            process.exit(0)
         })
         .catch((error) => {
             log.error(error)
+            process.exit(1)
         })
 }
