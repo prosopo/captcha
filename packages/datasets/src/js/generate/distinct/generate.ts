@@ -47,6 +47,16 @@ export default async (args: Args) => {
     const labelled: LabelledItem[] = labelledMapFile ? JSON.parse(fs.readFileSync(labelledMapFile, 'utf8')) : []
     const unlabelled: Item[] = unlabelledMapFile ? JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')) : []
 
+    // add prefixes to the data
+    if (prefixHost) {
+        for (const arr of [labelled, unlabelled]) {
+            for (const [index, item] of arr.entries()) {
+                item.data = prefixHost(hostPrefix, item.data)
+                arr[index] = item
+            }
+        }
+    }
+
     // check for duplicates
     checkDuplicates(labelled, unlabelled, {
         allowDuplicatesLabelled,
@@ -117,7 +127,7 @@ export default async (args: Args) => {
         for (const itemData of correctItems) {
             items.push({
                 type: CaptchaItemTypes.Image,
-                data: prefixHost(hostPrefix, itemData),
+                data: itemData,
                 hash: itemLookup[itemData].hash,
             })
         }
@@ -125,7 +135,7 @@ export default async (args: Args) => {
         for (const itemData of incorrectItems) {
             items.push({
                 type: CaptchaItemTypes.Image,
-                data: prefixHost(hostPrefix, itemData),
+                data: itemData,
                 hash: itemLookup[itemData].hash,
             })
         }
@@ -177,7 +187,7 @@ export default async (args: Args) => {
         for (const itemData of itemDataArr) {
             items.push({
                 type: CaptchaItemTypes.Image,
-                data: prefixHost(hostPrefix, itemData),
+                data: itemData,
                 hash: itemLookup[itemData].hash,
             })
         }
