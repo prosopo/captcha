@@ -56,7 +56,7 @@ export default async (args: Args) => {
                 data: name,
                 type: CaptchaItemTypes.Image,
                 label,
-                hash: u8aToHex(hash),
+                hash: hex,
             }
             fs.appendFileSync(mapFile, `${JSON.stringify(entry)}\n`)
         }
