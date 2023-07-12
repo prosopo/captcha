@@ -1,14 +1,14 @@
 'use client'
 
-import { environmentMock } from '@/app/mocks/profile-mock-data'
+import { summaryMock } from '@/mocks/profile-mocks'
 import GenericForm from '@/components/content-edit-form'
 import React from 'react'
 
-export default function ProfileSummary() {
-    const handleSubmit = (values: { [key: string]: string }) => {
+export default function ProfileSummaryForm() {
+    const handleSubmit = (values: { [key: string]: string | number | boolean }) => {
         console.log(values)
         // ... Add your API call here
     }
 
-    return <GenericForm initialValues={environmentMock} onSubmit={handleSubmit} />
+    return <GenericForm initialValues={summaryMock} onSubmit={handleSubmit} />
 }

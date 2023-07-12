@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, ChangeEvent, FormEvent } from 'react'
-import { Container, TextField, Button, Grid } from '@mui/material'
+import { Button, Container, Grid, TextField, Typography } from '@mui/material'
+import React, { ChangeEvent, FormEvent, useState } from 'react'
 
 interface EnvironmentVariables {
-    [key: string]: string
+    [key: string]: string | number | boolean
 }
 
 interface GenericFormProps {
@@ -34,7 +34,7 @@ const GenericForm: React.FC<GenericFormProps> = ({ initialValues, onSubmit }) =>
                     {Object.keys(values).map((key) => (
                         <React.Fragment key={key}>
                             <Grid item xs={6}>
-                                <TextField disabled fullWidth label={key} defaultValue={key} />
+                                <Typography>{key}</Typography>
                             </Grid>
                             <Grid item xs={6}>
                                 <TextField fullWidth label="Value" value={values[key]} onChange={handleChange(key)} />

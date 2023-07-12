@@ -1,18 +1,13 @@
 'use client'
 
+import { datasetMock } from '@/mocks/profile-mocks'
 import GenericForm from '@/components/content-edit-form'
 import React from 'react'
 
 export default function ProfileDatasetForm() {
-    const initialValues = {
-        DATASET_CONTENT_ID: 'DATASET_CONTENT_ID',
-        DATASET_ID: 'DATASET_ID',
-    }
-
-    const handleSubmit = (values: { [key: string]: string }) => {
+    const handleSubmit = (values: { [key: string]: string | number | boolean }) => {
         console.log(values)
-        // ... Add your API call here
     }
 
-    return <GenericForm initialValues={initialValues} onSubmit={handleSubmit} />
+    return <GenericForm initialValues={datasetMock} onSubmit={handleSubmit} />
 }
