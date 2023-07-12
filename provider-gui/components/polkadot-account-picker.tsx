@@ -1,6 +1,9 @@
+'use client'
+
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { SelectChangeEvent } from '@mui/material/Select'
+import { useGlobalState } from '@/contexts/PolkadotAccountContext'
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp'
 import React, { useEffect, useState } from 'react'
 
@@ -16,20 +19,20 @@ const injected: Injected = {
 
 export default function PolkadotAccountPicker() {
     const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
-    const [selectedAccount, setSelectedAccount] = useState<string>('')
+    const { currentAccount, setCurrentAccount } = useGlobalState()
 
     useEffect(() => {
         const enableExtension = async () => {
             await injected.enable('my cool dapp')
             const accounts = await injected.accounts()
             setAccounts(accounts)
-            if (accounts.length > 0) setSelectedAccount(accounts[0].address)
+            if (accounts.length > 0) setCurrentAccount(accounts[0].address)
         }
         enableExtension()
     }, [])
 
     const handleChange = (event: SelectChangeEvent<string>) => {
-        setSelectedAccount(event.target.value)
+        setCurrentAccount(event.target.value)
     }
 
     return (
@@ -38,7 +41,7 @@ export default function PolkadotAccountPicker() {
             <Select
                 labelId="account-picker-label"
                 id="account-picker"
-                value={selectedAccount}
+                value={currentAccount}
                 label="Account"
                 onChange={handleChange}
             >

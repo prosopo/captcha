@@ -1,3 +1,4 @@
+import { GlobalStateProvider } from '@/contexts/PolkadotAccountContext'
 import TopBar from '@/components/topbar'
 import type { Metadata } from 'next'
 
@@ -9,8 +10,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en">
-            <TopBar />
-            <body>{children}</body>
+            <body>
+                <GlobalStateProvider>
+                    <TopBar />
+                    {children}
+                </GlobalStateProvider>
+            </body>
         </html>
     )
 }

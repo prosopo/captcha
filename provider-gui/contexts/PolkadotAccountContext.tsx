@@ -1,37 +1,31 @@
-import React, { Dispatch, createContext, useReducer } from 'react'
+// src/context/GlobalStateContext.tsx
+import React, { ReactNode, createContext, useContext, useState } from 'react'
 
-export interface AccountState {
+interface GlobalStateContextProps {
     currentAccount: string
+    setCurrentAccount: React.Dispatch<React.SetStateAction<string>>
 }
 
-export type AccountAction = { type: 'SET_ACCOUNT'; account: string }
+const GlobalStateContext = createContext<GlobalStateContextProps | undefined>(undefined)
 
-type PolkadotAccountProviderProps = {
-    children: React.ReactNode
+interface GlobalStateProviderProps {
+    children: ReactNode
 }
 
-export const AccountStateContext = createContext<AccountState | undefined>(undefined)
-export const AccountDispatchContext = createContext<Dispatch<AccountAction> | undefined>(undefined)
-
-const accountReducer = (state: AccountState, action: AccountAction): AccountState => {
-    switch (action.type) {
-        case 'SET_ACCOUNT':
-            return { ...state, currentAccount: action.account }
-        default:
-            return state
-    }
-}
-
-const initialState: AccountState = {
-    currentAccount: '',
-}
-
-export const PolkadotAccountProvider: React.FC<PolkadotAccountProviderProps> = ({ children }): React.JSX.Element => {
-    const [state, dispatch] = useReducer(accountReducer, initialState)
+export const GlobalStateProvider: React.FC<GlobalStateProviderProps> = ({ children }) => {
+    const [currentAccount, setCurrentAccount] = useState<string>('')
 
     return (
-        <AccountDispatchContext.Provider value={dispatch}>
-            <AccountStateContext.Provider value={state}>{children}</AccountStateContext.Provider>
-        </AccountDispatchContext.Provider>
+        <GlobalStateContext.Provider value={{ currentAccount, setCurrentAccount }}>
+            {children}
+        </GlobalStateContext.Provider>
     )
+}
+
+export const useGlobalState = () => {
+    const context = useContext(GlobalStateContext)
+    if (context === undefined) {
+        throw new Error('useGlobalState must be used within a GlobalStateProvider')
+    }
+    return context
 }
