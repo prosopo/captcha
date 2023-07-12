@@ -1,10 +1,11 @@
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import generateDistinct from './distinct/cli.js'
 import generateUnion from './union/cli.js'
 
 export default {
     command: 'generate',
     describe: 'Generate captchas',
-    builder: (yargs: any) => {
+    builder: (yargs: Argv) => {
         return yargs
             .command(generateDistinct)
             .command(generateUnion)
@@ -65,7 +66,7 @@ export default {
                 description: 'Allow duplicates in the unlabelled data',
             })
     },
-    handler: async (argv: any) => {
+    handler: async (argv: ArgumentsCamelCase) => {
         throw new Error('Please specify a command')
     },
 }

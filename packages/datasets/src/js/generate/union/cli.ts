@@ -1,12 +1,12 @@
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { argsSchema } from '../args'
 import generate from './generate'
-import yargs from 'yargs'
 
 export default {
     command: 'union',
     describe:
         'Generate distinct captchas producing captcha challenges comprising one or more rounds, mixing labelled and unlabelled data into a single round',
-    builder: (yargs: yargs.Argv) => {
+    builder: (yargs: Argv) => {
         return yargs
             .option('count', {
                 type: 'number',
@@ -34,7 +34,7 @@ export default {
                 description: 'Maximum number of labelled images in each captcha',
             })
     },
-    handler: async (argv: yargs.Argv) => {
+    handler: async (argv: ArgumentsCamelCase) => {
         await generate(argsSchema.parse(argv))
     },
 }
