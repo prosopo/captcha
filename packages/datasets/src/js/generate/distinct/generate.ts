@@ -4,6 +4,7 @@ import {
     CaptchaTypes,
     CaptchaWithoutId,
     Captchas,
+    HashedItem,
     Item,
     LabelledItem,
     RawSolution,
@@ -53,17 +54,26 @@ export default async (args: Args) => {
         allowDuplicatesUnlabelled,
     })
 
+    // Create a lookup of all the items by item.data to the item
+    const itemLookup: { [data: string]: Item | LabelledItem | HashedItem } = {}
+    for (const item of labelled) {
+        itemLookup[item.data] = item
+    }
+    for (const item of unlabelled) {
+        itemLookup[item.data] = item
+    }
+
     // split the labelled data by label
-    const labelToImages: { [label: string]: string[] } = {}
+    const labelToImages: { [label: string]: Item[] } = {}
     for (const entry of labelled) {
         labelToImages[entry.label] = labelToImages[entry.label] || []
-        labelToImages[entry.label].push(entry.data)
+        labelToImages[entry.label].push(entry)
     }
     const targets = Object.keys(labelToImages)
 
     // load the labels from file
     // these are the labels that unlabelled data will be assigned to
-    // note that these can be differen to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
+    // note that these can be different to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
     const labels: string[] = []
     if (labelsFile && fs.existsSync(labelsFile)) {
         labels.push(...[...JSON.parse(fs.readFileSync(labelsFile, 'utf8'))])
@@ -74,7 +84,6 @@ export default async (args: Args) => {
     // generate n solved captchas
     const solvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < solved; i++) {
-        console.log(`generating solved captcha ${i}`)
         if (labelled.length <= size) {
             throw new Error(`Labelled map file does not contain enough data: ${labelledMapFile}`)
         }
@@ -96,7 +105,7 @@ export default async (args: Args) => {
         while (correctItems.size < correct) {
             // get a random image from the target
             const image = labelToImages[target][uint32() % labelToImages[target].length]
-            correctItems.add(image)
+            correctItems.add(image.data)
         }
         // get the incorrect items
         const incorrectItems = new Set<string>()
@@ -106,21 +115,23 @@ export default async (args: Args) => {
             const notTarget = notTargets[index]
             const imgs = labelToImages[notTarget]
             const image = imgs[uint32() % imgs.length]
-            incorrectItems.add(image)
+            incorrectItems.add(image.data)
         }
         const items: Item[] = []
         // add the correct items
-        for (const item of correctItems) {
+        for (const itemData of correctItems) {
             items.push({
                 type: CaptchaItemTypes.Image,
-                data: prefixHost(hostPrefix, item),
+                data: prefixHost(hostPrefix, itemData),
+                hash: itemLookup[itemData].hash,
             })
         }
         // add the incorrect items
-        for (const item of incorrectItems) {
+        for (const itemData of incorrectItems) {
             items.push({
                 type: CaptchaItemTypes.Image,
-                data: prefixHost(hostPrefix, item),
+                data: prefixHost(hostPrefix, itemData),
+                hash: itemLookup[itemData].hash,
             })
         }
 
@@ -161,17 +172,18 @@ export default async (args: Args) => {
         const index = uint32() % labels.length
         const target = labels[index]
         // randomly pick images from the unlabelled data
-        const imgs = new Set<string>()
-        while (imgs.size < size) {
-            const img = unlabelled[uint32() % unlabelled.length].data
-            imgs.add(img)
+        const itemDataArr = new Set<string>()
+        while (itemDataArr.size < size) {
+            const itemData = unlabelled[uint32() % unlabelled.length].data
+            itemDataArr.add(itemData)
         }
         const items: Item[] = []
         // add the items
-        for (const img of imgs) {
+        for (const itemData of itemDataArr) {
             items.push({
                 type: CaptchaItemTypes.Image,
-                data: prefixHost(hostPrefix, img),
+                data: prefixHost(hostPrefix, itemData),
+                hash: itemLookup[itemData].hash,
             })
         }
         // shuffle the items
