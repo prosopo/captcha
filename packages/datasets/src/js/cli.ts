@@ -18,12 +18,15 @@ const main = async () => {
         .parse()
 }
 
-main()
-    .then(() => {
-        console.log('done')
-        process.exit(0)
-    })
-    .catch((err) => {
-        console.error('error:', err)
-        process.exit(1)
-    })
+//if main process
+if (typeof require !== 'undefined' && require.main === module) {
+    main()
+        .then(() => {
+            console.log('done')
+            process.exit(0)
+        })
+        .catch((err) => {
+            console.error('error:', err)
+            process.exit(1)
+        })
+}

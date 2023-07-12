@@ -18,9 +18,10 @@ import { ProviderEnvironment } from '@prosopo/env'
 import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { loadEnv } from './env'
 import { processArgs } from './argv'
+const log = logger(LogLevel.Info, 'cli')
 async function main() {
     loadEnv()
-    const log = logger(LogLevel.Info, 'cli')
+
     const secret = getSecret()
     const ss58Format = getSs58Format()
     const pairType = getPairType()
@@ -42,7 +43,11 @@ async function main() {
 
 // if main node process
 if (typeof require !== 'undefined' && require.main === module) {
-    main().catch((error) => {
-        console.error(error)
-    })
+    main()
+        .then(() => {
+            log.info('done')
+        })
+        .catch((error) => {
+            log.error(error)
+        })
 }
