@@ -3,6 +3,7 @@
 import { hideBin } from 'yargs/helpers'
 import flatten from './flatten/cli'
 import generate from './generate/cli'
+import scale from './scale/cli'
 import yargs, { ArgumentsCamelCase } from 'yargs'
 
 const main = async () => {
@@ -13,7 +14,8 @@ const main = async () => {
         .help()
         .command(generate)
         .command(flatten)
-        .demandCommand()
+        .command(scale)
+        .strictCommands()
         .fail(false)
         .parse()
 }

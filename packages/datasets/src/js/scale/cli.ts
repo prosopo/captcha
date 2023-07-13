@@ -1,22 +1,37 @@
-import scale from "./scale.js"
+import { ArgumentsCamelCase, Argv } from 'yargs'
+import { argsSchema } from './args.js'
+import scale from './scale.js'
 
 export default {
-    command: "scale",
-    describe: "Scale images down to a given size",
-    builder: (yargs: any) => {
+    command: 'scale',
+    describe: 'Scale images down to a given size',
+    builder: (yargs: Argv) => {
         return yargs
-            .option("size", {
-                type: "number",
+            .option('map', {
+                type: 'string',
                 demand: true,
-                description: "The dimension (height/width) of the scaled image. If the image is not square, the other dimension will be scaled to maintain the aspect ratio.",
+                description: 'JSON file containing a list of objects with (at least) a url',
             })
-            .option("output", {
-                type: "string",
+            .option('out', {
+                type: 'string',
                 demand: true,
-                description: "Where to put the output file containing the scaled images",
+                description:
+                    'Where to put the output directory containing the map file and single directory of images. The map file will contain the new urls of the scaled images, new hashes and pass through any other information, e.g. labels.',
+            })
+            .option('overwrite', {
+                type: 'boolean',
+                default: false,
+                description: 'Overwrite the output if it already exists',
+            })
+            .option('size', {
+                type: 'number',
+                demand: true,
+                description:
+                    'The dimension (height/width) of the scaled image. If the image is not square, the other dimension will be scaled to maintain the aspect ratio.',
+                default: 128,
             })
     },
-    handler: (argv: any) => {
-        scale(argv)
+    handler: async (argv: ArgumentsCamelCase) => {
+        await scale(argsSchema.parse(argv))
     },
 }
