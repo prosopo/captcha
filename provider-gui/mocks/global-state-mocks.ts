@@ -3,7 +3,7 @@ import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { actionsMock, datasetMock, environmentMock, summaryMock } from './profile-mocks'
 
 // Mock for injected Polkadot account
-const polkadotAccountMock: InjectedAccountWithMeta = {
+const accountMock: InjectedAccountWithMeta = {
     address: 'polkadotAddress',
     meta: {
         name: 'AccountName',
@@ -13,8 +13,8 @@ const polkadotAccountMock: InjectedAccountWithMeta = {
 
 const globalStateMock: GlobalState = {
     profile: { environment: environmentMock, actions: actionsMock, dataset: datasetMock, summary: summaryMock },
-    accounts: [polkadotAccountMock],
-    currentAccount: polkadotAccountMock.address,
+    accounts: [accountMock],
+    currentAccount: accountMock.address,
 }
 
 export default globalStateMock
