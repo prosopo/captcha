@@ -1,5 +1,4 @@
 import { ProviderApi } from '@prosopo/api'
-import { useGlobalState } from '@/contexts/PolkadotAccountContext'
 
 export const GetProviderApi = (providerUrl: string, currentAccount: string) => {
     const network = {
@@ -14,9 +13,12 @@ export const GetProviderApi = (providerUrl: string, currentAccount: string) => {
 }
 
 export const CheckProviderActive = (providerUrl: string, providerAccountId: string) => {
+    //todo - this calls the to be build provider status api
     const provider = {
         providerAccount: providerAccountId,
         provider: {},
         blockNumber: 0,
     }
 }
+
+// todo, auth with provider by sending signed payload, valid for x blocks
