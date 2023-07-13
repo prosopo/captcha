@@ -46,10 +46,13 @@ export default async (args: Args) => {
             const extension = image.split('.').pop()
             // read file to bytes
             const content = fs.readFileSync(`${dataDir}/${label}/${image}`)
-            // hash based on the content of the image + the label to uniquely identify the image
-            const hash = blake2b(content + label)
+            // hash based on the content of the image
+            const hash = blake2b(content)
             const hex = u8aToHex(hash)
             const name = `${hex}.${extension}`
+            if (fs.existsSync(`${imageDir}/${name}`)) {
+                console.log(`Duplicate image: ${name}`)
+            }
             fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
             // add the image to the map file
             const entry: LabelledItem = {
