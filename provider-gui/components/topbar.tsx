@@ -1,9 +1,9 @@
 'use client'
 
 import { AppBar, Box, Toolbar, Typography } from '@mui/material'
+import AccountPicker from './account-picker'
 import Image from 'next/image'
 import Link from 'next/link'
-import PolkadotAccountPicker from './polkadot-account-picker'
 import React from 'react'
 
 const TopBar = () => {
@@ -18,7 +18,7 @@ const TopBar = () => {
                         <Image src="/../public/prosopo-logo-white.png" height={50} width={200} alt="Prosopo Logo" />
                     </Link>
                 </Box>
-                <PolkadotAccountPicker />
+                <AccountPicker />
                 <Typography variant="body1">Endpoint: {connectedEndpoint}</Typography>
                 <Box mx={2} />
                 <Typography variant="body1">Account: {connectedAccount}</Typography>

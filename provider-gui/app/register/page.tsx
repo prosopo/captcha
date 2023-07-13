@@ -3,6 +3,13 @@
 import { Button, Step, StepLabel, Stepper, TextField } from '@mui/material'
 import React, { useState } from 'react'
 
+enum RegistrationSteps {
+    Account = 'Account Details',
+    Folder = 'Folder Details',
+    Data = 'Data Details',
+    Amount = 'Amount Details',
+}
+
 export default function RegistrationStepper() {
     const [activeStep, setActiveStep] = useState(0)
 
@@ -14,7 +21,7 @@ export default function RegistrationStepper() {
         setActiveStep((prevActiveStep) => prevActiveStep - 1)
     }
 
-    const steps = ['Account Details', 'Folder Details', 'Data Details', 'Amount Details']
+    const steps = Object.values(RegistrationSteps)
 
     const getStepContent = (step: number) => {
         switch (step) {
@@ -53,40 +60,28 @@ export default function RegistrationStepper() {
     )
 }
 
-function StepOne() {
-    return (
-        <div>
-            <TextField label="Account" />
-            <TextField label="URL" />
-            <TextField label="Payee" />
-            <TextField label="Fee" />
-        </div>
-    )
-}
+const StepOne: React.FC = () => (
+    <>
+        <TextField label="Account" />
+        <TextField label="URL" />
+        <TextField label="Payee" />
+        <TextField label="Fee" />
+    </>
+)
 
-function StepTwo() {
-    return (
-        <div>
-            <TextField label="Folder" />
-            <TextField label="URL" />
-        </div>
-    )
-}
+const StepTwo: React.FC = () => (
+    <>
+        <TextField label="Folder" />
+        <TextField label="URL" />
+    </>
+)
 
-function StepThree() {
-    return (
-        <div>
-            <TextField label="Labelled Data" />
-            <TextField label="Unlabelled Data" />
-            <TextField label="Labels" />
-        </div>
-    )
-}
+const StepThree: React.FC = () => (
+    <>
+        <TextField label="Labelled Data" />
+        <TextField label="Unlabelled Data" />
+        <TextField label="Labels" />
+    </>
+)
 
-function StepFour() {
-    return (
-        <div>
-            <TextField label="Amount" />
-        </div>
-    )
-}
+const StepFour: React.FC = () => <TextField label="Amount" />

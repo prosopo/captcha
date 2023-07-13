@@ -21,30 +21,30 @@ const StyledBreadcrumb = styled(Chip)(({ theme }) => {
             backgroundColor: emphasize(backgroundColor, 0.12),
         },
     }
-}) as typeof Chip // TypeScript only: need a type cast here because https://github.com/Microsoft/TypeScript/issues/26591
+}) as typeof Chip
 
-function handleClick(event: React.MouseEvent<Element, MouseEvent>) {
+const handleClick = (event: React.MouseEvent<Element, MouseEvent>) => {
     event.preventDefault()
     console.info('You clicked a breadcrumb.')
 }
 
-export default function ProfileBreadcrumb() {
-    return (
-        <div role="presentation" onClick={handleClick}>
-            <Breadcrumbs aria-label="breadcrumb">
-                <Link href="./profile-summary" passHref>
-                    <StyledBreadcrumb component="a" label="Profile Summary" />
-                </Link>
-                <Link href="./profile-actions" passHref>
-                    <StyledBreadcrumb component="a" label="Profile Actions" />
-                </Link>
-                <Link href="./profile-dataset" passHref>
-                    <StyledBreadcrumb component="a" label="Profile Dataset" />
-                </Link>
-                <Link href="./profile-environment" passHref>
-                    <StyledBreadcrumb component="a" label="Profile Environment" />
-                </Link>
-            </Breadcrumbs>
-        </div>
-    )
-}
+const ProfileBreadcrumb: React.FC = () => (
+    <div role="presentation" onClick={handleClick}>
+        <Breadcrumbs aria-label="breadcrumb">
+            <Link href="./profile-summary" passHref>
+                <StyledBreadcrumb component="a" label="Profile Summary" />
+            </Link>
+            <Link href="./profile-actions" passHref>
+                <StyledBreadcrumb component="a" label="Profile Actions" />
+            </Link>
+            <Link href="./profile-dataset" passHref>
+                <StyledBreadcrumb component="a" label="Profile Dataset" />
+            </Link>
+            <Link href="./profile-environment" passHref>
+                <StyledBreadcrumb component="a" label="Profile Environment" />
+            </Link>
+        </Breadcrumbs>
+    </div>
+)
+
+export default ProfileBreadcrumb

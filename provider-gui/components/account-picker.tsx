@@ -3,9 +3,10 @@
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material'
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { SelectChangeEvent } from '@mui/material/Select'
-import { useGlobalState } from '@/contexts/PolkadotAccountContext'
+import { useEffect, useState } from 'react'
+import { useGlobalState } from '../contexts/GlobalContext'
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
 interface Injected {
     enable: typeof web3Enable
@@ -17,7 +18,7 @@ const injected: Injected = {
     accounts: web3Accounts,
 }
 
-export default function PolkadotAccountPicker() {
+const AccountPicker: React.FC = () => {
     const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
     const { currentAccount, setCurrentAccount } = useGlobalState()
 
@@ -54,3 +55,5 @@ export default function PolkadotAccountPicker() {
         </FormControl>
     )
 }
+
+export default AccountPicker

@@ -1,8 +1,8 @@
 'use client'
 
 import { Button, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material'
-import { GetProviderApi } from '@/services/provider-api/provider-api'
-import { useGlobalState } from '@/contexts/PolkadotAccountContext'
+import { getProviderApi } from '../services/provider-api/provider-api'
+import { useGlobalState } from '../contexts/GlobalContext'
 import { useRouter } from 'next/navigation'
 import React, { FormEvent, useState } from 'react'
 
@@ -11,26 +11,26 @@ interface HomePageState {
     providerUrl: string
 }
 
-export default function HomePage() {
+const HomePage: React.FC = () => {
     const { currentAccount, setCurrentAccount } = useGlobalState()
     const [state, setState] = useState<HomePageState>({ network: 'rococo', providerUrl: '' })
     const router = useRouter()
 
-    async function CheckIfProviderIsRunning(url: string): Promise<boolean> {
+    const checkIfProviderIsRunning = (url: string): boolean => {
         console.log(`Checking if provider at ${url} is running...`)
-        const provider = GetProviderApi(url, currentAccount)
+        const provider = getProviderApi(url, currentAccount)
         // Request captcha
         // if captcha is give, return true
         // else error, catch error and return false
         return url !== 'notrunning'
     }
 
-    async function CheckIfProviderIsRegistered(
+    const checkIfProviderIsRegistered = (
         url: string,
         contractAddress: string,
         network: string,
         accountId: string
-    ): Promise<boolean> {
+    ): boolean => {
         console.log(`Checking if provider is registered in ${network} network...`)
         return url !== 'notregistered'
         // try {
@@ -58,13 +58,13 @@ export default function HomePage() {
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
-        const isProviderRunning = await CheckIfProviderIsRunning(state.providerUrl)
+        const isProviderRunning = await checkIfProviderIsRunning(state.providerUrl)
         if (!isProviderRunning) {
             alert('Error: Provider is not running.')
             return
         }
 
-        const isProviderRegistered = await CheckIfProviderIsRegistered(
+        const isProviderRegistered = await checkIfProviderIsRegistered(
             state.providerUrl,
             state.network,
             state.providerUrl,
@@ -90,4 +90,4 @@ export default function HomePage() {
     )
 }
 
-// Dummy functions. Replace these with actual implementation.
+export default HomePage

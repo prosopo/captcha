@@ -1,4 +1,4 @@
-export interface ProfileEnvironment {
+export interface Environment {
     CAPTCHA_WASM_PATH: string
     CAPTCHA_ABI_PATH: string
     DAPP_WASM_PATH: string
@@ -21,18 +21,18 @@ export interface ProfileEnvironment {
     LOG_LEVEL: string
 }
 
-export interface ProfileActions {
+export interface Actions {
     currentStake: number
     isActive: boolean
     isRegistered: boolean
 }
 
-export interface ProfileDataset {
+export interface Dataset {
     datasetContentId: string
     datasetId: string
 }
 
-export interface ProfileSummary {
+export interface Summary {
     balance: number
     payee: string
     status: string

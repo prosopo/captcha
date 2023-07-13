@@ -1,5 +1,5 @@
-import { GlobalStateProvider } from '@/contexts/PolkadotAccountContext'
-import TopBar from '@/components/topbar'
+import { GlobalStateProvider } from '../contexts/GlobalContext'
+import TopBar from '../components/topbar'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {

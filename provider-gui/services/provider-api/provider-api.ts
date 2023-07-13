@@ -1,6 +1,6 @@
 import { ProviderApi } from '@prosopo/api'
 
-export const GetProviderApi = (providerUrl: string, currentAccount: string) => {
+export const getProviderApi = (providerUrl: string, currentAccount: string) => {
     const network = {
         endpoint: 'wss://rpc.polkadot.io',
         contract: {
@@ -12,7 +12,7 @@ export const GetProviderApi = (providerUrl: string, currentAccount: string) => {
     return new ProviderApi(network, providerUrl, currentAccount)
 }
 
-export const CheckProviderActive = (providerUrl: string, providerAccountId: string) => {
+export const checkProviderActive = (providerUrl: string, providerAccountId: string) => {
     //todo - this calls the to be build provider status api
     const provider = {
         providerAccount: providerAccountId,
