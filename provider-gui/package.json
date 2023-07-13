@@ -1,0 +1,35 @@
+{
+    "name": "provider-gui",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@emotion/react": "^11.11.1",
+        "@emotion/styled": "^11.11.0",
+        "@mui/material": "^5.13.7",
+        "@polkadot/extension-dapp": "^0.46.5",
+        "@polkadot/extension-inject": "^0.46.5",
+        "@polkadot/keyring": "^12.3.2",
+        "@polkadot/types": "^10.9.1",
+        "@prosopo/api": "^0.1.16",
+        "@prosopo/cli": "^0.1.16",
+        "@prosopo/env": "^0.1.16",
+        "@prosopo/provider": "^0.1.16",
+        "next": "13.4.9",
+        "react": "18.2.0"
+    },
+    "devDependencies": {
+        "react-dom": "18.2.0",
+        "typescript": "5.1.6",
+        "@types/node": "20.4.1",
+        "@types/react": "18.2.14",
+        "@types/react-dom": "18.2.6",
+        "eslint": "8.44.0",
+        "eslint-config-next": "13.4.9"
+    }
+}
