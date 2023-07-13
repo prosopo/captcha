@@ -3,6 +3,7 @@ import { CaptchaItemTypes, LabelledItem } from '@prosopo/types'
 import { blake2b } from '@noble/hashes/blake2b'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
+import path from 'path'
 
 export default async (args: Args) => {
     console.log('flattening...')
@@ -54,9 +55,10 @@ export default async (args: Args) => {
                 console.log(`Duplicate image: ${name}`)
             }
             fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
+            const filePath = path.resolve(`${imageDir}/${name}`)
             // add the image to the map file
             const entry: LabelledItem = {
-                data: name,
+                data: filePath,
                 type: CaptchaItemTypes.Image,
                 label,
                 hash: hex,
