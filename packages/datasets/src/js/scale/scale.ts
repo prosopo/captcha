@@ -67,5 +67,5 @@ export default async (args: Args) => {
 
     // write the map file
     const outputMapFile = `${outDir}/map.json`
-    fs.writeFileSync(outputMapFile, JSON.stringify(outputItems))
+    fs.writeFileSync(outputMapFile, JSON.stringify(outputItems, null, 4))
 }

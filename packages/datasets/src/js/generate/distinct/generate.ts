@@ -214,5 +214,5 @@ export default async (args: Args) => {
         captchas: [...solvedCaptchas, ...unsolvedCaptchas],
         format: CaptchaTypes.SelectAll,
     }
-    fs.writeFileSync(outputFile, JSON.stringify(output))
+    fs.writeFileSync(outputFile, JSON.stringify(output, null, 4))
 }

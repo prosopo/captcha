@@ -63,7 +63,7 @@ export default async (args: Args) => {
                 label,
                 hash: hex,
             }
-            fs.appendFileSync(mapFile, `${JSON.stringify(entry)}\n`)
+            fs.appendFileSync(mapFile, `${JSON.stringify(entry, null, 4)}\n`)
         }
     }
 
