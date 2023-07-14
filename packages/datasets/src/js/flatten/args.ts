@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 export const argsSchema = z.object({
     data: z.string(),
-    output: z.string(),
+    out: z.string(),
     overwrite: z.boolean().optional(),
 })
 

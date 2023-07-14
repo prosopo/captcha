@@ -14,9 +14,8 @@ export default {
                 demand: true,
                 description: 'Path to the data directory containing subdirectories for each image classification',
             })
-            .option('output', {
+            .option('out', {
                 type: 'string',
-                alias: 'out',
                 demand: true,
                 description: 'Where to put the output file containing the labels and single directory of images',
             })
