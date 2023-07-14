@@ -134,9 +134,11 @@ export default async (args: Args) => {
         }
 
         // get the solutions
-        const correct = [...Array(items.length).keys()].filter((i) => correctItems.has(items[i]))
+        const correctData = new Set<string>([...correctItems].map((item) => item.data))
+        const solution: RawSolution[] = [...Array(items.length).keys()].filter((i) => correctData.has(items[i].data))
 
-        const unlabelledIndices = [...Array(items.length).keys()].filter((i) => unlabelledItems.has(items[i]))
+        const unlabelledData = new Set<string>([...unlabelledItems].map((item) => item.data))
+        const unlabelledIndices = [...Array(items.length).keys()].filter((i) => unlabelledData.has(items[i].data))
 
         const salt = bcrypt.genSaltSync(saltRounds)
         // create the captcha
@@ -144,7 +146,7 @@ export default async (args: Args) => {
             salt,
             target,
             items,
-            solution: correct,
+            solution,
             unlabelled: unlabelledIndices,
         }
         captchas.push(captcha)

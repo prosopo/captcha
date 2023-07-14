@@ -117,7 +117,8 @@ export default async (args: Args) => {
         }
 
         // get the solution
-        const solution: RawSolution[] = [...Array(items.length).keys()].filter((i) => correctItems.has(items[i]))
+        const correctData = new Set<string>([...correctItems].map((item) => item.data))
+        const solution: RawSolution[] = [...Array(items.length).keys()].filter((i) => correctData.has(items[i].data))
 
         const salt = bcrypt.genSaltSync(saltRounds)
         // create the captcha
