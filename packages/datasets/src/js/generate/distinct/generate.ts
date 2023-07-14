@@ -1,10 +1,20 @@
 import { Args } from './args'
-import { CaptchaTypes, CaptchaWithoutId, Captchas, Item, LabelledItem, RawSolution } from '@prosopo/types'
+import {
+    CaptchaItemSchema,
+    CaptchaTypes,
+    CaptchaWithoutId,
+    Captchas,
+    Item,
+    LabelledItem,
+    LabelledItemSchema,
+    RawSolution,
+} from '@prosopo/types'
 import { checkDuplicates, choice } from '../util'
 import { consola } from 'consola'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
+import z from 'zod'
 
 export default async (args: Args) => {
     consola.log(args, 'generating...')
@@ -35,8 +45,16 @@ export default async (args: Args) => {
     const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
     const uint32 = () => Math.abs(random.int32())
     // load the map to get the labelled and unlabelled data
-    const labelled: LabelledItem[] = labelledMapFile ? JSON.parse(fs.readFileSync(labelledMapFile, 'utf8')) : []
-    const unlabelled: Item[] = unlabelledMapFile ? JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')) : []
+    const labelled: LabelledItem[] = labelledMapFile
+        ? LabelledItemSchema.passthrough()
+              .array()
+              .parse(JSON.parse(fs.readFileSync(labelledMapFile, 'utf8')))
+        : []
+    const unlabelled: Item[] = unlabelledMapFile
+        ? CaptchaItemSchema.passthrough()
+              .array()
+              .parse(JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')))
+        : []
     // check for duplicates
     checkDuplicates(labelled, unlabelled, {
         allowDuplicatesLabelled,
@@ -54,7 +72,14 @@ export default async (args: Args) => {
     // note that these can be different to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
     const labels: string[] = []
     if (labelsFile && fs.existsSync(labelsFile)) {
-        labels.push(...[...JSON.parse(fs.readFileSync(labelsFile, 'utf8'))])
+        labels.push(
+            ...[
+                ...z
+                    .string()
+                    .array()
+                    .parse(JSON.parse(fs.readFileSync(labelsFile, 'utf8'))),
+            ]
+        )
     } else {
         // else default to the labels in the labelled data
         labels.push(...[...targets])
@@ -101,13 +126,13 @@ export default async (args: Args) => {
             ;[indices[i], indices[j]] = [indices[j], indices[i]]
         }
         items = indices.map((i) => items[i])
-        // items = items.map((item) => {
-        //     return {
-        //         data: item.data,
-        //         hash: item.hash,
-        //         type: item.type,
-        //     }
-        // })
+        items = items.map((item) => {
+            return {
+                data: item.data,
+                hash: item.hash,
+                type: item.type,
+            }
+        })
 
         // the first n indices are the correct items
         const solution: RawSolution[] = indices

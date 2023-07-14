@@ -29,13 +29,8 @@ export enum CaptchaStates {
 export type RawSolution = number
 export type HashedSolution = string
 export type Item = z.infer<typeof CaptchaItemSchema>
-export interface HashedItem extends Omit<Item, 'hash'> {
-    hash: string
-}
-
-export interface LabelledItem extends HashedItem {
-    label: string
-}
+export type HashedItem = z.infer<typeof HashedCaptchaItemSchema>
+export type LabelledItem = z.infer<typeof LabelledItemSchema>
 
 export interface Captchas {
     captchas: CaptchaWithoutId[]
@@ -114,6 +109,13 @@ export const CaptchaItemSchema = z.object({
     hash: z.string(),
     data: z.string(),
     type: z.nativeEnum(CaptchaItemTypes),
+})
+
+export const HashedCaptchaItemSchema = CaptchaItemSchema.extend({
+    hash: z.string(),
+})
+export const LabelledItemSchema = HashedCaptchaItemSchema.extend({
+    label: z.string(),
 })
 
 export const SelectAllCaptchaSchemaRaw = CaptchaSchema.extend({

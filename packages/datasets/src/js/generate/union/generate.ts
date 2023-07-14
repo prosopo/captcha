@@ -1,10 +1,19 @@
 import { Args } from './args'
-import { CaptchaTypes, CaptchaWithoutId, Item, LabelledItem, RawSolution } from '@prosopo/types'
+import {
+    CaptchaItemSchema,
+    CaptchaTypes,
+    CaptchaWithoutId,
+    Item,
+    LabelledItem,
+    LabelledItemSchema,
+    RawSolution,
+} from '@prosopo/types'
 import { checkDuplicates, choice } from '../util'
 import { consola } from 'consola'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
+import z from 'zod'
 
 export interface CaptchaUnion extends CaptchaWithoutId {
     unlabelled: RawSolution[]
@@ -49,8 +58,16 @@ export default async (args: Args) => {
     // the parameters for generation can regulate how many labels are collected vs how much of a test the captcha posses. E.g. 18 images could have 16 unlabelled and 2 labelled, or 2 unlabelled and 16 labelled. The former is a better test of the user being human, but the latter is a better for maximising label collection.
     // if we focus on a single captcha round of 9 images, we must have at least 1 labelled correct image in the captcha for it to work, otherwise it's just a labelling phase, which normally isn't a problem but if we're treating these as tests for humanity too then we need some kind of test in there. (e.g. we abolish the labelled then unlabelled pattern of the challenge rounds in favour of mixing labelled and unlabelled data, but we then run a small chance of serving two completely unlabelled rounds if we don't set the min number of labelled images to 1 per captcha round)
     // load the map to get the labelled and unlabelled data
-    const labelled: LabelledItem[] = labelledMapFile ? JSON.parse(fs.readFileSync(labelledMapFile, 'utf8')) : []
-    const unlabelled: Item[] = unlabelledMapFile ? JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')) : []
+    const labelled: LabelledItem[] = labelledMapFile
+        ? LabelledItemSchema.passthrough()
+              .array()
+              .parse(JSON.parse(fs.readFileSync(labelledMapFile, 'utf8')))
+        : []
+    const unlabelled: Item[] = unlabelledMapFile
+        ? CaptchaItemSchema.passthrough()
+              .array()
+              .parse(JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')))
+        : []
     // check for duplicates
     checkDuplicates(labelled, unlabelled, {
         allowDuplicatesLabelled,
@@ -68,7 +85,14 @@ export default async (args: Args) => {
     // note that these can be differen to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
     const labels: string[] = []
     if (labelsFile && fs.existsSync(labelsFile)) {
-        labels.push(...[...JSON.parse(fs.readFileSync(labelsFile, 'utf8'))])
+        labels.push(
+            ...[
+                ...z
+                    .string()
+                    .array()
+                    .parse(JSON.parse(fs.readFileSync(labelsFile, 'utf8'))),
+            ]
+        )
     } else {
         // else use the labels from the labelled data
         labels.push(...[...targets])

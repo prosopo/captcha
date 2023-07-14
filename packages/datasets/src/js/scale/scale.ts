@@ -35,8 +35,7 @@ export default async (args: Args) => {
     fs.mkdirSync(imgDir, { recursive: true })
 
     // read the map file
-    const json: unknown = JSON.parse(fs.readFileSync(mapFile, 'utf8'))
-    const inputItems: InputItem[] = inputItemsSchema.parse(json)
+    const inputItems: InputItem[] = inputItemsSchema.parse(JSON.parse(fs.readFileSync(mapFile, 'utf8')))
 
     // for each item
     const outputItems: OutputItem[] = []
