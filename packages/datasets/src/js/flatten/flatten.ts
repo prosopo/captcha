@@ -34,6 +34,7 @@ export default async (args: Args) => {
         const images: string[] = fs.readdirSync(`${dataDir}/${label}`)
         // for each image
         for (const image of images) {
+            console.log(`flattening ${label}/${image}`)
             // copy the image to the output directory
             const extension = image.split('.').pop()
             // read file to bytes
@@ -43,7 +44,7 @@ export default async (args: Args) => {
             const hex = u8aToHex(hash)
             const name = `${hex}.${extension}`
             if (fs.existsSync(`${imageDir}/${name}`)) {
-                console.log(`Duplicate image: ${name}`)
+                console.log(`duplicate image: ${label}/${image} -> ${name}`)
             }
             fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
             const filePath = fs.realpathSync(`${imageDir}/${name}`)
