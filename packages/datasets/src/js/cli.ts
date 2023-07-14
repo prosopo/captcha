@@ -4,13 +4,10 @@ import { hideBin } from 'yargs/helpers'
 import flatten from './flatten/cli'
 import generate from './generate/cli'
 import scale from './scale/cli'
-import yargs, { ArgumentsCamelCase } from 'yargs'
+import yargs from 'yargs'
 
 const main = async () => {
     await yargs(hideBin(process.argv))
-        .middleware((argv: ArgumentsCamelCase) => {
-            console.log('argv:', argv)
-        })
         .help()
         .command(generate)
         .command(flatten)

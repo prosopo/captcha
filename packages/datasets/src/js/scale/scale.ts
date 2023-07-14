@@ -1,5 +1,6 @@
 import { Args } from './args'
 import { blake2b } from '@noble/hashes/blake2b'
+import { consola } from 'consola'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import fs from 'fs'
@@ -17,7 +18,7 @@ const outputItemSchema = inputItemSchema.extend({
 type OutputItem = z.infer<typeof outputItemSchema>
 
 export default async (args: Args) => {
-    console.log(args, 'scaling...')
+    consola.log(args, 'scaling...')
 
     const mapFile: string = args.map
     if (!fs.existsSync(mapFile)) {
@@ -40,7 +41,7 @@ export default async (args: Args) => {
     // for each item
     const outputItems: OutputItem[] = []
     for (const inputItem of inputItems) {
-        console.log(`scaling ${inputItem.data}`)
+        consola.log(`scaling ${inputItem.data}`)
         // read the file
         const img = fs.readFileSync(inputItem.data)
         // resize the image

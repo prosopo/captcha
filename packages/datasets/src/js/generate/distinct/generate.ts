@@ -1,12 +1,13 @@
 import { Args } from './args'
 import { CaptchaTypes, CaptchaWithoutId, Captchas, Item, LabelledItem, RawSolution } from '@prosopo/types'
 import { checkDuplicates, choice } from '../util'
+import { consola } from 'consola'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
 
 export default async (args: Args) => {
-    console.log(args, 'generating...')
+    consola.log(args, 'generating...')
 
     const outFile: string = args.out
     const overwrite = args.overwrite || false
@@ -61,7 +62,7 @@ export default async (args: Args) => {
     // generate n solved captchas
     const solvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < solved; i++) {
-        console.log(`generating solved captcha ${i + 1} of ${solved}`)
+        consola.log(`generating solved captcha ${i + 1} of ${solved}`)
 
         if (targets.length <= 1) {
             throw new Error(`not enough different labels in labelled data: ${labelledMapFile}`)
@@ -134,7 +135,7 @@ export default async (args: Args) => {
     // generate n unsolved captchas
     const unsolvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < unsolved; i++) {
-        console.log(`generating unsolved captcha ${i + 1} of ${unsolved}`)
+        consola.log(`generating unsolved captcha ${i + 1} of ${unsolved}`)
         if (unlabelled.length <= size) {
             throw new Error(`unlabelled map file does not contain enough data: ${unlabelledMapFile}`)
         }

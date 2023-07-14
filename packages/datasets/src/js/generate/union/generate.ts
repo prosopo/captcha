@@ -1,6 +1,7 @@
 import { Args } from './args'
 import { CaptchaTypes, CaptchaWithoutId, Item, LabelledItem, RawSolution } from '@prosopo/types'
 import { checkDuplicates, choice } from '../util'
+import { consola } from 'consola'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
@@ -15,7 +16,7 @@ export interface Captchas {
 }
 
 export default async (args: Args) => {
-    console.log(args, 'generating...')
+    consola.log(args, 'generating...')
 
     const outFile: string = args.out
     const overwrite = args.overwrite || false
@@ -75,7 +76,7 @@ export default async (args: Args) => {
     // generate n captchas
     const captchas: CaptchaUnion[] = []
     for (let i = 0; i < count; i++) {
-        console.log(`generating captcha ${i + 1} of ${count}`)
+        consola.log(`generating captcha ${i + 1} of ${count}`)
 
         if (targets.length <= 1) {
             throw new Error(`not enough different labels in labelled data: ${labelledMapFile}`)

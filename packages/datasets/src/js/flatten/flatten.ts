@@ -1,11 +1,12 @@
 import { Args } from './args'
 import { CaptchaItemTypes, LabelledItem } from '@prosopo/types'
 import { blake2b } from '@noble/hashes/blake2b'
+import { consola } from 'consola'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
 
 export default async (args: Args) => {
-    console.log(args, 'flattening...')
+    consola.log(args, 'flattening...')
 
     const dataDir: string = args.data
     if (!fs.existsSync(dataDir)) {
@@ -34,7 +35,7 @@ export default async (args: Args) => {
         const images: string[] = fs.readdirSync(`${dataDir}/${label}`)
         // for each image
         for (const image of images) {
-            console.log(`flattening ${label}/${image}`)
+            consola.log(`flattening ${label}/${image}`)
             // copy the image to the output directory
             const extension = image.split('.').pop()
             // read file to bytes
@@ -44,7 +45,7 @@ export default async (args: Args) => {
             const hex = u8aToHex(hash)
             const name = `${hex}.${extension}`
             if (fs.existsSync(`${imageDir}/${name}`)) {
-                console.log(`duplicate image: ${label}/${image} -> ${name}`)
+                consola.log(`duplicate image: ${label}/${image} -> ${name}`)
             }
             fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
             const filePath = fs.realpathSync(`${imageDir}/${name}`)
