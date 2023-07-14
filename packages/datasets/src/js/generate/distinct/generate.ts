@@ -6,6 +6,8 @@ import fs from 'fs'
 import seedrandom from 'seedrandom'
 
 export default async (args: Args) => {
+    console.log(args, 'generating...')
+
     const outFile: string = args.out
     const overwrite = args.overwrite || false
     if (!overwrite && fs.existsSync(outFile)) {

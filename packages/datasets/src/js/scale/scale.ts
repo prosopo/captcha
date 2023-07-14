@@ -17,7 +17,8 @@ const outputItemSchema = inputItemSchema.extend({
 type OutputItem = z.infer<typeof outputItemSchema>
 
 export default async (args: Args) => {
-    console.log('scaling...')
+    console.log(args, 'scaling...')
+
     const mapFile: string = args.map
     if (!fs.existsSync(mapFile)) {
         throw new Error(`Map file does not exist: ${mapFile}`)

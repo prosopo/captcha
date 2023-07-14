@@ -5,7 +5,7 @@ import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
 
 export default async (args: Args) => {
-    console.log('flattening...')
+    console.log(args, 'flattening...')
 
     const dataDir: string = args.data
     if (!fs.existsSync(dataDir)) {
