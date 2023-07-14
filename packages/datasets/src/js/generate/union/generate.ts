@@ -1,6 +1,6 @@
 import { Args } from './args'
-import { CaptchaItemTypes, CaptchaTypes, CaptchaWithoutId, Item, LabelledItem, RawSolution } from '@prosopo/types'
-import { checkDuplicates, itemLookupByData, prefixHost } from '../util'
+import { CaptchaTypes, CaptchaWithoutId, Item, LabelledItem, RawSolution } from '@prosopo/types'
+import { checkDuplicates } from '../util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
@@ -15,10 +15,10 @@ export interface Captchas {
 }
 
 export default async (args: Args) => {
-    const outputFile: string = args.output
+    const outFile: string = args.out
     const overwrite = args.overwrite || false
-    if (!overwrite && fs.existsSync(outputFile)) {
-        throw new Error(`Output file already exists: ${outputFile}`)
+    if (!overwrite && fs.existsSync(outFile)) {
+        throw new Error(`Output file already exists: ${outFile}`)
     }
     const labelledMapFile: string | undefined = args.labelled
     if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
@@ -33,7 +33,6 @@ export default async (args: Args) => {
     const seed: number = args.seed || 0
     const size: number = args.size || 9
     const minCorrect: number = args.minCorrect || 0
-    const hostPrefix: string = args.hostPrefix || ''
     const random = seedrandom(seed.toString())
     const saltRounds = 10
     const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
@@ -61,11 +60,6 @@ export default async (args: Args) => {
         allowDuplicatesUnlabelled,
     })
 
-    // concat labelled and unlabelled in a type safe way
-    const allItems: (Item | LabelledItem)[] = [...labelled, ...unlabelled]
-    // create a lookup by data field
-    const itemLookup = itemLookupByData(allItems)
-
     // split the labelled data by label
     const labelToImages: { [label: string]: string[] } = {}
     for (const entry of labelled) {
@@ -81,6 +75,7 @@ export default async (args: Args) => {
     if (labelsFile && fs.existsSync(labelsFile)) {
         labels.push(...[...JSON.parse(fs.readFileSync(labelsFile, 'utf8'))])
     } else {
+        // else use the labels from the labelled data
         labels.push(...[...targets])
     }
 
@@ -97,7 +92,7 @@ export default async (args: Args) => {
         const nIncorrect = nLabelled - nCorrect
 
         // get the correct items
-        const correctItems = new Set<string>()
+        const correctItems = new Set<Item>()
         while (correctItems.size < nCorrect) {
             // get a random image from the target
             const image = random.choice(labelToImages[target])
@@ -105,7 +100,7 @@ export default async (args: Args) => {
         }
 
         // get the incorrect items
-        const incorrectItems = new Set<string>()
+        const incorrectItems = new Set<Item>()
         while (incorrectItems.size < nIncorrect) {
             // get a random image from the target
             const notTarget = random.choice(notTargets)
@@ -114,50 +109,27 @@ export default async (args: Args) => {
         }
 
         // get the unlabelled items
-        const unlabelledItems = new Set<string>()
+        const unlabelledItems = new Set<Item>()
         while (unlabelledItems.size < size - nLabelled) {
             // get a random image from the unlabelled data
             const image = random.choice(unlabelled)
             unlabelledItems.add(image)
         }
 
-        const items: Item[] = []
-        // add the correct items
-        for (const item of correctItems) {
-            items.push({
-                type: CaptchaItemTypes.Image,
-                data: prefixHost(hostPrefix, item),
-                hash: itemLookup[item].hash,
-            })
-        }
-        // add the incorrect items
-        for (const item of incorrectItems) {
-            items.push({
-                type: CaptchaItemTypes.Image,
-                data: prefixHost(hostPrefix, item),
-                hash: itemLookup[item].hash,
-            })
-        }
-        // add the unlabelled items
-        for (const item of unlabelledItems) {
-            items.push({
-                type: CaptchaItemTypes.Image,
-                data: prefixHost(hostPrefix, item),
-                hash: itemLookup[item].hash,
-            })
-        }
+        const items: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
+
         // shuffle the items
-        random.shuffle(items)
+        for (let i = 0; i < items.length; i++) {
+            const j = uint32() % items.length
+            const tmp = items[i]
+            items[i] = items[j]
+            items[j] = tmp
+        }
 
         // get the solutions
-        const correct = [...Array(items.length).keys()].filter((i) => correctItems.has(items[i].data))
+        const correct = [...Array(items.length).keys()].filter((i) => correctItems.has(items[i]))
 
-        const unlabelledIndices = [...Array(items.length).keys()].filter(
-            (i) =>
-                unlabelledItems.has(items[i].data) &&
-                !correctItems.has(items[i].data) &&
-                !incorrectItems.has(items[i].data)
-        )
+        const unlabelledIndices = [...Array(items.length).keys()].filter((i) => unlabelledItems.has(items[i]))
 
         const salt = bcrypt.genSaltSync(saltRounds)
         // create the captcha
@@ -176,5 +148,5 @@ export default async (args: Args) => {
         captchas,
         format: CaptchaTypes.SelectAll,
     }
-    fs.writeFileSync(outputFile, JSON.stringify(output, null, 4))
+    fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
 }
