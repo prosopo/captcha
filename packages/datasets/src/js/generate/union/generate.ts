@@ -43,7 +43,7 @@ export default async (args: Args) => {
     const minIncorrect: number = Math.max(args.minIncorrect || 1, 1) // at least 1 incorrect image
     const minLabelled: number = minCorrect + minIncorrect // min incorrect + correct
     const maxLabelled: number = Math.min(args.maxLabelled || size, size) // at least 1 labelled image
-    const count = args.count || 0
+    const count: number = args.count || 0
 
     // the captcha contains n images. Each of these images are either labelled, being correct or incorrect against the target, or unlabelled. To construct one of these captchas, we need to decide how many of the images should be labelled vs unlabelled, and then how many of the labelled images should be correct vs incorrect
     // in the traditional captcha, two rounds are produced, one with labelled images and the other with unlabelled images. This gives 18 images overall, 9 labels produced.
@@ -61,10 +61,10 @@ export default async (args: Args) => {
     })
 
     // split the labelled data by label
-    const labelToImages: { [label: string]: string[] } = {}
+    const labelToImages: { [label: string]: Item[] } = {}
     for (const entry of labelled) {
         labelToImages[entry.label] = labelToImages[entry.label] || []
-        labelToImages[entry.label].push(entry.data)
+        labelToImages[entry.label].push(entry)
     }
     const targets = Object.keys(labelToImages)
 
@@ -86,16 +86,17 @@ export default async (args: Args) => {
         const target = targets[i % targets.length]
         const notTargets = targets.filter((t) => t !== target)
         // how many labelled images should be in the captcha?
-        const nLabelled = random.randRange(minLabelled, maxLabelled)
+        const nLabelled = (uint32() % (maxLabelled - minLabelled + 1)) + minLabelled
         // how many correct labelled images should be in the captcha?
-        const nCorrect = random.randRange(minCorrect, nLabelled - minIncorrect)
+        const maxCorrect = nLabelled - minCorrect
+        const nCorrect = (uint32() % (maxCorrect - minCorrect + 1)) + minCorrect
         const nIncorrect = nLabelled - nCorrect
 
         // get the correct items
         const correctItems = new Set<Item>()
         while (correctItems.size < nCorrect) {
             // get a random image from the target
-            const image = random.choice(labelToImages[target])
+            const image = labelToImages[target][uint32() % labelToImages[target].length]
             correctItems.add(image)
         }
 
@@ -103,8 +104,8 @@ export default async (args: Args) => {
         const incorrectItems = new Set<Item>()
         while (incorrectItems.size < nIncorrect) {
             // get a random image from the target
-            const notTarget = random.choice(notTargets)
-            const image = random.choice(labelToImages[notTarget])
+            const notTarget = notTargets[uint32() % notTargets.length]
+            const image = labelToImages[notTarget][uint32() % labelToImages[notTarget].length]
             incorrectItems.add(image)
         }
 
@@ -112,7 +113,7 @@ export default async (args: Args) => {
         const unlabelledItems = new Set<Item>()
         while (unlabelledItems.size < size - nLabelled) {
             // get a random image from the unlabelled data
-            const image = random.choice(unlabelled)
+            const image = unlabelled[uint32() % unlabelled.length]
             unlabelledItems.add(image)
         }
 
