@@ -3,7 +3,6 @@ import { CaptchaItemTypes, LabelledItem } from '@prosopo/types'
 import { blake2b } from '@noble/hashes/blake2b'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
-import path from 'path'
 
 export default async (args: Args) => {
     console.log('flattening...')
@@ -12,10 +11,10 @@ export default async (args: Args) => {
     if (!fs.existsSync(dataDir)) {
         throw new Error(`Data directory does not exist: ${dataDir}`)
     }
-    const outputFile: string = args.output
+    const outDir: string = args.out
     const overwrite = args.overwrite || false
-    if (!overwrite && fs.existsSync(outputFile)) {
-        throw new Error(`Output directory already exists: ${outputFile}`)
+    if (!overwrite && fs.existsSync(outDir)) {
+        throw new Error(`Output directory already exists: ${outDir}`)
     }
 
     // find the labels (these should be subdirectories of the data directory)
@@ -25,24 +24,16 @@ export default async (args: Args) => {
         .map((dirent) => dirent.name)
 
     // create the output directory
-    const imageDir = `${outputFile}/images`
+    const imageDir = `${outDir}/images`
     fs.mkdirSync(imageDir, { recursive: true })
-    // start the map file (which is an array of objects)
-    const mapFile = `${outputFile}/map.json`
-    fs.writeFileSync(mapFile, '[\n')
 
     // for each label
-    let first = true
+    const items: LabelledItem[] = []
     for (const label of labels) {
         // find all the images
         const images: string[] = fs.readdirSync(`${dataDir}/${label}`)
         // for each image
         for (const image of images) {
-            if (!first) {
-                // prepend a comma if not the first line
-                fs.appendFileSync(mapFile, ',')
-            }
-            first = false
             // copy the image to the output directory
             const extension = image.split('.').pop()
             // read file to bytes
@@ -55,7 +46,7 @@ export default async (args: Args) => {
                 console.log(`Duplicate image: ${name}`)
             }
             fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
-            const filePath = path.resolve(`${imageDir}/${name}`)
+            const filePath = fs.realpathSync(`${imageDir}/${name}`)
             // add the image to the map file
             const entry: LabelledItem = {
                 data: filePath,
@@ -63,12 +54,10 @@ export default async (args: Args) => {
                 label,
                 hash: hex,
             }
-            fs.appendFileSync(mapFile, `${JSON.stringify(entry, null, 4)}\n`)
+            items.push(entry)
         }
     }
 
-    fs.appendFileSync(mapFile, ']\n')
-
-    // check json is valid
-    JSON.parse(fs.readFileSync(mapFile, 'utf8'))
+    // write map file
+    fs.writeFileSync(`${outDir}/images.json`, JSON.stringify(items, null, 4))
 }
