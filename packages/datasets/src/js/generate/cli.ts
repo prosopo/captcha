@@ -15,7 +15,7 @@ export default {
                 default: false,
                 description: 'Overwrite the output file if it already exists',
             })
-            .option('output', {
+            .option('out', {
                 type: 'string',
                 demand: true,
                 description: 'Path to the output file',
@@ -45,10 +45,6 @@ export default {
                 type: 'string',
                 description:
                     'Path to the labels file. This is a file containing a list of labels which unlabelled data will be assigned to.',
-            })
-            .options('host-prefix', {
-                type: 'string',
-                description: 'Prefix to add to the start of each image url',
             })
             .option('allow-duplicates', {
                 type: 'boolean',

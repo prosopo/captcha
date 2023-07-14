@@ -26,18 +26,3 @@ export const checkDuplicates = (
         }
     }
 }
-
-export function itemLookupByData(allItems: (Item | LabelledItem)[]) {
-    // Create a lookup of all the items by item.data to the item
-    // array can have either LabelledItem or Item type
-    const itemLookup: { [data: string]: Item | LabelledItem } = {}
-
-    for (const item of allItems) {
-        itemLookup[item.data] = item
-    }
-    return itemLookup
-}
-
-export function prefixHost(hostPrefix: string, item: string): string {
-    return `${hostPrefix}${hostPrefix.endsWith('/') ? '' : '/'}${item}`
-}

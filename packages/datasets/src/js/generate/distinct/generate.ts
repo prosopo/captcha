@@ -1,31 +1,23 @@
 import { Args } from './args'
-import {
-    CaptchaItemTypes,
-    CaptchaTypes,
-    CaptchaWithoutId,
-    Captchas,
-    Item,
-    LabelledItem,
-    RawSolution,
-} from '@prosopo/types'
-import { checkDuplicates, itemLookupByData, prefixHost } from '../util'
+import { CaptchaTypes, CaptchaWithoutId, Captchas, Item, LabelledItem, RawSolution } from '@prosopo/types'
+import { checkDuplicates } from '../util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import seedrandom from 'seedrandom'
 
 export default async (args: Args) => {
-    const outputFile: string = args.output
+    const outFile: string = args.out
     const overwrite = args.overwrite || false
-    if (!overwrite && fs.existsSync(outputFile)) {
-        throw new Error(`Output file already exists: ${outputFile}`)
+    if (!overwrite && fs.existsSync(outFile)) {
+        throw new Error(`output file already exists: ${outFile}`)
     }
     const labelledMapFile: string | undefined = args.labelled
     if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
-        throw new Error(`Labelled map file does not exist: ${labelledMapFile}`)
+        throw new Error(`labelled map file does not exist: ${labelledMapFile}`)
     }
     const unlabelledMapFile: string | undefined = args.unlabelled
     if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
-        throw new Error(`Unlabelled map file does not exist: ${unlabelledMapFile}`)
+        throw new Error(`unlabelled map file does not exist: ${unlabelledMapFile}`)
     }
 
     const labelsFile: string | undefined = args.labels
@@ -35,7 +27,6 @@ export default async (args: Args) => {
     const maxCorrect: number = args.maxCorrect || size
     const solved: number = args.solved || 1
     const unsolved: number = args.unsolved || 1
-    const hostPrefix: string = args.hostPrefix || ''
     const random = seedrandom(seed.toString())
     const saltRounds = 10
     const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
@@ -47,26 +38,11 @@ export default async (args: Args) => {
     const labelled: LabelledItem[] = labelledMapFile ? JSON.parse(fs.readFileSync(labelledMapFile, 'utf8')) : []
     const unlabelled: Item[] = unlabelledMapFile ? JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')) : []
 
-    // add prefixes to the data
-    if (prefixHost) {
-        for (const arr of [labelled, unlabelled]) {
-            for (const [index, item] of arr.entries()) {
-                item.data = prefixHost(hostPrefix, item.data)
-                arr[index] = item
-            }
-        }
-    }
-
     // check for duplicates
     checkDuplicates(labelled, unlabelled, {
         allowDuplicatesLabelled,
         allowDuplicatesUnlabelled,
     })
-
-    // concat labelled and unlabelled in a type safe way
-    const allItems: (Item | LabelledItem)[] = [...labelled, ...unlabelled]
-    // create a lookup by data field
-    const itemLookup = itemLookupByData(allItems)
 
     // split the labelled data by label
     const labelToImages: { [label: string]: Item[] } = {}
@@ -83,62 +59,48 @@ export default async (args: Args) => {
     if (labelsFile && fs.existsSync(labelsFile)) {
         labels.push(...[...JSON.parse(fs.readFileSync(labelsFile, 'utf8'))])
     } else {
+        // else default to the labels in the labelled data
         labels.push(...[...targets])
     }
 
     // generate n solved captchas
     const solvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < solved; i++) {
+        console.log(`generating solved captcha ${i}`)
         if (labelled.length <= size) {
-            throw new Error(`Labelled map file does not contain enough data: ${labelledMapFile}`)
+            throw new Error(`labelled map file does not contain enough data: ${labelledMapFile}`)
         }
         if (targets.length <= 0) {
-            throw new Error(`Not enough different labels in labelled data: ${labelledMapFile}`)
+            throw new Error(`not enough different labels in labelled data: ${labelledMapFile}`)
         }
         // uniformly sample targets
         const target = targets[i % targets.length]
         const notTargets = targets.filter((t) => t !== target)
         if (notTargets.length <= 0) {
-            throw new Error(`Not enough different labels in labelled data: ${labelledMapFile}`)
+            throw new Error(`not enough different labels in labelled data: ${labelledMapFile}`)
         }
         // how many correct items should be in the captcha?
         const correct = (uint32() % (maxCorrect - minCorrect + 1)) + minCorrect
         // how many incorrect items should be in the captcha?
         const incorrect = size - correct
         // get the correct items
-        const correctItems = new Set<string>()
+        const correctItems = new Set<Item>()
         while (correctItems.size < correct) {
             // get a random image from the target
             const image = labelToImages[target][uint32() % labelToImages[target].length]
-            correctItems.add(image.data)
+            correctItems.add(image)
         }
         // get the incorrect items
-        const incorrectItems = new Set<string>()
+        const incorrectItems = new Set<Item>()
         while (incorrectItems.size < incorrect) {
             // get a random image from the target
             const index = uint32() % notTargets.length
             const notTarget = notTargets[index]
             const imgs = labelToImages[notTarget]
             const image = imgs[uint32() % imgs.length]
-            incorrectItems.add(image.data)
+            incorrectItems.add(image)
         }
-        const items: Item[] = []
-        // add the correct items
-        for (const itemData of correctItems) {
-            items.push({
-                type: CaptchaItemTypes.Image,
-                data: itemData,
-                hash: itemLookup[itemData].hash,
-            })
-        }
-        // add the incorrect items
-        for (const itemData of incorrectItems) {
-            items.push({
-                type: CaptchaItemTypes.Image,
-                data: itemData,
-                hash: itemLookup[itemData].hash,
-            })
-        }
+        const items: Item[] = [...correctItems, ...incorrectItems]
 
         // shuffle the items
         for (let i = 0; i < items.length; i++) {
@@ -149,7 +111,7 @@ export default async (args: Args) => {
         }
 
         // get the solution
-        const solution: RawSolution[] = [...Array(items.length).keys()].filter((i) => correctItems.has(items[i].data))
+        const solution: RawSolution[] = [...Array(items.length).keys()].filter((i) => correctItems.has(items[i]))
 
         const salt = bcrypt.genSaltSync(saltRounds)
         // create the captcha
@@ -167,30 +129,23 @@ export default async (args: Args) => {
     for (let i = 0; i < unsolved; i++) {
         console.log(`generating unsolved captcha ${i}`)
         if (unlabelled.length <= size) {
-            throw new Error(`Unlabelled map file does not contain enough data: ${unlabelledMapFile}`)
+            throw new Error(`unlabelled map file does not contain enough data: ${unlabelledMapFile}`)
         }
         // pick a random label to be the target
         // note that these are potentially different to the labelled data labels
         if (labels.length <= 0) {
-            throw new Error(`Labels file is empty: ${labelsFile}`)
+            throw new Error(`no labels found for unlabelled data: ${labelsFile}`)
         }
         const index = uint32() % labels.length
         const target = labels[index]
         // randomly pick images from the unlabelled data
-        const itemDataArr = new Set<string>()
-        while (itemDataArr.size < size) {
-            const itemData = unlabelled[uint32() % unlabelled.length].data
-            itemDataArr.add(itemData)
+        const itemSet = new Set<Item>()
+        while (itemSet.size < size) {
+            const item = unlabelled[uint32() % unlabelled.length]
+            itemSet.add(item)
         }
-        const items: Item[] = []
-        // add the items
-        for (const itemData of itemDataArr) {
-            items.push({
-                type: CaptchaItemTypes.Image,
-                data: itemData,
-                hash: itemLookup[itemData].hash,
-            })
-        }
+        const items: Item[] = [...itemSet]
+
         // shuffle the items
         for (let i = 0; i < items.length; i++) {
             const j = uint32() % items.length
@@ -214,5 +169,5 @@ export default async (args: Args) => {
         captchas: [...solvedCaptchas, ...unsolvedCaptchas],
         format: CaptchaTypes.SelectAll,
     }
-    fs.writeFileSync(outputFile, JSON.stringify(output, null, 4))
+    fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
 }

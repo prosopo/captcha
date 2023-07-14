@@ -9,12 +9,12 @@ export default async (args: Args) => {
 
     const dataDir: string = args.data
     if (!fs.existsSync(dataDir)) {
-        throw new Error(`Data directory does not exist: ${dataDir}`)
+        throw new Error(`data directory does not exist: ${dataDir}`)
     }
     const outDir: string = args.out
     const overwrite = args.overwrite || false
     if (!overwrite && fs.existsSync(outDir)) {
-        throw new Error(`Output directory already exists: ${outDir}`)
+        throw new Error(`output directory already exists: ${outDir}`)
     }
 
     // find the labels (these should be subdirectories of the data directory)
