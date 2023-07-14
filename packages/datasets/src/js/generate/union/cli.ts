@@ -1,5 +1,5 @@
 import { ArgumentsCamelCase, Argv } from 'yargs'
-import { argsSchema } from '../args'
+import { argsSchema } from './args'
 import generate from './generate'
 
 export default {
