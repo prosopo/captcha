@@ -43,7 +43,7 @@ export default async (args: Args) => {
     const minIncorrect: number = Math.max(args.minIncorrect || 1, 1) // at least 1 incorrect image
     const minLabelled: number = minCorrect + minIncorrect // min incorrect + correct
     const maxLabelled: number = Math.min(args.maxLabelled || size, size) // at least 1 labelled image
-    const count = args.count || 1
+    const count = args.count || 0
 
     // the captcha contains n images. Each of these images are either labelled, being correct or incorrect against the target, or unlabelled. To construct one of these captchas, we need to decide how many of the images should be labelled vs unlabelled, and then how many of the labelled images should be correct vs incorrect
     // in the traditional captcha, two rounds are produced, one with labelled images and the other with unlabelled images. This gives 18 images overall, 9 labels produced.
@@ -116,7 +116,13 @@ export default async (args: Args) => {
             unlabelledItems.add(image)
         }
 
-        const items: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
+        const items: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems].map((item) => {
+            return {
+                data: item.data,
+                hash: item.hash,
+                type: item.type,
+            }
+        })
 
         // shuffle the items
         for (let i = 0; i < items.length; i++) {

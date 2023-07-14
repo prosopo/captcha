@@ -25,8 +25,8 @@ export default async (args: Args) => {
     const size: number = args.size || 9
     const minCorrect: number = args.minCorrect || 0
     const maxCorrect: number = args.maxCorrect || size
-    const solved: number = args.solved || 1
-    const unsolved: number = args.unsolved || 1
+    const solved: number = args.solved || 0
+    const unsolved: number = args.unsolved || 0
     const random = seedrandom(seed.toString())
     const saltRounds = 10
     const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
@@ -100,7 +100,13 @@ export default async (args: Args) => {
             const image = imgs[uint32() % imgs.length]
             incorrectItems.add(image)
         }
-        const items: Item[] = [...correctItems, ...incorrectItems]
+        const items: Item[] = [...correctItems, ...incorrectItems].map((item) => {
+            return {
+                data: item.data,
+                hash: item.hash,
+                type: item.type,
+            }
+        })
 
         // shuffle the items
         for (let i = 0; i < items.length; i++) {
@@ -144,7 +150,13 @@ export default async (args: Args) => {
             const item = unlabelled[uint32() % unlabelled.length]
             itemSet.add(item)
         }
-        const items: Item[] = [...itemSet]
+        const items: Item[] = [...itemSet].map((item) => {
+            return {
+                data: item.data,
+                hash: item.hash,
+                type: item.type,
+            }
+        })
 
         // shuffle the items
         for (let i = 0; i < items.length; i++) {
