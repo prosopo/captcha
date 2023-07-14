@@ -17,6 +17,7 @@ const outputItemSchema = inputItemSchema.extend({
 type OutputItem = z.infer<typeof outputItemSchema>
 
 export default async (args: Args) => {
+    console.log('scaling...')
     const mapFile: string = args.map
     if (!fs.existsSync(mapFile)) {
         throw new Error(`Map file does not exist: ${mapFile}`)
@@ -38,6 +39,7 @@ export default async (args: Args) => {
     // for each item
     const outputItems: OutputItem[] = []
     for (const inputItem of inputItems) {
+        console.log(`scaling ${inputItem.data}`)
         // read the file
         const img = fs.readFileSync(inputItem.data)
         // resize the image
