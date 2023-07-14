@@ -10,14 +10,11 @@ const inputItemSchema = z.object({
 })
 const inputItemsSchema = inputItemSchema.passthrough().array()
 type InputItem = z.infer<typeof inputItemSchema>
-type InputItems = z.infer<typeof inputItemsSchema>
 
 const outputItemSchema = inputItemSchema.extend({
     hash: z.string(),
 })
-const outputItemsSchema = z.array(outputItemSchema)
 type OutputItem = z.infer<typeof outputItemSchema>
-type OutputItems = z.infer<typeof outputItemsSchema>
 
 export default async (args: Args) => {
     const mapFile: string = args.map
