@@ -1,0 +1,40 @@
+{
+    "name": "@prosopo/util",
+    "version": "0.1.16",
+    "author": "PROSOPO LIMITED <info@prosopo.io>",
+    "license": "Apache-2.0",
+    "private": false,
+    "scripts": {
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "lint": "npx eslint .",
+        "lint:fix": "npx eslint . --fix",
+        "cli": "node ./dist/js/cli.js",
+        "test": "NODE_ENV=test ts-mocha \"./tests/js/**/*.test.ts\" --timeout 120000 --recursive --exit"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "dependencies": {
+        "lodash": "^4.17.21",
+        "seedrandom": "^3.0.5"
+    },
+    "devDependencies": {
+        "typescript": "^4.9.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/prosopo/captcha.git"
+    },
+    "bugs": {
+        "url": "https://github.com/prosopo/captcha/issues"
+    },
+    "homepage": "https://github.com/prosopo/captcha#readme",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    },
+    "description": "Datasets for use with providers",
+    "directories": {
+        "test": "tests"
+    },
+    "sideEffects": false
+}
