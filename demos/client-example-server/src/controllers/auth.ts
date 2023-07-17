@@ -17,7 +17,7 @@ import { ProcaptchaResponse } from '@prosopo/types'
 import { ProsopoServer } from '@prosopo/server'
 import { UserInterface } from '../models/user'
 import { blake2b } from '@noble/hashes/blake2b'
-import { randomAsHex } from '@polkadot/util/crypto'
+import { randomAsHex } from '@polkadot/util-crypto'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
@@ -49,7 +49,7 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
         if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
             // salt
             const salt = randomAsHex(32)
-            // password hash
+            // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
             const passwordHash = hashPassword(`${req.body.password}${salt}`)
 
             if (passwordHash) {
@@ -91,6 +91,7 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
 
                 if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
                     // password hash
+                    // !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
                     const passwordHash = hashPassword(`${req.body.password}${dbUser.salt}`)
                     if (passwordHash !== dbUser.password) {
                         // password doesnt match
