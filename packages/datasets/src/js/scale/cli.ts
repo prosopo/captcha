@@ -20,7 +20,6 @@ export default {
             })
             .option('overwrite', {
                 type: 'boolean',
-                default: false,
                 description: 'Overwrite the output if it already exists',
             })
             .option('size', {
@@ -28,7 +27,6 @@ export default {
                 demand: true,
                 description:
                     'The dimension (height/width) of the scaled image. If the image is not square, the other dimension will be scaled to maintain the aspect ratio.',
-                default: 128,
             })
     },
     handler: async (argv: ArgumentsCamelCase) => {
