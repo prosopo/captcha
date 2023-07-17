@@ -1,11 +1,12 @@
 import { Args } from './args'
+import consola from 'consola'
 import fs from 'fs'
 
 export default async (args: Args) => {
-    console.log(args, 'relocating...')
+    consola.log(args, 'relocating...')
 
     const file: string = args.data
-    console.log(`relocating data in ${file} from ${args.from} to ${args.to}`)
+    consola.log(`relocating data in ${file} from ${args.from} to ${args.to}`)
     // read the file
     let data = JSON.parse(fs.readFileSync(file, 'utf8'))
     // replace the urls by recursively traversing the data
@@ -16,7 +17,7 @@ export default async (args: Args) => {
 
 const replace = (data: unknown, from: string, to: string) => {
     if (Array.isArray(data)) {
-        console.log('array')
+        consola.log('array')
         for (let i = 0; i < data.length; i++) {
             data[i] = replace(data[i], from, to)
         }

@@ -17,6 +17,7 @@ import fs from 'fs'
 import z from 'zod'
 
 export default async (args: Args) => {
+    consola.log('lvl', consola.level)
     consola.log(args, 'generating...')
 
     const outFile: string = args.out

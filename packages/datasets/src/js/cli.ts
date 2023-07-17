@@ -2,7 +2,7 @@
 
 import { hideBin } from 'yargs/helpers'
 import { lodash } from './util'
-import consola, { LogLevels } from 'consola'
+import consola, { LogTypes } from 'consola'
 import flatten from './flatten/cli'
 import generate from './generate/cli'
 import relocate from './relocate/cli'
@@ -19,7 +19,7 @@ const main = async () => {
             description: 'Verbosity of logging',
         })
         .middleware((argv) => {
-            consola.level = LogLevels[_.capitalize(argv.logLevel || 'log')] || LogLevels.log
+            consola.level = LogTypes[_.lowerCase(argv.logLevel || 'info')].level
         })
         .command(generate)
         .command(flatten)
@@ -35,11 +35,11 @@ const main = async () => {
 if (typeof require !== 'undefined' && require.main === module) {
     main()
         .then(() => {
-            console.log('done')
+            consola.log('done')
             process.exit(0)
         })
         .catch((err) => {
-            console.error('error:', err)
+            consola.error('error:', err)
             process.exit(1)
         })
 }
