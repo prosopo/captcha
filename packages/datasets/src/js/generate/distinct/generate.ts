@@ -127,8 +127,8 @@ export default async (args: Args) => {
         const incorrectItems: Item[] = _.sampleSize(notTargetItems, nIncorrect)
 
         let items: Item[] = [...correctItems, ...incorrectItems]
-        const indices: number[] = [...Array(items.length).keys()]
-        _.shuffle(indices)
+        let indices: number[] = [...Array(items.length).keys()]
+        indices = _.shuffle(indices)
         items = indices.map((i) => items[i])
         items = items.map((item) => {
             return {
@@ -179,8 +179,8 @@ export default async (args: Args) => {
         const itemSet: Item[] = _.sampleSize(unlabelled, size)
         // shuffle the items
         let items: Item[] = [...itemSet]
-        const indices: number[] = [...Array(items.length).keys()]
-        _.shuffle(indices)
+        let indices: number[] = [...Array(items.length).keys()]
+        indices = _.shuffle(indices)
         items = indices.map((i) => items[i])
         items = items.map((item) => {
             return {

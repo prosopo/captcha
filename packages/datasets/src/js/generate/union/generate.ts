@@ -149,8 +149,8 @@ export default async (args: Args) => {
         }
 
         let items: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
-        const indices: number[] = [...Array(items.length).keys()]
-        _.shuffle(indices)
+        let indices: number[] = [...Array(items.length).keys()]
+        indices = _.shuffle(indices)
         items = indices.map((i) => items[i])
         items = items.map((item) => {
             return {
