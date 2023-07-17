@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "tsc --build --clean",
-    "build:webpack:prod": "webpack --mode production",
-    "build:webpack:dev": "webpack --mode development",
+    "build:webpack:prod": "webpack --config webpack.config.production.js --mode production",
+    "build:webpack:dev": "webpack --config webpack.config.js --mode development",
     "build": "tsc --build --verbose",
     "cli": "node ./dist/cli.js",
     "start": "node ./dist/start.js",

@@ -11,16 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// import { prosopoMiddleware } from '../api';
-// import { LocalAssetsResolver } from '../assets';
 import { LogLevel, getPair, logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { loadEnv } from './env'
 import { processArgs } from './argv'
+import { start } from './start'
+const log = logger(LogLevel.Info, 'cli')
 async function main() {
     loadEnv()
-    const log = logger(LogLevel.Info, 'cli')
+
     const secret = getSecret()
     const ss58Format = getSs58Format()
     const pairType = getPairType()
@@ -35,14 +35,22 @@ async function main() {
 
     await env.isReady()
 
-    await processArgs(process.argv.slice(2), env)
-
-    process.exit()
+    const processedArgs = await processArgs(process.argv.slice(2), env)
+    if (processedArgs.api) {
+        log.info('Starting API')
+        await start(env)
+    } else {
+        process.exit(0)
+    }
 }
 
 // if main node process
 if (typeof require !== 'undefined' && require.main === module) {
-    main().catch((error) => {
-        console.error(error)
-    })
+    main()
+        .then(() => {
+            log.info('Running main process...')
+        })
+        .catch((error) => {
+            log.error(error)
+        })
 }
