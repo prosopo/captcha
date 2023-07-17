@@ -9,11 +9,11 @@ import {
     LabelledItemSchema,
     RawSolution,
 } from '@prosopo/types'
-import { checkDuplicates, choice } from '../util'
+import { checkDuplicates } from '../util'
 import { consola } from 'consola'
+import Rng from '../../rng'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
-import seedrandom from 'seedrandom'
 import z from 'zod'
 
 export default async (args: Args) => {
@@ -39,11 +39,10 @@ export default async (args: Args) => {
     const maxCorrect: number = args.maxCorrect || size
     const solved: number = args.solved || 0
     const unsolved: number = args.unsolved || 0
-    const random = seedrandom(seed.toString())
+    const rng = new Rng({ seed })
     const saltRounds = 10
     const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
     const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
-    const uint32 = () => Math.abs(random.int32())
     // load the map to get the labelled and unlabelled data
     const labelled: LabelledItem[] = labelledMapFile
         ? LabelledItemSchema.passthrough()
@@ -98,7 +97,7 @@ export default async (args: Args) => {
         const notTargets = targets.filter((t) => t !== target)
 
         // how many correct items should be in the captcha?
-        const nCorrect = (uint32() % (maxCorrect - minCorrect + 1)) + minCorrect
+        const nCorrect = rng.index(maxCorrect, { maxInclusive: true })
         // how many incorrect items should be in the captcha?
         const nIncorrect = size - nCorrect
 
@@ -113,18 +112,20 @@ export default async (args: Args) => {
         }
 
         // get the correct items
-        const correctItems: Item[] = choice(targetItems, nCorrect, uint32, { withReplacement: false }).choices
+        const correctItems: Item[] = rng.choice(targetItems, {
+            n: nCorrect,
+            withReplacement: false,
+        }).choices
 
         // get the incorrect items
-        const incorrectItems: Item[] = choice(notTargetItems, nIncorrect, uint32, { withReplacement: false }).choices
+        const incorrectItems: Item[] = rng.choice(notTargetItems, {
+            n: nIncorrect,
+            withReplacement: false,
+        }).choices
 
         let items: Item[] = [...correctItems, ...incorrectItems]
         const indices: number[] = [...Array(items.length).keys()]
-        // shuffle the items
-        for (let i = indices.length - 1; i > 0; i--) {
-            const j = uint32() % (i + 1)
-            ;[indices[i], indices[j]] = [indices[j], indices[i]]
-        }
+        rng.shuffle(indices)
         items = indices.map((i) => items[i])
         items = items.map((item) => {
             return {
@@ -164,23 +165,22 @@ export default async (args: Args) => {
         if (unlabelled.length <= size) {
             throw new Error(`unlabelled map file does not contain enough data: ${unlabelledMapFile}`)
         }
-        // pick a random label to be the target
+        // pick a rng label to be the target
         // note that these are potentially different to the labelled data labels
         if (labels.length <= 0) {
             throw new Error(`no labels found for unlabelled data: ${labelsFile}`)
         }
-        const index = uint32() % labels.length
+        const index = rng.index(labels.length)
         const target = labels[index]
-        // randomly pick images from the unlabelled data
-        const itemSet: Item[] = choice(unlabelled, size, uint32, { withReplacement: false }).choices
+        // rngly pick images from the unlabelled data
+        const itemSet: Item[] = rng.choice(unlabelled, {
+            n: size,
+            withReplacement: false,
+        }).choices
         // shuffle the items
         let items: Item[] = [...itemSet]
         const indices: number[] = [...Array(items.length).keys()]
-        // shuffle the items
-        for (let i = indices.length - 1; i > 0; i--) {
-            const j = uint32() % indices.length
-            ;[indices[i], indices[j]] = [indices[j], indices[i]]
-        }
+        rng.shuffle(indices)
         items = indices.map((i) => items[i])
         items = items.map((item) => {
             return {

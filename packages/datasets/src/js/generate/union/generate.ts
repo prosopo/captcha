@@ -8,11 +8,11 @@ import {
     LabelledItemSchema,
     RawSolution,
 } from '@prosopo/types'
-import { checkDuplicates, choice } from '../util'
+import { checkDuplicates } from '../util'
 import { consola } from 'consola'
+import Rng from '../../rng'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
-import seedrandom from 'seedrandom'
 import z from 'zod'
 
 export interface CaptchaUnion extends CaptchaWithoutId {
@@ -44,11 +44,10 @@ export default async (args: Args) => {
     const seed: number = args.seed || 0
     const size: number = args.size || 9
     const minCorrect: number = args.minCorrect || 0
-    const random = seedrandom(seed.toString())
+    const rng = new Rng({ seed })
     const saltRounds = 10
     const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
     const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
-    const uint32 = () => Math.abs(random.int32())
     const minIncorrect: number = Math.max(args.minIncorrect || 1, 1) // at least 1 incorrect image
     const minLabelled: number = minCorrect + minIncorrect // min incorrect + correct
     const maxLabelled: number = Math.min(args.maxLabelled || size, size) // at least 1 labelled image
@@ -110,10 +109,10 @@ export default async (args: Args) => {
         const target = targets[i % targets.length]
         const notTargets = targets.filter((t) => t !== target)
         // how many labelled images should be in the captcha?
-        const nLabelled = (uint32() % (maxLabelled - minLabelled + 1)) + minLabelled
+        const nLabelled = rng.index(maxLabelled, { maxInclusive: true })
         // how many correct labelled images should be in the captcha?
         const maxCorrect = nLabelled - minCorrect
-        const nCorrect = (uint32() % (maxCorrect - minCorrect + 1)) + minCorrect
+        const nCorrect = rng.index(maxCorrect, { maxInclusive: true })
         const nIncorrect = nLabelled - nCorrect
         const nUnlabelled = size - nLabelled
 
@@ -131,26 +130,28 @@ export default async (args: Args) => {
         }
 
         // get the correct items
-        const correctItems: Item[] = choice(targetItems, nCorrect, uint32, { withReplacement: false }).choices
+        const correctItems: Item[] = rng.choice(targetItems, {
+            n: nCorrect,
+            withReplacement: false,
+        }).choices
 
         // get the incorrect items
-        const incorrectItems: Item[] = choice(notTargetItems, nIncorrect, uint32, { withReplacement: false }).choices
+        const incorrectItems: Item[] = rng.choice(notTargetItems, {
+            n: nIncorrect,
+            withReplacement: false,
+        }).choices
 
         // get the unlabelled items
         const unlabelledItems = new Set<Item>()
         while (unlabelledItems.size < size - nLabelled) {
-            // get a random image from the unlabelled data
-            const image = unlabelled[uint32() % unlabelled.length]
+            // get a rng image from the unlabelled data
+            const image = unlabelled[rng.index(unlabelled.length)]
             unlabelledItems.add(image)
         }
 
         let items: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
         const indices: number[] = [...Array(items.length).keys()]
-        // shuffle the items
-        for (let i = indices.length - 1; i > 0; i--) {
-            const j = uint32() % (i + 1)
-            ;[indices[i], indices[j]] = [indices[j], indices[i]]
-        }
+        rng.shuffle(indices)
         items = indices.map((i) => items[i])
         items = items.map((item) => {
             return {
