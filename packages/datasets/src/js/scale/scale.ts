@@ -22,7 +22,7 @@ type OutputItem = z.infer<typeof outputItemSchema>
 export default async (args: Args) => {
     consola.log(args, 'scaling...')
 
-    const mapFile: string = args.map
+    const mapFile: string = args.images
     if (!fs.existsSync(mapFile)) {
         throw new Error(`Map file does not exist: ${mapFile}`)
     }

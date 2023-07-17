@@ -5,7 +5,7 @@ import fs from 'fs'
 export default async (args: Args) => {
     consola.log(args, 'relocating...')
 
-    const file: string = args.data
+    const file: string = args.images
     consola.log(`relocating data in ${file} from ${args.from} to ${args.to}`)
     // read the file
     let data = JSON.parse(fs.readFileSync(file, 'utf8'))
