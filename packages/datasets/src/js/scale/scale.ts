@@ -1,4 +1,5 @@
 import { Args } from './args'
+import { CaptchaItemSchema } from '@prosopo/types'
 import { blake2b } from '@noble/hashes/blake2b'
 import { consola } from 'consola'
 import { u8aToHex } from '@polkadot/util'
@@ -6,14 +7,15 @@ import { z } from 'zod'
 import fs from 'fs'
 import sharp from 'sharp'
 
-const inputItemSchema = z.object({
-    data: z.string(),
+const inputItemSchema = CaptchaItemSchema.omit({
+    hash: true,
+    type: true,
 })
 const inputItemsSchema = inputItemSchema.passthrough().array()
 type InputItem = z.infer<typeof inputItemSchema>
 
-const outputItemSchema = inputItemSchema.extend({
-    hash: z.string(),
+const outputItemSchema = CaptchaItemSchema.omit({
+    type: true,
 })
 type OutputItem = z.infer<typeof outputItemSchema>
 
