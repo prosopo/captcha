@@ -4,6 +4,7 @@ import { hideBin } from 'yargs/helpers'
 import consola, { LogLevels } from 'consola'
 import flatten from './flatten/cli'
 import generate from './generate/cli'
+import relocate from './relocate/cli'
 import scale from './scale/cli'
 import yargs from 'yargs'
 
@@ -20,6 +21,7 @@ const main = async () => {
         .command(generate)
         .command(flatten)
         .command(scale)
+        .command(relocate)
         .strictCommands()
         .showHelpOnFail(false, 'Specify --help for available options')
         .fail(false)

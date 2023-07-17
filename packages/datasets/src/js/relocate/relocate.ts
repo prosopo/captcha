@@ -1,0 +1,35 @@
+import { Args } from './args'
+import fs from 'fs'
+
+export default async (args: Args) => {
+    console.log(args, 'relocating...')
+
+    const file: string = args.data
+    console.log(`relocating data in ${file} from ${args.from} to ${args.to}`)
+    // read the file
+    let data = JSON.parse(fs.readFileSync(file, 'utf8'))
+    // replace the urls by recursively traversing the data
+    data = replace(data, args.from, args.to)
+    // write the file
+    fs.writeFileSync(file, JSON.stringify(data, null, 4))
+}
+
+const replace = (data: unknown, from: string, to: string) => {
+    if (Array.isArray(data)) {
+        console.log('array')
+        for (let i = 0; i < data.length; i++) {
+            data[i] = replace(data[i], from, to)
+        }
+    } else if (typeof data === 'object') {
+        const obj = data as object
+        for (const key of Object.keys(obj)) {
+            if (key === 'data') {
+                const value = obj[key]
+                if (value.startsWith(from)) {
+                    obj[key] = to + value.slice(from.length)
+                }
+            }
+        }
+    }
+    return data
+}
