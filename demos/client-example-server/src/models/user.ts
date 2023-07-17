@@ -18,6 +18,7 @@ export interface UserInterface {
     email: string
     name: string
     password: string
+    salt: string
 }
 
 const UserSchema = new Schema<UserInterface>({
