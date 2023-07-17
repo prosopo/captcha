@@ -16,7 +16,6 @@
     "types": "./dist/index.d.ts",
     "dependencies": {
         "@polkadot/util": "^12.3.2",
-        "@prosopo/common": "^0.1.16",
         "@prosopo/types": "^0.1.16",
         "@prosopo/util": "^0.1.16",
         "bcrypt": "^5.1.0",
