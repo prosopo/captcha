@@ -15,7 +15,7 @@ import { Captcha, CaptchaItemTypes, CaptchaSolution, CaptchaTypes, Dataset, Item
 import { computeItemHash, matchItemsToSolutions } from '@prosopo/datasets'
 import { expect } from 'chai'
 import { it } from 'mocha'
-import { validateDatasetContent } from '../../src/js'
+import { validateDatasetContent } from '../../src'
 import path from 'path'
 
 describe('DATASET FUNCTIONS', async function () {

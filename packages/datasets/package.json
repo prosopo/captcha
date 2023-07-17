@@ -9,23 +9,23 @@
         "build": "tsc --build --verbose",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix",
-        "cli": "node ./dist/js/cli.js",
+        "cli": "node ./dist/cli.js",
         "test": "NODE_ENV=test ts-mocha \"./tests/js/**/*.test.ts\" --timeout 120000 --recursive --exit"
     },
-    "main": "./dist/js/index.js",
-    "types": "./dist/js/index.d.ts",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
     "exports": {
-        ".": "./dist/js/index.js",
-        "./types": "./dist/js/types/index.js",
-        "./captcha": "./dist/js/captcha/index.js"
+        ".": "./dist/index.js",
+        "./types": "./dist/types/index.js",
+        "./captcha": "./dist/captcha/index.js"
     },
     "typesVersions": {
         "*": {
             "types": [
-                "dist/js/types"
+                "dist/types"
             ],
             "captcha": [
-                "dist/js/captcha"
+                "dist/captcha"
             ]
         }
     },
