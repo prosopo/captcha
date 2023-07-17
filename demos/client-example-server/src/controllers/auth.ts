@@ -16,8 +16,9 @@ import { Connection } from 'mongoose'
 import { ProcaptchaResponse } from '@prosopo/types'
 import { ProsopoServer } from '@prosopo/server'
 import { UserInterface } from '../models/user'
+import { blake2b } from '@noble/hashes/blake2b'
+import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
-import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
@@ -26,6 +27,10 @@ const SubscribeBodySpec = ProcaptchaResponse.merge(
         password: z.string(),
     })
 )
+
+function hashPassword(password: string): string {
+    return u8aToHex(blake2b(password))
+}
 
 const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, res, next) => {
     try {
@@ -42,24 +47,22 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
 
         if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
             // password hash
-            bcrypt.hash(req.body.password, 12, (err, passwordHash) => {
-                if (err) {
-                    return res.status(500).json({ message: 'couldnt hash the password' })
-                } else if (passwordHash) {
-                    return User.create({
-                        email: req.body.email,
-                        name: req.body.name,
-                        password: passwordHash,
+            const passwordHash = hashPassword(req.body.password)
+
+            if (passwordHash) {
+                return User.create({
+                    email: req.body.email,
+                    name: req.body.name,
+                    password: passwordHash,
+                })
+                    .then(() => {
+                        res.status(200).json({ message: 'user created' })
                     })
-                        .then(() => {
-                            res.status(200).json({ message: 'user created' })
-                        })
-                        .catch((err) => {
-                            console.log(err)
-                            res.status(502).json({ message: 'error while creating the user' })
-                        })
-                }
-            })
+                    .catch((err) => {
+                        console.log(err)
+                        res.status(502).json({ message: 'error while creating the user' })
+                    })
+            }
         } else {
             res.status(401).json({ message: 'user has not completed a captcha' })
         }
@@ -84,19 +87,15 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
 
                 if (await prosopoServer.isVerified(payload[ApiParams.procaptchaResponse])) {
                     // password hash
-                    bcrypt.compare(req.body.password, dbUser.password, (err, compareRes) => {
-                        if (err) {
-                            // error while comparing
-                            res.status(502).json({ message: 'error while checking user password' })
-                        } else if (compareRes) {
-                            // password match
-                            const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' })
-                            res.status(200).json({ message: 'user logged in', token: token })
-                        } else {
-                            // password doesnt match
-                            res.status(401).json({ message: 'invalid credentials' })
-                        }
-                    })
+                    const passwordHash = hashPassword(req.body.password)
+                    if (passwordHash !== dbUser.password) {
+                        // password doesnt match
+                        res.status(401).json({ message: 'invalid credentials' })
+                    } else {
+                        // password match
+                        const token = jwt.sign({ email: req.body.email }, 'secret', { expiresIn: '1h' })
+                        res.status(200).json({ message: 'user logged in', token: token })
+                    }
                 }
             }
         })
