@@ -36,7 +36,6 @@ async function main() {
     await env.isReady()
 
     const processedArgs = await processArgs(process.argv.slice(2), env)
-    console.log('processedArgs', processedArgs)
     if (processedArgs.api) {
         log.info('Starting API')
         await start(env)
