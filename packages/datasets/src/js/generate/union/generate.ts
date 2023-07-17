@@ -10,7 +10,7 @@ import {
 } from '@prosopo/types'
 import { checkDuplicates } from '../util'
 import { consola } from 'consola'
-import Rng from '../../rng'
+import { lodash, setSeedGlobal } from '../../util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import z from 'zod'
@@ -44,7 +44,6 @@ export default async (args: Args) => {
     const seed: number = args.seed || 0
     const size: number = args.size || 9
     const minCorrect: number = args.minCorrect || 0
-    const rng = new Rng({ seed })
     const saltRounds = 10
     const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
     const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
@@ -52,6 +51,12 @@ export default async (args: Args) => {
     const minLabelled: number = minCorrect + minIncorrect // min incorrect + correct
     const maxLabelled: number = Math.min(args.maxLabelled || size, size) // at least 1 labelled image
     const count: number = args.count || 0
+
+    // set the seed
+    setSeedGlobal(seed)
+    // get lodash (with seeded rng)
+    const _ = lodash()
+
     // the captcha contains n images. Each of these images are either labelled, being correct or incorrect against the target, or unlabelled. To construct one of these captchas, we need to decide how many of the images should be labelled vs unlabelled, and then how many of the labelled images should be correct vs incorrect
     // in the traditional captcha, two rounds are produced, one with labelled images and the other with unlabelled images. This gives 18 images overall, 9 labels produced.
     // the parameters for generation can regulate how many labels are collected vs how much of a test the captcha posses. E.g. 18 images could have 16 unlabelled and 2 labelled, or 2 unlabelled and 16 labelled. The former is a better test of the user being human, but the latter is a better for maximising label collection.
@@ -109,10 +114,10 @@ export default async (args: Args) => {
         const target = targets[i % targets.length]
         const notTargets = targets.filter((t) => t !== target)
         // how many labelled images should be in the captcha?
-        const nLabelled = rng.intRange(minLabelled, maxLabelled, { maxInclusive: true })
+        const nLabelled = _.random(minLabelled, maxLabelled)
         // how many correct labelled images should be in the captcha?
         const maxCorrect = nLabelled - minCorrect
-        const nCorrect = rng.intRange(minCorrect, maxCorrect, { maxInclusive: true })
+        const nCorrect = _.random(minCorrect, maxCorrect)
         const nIncorrect = nLabelled - nCorrect
         const nUnlabelled = size - nLabelled
 
@@ -130,28 +135,22 @@ export default async (args: Args) => {
         }
 
         // get the correct items
-        const correctItems: Item[] = rng.choice(targetItems, {
-            n: nCorrect,
-            withReplacement: false,
-        }).choices
+        const correctItems: Item[] = _.sampleSize(targetItems, nCorrect)
 
         // get the incorrect items
-        const incorrectItems: Item[] = rng.choice(notTargetItems, {
-            n: nIncorrect,
-            withReplacement: false,
-        }).choices
+        const incorrectItems: Item[] = _.sampleSize(notTargetItems, nIncorrect)
 
         // get the unlabelled items
         const unlabelledItems = new Set<Item>()
         while (unlabelledItems.size < size - nLabelled) {
-            // get a rng image from the unlabelled data
-            const image = unlabelled[rng.index(unlabelled.length)]
+            // get a random image from the unlabelled data
+            const image = unlabelled[_.random(0, unlabelled.length - 1)]
             unlabelledItems.add(image)
         }
 
         let items: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
         const indices: number[] = [...Array(items.length).keys()]
-        rng.shuffle(indices)
+        _.shuffle(indices)
         items = indices.map((i) => items[i])
         items = items.map((item) => {
             return {

@@ -11,7 +11,7 @@ import {
 } from '@prosopo/types'
 import { checkDuplicates } from '../util'
 import { consola } from 'consola'
-import Rng from '../../rng'
+import { lodash, setSeedGlobal } from '../../util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import z from 'zod'
@@ -39,10 +39,15 @@ export default async (args: Args) => {
     const maxCorrect: number = args.maxCorrect || size
     const solved: number = args.solved || 0
     const unsolved: number = args.unsolved || 0
-    const rng = new Rng({ seed })
     const saltRounds = 10
     const allowDuplicatesLabelled = args.allowDuplicatesLabelled || args.allowDuplicates || false
     const allowDuplicatesUnlabelled = args.allowDuplicatesUnlabelled || args.allowDuplicates || false
+
+    // set the seed
+    setSeedGlobal(seed)
+    // get lodash (with seeded rng)
+    const _ = lodash()
+
     // load the map to get the labelled and unlabelled data
     const labelled: LabelledItem[] = labelledMapFile
         ? LabelledItemSchema.passthrough()
@@ -54,11 +59,13 @@ export default async (args: Args) => {
               .array()
               .parse(JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')))
         : []
+
     // check for duplicates
     checkDuplicates(labelled, unlabelled, {
         allowDuplicatesLabelled,
         allowDuplicatesUnlabelled,
     })
+
     // split the labelled data by label
     const labelToImages: { [label: string]: Item[] } = {}
     for (const entry of labelled) {
@@ -66,6 +73,7 @@ export default async (args: Args) => {
         labelToImages[entry.label].push(entry)
     }
     const targets = Object.keys(labelToImages)
+
     // load the labels from file
     // these are the labels that unlabelled data will be assigned to
     // note that these can be different to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
@@ -83,6 +91,7 @@ export default async (args: Args) => {
         // else default to the labels in the labelled data
         labels.push(...[...targets])
     }
+
     // generate n solved captchas
     const solvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < solved; i++) {
@@ -97,7 +106,7 @@ export default async (args: Args) => {
         const notTargets = targets.filter((t) => t !== target)
 
         // how many correct items should be in the captcha?
-        const nCorrect = rng.intRange(minCorrect, maxCorrect, { maxInclusive: true })
+        const nCorrect = _.random(minCorrect, maxCorrect)
         // how many incorrect items should be in the captcha?
         const nIncorrect = size - nCorrect
 
@@ -112,20 +121,14 @@ export default async (args: Args) => {
         }
 
         // get the correct items
-        const correctItems: Item[] = rng.choice(targetItems, {
-            n: nCorrect,
-            withReplacement: false,
-        }).choices
+        const correctItems: Item[] = _.sampleSize(targetItems, nCorrect)
 
         // get the incorrect items
-        const incorrectItems: Item[] = rng.choice(notTargetItems, {
-            n: nIncorrect,
-            withReplacement: false,
-        }).choices
+        const incorrectItems: Item[] = _.sampleSize(notTargetItems, nIncorrect)
 
         let items: Item[] = [...correctItems, ...incorrectItems]
         const indices: number[] = [...Array(items.length).keys()]
-        rng.shuffle(indices)
+        _.shuffle(indices)
         items = indices.map((i) => items[i])
         items = items.map((item) => {
             return {
@@ -165,22 +168,19 @@ export default async (args: Args) => {
         if (unlabelled.length <= size) {
             throw new Error(`unlabelled map file does not contain enough data: ${unlabelledMapFile}`)
         }
-        // pick a rng label to be the target
+        // pick a random label to be the target
         // note that these are potentially different to the labelled data labels
         if (labels.length <= 0) {
             throw new Error(`no labels found for unlabelled data: ${labelsFile}`)
         }
-        const index = rng.index(labels.length)
+        const index = _.random(0, labels.length - 1)
         const target = labels[index]
-        // rngly pick images from the unlabelled data
-        const itemSet: Item[] = rng.choice(unlabelled, {
-            n: size,
-            withReplacement: false,
-        }).choices
+        // randomly pick images from the unlabelled data
+        const itemSet: Item[] = _.sampleSize(unlabelled, size)
         // shuffle the items
         let items: Item[] = [...itemSet]
         const indices: number[] = [...Array(items.length).keys()]
-        rng.shuffle(indices)
+        _.shuffle(indices)
         items = indices.map((i) => items[i])
         items = items.map((item) => {
             return {
