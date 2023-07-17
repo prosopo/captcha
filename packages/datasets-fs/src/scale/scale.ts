@@ -1,0 +1,73 @@
+import { Args } from './args'
+import { CaptchaItemSchema } from '@prosopo/types'
+import { blake2b } from '@noble/hashes/blake2b'
+import { consola } from 'consola'
+import { u8aToHex } from '@polkadot/util'
+import { z } from 'zod'
+import fs from 'fs'
+import sharp from 'sharp'
+
+const inputItemSchema = CaptchaItemSchema.omit({
+    hash: true,
+    type: true,
+})
+const inputItemsSchema = inputItemSchema.passthrough().array()
+type InputItem = z.infer<typeof inputItemSchema>
+
+const outputItemSchema = CaptchaItemSchema.omit({
+    type: true,
+})
+type OutputItem = z.infer<typeof outputItemSchema>
+
+export default async (args: Args) => {
+    consola.log(args, 'scaling...')
+
+    const mapFile: string = args.images
+    if (!fs.existsSync(mapFile)) {
+        throw new Error(`Map file does not exist: ${mapFile}`)
+    }
+    const outDir: string = args.out
+    const overwrite = args.overwrite || false
+    if (!overwrite && fs.existsSync(outDir)) {
+        throw new Error(`Output directory already exists: ${outDir}`)
+    }
+
+    // create the output directory
+    const imgDir = `${outDir}/images`
+    fs.mkdirSync(imgDir, { recursive: true })
+
+    // read the map file
+    const inputItems: InputItem[] = inputItemsSchema.parse(JSON.parse(fs.readFileSync(mapFile, 'utf8')))
+
+    // for each item
+    const outputItems: OutputItem[] = []
+    for (const inputItem of inputItems) {
+        consola.log(`scaling ${inputItem.data}`)
+        // read the file
+        const img = fs.readFileSync(inputItem.data)
+        // resize the image
+        const resized = await sharp(img).resize(128).png()
+        const tmpFilePath = `${imgDir}/tmp.png`
+        await resized.toFile(tmpFilePath)
+        // read the resized image
+        const resizedImg = fs.readFileSync(tmpFilePath)
+        // hash the image
+        const hash = blake2b(resizedImg)
+        const hex = u8aToHex(hash)
+        // move the image
+        const finalFilePath = `${imgDir}/${hex}.png`
+        fs.renameSync(tmpFilePath, finalFilePath)
+
+        // add the item to the output
+        const outputItem: OutputItem = {
+            ...inputItem,
+            hash: hex,
+            data: fs.realpathSync(finalFilePath),
+        }
+        outputItems.push(outputItem)
+    }
+
+    // write the map file
+    const outputMapFile = `${outDir}/map.json`
+    fs.writeFileSync(outputMapFile, JSON.stringify(outputItems, null, 4))
+}
