@@ -1,7 +1,7 @@
 // Take a set of data and generate a bunch of captchas
 
 import { hideBin } from 'yargs/helpers'
-import { lodash } from '../../util/src/util'
+import { lodash } from '@prosopo/util'
 import consola, { LogTypes } from 'consola'
 import flatten from './flatten/cli'
 import generate from './generate/cli'

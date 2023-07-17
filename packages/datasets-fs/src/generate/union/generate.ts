@@ -10,7 +10,7 @@ import {
 } from '@prosopo/types'
 import { checkDuplicates } from '../util'
 import { consola } from 'consola'
-import { lodash, setSeedGlobal } from '../../../../util/src/util'
+import { lodash, setSeedGlobal } from '@prosopo/util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 import z from 'zod'
