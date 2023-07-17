@@ -21,7 +21,6 @@ export default {
             })
             .option('overwrite', {
                 type: 'boolean',
-                default: false,
                 description: 'Overwrite the output file if it already exists',
             })
     },

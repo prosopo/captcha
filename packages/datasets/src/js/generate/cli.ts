@@ -12,7 +12,6 @@ export default {
             .demandCommand()
             .option('overwrite', {
                 type: 'boolean',
-                default: false,
                 description: 'Overwrite the output file if it already exists',
             })
             .option('out', {
@@ -33,12 +32,10 @@ export default {
             })
             .option('seed', {
                 type: 'number',
-                default: 0,
                 description: 'Seed for the random number generator',
             })
             .option('size', {
                 type: 'number',
-                default: 0,
                 description: 'Number of images in each captcha',
             })
             .options('labels', {
@@ -48,17 +45,14 @@ export default {
             })
             .option('allow-duplicates', {
                 type: 'boolean',
-                default: false,
                 description: 'Allow duplicates in the data (labelled and unlabelled)',
             })
             .option('allow-duplicates-labelled', {
                 type: 'boolean',
-                default: false,
                 description: 'Allow duplicates in the labelled data',
             })
             .option('allow-duplicates-unlabelled', {
                 type: 'boolean',
-                default: false,
                 description: 'Allow duplicates in the unlabelled data',
             })
     },

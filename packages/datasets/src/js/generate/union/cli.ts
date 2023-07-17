@@ -10,27 +10,22 @@ export default {
         return yargs
             .option('count', {
                 type: 'number',
-                default: 0,
                 description: 'Number of captchas to generate',
             })
             .option('min-correct', {
                 type: 'number',
-                default: 0,
                 description: 'Minimum number of target images in each captcha',
             })
             .option('min-incorrect', {
                 type: 'number',
-                default: 0,
                 description: 'Minimum number of incorrect images in each captcha',
             })
             .option('min-labelled', {
                 type: 'number',
-                default: 0,
                 description: 'Minimum number of labelled images in each captcha',
             })
             .option('max-labelled', {
                 type: 'number',
-                default: 0,
                 description: 'Maximum number of labelled images in each captcha',
             })
     },
