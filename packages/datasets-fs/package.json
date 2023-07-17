@@ -1,5 +1,5 @@
 {
-    "name": "@prosopo/datasets",
+    "name": "@prosopo/datasets-fs",
     "version": "0.1.16",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
@@ -12,29 +12,22 @@
         "cli": "node ./dist/js/cli.js",
         "test": "NODE_ENV=test ts-mocha \"./tests/js/**/*.test.ts\" --timeout 120000 --recursive --exit"
     },
-    "main": "./dist/js/index.js",
-    "types": "./dist/js/index.d.ts",
-    "exports": {
-        ".": "./dist/js/index.js",
-        "./types": "./dist/js/types/index.js",
-        "./captcha": "./dist/js/captcha/index.js"
-    },
-    "typesVersions": {
-        "*": {
-            "types": [
-                "dist/js/types"
-            ],
-            "captcha": [
-                "dist/js/captcha"
-            ]
-        }
-    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
     "dependencies": {
         "@polkadot/util": "^12.3.2",
         "@prosopo/common": "^0.1.16",
-        "@prosopo/contract": "^0.1.16",
         "@prosopo/types": "^0.1.16",
-        "axios": "^0.27.2"
+        "bcrypt": "^5.1.0",
+        "consola": "^3.2.3",
+        "fs": "^0.0.1-security",
+        "lodash": "^4.17.21",
+        "noble-hashes": "^0.3.1",
+        "node-fetch": "^2.6.12",
+        "seedrandom": "^3.0.5",
+        "sharp": "^0.32.1",
+        "yargs": "^17.7.2",
+        "zod": "^3.21.4"
     },
     "devDependencies": {
         "@types/mocha": "^10.0.0",
