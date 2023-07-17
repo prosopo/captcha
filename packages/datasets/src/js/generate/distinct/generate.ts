@@ -97,7 +97,7 @@ export default async (args: Args) => {
         const notTargets = targets.filter((t) => t !== target)
 
         // how many correct items should be in the captcha?
-        const nCorrect = rng.index(maxCorrect, { maxInclusive: true })
+        const nCorrect = rng.intRange(minCorrect, maxCorrect, { maxInclusive: true })
         // how many incorrect items should be in the captcha?
         const nIncorrect = size - nCorrect
 

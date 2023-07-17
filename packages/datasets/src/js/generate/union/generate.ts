@@ -109,10 +109,10 @@ export default async (args: Args) => {
         const target = targets[i % targets.length]
         const notTargets = targets.filter((t) => t !== target)
         // how many labelled images should be in the captcha?
-        const nLabelled = rng.index(maxLabelled, { maxInclusive: true })
+        const nLabelled = rng.intRange(minLabelled, maxLabelled, { maxInclusive: true })
         // how many correct labelled images should be in the captcha?
         const maxCorrect = nLabelled - minCorrect
-        const nCorrect = rng.index(maxCorrect, { maxInclusive: true })
+        const nCorrect = rng.intRange(minCorrect, maxCorrect, { maxInclusive: true })
         const nIncorrect = nLabelled - nCorrect
         const nUnlabelled = size - nLabelled
 
