@@ -255,7 +255,7 @@ describe('Captchas', () => {
         cy.captchaImages().first().siblings().first().should('have.css', 'opacity', '1')
     })
 
-    it.only('Selecting the correct images passes the captcha', () => {
+    it('Selecting the correct images passes the captcha', () => {
         let captchas
         cy.clickIAmHuman().then((captchasResponse) => {
             captchas = captchasResponse
