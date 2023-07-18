@@ -127,7 +127,10 @@ export const Manager = (
     const updateState = buildUpdateState(state, onStateUpdate)
 
     /**
-     * Build the config on demand, using the optional config passed in from the outside. State may override various config values depending on the state of the captcha process. E.g. if the process has been started using account "ABC" and then the user changes account to "DEF" via the optional config prop, the account in use will not change. This is because the captcha process has already been started using account "ABC".
+     * Build the config on demand, using the optional config passed in from the outside. State may override various
+     * config values depending on the state of the captcha process. E.g. if the process has been started using account
+     * "ABC" and then the user changes account to "DEF" via the optional config prop, the account in use will not change.
+     * This is because the captcha process has already been started using account "ABC".
      * @returns the config for procaptcha
      */
     const getConfig = () => {
@@ -135,7 +138,8 @@ export const Manager = (
             userAccountAddress: '',
             ...configOptional,
         }
-        // overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user changes account in the middle of the captcha process.
+        // overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user
+        // changes account in the middle of the captcha process.
         if (state.account) {
             config.userAccountAddress = state.account.account.address
         }
@@ -341,8 +345,11 @@ export const Manager = (
                 loading: false,
             })
             if (state.isHuman) {
+                const trimmedUrl = trimProviderUrl(captchaApi.provider.provider.url.toString())
+                // cache this provider for future use
+                storage.setProviderUrl(trimmedUrl)
                 events.onHuman({
-                    providerUrl: trimProviderUrl(captchaApi.provider.provider.url.toString()),
+                    providerUrl: trimmedUrl,
                     user: account.account.address,
                     dapp: getDappAccount(),
                     commitmentId: submission[1],
@@ -466,6 +473,8 @@ export const Manager = (
         // check if account exists in extension
         const ext = config.web2 ? new ExtensionWeb2() : new ExtensionWeb3()
         const account = await ext.getAccount(config)
+        // Store the account in local storage
+        storage.setAccount(account.account.address)
 
         console.log('Using account:', account)
         updateState({ account })
