@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/common",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Prosopo common library",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
