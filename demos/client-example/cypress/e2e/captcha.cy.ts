@@ -282,6 +282,7 @@ describe('Captchas', () => {
                             }
                             // get inputs of type checkbox
                             cy.get("input[type='checkbox']").then((checkboxes) => {
+                                expect(checkboxes).to.have.length(1)
                                 // make sure the first checkbox is checked
                                 expect(checkboxes[0]).to.be.checked
                             })
