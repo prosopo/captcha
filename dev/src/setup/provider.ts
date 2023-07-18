@@ -18,9 +18,9 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { Tasks } from '@prosopo/provider'
 import { getSendAmount, getStakeAmount, sendFunds } from './funds'
-import { hexToU8a } from '@polkadot/util'
 import { loadJSONFile } from '@prosopo/cli'
-import { stringToHexPadded, wrapQuery } from '@prosopo/contract'
+import { stringToU8a } from '@polkadot/util'
+import { wrapQuery } from '@prosopo/contract'
 
 export async function registerProvider(env: ProviderEnvironment, account: IProviderAccount) {
     try {
@@ -65,7 +65,7 @@ export async function setupProvider(env: ProviderEnvironment, provider: IProvide
     const tasks = new Tasks(env)
     logger.info('   - providerRegister')
     const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
-        Array.from(hexToU8a(stringToHexPadded(provider.url))),
+        Array.from(stringToU8a(provider.url)),
         provider.fee,
         provider.payee,
         {
@@ -91,7 +91,7 @@ export async function setupProvider(env: ProviderEnvironment, provider: IProvide
     logger.info(registeredProvider)
     logger.info('   - providerStake')
     const providerUpdateArgs: Parameters<typeof tasks.contract.query.providerUpdate> = [
-        Array.from(hexToU8a(stringToHexPadded(provider.url))),
+        Array.from(stringToU8a(provider.url)),
         provider.fee,
         provider.payee,
         {
