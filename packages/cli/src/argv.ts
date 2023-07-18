@@ -21,9 +21,9 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { cwd } from 'process'
 import { encodeStringAddress } from '@prosopo/provider'
-import { hexToU8a } from '@polkadot/util'
 import { loadJSONFile } from './files'
-import { stringToHexPadded, wrapQuery } from '@prosopo/contract'
+import { stringToU8a } from '@polkadot/util'
+import { wrapQuery } from '@prosopo/contract'
 import parser from 'cron-parser'
 import pm2 from 'pm2'
 const yargs = require('yargs')
@@ -102,7 +102,7 @@ export function processArgs(args, env: ProviderEnvironment) {
                     }),
             async (argv) => {
                 const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
-                    Array.from(hexToU8a(stringToHexPadded(argv.url))),
+                    Array.from(stringToU8a(argv.url)),
                     argv.fee,
                     argv.payee,
                     {
