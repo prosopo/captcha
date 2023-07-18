@@ -143,9 +143,13 @@ export const AccountCreatorConfigSchema = z.object({
 
 export type ProsopoClientConfig = z.infer<typeof ProsopoClientConfigSchema>
 
+export const ProcaptchaCustomStyleAttributeNames = z.enum(['minWidth', 'maxWidth'])
+
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.merge(
     z.object({
         accountCreator: AccountCreatorConfigSchema.optional(),
+        [ProcaptchaCustomStyleAttributeNames.enum.minWidth]: z.string().optional(),
+        [ProcaptchaCustomStyleAttributeNames.enum.maxWidth]: z.string().optional(),
     })
 )
 

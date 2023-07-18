@@ -11,7 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
+import {
+    ApiParams,
+    EnvironmentTypes,
+    EnvironmentTypesSchema,
+    ProcaptchaCustomStyleAttributeNames,
+    ProcaptchaOutput,
+} from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { Procaptcha } from '@prosopo/procaptcha-react'
@@ -65,16 +71,25 @@ export function render(callbacks?: ProcaptchaCallbacks) {
     }
 
     for (const element of elements) {
-        // loop through the procaptcha callback names and pass through any existing callback functions
-        // to the Procaptcha component
+        // get the custom callback functions for procaptcha events, if set
         for (const callbackName of ProcapchaEventNames) {
-            const callback = element.getAttribute(`data-${callbackName.toLowerCase()}`)
+            const dataCallbackName = `data-${callbackName.toLowerCase()}` // e.g. data-onhuman
+            const callback = element.getAttribute(dataCallbackName)
             if (callback) {
                 callbacks[callbackName] = window[callback.replace('window.', '')]
             }
         }
+        // get the custom data attributes, if set
+        for (const attr of Object.values(ProcaptchaCustomStyleAttributeNames.Values)) {
+            const customValue = element.getAttribute(`data-${attr.toLowerCase()}`)
+            if (customValue) {
+                config[attr] = customValue
+            }
+        }
+
+        // set a default callback for onHuman, if not set
         if (!callbacks['onHuman']) {
-            // Create a callback that appends the prosopo payload to the containing form
+            // append the prosopo payload to the containing form
             callbacks['onHuman'] = function (payload: ProcaptchaOutput) {
                 // get form
                 const form = getParentForm(element)

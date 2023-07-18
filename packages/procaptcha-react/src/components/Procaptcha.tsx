@@ -123,6 +123,23 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     ]
 }
 
+function getCSSAttribute(defaultValue: string, cssAttr?: string): string {
+    if (cssAttr) {
+        // check if config.maxWidth is a valid css value for maxWidth
+        for (const postfix of ['px', '%', 'em', 'rem', 'ch', 'vw', 'vh', 'vmin', 'vmax']) {
+            if (cssAttr.endsWith(postfix) && !isNaN(Number(cssAttr.slice(0, cssAttr.length - postfix.length)))) {
+                return cssAttr
+            }
+        }
+        for (const keyword of ['initial', 'inherit', 'unset', 'revert', 'revert-layer']) {
+            if (cssAttr === keyword) {
+                return cssAttr
+            }
+        }
+    }
+    return defaultValue
+}
+
 export const Procaptcha = (props: ProcaptchaProps) => {
     console.log('config', props.config)
     const config = props.config
@@ -150,7 +167,14 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                 )}
             </Backdrop>
 
-            <Box p={1} sx={{ maxWidth: '300px', minWidth: '200px' }} data-cy={'button-human'}>
+            <Box
+                p={1}
+                sx={{
+                    maxWidth: getCSSAttribute('400px', config.maxWidth),
+                    minWidth: getCSSAttribute('200px', config.minWidth),
+                }}
+                data-cy={'button-human'}
+            >
                 <Box
                     p={1}
                     border={1}
