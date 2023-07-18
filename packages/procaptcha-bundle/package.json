@@ -12,8 +12,8 @@
         "start": "webpack serve --mode development",
         "build:webpack:prod": "webpack --mode production",
         "build:webpack:prod:copy": "webpack --mode production && cp dist/procaptcha_bundle.main.bundle.js ../../demos/client-bundle-example/src",
-        "build:webpack:dev": "webpack --mode development",
-        "build:webpack:dev:copy": "webpack --mode development && cp dist/procaptcha_bundle.main.bundle.js ../../demos/client-bundle-example/src",
+        "build:webpack:dev": "webpack --config webpack.config.js --mode development",
+        "build:webpack:dev:copy": "webpack --config webpack.config.js --mode development && cp dist/procaptcha_bundle.main.bundle.js ../../demos/client-bundle-example/src",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix"
     },
