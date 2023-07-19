@@ -69,33 +69,6 @@ pub mod proxy {
         ProxySetCodeHash(Result<(), Error>)
     }
 
-    // #[derive(Debug, PartialEq)]
-    // struct EvenNumber(i32);
-    //
-    // impl TryFrom<i32> for EvenNumber {
-    //     type Error = ();
-    //
-    //     fn try_from(value: i32) -> Result<Self, Self::Error> {
-    //         if value % 2 == 0 {
-    //             Ok(EvenNumber(value))
-    //         } else {
-    //             Err(())
-    //         }
-    //     }
-    // }
-    //
-    // impl TryFrom<GetGitCommitId([u8; 20])> for [u8; 20] {
-    //     type Error = ();
-    //
-    //     fn try_from(value: i32) -> Result<Self, Self::Error> {
-    //         if value % 2 == 0 {
-    //             Ok(EvenNumber(value))
-    //         } else {
-    //             Err(())
-    //         }
-    //     }
-    // }
-
     impl Proxy {
         /// Instantiate this contract with an address of the `logic` contract.
         ///
@@ -160,9 +133,11 @@ pub mod proxy {
         }
 
         fn proxy_terminate(&mut self) -> Result<(), Error> {
+            debug!("proxy_terminate");
             let caller = self.env().caller();
+            debug!("caller: {:?}", caller);
             self.check_is_admin(caller)?;
-
+            debug!("check_is_admin passed");
             self.env().terminate_contract(caller);
             // unreachable
         }
@@ -194,8 +169,6 @@ pub mod proxy {
         ///   have any effect whatsoever on the contract we forward to.
         #[ink(message, payable, selector = _)]
         pub fn proxy_forward(&self) -> u32 {
-            let (_selector, _message) =
-                ink::env::decode_input::<([u8; 4], String)>().unwrap();
             ink::env::call::build_call::<ink::env::DefaultEnvironment>()
                 .call(self.get_proxy_destination())
                 .transferred_value(self.env().transferred_value())
@@ -343,17 +316,22 @@ pub mod proxy {
             let admin_result = contract.handler(ProxyMessages::GetAdmin);
             if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
                 set_caller(admin); // an account which does have permission to call proxy_terminate
-
+                debug!("Admin account {:?}", admin);
+                assert_eq!(admin, AccountId::from(ENV_AUTHOR_BYTES));
                 let contract_account = contract.env().account_id();
                 let bal = get_account_balance(contract_account).unwrap();
+                debug!("Contract account {:?}", contract_account);
+                reset_caller();
+                set_caller(admin);
                 let proxy_terminate_result = contract.handler(ProxyMessages::ProxyTerminate);
+                debug!("proxy_terminate_result: {:?}", proxy_terminate_result);
                 if let ProxyReturnTypes::ProxyTerminate(proxy_terminate) =
                     proxy_terminate_result
                 {
                     let should_proxy_terminate = move || proxy_terminate.unwrap();
                     ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
                         should_proxy_terminate,
-                        admin.into(),
+                        AccountId::from(admin),
                         bal,
                     );
                 }
