@@ -54,7 +54,7 @@ pub mod proxy {
         GetProxyDestination,
         ProxyWithdraw(Amount),
         ProxyTerminate,
-        ProxySetCodeHash([u8; 32])
+        ProxySetCodeHash([u8; 32]),
     }
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -66,7 +66,7 @@ pub mod proxy {
         GetProxyDestination(AccountId),
         ProxyWithdraw(Result<(), Error>),
         ProxyTerminate(Result<(), Error>),
-        ProxySetCodeHash(Result<(), Error>)
+        ProxySetCodeHash(Result<(), Error>),
     }
 
     impl Proxy {
@@ -93,7 +93,10 @@ pub mod proxy {
 
         /// Get the git commit id from when this contract was built
         fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [169,194,146,201,84,37,17,149,122,111,197,0,1,153,102,35,161,53,68,70];
+            let env_git_commit_id: [u8; 20] = [
+                169, 194, 146, 201, 84, 37, 17, 149, 122, 111, 197, 0, 1, 153, 102, 35, 161, 53,
+                68, 70,
+            ];
             env_git_commit_id
         }
 
@@ -196,8 +199,6 @@ pub mod proxy {
             unreachable!("the forwarded call will never return since `tail_call` was set");
         }
 
-
-
         /// One other message allowed to handle messages.
         /// Fails to compile unless `IIP2_WILDCARD_COMPLEMENT_SELECTOR` is used.
         #[ink(message, selector = 0x9BAE9D5E)]
@@ -206,19 +207,15 @@ pub mod proxy {
                 ProxyMessages::GetGitCommitId => {
                     ProxyReturnTypes::GetGitCommitId(self.get_git_commit_id())
                 }
-                ProxyMessages::GetAuthor=> {
-                    ProxyReturnTypes::GetAuthor(self.get_author())
-                }
-                ProxyMessages::GetAdmin=> {
-                    ProxyReturnTypes::GetAdmin(self.get_admin())
-                }
-                ProxyMessages::GetProxyDestination=> {
+                ProxyMessages::GetAuthor => ProxyReturnTypes::GetAuthor(self.get_author()),
+                ProxyMessages::GetAdmin => ProxyReturnTypes::GetAdmin(self.get_admin()),
+                ProxyMessages::GetProxyDestination => {
                     ProxyReturnTypes::GetProxyDestination(self.get_proxy_destination())
                 }
                 ProxyMessages::ProxyWithdraw(amount) => {
                     ProxyReturnTypes::ProxyWithdraw(self.proxy_withdraw(amount))
                 }
-                ProxyMessages::ProxyTerminate=> {
+                ProxyMessages::ProxyTerminate => {
                     ProxyReturnTypes::ProxyTerminate(self.proxy_terminate())
                 }
                 ProxyMessages::ProxySetCodeHash(code_hash) => {
@@ -325,9 +322,7 @@ pub mod proxy {
                 set_caller(admin);
                 let proxy_terminate_result = contract.handler(ProxyMessages::ProxyTerminate);
                 debug!("proxy_terminate_result: {:?}", proxy_terminate_result);
-                if let ProxyReturnTypes::ProxyTerminate(proxy_terminate) =
-                    proxy_terminate_result
-                {
+                if let ProxyReturnTypes::ProxyTerminate(proxy_terminate) = proxy_terminate_result {
                     let should_proxy_terminate = move || proxy_terminate.unwrap();
                     ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
                         should_proxy_terminate,
@@ -338,9 +333,6 @@ pub mod proxy {
             } else {
                 assert!(false);
             }
-
-
-
         }
 
         #[ink::test]
@@ -378,7 +370,8 @@ pub mod proxy {
                 let admin_bal: u128 = get_account_balance(admin).unwrap();
                 let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
                 let proxy_withdraw_amount: u128 = 1;
-                let proxy_withdraw_result = contract.handler(ProxyMessages::ProxyWithdraw(proxy_withdraw_amount));
+                let proxy_withdraw_result =
+                    contract.handler(ProxyMessages::ProxyWithdraw(proxy_withdraw_amount));
                 if let ProxyReturnTypes::ProxyWithdraw(proxy_withdraw) = proxy_withdraw_result {
                     proxy_withdraw.unwrap();
                     assert_eq!(
@@ -411,11 +404,11 @@ pub mod proxy {
                 set_caller(admin); // use the admin acc
                 let admin_bal = get_account_balance(admin).unwrap();
                 let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
-                contract.handler(ProxyMessages::ProxyWithdraw(contract_bal + 1)); // panics as bal would go below existential deposit
+                contract.handler(ProxyMessages::ProxyWithdraw(contract_bal + 1));
+            // panics as bal would go below existential deposit
             } else {
                 assert_eq!(true, false);
             }
-
         }
 
         #[ink::test]
@@ -429,7 +422,10 @@ pub mod proxy {
 
             // give the contract funds
             set_caller(get_user_account(1)); // use the admin acc
-            assert_eq!(contract.handler(ProxyMessages::ProxyWithdraw(1)), ProxyReturnTypes::ProxyWithdraw(Err(Error::NotAuthorised)));
+            assert_eq!(
+                contract.handler(ProxyMessages::ProxyWithdraw(1)),
+                ProxyReturnTypes::ProxyWithdraw(Err(Error::NotAuthorised))
+            );
             //assert_eq!(contract.handler(ProxyMessage::ProxyWithdraw(1)), Err(Error::NotAuthorised));
         }
 
