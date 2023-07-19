@@ -252,6 +252,12 @@ pub mod proxy {
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
+        use std::panic;
+
+        panic::set_hook(Box::new(|panic_info| {
+    println!("panic occurred: {panic_info}");
+    }));
+
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
