@@ -320,7 +320,7 @@ pub mod proxy {
                 // TODO causes compiler panic
                 //   thread 'proxy::tests::test_proxy_terminate' panicked at 'Box<dyn Any>'
                 //   https://github.com/paritytech/ink/issues/1676#issuecomment-1643654402
-                assert(true);
+                assert!(true);
                 // let proxy_terminate_result = contract.handler(ProxyMessages::ProxyTerminate);
                 // debug!("proxy_terminate_result: {:?}", proxy_terminate_result);
                 // if let ProxyReturnTypes::ProxyTerminate(proxy_terminate) = proxy_terminate_result {
