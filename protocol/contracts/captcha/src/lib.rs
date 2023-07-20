@@ -25,13 +25,10 @@ pub mod captcha {
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
     use ink::prelude::vec::Vec;
+    use ink::storage::traits::{ManualKey, StorageKey};
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-    use ink::storage::traits::{
-        StorageKey,
-        ManualKey
-    };
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
@@ -363,10 +360,7 @@ pub mod captcha {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [
-                246, 103, 20, 204, 216, 217, 107, 3, 196, 247, 37, 201, 202, 147, 117, 92, 178, 37,
-                60, 56,
-            ];
+            let env_git_commit_id: [u8; 20] = [118,45,245,158,80,210,168,162,146,223,44,178,41,60,145,196,65,198,109,90];
             env_git_commit_id
         }
 
@@ -385,7 +379,10 @@ pub mod captcha {
         }
 
         fn get_admin_bytes(&self) -> [u8; 32] {
-            let env_admin_bytes: [u8; 32] = Self::get_author_bytes();
+            let env_admin_bytes: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
             env_admin_bytes
         }
 
