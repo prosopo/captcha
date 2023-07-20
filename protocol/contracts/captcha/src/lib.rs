@@ -360,10 +360,7 @@ pub mod captcha {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [
-                169, 194, 146, 201, 84, 37, 17, 149, 122, 111, 197, 0, 1, 153, 102, 35, 161, 53,
-                68, 70,
-            ];
+            let env_git_commit_id: [u8; 20] = [118,45,245,158,80,210,168,162,146,223,44,178,41,60,145,196,65,198,109,90];
             env_git_commit_id
         }
 
