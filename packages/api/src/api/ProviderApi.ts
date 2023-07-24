@@ -20,7 +20,7 @@ import {
     RandomProvider,
     VerifySolutionBodyType,
 } from '@prosopo/types'
-import { CaptchaSolutionResponse, GetCaptchaResponse, VerificationResponse } from '../types'
+import { CaptchaSolutionResponse, GetCaptchaResponse, ProviderStatus, VerificationResponse } from '../types'
 import { NetworkConfig } from '@prosopo/types'
 import HttpClientBase from './HttpClientBase'
 
@@ -73,5 +73,9 @@ export default class ProviderApi extends HttpClientBase {
             payload['commitmentId'] = commitmentId
         }
         return this.axios.post(ApiPaths.VerifyCaptchaSolution, payload as VerifySolutionBodyType)
+    }
+
+    public getProviderStatus(): Promise<ProviderStatus> {
+        return this.axios.get(ApiPaths.GetProviderStatus)
     }
 }

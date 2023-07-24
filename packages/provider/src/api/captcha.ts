@@ -152,7 +152,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
     /**
      * Verifies that the provider is running and registered in the contract
      */
-    router.get(ApiPaths.GetCaptchaStatus, async (req, res, next) => {
+    router.get(ApiPaths.GetProviderStatus, async (req, res, next) => {
         try {
             const status = await tasks.providerStatus()
             return res.json({ status })
