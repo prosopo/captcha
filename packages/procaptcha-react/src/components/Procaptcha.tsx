@@ -150,7 +150,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                 )}
             </Backdrop>
 
-            <Box p={1} sx={{ maxWidth: '300px', minWidth: '200px' }} data-cy={'button-human'}>
+            <Box p={1} sx={{ maxWidth: '400px', minWidth: '200px' }} data-cy={'button-human'}>
                 <Box
                     p={1}
                     border={1}

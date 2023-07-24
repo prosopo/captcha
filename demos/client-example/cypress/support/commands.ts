@@ -21,6 +21,7 @@ declare global {
         interface Chainable {
             clickIAmHuman(): Cypress.Chainable<any[]>
             captchaImages(): Cypress.Chainable<JQuery<HTMLElement[]>>
+            clickCorrectCaptchaImages(): Cypress.Chainable<any[]>
         }
     }
 }
@@ -52,4 +53,33 @@ function captchaImages() {
     return cy.get('@captchaImages')
 }
 
-Cypress.Commands.addAll({ clickIAmHuman, captchaImages })
+function clickCorrectCaptchaImages(solutions: { captchaContentId: string; solution: string[] }[], captchas: any[]) {
+    const foundSolutions: string[][] = []
+    // Get the second captcha content Id
+    for (const captcha of captchas) {
+        const captchaIndex = solutions.findIndex(
+            (testSolution) => testSolution.captchaContentId === captcha.captchaContentId
+        )
+        let solution: string[] = []
+        if (captchaIndex !== -1) {
+            solution = solutions[captchaIndex].solution
+            for (const item of captcha.items) {
+                if (solution.includes(item.hash)) {
+                    // get the image based on the image src
+                    cy.get(`img[src="${item.data}"]`).click()
+                }
+            }
+        }
+        foundSolutions.push(solution)
+        // break if we're on the last captcha
+        if (captcha === captchas[captchas.length - 1]) {
+            break
+        }
+
+        // Go to the next captcha
+        cy.get('[data-cy="button-next"]').click()
+    }
+    return cy.wrap(foundSolutions)
+}
+
+Cypress.Commands.addAll({ clickIAmHuman, captchaImages, clickCorrectCaptchaImages })
