@@ -80,3 +80,7 @@ export interface PendingCaptchaRequest {
     deadlineTimestamp: number // unix timestamp
     requestedAtBlock: number // expected block number
 }
+
+export interface ProviderRegistered {
+    status: 'Registered' | 'Unregistered'
+}

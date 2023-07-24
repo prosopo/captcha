@@ -26,6 +26,7 @@ import {
     Hash,
     PendingCaptchaRequest,
     Provider,
+    ProviderRegistered,
     RandomProvider,
 } from '@prosopo/types'
 import { BlockHash } from '@polkadot/types/interfaces/chain/index'
@@ -235,12 +236,16 @@ export class Tasks {
     /**
      * Gets provider status in contract
      */
-    async providerStatus(): Promise<string> {
-        const provider: Provider = await wrapQuery(
-            this.contract.query.getProvider,
-            this.contract.query
-        )(this.contract.pair.address)
-        return provider.status.toString()
+    async providerStatus(): Promise<ProviderRegistered> {
+        try {
+            const provider: Provider = await wrapQuery(
+                this.contract.query.getProvider,
+                this.contract.query
+            )(this.contract.pair.address)
+            return { status: provider.status ? 'Registered' : 'Unregistered' }
+        } catch (e) {
+            return { status: 'Unregistered' }
+        }
     }
 
     /**

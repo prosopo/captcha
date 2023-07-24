@@ -79,6 +79,6 @@ export interface ProsopoNetwork {
     }
 }
 
-export interface ProviderStatus {
-    status: 'Active' | 'Inactive'
+export interface ProviderRegistered {
+    status: 'Registered' | 'Unregistered'
 }
