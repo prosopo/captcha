@@ -17,6 +17,7 @@ import {
     CaptchaSolution,
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
+    Provider,
     RandomProvider,
     VerifySolutionBodyType,
 } from '@prosopo/types'
@@ -77,5 +78,9 @@ export default class ProviderApi extends HttpClientBase {
 
     public getProviderStatus(): Promise<ProviderStatus> {
         return this.axios.get(ApiPaths.GetProviderStatus)
+    }
+
+    public getProviderDetails(): Promise<Provider> {
+        return this.axios.get(ApiPaths.GetProviderDetails)
     }
 }

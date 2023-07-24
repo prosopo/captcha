@@ -161,5 +161,17 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         }
     })
 
+    /**
+     * Gets public details of the provider
+     */
+    router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {
+        try {
+            const details = await tasks.getProviderDetails()
+            return res.json(details)
+        } catch (err) {
+            return next(new ProsopoApiError(err, undefined, 400))
+        }
+    })
+
     return router
 }

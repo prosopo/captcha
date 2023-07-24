@@ -19,6 +19,7 @@ export enum ApiPaths {
     SubmitCaptchaSolution = '/v1/prosopo/provider/solution',
     VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
     GetProviderStatus = '/v1/prosopo/provider/status',
+    GetProviderDetails = '/v1/prosopo/provider/details',
 }
 
 export enum ApiParams {

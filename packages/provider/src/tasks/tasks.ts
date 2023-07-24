@@ -505,4 +505,9 @@ export class Tasks {
         }
         return undefined
     }
+
+    /* Returns public details of provider */
+    async getProviderDetails(): Promise<Provider> {
+        return await wrapQuery(this.contract.query.getProvider, this.contract.query)(this.contract.pair.address)
+    }
 }
