@@ -94,8 +94,18 @@ log.info('externalsRegex', externalsRegex)
 
 loadEnv()
 
+const bundledEnvVars = {
+    'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
+    'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
+    'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
+    'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
+}
+
+log.info(`Bundling with env vars: ${JSON.stringify(bundledEnvVars, null, 4)}`)
+
 module.exports = (env, argv) => {
     const isProduction = argv.mode === 'production'
+    log.info(`Production: ${isProduction}`)
     const libraryName = 'procaptcha_bundle'
     return {
         resolve: {
@@ -157,13 +167,7 @@ module.exports = (env, argv) => {
                 template: './src/index.html',
             }),
             //new BundleAnalyzerPlugin(),
-            new webpack.DefinePlugin({
-                'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
-                'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
-                'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-                'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
-                'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
-            }),
+            new webpack.DefinePlugin(bundledEnvVars),
             // new webpack.optimize.SplitChunksPlugin(),
             new CompressionPlugin(),
             new MiniCssExtractPlugin({
