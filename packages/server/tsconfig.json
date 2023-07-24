@@ -16,7 +16,7 @@
     ],
     "references": [
         {
-            "path": "../api"
+            "path": "../captcha"
         },
         {
             "path": "../contract"

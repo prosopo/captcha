@@ -20,7 +20,7 @@ import { LogLevel, Logger, logger } from '@prosopo/common'
 import { ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
-import { ProviderApi } from '@prosopo/api'
+import { ProviderApi } from '@prosopo/captcha'
 import { WsProvider } from '@polkadot/rpc-provider'
 
 export class ProsopoServer {

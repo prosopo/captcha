@@ -18,7 +18,7 @@
   ],
   "references": [
     {
-      "path": "../api"
+      "path": "../captcha"
     },
     {
       "path": "../common"

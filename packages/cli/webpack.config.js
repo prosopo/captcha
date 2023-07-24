@@ -15,7 +15,7 @@ const fs = require('fs')
 const moduleDirs = [
     path.resolve(__dirname, 'node_modules'),
     path.resolve(__dirname, '../../node_modules'),
-    path.resolve(__dirname, '../api/node_modules'),
+    path.resolve(__dirname, '../captcha/node_modules'),
     path.resolve(__dirname, '../common/node_modules'),
     path.resolve(__dirname, '../procaptcha/node_modules'),
     path.resolve(__dirname, '../procaptcha-react/node_modules'),

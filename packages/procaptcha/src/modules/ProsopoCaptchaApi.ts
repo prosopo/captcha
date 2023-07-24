@@ -21,14 +21,14 @@ import {
 import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
 import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { ProsopoApiError } from '../api/handlers'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
-import { ProviderApi } from '@prosopo/api'
+import { ProviderApi } from '@prosopo/captcha'
 import { RandomProvider } from '@prosopo/types'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from '../types/client'
 import { stringToHex } from '@polkadot/util'
+import { ProsopoApiError } from '../api/handlers'
 
 export class ProsopoCaptchaApi {
     userAccount: string

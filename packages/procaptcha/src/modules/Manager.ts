@@ -27,7 +27,7 @@ import {
     ProsopoClientConfig,
     RandomProvider,
 } from '@prosopo/types'
-import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
+import { GetCaptchaResponse, ProviderApi } from '@prosopo/captcha'
 import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client'

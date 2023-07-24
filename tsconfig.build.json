@@ -42,10 +42,10 @@
     ],
     "baseUrl": "./packages",
     "paths": {
-      "@prosopo/api": [
+      "@prosopo/captcha": [
         "api/src"
       ],
-      "@prosopo/api/*": [
+      "@prosopo/captcha/*": [
         "api/src/*"
       ],
       "@prosopo/cli": [

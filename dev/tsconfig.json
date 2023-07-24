@@ -19,7 +19,7 @@
 
     "references": [
         {
-            "path": "../packages/api"
+            "path": "../packages/captcha"
         },
         {
             "path": "../packages/cli"

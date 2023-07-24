@@ -1,5 +1,5 @@
 {
-  "name": "@prosopo/api",
+  "name": "@prosopo/captcha",
   "version": "0.1.16",
   "description": "Wrapper for the provider API",
   "main": "dist/index.js",

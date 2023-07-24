@@ -1,4 +1,4 @@
-import { ProviderApi } from '@prosopo/api'
+import { ProviderApi } from '@prosopo/captcha'
 
 export const getProviderApi = (providerUrl: string, currentAccount: string) => {
     const network = {
