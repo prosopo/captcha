@@ -233,14 +233,14 @@ export class Tasks {
     }
 
     /**
-     * Validate that the provider is active in the contract
+     * Gets provider status in contract
      */
-    async providerIsActive(providerAccount: string): Promise<boolean> {
+    async providerStatus(): Promise<string> {
         const provider: Provider = await wrapQuery(
             this.contract.query.getProvider,
             this.contract.query
-        )(providerAccount)
-        return provider.status.toString() === 'Active'
+        )(this.contract.pair.address)
+        return provider.status.toString()
     }
 
     /**
