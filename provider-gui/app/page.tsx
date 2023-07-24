@@ -72,11 +72,11 @@ const HomePage: React.FC = () => {
         )
         if (!isProviderRegistered) {
             alert('Provider is running but not registered.')
-            router.push('/register-provider')
+            router.push('/register')
             return
         }
 
-        router.push('/provider-profile/profile-summary')
+        router.push('/profile/summary')
     }
 
     return (
