@@ -28,7 +28,7 @@ import { ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
 import { downloadImage } from './util'
 import { isHex } from '@polkadot/util'
 
-// import {encodeAddress} from "@polkadot/util-crypto";
+export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
 
 /**
  * Parse a dataset
@@ -131,7 +131,9 @@ export function computeCaptchaHash(
         })
         return hexHashArray([
             captcha.target,
-            ...(includeSolution && captcha.solution ? captcha.solution.sort() : []),
+            // empty array hashes as empty string, undefined solution results in the array [`NO_SOLUTION`]
+            // [undefined] also hashes as empty string, which is why we don't use it
+            ...(includeSolution ? getSolutionValueToHash(captcha.solution) : []),
             includeSalt ? captcha.salt : '',
             sortItemHashes ? itemHashes.sort() : itemHashes,
         ])
@@ -140,13 +142,12 @@ export function computeCaptchaHash(
     }
 }
 
-/** Return the sorted solution value or [undefined] if there is no solution. Ensures that an empty array is a valid
+/** Return the sorted solution value or ['NO_SOLUTION'] if there is no solution. Ensures that an empty array is a valid
  * solution
  * @param solution
  */
 export function getSolutionValueToHash(solution?: HashedSolution[] | RawSolution[]) {
-    //
-    return solution !== undefined ? solution.sort() : [undefined]
+    return solution !== undefined ? solution.sort() : [NO_SOLUTION_VALUE]
 }
 
 /** Compute the hash of a captcha item, downloading the image if necessary

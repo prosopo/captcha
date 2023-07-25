@@ -22,6 +22,7 @@ import {
     Item,
     MerkleProof,
 } from '@prosopo/types'
+import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '@prosopo/datasets'
 import {
     compareCaptchaSolutions,
     computeCaptchaHash,
@@ -35,7 +36,6 @@ import {
     verifyProof,
 } from '@prosopo/datasets'
 import { expect } from 'chai'
-import { getSolutionValueToHash } from '../../src/js'
 import { it } from 'mocha'
 import path from 'path'
 import exp = require('constants')
@@ -115,7 +115,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
                     items: ITEMS,
                 },
                 {
-                    captchaId: '0xff104b75ea2eff08e9cbc8deeee26be24c1e731f3f64eee430dccfe2687be289',
+                    captchaId: '0x658d30c45a4a5b5109c50e3f25acf53641a38dec9f5af9ffdc27c9b30e75acca',
                     captchaContentId: '0x01',
                     salt: '0x02',
                     target: 'train',
@@ -211,6 +211,24 @@ describe('CAPTCHA FUNCTIONS', async function () {
         } as CaptchaWithoutId
 
         expect(computeCaptchaHash(captcha, true, true, false)).to.be.a('string')
+
+        const captchaEmptyArraySolution = {
+            solution: [],
+            salt: '',
+            target: 'plane',
+            items: MOCK_ITEMS,
+        }
+
+        const captchaUndefinedSolution = {
+            solution: undefined,
+            salt: '',
+            target: 'plane',
+            items: MOCK_ITEMS,
+        }
+
+        expect(computeCaptchaHash(captchaEmptyArraySolution, true, true, true)).to.not.equal(
+            computeCaptchaHash(captchaUndefinedSolution, true, true, true)
+        )
     })
 
     it('Captcha solutions are correctly sorted and computed', () => {
@@ -391,6 +409,6 @@ describe('CAPTCHA FUNCTIONS', async function () {
         const numberSolutions = [3, 2, 1]
         expect(getSolutionValueToHash(numberSolutions)).to.deep.equal([1, 2, 3])
         const undefinedSolution = undefined
-        expect(getSolutionValueToHash(undefinedSolution)).to.deep.equal([undefined])
+        expect(getSolutionValueToHash(undefinedSolution)).to.deep.equal([NO_SOLUTION_VALUE])
     })
 })
