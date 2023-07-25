@@ -35,8 +35,10 @@ import {
     verifyProof,
 } from '@prosopo/datasets'
 import { expect } from 'chai'
+import { getSolutionValueToHash } from '../../src/js'
 import { it } from 'mocha'
 import path from 'path'
+import exp = require('constants')
 
 describe('CAPTCHA FUNCTIONS', async function () {
     let MOCK_ITEMS: Item[]
@@ -179,6 +181,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, true, true, false))
         expect(captchaHashes[0]).to.equal('captchaId' in dataset.captchas[0] ? dataset.captchas[0].captchaId : '')
         expect(captchaHashes[1]).to.equal('captchaId' in dataset.captchas[1] ? dataset.captchas[1].captchaId : '')
+        expect(captchaHashes[0]).to.not.equal(captchaHashes[1])
     })
 
     it('Captcha solutions are successfully parsed', () => {
@@ -379,5 +382,15 @@ describe('CAPTCHA FUNCTIONS', async function () {
         const leaf = '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16'
         const verification = verifyProof(leaf, [[proof]])
         expect(verification).to.be.false
+    })
+    it('Returns sorted solutions', () => {
+        const emptyArraySolution = []
+        expect(getSolutionValueToHash(emptyArraySolution)).to.deep.equal([])
+        const hashSolutions = ['0x3', '0x2', '0x1']
+        expect(getSolutionValueToHash(hashSolutions)).to.deep.equal(['0x1', '0x2', '0x3'])
+        const numberSolutions = [3, 2, 1]
+        expect(getSolutionValueToHash(numberSolutions)).to.deep.equal([1, 2, 3])
+        const undefinedSolution = undefined
+        expect(getSolutionValueToHash(undefinedSolution)).to.deep.equal([undefined])
     })
 })

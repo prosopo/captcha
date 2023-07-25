@@ -140,6 +140,15 @@ export function computeCaptchaHash(
     }
 }
 
+/** Return the sorted solution value or [undefined] if there is no solution. Ensures that an empty array is a valid
+ * solution
+ * @param solution
+ */
+export function getSolutionValueToHash(solution?: HashedSolution[] | RawSolution[]) {
+    //
+    return solution !== undefined ? solution.sort() : [undefined]
+}
+
 /** Compute the hash of a captcha item, downloading the image if necessary
  * @param  {Item} item
  * @return {Promise<HashedItem>} the hex string hash of the item
