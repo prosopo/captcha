@@ -18,6 +18,8 @@ export enum ApiPaths {
     GetCaptchaChallenge = '/v1/prosopo/provider/captcha',
     SubmitCaptchaSolution = '/v1/prosopo/provider/solution',
     VerifyCaptchaSolution = '/v1/prosopo/provider/verify',
+    GetProviderStatus = '/v1/prosopo/provider/status',
+    GetProviderDetails = '/v1/prosopo/provider/details',
 }
 
 export enum ApiParams {
@@ -77,4 +79,8 @@ export interface PendingCaptchaRequest {
     [ApiParams.requestHash]: string
     deadlineTimestamp: number // unix timestamp
     requestedAtBlock: number // expected block number
+}
+
+export interface ProviderRegistered {
+    status: 'Registered' | 'Unregistered'
 }
