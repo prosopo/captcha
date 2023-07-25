@@ -14,4 +14,4 @@
 export * from './tasks'
 export * from './util'
 export * from './batch'
-export * from './api'
+export * from './api/captcha'
