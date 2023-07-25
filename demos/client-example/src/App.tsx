@@ -47,7 +47,7 @@ function App() {
         fetch(`${serverUrl}/private`, {
             method: 'GET',
             headers: {
-                Origin: 'http://localhost:3001', // TODO: change this to env var
+                Origin: 'http://localhost:9230', // TODO: change this to env var
                 ...corsHeaders,
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`,
