@@ -24,9 +24,9 @@ import { CaptchaRequestBody } from '@prosopo/types'
 import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
-import { Tasks } from './tasks/tasks'
+import { Tasks } from '../tasks/tasks'
 import { UserCommitmentRecord } from '@prosopo/types-database'
-import { parseBlockNumber } from './util'
+import { parseBlockNumber } from '../util'
 import { parseCaptchaAssets } from '@prosopo/datasets'
 import { validateAddress } from '@polkadot/util-crypto'
 import express, { Router } from 'express'
@@ -144,6 +144,30 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 status: req.t(statusMessage),
                 solutionApproved: false,
             })
+        } catch (err) {
+            return next(new ProsopoApiError(err, undefined, 400))
+        }
+    })
+
+    /**
+     * Verifies that the provider is running and registered in the contract
+     */
+    router.get(ApiPaths.GetProviderStatus, async (req, res, next) => {
+        try {
+            const status = await tasks.providerStatus()
+            return res.json({ status })
+        } catch (err) {
+            return next(new ProsopoApiError(err, undefined, 400))
+        }
+    })
+
+    /**
+     * Gets public details of the provider
+     */
+    router.get(ApiPaths.GetProviderDetails, async (req, res, next) => {
+        try {
+            const details = await tasks.getProviderDetails()
+            return res.json(details)
         } catch (err) {
             return next(new ProsopoApiError(err, undefined, 400))
         }
