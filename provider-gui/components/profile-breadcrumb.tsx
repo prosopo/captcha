@@ -31,16 +31,16 @@ const handleClick = (event: React.MouseEvent<Element, MouseEvent>) => {
 const ProfileBreadcrumb: React.FC = () => (
     <div role="presentation" onClick={handleClick}>
         <Breadcrumbs aria-label="breadcrumb">
-            <Link href="./profile-summary" passHref>
+            <Link href="./summary" passHref>
                 <StyledBreadcrumb component="a" label="Profile Summary" />
             </Link>
-            <Link href="./profile-actions" passHref>
+            <Link href="./actions" passHref>
                 <StyledBreadcrumb component="a" label="Profile Actions" />
             </Link>
-            <Link href="./profile-dataset" passHref>
+            <Link href="./dataset" passHref>
                 <StyledBreadcrumb component="a" label="Profile Dataset" />
             </Link>
-            <Link href="./profile-environment" passHref>
+            <Link href="./environment" passHref>
                 <StyledBreadcrumb component="a" label="Profile Environment" />
             </Link>
         </Breadcrumbs>
