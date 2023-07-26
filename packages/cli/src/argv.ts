@@ -323,7 +323,7 @@ export function processArgs(args, env: ProviderEnvironment) {
                 yargs
                     .option('dataset-id', {
                         type: 'string',
-                        demand: true,
+                        demand: false,
                         desc: 'The dataset ID to export',
                     })
                     .option('file', {
@@ -333,16 +333,23 @@ export function processArgs(args, env: ProviderEnvironment) {
                     }),
             async (argv) => {
                 try {
-                    const result = await tasks.getProviderDataset(argv.datasetId)
+                    let datasetId = argv.datasetId
+                    if (datasetId === undefined) {
+                        const providerAddress = env.config.account.address
+                        const provider = (await tasks.contract.query.getProvider(providerAddress)).value
+                            .unwrap()
+                            .unwrap()
+                        logger.info(`Getting dataset ID from provider ${providerAddress}`)
+                        datasetId = provider.datasetId.toString()
+                    }
+                    // get the dataset from the provider database
+                    const result = await tasks.getProviderDataset(datasetId)
                     // export the result to file
-                    await writeJSONFile(argv.file, JSON.stringify(result, null, 2))
-
-                    logger.info(JSON.stringify(result, null, 2))
+                    await writeJSONFile(argv.file, result)
                 } catch (err) {
                     logger.error(err)
                 }
-            },
-            [validateAddress]
+            }
         )
         .command(
             'dapp_details',
