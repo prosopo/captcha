@@ -25,10 +25,10 @@ import type BN from 'bn.js'
 //@ts-ignore
 import { getTypeDescription } from './../shared/utils'
 // @ts-ignore
+import { EventRecord } from '@polkadot/types/interfaces'
 import { decodeEvents } from '../shared/utils'
 import DATA_TYPE_DESCRIPTIONS from '../data/proxy.json'
 import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/proxy.json'
-import type { EventRecord } from '@polkadot/api/submittable'
 
 export default class Methods {
     readonly __nativeContract: ContractPromise
@@ -114,7 +114,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'proxyWithdraw',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [amount],
@@ -133,7 +133,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'proxyTerminate',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [],
@@ -153,7 +153,7 @@ export default class Methods {
             this.__nativeContract,
             this.__keyringPair,
             'proxySetCodeHash',
-            (events: EventRecord) => {
+            (events: EventRecord[]) => {
                 return decodeEvents(events, this.__nativeContract, EVENT_DATA_TYPE_DESCRIPTIONS)
             },
             [codeHash],
