@@ -1,10 +1,11 @@
 'use client'
 
+import { GlobalState } from '../types/global-state-types'
 import React, { ReactNode, createContext, useContext, useState } from 'react'
 
 interface GlobalStateContextProps {
-    currentAccount: string
-    setCurrentAccount: React.Dispatch<React.SetStateAction<string>>
+    providerDetails: GlobalState
+    setProviderDetails: React.Dispatch<React.SetStateAction<GlobalState>>
 }
 
 const GlobalStateContext = createContext<GlobalStateContextProps | undefined>(undefined)
@@ -14,10 +15,10 @@ interface GlobalStateProviderProps {
 }
 
 export const GlobalStateProvider: React.FC<GlobalStateProviderProps> = ({ children }) => {
-    const [currentAccount, setCurrentAccount] = useState<string>('')
+    const [providerDetails, setProviderDetails] = useState<GlobalState>({ profile: {}, accounts: [] })
 
     return (
-        <GlobalStateContext.Provider value={{ currentAccount, setCurrentAccount }}>
+        <GlobalStateContext.Provider value={{ providerDetails, setProviderDetails }}>
             {children}
         </GlobalStateContext.Provider>
     )

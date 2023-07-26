@@ -1,9 +1,8 @@
 'use client'
 
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material'
-import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { SelectChangeEvent } from '@mui/material/Select'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useGlobalState } from '../contexts/GlobalContext'
 import { web3Accounts, web3Enable } from '@polkadot/extension-dapp'
 import React from 'react'
@@ -19,21 +18,23 @@ const injected: Injected = {
 }
 
 const AccountPicker: React.FC = () => {
-    const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
-    const { currentAccount, setCurrentAccount } = useGlobalState()
+    const { providerDetails, setProviderDetails } = useGlobalState()
 
     useEffect(() => {
         const enableExtension = async () => {
             await injected.enable('my cool dapp')
             const accounts = await injected.accounts()
-            setAccounts(accounts)
-            if (accounts.length > 0) setCurrentAccount(accounts[0].address)
+            if (accounts.length > 0) {
+                setProviderDetails({ ...providerDetails, accounts, currentAccount: accounts[0].address })
+            } else {
+                setProviderDetails({ ...providerDetails, accounts })
+            }
         }
         enableExtension()
     }, [])
 
     const handleChange = (event: SelectChangeEvent<string>) => {
-        setCurrentAccount(event.target.value)
+        setProviderDetails({ ...providerDetails, currentAccount: event.target.value })
     }
 
     return (
@@ -42,11 +43,11 @@ const AccountPicker: React.FC = () => {
             <Select
                 labelId="account-picker-label"
                 id="account-picker"
-                value={currentAccount}
+                value={providerDetails.currentAccount ?? ''}
                 label="Account"
                 onChange={handleChange}
             >
-                {accounts.map((account) => (
+                {providerDetails.accounts.map((account) => (
                     <MenuItem key={account.address} value={account.address}>
                         {account.meta.name} ({account.address})
                     </MenuItem>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, MenuItem, Select, SelectChangeEvent, TextField } from '@mui/material'
+import { Box, Button, Dialog, MenuItem, Select, SelectChangeEvent, TextField, Typography } from '@mui/material'
 import { getProviderApi } from '../services/provider-api/provider-api'
 import { useGlobalState } from '../contexts/GlobalContext'
 import { useRouter } from 'next/navigation'
@@ -12,13 +12,20 @@ interface HomePageState {
 }
 
 const HomePage: React.FC = () => {
-    const { currentAccount, setCurrentAccount } = useGlobalState()
+    const { providerDetails, setProviderDetails } = useGlobalState()
     const [state, setState] = useState<HomePageState>({ network: 'rococo', providerUrl: '' })
+    const [isFormVisible, setIsFormVisible] = useState(false)
+    const [isDialogVisible, setIsDialogVisible] = useState(false)
     const router = useRouter()
 
     const checkIfProviderIsRunning = (url: string): boolean => {
         console.log(`Checking if provider at ${url} is running...`)
-        const provider = getProviderApi(url, currentAccount)
+
+        if (!providerDetails.currentAccount) {
+            return false
+        }
+
+        const provider = getProviderApi(url, providerDetails.currentAccount)
         // Request captcha
         // if captcha is give, return true
         // else error, catch error and return false
@@ -64,12 +71,17 @@ const HomePage: React.FC = () => {
             return
         }
 
+        if (!providerDetails.currentAccount) {
+            return false
+        }
+
         const isProviderRegistered = await checkIfProviderIsRegistered(
             state.providerUrl,
             state.network,
             state.providerUrl,
-            currentAccount
+            providerDetails.currentAccount
         )
+
         if (!isProviderRegistered) {
             alert('Provider is running but not registered.')
             router.push('/register')
@@ -79,14 +91,58 @@ const HomePage: React.FC = () => {
         router.push('/profile/summary')
     }
 
+    const handleYesClick = () => {
+        setIsFormVisible(true)
+    }
+
+    const handleNoClick = () => {
+        setIsDialogVisible(true)
+    }
+
+    const handleDialogClose = () => {
+        setIsDialogVisible(false)
+    }
+
     return (
-        <form onSubmit={handleSubmit}>
-            <Select value={state.network} onChange={handleNetworkChange}>
-                <MenuItem value="rococo">Rococo</MenuItem>
-            </Select>
-            <TextField label="Provider URL" name="providerUrl" value={state.providerUrl} onChange={handleInputChange} />
-            <Button type="submit">Elect Running Provider</Button>
-        </form>
+        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" height="100vh">
+            {!isFormVisible && !isDialogVisible && (
+                <>
+                    <Typography variant="h6">Have you got a running provider which you know the address of?</Typography>
+                    <Box marginTop={2}>
+                        <Button variant="contained" size="large" onClick={handleYesClick} style={{ margin: '10px' }}>
+                            Yes
+                        </Button>
+                        <Button variant="contained" size="large" onClick={handleNoClick} style={{ margin: '10px' }}>
+                            No
+                        </Button>
+                    </Box>
+                </>
+            )}
+
+            {isFormVisible && (
+                <form onSubmit={handleSubmit}>
+                    <Box>
+                        <Select value={state.network} onChange={handleNetworkChange}>
+                            <MenuItem value="rococo">Rococo</MenuItem>
+                        </Select>
+                        <TextField
+                            label="Provider URL"
+                            name="providerUrl"
+                            value={state.providerUrl}
+                            onChange={handleInputChange}
+                        />
+                        <Button type="submit">Select Provider URL</Button>
+                    </Box>
+                </form>
+            )}
+
+            <Dialog open={isDialogVisible} onClose={handleDialogClose}>
+                <Typography padding="2rem">
+                    Before using this GUI, you&apos;ll need to get a provider running. Follow the documentation outlined
+                    here https://github.com/prosopo/captcha
+                </Typography>
+            </Dialog>
+        </Box>
     )
 }
 

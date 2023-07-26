@@ -1,14 +1,14 @@
 'use client'
 
 import { AppBar, Box, Toolbar, Typography } from '@mui/material'
+import { useGlobalState } from '../contexts/GlobalContext'
 import AccountPicker from './account-picker'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
 const TopBar = () => {
-    const connectedEndpoint = 'ws://localhost:9944' // Replace with real data
-    const connectedAccount = '5EjTA28bKSbKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV' // Replace with real data
+    const { providerDetails } = useGlobalState()
 
     return (
         <AppBar position="static">
@@ -19,9 +19,11 @@ const TopBar = () => {
                     </Link>
                 </Box>
                 <AccountPicker />
-                <Typography variant="body1">Endpoint: {connectedEndpoint}</Typography>
+                <Typography variant="body1">
+                    Provider URL: {providerDetails.profile.summary?.url ?? 'Not Selected'}
+                </Typography>
                 <Box mx={2} />
-                <Typography variant="body1">Account: {connectedAccount}</Typography>
+                <Typography variant="body1">Account: {providerDetails.currentAccount ?? 'Not Selected'}</Typography>
             </Toolbar>
         </AppBar>
     )
