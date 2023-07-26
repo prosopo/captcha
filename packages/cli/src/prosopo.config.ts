@@ -37,7 +37,7 @@ export default (): ProsopoConfig => ({
     },
     networks: {
         development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL || 'http://localhost:9944', // TODO accept array of endpoints. WsProvider takes array and has failover.
+            endpoint: process.env.SUBSTRATE_NODE_URL || 'ws://localhost:9944', // TODO accept array of endpoints. WsProvider takes array and has failover.
             contract: {
                 address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
                 name: 'prosopo',

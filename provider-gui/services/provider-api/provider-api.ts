@@ -1,4 +1,15 @@
 import { ProviderApi } from '@prosopo/api'
+import axios from 'axios'
+
+async function getProviderDetails() {
+    try {
+        const response = await axios.get('http://localhost:9229/v1/prosopo/provider/details')
+        console.log(response.data)
+        return response.data
+    } catch (error) {
+        console.error(`Error: ${error}`)
+    }
+}
 
 export const getProviderApi = (providerUrl: string, currentAccount: string) => {
     const network = {
