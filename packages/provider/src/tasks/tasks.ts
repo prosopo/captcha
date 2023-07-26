@@ -23,6 +23,7 @@ import {
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
+    DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
     Provider,
@@ -42,14 +43,13 @@ import {
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Header, SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getBlockNumber } from '@prosopo/contract'
+import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 import { SubmittableResult } from '@polkadot/api'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { shuffleArray } from '../util'
-import { wrapQuery } from '@prosopo/contract'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -514,5 +514,11 @@ export class Tasks {
     /* Returns public details of provider */
     async getProviderDetails(): Promise<Provider> {
         return await wrapQuery(this.contract.query.getProvider, this.contract.query)(this.contract.pair.address)
+    }
+
+    /** Get the dataset from the databse */
+
+    async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
+        return await this.db.getDataset(datasetId)
     }
 }

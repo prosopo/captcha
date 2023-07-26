@@ -21,7 +21,7 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { cwd } from 'process'
 import { encodeStringAddress } from '@prosopo/provider'
-import { loadJSONFile } from './files'
+import { loadJSONFile, writeJSONFile } from './files'
 import { stringToU8a } from '@polkadot/util'
 import { wrapQuery } from '@prosopo/contract'
 import parser from 'cron-parser'
@@ -315,6 +315,41 @@ export function processArgs(args, env: ProviderEnvironment) {
                 }
             },
             [validateAddress]
+        )
+        .command(
+            'provider_dataset',
+            'Exports a dataset from the provider database',
+            (yargs) =>
+                yargs
+                    .option('dataset-id', {
+                        type: 'string',
+                        demand: false,
+                        desc: 'The dataset ID to export',
+                    })
+                    .option('file', {
+                        type: 'string',
+                        demand: true,
+                        desc: 'The file path to export the dataset to',
+                    }),
+            async (argv) => {
+                try {
+                    let datasetId = argv.datasetId
+                    if (datasetId === undefined) {
+                        const providerAddress = env.config.account.address
+                        const provider = (await tasks.contract.query.getProvider(providerAddress)).value
+                            .unwrap()
+                            .unwrap()
+                        logger.info(`Getting dataset ID from provider ${providerAddress}`)
+                        datasetId = provider.datasetId.toString()
+                    }
+                    // get the dataset from the provider database
+                    const result = await tasks.getProviderDataset(datasetId)
+                    // export the result to file
+                    await writeJSONFile(argv.file, result)
+                } catch (err) {
+                    logger.error(err)
+                }
+            }
         )
         .command(
             'dapp_details',
