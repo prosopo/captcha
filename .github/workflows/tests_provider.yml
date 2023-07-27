@@ -94,6 +94,8 @@ jobs:
           PACKAGES_HASH=$(git ls-files | git hash-object --stdin)
           npm run lint:fix
           NEW_PACKAGES_HASH=$(git ls-files | git hash-object --stdin)
+          echo "PACKAGES_HASH: $PACKAGES_HASH"
+          echo "NEW_PACKAGES_HASH: $NEW_PACKAGES_HASH"
           if [ "$PACKAGES_HASH" != "$NEW_PACKAGES_HASH" ]; then
             echo "Linter failed"
             exit 1
