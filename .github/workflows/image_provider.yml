@@ -35,7 +35,6 @@ jobs:
         run: |
           cd captcha
           echo "PROVIDER_IMAGE_VERSION=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
-          echo "${{ env.PROVIDER_IMAGE_VERSION }}"
 
       # npm install
       - name: Npm install
@@ -60,8 +59,9 @@ jobs:
       # create the provider image
       - name: Build provider image
         run: |
+          echo "Building Image Version ${{ env.PROVIDER_IMAGE_VERSION }}"
           cd captcha
-          TAG=${{ env.PROVIDER_IMAGE_VERSION }} docker compose --file ./docker/docker-compose.provider.yml build --progress=plain
+          docker build -f ./docker/images/provider.dockerfile . -t prosopo/provider:${{ env.PROVIDER_IMAGE_VERSION }}
 
       # push the provider image to docker hub, if the push is to main
       - name: Push provider image to docker hub
