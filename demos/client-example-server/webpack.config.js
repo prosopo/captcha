@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { loadEnv } = require('@prosopo/cli')
 const { logger } = require('@prosopo/common')
 const path = require('path')
