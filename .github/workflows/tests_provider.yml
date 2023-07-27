@@ -3,6 +3,10 @@ name: Provider Tests
 on:
   pull_request:
     branches: [ main ]
+    paths:
+      - '**.ts'
+      - '**.js'
+      - '.github/workflows/tests_provider.yml'
 
 env:
   CARGO_TERM_COLOR: always
