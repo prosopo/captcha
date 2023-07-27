@@ -54,7 +54,8 @@ jobs:
       - name: Build cli production bundle
         run: |
           cd captcha
-          npm run build:cli:prod
+          cp ./dev/env.rococo ./packages/cli/.env.rococo
+          NODE_ENV=rococo npm run -w @prosopo/cli build:webpack:prod
 
       # create the provider image
       - name: Build provider image
