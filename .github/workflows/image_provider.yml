@@ -1,13 +1,16 @@
-name: Rust
+name: Provider Docker Image
 
-#  1. on push to main
 on:
   push:
     branches:
       - 'main'
-      - '307-test-restricted-provider-workflow'
     paths:
       - 'packages/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'packages/**'
+      - '.github/workflows/image_provider.yml'
 
 env:
   CARGO_TERM_COLOR: always
@@ -31,6 +34,8 @@ jobs:
         id: get_provider_image_version
         run: |
           echo "::set-output name=provider_image_version::$(cat package.json | jq -r '.version')"
+
+
 
       # npm install
       - name: Npm install
@@ -57,8 +62,9 @@ jobs:
           cd captcha
           TAG=v{{ steps.get_provider_image_version.outputs.provider_image_version }} docker compose --file ./docker/docker-compose.provider.yml build --progress=plain
 
-      # push the provider image to docker hub
+      # push the provider image to docker hub, if the push is to main
       - name: Push provider image to docker hub
         run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then exit 0; fi
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           docker push prosopo/provider:{{ steps.get_provider_image_version.outputs.provider_image_version }}
