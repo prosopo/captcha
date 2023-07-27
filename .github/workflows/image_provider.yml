@@ -45,7 +45,7 @@ jobs:
       - name: Check provider image version
         id: check_provider_image_version
         run: |
-          echo "LATEST_PROVIDER_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
+          echo "PROVIDER_IMAGE_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
           echo "LATEST_PROVIDER_VERSION=${{ env.LATEST_PROVIDER_VERSION }}"
           if [ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]; then
               echo "Provider image version is not greater than the latest npm version. Please update the provider image version in the root package.json"
