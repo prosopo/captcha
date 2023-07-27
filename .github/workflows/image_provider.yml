@@ -40,7 +40,7 @@ jobs:
       # npm install
       - name: Npm install
         run: |
-          cd protocol/dev
+          cd captcha
           npm install
 
       # build the packages
