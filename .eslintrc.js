@@ -42,4 +42,5 @@ module.exports = {
         ],
         'prettier/prettier': ['error'],
     },
+    ignorePatterns: ['**/artifacts/*', '**/dist/*', 'demos/**/scripts/*', 'demos/**/next.config.js', '**/*bundle*.js'],
 }
