@@ -33,7 +33,7 @@ jobs:
       - name: Get provider image version
         id: get_provider_image_version
         run: |
-          echo "::set-output name=provider_image_version::$(cat package.json | jq -r '.version')"
+          echo "{provider_image_version}=$(cat package.json | jq -r '.version')" >> $GITHUB_OUTPUT
 
 
 
