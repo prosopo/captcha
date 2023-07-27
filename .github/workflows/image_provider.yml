@@ -51,7 +51,6 @@ jobs:
       - name: Check provider image version
         id: check_provider_image_version
         run: |
-          echo "PROVIDER_IMAGE_VERSION=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
           echo "LATEST_PROVIDER_VERSION=$(npm view @prosopo/provider version)" >> $GITHUB_ENV
           echo "PROVIDER_IMAGE_VERSION=$PROVIDER_IMAGE_VERSION"
           echo "LATEST_PROVIDER_VERSION=$LATEST_PROVIDER_VERSION"
