@@ -21,7 +21,7 @@ const moduleDirs = [
     path.resolve(__dirname, '../procaptcha-react/node_modules'),
 ]
 
-console.log(`Env is ${process.env.NODE_ENV}`)
+log.info(`Env is ${process.env.NODE_ENV}`)
 
 const allowList = [
     '@emotion/cache',
@@ -98,6 +98,14 @@ log.info('externalsRegex', externalsRegex)
 
 loadEnv()
 
+const definedEnv = {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
+    'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
+}
+
+log.info('Building with env vars', definedEnv)
+
 module.exports = (env, argv) => {
     const libraryName = 'provider_cli_bundle'
     return {
@@ -162,11 +170,7 @@ module.exports = (env, argv) => {
 
         plugins: [
             //new BundleAnalyzerPlugin(),
-            new webpack.DefinePlugin({
-                'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-                'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
-                'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-            }),
+            new webpack.DefinePlugin(definedEnv),
             // new webpack.optimize.SplitChunksPlugin(),
             new CompressionPlugin(),
             new MiniCssExtractPlugin({
