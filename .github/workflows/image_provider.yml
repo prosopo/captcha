@@ -18,7 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checkout the repo
-      - uses: actions/checkout@v3
+      - name: Clone captcha
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          repository: prosopo/captcha
+          path: captcha
+          submodules: recursive
 
       # Get the version of the provider image from the version of the root package.json
       - name: Get provider image version
