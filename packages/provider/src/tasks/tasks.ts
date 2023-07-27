@@ -26,6 +26,7 @@ import {
     DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
+    ProsopoConfig,
     Provider,
     ProviderRegistered,
     RandomProvider,
@@ -65,6 +66,8 @@ export class Tasks {
 
     logger: Logger
 
+    config: ProsopoConfig
+
     constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {
             throw new ProsopoEnvError(
@@ -74,7 +77,7 @@ export class Tasks {
                 { contractAddress: env.contractAddress }
             )
         }
-
+        this.config = env.config
         this.contract = env.contractInterface
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
@@ -89,6 +92,21 @@ export class Tasks {
     }
 
     async providerSetDataset(datasetRaw: DatasetRaw): Promise<SubmittableResult | undefined> {
+        // check that the number of captchas contained within dataset.captchas is greater than or equal to the total
+        // number of captchas that must be served
+        if (datasetRaw.captchas.length < this.config.captchas.solved.count + this.config.captchas.unsolved.count) {
+            throw new ProsopoEnvError('DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+        }
+
+        // check that the number of solutions contained within dataset.captchas is greater than or equal to the number
+        // of solved captchas that must be served
+        const solutions = datasetRaw.captchas
+            .map((captcha): number => (captcha.solution ? 1 : 0))
+            .reduce((partialSum, b) => partialSum + b, 0)
+        if (solutions < this.config.captchas.solved.count) {
+            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+        }
+
         const dataset = await buildDataset(datasetRaw)
         if (!dataset.datasetId || !dataset.datasetContentId) {
             throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerSetDataset.name)

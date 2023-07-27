@@ -52,7 +52,9 @@
         "PARSE_ERROR": "Error parsing dataset",
         "HASH_ERROR": "Error hashing dataset",
         "INVALID_DATASET_ID": "Invalid dataset id",
-        "DATASET_ID_UNDEFINED": "Dataset id undefined"
+        "DATASET_ID_UNDEFINED": "Dataset id undefined",
+        "CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Number of captchas in dataset is less than configured number of captchas",
+        "SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Number of solutions in dataset is less than configured number of solutions"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",
