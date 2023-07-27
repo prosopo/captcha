@@ -90,10 +90,11 @@ jobs:
       # Checks if the git hash of packages is the same after running linting
       - name: Linter
         run: |
-          PACKAGES_HASH=$(git ls-files -s somedirectory | git hash-object --stdin)
+          PACKAGES_HASH=$(git ls-files -s captcha | git hash-object --stdin)
           cd captcha
           npm run lint:fix
-          NEW_PACKAGES_HASH=$(git ls-files -s somedirectory | git hash-object --stdin)
+          cd ..
+          NEW_PACKAGES_HASH=$(git ls-files -s captcha | git hash-object --stdin)
           if [ "$PACKAGES_HASH" != "$NEW_PACKAGES_HASH" ]; then
             echo "Linter failed"
             exit 1
