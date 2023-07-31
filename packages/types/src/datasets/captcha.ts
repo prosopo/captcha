@@ -31,6 +31,7 @@ export type HashedSolution = string
 export type Item = z.infer<typeof CaptchaItemSchema>
 export type HashedItem = z.infer<typeof HashedCaptchaItemSchema>
 export type LabelledItem = z.infer<typeof LabelledItemSchema>
+export type Data = z.infer<typeof DataSchema>
 
 export interface Captchas {
     captchas: CaptchaWithoutId[]
@@ -121,6 +122,10 @@ export const LabelledItemSchema = HashedCaptchaItemSchema.extend({
     label: z.string(),
 })
 
+export const MaybeLabelledHashedItemSchema = HashedCaptchaItemSchema.extend({
+    label: z.string().optional(),
+})
+
 export const SelectAllCaptchaSchemaRaw = CaptchaSchema.extend({
     items: z.array(CaptchaItemSchema),
     target: z.string(),
@@ -141,3 +146,7 @@ export const CaptchaSolutionSchema = z.object({
 })
 
 export const CaptchaSolutionArraySchema = z.array(CaptchaSolutionSchema)
+
+export const DataSchema = z.object({
+    items: z.array(MaybeLabelledHashedItemSchema),
+})
