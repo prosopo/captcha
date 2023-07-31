@@ -1,6 +1,6 @@
 import { ArgumentsCamelCase, Argv } from 'yargs'
 import { argsSchema } from './args.js'
-import scale from './get.js'
+import get from './get.js'
 
 export default {
     command: 'get',
@@ -13,6 +13,6 @@ export default {
         })
     },
     handler: async (argv: ArgumentsCamelCase) => {
-        await scale(argsSchema.parse(argv))
+        await get(argsSchema.parse(argv))
     },
 }
