@@ -9,8 +9,8 @@ const path = require('path')
 const { JsonAccessOptimizer } = require('webpack-json-access-optimizer')
 const { ProvidePlugin } = require('webpack')
 const { loadEnv } = require('@prosopo/cli')
-const { logger } = require('@prosopo/common')
-const log = logger(`Info`, `webpack.config.js`)
+const { getLogger } = require('@prosopo/common')
+const log = getLogger(`Info`, `webpack.config.js`)
 const moduleDirs = [
     path.resolve(__dirname, 'node_modules'),
     path.resolve(__dirname, '../../node_modules'),
