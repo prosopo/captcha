@@ -213,7 +213,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         try {
             await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(dataset)))
         } catch (e) {
-            e.message.should.match('Number of captchas in dataset is less than configured number of captchas')
+            expect(e).to.match(/Number of captchas in dataset is less than configured number of captchas/)
         }
     })
 
@@ -231,7 +231,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         try {
             await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(dataset)))
         } catch (e) {
-            e.message.should.equal('Number of solutions in dataset is less than configured number of solutions')
+            expect(e).to.match(/Number of solutions in dataset is less than configured number of solutions/)
         }
     })
 
@@ -240,12 +240,11 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
         const tasks = await getSignedTasks(env, providerAccount)
 
-        const datasetPromise = tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
-
-        datasetPromise.catch((e) => {
-            console.log(e)
-            e.message.should.match('/ProviderInactive/')
-        })
+        try {
+            await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
+        } catch (e) {
+            expect(e).to.match(/ProviderInactive/)
+        }
     })
 
     it('Provider approve', async (): Promise<void> => {
