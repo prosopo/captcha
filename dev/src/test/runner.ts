@@ -81,6 +81,8 @@ export async function findTestFiles(logger: Logger): Promise<string[]> {
             '../../**/node_modules/**',
             '../node_modules/**',
             '../../node_modules/**',
+            '../../**/provider-gui/**',
+            '../**/provider-gui/**',
         ],
     })
 }
