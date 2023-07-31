@@ -6,7 +6,7 @@ import fs from 'fs'
 export default async (args: Args, loggerOpt?: Logger) => {
     const logger = loggerOpt || getLoggerDefault()
 
-    logger.log(args, 'getting...')
+    logger.debug(args, 'getting...')
 
     const traverse = async (data: JSON) => {
         if (data instanceof Array) {

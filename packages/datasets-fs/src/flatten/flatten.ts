@@ -8,7 +8,7 @@ import fs from 'fs'
 export default async (args: Args, logger?: Logger) => {
     logger = logger || getLoggerDefault()
 
-    logger.info(args, 'flattening...')
+    logger.debug(args, 'flattening...')
 
     const dataDir: string = args.data
     if (!fs.existsSync(dataDir)) {

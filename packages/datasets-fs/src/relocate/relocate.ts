@@ -4,7 +4,7 @@ import fs from 'fs'
 
 export default async (args: Args, logger?: Logger) => {
     logger = logger || getLoggerDefault()
-    logger.log(args, 'relocating...')
+    logger.debug(args, 'relocating...')
 
     const replace = (data: unknown, from: string, to: string) => {
         if (Array.isArray(data)) {

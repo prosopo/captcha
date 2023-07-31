@@ -9,7 +9,7 @@ import sharp from 'sharp'
 export default async (args: Args, logger?: Logger) => {
     logger = logger || getLoggerDefault()
 
-    logger.log(args, 'scaling...')
+    logger.debug(args, 'scaling...')
 
     const mapFile: string = args.data
     if (!fs.existsSync(mapFile)) {

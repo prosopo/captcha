@@ -6,7 +6,7 @@ import fs from 'fs'
 export default async (args: Args, logger?: Logger) => {
     logger = logger || getLoggerDefault()
 
-    logger.log(args, 'reading labels...')
+    logger.debug(args, 'reading labels...')
 
     const file = args.data
     if (!fs.existsSync(file)) {

@@ -20,7 +20,7 @@ import fs from 'fs'
 export default async (args: Args, logger?: Logger) => {
     logger = logger || getLoggerDefault()
 
-    logger.log(args, 'generating...')
+    logger.debug(args, 'generating...')
 
     const outFile: string = args.out
     const overwrite = args.overwrite || false
@@ -93,7 +93,7 @@ export default async (args: Args, logger?: Logger) => {
     // generate n solved captchas
     const solvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < solved; i++) {
-        logger.log(`generating solved captcha ${i + 1} of ${solved}`)
+        logger.info(`generating solved captcha ${i + 1} of ${solved}`)
 
         if (targets.length <= 1) {
             throw new ProsopoEnvError(
@@ -171,7 +171,7 @@ export default async (args: Args, logger?: Logger) => {
     // generate n unsolved captchas
     const unsolvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < unsolved; i++) {
-        logger.log(`generating unsolved captcha ${i + 1} of ${unsolved}`)
+        logger.info(`generating unsolved captcha ${i + 1} of ${unsolved}`)
         if (unlabelled.length <= size) {
             throw new ProsopoEnvError(
                 new Error(`unlabelled map file does not contain enough data: ${unlabelledMapFile}`),

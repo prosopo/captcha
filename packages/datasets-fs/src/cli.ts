@@ -1,8 +1,5 @@
-// Take a set of data and generate a bunch of captchas
-
 import { LogLevel, getLogger } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
-import { lodash } from '@prosopo/util'
 import flatten from './flatten/cli'
 import generate from './generate/cli'
 import get from './get/cli'
@@ -11,18 +8,26 @@ import relocate from './relocate/cli'
 import scale from './scale/cli'
 import yargs from 'yargs'
 
-const _ = lodash()
 const logger = getLogger(LogLevel.Info, `${__dirname}/${__filename}`)
 
 const main = async () => {
     await yargs(hideBin(process.argv))
         .help()
-        .command(generate)
-        .command(flatten)
-        .command(scale)
-        .command(relocate)
-        .command(get)
-        .command(labels)
+        .option('log-level', {
+            type: 'string',
+            choices: Object.values(LogLevel),
+            default: LogLevel.Info,
+            description: 'The log level',
+        })
+        .middleware((argv) => {
+            logger.setLogLevel(argv.logLevel as unknown as LogLevel)
+        })
+        .command(generate({ logger }))
+        .command(flatten({ logger }))
+        .command(scale({ logger }))
+        .command(relocate({ logger }))
+        .command(get({ logger }))
+        .command(labels({ logger }))
         .strictCommands()
         .showHelpOnFail(false, 'Specify --help for available options')
         .fail(false)
@@ -33,7 +38,7 @@ const main = async () => {
 if (typeof require !== 'undefined' && require.main === module) {
     main()
         .then(() => {
-            logger.log('done')
+            logger.debug('done')
             process.exit(0)
         })
         .catch((err) => {

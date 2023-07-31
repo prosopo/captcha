@@ -20,7 +20,7 @@ import fs from 'fs'
 export default async (args: Args, logger?: Logger) => {
     logger = logger || getLoggerDefault()
 
-    logger.log(args, 'generating...')
+    logger.debug(args, 'generating...')
 
     const outFile: string = args.out
     const overwrite = args.overwrite || false
@@ -94,7 +94,7 @@ export default async (args: Args, logger?: Logger) => {
     // generate n captchas
     const captchas: CaptchaWithoutId[] = []
     for (let i = 0; i < count; i++) {
-        logger.log(`generating captcha ${i + 1} of ${count}`)
+        logger.info(`generating captcha ${i + 1} of ${count}`)
 
         if (targets.length <= 1) {
             throw new ProsopoEnvError(
