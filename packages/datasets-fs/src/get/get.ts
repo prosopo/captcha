@@ -1,4 +1,5 @@
 import { Args } from './args'
+import { ProsopoEnvError } from '@prosopo/common'
 import { consola } from 'consola'
 import fetch from 'node-fetch'
 import fs from 'fs'
@@ -8,7 +9,7 @@ export default async (args: Args) => {
 
     const file = args.data
     if (!fs.existsSync(file)) {
-        throw new Error(`file does not exist: ${file}`)
+        throw new ProsopoEnvError(new Error(`file does not exist: ${file}`), 'FS.FILE_NOT_FOUND')
     }
 
     // read the map file

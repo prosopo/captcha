@@ -1,5 +1,6 @@
 import { Args } from './args'
 import { CaptchaItemTypes, LabelledItem } from '@prosopo/types'
+import { ProsopoEnvError } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
 import { consola } from 'consola'
 import { u8aToHex } from '@polkadot/util'
@@ -10,12 +11,15 @@ export default async (args: Args) => {
 
     const dataDir: string = args.data
     if (!fs.existsSync(dataDir)) {
-        throw new Error(`data directory does not exist: ${dataDir}`)
+        throw new ProsopoEnvError(new Error(`data directory does not exist: ${dataDir}`), 'FS.DIRECTORY_NOT_FOUND')
     }
     const outDir: string = args.out
     const overwrite = args.overwrite || false
     if (!overwrite && fs.existsSync(outDir)) {
-        throw new Error(`output directory already exists: ${outDir}`)
+        throw new ProsopoEnvError(
+            new Error(`output directory already exists: ${outDir}`),
+            'FS.DIRECTORY_ALREADY_EXISTS'
+        )
     }
 
     // find the labels (these should be subdirectories of the data directory)

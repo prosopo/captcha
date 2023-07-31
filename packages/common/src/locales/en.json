@@ -24,7 +24,7 @@
         "CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}",
         "ENVIRONMENT_NOT_READY": "Environment not ready",
         "INVALID_SIGNATURE": "Invalid signature",
-        "PAIR_TYPE_UNDEFINED" : "Pair type undefined"
+        "PAIR_TYPE_UNDEFINED": "Pair type undefined"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Invalid contract method",
@@ -52,7 +52,9 @@
         "PARSE_ERROR": "Error parsing dataset",
         "HASH_ERROR": "Error hashing dataset",
         "INVALID_DATASET_ID": "Invalid dataset id",
-        "DATASET_ID_UNDEFINED": "Dataset id undefined"
+        "DATASET_ID_UNDEFINED": "Dataset id undefined",
+        "NOT_ENOUGH_LABELS": "Not enough labels",
+        "NOT_ENOUGH_IMAGES": "Not enough images"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",
@@ -113,5 +115,11 @@
         "ACCOUNT_TYPE_MISSING": "{{accountType}} not created by databasePopulator",
         "FUNDING_FAILED": "Funding failed",
         "MISSING_PROVIDER_PAIR": "Missing provider pair"
+    },
+    "FS": {
+        "DIRECTORY_NOT_FOUND": "Directory not found",
+        "FILE_NOT_FOUND": "File not found",
+        "FILE_ALREADY_EXISTS": "File already exists",
+        "DIRECTORY_ALREADY_EXISTS": "Directory already exists"
     }
 }

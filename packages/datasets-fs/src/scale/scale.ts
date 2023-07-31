@@ -1,5 +1,6 @@
 import { Args } from './args'
 import { CaptchaItemSchema } from '@prosopo/types'
+import { ProsopoEnvError } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
 import { consola } from 'consola'
 import { u8aToHex } from '@polkadot/util'
@@ -24,12 +25,12 @@ export default async (args: Args) => {
 
     const mapFile: string = args.images
     if (!fs.existsSync(mapFile)) {
-        throw new Error(`Map file does not exist: ${mapFile}`)
+        throw new ProsopoEnvError(new Error(`Map file does not exist: ${mapFile}`), 'FS.FILE_NOT_FOUND')
     }
     const outDir: string = args.out
     const overwrite = args.overwrite || false
     if (!overwrite && fs.existsSync(outDir)) {
-        throw new Error(`Output directory already exists: ${outDir}`)
+        throw new ProsopoEnvError(new Error(`Output directory already exists: ${outDir}`), 'FS.FILE_NOT_FOUND')
     }
 
     // create the output directory

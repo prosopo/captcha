@@ -8,6 +8,7 @@ import {
     LabelledItemSchema,
     RawSolution,
 } from '@prosopo/types'
+import { ProsopoEnvError } from '@prosopo/common'
 import { checkDuplicates } from '../util'
 import { consola } from 'consola'
 import { lodash, setSeedGlobal } from '@prosopo/util'
@@ -30,15 +31,21 @@ export default async (args: Args) => {
     const outFile: string = args.out
     const overwrite = args.overwrite || false
     if (!overwrite && fs.existsSync(outFile)) {
-        throw new Error(`Output file already exists: ${outFile}`)
+        throw new ProsopoEnvError(new Error(`Output file already exists: ${outFile}`), 'FS.FILE_ALREADY_EXISTS')
     }
     const labelledMapFile: string | undefined = args.labelled
     if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
-        throw new Error(`Labelled map file does not exist: ${labelledMapFile}`)
+        throw new ProsopoEnvError(
+            new Error(`Labelled map file does not exist: ${labelledMapFile}`),
+            'FS.FILE_NOT_FOUND'
+        )
     }
     const unlabelledMapFile: string | undefined = args.unlabelled
     if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
-        throw new Error(`Unlabelled map file does not exist: ${unlabelledMapFile}`)
+        throw new ProsopoEnvError(
+            new Error(`Unlabelled map file does not exist: ${unlabelledMapFile}`),
+            'FS.FILE_NOT_FOUND'
+        )
     }
     const labelsFile: string | undefined = args.labels
     const seed: number = args.seed || 0
@@ -107,7 +114,10 @@ export default async (args: Args) => {
         consola.log(`generating captcha ${i + 1} of ${count}`)
 
         if (targets.length <= 1) {
-            throw new Error(`not enough different labels in labelled data: ${labelledMapFile}`)
+            throw new ProsopoEnvError(
+                new Error(`not enough different labels in labelled data: ${labelledMapFile}`),
+                'DATASET.NOT_ENOUGH_LABELS'
+            )
         }
 
         // uniformly sample targets
@@ -125,13 +135,19 @@ export default async (args: Args) => {
         const notTargetItems: Item[] = notTargets.map((notTarget) => labelToImages[notTarget]).flat()
 
         if (nUnlabelled > unlabelled.length) {
-            throw new Error(`not enough unlabelled data`)
+            throw new ProsopoEnvError(new Error(`not enough unlabelled data`), 'DATASET.NOT_ENOUGH_IMAGES')
         }
         if (nCorrect > targetItems.length) {
-            throw new Error(`not enough images for target (${target})`)
+            throw new ProsopoEnvError(
+                new Error(`not enough images for target (${target})`),
+                'DATASET.NOT_ENOUGH_IMAGES'
+            )
         }
         if (nIncorrect > notTargetItems.length) {
-            throw new Error(`not enough non-matching images for target (${target})`)
+            throw new ProsopoEnvError(
+                new Error(`not enough non-matching images for target (${target})`),
+                'DATASET.NOT_ENOUGH_IMAGES'
+            )
         }
 
         // get the correct items
