@@ -202,6 +202,39 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
     })
 
+    it('Provider add dataset with too few captchas will fail', async (): Promise<void> => {
+        const providerAccount = await getUser(env, AccountKey.providersWithStake)
+
+        const tasks = await getSignedTasks(env, providerAccount)
+
+        // copy captchaData and remove all but one captcha
+        const dataset = { ...captchaData }
+        dataset.captchas = dataset.captchas.slice(0, 1)
+        try {
+            const datasetPromise = tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(dataset)))
+        } catch (e) {
+            e.message.should.match('Number of captchas in dataset is less than configured number of captchas')
+        }
+    })
+
+    it('Provider add dataset with too few solutions will fail', async (): Promise<void> => {
+        const providerAccount = await getUser(env, AccountKey.providersWithStake)
+
+        const tasks = await getSignedTasks(env, providerAccount)
+
+        const dataset = { ...captchaData }
+        // remove solution field from each captcha
+        dataset.captchas = dataset.captchas.map((captcha) => {
+            const { solution, ...rest } = captcha
+            return rest as any
+        })
+        try {
+            await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(dataset)))
+        } catch (e) {
+            e.message.should.equal('Number of solutions in dataset is less than configured number of solutions')
+        }
+    })
+
     it('Inactive Provider cannot add dataset', async (): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providers)
 
