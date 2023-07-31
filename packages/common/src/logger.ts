@@ -50,10 +50,14 @@ export function getLoggerDefault(): Logger {
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // automatically maps 0,1,2... to consola's log levels (which conveniently match... :O )
     const convertToLevel = (logLevel: LogLevel): ConsolaLogLevel => {
-        return ConsolaLogLevel[LogLevel[logLevel] as keyof typeof ConsolaLogLevel]
+        const a = LogLevel[logLevel]
+        const b = a as keyof typeof ConsolaLogLevel
+        return b as unknown as ConsolaLogLevel
     }
     const convertFromLevel = (logLevel: ConsolaLogLevel): LogLevel => {
-        return LogLevel[ConsolaLogLevel[logLevel] as keyof typeof LogLevel]
+        const a = ConsolaLogLevel[logLevel]
+        const b = a as keyof typeof LogLevel
+        return b as unknown as LogLevel
     }
     const logger = consola.create({ level: convertToLevel(logLevel) }).withScope(scope)
     return {
