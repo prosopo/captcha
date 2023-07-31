@@ -8,6 +8,7 @@ import {
     Item,
     LabelledDataSchema,
     LabelledItem,
+    LabelsContainerSchema,
     RawSolution,
 } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
@@ -16,7 +17,6 @@ import { consola } from 'consola'
 import { lodash, setSeedGlobal } from '@prosopo/util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
-import z from 'zod'
 
 export default async (args: Args) => {
     consola.log(args, 'generating...')
@@ -83,14 +83,7 @@ export default async (args: Args) => {
     // note that these can be different to the labels in the map file as the labelled data is independent of the unlabelled data in terms of labels
     const labels: string[] = []
     if (labelsFile && fs.existsSync(labelsFile)) {
-        labels.push(
-            ...[
-                ...z
-                    .string()
-                    .array()
-                    .parse(JSON.parse(fs.readFileSync(labelsFile, 'utf8'))),
-            ]
-        )
+        labels.push(...[...LabelsContainerSchema.parse(JSON.parse(fs.readFileSync(labelsFile, 'utf8'))).labels])
     } else {
         // else default to the labels in the labelled data
         labels.push(...[...targets])

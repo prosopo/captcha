@@ -34,6 +34,7 @@ export type LabelledItem = z.infer<typeof LabelledItemSchema>
 export type Data = z.infer<typeof DataSchema>
 export type LabelledData = z.infer<typeof LabelledDataSchema>
 export type CaptchasContainer = z.infer<typeof CaptchasContainerSchema>
+export type LabelsContainer = z.infer<typeof LabelsContainerSchema>
 
 export interface Captchas {
     captchas: CaptchaWithoutId[]
@@ -160,4 +161,8 @@ export const LabelledDataSchema = z.object({
 export const CaptchasContainerSchema = z.object({
     captchas: CaptchasSchema,
     format: z.nativeEnum(CaptchaTypes),
+})
+
+export const LabelsContainerSchema = z.object({
+    labels: z.array(z.string()),
 })
