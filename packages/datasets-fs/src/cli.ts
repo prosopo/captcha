@@ -6,6 +6,7 @@ import consola, { LogTypes } from 'consola'
 import flatten from './flatten/cli'
 import generate from './generate/cli'
 import get from './get/cli'
+import labels from './labels/cli'
 import relocate from './relocate/cli'
 import scale from './scale/cli'
 import yargs from 'yargs'
@@ -27,6 +28,7 @@ const main = async () => {
         .command(scale)
         .command(relocate)
         .command(get)
+        .command(labels)
         .strictCommands()
         .showHelpOnFail(false, 'Specify --help for available options')
         .fail(false)
