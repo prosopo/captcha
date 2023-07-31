@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { loadEnv } = require('@prosopo/cli')
-const { logger } = require('@prosopo/common')
+const { getLogger } = require('@prosopo/common')
 const path = require('path')
 const rootDir = path.resolve(__dirname, '.')
 const webpack = require('webpack')
 loadEnv(rootDir)
-const log = logger(process.env.LOG_LEVEL || 'info', 'webpack.config.js')
+const log = getLogger(process.env.LOG_LEVEL || 'info', 'webpack.config.js')
 const mode = process.env.NODE_ENV || 'development'
 log.info('REACT_APP_SUBSTRATE_NODE_URL:', process.env.REACT_APP_SUBSTRATE_NODE_URL)
 log.log('Mode:', mode)
