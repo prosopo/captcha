@@ -3,7 +3,7 @@
 import { z } from 'zod'
 
 export const argsSchema = z.object({
-    images: z.string(),
+    data: z.string(),
     out: z.string(),
     overwrite: z.boolean().optional(),
     size: z.number().optional(),

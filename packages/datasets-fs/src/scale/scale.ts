@@ -1,5 +1,5 @@
 import { Args } from './args'
-import { CaptchaItemSchema, Data, DataSchema, Item } from '@prosopo/types'
+import { Data, DataSchema, Item } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
 import { consola } from 'consola'
@@ -10,7 +10,7 @@ import sharp from 'sharp'
 export default async (args: Args) => {
     consola.log(args, 'scaling...')
 
-    const mapFile: string = args.images
+    const mapFile: string = args.data
     if (!fs.existsSync(mapFile)) {
         throw new ProsopoEnvError(new Error(`Map file does not exist: ${mapFile}`), 'FS.FILE_NOT_FOUND')
     }
@@ -25,7 +25,7 @@ export default async (args: Args) => {
     fs.mkdirSync(imgDir, { recursive: true })
 
     // read the map file
-    const inputItems: Item[] = CaptchaItemSchema.array().parse(JSON.parse(fs.readFileSync(mapFile, 'utf8')))
+    const inputItems: Item[] = DataSchema.parse(JSON.parse(fs.readFileSync(mapFile, 'utf8'))).items
 
     // for each item
     const outputItems: Item[] = []

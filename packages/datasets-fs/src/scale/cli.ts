@@ -7,7 +7,7 @@ export default {
     describe: 'Scale images down to a given size',
     builder: (yargs: Argv) => {
         return yargs
-            .option('images', {
+            .option('data', {
                 type: 'string',
                 demand: true,
                 description: 'JSON file containing a list of objects with (at least) a url',
