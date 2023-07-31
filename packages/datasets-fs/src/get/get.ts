@@ -46,6 +46,8 @@ const traverse = async (data: JSON) => {
                         consola.error(`GET ${url} ${err}`)
                     }
                 }
+            } else {
+                await traverse(data[key])
             }
         }
     }
