@@ -1,14 +1,14 @@
 import { Args } from './args'
 import {
-    CaptchaItemSchema,
     CaptchaTypes,
     CaptchaWithoutId,
     Captchas,
+    CaptchasContainerSchema,
+    DataSchema,
     Item,
+    LabelledDataSchema,
     LabelledItem,
-    LabelledItemSchema,
     RawSolution,
-    SelectAllCaptchaSchema,
 } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { checkDuplicates } from '../util'
@@ -63,14 +63,10 @@ export default async (args: Args) => {
     // if we focus on a single captcha round of 9 images, we must have at least 1 labelled correct image in the captcha for it to work, otherwise it's just a labelling phase, which normally isn't a problem but if we're treating these as tests for humanity too then we need some kind of test in there. (e.g. we abolish the labelled then unlabelled pattern of the challenge rounds in favour of mixing labelled and unlabelled data, but we then run a small chance of serving two completely unlabelled rounds if we don't set the min number of labelled images to 1 per captcha round)
     // load the map to get the labelled and unlabelled data
     const labelled: LabelledItem[] = labelledMapFile
-        ? LabelledItemSchema.passthrough()
-              .array()
-              .parse(JSON.parse(fs.readFileSync(labelledMapFile, 'utf8')))
+        ? LabelledDataSchema.parse(JSON.parse(fs.readFileSync(labelledMapFile, 'utf8'))).items
         : []
     const unlabelled: Item[] = unlabelledMapFile
-        ? CaptchaItemSchema.passthrough()
-              .array()
-              .parse(JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')))
+        ? DataSchema.parse(JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8'))).items
         : []
     // check for duplicates
     checkDuplicates(labelled, unlabelled, {
@@ -213,7 +209,7 @@ export default async (args: Args) => {
     }
 
     // verify the output
-    SelectAllCaptchaSchema.parse(output)
+    CaptchasContainerSchema.parse(output)
 
     fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
 }

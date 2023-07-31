@@ -1,14 +1,14 @@
 import { Args } from './args'
 import {
-    CaptchaItemSchema,
     CaptchaTypes,
     CaptchaWithoutId,
     Captchas,
+    CaptchasContainerSchema,
+    DataSchema,
     Item,
+    LabelledDataSchema,
     LabelledItem,
-    LabelledItemSchema,
     RawSolution,
-    SelectAllCaptchaSchema,
 } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { checkDuplicates } from '../util'
@@ -19,7 +19,6 @@ import fs from 'fs'
 import z from 'zod'
 
 export default async (args: Args) => {
-    consola.log('lvl', consola.level)
     consola.log(args, 'generating...')
 
     const outFile: string = args.out
@@ -59,14 +58,10 @@ export default async (args: Args) => {
 
     // load the map to get the labelled and unlabelled data
     const labelled: LabelledItem[] = labelledMapFile
-        ? LabelledItemSchema.passthrough()
-              .array()
-              .parse(JSON.parse(fs.readFileSync(labelledMapFile, 'utf8')))
+        ? LabelledDataSchema.parse(JSON.parse(fs.readFileSync(labelledMapFile, 'utf8'))).items
         : []
     const unlabelled: Item[] = unlabelledMapFile
-        ? CaptchaItemSchema.passthrough()
-              .array()
-              .parse(JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8')))
+        ? DataSchema.parse(JSON.parse(fs.readFileSync(unlabelledMapFile, 'utf8'))).items
         : []
 
     // check for duplicates
@@ -229,7 +224,7 @@ export default async (args: Args) => {
     }
 
     // verify the output
-    SelectAllCaptchaSchema.parse(output)
+    CaptchasContainerSchema.parse(output)
 
     fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
 }
