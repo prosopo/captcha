@@ -1,5 +1,6 @@
 // Take a set of data and generate a bunch of captchas
 
+import { LogLevel, getLogger } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import { lodash } from '@prosopo/util'
 import flatten from './flatten/cli'
@@ -11,6 +12,7 @@ import scale from './scale/cli'
 import yargs from 'yargs'
 
 const _ = lodash()
+const logger = getLogger(LogLevel.Info, `${__dirname}/${__filename}`)
 
 const main = async () => {
     await yargs(hideBin(process.argv))
@@ -31,11 +33,11 @@ const main = async () => {
 if (typeof require !== 'undefined' && require.main === module) {
     main()
         .then(() => {
-            consola.log('done')
+            logger.log('done')
             process.exit(0)
         })
         .catch((err) => {
-            consola.error('error:', err)
+            logger.error('error:', err)
             process.exit(1)
         })
 }

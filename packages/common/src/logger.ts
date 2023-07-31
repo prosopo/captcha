@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { lodash } from '@prosopo/util'
 import consola, { LogLevel as ConsolaLogLevel } from 'consola'
 
 export interface Logger {
@@ -69,4 +70,14 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
             return convertFromLevel(logger.level)
         },
     }
+}
+
+/**
+ * Get the log level from the passed value or from environment variables or a default of `info`.
+ * @param logTypeOption
+ */
+export function getLogLevel(logTypeOption?: string): LogLevel {
+    const _ = lodash()
+    const logType = _.capitalize(logTypeOption || process.env.LOG_LEVEL || 'info')
+    return LogLevel[logType as keyof typeof LogLevel]
 }

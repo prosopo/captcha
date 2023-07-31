@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { DatabaseTypes, EnvironmentTypesSchema, ProsopoConfigSchema } from '@prosopo/types'
-import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
-import { getLogLevel, loadEnv } from '@prosopo/cli'
+import { Logger, ProsopoEnvError, getLogLevel, getLogger } from '@prosopo/common'
 import { glob } from 'glob'
+import { loadEnv } from '@prosopo/cli'
 require('ts-mocha')
 import Mocha from 'mocha'
 loadEnv()

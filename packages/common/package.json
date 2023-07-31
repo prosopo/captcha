@@ -1,44 +1,43 @@
 {
-  "name": "@prosopo/common",
-  "version": "0.1.17",
-  "description": "Prosopo common library",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose",
-    "test": "mocha -r ts-node/register 'tests/**/*.ts'",
-    "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@polkadot/keyring": "12.3.2",
-    "@polkadot/util": "12.3.2",
-    "@polkadot/util-crypto": "12.3.2",
-    "@types/react": "^18.0.25",
-    "consola": "^2.15.3",
-    "dotenv": "^16.0.1",
-    "i18next": "^21.9.2",
-    "i18next-browser-languagedetector": "^6.1.5",
-    "i18next-http-backend": "^1.4.4",
-    "i18next-http-middleware": "^3.2.1",
-    "react-i18next": "^11.18.6"
-  },
-  "devDependencies": {
-    "typescript": "^4.9.4"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/prosopo/captcha.git"
-  },
-  "bugs": {
-    "url": "https://github.com/prosopo/captcha/issues"
-  },
-  "homepage": "https://github.com/prosopo/captcha#readme",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org"
-  },
-  "sideEffects": false
+    "name": "@prosopo/common",
+    "version": "0.1.17",
+    "description": "Prosopo common library",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "test": "mocha -r ts-node/register 'tests/**/*.ts'",
+        "lint": "npx eslint .",
+        "lint:fix": "npx eslint . --fix"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@polkadot/keyring": "12.3.2",
+        "@polkadot/util": "12.3.2",
+        "@polkadot/util-crypto": "12.3.2",
+        "@types/react": "^18.0.25",
+        "dotenv": "^16.0.1",
+        "i18next": "^21.9.2",
+        "i18next-browser-languagedetector": "^6.1.5",
+        "i18next-http-backend": "^1.4.4",
+        "i18next-http-middleware": "^3.2.1",
+        "react-i18next": "^11.18.6"
+    },
+    "devDependencies": {
+        "typescript": "^4.9.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/prosopo/captcha.git"
+    },
+    "bugs": {
+        "url": "https://github.com/prosopo/captcha/issues"
+    },
+    "homepage": "https://github.com/prosopo/captcha#readme",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    },
+    "sideEffects": false
 }

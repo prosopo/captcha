@@ -14,7 +14,7 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import { deployDapp, deployProtocol } from '../contract/deploy/index'
 import { exec } from '../util'
-import { getLogLevel } from '@prosopo/cli'
+import { getLogLevel } from '@prosopo/common'
 import { importContract } from '../contract'
 import { loadEnv } from '@prosopo/cli'
 import { runTests } from '../test/index'
