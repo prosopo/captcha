@@ -18,11 +18,7 @@ export default {
                 demand: true,
                 description: 'The new url to replace the old one with',
             })
-            .option('captchas', {
-                type: 'string',
-                description: 'The dataset JSON file containing the captchas with urls to replace',
-            })
-            .option('images', {
+            .option('data', {
                 type: 'string',
                 description: 'Path to the images JSON containing the urls of images to replace',
             })

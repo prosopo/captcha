@@ -5,7 +5,7 @@ import fs from 'fs'
 export default async (args: Args) => {
     consola.log(args, 'relocating...')
 
-    const file: string = args.images
+    const file: string = args.data
     consola.log(`relocating data in ${file} from ${args.from} to ${args.to}`)
     // read the file
     let data = JSON.parse(fs.readFileSync(file, 'utf8'))
@@ -29,6 +29,8 @@ const replace = (data: unknown, from: string, to: string) => {
                 if (value.startsWith(from)) {
                     obj[key] = to + value.slice(from.length)
                 }
+            } else {
+                obj[key] = replace(obj[key], from, to)
             }
         }
     }
