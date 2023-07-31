@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { loadEnv } = require('@prosopo/cli')
 const path = require('path')
 const webpack = require('webpack')
@@ -109,7 +110,7 @@ module.exports = (env, argv) => {
         externals: [
             {
                 'cli-progress': 'cli-progress',
-            }
-        ]
+            },
+        ],
     }
 }
