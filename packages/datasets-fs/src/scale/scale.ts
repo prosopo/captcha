@@ -1,14 +1,15 @@
 import { Args } from './args'
 import { Data, DataSchema, Item } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
-import { consola } from 'consola'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
 import sharp from 'sharp'
 
-export default async (args: Args) => {
-    consola.log(args, 'scaling...')
+export default async (args: Args, logger?: Logger) => {
+    logger = logger || getLoggerDefault()
+
+    logger.log(args, 'scaling...')
 
     const mapFile: string = args.data
     if (!fs.existsSync(mapFile)) {
@@ -30,7 +31,7 @@ export default async (args: Args) => {
     // for each item
     const outputItems: Item[] = []
     for (const inputItem of inputItems) {
-        consola.log(`scaling ${inputItem.data}`)
+        logger.log(`scaling ${inputItem.data}`)
         // read the file
         const img = fs.readFileSync(inputItem.data)
         // resize the image

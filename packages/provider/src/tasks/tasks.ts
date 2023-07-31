@@ -42,7 +42,7 @@ import {
 } from '@prosopo/datasets'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Header, SignedBlock } from '@polkadot/types/interfaces/runtime/index'
-import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
@@ -79,7 +79,7 @@ export class Tasks {
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
         this.captchaSolutionConfig = env.config.captchaSolutions
-        this.logger = logger(env.config.logLevel, 'Tasks')
+        this.logger = getLogger(env.config.logLevel, 'Tasks')
     }
 
     async providerSetDatasetFromFile(file: JSON): Promise<SubmittableResult | undefined> {

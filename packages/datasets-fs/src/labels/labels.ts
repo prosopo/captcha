@@ -1,11 +1,12 @@
 import { Args } from './args'
 import { LabelledDataSchema, LabelledItem } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
-import { consola } from 'consola'
+import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import fs from 'fs'
 
-export default async (args: Args) => {
-    consola.log(args, 'reading labels...')
+export default async (args: Args, logger?: Logger) => {
+    logger = logger || getLoggerDefault()
+
+    logger.log(args, 'reading labels...')
 
     const file = args.data
     if (!fs.existsSync(file)) {
@@ -22,5 +23,5 @@ export default async (args: Args) => {
     }
     const labelArray = Array.from(labels)
     labelArray.sort()
-    consola.log(JSON.stringify(labelArray, null, 4))
+    logger.log(JSON.stringify(labelArray, null, 4))
 }

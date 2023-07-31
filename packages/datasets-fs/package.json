@@ -19,7 +19,6 @@
         "@prosopo/types": "^0.1.16",
         "@prosopo/util": "^0.1.16",
         "bcrypt": "^5.1.0",
-        "consola": "^3.2.3",
         "fs": "^0.0.1-security",
         "lodash": "^4.17.21",
         "noble-hashes": "^0.3.1",

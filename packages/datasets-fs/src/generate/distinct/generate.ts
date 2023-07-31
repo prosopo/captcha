@@ -11,15 +11,16 @@ import {
     LabelsContainerSchema,
     RawSolution,
 } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import { checkDuplicates } from '../util'
-import { consola } from 'consola'
 import { lodash, setSeedGlobal } from '@prosopo/util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 
-export default async (args: Args) => {
-    consola.log(args, 'generating...')
+export default async (args: Args, logger?: Logger) => {
+    logger = logger || getLoggerDefault()
+
+    logger.log(args, 'generating...')
 
     const outFile: string = args.out
     const overwrite = args.overwrite || false
@@ -92,7 +93,7 @@ export default async (args: Args) => {
     // generate n solved captchas
     const solvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < solved; i++) {
-        consola.log(`generating solved captcha ${i + 1} of ${solved}`)
+        logger.log(`generating solved captcha ${i + 1} of ${solved}`)
 
         if (targets.length <= 1) {
             throw new ProsopoEnvError(
@@ -170,7 +171,7 @@ export default async (args: Args) => {
     // generate n unsolved captchas
     const unsolvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < unsolved; i++) {
-        consola.log(`generating unsolved captcha ${i + 1} of ${unsolved}`)
+        logger.log(`generating unsolved captcha ${i + 1} of ${unsolved}`)
         if (unlabelled.length <= size) {
             throw new ProsopoEnvError(
                 new Error(`unlabelled map file does not contain enough data: ${unlabelledMapFile}`),

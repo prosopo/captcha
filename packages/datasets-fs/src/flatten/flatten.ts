@@ -1,13 +1,14 @@
 import { Args } from './args'
 import { CaptchaItemTypes, Data, DataSchema, LabelledItem } from '@prosopo/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
-import { consola } from 'consola'
 import { u8aToHex } from '@polkadot/util'
 import fs from 'fs'
 
-export default async (args: Args) => {
-    consola.log(args, 'flattening...')
+export default async (args: Args, logger?: Logger) => {
+    logger = logger || getLoggerDefault()
+
+    logger.info(args, 'flattening...')
 
     const dataDir: string = args.data
     if (!fs.existsSync(dataDir)) {
@@ -39,7 +40,7 @@ export default async (args: Args) => {
         const images: string[] = fs.readdirSync(`${dataDir}/${label}`)
         // for each image
         for (const image of images) {
-            consola.log(`flattening ${label}/${image}`)
+            logger.log(`flattening ${label}/${image}`)
             // copy the image to the output directory
             const extension = image.split('.').pop()
             // read file to bytes
@@ -49,7 +50,7 @@ export default async (args: Args) => {
             const hex = u8aToHex(hash)
             const name = `${hex}.${extension}`
             if (fs.existsSync(`${imageDir}/${name}`)) {
-                consola.log(`duplicate image: ${label}/${image} -> ${name}`)
+                logger.log(`duplicate image: ${label}/${image} -> ${name}`)
             }
             fs.copyFileSync(`${dataDir}/${label}/${image}`, `${imageDir}/${name}`)
             const filePath = fs.realpathSync(`${imageDir}/${name}`)

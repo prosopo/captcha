@@ -12,8 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import consola, { LogLevel as ConsolaLogLevel } from 'consola'
+
 export type Logger = typeof consola
-export { ConsolaLogLevel as LogLevel }
-export function logger(level: ConsolaLogLevel, scope: string): Logger {
+export type LogLevel = ConsolaLogLevel
+export const LogLevel = ConsolaLogLevel
+
+// Create a new logger with the given level and scope
+export function getLogger(level: LogLevel, scope: string): Logger {
     return consola.create({ level }).withScope(scope)
+}
+
+// Get the default logger (i.e. the global logger)
+export function getLoggerDefault(): Logger {
+    return consola
 }
