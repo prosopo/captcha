@@ -1,24 +1,11 @@
 import { Args } from './args'
-import { CaptchaItemSchema } from '@prosopo/types'
+import { CaptchaItemSchema, Data, DataSchema, Item } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
 import { consola } from 'consola'
 import { u8aToHex } from '@polkadot/util'
-import { z } from 'zod'
 import fs from 'fs'
 import sharp from 'sharp'
-
-const inputItemSchema = CaptchaItemSchema.omit({
-    hash: true,
-    type: true,
-})
-const inputItemsSchema = inputItemSchema.passthrough().array()
-type InputItem = z.infer<typeof inputItemSchema>
-
-const outputItemSchema = CaptchaItemSchema.omit({
-    type: true,
-})
-type OutputItem = z.infer<typeof outputItemSchema>
 
 export default async (args: Args) => {
     consola.log(args, 'scaling...')
@@ -38,10 +25,10 @@ export default async (args: Args) => {
     fs.mkdirSync(imgDir, { recursive: true })
 
     // read the map file
-    const inputItems: InputItem[] = inputItemsSchema.parse(JSON.parse(fs.readFileSync(mapFile, 'utf8')))
+    const inputItems: Item[] = CaptchaItemSchema.array().parse(JSON.parse(fs.readFileSync(mapFile, 'utf8')))
 
     // for each item
-    const outputItems: OutputItem[] = []
+    const outputItems: Item[] = []
     for (const inputItem of inputItems) {
         consola.log(`scaling ${inputItem.data}`)
         // read the file
@@ -60,7 +47,7 @@ export default async (args: Args) => {
         fs.renameSync(tmpFilePath, finalFilePath)
 
         // add the item to the output
-        const outputItem: OutputItem = {
+        const outputItem: Item = {
             ...inputItem,
             hash: hex,
             data: fs.realpathSync(finalFilePath),
@@ -70,5 +57,13 @@ export default async (args: Args) => {
 
     // write the map file
     const outputMapFile = `${outDir}/map.json`
+
+    const data: Data = {
+        items: outputItems,
+    }
+
+    // verify the output
+    DataSchema.parse(data)
+
     fs.writeFileSync(outputMapFile, JSON.stringify(outputItems, null, 4))
 }

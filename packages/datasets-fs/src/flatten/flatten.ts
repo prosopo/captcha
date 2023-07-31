@@ -1,5 +1,5 @@
 import { Args } from './args'
-import { CaptchaItemTypes, LabelledItem } from '@prosopo/types'
+import { CaptchaItemTypes, Data, DataSchema, LabelledItem } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
 import { consola } from 'consola'
@@ -64,6 +64,13 @@ export default async (args: Args) => {
         }
     }
 
+    const data: Data = {
+        items,
+    }
+
+    // verify data
+    DataSchema.parse(data)
+
     // write map file
-    fs.writeFileSync(`${outDir}/images.json`, JSON.stringify(items, null, 4))
+    fs.writeFileSync(`${outDir}/images.json`, JSON.stringify(data, null, 4))
 }
