@@ -72,5 +72,5 @@ export default async (args: Args) => {
     DataSchema.parse(data)
 
     // write map file
-    fs.writeFileSync(`${outDir}/images.json`, JSON.stringify(data, null, 4))
+    fs.writeFileSync(`${outDir}/data.json`, JSON.stringify(data, null, 4))
 }
