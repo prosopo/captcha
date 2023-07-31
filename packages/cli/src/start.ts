@@ -71,17 +71,18 @@ function startFileSrv(port: number | string, locations: string[]) {
     }
 }
 
-async function start(nodeEnv: string) {
-    loadEnv()
+export async function start(env?: ProviderEnvironment) {
+    if (!env) {
+        loadEnv()
 
-    const ss58Format = getSs58Format()
-    const pairType = getPairType()
-    const secret = getSecret()
-    const config = getConfig()
-    const pair = await getPair(pairType, ss58Format, secret)
+        const ss58Format = getSs58Format()
+        const pairType = getPairType()
+        const secret = getSecret()
+        const config = getConfig()
+        const pair = await getPair(pairType, ss58Format, secret)
 
-    const env = new ProviderEnvironment(pair, config)
-
+        env = new ProviderEnvironment(pair, config)
+    }
     await env.isReady()
     startApi(env)
 
@@ -100,7 +101,7 @@ function stop() {
 }
 //if main process
 if (typeof require !== undefined && require.main === module) {
-    start(process.env.NODE_ENV || 'development').catch((error) => {
+    start().catch((error) => {
         console.error(error)
     })
 }

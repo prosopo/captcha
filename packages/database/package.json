@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/database",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Prosopo database plugins for provider",
   "main": "dist/index.js",
   "scripts": {
@@ -21,12 +21,12 @@
   },
   "homepage": "https://github.com/prosopo/captcha#readme",
   "dependencies": {
-    "@prosopo/common": "^0.1.16",
-    "@prosopo/types": "^0.1.16",
-    "@prosopo/types-database": "^0.1.16",
+    "@prosopo/common": "^0.1.17",
+    "@prosopo/types": "^0.1.17",
+    "@prosopo/types-database": "^0.1.17",
     "mongodb": "5.6.0",
     "mongodb-memory-server": "^8.7.2",
-    "mongoose": "^7.2.0",
+    "mongoose": "^7.3.3",
     "zod": "^3.17.9"
   },
   "devDependencies": {

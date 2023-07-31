@@ -1,12 +1,12 @@
 version: '3.8'
 services:
   provider:
-    image: prosopo/provider:v1.0.6
+    image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
     build:
       context: ..
       dockerfile: ./docker/images/provider.dockerfile
     env_file:
-      - ../.env.provider
+      - ../.env.rococo
     ports:
       - "9229:9229"
     tty: true
@@ -22,7 +22,7 @@ services:
     ports:
       - "27017:27017"
     env_file:
-      - ../.env.provider
+      - ../.env.rococo
     deploy:
       replicas: 1
       resources:

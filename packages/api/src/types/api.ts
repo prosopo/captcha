@@ -78,3 +78,7 @@ export interface ProsopoNetwork {
         name: string
     }
 }
+
+export interface ProviderRegistered {
+    status: 'Registered' | 'Unregistered'
+}

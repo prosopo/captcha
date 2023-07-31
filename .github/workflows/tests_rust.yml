@@ -5,6 +5,9 @@ on:
     branches:
       - 'develop'
       - 'main'
+    paths:
+      - 'protocol/**'
+      - '.github/workflows/rust.yml'
 
 env:
   CARGO_TERM_COLOR: always
@@ -65,7 +68,7 @@ jobs:
           npm run cli -- build --release --toolchain nightly --docker
           # take ownership of the build files so they can be cached
           npm run cli -- chown
-          
+
       # Do unit testing
       - name: Test contract
         run: |
@@ -94,7 +97,7 @@ jobs:
           do
               gh actions-cache delete $cacheKey -R $REPO --confirm
           done
-          
+
       # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
       - name: Save cargo build to cache
         uses: actions/cache/save@v3

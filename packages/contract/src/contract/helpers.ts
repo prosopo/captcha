@@ -76,7 +76,7 @@ export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): 
         let argVal = args[idx]
         // hash values that have been passed as strings
         if (typesToHash.indexOf(methodArg.type.type) > -1 && !(isU8a(argVal) || isHex(argVal))) {
-            argVal = stringToHexPadded(argVal)
+            argVal = stringToHexPadded(argVal) // hashes must be 32 bytes long
         }
         encodedArgs.push(abi.registry.createType(methodArg.type.type, argVal).toU8a())
     })
