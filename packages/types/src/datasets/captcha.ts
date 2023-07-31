@@ -46,7 +46,9 @@ type CaptchaWithoutIdBase = {
 }
 
 export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
-    solution?: HashedSolution[] | RawSolution[]
+    solution?: HashedSolution[] | RawSolution[] // this contains the CORRECT items only!
+    unlabelled?: HashedSolution[] | RawSolution[] // this contains the unlabelled items only!
+    // INCORRECT items are any missing from the solution and unlabelled arrays!
 }
 
 export type CaptchaSolutionToUpdate = {
@@ -102,6 +104,7 @@ export const CaptchaSchema = z.object({
     captchaContentId: z.union([z.string(), z.undefined()]),
     salt: z.string(),
     solution: z.number().array().optional(),
+    unlabelled: z.number().array().optional(),
     timeLimit: z.number().optional(),
 })
 
@@ -125,6 +128,7 @@ export const SelectAllCaptchaSchemaRaw = CaptchaSchema.extend({
 
 export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
     solution: z.string().array().optional(),
+    unlabelled: z.string().array().optional(),
 })
 
 export const CaptchasSchema = z.array(SelectAllCaptchaSchemaRaw)

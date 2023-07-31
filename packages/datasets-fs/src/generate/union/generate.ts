@@ -16,15 +16,6 @@ import bcrypt from 'bcrypt'
 import fs from 'fs'
 import z from 'zod'
 
-export interface CaptchaUnion extends CaptchaWithoutId {
-    unlabelled: RawSolution[]
-}
-
-export interface Captchas {
-    captchas: CaptchaUnion[]
-    format: CaptchaTypes
-}
-
 export default async (args: Args) => {
     consola.log(args, 'generating...')
 
@@ -109,7 +100,7 @@ export default async (args: Args) => {
         labels.push(...[...targets])
     }
     // generate n captchas
-    const captchas: CaptchaUnion[] = []
+    const captchas: CaptchaWithoutId[] = []
     for (let i = 0; i < count; i++) {
         consola.log(`generating captcha ${i + 1} of ${count}`)
 
@@ -204,7 +195,7 @@ export default async (args: Args) => {
 
         const salt = bcrypt.genSaltSync(saltRounds)
         // create the captcha
-        const captcha: CaptchaUnion = {
+        const captcha: CaptchaWithoutId = {
             salt,
             target,
             items,
@@ -218,5 +209,6 @@ export default async (args: Args) => {
         captchas,
         format: CaptchaTypes.SelectAll,
     }
+
     fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
 }
