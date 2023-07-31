@@ -2,7 +2,6 @@
 
 import { hideBin } from 'yargs/helpers'
 import { lodash } from '@prosopo/util'
-import consola, { LogTypes } from 'consola'
 import flatten from './flatten/cli'
 import generate from './generate/cli'
 import get from './get/cli'
@@ -16,13 +15,6 @@ const _ = lodash()
 const main = async () => {
     await yargs(hideBin(process.argv))
         .help()
-        .option('logLevel', {
-            type: 'string',
-            description: 'Verbosity of logging',
-        })
-        .middleware((argv) => {
-            consola.level = LogTypes[_.lowerCase(argv.logLevel || 'info')].level
-        })
         .command(generate)
         .command(flatten)
         .command(scale)
