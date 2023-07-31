@@ -3,10 +3,12 @@ import {
     CaptchaItemSchema,
     CaptchaTypes,
     CaptchaWithoutId,
+    Captchas,
     Item,
     LabelledItem,
     LabelledItemSchema,
     RawSolution,
+    SelectAllCaptchaSchema,
 } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { checkDuplicates } from '../util'
@@ -209,6 +211,9 @@ export default async (args: Args) => {
         captchas,
         format: CaptchaTypes.SelectAll,
     }
+
+    // verify the output
+    SelectAllCaptchaSchema.parse(output)
 
     fs.writeFileSync(outFile, JSON.stringify(output, null, 4))
 }
