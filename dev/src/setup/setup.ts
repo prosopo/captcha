@@ -14,7 +14,7 @@
 import { ArgumentTypes } from '@prosopo/types'
 import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
-import { LogLevel, ProsopoEnvError, logger as getLogger, getPair } from '@prosopo/common'
+import { LogLevel, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { defaultConfig, getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/cli'

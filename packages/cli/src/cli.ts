@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, getPair, logger } from '@prosopo/common'
+import { LogLevel, getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { loadEnv } from './env'
 import { processArgs } from './argv'
 import { start } from './start'
-const log = logger(LogLevel.Info, 'cli')
+const log = getLogger(LogLevel.Info, 'cli')
 async function main() {
     loadEnv()
 

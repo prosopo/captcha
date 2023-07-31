@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { DatabaseTypes, EnvironmentTypesSchema, ProsopoConfigSchema } from '@prosopo/types'
-import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { getLogLevel, loadEnv } from '@prosopo/cli'
 import { glob } from 'glob'
 require('ts-mocha')
@@ -134,7 +134,7 @@ async function runMochaTests(files, log) {
 
 export async function runTests() {
     try {
-        const log = logger(logLevel, 'TestRunner')
+        const log = getLogger(logLevel, 'TestRunner')
         const files = await findTestFiles(log)
 
         // Set config for tests
