@@ -211,7 +211,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const dataset = { ...captchaData }
         dataset.captchas = dataset.captchas.slice(0, 1)
         try {
-            const datasetPromise = tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(dataset)))
+            await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(dataset)))
         } catch (e) {
             e.message.should.match('Number of captchas in dataset is less than configured number of captchas')
         }
