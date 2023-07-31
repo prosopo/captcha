@@ -85,6 +85,7 @@ export class ContractDeployer {
         const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
 
         if (contract) {
+            // eslint-disable-next-line no-async-promise-executor
             return new Promise(async (resolve, reject) => {
                 const unsub = await contract?.signAndSend(this.pair, { nonce }, (result: ISubmittableResult) => {
                     if (result.status.isFinalized || result.status.isInBlock) {

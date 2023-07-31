@@ -54,7 +54,9 @@
         "INVALID_DATASET_ID": "Invalid dataset id",
         "DATASET_ID_UNDEFINED": "Dataset id undefined",
         "NOT_ENOUGH_LABELS": "Not enough labels",
-        "NOT_ENOUGH_IMAGES": "Not enough images"
+        "NOT_ENOUGH_IMAGES": "Not enough images",
+        "CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Number of captchas in dataset is less than configured number of captchas",
+        "SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Number of solutions in dataset is less than configured number of solutions"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Failed to connect",
