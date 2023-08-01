@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(not(feature = "std"), no_std, no_main)]
 
 pub use self::captcha::{Captcha, CaptchaRef};
 
@@ -360,7 +360,7 @@ pub mod captcha {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [118,45,245,158,80,210,168,162,146,223,44,178,41,60,145,196,65,198,109,90];
+            let env_git_commit_id: [u8; 20] = [62,44,93,2,149,240,230,45,208,3,201,106,55,21,238,186,83,46,211,127];
             env_git_commit_id
         }
 
