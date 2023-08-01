@@ -209,7 +209,9 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                     minWidth: getCSSAttribute('200px', config.minWidth),
                 }}
                 data-cy={'button-human'}
-            >                <Box
+            >
+                {' '}
+                <Box
                     p={1}
                     border={1}
                     borderColor="grey.300"
