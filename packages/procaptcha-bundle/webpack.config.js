@@ -95,19 +95,20 @@ log.info('externalsRegex', externalsRegex)
 
 loadEnv()
 
-const bundledEnvVars = {
-    'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
-    'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-    'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
-    'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
-}
-
-log.info(`Bundling with env vars: ${JSON.stringify(bundledEnvVars, null, 4)}`)
-
 module.exports = (env, argv) => {
     const isProduction = argv.mode === 'production'
     log.info(`Production: ${isProduction}`)
     const libraryName = 'procaptcha_bundle'
+    const bundledEnvVars = {
+        // TODO decide on what NODE_ENV is for
+        'process.env.NODE_ENV': process.env.NODE_ENV || JSON.stringify(isProduction ? 'production' : 'development'),
+        'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
+        'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
+        'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
+        //only needed if bundling with a site key
+        'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
+    }
+    log.info(`Env vars: ${JSON.stringify(bundledEnvVars, null, 4)}`)
     return {
         resolve: {
             extensions: ['.js', '.jsx', '.ts', '.tsx'],
