@@ -1,58 +1,59 @@
 {
-  "name": "@prosopo/datasets",
-  "version": "0.1.17",
-  "author": "PROSOPO LIMITED <info@prosopo.io>",
-  "license": "Apache-2.0",
-  "private": false,
-  "scripts": {
-    "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose",
-    "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix",
-    "test": "NODE_ENV=test ts-mocha \"./tests/js/**/*.test.ts\" --timeout 120000 --recursive --exit"
-  },
-  "main": "./dist/js/index.js",
-  "types": "./dist/js/index.d.ts",
-  "exports": {
-    ".": "./dist/js/index.js",
-    "./types": "./dist/js/types/index.js",
-    "./captcha": "./dist/js/captcha/index.js"
-  },
-  "typesVersions": {
-    "*": {
-      "types": [
-        "dist/js/types"
-      ],
-      "captcha": [
-        "dist/js/captcha"
-      ]
-    }
-  },
-  "dependencies": {
-    "@polkadot/util": "12.3.2",
-    "@prosopo/common": "^0.1.17",
-    "@prosopo/contract": "^0.1.17",
-    "@prosopo/types": "^0.1.17",
-    "axios": "^0.27.2"
-  },
-  "devDependencies": {
-    "@types/mocha": "^10.0.0",
-    "typescript": "^4.9.4"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/prosopo/captcha.git"
-  },
-  "bugs": {
-    "url": "https://github.com/prosopo/captcha/issues"
-  },
-  "homepage": "https://github.com/prosopo/captcha#readme",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org"
-  },
-  "description": "Datasets for use with providers",
-  "directories": {
-    "test": "tests"
-  },
-  "sideEffects": false
+    "name": "@prosopo/datasets",
+    "version": "0.1.17",
+    "author": "PROSOPO LIMITED <info@prosopo.io>",
+    "license": "Apache-2.0",
+    "private": false,
+    "scripts": {
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "lint": "npx eslint .",
+        "lint:fix": "npx eslint . --fix",
+        "cli": "node ./dist/cli.js",
+        "test": "NODE_ENV=test ts-mocha \"./tests/js/**/*.test.ts\" --timeout 120000 --recursive --exit"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": "./dist/index.js",
+        "./types": "./dist/types/index.js",
+        "./captcha": "./dist/captcha/index.js"
+    },
+    "typesVersions": {
+        "*": {
+            "types": [
+                "dist/types"
+            ],
+            "captcha": [
+                "dist/captcha"
+            ]
+        }
+    },
+    "dependencies": {
+        "@polkadot/util": "^12.3.2",
+        "@prosopo/common": "^0.1.16",
+        "@prosopo/contract": "^0.1.16",
+        "@prosopo/types": "^0.1.16",
+        "axios": "^0.27.2"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.0",
+        "typescript": "^4.9.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/prosopo/captcha.git"
+    },
+    "bugs": {
+        "url": "https://github.com/prosopo/captcha/issues"
+    },
+    "homepage": "https://github.com/prosopo/captcha#readme",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    },
+    "description": "Datasets for use with providers",
+    "directories": {
+        "test": "tests"
+    },
+    "sideEffects": false
 }
