@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaStates } from '@prosopo/types'
-import { ProsopoEnvError, logger } from '@prosopo/common'
+import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { ScheduledTaskNames } from '@prosopo/types'
 import { Tasks } from './tasks'
@@ -21,7 +21,7 @@ import { captchaSort } from '@prosopo/datasets'
 export class CalculateSolutionsTask extends Tasks {
     constructor(env: ProviderEnvironment) {
         super(env)
-        this.logger = logger(env.config.logLevel, 'CalculateSolutionsTask')
+        this.logger = getLogger(env.config.logLevel, 'CalculateSolutionsTask')
     }
 
     /**

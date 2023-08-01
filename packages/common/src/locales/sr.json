@@ -51,7 +51,9 @@
     "DATASET": {
         "PARSE_ERROR": "Greška pri parsiranju skupa podataka",
         "HASH_ERROR": "Greška pri heširanju skupa podataka",
-        "INVALID_DATASET_ID": "Nevažeći ID skupa podataka"
+        "INVALID_DATASET_ID": "Nevažeći ID skupa podataka",
+        "CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Broj captcha u skupu podataka je manji od konfigurisanog broja captcha",
+        "SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Broj rešenja u skupu podataka je manji od konfigurisanog broja rešenja"
     },
     "DATABASE": {
         "CONNECT_ERROR": "Neuspelo povezivanje",

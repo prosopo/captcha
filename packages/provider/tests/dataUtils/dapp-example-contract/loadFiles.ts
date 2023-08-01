@@ -14,9 +14,7 @@
 import { Abi } from '@polkadot/api-contract'
 import { hexToU8a, isWasm } from '@polkadot/util'
 import fse from 'fs-extra'
-
-const path = require('node:path')
-
+import path from 'node:path'
 // TODO use the .contract file instead of the .json and .wasm files. Polkadot-JS apps is also erroring out when using
 //   the .wasm and .json files. The .contract file works but I don't know why.
 

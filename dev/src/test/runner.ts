@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { DatabaseTypes, EnvironmentTypesSchema, ProsopoConfigSchema } from '@prosopo/types'
-import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { getLogLevel, loadEnv } from '@prosopo/cli'
+import { Logger, ProsopoEnvError, getLogLevel, getLogger } from '@prosopo/common'
 import { glob } from 'glob'
+import { loadEnv } from '@prosopo/cli'
 require('ts-mocha')
 import Mocha from 'mocha'
 loadEnv()
@@ -81,6 +81,8 @@ export async function findTestFiles(logger: Logger): Promise<string[]> {
             '../../**/node_modules/**',
             '../node_modules/**',
             '../../node_modules/**',
+            '../../**/provider-gui/**',
+            '../**/provider-gui/**',
         ],
     })
 }
@@ -96,29 +98,29 @@ export async function findTestFiles(logger: Logger): Promise<string[]> {
 //     inspect: true,
 // }
 
-async function runMochaTests(files, log) {
+async function runMochaTests(files: string[], logger: Logger) {
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
         try {
             const numberOfFailures = 0
             //You cannot use it.only, describe.only, this.only(), etc., in parallel mode.
             const mocha = await new Mocha({ timeout: 12000000, parallel: false, color: true, noHighlighting: false })
-            log.info('Mocha options', JSON.stringify(mocha.options, null, 2))
+            logger.info('Mocha options', JSON.stringify(mocha.options, null, 2))
 
             files.forEach((file) => {
                 mocha.addFile(file)
-                log.info('Adding file: ', file)
+                logger.info('Adding file: ', file)
             })
 
             const runner = mocha.run()
 
             runner.on('fail', (test, err) => {
-                log.error('Test failed', test.title, err)
+                logger.error('Test failed', test.title, err)
                 reject(new ProsopoEnvError(err))
             })
 
             runner.on('end', () => {
-                log.info(`All tests done. ${numberOfFailures} failures.`)
+                logger.info(`All tests done. ${numberOfFailures} failures.`)
                 if (numberOfFailures > 0) {
                     reject(new ProsopoEnvError(new Error(`Test run failed with ${numberOfFailures} failures.`)))
                 }
@@ -132,14 +134,14 @@ async function runMochaTests(files, log) {
 
 export async function runTests() {
     try {
-        const log = logger(logLevel, 'TestRunner')
-        const files = await findTestFiles(log)
+        const logger = getLogger(logLevel, 'TestRunner')
+        const files = await findTestFiles(logger)
 
         // Set config for tests
         ProsopoConfigSchema.parse(testConfig)
         process.env.config = JSON.stringify(testConfig)
 
-        return await runMochaTests(files, log)
+        return await runMochaTests(files, logger)
     } catch (err) {
         throw new Error(err)
     }
