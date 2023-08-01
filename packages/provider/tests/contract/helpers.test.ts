@@ -14,7 +14,7 @@
 import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { LogLevel, ProsopoEnvError, logger } from '@prosopo/common'
+import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { MockEnvironment } from '@prosopo/env'
 import { ProsopoConfigSchema } from '@prosopo/types'
 import { TypeDefInfo } from '@polkadot/types-create'
@@ -27,7 +27,7 @@ import chai from 'chai'
 const expect = chai.expect
 
 describe('CONTRACT HELPERS', function () {
-    const log = logger(LogLevel.Debug, 'TEST')
+    const log = getLogger(LogLevel.Debug, 'TEST')
     let env: MockEnvironment
     let pairType: KeypairType
     let ss58Format: number

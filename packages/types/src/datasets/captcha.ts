@@ -29,20 +29,30 @@ export enum CaptchaStates {
 export type RawSolution = number
 export type HashedSolution = string
 export type Item = z.infer<typeof CaptchaItemSchema>
-export interface HashedItem extends Omit<Item, 'hash'> {
-    hash: string
+export type HashedItem = z.infer<typeof HashedCaptchaItemSchema>
+export type LabelledItem = z.infer<typeof LabelledItemSchema>
+export type Data = z.infer<typeof DataSchema>
+export type LabelledData = z.infer<typeof LabelledDataSchema>
+export type CaptchasContainer = z.infer<typeof CaptchasContainerSchema>
+export type LabelsContainer = z.infer<typeof LabelsContainerSchema>
+
+export interface Captchas {
+    captchas: CaptchaWithoutId[]
+    format: CaptchaTypes
 }
 
 type CaptchaWithoutIdBase = {
     salt: string
-    items: Item[]
+    items: HashedItem[]
     target: string
     solved?: boolean
     timeLimitMs?: number
 }
 
 export interface CaptchaWithoutId extends CaptchaWithoutIdBase {
-    solution?: HashedSolution[] | RawSolution[]
+    solution?: HashedSolution[] | RawSolution[] // this contains the CORRECT items only!
+    unlabelled?: HashedSolution[] | RawSolution[] // this contains the unlabelled items only!
+    // INCORRECT items are any missing from the solution and unlabelled arrays!
 }
 
 export type CaptchaSolutionToUpdate = {
@@ -98,13 +108,25 @@ export const CaptchaSchema = z.object({
     captchaContentId: z.union([z.string(), z.undefined()]),
     salt: z.string(),
     solution: z.number().array().optional(),
+    unlabelled: z.number().array().optional(),
     timeLimit: z.number().optional(),
 })
 
 export const CaptchaItemSchema = z.object({
-    hash: z.string().optional(),
+    hash: z.string(),
     data: z.string(),
     type: z.nativeEnum(CaptchaItemTypes),
+})
+
+export const HashedCaptchaItemSchema = CaptchaItemSchema.extend({
+    hash: z.string(),
+})
+export const LabelledItemSchema = HashedCaptchaItemSchema.extend({
+    label: z.string(),
+})
+
+export const MaybeLabelledHashedItemSchema = HashedCaptchaItemSchema.extend({
+    label: z.string().optional(),
 })
 
 export const SelectAllCaptchaSchemaRaw = CaptchaSchema.extend({
@@ -114,6 +136,7 @@ export const SelectAllCaptchaSchemaRaw = CaptchaSchema.extend({
 
 export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
     solution: z.string().array().optional(),
+    unlabelled: z.string().array().optional(),
 })
 
 export const CaptchasSchema = z.array(SelectAllCaptchaSchemaRaw)
@@ -126,3 +149,20 @@ export const CaptchaSolutionSchema = z.object({
 })
 
 export const CaptchaSolutionArraySchema = z.array(CaptchaSolutionSchema)
+
+export const DataSchema = z.object({
+    items: z.array(MaybeLabelledHashedItemSchema),
+})
+
+export const LabelledDataSchema = z.object({
+    items: z.array(LabelledItemSchema),
+})
+
+export const CaptchasContainerSchema = z.object({
+    captchas: CaptchasSchema,
+    format: z.nativeEnum(CaptchaTypes),
+})
+
+export const LabelsContainerSchema = z.object({
+    labels: z.array(z.string()),
+})
