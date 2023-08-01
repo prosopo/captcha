@@ -11,14 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Logger } from '@prosopo/common'
 import { getEnv } from '@prosopo/cli'
-import consola from 'consola'
+import { glob } from 'glob'
 import dotenv from 'dotenv'
 import fs from 'fs'
-import { glob } from 'glob'
 import path from 'path'
 
-export async function findEnvFiles(logger: typeof consola) {
+export async function findEnvFiles(logger: Logger) {
     const env = getEnv()
     const fileName = `.env.${env}`
     // options is optional
@@ -34,7 +34,7 @@ export async function findEnvFiles(logger: typeof consola) {
     })
 }
 
-export async function updateEnvFiles(varNames: string[], varValue: string, logger: typeof consola) {
+export async function updateEnvFiles(varNames: string[], varValue: string, logger: Logger) {
     const files = await findEnvFiles(logger)
     logger.info('Env files found', files)
     files.forEach((file) => {

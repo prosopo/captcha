@@ -1,0 +1,51 @@
+{
+    "name": "@prosopo/datasets-fs",
+    "version": "0.1.16",
+    "author": "PROSOPO LIMITED <info@prosopo.io>",
+    "license": "Apache-2.0",
+    "private": false,
+    "scripts": {
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "lint": "npx eslint .",
+        "lint:fix": "npx eslint . --fix",
+        "cli": "node ./dist/js/cli.js",
+        "test": "NODE_ENV=test ts-mocha \"./tests/js/**/*.test.ts\" --timeout 120000 --recursive --exit"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "dependencies": {
+        "@polkadot/util": "^12.3.2",
+        "@prosopo/types": "^0.1.16",
+        "@prosopo/util": "^0.1.16",
+        "bcrypt": "^5.1.0",
+        "fs": "^0.0.1-security",
+        "lodash": "^4.17.21",
+        "noble-hashes": "^0.3.1",
+        "node-fetch": "^2.6.12",
+        "seedrandom": "^3.0.5",
+        "sharp": "^0.32.1",
+        "yargs": "^17.7.2",
+        "zod": "^3.21.4"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.0",
+        "typescript": "^4.9.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/prosopo/captcha.git"
+    },
+    "bugs": {
+        "url": "https://github.com/prosopo/captcha/issues"
+    },
+    "homepage": "https://github.com/prosopo/captcha#readme",
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org"
+    },
+    "description": "Datasets for use with providers",
+    "directories": {
+        "test": "tests"
+    },
+    "sideEffects": false
+}

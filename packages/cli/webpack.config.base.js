@@ -9,8 +9,8 @@ const path = require('path')
 const { JsonAccessOptimizer } = require('webpack-json-access-optimizer')
 const { ProvidePlugin, IgnorePlugin } = require('webpack')
 const { loadEnv } = require('@prosopo/cli')
-const { logger } = require('@prosopo/common')
-const log = logger(`Info`, `webpack.config.js`)
+const { getLogger } = require('@prosopo/common')
+const logger = getLogger(`Info`, `webpack.config.js`)
 const fs = require('fs')
 
 const moduleDirs = [
@@ -22,7 +22,7 @@ const moduleDirs = [
     path.resolve(__dirname, '../procaptcha-react/node_modules'),
 ]
 
-log.info(`Env is ${process.env.NODE_ENV}`)
+logger.info(`Env is ${process.env.NODE_ENV}`)
 
 const allowList = [
     '@emotion/cache',
@@ -95,7 +95,7 @@ const allowList = [
 ]
 // Create a regex that captures packages that are NOT in the allow list
 const externalsRegex = `(?!${allowList.map((item) => item.replace('/', '\\/')).join('|')})`
-log.info('externalsRegex', externalsRegex)
+logger.info('externalsRegex', externalsRegex)
 
 loadEnv()
 
@@ -105,7 +105,7 @@ const definedEnv = {
     'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
 }
 
-log.info('Building with env vars', definedEnv)
+logger.info('Building with env vars', definedEnv)
 
 module.exports = (env, argv) => {
     const libraryName = 'provider_cli_bundle'
@@ -192,7 +192,7 @@ module.exports = (env, argv) => {
             {
                 apply: (compiler) => {
                     compiler.hooks.done.tap('DonePlugin', (stats) => {
-                        log.info('Compile is done !')
+                        logger.info('Compile is done !')
                         setTimeout(() => {
                             process.exit(0)
                         })

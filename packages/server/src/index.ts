@@ -16,7 +16,7 @@ import { BlockHash } from '@polkadot/types/interfaces/chain/index'
 import { ContractAbi, NetworkConfig, ProsopoServerConfig, RandomProvider } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, logger } from '@prosopo/common'
+import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProcaptchaOutput } from '@prosopo/types'
 import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
@@ -51,7 +51,7 @@ export class ProsopoServer {
             this.prosopoContractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.dappContractAddress = this.config.account.address
             this.contractName = this.config.networks[this.defaultEnvironment].contract.name
-            this.logger = logger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
+            this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
             })
