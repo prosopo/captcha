@@ -14,7 +14,7 @@
 // import {ProsopoConfig} from './types';
 
 import { DatabaseTypes, EnvironmentTypes, EnvironmentTypesSchema, ProsopoConfig } from '@prosopo/types'
-import { getLogLevel } from './process.env'
+import { getLogLevel } from '@prosopo/common'
 
 function getMongoURI(): string {
     const protocol = process.env.DATABASE_PROTOCOL || 'mongodb'

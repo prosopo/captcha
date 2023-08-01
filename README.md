@@ -2,7 +2,7 @@
 
 Prosopo Procaptcha is a drop-replacement for reCAPTCHA and hCaptcha that protects user privacy and collects zero data.
 
-Sign up at [Prosopo](https://prosopo.io/signup) to get your sitekey today. You need a sitekey to use this library.
+Sign up at [Prosopo](https://prosopo.io/#signup) to get your sitekey today. You need a sitekey to use this library.
 
 # Implementation
 
