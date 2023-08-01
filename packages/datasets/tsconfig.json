@@ -1,20 +1,17 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "rootDir": "./src/js",
-    "outDir": "./dist/js",
-  },
-  "include": [
-    "./src/js/**/*.ts",
-    "./src/js/abi/*.json"
-  ],
-  "exclude": ["**/*.test.ts"],
-  "references": [
-    {
-      "path": "../common"
+    "extends": "../../tsconfig.build.json",
+    "compilerOptions": {
+        "rootDir": "./src/",
+        "outDir": "./dist"
     },
-    {
-      "path": "../types"
-    }
-  ]
+    "include": ["./src/**/*.ts", "./src/abi/*.json"],
+    "exclude": ["**/*.test.ts"],
+    "references": [
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../types"
+        }
+    ]
 }
