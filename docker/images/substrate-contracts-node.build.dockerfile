@@ -21,4 +21,4 @@ EXPOSE 30333 9933 9944 9615
 
 USER root
 
-CMD exec /bin/bash -c "substrate-contracts-node --dev -d ./chain-data --unsafe-ws-external --rpc-external --prometheus-external -lerror,runtime::contracts=debug"
+CMD exec /bin/bash -c "substrate-contracts-node --dev -d ./chain-data --unsafe-rpc-external --rpc-external --prometheus-external -lerror,runtime::contracts=debug"
