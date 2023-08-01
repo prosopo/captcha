@@ -86,7 +86,7 @@ jobs:
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           docker push prosopo/provider:${{ env.PROVIDER_IMAGE_VERSION }}
 
-      # Create the new procaptcha JS bundle if the push target is `main`
+      # Create the new procaptcha JS bundle if the push target is `main` and push the image to docker hub
       - name: Create new procaptcha JS bundle
         run: |
           if [ "${{ github.ref }}" != "refs/heads/main" ]; then exit 0; fi
