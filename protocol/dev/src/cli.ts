@@ -341,10 +341,9 @@ export async function processArgs(args: string[]) {
         let script = ''
         if (argv.docker) {
             pullDockerImage()
-            script = `docker run --rm -v ${repoDir}:/repo prosopo/contracts-ci-linux:${contractsCiVersion} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${rest}`
+            script = `docker run --rm -v ${repoDir}:/repo --entrypoint /bin/sh prosopo/contracts-ci-linux:${contractsCiVersion} -c 'cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${rest}'`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
-            console.log(`script ${script}`)
             if (dir) {
                 script = `cd ${dir} && ${script}`
             }
@@ -472,7 +471,7 @@ export async function processArgs(args: string[]) {
 
                 for (const contract of contracts) {
                     const contractPath = `${contractsDir}/${contract}`
-                    await execCargo(argv, 'build', contractPath)
+                    await execCargo(argv, 'contract build', contractPath)
                 }
 
                 // unset the env variables using the backups
