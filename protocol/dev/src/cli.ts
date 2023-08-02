@@ -340,8 +340,9 @@ export async function processArgs(args: string[]) {
 
         let script = ''
         if (argv.docker) {
+            const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
             pullDockerImage()
-            script = `docker run --rm -v ${repoDir}:/repo --entrypoint /bin/sh prosopo/contracts-ci-linux:${contractsCiVersion} -c 'cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${rest}'`
+            script = `docker run --rm -v ${repoDir}:/repo --entrypoint /bin/sh prosopo/contracts-ci-linux:${contractsCiVersion} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
             if (dir) {
