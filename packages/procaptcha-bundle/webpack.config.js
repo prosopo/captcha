@@ -168,7 +168,7 @@ module.exports = (env, argv) => {
                 template: './src/index.html',
             }),
             //new BundleAnalyzerPlugin(),
-            new webpack.DefinePlugin(),
+            new webpack.DefinePlugin(defineVars),
             // new webpack.optimize.SplitChunksPlugin(),
             new CompressionPlugin(),
             new MiniCssExtractPlugin({
