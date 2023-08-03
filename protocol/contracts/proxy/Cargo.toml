@@ -36,11 +36,6 @@ features = ["ink-as-dependency"]
 [lib]
 name = "proxy"
 path = "src/lib.rs"
-#crate-type = [
-#    # Used for normal contract Wasm blobs.
-#    "cdylib",
-#    "rlib"
-#]
 
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.
 [profile.release]

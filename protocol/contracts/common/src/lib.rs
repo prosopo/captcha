@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(not(feature = "std"), no_std, no_main)]
 
 pub use self::common::{Common, CommonRef};
 
@@ -20,7 +20,7 @@ pub use self::common::{Common, CommonRef};
 macro_rules! err {
     ($self_:ident, $err:expr) => {{
         ink::env::debug_println!(
-            "ERROR: 
+            "ERROR:
     type: {:?}
     block: {:?}
     caller: {:?}
@@ -38,7 +38,7 @@ macro_rules! err_fn {
     ($self_:ident, $err:expr) => {
         || {
             ink::env::debug_println!(
-                "ERROR: 
+                "ERROR:
         type: {:?}
         block: {:?}
         caller: {:?}
