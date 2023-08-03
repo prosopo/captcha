@@ -8,7 +8,6 @@ edition = "2021"
 ink = { git = "https://github.com/prosopo/ink_sr25519", branch="goastler-add-sr25519_verify", default-features = false }
 scale = { package = "parity-scale-codec", version = "3.4", default-features = false, features = ["derive"] }
 scale-info = { version = "2.7.0", default-features = false, features = ["derive"], optional = true }
-hex = "0.4.3"
 
 [dependencies.inject_self_macro]
 version = "0.3.0"
