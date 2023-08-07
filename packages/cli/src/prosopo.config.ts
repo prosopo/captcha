@@ -74,6 +74,5 @@ export default (): ProsopoConfig => ({
     server: {
         baseURL: process.env.API_BASE_URL || '',
         port: process.env.API_PORT ? parseInt(process.env.API_PORT) : 9229,
-        fileServePaths: process.env.FILE_SERVE_PATHS || '[]',
     },
 })
