@@ -52,7 +52,7 @@ pub mod proxy {
         GetGitCommitId,
         GetAuthor,
         GetAdmin,
-        GetProxyDestination,
+        GetDestination,
         ProxyWithdraw(Amount),
         ProxyTerminate,
         ProxySetCodeHash([u8; 32]),
@@ -64,7 +64,7 @@ pub mod proxy {
         GetGitCommitId([u8; 20]),
         GetAuthor(AccountId),
         GetAdmin(AccountId),
-        GetProxyDestination(AccountId),
+        GetDestination(AccountId),
         ProxyWithdraw,
         ProxyTerminate,
         ProxySetCodeHash,
@@ -108,7 +108,7 @@ pub mod proxy {
             AccountId::from(env_admin_bytes)
         }
 
-        fn get_proxy_destination(&self) -> AccountId {
+        fn get_destination(&self) -> AccountId {
             let env_proxy_destination_bytes: [u8; 32] = [
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0,
@@ -123,7 +123,7 @@ pub mod proxy {
             Ok(())
         }
 
-        fn proxy_withdraw(&mut self, amount: Balance) -> Result<ProxyReturnTypes, Error> {
+        fn withdraw(&mut self, amount: Balance) -> Result<ProxyReturnTypes, Error> {
             let caller = self.env().caller();
             self.check_is_admin(caller)?;
 
@@ -133,7 +133,7 @@ pub mod proxy {
             }
         }
 
-        fn proxy_terminate(&mut self) -> Result<ProxyReturnTypes, Error> {
+        fn terminate(&mut self) -> Result<ProxyReturnTypes, Error> {
             let caller = self.env().caller();
             self.check_is_admin(caller)?;
             self.env().terminate_contract(caller);
@@ -145,7 +145,7 @@ pub mod proxy {
         /// `true` is returned on successful upgrade, `false` otherwise
         /// Errors are returned if the caller is not an admin, if the code hash is the callers
         /// account_id, if the code is not found, and for any other unknown ink errors
-        fn proxy_set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
+        fn set_code_hash(&mut self, code_hash: [u8; 32]) -> Result<(), Error> {
             if self.env().caller() != self.get_admin() {
                 return err!(self, Error::NotAuthorised);
             }
@@ -166,9 +166,9 @@ pub mod proxy {
         /// - If the self receiver were `forward(&mut self)` here, this would not
         ///   have any effect whatsoever on the contract we forward to.
         #[ink(message, payable, selector = _)]
-        pub fn proxy_forward(&self) -> u32 {
+        pub fn forward(&self) -> u32 {
             ink::env::call::build_call::<ink::env::DefaultEnvironment>()
-                .call(self.get_proxy_destination())
+                .call(self.get_destination())
                 .transferred_value(self.env().transferred_value())
                 .gas_limit(0)
                 .call_flags(
@@ -180,14 +180,14 @@ pub mod proxy {
                 .unwrap_or_else(|env_err| {
                     panic!(
                         "cross-contract call to {:?} failed due to {:?}",
-                        self.get_proxy_destination(),
+                        self.get_destination(),
                         env_err
                     )
                 })
                 .unwrap_or_else(|lang_err| {
                     panic!(
                         "cross-contract call to {:?} failed due to {:?}",
-                        self.get_proxy_destination(),
+                        self.get_destination(),
                         lang_err
                     )
                 });
@@ -204,17 +204,17 @@ pub mod proxy {
                 }
                 ProxyMessages::GetAuthor => Ok(ProxyReturnTypes::GetAuthor(self.get_author())),
                 ProxyMessages::GetAdmin => Ok(ProxyReturnTypes::GetAdmin(self.get_admin())),
-                ProxyMessages::GetProxyDestination => {
-                    Ok(ProxyReturnTypes::GetProxyDestination(self.get_proxy_destination()))
+                ProxyMessages::GetDestination => {
+                    Ok(ProxyReturnTypes::GetDestination(self.get_destination()))
                 }
                 ProxyMessages::ProxyWithdraw(amount) => {
-                    self.proxy_withdraw(amount).map(|_| ProxyReturnTypes::ProxyWithdraw)
+                    self.withdraw(amount).map(|_| ProxyReturnTypes::ProxyWithdraw)
                 }
                 ProxyMessages::ProxyTerminate => {
-                    self.proxy_terminate().map(|_| ProxyReturnTypes::ProxyTerminate)
+                    self.terminate().map(|_| ProxyReturnTypes::ProxyTerminate)
                 }
                 ProxyMessages::ProxySetCodeHash(code_hash) => {
-                    self.proxy_set_code_hash(code_hash).map(|_| ProxyReturnTypes::ProxySetCodeHash)
+                    self.set_code_hash(code_hash).map(|_| ProxyReturnTypes::ProxySetCodeHash)
                 }
                 _ => err!(self, Error::UnknownMessage),
             }
@@ -302,7 +302,7 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_proxy_terminate() {
+        fn test_terminate() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
             reset_callee();
@@ -311,7 +311,7 @@ pub mod proxy {
             set_callee(get_contract_account(0));
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
             if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
-                set_caller(admin); // an account which does have permission to call proxy_terminate
+                set_caller(admin); // an account which does have permission to call terminate
                 debug!("Admin account {:?}", admin);
                 assert_eq!(admin, AccountId::from(ENV_AUTHOR_BYTES));
                 let contract_account = contract.env().account_id();
@@ -338,21 +338,21 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_proxy_terminate_unauthorised() {
+        fn test_terminate_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
             reset_callee();
 
             let mut contract = get_contract_unguarded(0);
             set_callee(get_contract_account(0));
-            set_caller(get_user_account(0)); // an account which does not have permission to call proxy_terminate
+            set_caller(get_user_account(0)); // an account which does not have permission to call terminate
 
-            let proxy_terminate_result = contract.handler(ProxyMessages::ProxyTerminate);
-            assert_eq!(proxy_terminate_result.unwrap_err(), Error::NotAuthorised);
+            let terminate_result = contract.handler(ProxyMessages::ProxyTerminate);
+            assert_eq!(terminate_result.unwrap_err(), Error::NotAuthorised);
         }
 
         #[ink::test]
-        fn test_proxy_withdraw() {
+        fn test_withdraw() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
             reset_callee();
@@ -367,17 +367,17 @@ pub mod proxy {
                 set_caller(admin); // use the admin acc
                 let admin_bal: u128 = get_account_balance(admin).unwrap();
                 let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
-                let proxy_withdraw_amount: u128 = 1;
-                let proxy_withdraw_result =
-                    contract.handler(ProxyMessages::ProxyWithdraw(proxy_withdraw_amount)).unwrap();
-                if let ProxyReturnTypes::ProxyWithdraw = proxy_withdraw_result {
+                let withdraw_amount: u128 = 1;
+                let withdraw_result =
+                    contract.handler(ProxyMessages::ProxyWithdraw(withdraw_amount)).unwrap();
+                if let ProxyReturnTypes::ProxyWithdraw = withdraw_result {
                     assert_eq!(
                         get_account_balance(admin).unwrap(),
-                        admin_bal + proxy_withdraw_amount
+                        admin_bal + withdraw_amount
                     );
                     assert_eq!(
                         get_account_balance(contract.env().account_id()).unwrap(),
-                        contract_bal - proxy_withdraw_amount
+                        contract_bal - withdraw_amount
                     );
                 } else {
                     assert_eq!(true, false);
@@ -389,7 +389,7 @@ pub mod proxy {
 
         #[ink::test]
         #[should_panic]
-        fn test_proxy_withdraw_insufficient_funds() {
+        fn test_withdraw_insufficient_funds() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
             reset_callee();
@@ -409,7 +409,7 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_proxy_withdraw_unauthorised() {
+        fn test_withdraw_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
             reset_callee();
@@ -427,7 +427,7 @@ pub mod proxy {
         }
 
         #[ink::test]
-        fn test_proxy_set_code_hash() {
+        fn test_set_code_hash() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
             reset_callee();
@@ -442,13 +442,13 @@ pub mod proxy {
 
             // set_caller(get_admin_account(0)); // an account which does have permission to call set code hash
 
-            // assert_eq!(contract.proxy_set_code_hash(new_code_hash), Ok(()));
+            // assert_eq!(contract.set_code_hash(new_code_hash), Ok(()));
 
             // assert_eq!(contract.env().own_code_hash().unwrap(), Hash::from(new_code_hash));
         }
 
         #[ink::test]
-        fn test_proxy_set_code_hash_unauthorised() {
+        fn test_set_code_hash_unauthorised() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
             reset_callee();
