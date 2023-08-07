@@ -79,9 +79,23 @@ jobs:
           cd captcha
           docker build -f ./docker/images/provider.dockerfile . -t prosopo/provider:${{ env.PROVIDER_IMAGE_VERSION }}
 
-      # push the provider image to docker hub, if the push is to main
+      # Push the provider image to docker hub, if the push target is `main`
       - name: Push provider image to docker hub
         run: |
           if [ "${{ github.ref }}" != "refs/heads/main" ]; then exit 0; fi
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           docker push prosopo/provider:${{ env.PROVIDER_IMAGE_VERSION }}
+
+      # Create the new procaptcha JS bundle if the push target is `main` and push the image to docker hub
+      - name: Create new procaptcha JS bundle
+        run: |
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then exit 0; fi
+          cd captcha
+          cp ./dev/env.rococo ./packages/cli/.env.rococo
+          NODE_ENV=rococo npm run -w @prosopo/procaptcha-bundle build:webpack:prod
+          docker build -f ./docker/images/js.server.dockerfile . -t prosopo/js_server:latest
+          docker push prosopo/js_server:latest
+          docker tag prosopo/js_server:latest prosopo/js_server:${{ env.PROVIDER_IMAGE_VERSION }}
+          docker push prosopo/js_server:${{ env.PROVIDER_IMAGE_VERSION }}
+
+          

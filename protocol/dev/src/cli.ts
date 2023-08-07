@@ -11,16 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import consola, { LogLevel } from 'consola'
-import path from 'path'
-import yargs from 'yargs'
-import process from 'process';
-import { readdirSync } from 'fs'
-import { spawn } from 'child_process'
-import { stdout, stderr, stdin } from 'process';
-import fs from 'fs'
 import { config } from 'dotenv'
 import { hexToU8a } from '@polkadot/util'
+import { readdirSync } from 'fs'
+import { spawn } from 'child_process'
+import { stdin } from 'process'
+import fs from 'fs'
+import path from 'path'
+import process from 'process'
+import yargs from 'yargs'
 
 const contractSrcFileExtension = '.rs'
 const backupFileExtension = '.bak'
@@ -33,7 +32,7 @@ const addGitCommitIdToEnv = async () => {
     // console.log("git commit id:", gitCommitId)
     const gitCommitIdBytes = hexToU8a(gitCommitId)
     // console.log("git commit id bytes:", gitCommitIdBytes)
-    const gitCommitIdBytesString = "[" + gitCommitIdBytes.toString() + "]"
+    const gitCommitIdBytesString = '[' + gitCommitIdBytes.toString() + ']'
     // console.log("git commit id byte string:", gitCommitIdBytesString)
     // add it to the env
     process.env['ENV_GIT_COMMIT_ID'] = gitCommitIdBytesString
@@ -41,7 +40,7 @@ const addGitCommitIdToEnv = async () => {
 
 const setEnvVariable = (filePath: string, name: string, value: string) => {
     // console.log("setting env variable", name, "in", filePath)
-    let content = fs.readFileSync(filePath, 'utf8')
+    const content = fs.readFileSync(filePath, 'utf8')
     let result = content
     // find and replace every declaration of the env variable
     // e.g.
@@ -53,31 +52,31 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     //
     // let ENV_ABC: u32 = 3;
     //
-    
+
     // names could be lower, upper or specific case
-    const names = [... new Set([name, name.toLowerCase(), name.toUpperCase()])]
-    for(const name of names) {
-        for(const declaration of ['let', 'const']) {
-            const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gms');
+    const names = [...new Set([name, name.toLowerCase(), name.toUpperCase()])]
+    for (const name of names) {
+        for (const declaration of ['let', 'const']) {
+            const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gms')
             const regexMatch = regex.test(result)
-            if(!regexMatch) {
+            if (!regexMatch) {
                 // console.log('no match for', regex, 'in', filePath);
-                continue;
+                continue
             }
             // console.log('match for', regex, 'in', filePath);
             result = result.replaceAll(regex, `${declaration} ${name}:$1= ${value};`)
         }
     }
-    if(result === content) {
+    if (result === content) {
         // no change has been made
         return
     }
-    console.log("set env variable", name, "in", filePath)
+    console.log('set env variable', name, 'in', filePath)
     // else change has been made
     // backup original file (if not already)
     const backupFilePath = `${filePath}${backupFileExtension}`
-    if(!fs.existsSync(backupFilePath)) {
-        console.log("backing up", filePath)
+    if (!fs.existsSync(backupFilePath)) {
+        console.log('backing up', filePath)
         fs.copyFileSync(filePath, backupFilePath)
     }
     // then overwrite original file with the new content
@@ -85,20 +84,20 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
 }
 
 const setEnvVariables = (filePath: string) => {
-    const stats = fs.lstatSync(filePath);
-    if(stats.isDirectory()) {
+    const stats = fs.lstatSync(filePath)
+    if (stats.isDirectory()) {
         // recurse into directory
-        const files = fs.readdirSync(filePath);
+        const files = fs.readdirSync(filePath)
         files.forEach((file) => {
             setEnvVariables(path.join(filePath, file))
         })
-    } else if(stats.isFile()) {
+    } else if (stats.isFile()) {
         // process file
-        if(filePath.endsWith(contractSrcFileExtension)) {
+        if (filePath.endsWith(contractSrcFileExtension)) {
             // loop through all env variables and set them
-            for(const [name, value] of Object.entries(process.env)) {
+            for (const [name, value] of Object.entries(process.env)) {
                 if (value === undefined) {
-                    continue;
+                    continue
                 }
                 // env vars have to start with the correct prefix, otherwise normal env vars (e.g. PWD, EDITOR, SHELL, etc.) would be propagated into the contract, which is not desired
                 if (name.startsWith('ENV_')) {
@@ -112,25 +111,25 @@ const setEnvVariables = (filePath: string) => {
 }
 
 const unsetEnvVariables = (filePath: string) => {
-    if(!fs.existsSync(filePath)) {
+    if (!fs.existsSync(filePath)) {
         // file no longer exists (was probably a backup file which got deleted)
-        return;
+        return
     }
-    const stats = fs.lstatSync(filePath);
-    if(stats.isDirectory()) {
+    const stats = fs.lstatSync(filePath)
+    if (stats.isDirectory()) {
         // recurse into directory
-        const files = fs.readdirSync(filePath);
+        const files = fs.readdirSync(filePath)
         files.forEach((file) => {
             unsetEnvVariables(path.join(filePath, file))
         })
-    } else if(stats.isFile()) {
+    } else if (stats.isFile()) {
         // process file
-        if(filePath.endsWith(contractSrcFileExtension)) {
+        if (filePath.endsWith(contractSrcFileExtension)) {
             // check for backup version of the file
             const backupFilePath = `${filePath}${backupFileExtension}`
-            if(fs.existsSync(backupFilePath)) {
+            if (fs.existsSync(backupFilePath)) {
                 // restore backup (copy without environment variables set)
-                console.log("unsetting env vars in", filePath)
+                console.log('unsetting env vars in', filePath)
                 fs.copyFileSync(backupFilePath, filePath)
                 fs.rmSync(backupFilePath, {
                     force: true,
@@ -143,19 +142,19 @@ const unsetEnvVariables = (filePath: string) => {
 }
 
 const clearEnvBackupFiles = (filePath: string) => {
-    const stats = fs.lstatSync(filePath);
-    if(stats.isDirectory()) {
+    const stats = fs.lstatSync(filePath)
+    if (stats.isDirectory()) {
         // recurse into directory
-        const files = fs.readdirSync(filePath);
+        const files = fs.readdirSync(filePath)
         files.forEach((file) => {
             clearEnvBackupFiles(path.join(filePath, file))
         })
-    } else if(stats.isFile()) {
+    } else if (stats.isFile()) {
         // process file
         // check for backup version of the file
         if (filePath.endsWith(contractSrcFileExtension + backupFileExtension)) {
             // remove backup
-            console.log("removing backup file", filePath)
+            console.log('removing backup file', filePath)
             fs.rmSync(filePath, {
                 force: true,
             })
@@ -165,31 +164,33 @@ const clearEnvBackupFiles = (filePath: string) => {
     }
 }
 
-const exec = (command: string, pipe?: boolean): Promise<{
-    stdout: string,
-    stderr: string,
-    code: number | null,
+const exec = (
+    command: string,
+    pipe?: boolean
+): Promise<{
+    stdout: string
+    stderr: string
+    code: number | null
 }> => {
-
     console.log(`> ${command}`)
 
     const prc = spawn(command, {
         shell: true,
-    });
+    })
 
-    if(pipe || pipe === undefined) {
-        prc.stdout.pipe(process.stdout);
-        prc.stderr.pipe(process.stderr);
+    if (pipe || pipe === undefined) {
+        prc.stdout.pipe(process.stdout)
+        prc.stderr.pipe(process.stderr)
     }
-    stdin.pipe(prc.stdin);
+    stdin.pipe(prc.stdin)
 
-    const stdoutData: string[] = [];
-    const stderrData: string[] = [];
+    const stdoutData: string[] = []
+    const stderrData: string[] = []
     prc.stdout.on('data', (data) => {
-        stdoutData.push(data.toString());
+        stdoutData.push(data.toString())
     })
     prc.stderr.on('data', (data) => {
-        stderrData.push(data.toString());
+        stderrData.push(data.toString())
     })
 
     return new Promise((resolve, reject) => {
@@ -198,14 +199,14 @@ const exec = (command: string, pipe?: boolean): Promise<{
                 stdout: stdoutData.join(''),
                 stderr: stderrData.join(''),
                 code,
-            };
-            if (code === 0) {
-                resolve(output);
-            } else {
-                reject(output);
             }
-        });
-    });
+            if (code === 0) {
+                resolve(output)
+            } else {
+                reject(output)
+            }
+        })
+    })
 }
 
 export async function processArgs(args: string[]) {
@@ -216,7 +217,7 @@ export async function processArgs(args: string[]) {
     // }).argv
 
     config({ path: `.env.${process.env.NODE_ENV}` })
-    console.log("NODE_ENV:", process.env.NODE_ENV)
+    console.log('NODE_ENV:', process.env.NODE_ENV)
     // const env = Object.keys(process.env)
     // .filter(key => key.startsWith("ENV_"))
     // .reduce((obj, key) => {
@@ -230,15 +231,15 @@ export async function processArgs(args: string[]) {
     const repoDir = path.join(__dirname, '../..')
     const contractsDir = path.join(__dirname, '../../contracts')
     const cratesDir = path.join(__dirname, '../../crates')
-    const contractsCiVersion = '41abf440-20230503'
+    const contractsCiVersion = '3.0.1'
     const relDirContracts = path.relative(repoDir, contractsDir)
     const relDirCrates = path.relative(repoDir, cratesDir)
     const crates = readdirSync(cratesDir, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name);
+        .filter((dirent) => dirent.isDirectory())
+        .map((dirent) => dirent.name)
     const contracts = readdirSync(contractsDir, { withFileTypes: true })
-        .filter(dirent => dirent.isDirectory())
-        .map(dirent => dirent.name);
+        .filter((dirent) => dirent.isDirectory())
+        .map((dirent) => dirent.name)
     const packages = [...crates, ...contracts]
     const outputDir = path.join(repoDir, 'target/ink')
     const ignoredContractsBuild = ['common_dev'] // contracts to ignore when building
@@ -247,29 +248,28 @@ export async function processArgs(args: string[]) {
     console.log(`contractsDir: ${contractsDir}`)
     console.log(`cratesDir: ${cratesDir}`)
     console.log(`outputDir: ${outputDir}`)
-    
+
     const getContractsToBuild = (contracts: string[]): string[] => {
         // ignore contracts which should not be built
-        return contracts.filter(contract => !ignoredContractsBuild.includes(contract))
+        return contracts.filter((contract) => !ignoredContractsBuild.includes(contract))
     }
 
     const moveMetadata = (contracts: string[]) => {
-        for(const contract of contracts) {
+        for (const contract of contracts) {
             console.log(`moving metadata for ${contract} contract`)
-            
+
             const metadataPath = `${outputDir}/${contract}/metadata.json`
-            const exists = fs.existsSync(metadataPath);
-            if(exists) {
+            const exists = fs.existsSync(metadataPath)
+            if (exists) {
                 // move the metadata to be named after the contract
                 const newPath = `${outputDir}/${contract}/${contract}.json`
-                fs.renameSync(metadataPath, newPath);
+                fs.renameSync(metadataPath, newPath)
             }
         }
     }
 
     const addPackageOption = (yargs: yargs.Argv, customPackages?: string[]) => {
-        return yargs
-        .option('package', {
+        return yargs.option('package', {
             type: 'array',
             demand: false,
             desc: 'Target a specific crate/contract',
@@ -279,8 +279,7 @@ export async function processArgs(args: string[]) {
     }
 
     const addToolchainOption = (yargs: yargs.Argv) => {
-        return yargs
-        .option('toolchain', {
+        return yargs.option('toolchain', {
             type: 'string',
             demand: false,
             desc: 'Use a specific toolchain',
@@ -289,8 +288,7 @@ export async function processArgs(args: string[]) {
     }
 
     const addReleaseOption = (yargs: yargs.Argv) => {
-        return yargs
-        .option('release', {
+        return yargs.option('release', {
             type: 'boolean',
             demand: false,
             desc: 'Build in release mode',
@@ -299,8 +297,7 @@ export async function processArgs(args: string[]) {
     }
 
     const addFixOption = (yargs: yargs.Argv) => {
-        return yargs
-        .option('fix', {
+        return yargs.option('fix', {
             type: 'boolean',
             demand: false,
             desc: 'Fix the code',
@@ -309,8 +306,7 @@ export async function processArgs(args: string[]) {
     }
 
     const addDockerOption = (yargs: yargs.Argv) => {
-        return yargs
-        .option('docker', {
+        return yargs.option('docker', {
             type: 'boolean',
             demand: false,
             desc: 'Use docker contracts-ci image to build instead of local toolchain',
@@ -321,49 +317,50 @@ export async function processArgs(args: string[]) {
     const pullDockerImage = async () => {
         // check if the docker image is already pulled
         try {
-            await exec(`docker images -q paritytech/contracts-ci-linux:${contractsCiVersion}`)
-        } catch(e: any) {
+            await exec(`docker images -q prosopo/contracts-ci-linux:${contractsCiVersion}`)
+        } catch (e: any) {
             // if not, pull it
-            await exec(`docker pull paritytech/contracts-ci-linux:${contractsCiVersion}`)
+            await exec(`docker pull prosopo/contracts-ci-linux:${contractsCiVersion}`)
         }
     }
 
     const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, dir?: string) => {
-        const rest = argv._.slice(1).join(' '); // remove the first arg (the command) to get the rest of the args
+        const rest = argv._.slice(1).join(' ') // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
-        const relDir = path.relative(repoDir, dir || "..")
+        const relDir = path.relative(repoDir, dir || '..')
 
-        if(cmd.startsWith("contract") && argv.package) {
-            throw new Error("Cannot run contract commands on specific packages")
+        if (cmd.startsWith('contract') && argv.package) {
+            throw new Error('Cannot run contract commands on specific packages')
         } else {
-            for(const pkg of argv.package as string[] || []) {
+            for (const pkg of (argv.package as string[]) || []) {
                 // add the package to the end of the cmd
                 cmd = `${cmd} --package ${pkg}`
             }
         }
 
-        let script: string = "";
-        if(argv.docker) {
-            pullDockerImage();
-            script = `docker run --rm -v ${repoDir}:/repo paritytech/contracts-ci-linux:${contractsCiVersion} cargo ${toolchain} ${cmd} --manifest-path=/repo/${relDir}/Cargo.toml ${rest}`
+        let script = ''
+        if (argv.docker) {
+            const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
+            pullDockerImage()
+            script = `docker run --rm -v ${repoDir}:/repo --entrypoint /bin/sh prosopo/contracts-ci-linux:${contractsCiVersion} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
-            if(dir) {
+            if (dir) {
                 script = `cd ${dir} && ${script}`
             }
         }
 
-        let error = false;
+        let error = false
         try {
             await exec(script)
-        } catch(e: any) {
+        } catch (e: any) {
             // error should be printed to console in the exec function
             // error out after cleanup
-            error = true;
+            error = true
         }
 
         await new Promise((resolve, reject) => {
-            if(error) {
+            if (error) {
                 reject()
             } else {
                 resolve({})
@@ -406,9 +403,11 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                const rest = argv._.slice(1); // remove the first arg (the command) to get the rest of the args
-                const contract = argv.package;
-                await exec(`cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${rest} > ${repoDir}/expanded/${contract}.rs`)
+                const rest = argv._.slice(1) // remove the first arg (the command) to get the rest of the args
+                const contract = argv.package
+                await exec(
+                    `cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${rest} > ${repoDir}/expanded/${contract}.rs`
+                )
             },
             []
         )
@@ -423,9 +422,11 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                const rest = argv._.slice(1); // remove the first arg (the command) to get the rest of the args
-                const contract = argv.package;
-                await exec(`cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${rest}`)
+                const rest = argv._.slice(1) // remove the first arg (the command) to get the rest of the args
+                const contract = argv.package
+                await exec(
+                    `cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${rest}`
+                )
             },
             []
         )
@@ -440,9 +441,11 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                const rest = argv._.slice(1); // remove the first arg (the command) to get the rest of the args
-                const contract = argv.package;
-                await exec(`cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${rest}`)
+                const rest = argv._.slice(1) // remove the first arg (the command) to get the rest of the args
+                const contract = argv.package
+                await exec(
+                    `cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${rest}`
+                )
             },
             []
         )
@@ -457,8 +460,8 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                const contracts = getContractsToBuild(argv.package as string[]);
-                delete argv.package;
+                const contracts = getContractsToBuild(argv.package as string[])
+                delete argv.package
 
                 // clear any previous env backup files
                 clearEnvBackupFiles(contractsDir)
@@ -467,7 +470,7 @@ export async function processArgs(args: string[]) {
                 setEnvVariables(contractsDir)
                 setEnvVariables(cratesDir)
 
-                for(const contract of contracts) {
+                for (const contract of contracts) {
                     const contractPath = `${contractsDir}/${contract}`
                     await execCargo(argv, 'contract build', contractPath)
                 }
@@ -480,7 +483,8 @@ export async function processArgs(args: string[]) {
                 moveMetadata(contracts)
             },
             []
-        ).command(
+        )
+        .command(
             'test',
             'Test the crates and contracts',
             (yargs) => {
@@ -492,7 +496,8 @@ export async function processArgs(args: string[]) {
                 await execCargo(argv, 'test')
             },
             []
-        ).command(
+        )
+        .command(
             'fmt',
             'Format the crates and contracts',
             (yargs) => {
@@ -507,17 +512,18 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                if(!argv._.includes("--all")) {
-                    argv._.push("--all")
+                if (!argv._.includes('--all')) {
+                    argv._.push('--all')
                 }
-                if(!argv._.includes("--verbose")) {
-                    argv._.push("--verbose")
+                if (!argv._.includes('--verbose')) {
+                    argv._.push('--verbose')
                 }
-                
+
                 await execCargo(argv, 'fmt')
             },
             []
-        ).command(
+        )
+        .command(
             'clippy',
             'Clippy the crates and contracts',
             (yargs) => {
@@ -526,13 +532,13 @@ export async function processArgs(args: string[]) {
                 return yargs
             },
             async (argv) => {
-                argv._.push("-- -D warnings -A clippy::too_many_arguments")
+                argv._.push('-- -D warnings -A clippy::too_many_arguments')
                 await execCargo(argv, 'clippy')
             },
             []
         )
-        .parserConfiguration({'unknown-options-as-args': true})
-        .parse();
+        .parserConfiguration({ 'unknown-options-as-args': true })
+        .parse()
 }
 
 processArgs(process.argv.slice(2))
