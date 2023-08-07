@@ -36,10 +36,49 @@ export enum LogLevel {
     Verbose = Number.POSITIVE_INFINITY,
 }
 
+export const parseLogLevel = (logLevel: string | LogLevel | number | undefined): LogLevel => {
+    if (logLevel === undefined) {
+        return LogLevel.Info
+    } else if (typeof logLevel === 'number') {
+        // LogLevel or number can be out of range of the enum (e.g. you can do `const a: LogLevel = -1` and that's valid!) so need to check it
+        if (logLevel in LogLevel) {
+            return logLevel
+        }
+    } else {
+        const int = parseInt(logLevel) // test if str can be parsed as int
+        if (!isNaN(int)) {
+            // if so then check if it's a valid log level
+            if (logLevel in LogLevel) {
+                // if so then return it
+                return LogLevel[LogLevel[logLevel] as keyof typeof LogLevel]
+            }
+        } else {
+            // else not an int so try to parse as a string log level
+            const _ = lodash()
+            const level: string = _.capitalize(logLevel.toString())
+
+            // if not found in LogLevel then throw an error
+            if (level in LogLevel) {
+                return LogLevel[level]
+            }
+        }
+    }
+
+    throw new Error(`Invalid log level: ${logLevel}`)
+}
+
 // Create a new logger with the given level and scope
 export function getLogger(logLevel: LogLevel | string, scope: string): Logger {
-    const level = typeof logLevel === 'string' ? LogLevel[logLevel] : logLevel
-    return getLoggerAdapterConsola(level, scope)
+    // console.log('a', parseLogLevel(0))
+    // console.log('a', parseLogLevel(1))
+    // console.log('a', parseLogLevel('0'))
+    // console.log('a', parseLogLevel('error'))
+    // console.log('a', parseLogLevel('info'))
+    // console.log('a', parseLogLevel('TrAcE'))
+    // console.log('a', parseLogLevel(-1))
+    // console.log('a', parseLogLevel('-1'))
+
+    return getLoggerAdapterConsola(parseLogLevel(logLevel), scope)
 }
 
 // Get the default logger (i.e. the global logger)
@@ -49,17 +88,13 @@ export function getLoggerDefault(): Logger {
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // automatically maps 0,1,2... to consola's log levels (which conveniently match... :O )
-    const convertToLevel = (logLevel: LogLevel): ConsolaLogLevel => {
-        const a = LogLevel[logLevel]
-        const b = a as keyof typeof ConsolaLogLevel
-        return b as unknown as ConsolaLogLevel
+    const convertToConsolaLevel = (logLevel: LogLevel): ConsolaLogLevel => {
+        return parseLogLevel(logLevel) as unknown as ConsolaLogLevel
     }
-    const convertFromLevel = (logLevel: ConsolaLogLevel): LogLevel => {
-        const a = ConsolaLogLevel[logLevel]
-        const b = a as keyof typeof LogLevel
-        return b as unknown as LogLevel
+    const convertFromConsolaLevel = (logLevel: ConsolaLogLevel): LogLevel => {
+        return parseLogLevel(logLevel as unknown as LogLevel)
     }
-    const logger = consola.create({ level: convertToLevel(logLevel) }).withScope(scope)
+    const logger = consola.create({ level: convertToConsolaLevel(logLevel) }).withScope(scope)
     return {
         log: logger.log,
         info: logger.info,
@@ -68,10 +103,10 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
         warn: logger.warn,
         error: logger.error,
         setLogLevel: (level: LogLevel) => {
-            logger.level = convertToLevel(level)
+            logger.level = convertToConsolaLevel(level)
         },
         getLogLevel: () => {
-            return convertFromLevel(logger.level)
+            return convertFromConsolaLevel(logger.level)
         },
     }
 }
