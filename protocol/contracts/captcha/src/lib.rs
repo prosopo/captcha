@@ -1452,8 +1452,6 @@ pub mod captcha {
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
 
-        type Event = <Captcha as ::ink::reflect::ContractEventBase>::Type;
-
         const STAKE_THRESHOLD: u128 = 1000000000;
 
         const set_caller: fn(AccountId) =

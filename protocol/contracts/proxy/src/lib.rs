@@ -317,20 +317,19 @@ pub mod proxy {
                 debug!("Contract account {:?}", contract_account);
                 reset_caller();
                 set_caller(admin);
-                // TODO causes compiler panic
-                //   thread 'proxy::tests::test_proxy_terminate' panicked at 'Box<dyn Any>'
-                //   https://github.com/paritytech/ink/issues/1676#issuecomment-1643654402
-                assert!(true);
-                // let proxy_terminate_result = contract.handler(ProxyMessages::ProxyTerminate);
-                // debug!("proxy_terminate_result: {:?}", proxy_terminate_result);
-                // if let ProxyReturnTypes::ProxyTerminate(proxy_terminate) = proxy_terminate_result {
-                //     let should_proxy_terminate = move || proxy_terminate.unwrap();
-                //     ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
-                //         should_proxy_terminate,
-                //         AccountId::from(admin),
-                //         bal,
-                //     );
-                // }
+                // a lambda that terminates the contract and return nothing <-- this is important!
+                let should_terminate = move || {
+                    contract.handler(ProxyMessages::ProxyTerminate);
+                };
+                // the assert_contract_termination fn takes a lambda which will terminate the contract + a caller + a balance which should be returned
+                // it will then check that the contract terminates and returns the correct balance to the caller
+                // we have to use this fn because the terminate call stops the code execution in-place, so we can't check the return value of the terminate call
+                // this fn works around that
+                ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
+                    should_terminate,
+                    admin,
+                    bal,
+                );
             } else {
                 assert!(false);
             }
