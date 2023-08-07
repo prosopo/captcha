@@ -21,7 +21,7 @@ export interface Logger {
     trace(message: unknown, ...args: unknown[]): void
     warn(message: unknown, ...args: unknown[]): void
     error(message: unknown, ...args: unknown[]): void
-    setLogLevel(level: LogLevel): void
+    setLogLevel(level: LogLevel | string): void
     getLogLevel(): LogLevel
 }
 
@@ -34,6 +34,22 @@ export enum LogLevel {
     Debug = 4,
     Trace = 5,
     Verbose = Number.POSITIVE_INFINITY,
+}
+
+export function* getLogLevelKeys(): Generator<string> {
+    for (const level in LogLevel) {
+        if (isNaN(Number(level))) {
+            yield level
+        }
+    }
+}
+
+export function* getLogLevelValues(): Generator<LogLevel> {
+    for (const level in LogLevel) {
+        if (!isNaN(Number(level))) {
+            yield Number(level) as unknown as LogLevel
+        }
+    }
 }
 
 export const parseLogLevel = (logLevel: string | LogLevel | number | undefined): LogLevel => {
@@ -88,7 +104,7 @@ export function getLoggerDefault(): Logger {
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // automatically maps 0,1,2... to consola's log levels (which conveniently match... :O )
-    const convertToConsolaLevel = (logLevel: LogLevel): ConsolaLogLevel => {
+    const convertToConsolaLevel = (logLevel: LogLevel | string): ConsolaLogLevel => {
         return parseLogLevel(logLevel) as unknown as ConsolaLogLevel
     }
     const convertFromConsolaLevel = (logLevel: ConsolaLogLevel): LogLevel => {
@@ -102,7 +118,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
         trace: logger.trace,
         warn: logger.warn,
         error: logger.error,
-        setLogLevel: (level: LogLevel) => {
+        setLogLevel: (level: LogLevel | string) => {
             logger.level = convertToConsolaLevel(level)
         },
         getLogLevel: () => {
