@@ -93,7 +93,7 @@ pub mod proxy {
 
         /// Get the git commit id from when this contract was built
         fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [82,9,68,134,125,2,152,104,88,67,197,249,27,224,169,81,110,60,2,141];
+            let env_git_commit_id: [u8; 20] = [25,175,186,108,140,91,98,141,48,59,196,39,26,58,56,221,240,54,155,164];
             env_git_commit_id
         }
 
@@ -247,6 +247,9 @@ pub mod proxy {
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
 
+
+
+
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
 
@@ -314,20 +317,19 @@ pub mod proxy {
                 debug!("Contract account {:?}", contract_account);
                 reset_caller();
                 set_caller(admin);
-                // TODO causes compiler panic
-                //   thread 'proxy::tests::test_proxy_terminate' panicked at 'Box<dyn Any>'
-                //   https://github.com/paritytech/ink/issues/1676#issuecomment-1643654402
-                assert!(true);
-                // let proxy_terminate_result = contract.handler(ProxyMessages::ProxyTerminate);
-                // debug!("proxy_terminate_result: {:?}", proxy_terminate_result);
-                // if let ProxyReturnTypes::ProxyTerminate(proxy_terminate) = proxy_terminate_result {
-                //     let should_proxy_terminate = move || proxy_terminate.unwrap();
-                //     ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
-                //         should_proxy_terminate,
-                //         AccountId::from(admin),
-                //         bal,
-                //     );
-                // }
+                // a lambda that terminates the contract and return nothing <-- this is important!
+                let should_terminate = move || {
+                    contract.handler(ProxyMessages::ProxyTerminate);
+                };
+                // the assert_contract_termination fn takes a lambda which will terminate the contract + a caller + a balance which should be returned
+                // it will then check that the contract terminates and returns the correct balance to the caller
+                // we have to use this fn because the terminate call stops the code execution in-place, so we can't check the return value of the terminate call
+                // this fn works around that
+                ink::env::test::assert_contract_termination::<ink::env::DefaultEnvironment, _>(
+                    should_terminate,
+                    admin,
+                    bal,
+                );
             } else {
                 assert!(false);
             }

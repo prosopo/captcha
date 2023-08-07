@@ -93,7 +93,7 @@ jobs:
           cd captcha
           cp ./dev/env.rococo ./packages/cli/.env.rococo
           NODE_ENV=rococo npm run -w @prosopo/procaptcha-bundle build:webpack:prod
-          docker build -f ./docker/images/js.server.dockerfile .
+          docker build -f ./docker/images/js.server.dockerfile . -t prosopo/js_server:latest
           docker push prosopo/js_server:latest
           docker tag prosopo/js_server:latest prosopo/js_server:${{ env.PROVIDER_IMAGE_VERSION }}
           docker push prosopo/js_server:${{ env.PROVIDER_IMAGE_VERSION }}

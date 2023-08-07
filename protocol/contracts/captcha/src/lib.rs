@@ -360,7 +360,7 @@ pub mod captcha {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [82,9,68,134,125,2,152,104,88,67,197,249,27,224,169,81,110,60,2,141];
+            let env_git_commit_id: [u8; 20] = [25,175,186,108,140,91,98,141,48,59,196,39,26,58,56,221,240,54,155,164];
             env_git_commit_id
         }
 
@@ -1451,8 +1451,6 @@ pub mod captcha {
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
-
-        type Event = <Captcha as ::ink::reflect::ContractEventBase>::Type;
 
         const STAKE_THRESHOLD: u128 = 1000000000;
 
