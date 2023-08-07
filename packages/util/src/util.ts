@@ -28,7 +28,20 @@ export const seedLodash = (seed: number | string) => {
 
 // create a new rng with the given seed
 export const rng = (seed: number | string) => {
-    return seedrandom(seed)
+    const rng = seedrandom(seed)
+    return {
+        double: () => rng.double(),
+        float: () => rng.quick(),
+        int: () => {
+            // js only has 53 bits of precision for integers, so we can't use the full 64 bits of the rng
+            // take two 32 bit integers and combine them into a 53 bit integer
+            const a = rng.int32()
+            const b = rng.int32()
+            return (a << 21) + b
+        },
+        int32: () => rng.int32(),
+        bool: () => rng.int32() % 2 === 0,
+    }
 }
 
 // create a generator that yields the permutations for a set of options

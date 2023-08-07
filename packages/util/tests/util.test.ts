@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { expect } from 'chai'
-import { permutations } from '../src/util'
+import { permutations, rng, seedLodash } from '../src/util'
 
 describe('util', () => {
     describe('permutations', () => {
@@ -46,6 +46,31 @@ describe('util', () => {
                 [0, 1, 1],
                 [0, 1, 2],
             ])
+        })
+    })
+
+    describe('rng', () => {
+        it('generates random numbers using a seed', () => {
+            const seed = 0
+            const rand = rng(seed)
+            const expected = [-1065104217, 665175191, 222529346, 1915458065, -720845602, -50645347, -775619164]
+            for (let i = 0; i < expected.length; i++) {
+                expect(rand.int()).to.equal(expected[i])
+            }
+        })
+    })
+
+    describe('seeded_lodash', () => {
+        it('shuffles an array using a seed', () => {
+            let array = [1, 2, 3, 4, 5]
+            const seed = 0
+            const _ = seedLodash(seed)
+            array = _.shuffle(array)
+            expect(array).to.deep.equal([1, 2, 4, 5, 3])
+            array = _.shuffle(array)
+            expect(array).to.deep.equal([2, 5, 1, 3, 4])
+            array = _.shuffle(array)
+            expect(array).to.deep.equal([3, 5, 2, 4, 1])
         })
     })
 })
