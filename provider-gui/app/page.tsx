@@ -5,6 +5,7 @@ import { getProviderApi } from '../services/provider-api/provider-api'
 import { useGlobalState } from '../contexts/GlobalContext'
 import { useRouter } from 'next/navigation'
 import React, { FormEvent, useState } from 'react'
+import { getContractApi } from '../services/contract/contract'
 
 interface HomePageState {
     network: string
@@ -32,20 +33,14 @@ const HomePage: React.FC = () => {
         return url !== 'notrunning'
     }
 
-    const checkIfProviderIsRegistered = (
-        url: string,
-        contractAddress: string,
-        network: string,
-        accountId: string
-    ): boolean => {
+    const checkIfProviderIsRegistered = async (network: string, accountId: string): Promise<boolean> => {
         console.log(`Checking if provider is registered in ${network} network...`)
-        return url !== 'notregistered'
-        // try {
-        //     await getContractApi(accountId)
-        //     return true
-        // } catch (e) {
-        //     return false
-        // }
+        try {
+            await getContractApi(accountId)
+            return true
+        } catch (e) {
+            return false
+        }
     }
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
