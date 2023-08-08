@@ -333,7 +333,7 @@ pub mod proxy {
                     bal,
                 );
             } else {
-                assert!(false);
+                unreachable!();
             }
         }
 
