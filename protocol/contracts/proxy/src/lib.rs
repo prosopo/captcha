@@ -44,8 +44,6 @@ pub mod proxy {
         UnknownMessage,
     }
 
-    pub type Amount = Balance;
-
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProxyMessages {
@@ -69,6 +67,8 @@ pub mod proxy {
         ProxyTerminate,
         ProxySetCodeHash,
     }
+
+    pub type Amount = Balance;
 
     impl Proxy {
         /// Instantiate this contract with an address of the `logic` contract.
@@ -463,6 +463,10 @@ pub mod proxy {
                 contract.handler(ProxyMessages::ProxySetCodeHash(new_code_hash)),
                 Err(Error::NotAuthorised)
             );
+            // assert_eq!(
+            //     contract.handler(new_code_hash),
+            //     Err(Error::NotAuthorised)
+            // );
         }
     }
 }
