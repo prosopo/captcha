@@ -1,11 +1,11 @@
 'use client'
 
 import { Box, Button, Dialog, MenuItem, Select, SelectChangeEvent, TextField, Typography } from '@mui/material'
-import { getProviderApi } from '../services/provider-api/provider-api'
-import { useGlobalState } from '../contexts/GlobalContext'
 import { useRouter } from 'next/navigation'
 import React, { FormEvent, useState } from 'react'
+import { useGlobalState } from '../contexts/GlobalContext'
 import { getContractApi } from '../services/contract/contract'
+import { getProviderDetails } from '../services/provider-api/provider-api'
 
 interface HomePageState {
     network: string
@@ -19,18 +19,18 @@ const HomePage: React.FC = () => {
     const [isDialogVisible, setIsDialogVisible] = useState(false)
     const router = useRouter()
 
-    const checkIfProviderIsRunning = (url: string): boolean => {
+    const checkIfProviderIsRunning = async (url: string): Promise<boolean> => {
         console.log(`Checking if provider at ${url} is running...`)
 
         if (!providerDetails.currentAccount) {
             return false
         }
 
-        const provider = getProviderApi(url, providerDetails.currentAccount)
-        // Request captcha
-        // if captcha is give, return true
-        // else error, catch error and return false
-        return url !== 'notrunning'
+        const provider = await getProviderDetails(url, providerDetails.currentAccount, providerDetails)
+        setProviderDetails({ ...providerDetails, ...provider })
+        console.log(provider)
+
+        return !!provider
     }
 
     const checkIfProviderIsRegistered = async (network: string, accountId: string): Promise<boolean> => {
@@ -70,12 +70,7 @@ const HomePage: React.FC = () => {
             return false
         }
 
-        const isProviderRegistered = await checkIfProviderIsRegistered(
-            state.providerUrl,
-            state.network,
-            state.providerUrl,
-            providerDetails.currentAccount
-        )
+        const isProviderRegistered = await checkIfProviderIsRegistered(state.providerUrl, state.network)
 
         if (!isProviderRegistered) {
             alert('Provider is running but not registered.')

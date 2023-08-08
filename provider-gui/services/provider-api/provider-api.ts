@@ -1,13 +1,24 @@
 import { ProviderApi } from '@prosopo/api'
-import axios from 'axios'
+import { useState } from 'react'
+import { GlobalState } from '../../types/global-state-types'
 
-async function getProviderDetails() {
+export async function getProviderDetails(providerUrl: string, providerAccountId: string, providerDetails: GlobalState) {
     try {
-        const response = await axios.get('http://localhost:9229/v1/prosopo/provider/details')
-        console.log(response.data)
-        return response.data
+        const response = await getProviderApi(providerUrl, providerAccountId).getProviderDetails()
+        return {
+            ...providerDetails,
+            profile: {
+                summary: {
+                    balance: response.balance.toNumber(),
+                    fee: response.fee,
+                    payee: response.payee,
+                    status: response.status,
+                },
+            },
+        }
     } catch (error) {
         console.error(`Error: ${error}`)
+        return null
     }
 }
 
@@ -16,7 +27,7 @@ export const getProviderApi = (providerUrl: string, currentAccount: string) => {
         endpoint: 'wss://rpc.polkadot.io',
         contract: {
             address: 'asdf',
-            name: 'asdf',
+            name: 'captcha_contract',
         },
         accounts: [''],
     }
