@@ -94,7 +94,10 @@ pub mod proxy {
 
         /// Get the git commit id from when this contract was built
         fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [25,175,186,108,140,91,98,141,48,59,196,39,26,58,56,221,240,54,155,164];
+            let env_git_commit_id: [u8; 20] = [
+                25, 175, 186, 108, 140, 91, 98, 141, 48, 59, 196, 39, 26, 58, 56, 221, 240, 54,
+                155, 164,
+            ];
             env_git_commit_id
         }
 
@@ -207,15 +210,15 @@ pub mod proxy {
                 ProxyMessages::GetDestination => {
                     Ok(ProxyReturnTypes::GetDestination(self.get_destination()))
                 }
-                ProxyMessages::ProxyWithdraw(amount) => {
-                    self.withdraw(amount).map(|_| ProxyReturnTypes::ProxyWithdraw)
-                }
+                ProxyMessages::ProxyWithdraw(amount) => self
+                    .withdraw(amount)
+                    .map(|_| ProxyReturnTypes::ProxyWithdraw),
                 ProxyMessages::ProxyTerminate => {
                     self.terminate().map(|_| ProxyReturnTypes::ProxyTerminate)
                 }
-                ProxyMessages::ProxySetCodeHash(code_hash) => {
-                    self.set_code_hash(code_hash).map(|_| ProxyReturnTypes::ProxySetCodeHash)
-                }
+                ProxyMessages::ProxySetCodeHash(code_hash) => self
+                    .set_code_hash(code_hash)
+                    .map(|_| ProxyReturnTypes::ProxySetCodeHash),
                 _ => err!(self, Error::UnknownMessage),
             }
         }
@@ -248,9 +251,6 @@ pub mod proxy {
         use ink::env::hash::Blake2x256;
         use ink::env::hash::CryptoHash;
         use ink::env::hash::HashOutput;
-
-
-
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
@@ -368,8 +368,9 @@ pub mod proxy {
                 let admin_bal: u128 = get_account_balance(admin).unwrap();
                 let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
                 let withdraw_amount: u128 = 1;
-                let withdraw_result =
-                    contract.handler(ProxyMessages::ProxyWithdraw(withdraw_amount)).unwrap();
+                let withdraw_result = contract
+                    .handler(ProxyMessages::ProxyWithdraw(withdraw_amount))
+                    .unwrap();
                 if let ProxyReturnTypes::ProxyWithdraw = withdraw_result {
                     assert_eq!(
                         get_account_balance(admin).unwrap(),
