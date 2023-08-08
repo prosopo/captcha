@@ -219,7 +219,6 @@ pub mod proxy {
                 ProxyMessages::ProxySetCodeHash(code_hash) => self
                     .set_code_hash(code_hash)
                     .map(|_| ProxyReturnTypes::ProxySetCodeHash),
-                _ => err!(self, Error::UnknownMessage),
             }
         }
     }
