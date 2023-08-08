@@ -1,6 +1,6 @@
 [package]
 name = "captcha"
-version = "4.0.0"
+version = "4.2.0"
 authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
 edition = "2021"
 
@@ -25,22 +25,17 @@ path = "../../crates/disable_macro"
 version = "0.3.0"
 path = "../../contracts/common"
 default-features = false
-features = ["ink-as-dependency"] 
+features = ["ink-as-dependency"]
 
 [dev-dependencies.common_dev]
 version = "0.3.0"
 path = "../../contracts/common_dev"
 default-features = false
-features = ["ink-as-dependency"] 
+features = ["ink-as-dependency"]
 
 [lib]
 name = "captcha"
 path = "src/lib.rs"
-#crate-type = [
-    # Used for normal contract Wasm blobs.
-#    "cdylib",
-#    "rlib"
-#]
 
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.
 [profile.release]

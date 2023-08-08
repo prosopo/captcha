@@ -18,8 +18,7 @@ import { Database } from '@prosopo/types-database'
 import { Databases } from '@prosopo/database'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel } from 'consola'
-import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
+import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoBasicConfig } from '@prosopo/types'
 import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
@@ -44,7 +43,7 @@ export class Environment implements ProsopoEnvironment {
         this.config = config
         this.defaultEnvironment = this.config.defaultEnvironment
         this.pair = pair
-        this.logger = logger(this.config.logLevel, `ProsopoEnvironment`)
+        this.logger = getLogger(this.config.logLevel, `ProsopoEnvironment`)
         if (
             this.config.defaultEnvironment &&
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment) &&

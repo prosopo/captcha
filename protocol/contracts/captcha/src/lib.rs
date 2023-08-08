@@ -25,13 +25,10 @@ pub mod captcha {
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
     use ink::prelude::vec::Vec;
+    use ink::storage::traits::{ManualKey, StorageKey};
     use ink::storage::Lazy;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
-    use ink::storage::traits::{
-        StorageKey,
-        ManualKey
-    };
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
@@ -363,7 +360,7 @@ pub mod captcha {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [153,51,216,28,240,74,28,49,103,245,80,161,20,12,9,36,156,24,120,206];
+            let env_git_commit_id: [u8; 20] = [25,175,186,108,140,91,98,141,48,59,196,39,26,58,56,221,240,54,155,164];
             env_git_commit_id
         }
 
@@ -379,7 +376,10 @@ pub mod captcha {
         }
 
         fn get_admin_bytes(&self) -> [u8; 32] {
-            let env_admin_bytes: [u8; 32] = [212,28,96,15,28,172,179,198,79,76,167,189,158,170,135,63,142,73,178,171,213,218,70,123,189,157,19,23,188,227,201,32];
+            let env_admin_bytes: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
             env_admin_bytes
         }
 
@@ -1448,8 +1448,6 @@ pub mod captcha {
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
-
-        type Event = <Captcha as ::ink::reflect::ContractEventBase>::Type;
 
         const STAKE_THRESHOLD: u128 = 1000000000;
 

@@ -4,6 +4,7 @@
     "description": "Dev tools for working with prosopo contracts",
     "main": "dist/index.js",
     "scripts": {
+        "build": "tsc",
         "cli": "ts-node src/cli.ts"
     },
     "author": "Prosopo Limited",

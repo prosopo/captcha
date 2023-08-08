@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, logger } from '@prosopo/common'
+import { LogLevel, getLogger } from '@prosopo/common'
 import { deployDapp, deployProtocol } from '../contract/deploy/index'
 import { exec } from '../util'
-import { getLogLevel } from '@prosopo/cli'
+import { getLogLevel } from '@prosopo/common'
 import { importContract } from '../contract'
 import { loadEnv } from '@prosopo/cli'
 import { runTests } from '../test/index'
@@ -33,7 +33,7 @@ export async function processArgs(args) {
         choices: Object.keys(LogLevel),
     }).argv
 
-    const log = logger(getLogLevel(parsed.logLevel), 'CLI')
+    const log = getLogger(getLogLevel(parsed.logLevel), 'CLI')
 
     yargs
         .usage('Usage: $0 [global options] <command> [options]')

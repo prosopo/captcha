@@ -23,8 +23,10 @@ import {
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
+    DatasetWithIds,
     Hash,
     PendingCaptchaRequest,
+    ProsopoConfig,
     Provider,
     ProviderRegistered,
     RandomProvider,
@@ -41,15 +43,14 @@ import {
 } from '@prosopo/datasets'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Header, SignedBlock } from '@polkadot/types/interfaces/runtime/index'
-import { Logger, ProsopoEnvError, logger } from '@prosopo/common'
-import { ProsopoCaptchaContract, getBlockNumber } from '@prosopo/contract'
+import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 import { SubmittableResult } from '@polkadot/api'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { shuffleArray } from '../util'
-import { wrapQuery } from '@prosopo/contract'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -65,6 +66,8 @@ export class Tasks {
 
     logger: Logger
 
+    config: ProsopoConfig
+
     constructor(env: ProviderEnvironment) {
         if (!env.contractInterface) {
             throw new ProsopoEnvError(
@@ -74,12 +77,12 @@ export class Tasks {
                 { contractAddress: env.contractAddress }
             )
         }
-
+        this.config = env.config
         this.contract = env.contractInterface
         this.db = env.db as Database
         this.captchaConfig = env.config.captchas
         this.captchaSolutionConfig = env.config.captchaSolutions
-        this.logger = logger(env.config.logLevel, 'Tasks')
+        this.logger = getLogger(env.config.logLevel, 'Tasks')
     }
 
     async providerSetDatasetFromFile(file: JSON): Promise<SubmittableResult | undefined> {
@@ -89,6 +92,21 @@ export class Tasks {
     }
 
     async providerSetDataset(datasetRaw: DatasetRaw): Promise<SubmittableResult | undefined> {
+        // check that the number of captchas contained within dataset.captchas is greater than or equal to the total
+        // number of captchas that must be served
+        if (datasetRaw.captchas.length < this.config.captchas.solved.count + this.config.captchas.unsolved.count) {
+            throw new ProsopoEnvError('DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+        }
+
+        // check that the number of solutions contained within dataset.captchas is greater than or equal to the number
+        // of solved captchas that must be served
+        const solutions = datasetRaw.captchas
+            .map((captcha): number => (captcha.solution ? 1 : 0))
+            .reduce((partialSum, b) => partialSum + b, 0)
+        if (solutions < this.config.captchas.solved.count) {
+            throw new ProsopoEnvError('DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED', this.providerSetDataset.name)
+        }
+
         const dataset = await buildDataset(datasetRaw)
         if (!dataset.datasetId || !dataset.datasetContentId) {
             throw new ProsopoEnvError('DATASET.DATASET_ID_UNDEFINED', this.providerSetDataset.name)
@@ -514,5 +532,11 @@ export class Tasks {
     /* Returns public details of provider */
     async getProviderDetails(): Promise<Provider> {
         return await wrapQuery(this.contract.query.getProvider, this.contract.query)(this.contract.pair.address)
+    }
+
+    /** Get the dataset from the databse */
+
+    async getProviderDataset(datasetId: string): Promise<DatasetWithIds> {
+        return await this.db.getDataset(datasetId)
     }
 }

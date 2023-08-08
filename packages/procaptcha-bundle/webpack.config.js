@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const CompressionPlugin = require('compression-webpack-plugin')
@@ -8,8 +9,8 @@ const path = require('path')
 const { JsonAccessOptimizer } = require('webpack-json-access-optimizer')
 const { ProvidePlugin } = require('webpack')
 const { loadEnv } = require('@prosopo/cli')
-const { logger } = require('@prosopo/common')
-const log = logger(`Info`, `webpack.config.js`)
+const { getLogger } = require('@prosopo/common')
+const log = getLogger(`Info`, `webpack.config.js`)
 const moduleDirs = [
     path.resolve(__dirname, 'node_modules'),
     path.resolve(__dirname, '../../node_modules'),
@@ -97,6 +98,16 @@ loadEnv()
 module.exports = (env, argv) => {
     const isProduction = argv.mode === 'production'
     const libraryName = 'procaptcha_bundle'
+    const defineVars = {
+        // TODO decide on what NODE_ENV is for
+        'process.env.NODE_ENV': process.env.NODE_ENV || JSON.stringify(isProduction ? 'production' : 'development'),
+        'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
+        'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
+        'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
+        //only needed if bundling with a site key
+        'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
+    }
+    log.info(`Env vars: ${JSON.stringify(defineVars, null, 4)}`)
     return {
         resolve: {
             extensions: ['.js', '.jsx', '.ts', '.tsx'],
@@ -157,13 +168,7 @@ module.exports = (env, argv) => {
                 template: './src/index.html',
             }),
             //new BundleAnalyzerPlugin(),
-            new webpack.DefinePlugin({
-                'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
-                'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
-                'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
-                'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
-                'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
-            }),
+            new webpack.DefinePlugin(defineVars),
             // new webpack.optimize.SplitChunksPlugin(),
             new CompressionPlugin(),
             new MiniCssExtractPlugin({
