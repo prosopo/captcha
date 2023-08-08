@@ -22,6 +22,7 @@ import {
     Item,
     MerkleProof,
 } from '@prosopo/types'
+import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '@prosopo/datasets'
 import {
     compareCaptchaSolutions,
     computeCaptchaHash,
@@ -37,6 +38,7 @@ import {
 import { expect } from 'chai'
 import { it } from 'mocha'
 import path from 'path'
+import exp = require('constants')
 
 describe('CAPTCHA FUNCTIONS', async function () {
     let MOCK_ITEMS: Item[]
@@ -113,7 +115,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
                     items: ITEMS,
                 },
                 {
-                    captchaId: '0xff104b75ea2eff08e9cbc8deeee26be24c1e731f3f64eee430dccfe2687be289',
+                    captchaId: '0x658d30c45a4a5b5109c50e3f25acf53641a38dec9f5af9ffdc27c9b30e75acca',
                     captchaContentId: '0x01',
                     salt: '0x02',
                     target: 'train',
@@ -179,6 +181,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, true, true, false))
         expect(captchaHashes[0]).to.equal('captchaId' in dataset.captchas[0] ? dataset.captchas[0].captchaId : '')
         expect(captchaHashes[1]).to.equal('captchaId' in dataset.captchas[1] ? dataset.captchas[1].captchaId : '')
+        expect(captchaHashes[0]).to.not.equal(captchaHashes[1])
     })
 
     it('Captcha solutions are successfully parsed', () => {
@@ -208,6 +211,24 @@ describe('CAPTCHA FUNCTIONS', async function () {
         } as CaptchaWithoutId
 
         expect(computeCaptchaHash(captcha, true, true, false)).to.be.a('string')
+
+        const captchaEmptyArraySolution = {
+            solution: [],
+            salt: '',
+            target: 'plane',
+            items: MOCK_ITEMS,
+        }
+
+        const captchaUndefinedSolution = {
+            solution: undefined,
+            salt: '',
+            target: 'plane',
+            items: MOCK_ITEMS,
+        }
+
+        expect(computeCaptchaHash(captchaEmptyArraySolution, true, true, true)).to.not.equal(
+            computeCaptchaHash(captchaUndefinedSolution, true, true, true)
+        )
     })
 
     it('Captcha solutions are correctly sorted and computed', () => {
@@ -379,5 +400,15 @@ describe('CAPTCHA FUNCTIONS', async function () {
         const leaf = '0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16'
         const verification = verifyProof(leaf, [[proof]])
         expect(verification).to.be.false
+    })
+    it('Returns sorted solutions', () => {
+        const emptyArraySolution = []
+        expect(getSolutionValueToHash(emptyArraySolution)).to.deep.equal([])
+        const hashSolutions = ['0x3', '0x2', '0x1']
+        expect(getSolutionValueToHash(hashSolutions)).to.deep.equal(['0x1', '0x2', '0x3'])
+        const numberSolutions = [3, 2, 1]
+        expect(getSolutionValueToHash(numberSolutions)).to.deep.equal([1, 2, 3])
+        const undefinedSolution = undefined
+        expect(getSolutionValueToHash(undefinedSolution)).to.deep.equal([NO_SOLUTION_VALUE])
     })
 })
