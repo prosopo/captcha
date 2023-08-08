@@ -365,7 +365,10 @@ pub mod captcha {
         }
 
         fn get_author_bytes() -> [u8; 32] {
-            let env_author_bytes: [u8; 32] = [212,28,96,15,28,172,179,198,79,76,167,189,158,170,135,63,142,73,178,171,213,218,70,123,189,157,19,23,188,227,201,32]; // the account which can instantiate the contract
+            let env_author_bytes: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ]; // the account which can instantiate the contract
             env_author_bytes
         }
 
