@@ -101,7 +101,6 @@ export const ProsopoCaptchaCountConfigSchema = z.object({
 export const ProsopoImageServerConfigSchema = z.object({
     baseURL: z.string().url(),
     port: z.number().optional().default(9229),
-    fileServePaths: z.string(),
 })
 
 export const ProsopoCaptchaSolutionConfigSchema = z.object({
