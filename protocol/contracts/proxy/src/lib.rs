@@ -59,13 +59,9 @@ pub mod proxy {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProxyReturnTypes {
-        GetGitCommitId([u8; 20]),
-        GetAuthor(AccountId),
-        GetAdmin(AccountId),
-        GetDestination(AccountId),
-        ProxyWithdraw,
-        ProxyTerminate,
-        ProxySetCodeHash,
+        Hash20([u8; 20]),
+        AccountId(AccountId),
+        Void,
     }
 
     pub type Amount = Balance;
@@ -131,7 +127,7 @@ pub mod proxy {
             self.check_is_admin(caller)?;
 
             match self.env().transfer(caller, amount) {
-                Ok(()) => Ok(ProxyReturnTypes::ProxyWithdraw),
+                Ok(()) => Ok(ProxyReturnTypes::Void),
                 Err(_) => Err(Error::TransferFailed),
             }
         }
@@ -203,22 +199,22 @@ pub mod proxy {
         pub fn handler(&mut self, msg: ProxyMessages) -> Result<ProxyReturnTypes, Error> {
             match msg {
                 ProxyMessages::GetGitCommitId => {
-                    Ok(ProxyReturnTypes::GetGitCommitId(self.get_git_commit_id()))
+                    Ok(ProxyReturnTypes::Hash20(self.get_git_commit_id()))
                 }
-                ProxyMessages::GetAuthor => Ok(ProxyReturnTypes::GetAuthor(self.get_author())),
-                ProxyMessages::GetAdmin => Ok(ProxyReturnTypes::GetAdmin(self.get_admin())),
+                ProxyMessages::GetAuthor => Ok(ProxyReturnTypes::AccountId(self.get_author())),
+                ProxyMessages::GetAdmin => Ok(ProxyReturnTypes::AccountId(self.get_admin())),
                 ProxyMessages::GetDestination => {
-                    Ok(ProxyReturnTypes::GetDestination(self.get_destination()))
+                    Ok(ProxyReturnTypes::AccountId(self.get_destination()))
                 }
                 ProxyMessages::ProxyWithdraw(amount) => self
                     .withdraw(amount)
-                    .map(|_| ProxyReturnTypes::ProxyWithdraw),
+                    .map(|_| ProxyReturnTypes::Void),
                 ProxyMessages::ProxyTerminate => {
-                    self.terminate().map(|_| ProxyReturnTypes::ProxyTerminate)
+                    self.terminate().map(|_| ProxyReturnTypes::Void)
                 }
                 ProxyMessages::ProxySetCodeHash(code_hash) => self
                     .set_code_hash(code_hash)
-                    .map(|_| ProxyReturnTypes::ProxySetCodeHash),
+                    .map(|_| ProxyReturnTypes::Void),
             }
         }
     }
@@ -295,7 +291,7 @@ pub mod proxy {
 
             // check the caller is admin
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
-            if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
+            if let ProxyReturnTypes::AccountId(admin) = admin_result {
                 assert_eq!(admin, AccountId::from(ENV_AUTHOR_BYTES));
             }
         }
@@ -309,7 +305,7 @@ pub mod proxy {
             let mut contract = get_contract_unguarded(0);
             set_callee(get_contract_account(0));
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
-            if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
+            if let ProxyReturnTypes::AccountId(admin) = admin_result {
                 set_caller(admin); // an account which does have permission to call terminate
                 debug!("Admin account {:?}", admin);
                 assert_eq!(admin, AccountId::from(ENV_AUTHOR_BYTES));
@@ -362,7 +358,7 @@ pub mod proxy {
             // give the contract funds
             set_account_balance(contract.env().account_id(), 10000000000);
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
-            if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
+            if let ProxyReturnTypes::AccountId(admin) = admin_result {
                 set_caller(admin); // use the admin acc
                 let admin_bal: u128 = get_account_balance(admin).unwrap();
                 let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
@@ -397,7 +393,7 @@ pub mod proxy {
             let mut contract = get_contract_unguarded(0);
             set_callee(get_contract_account(0));
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
-            if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
+            if let ProxyReturnTypes::AccountId(admin) = admin_result {
                 set_caller(admin); // use the admin acc
                 let admin_bal = get_account_balance(admin).unwrap();
                 let contract_bal = get_account_balance(contract.env().account_id()).unwrap();
