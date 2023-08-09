@@ -206,12 +206,10 @@ pub mod proxy {
                 ProxyMessages::GetDestination => {
                     Ok(ProxyReturnTypes::AccountId(self.get_destination()))
                 }
-                ProxyMessages::ProxyWithdraw(amount) => self
-                    .withdraw(amount)
-                    .map(|_| ProxyReturnTypes::Void),
-                ProxyMessages::ProxyTerminate => {
-                    self.terminate().map(|_| ProxyReturnTypes::Void)
+                ProxyMessages::ProxyWithdraw(amount) => {
+                    self.withdraw(amount).map(|_| ProxyReturnTypes::Void)
                 }
+                ProxyMessages::ProxyTerminate => self.terminate().map(|_| ProxyReturnTypes::Void),
                 ProxyMessages::ProxySetCodeHash(code_hash) => self
                     .set_code_hash(code_hash)
                     .map(|_| ProxyReturnTypes::Void),
