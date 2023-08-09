@@ -364,7 +364,7 @@ pub mod proxy {
                 let withdraw_result = contract
                     .handler(ProxyMessages::ProxyWithdraw(withdraw_amount))
                     .unwrap();
-                if let ProxyReturnTypes::ProxyWithdraw = withdraw_result {
+                if let ProxyReturnTypes::Void = withdraw_result {
                     assert_eq!(
                         get_account_balance(admin).unwrap(),
                         admin_bal + withdraw_amount
