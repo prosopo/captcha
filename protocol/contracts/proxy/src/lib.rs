@@ -89,11 +89,11 @@ pub mod proxy {
             ];
             env_git_commit_id
         }
-        
+
         fn get_author_bytes(&self) -> [u8; 32] {
             let env_author_bytes: [u8; 32] = [
-                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0,
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0,
             ]; // the account which can instantiate the contract
             env_author_bytes
         }
@@ -222,8 +222,10 @@ pub mod proxy {
                 ProxyMessages::ProxySetCodeHash(code_hash) => self
                     .set_code_hash(code_hash)
                     .map(|_| ProxyReturnTypes::Void),
-                    ProxyMessages::GetAdminBytes => Ok(ProxyReturnTypes::U8x32(self.get_admin_bytes())),
-                    ProxyMessages::GetAuthorBytes => Ok(ProxyReturnTypes::U8x32(self.get_author_bytes())),
+                ProxyMessages::GetAdminBytes => Ok(ProxyReturnTypes::U8x32(self.get_admin_bytes())),
+                ProxyMessages::GetAuthorBytes => {
+                    Ok(ProxyReturnTypes::U8x32(self.get_author_bytes()))
+                }
             }
         }
     }
@@ -260,9 +262,10 @@ pub mod proxy {
         use super::*;
 
         const ENV_AUTHOR_BYTES: [u8; 32] = [
-       212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-    ]; // the account which can instantiate the contract
-       // alice: [ 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125, ]
+            212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133,
+            88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+        ]; // the account which can instantiate the contract
+           // alice: [ 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125, ]
 
         /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
         fn get_contract_unguarded(index: u128) -> Proxy {
