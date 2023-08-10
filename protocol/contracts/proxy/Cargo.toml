@@ -31,7 +31,7 @@ features = ["ink-as-dependency"]
 version = "0.3.0"
 path = "../../contracts/common"
 default-features = false
-features = ["ink-as-dependency"]
+features = ["ink-as-dependency", "test-dependency"]
 
 [lib]
 name = "proxy"
