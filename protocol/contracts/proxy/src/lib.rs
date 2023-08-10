@@ -238,7 +238,7 @@ pub mod proxy {
         )
     )]
     mod tests {
-        use common_dev::common_dev::tests::*;
+        use common::common::tests::*;
         use ink;
         use ink::codegen::Env;
         use ink::env::hash::Blake2x256;

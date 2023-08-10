@@ -662,7 +662,6 @@ name = "proxy"
 version = "4.0.0"
 dependencies = [
  "common",
- "common_dev",
  "disable_macro",
  "inject_self_macro",
  "ink",
