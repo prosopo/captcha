@@ -117,7 +117,7 @@ pub mod common {
         }
     }
 
-    #[cfg(any(test, feature = "ink-as-dependency"))]
+    #[cfg(any(test, feature = "test-dependency"))]
     #[cfg_attr(
         debug_assertions,
         allow(
@@ -132,7 +132,6 @@ pub mod common {
     )]
     pub mod tests {
 
-        /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
         use ink;
         use ink::codegen::Env;
@@ -254,7 +253,9 @@ pub mod common {
         /// Test accounts are funded with existential deposit
         #[ink::test]
         fn test_accounts_funded() {
-            for func in vec![get_admin_account, get_contract_account].iter() {
+            let arr: Vec<&dyn Fn(u128) -> AccountId> =
+                vec![&get_admin_account, &get_contract_account];
+            for func in arr.iter() {
                 for i in 0..10 {
                     let account = func(i);
                     // check the account has funds. Will panic if not as no existential deposit == account not found
@@ -269,16 +270,15 @@ pub mod common {
             let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
 
             // for each method of generating an account
-            for func in vec![
-                get_admin_account,
-                get_contract_account,
-                get_user_account,
-                get_forward_account,
-                get_provider_account,
-                get_dapp_account,
-            ]
-            .iter()
-            {
+            let arr: Vec<&dyn Fn(u128) -> AccountId> = vec![
+                &get_admin_account,
+                &get_contract_account,
+                &get_user_account,
+                &get_forward_account,
+                &get_provider_account,
+                &get_dapp_account,
+            ];
+            for func in arr.iter() {
                 // try the first 10 accounts
                 for i in 0..10 {
                     let account = func(i);
@@ -291,7 +291,8 @@ pub mod common {
             }
 
             // do the same for non-account based IDs
-            for func in vec![get_code_hash].iter() {
+            let arr_hash: Vec<&dyn Fn(u128) -> [u8; 32]> = vec![&get_code_hash];
+            for func in arr_hash.iter() {
                 // try the first 10 accounts
                 for i in 0..10 {
                     let account = func(i);
