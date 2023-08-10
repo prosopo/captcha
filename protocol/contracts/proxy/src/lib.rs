@@ -42,6 +42,7 @@ pub mod proxy {
         SetCodeHashFailed,
         InvalidDestination,
         UnknownMessage,
+        NotAuthor,
     }
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
@@ -67,21 +68,14 @@ pub mod proxy {
     pub type Amount = Balance;
 
     impl Proxy {
-        /// Instantiate this contract with an address of the `logic` contract.
-        ///
-        /// Sets the privileged account to the caller. Only this account may
-        /// later changed the `forward_to` address.
         #[ink(constructor)]
-        pub fn new() -> Self {
-            let author = AccountId::from(ENV_AUTHOR_BYTES);
+        pub fn new() -> Result<Self, Error> {
+            let author = AccountId::from(Self::get_author_bytes());
             let caller = Self::env().caller();
             if caller != author {
-                panic!(
-                    "Not authorised to instantiate this contract: {:?} != {:?}",
-                    caller, author
-                );
+                return Err(Error::NotAuthor);
             }
-            Self::new_unguarded()
+            Ok(Self::new_unguarded())
         }
 
         fn new_unguarded() -> Self {
@@ -96,15 +90,31 @@ pub mod proxy {
             ];
             env_git_commit_id
         }
+        
+        fn get_author_bytes() -> [u8; 32] {
+            let env_author_bytes: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ]; // the account which can instantiate the contract
+            env_author_bytes
+        }
 
+        /// the account which can instantiate the contract
         fn get_author(&self) -> AccountId {
-            AccountId::from(ENV_AUTHOR_BYTES)
+            AccountId::from(Self::get_author_bytes())
+        }
+
+        fn get_admin_bytes(&self) -> [u8; 32] {
+            let env_admin_bytes: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
+            env_admin_bytes
         }
 
         /// the admin which can control this contract. set to author/instantiator by default
         fn get_admin(&self) -> AccountId {
-            let env_admin_bytes: [u8; 32] = ENV_AUTHOR_BYTES;
-            AccountId::from(env_admin_bytes)
+            AccountId::from(self.get_admin_bytes())
         }
 
         fn get_destination(&self) -> AccountId {
