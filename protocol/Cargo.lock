@@ -112,15 +112,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "common_dev"
-version = "0.3.0"
-dependencies = [
- "ink",
- "parity-scale-codec",
- "scale-info",
-]
-
-[[package]]
 name = "cpufeatures"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
