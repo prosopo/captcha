@@ -59,7 +59,6 @@
         "eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
         "eslint-plugin-unused-imports": "^2.0.0",
         "node-loader": "^2.0.0",
-        "nodemon": "^2.0.20",
         "npm-check-updates": "^15.3.4",
         "prettier": "2.8.8",
         "tsc-alias": "^1.8.6",
