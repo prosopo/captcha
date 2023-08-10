@@ -326,21 +326,20 @@ pub mod captcha {
         ProviderFeeTooHigh,
         /// Returned if the commitment already exists
         CommitAlreadyExists,
+        /// Returned if the caller is not the author
+        NotAuthor,
     }
 
     impl Captcha {
         /// Constructor
         #[ink(constructor, payable)]
-        pub fn new() -> Self {
+        pub fn new() -> Result<Self, Error> {
             let author = AccountId::from(Self::get_author_bytes());
             let caller = Self::env().caller();
             if caller != author {
-                panic!(
-                    "Not authorised to instantiate this contract: {:?} != {:?}",
-                    caller, author
-                );
+                return Err(Error::NotAuthor);
             }
-            Self::new_unguarded()
+            Ok(Self::new_unguarded())
         }
 
         fn new_unguarded() -> Self {
