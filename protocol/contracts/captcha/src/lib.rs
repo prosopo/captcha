@@ -1572,7 +1572,6 @@ pub mod captcha {
         }
 
         #[ink::test]
-        #[should_panic]
         fn test_ctor_guard_fail() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
@@ -1580,7 +1579,10 @@ pub mod captcha {
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
             let contract = Captcha::new();
-            // should fail to construct and panic
+            assert_eq!(
+                contract.unwrap_err(),
+                Error::NotAuthor
+            );
         }
 
         #[ink::test]
