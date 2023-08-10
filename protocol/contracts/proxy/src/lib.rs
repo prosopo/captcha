@@ -373,6 +373,7 @@ pub mod proxy {
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
             if let ProxyReturnTypes::AccountId(admin) = admin_result {
                 set_caller(admin); // use the admin acc
+                set_account_balance(admin, 10000000000); // give the admin some funds so the account exists
                 let admin_bal: u128 = get_account_balance(admin).unwrap();
                 let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
                 let withdraw_amount: u128 = 1;
