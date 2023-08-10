@@ -334,12 +334,13 @@ pub mod captcha {
         /// Constructor
         #[ink(constructor, payable)]
         pub fn new() -> Result<Self, Error> {
-            let author = AccountId::from(Self::get_author_bytes());
+            let result = Self::new_unguarded();
+            let author = AccountId::from(Self::get_author_bytes(&result));
             let caller = Self::env().caller();
             if caller != author {
                 return Err(Error::NotAuthor);
             }
-            Ok(Self::new_unguarded())
+            Ok(result)
         }
 
         fn new_unguarded() -> Self {
@@ -363,7 +364,7 @@ pub mod captcha {
             env_git_commit_id
         }
 
-        fn get_author_bytes() -> [u8; 32] {
+        fn get_author_bytes(&self) -> [u8; 32] {
             let env_author_bytes: [u8; 32] = [
                 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
                 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
@@ -374,7 +375,7 @@ pub mod captcha {
         /// the account which can instantiate the contract
         #[ink(message)]
         pub fn get_author(&self) -> AccountId {
-            AccountId::from(Self::get_author_bytes())
+            AccountId::from(self.get_author_bytes())
         }
 
         fn get_admin_bytes(&self) -> [u8; 32] {
