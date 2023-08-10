@@ -1,6 +1,5 @@
 [lib]
 proc-macro = true
-name = "disable_macro"
 
 [package]
 name = "disable_macro"
