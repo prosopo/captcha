@@ -50,7 +50,9 @@ pub mod proxy {
     pub enum ProxyMessages {
         GetGitCommitId,
         GetAuthor,
+        GetAuthorBytes,
         GetAdmin,
+        GetAdminBytes,
         GetDestination,
         ProxyWithdraw(Amount),
         ProxyTerminate,
@@ -61,6 +63,7 @@ pub mod proxy {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProxyReturnTypes {
         Hash20([u8; 20]),
+        U8x32([u8; 32]),
         AccountId(AccountId),
         Void,
     }
@@ -223,6 +226,8 @@ pub mod proxy {
                 ProxyMessages::ProxySetCodeHash(code_hash) => self
                     .set_code_hash(code_hash)
                     .map(|_| ProxyReturnTypes::Void),
+                    ProxyMessages::GetAdminBytes => Ok(ProxyReturnTypes::U8x32(self.get_admin_bytes())),
+                    ProxyMessage::GetAuthorBytes => Ok(ProxyReturnTypes::U8x32(self.get_author_bytes())),
             }
         }
     }
