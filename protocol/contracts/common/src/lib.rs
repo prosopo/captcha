@@ -109,12 +109,15 @@ pub mod common {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [25,175,186,108,140,91,98,141,48,59,196,39,26,58,56,221,240,54,155,164];
+            let env_git_commit_id: [u8; 20] = [
+                25, 175, 186, 108, 140, 91, 98, 141, 48, 59, 196, 39, 26, 58, 56, 221, 240, 54,
+                155, 164,
+            ];
             env_git_commit_id
         }
     }
 
-
+    #[cfg(any(test, feature = "ink-as-dependency"))]
     #[cfg_attr(
         debug_assertions,
         allow(
@@ -248,73 +251,55 @@ pub mod common {
             contract
         }
 
-        /// Unit tests are placed in an inner module so they are independent of imports in other packages. For some reason in ink, when importing from this module the module being imported cannot be marked as an ink test otherwise compilation fails. Hence we put it as an inner module here. External packages can import the outer module and use the functions defined here.
-        #[cfg(test)]
-        #[cfg_attr(
-            debug_assertions,
-            allow(
-                dead_code,
-                unused_imports,
-                unused_variables,
-                unused_mut,
-                unused_must_use,
-                non_upper_case_globals,
-                non_shorthand_field_patterns
-            )
-        )]
-        pub mod tests_inner {
-            use super::*;
+        /// Test accounts are funded with existential deposit
+        #[ink::test]
+        fn test_accounts_funded() {
+            for func in vec![get_admin_account, get_contract_account].iter() {
+                for i in 0..10 {
+                    let account = func(i);
+                    // check the account has funds. Will panic if not as no existential deposit == account not found
+                    get_account_balance(account).unwrap();
+                }
+            }
+        }
 
-            /// Test accounts are funded with existential deposit
-            #[ink::test]
-            fn test_accounts_funded() {
-                for func in vec![get_admin_account, get_contract_account].iter() {
-                    for i in 0..10 {
-                        let account = func(i);
-                        // check the account has funds. Will panic if not as no existential deposit == account not found
-                        get_account_balance(account).unwrap();
-                    }
+        /// Are the unit test accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
+        #[ink::test]
+        fn test_accounts_unique() {
+            let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
+
+            // for each method of generating an account
+            for func in vec![
+                get_admin_account,
+                get_contract_account,
+                get_user_account,
+                get_forward_account,
+                get_provider_account,
+                get_dapp_account,
+            ]
+            .iter()
+            {
+                // try the first 10 accounts
+                for i in 0..10 {
+                    let account = func(i);
+                    assert!(
+                        set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
+                        "Duplicate account ID found: {:?}",
+                        account
+                    );
                 }
             }
 
-            /// Are the unit test accounts unique, i.e. make sure there's no collisions in accounts destined for different roles, as this would invalidate any caller guards
-            #[ink::test]
-            fn test_accounts_unique() {
-                let mut set: std::collections::HashSet<[u8; 32]> = std::collections::HashSet::new();
-
-                // for each method of generating an account
-                for func in vec![
-                    get_admin_account,
-                    get_contract_account,
-                    get_user_account,
-                    get_forward_account,
-                    get_provider_account,
-                    get_dapp_account,
-                ]
-                .iter()
-                {
-                    // try the first 10 accounts
-                    for i in 0..10 {
-                        let account = func(i);
-                        assert!(
-                            set.insert(*AsRef::<[u8; 32]>::as_ref(&account)),
-                            "Duplicate account ID found: {:?}",
-                            account
-                        );
-                    }
-                }
-
-                // do the same for non-account based IDs
-                for func in vec![get_code_hash].iter() {
-                    // try the first 10 accounts
-                    for i in 0..10 {
-                        let account = func(i);
-                        assert!(
-                            set.insert(account),
-                            "Duplicate account ID found: {:?}",
-                            account
-                        );
-                    }
+            // do the same for non-account based IDs
+            for func in vec![get_code_hash].iter() {
+                // try the first 10 accounts
+                for i in 0..10 {
+                    let account = func(i);
+                    assert!(
+                        set.insert(account),
+                        "Duplicate account ID found: {:?}",
+                        account
+                    );
                 }
             }
         }
