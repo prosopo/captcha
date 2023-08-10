@@ -30,7 +30,6 @@
         "dev:server": "npm -w @prosopo/client-example-server run dev",
         "start:demo": "npm -w @prosopo/client-example run start",
         "start:bundle": "npm -w client-bundle-example run start",
-        "provider": "npm -w @prosopo/provider run cli",
         "populate-data": "npm -w @prosopo/provider run populate-data",
         "test": "npm -w @prosopo/dev run test",
         "lint": "npm run lint --workspaces --if-present",
