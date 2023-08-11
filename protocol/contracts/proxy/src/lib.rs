@@ -77,6 +77,15 @@ pub mod proxy {
             Ok(result)
         }
 
+        #[ink(constructor)]
+        pub fn new_panic() -> Self {
+            let result = Self::new();
+            if let Err(e) = result {
+                panic!("{:?}", e);
+            }
+            result.unwrap()
+        }
+
         fn new_unguarded() -> Self {
             Self {}
         }
