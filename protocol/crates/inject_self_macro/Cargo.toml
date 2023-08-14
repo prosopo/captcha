@@ -1,6 +1,5 @@
 [lib]
 proc-macro = true
-name = "inject_self_macro"
 
 [package]
 name = "inject_self_macro"
