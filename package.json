@@ -11,6 +11,7 @@
         "cmd": "e() { $@ ;}; f() { cmd=\"$1\"; shift; for arg in $@; do str=$(printf \"$cmd\" \"$arg\"); echo exec: $str; echo; e $str || exit 1; done ;}; f",
         "build": "npm run --silent cmd \"npm run --silent -w @prosopo/%s build\"",
         "clean": "npm run --silent cmd \"npm run --silent -w @prosopo/%s clean\"",
+        "build:all": "npm run --workspaces build",
         "rebuild": "f() { npm run --silent cmd \"npm run clean %s\" $@ ; npm run cmd \"npm run build %s\" $@ ;}; f",
         "rebuild:npm": "npm run clean:npm && npm i",
         "deploy_protocol": "npm run -w @prosopo/dev cli deploy_protocol -- --logLevel=Debug --update_env",
