@@ -34,7 +34,6 @@ default-features = false
 features = ["ink-as-dependency", "test-dependency"]
 
 [lib]
-name = "captcha"
 path = "src/lib.rs"
 
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.
