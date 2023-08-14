@@ -158,6 +158,7 @@ pub mod proxy {
 
             match ink::env::set_code_hash(&code_hash) {
                 Ok(()) => Ok(()),
+                Err(ink::env::Error::CodeNotFound) => err!(self, Error::CodeNotFound),
                 Err(_) => err!(self, Error::SetCodeHashFailed),
             }
         }
