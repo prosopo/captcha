@@ -21,6 +21,7 @@ pub mod captcha {
     use common::err;
     use common::err_fn;
     use common::lazy;
+    use common::common::Error;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
@@ -260,74 +261,6 @@ pub mod captcha {
         commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
-    }
-
-    /// The error types
-    ///
-    #[derive(
-        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
-    )]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum Error {
-        /// Returned if the caller is not the admin
-        NotAdmin,
-        /// Returned if the caller is not the owner of the dapp
-        NotOwner,
-        /// Returned when the contract to address transfer fails
-        ContractTransferFailed,
-        /// Returned if provider account exists when it shouldn't
-        ProviderAccountExists,
-        /// Returned if provider exists when it shouldn't
-        ProviderExists,
-        /// Returned if provider account does not exists when it shouldn't
-        ProviderAccountDoesNotExist,
-        /// Returned if provider does not exist when it should
-        ProviderDoesNotExist,
-        /// Returned if provider has insufficient funds to operate
-        ProviderInsufficientFunds,
-        /// Returned if provider is inactive and trying to use the service
-        ProviderInactive,
-        /// Returned if url is already used by another provider
-        ProviderUrlUsed,
-        /// Returned if dapp exists when it shouldn't
-        DappExists,
-        /// Returned if dapp does not exist when it should
-        DappDoesNotExist,
-        /// Returned if dapp is inactive and trying to use the service
-        DappInactive,
-        /// Returned if dapp has insufficient funds to operate
-        DappInsufficientFunds,
-        /// Returned if captcha data does not exist
-        CaptchaDataDoesNotExist,
-        /// Returned if solution commitment does not exist when it should
-        CommitDoesNotExist,
-        /// Returned if dapp user does not exist when it should
-        DappUserDoesNotExist,
-        /// Returned if there are no active providers
-        NoActiveProviders,
-        /// Returned if the dataset ID and dataset ID with solutions are identical
-        DatasetIdSolutionsSame,
-        /// CodeNotFound ink env error
-        CodeNotFound,
-        /// An unknown ink env error has occurred
-        #[default]
-        Unknown,
-        /// Invalid contract
-        InvalidContract,
-        /// Invalid payee. Returned when the payee value does not exist in the enum
-        InvalidPayee,
-        /// Returned if not all captcha statuses have been handled
-        InvalidCaptchaStatus,
-        /// No correct captchas in history (either history is empty or all captchas are incorrect)
-        NoCorrectCaptcha,
-        /// Returned if not enough providers are active
-        NotEnoughActiveProviders,
-        /// Returned if provider fee is too high
-        ProviderFeeTooHigh,
-        /// Returned if the commitment already exists
-        CommitAlreadyExists,
-        /// Returned if the caller is not the author
-        NotAuthor,
     }
 
     impl Captcha {
