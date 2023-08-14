@@ -7,9 +7,7 @@ edition = "2021"
 [dependencies]
 ink = { git = "https://github.com/prosopo/ink_sr25519", branch="goastler-add-sr25519_verify", default-features = false }
 scale = { package = "parity-scale-codec", version = "3.4", default-features = false, features = ["derive"] }
-scale-info = { version = "2.7.0", default-features = false, features = ["derive"] }
-#ink_storage = {version = "4.1.0", default-features = false, optional = true, features = []}
-#ink_metadata = {version = "4.1.0", default-features = false, optional = true, features = []}
+scale-info = { version = "2.7.0", default-features = false, features = ["derive"], optional = true }
 
 [lib]
 path = "src/lib.rs"
@@ -21,7 +19,5 @@ overflow-checks = false
 [features]
 default = ["std"]
 std = ["ink/std", "scale/std", "scale-info/std"]
-ink-as-dependency = [ "scale-info/derive"
-#, "dep:ink_storage", "dep:ink_metadata"
-]
+ink-as-dependency = [ "scale-info/derive" ]
 test-dependency = []
