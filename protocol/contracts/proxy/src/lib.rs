@@ -19,6 +19,7 @@
 pub mod proxy {
 
     use common::err;
+    use common::config;
     #[allow(unused_imports)]
     use ink::env::debug_println as debug;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
@@ -89,20 +90,12 @@ pub mod proxy {
 
         /// Get the git commit id from when this contract was built
         fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [
-                25, 175, 186, 108, 140, 91, 98, 141, 48, 59, 196, 39, 26, 58, 56, 221, 240, 54,
-                155, 164,
-            ];
-            env_git_commit_id
+            config::get_git_commit_id()
         }
 
         /// the admin which can control this contract. set to author/instantiator by default
         fn get_admin(&self) -> AccountId {
-            let env_admin_bytes: [u8; 32] = [
-                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
-                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-            ];
-            AccountId::from(env_admin_bytes)
+            config::get_admin()
         }
 
         fn get_destination(&self) -> AccountId {
