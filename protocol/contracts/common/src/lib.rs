@@ -75,12 +75,6 @@ pub mod common {
         SetCodeHashFailed,
         InvalidDestination,
         UnknownMessage,
-        /// Returned if the caller is not the admin
-        NotAdmin,
-        /// Returned if the caller is not the owner of the dapp
-        NotOwner,
-        /// Returned when the contract to address transfer fails
-        ContractTransferFailed,
         /// Returned if provider account exists when it shouldn't
         ProviderAccountExists,
         /// Returned if provider exists when it shouldn't
