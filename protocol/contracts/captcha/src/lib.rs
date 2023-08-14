@@ -326,21 +326,30 @@ pub mod captcha {
         ProviderFeeTooHigh,
         /// Returned if the commitment already exists
         CommitAlreadyExists,
+        /// Returned if the caller is not the author
+        NotAuthor,
     }
 
     impl Captcha {
         /// Constructor
         #[ink(constructor, payable)]
-        pub fn new() -> Self {
-            let author = AccountId::from(Self::get_author_bytes());
+        pub fn new() -> Result<Self, Error> {
+            let result = Self::new_unguarded();
+            let author = AccountId::from(Self::get_author_bytes(&result));
             let caller = Self::env().caller();
             if caller != author {
-                panic!(
-                    "Not authorised to instantiate this contract: {:?} != {:?}",
-                    caller, author
-                );
+                return Err(Error::NotAuthor);
             }
-            Self::new_unguarded()
+            Ok(result)
+        }
+
+        #[ink(constructor)]
+        pub fn new_panic() -> Self {
+            let result = Self::new();
+            if let Err(e) = result {
+                panic!("{:?}", e);
+            }
+            result.unwrap()
         }
 
         fn new_unguarded() -> Self {
@@ -367,7 +376,7 @@ pub mod captcha {
             env_git_commit_id
         }
 
-        fn get_author_bytes() -> [u8; 32] {
+        fn get_author_bytes(&self) -> [u8; 32] {
             let env_author_bytes: [u8; 32] = [
                 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
                 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
@@ -378,7 +387,7 @@ pub mod captcha {
         /// the account which can instantiate the contract
         #[ink(message)]
         pub fn get_author(&self) -> AccountId {
-            AccountId::from(Self::get_author_bytes())
+            AccountId::from(self.get_author_bytes())
         }
 
         fn get_admin_bytes(&self) -> [u8; 32] {
@@ -1575,7 +1584,6 @@ pub mod captcha {
         }
 
         #[ink::test]
-        #[should_panic]
         fn test_ctor_guard_fail() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
@@ -1583,7 +1591,7 @@ pub mod captcha {
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
             let contract = Captcha::new();
-            // should fail to construct and panic
+            assert_eq!(contract.unwrap_err(), Error::NotAuthor);
         }
 
         #[ink::test]
