@@ -653,7 +653,7 @@ pub mod captcha {
             if balance > 0 {
                 self.env()
                     .transfer(provider_account, balance)
-                    .map_err(|_| Error::ContractTransferFailed)?;
+                    .map_err(|_| Error::TransferFailed)?;
             }
 
             Ok(())
@@ -705,7 +705,7 @@ pub mod captcha {
         fn check_dapp_owner_is_caller(&self, dapp: &Dapp) -> Result<(), Error> {
             let caller = self.env().caller();
             if dapp.owner != caller {
-                return err!(self, Error::NotOwner);
+                return err!(self, Error::NotAuthorised);
             }
 
             Ok(())
@@ -821,7 +821,7 @@ pub mod captcha {
             if balance > 0 {
                 self.env()
                     .transfer(dapp.owner, balance)
-                    .map_err(|_| Error::ContractTransferFailed)?;
+                    .map_err(|_| Error::TransferFailed)?;
             }
 
             // remove the dapp
@@ -1330,7 +1330,7 @@ pub mod captcha {
             let transfer_result =
                 ink::env::transfer::<ink::env::DefaultEnvironment>(caller, amount);
             if transfer_result.is_err() {
-                return err!(self, Error::ContractTransferFailed);
+                return err!(self, Error::TransferFailed);
             }
             Ok(())
         }
@@ -1346,7 +1346,7 @@ pub mod captcha {
                         return err!(self, Error::CodeNotFound);
                     }
                     _ => {
-                        return err!(self, Error::Unknown);
+                        return err!(self, Error::SetCodeHashFailed);
                     }
                 }
             }
@@ -1361,7 +1361,7 @@ pub mod captcha {
         /// Is the specified account the admin for this contract?
         fn check_is_admin(&self, acc: AccountId) -> Result<(), Error> {
             if self.get_admin() != acc {
-                return err!(self, Error::NotAdmin);
+                return err!(self, Error::NotAuthorised);
             }
             Ok(())
         }
@@ -1679,7 +1679,7 @@ pub mod captcha {
             set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
 
             let new_code_hash = get_code_hash(1);
-            assert_eq!(contract.set_code_hash(new_code_hash), Err(Error::NotAdmin));
+            assert_eq!(contract.set_code_hash(new_code_hash), Err(Error::NotAuthorised));
         }
 
         #[ink::test]
@@ -1709,7 +1709,7 @@ pub mod captcha {
             let mut contract = get_contract(0);
             set_caller(get_user_account(0)); // an account which does not have permission to call terminate
 
-            assert_eq!(contract.terminate().unwrap_err(), Error::NotAdmin);
+            assert_eq!(contract.terminate().unwrap_err(), Error::NotAuthorised);
         }
 
         #[ink::test]
@@ -1760,7 +1760,7 @@ pub mod captcha {
 
             // give the contract funds
             set_caller(get_user_account(0)); // use the admin acc
-            assert_eq!(contract.withdraw(1), Err(Error::NotAdmin));
+            assert_eq!(contract.withdraw(1), Err(Error::NotAuthorised));
         }
 
         #[ink::test]
