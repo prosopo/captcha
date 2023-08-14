@@ -11,7 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#![cfg_attr(any(not(feature = "std"), feature = "ink-as-dependency"), no_std, no_main)]
+#![cfg_attr(
+    any(not(feature = "std"), feature = "ink-as-dependency"),
+    no_std,
+    no_main
+)]
 
 pub use self::common::{Common, CommonRef};
 
@@ -67,7 +71,10 @@ pub mod common {
 
     /// The errors that can be returned by the Proxy contract.
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(any(feature = "std", feature = "ink-as-dependency"), derive(scale_info::TypeInfo))]
+    #[cfg_attr(
+        any(feature = "std", feature = "ink-as-dependency"),
+        derive(scale_info::TypeInfo)
+    )]
     // #[cfg_attr(any(feature = "std", feature = "ink-as-dependency"), derive(ink::storage::traits::StorageLayout))]
     pub enum Error {
         NotAuthorised,

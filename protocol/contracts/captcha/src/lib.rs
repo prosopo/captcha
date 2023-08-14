@@ -18,10 +18,10 @@ pub use self::captcha::{Captcha, CaptchaRef};
 #[ink::contract]
 pub mod captcha {
 
+    use common::common::Error;
     use common::err;
     use common::err_fn;
     use common::lazy;
-    use common::common::Error;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
@@ -1679,7 +1679,10 @@ pub mod captcha {
             set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
 
             let new_code_hash = get_code_hash(1);
-            assert_eq!(contract.set_code_hash(new_code_hash), Err(Error::NotAuthorised));
+            assert_eq!(
+                contract.set_code_hash(new_code_hash),
+                Err(Error::NotAuthorised)
+            );
         }
 
         #[ink::test]
