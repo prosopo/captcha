@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#![cfg_attr(not(feature = "std"), no_std, no_main)]
+#![cfg_attr(any(not(feature = "std"), feature = "ink-as-dependency"), no_std, no_main)]
 
 pub use self::common::{Common, CommonRef};
 
@@ -64,6 +64,19 @@ macro_rules! lazy {
 /// An ink contract must be defined in order to import functions into another contract
 #[ink::contract]
 pub mod common {
+
+    /// The errors that can be returned by the Proxy contract.
+    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
+    #[cfg_attr(any(feature = "std", feature = "ink-as-dependency"), derive(scale_info::TypeInfo))]
+    // #[cfg_attr(any(feature = "std", feature = "ink-as-dependency"), derive(ink::storage::traits::StorageLayout))]
+    pub enum Error {
+        NotAuthorised,
+        TransferFailed,
+        SetCodeHashFailed,
+        InvalidDestination,
+        UnknownMessage,
+        NotAuthor,
+    }
 
     /// get the account id in byte array format
     pub fn account_id_bytes(account: &AccountId) -> &[u8; 32] {
