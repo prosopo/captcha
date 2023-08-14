@@ -65,6 +65,37 @@ macro_rules! lazy {
 #[ink::contract]
 pub mod common {
 
+    pub mod config {
+        use super::*;
+        
+        /// Get the git commit id from when this contract was built
+        pub fn get_git_commit_id() -> [u8; 20] {
+            let env_git_commit_id: [u8; 20] = [
+                25, 175, 186, 108, 140, 91, 98, 141, 48, 59, 196, 39, 26, 58, 56, 221, 240, 54,
+                155, 164,
+            ];
+            env_git_commit_id
+        }
+
+        /// the account which can instantiate the contract
+        pub fn get_author() -> AccountId {
+            let env_author_bytes: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
+            AccountId::from(env_author_bytes)
+        }
+
+        /// the admin which can control this contract. set to author/instantiator by default
+        pub fn get_admin() -> AccountId {
+            let env_admin_bytes: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
+            AccountId::from(env_admin_bytes)
+        }
+    }
+
     /// get the account id in byte array format
     pub fn account_id_bytes(account: &AccountId) -> &[u8; 32] {
         AsRef::<[u8; 32]>::as_ref(account)
