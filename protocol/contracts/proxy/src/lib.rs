@@ -57,8 +57,8 @@ pub mod proxy {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProxyReturnTypes {
-        Hash20([u8; 20]),
         U8x32([u8; 32]),
+        U8x20([u8; 20]),
         AccountId(AccountId),
         Void,
     }
@@ -217,7 +217,7 @@ pub mod proxy {
         pub fn handler(&mut self, msg: ProxyMessages) -> Result<ProxyReturnTypes, Error> {
             match msg {
                 ProxyMessages::GetGitCommitId => {
-                    Ok(ProxyReturnTypes::Hash20(self.get_git_commit_id()))
+                    Ok(ProxyReturnTypes::U8x20(self.get_git_commit_id()))
                 }
                 ProxyMessages::GetAuthor => Ok(ProxyReturnTypes::AccountId(self.get_author())),
                 ProxyMessages::GetAdmin => Ok(ProxyReturnTypes::AccountId(self.get_admin())),
@@ -260,7 +260,7 @@ pub mod proxy {
         )
     )]
     mod tests {
-        use common_dev::common_dev::tests::*;
+        use common::common::tests::*;
         use ink;
         use ink::codegen::Env;
         use ink::env::hash::Blake2x256;
