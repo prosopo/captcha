@@ -42,7 +42,8 @@
     "workspaces": [
         "packages/*",
         "demos/*",
-        "dev"
+        "dev",
+        "protocol/dev"
     ],
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
