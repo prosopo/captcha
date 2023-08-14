@@ -7,7 +7,7 @@
     "files.autoSave": "onFocusChange", // optional but recommended
     "vs-code-prettier-eslint.prettierLast": "false", // set as "true" to run 'prettier' last not first
     "[rust]": {
-        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+        "editor.defaultFormatter": "rust-lang.rust-analyzer", // install the rust-analyzer extension first!
         "editor.formatOnSave": true
     },
     "[json]": {
