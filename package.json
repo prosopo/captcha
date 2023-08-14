@@ -33,6 +33,7 @@
         "start:bundle": "npm -w client-bundle-example run start",
         "populate-data": "npm -w @prosopo/provider run populate-data",
         "test": "npm -w @prosopo/dev run test",
+        "test:all": "npm run --workspaces --if-present test",
         "lint": "npm run lint --workspaces --if-present",
         "lint:fix": "npm run lint:fix --workspaces --if-present"
     },
