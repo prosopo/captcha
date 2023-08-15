@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { UseTranslationOptions, UseTranslationResponse, useTranslation as useTranslationDefault } from 'react-i18next'
-import i18n from '../i18n'
+import i18n from '../i18n.js'
 
 function useTranslation(options?: UseTranslationOptions): UseTranslationResponse<'translation'> & { t: typeof i18n.t } {
     return useTranslationDefault('translation', { i18n, ...options })

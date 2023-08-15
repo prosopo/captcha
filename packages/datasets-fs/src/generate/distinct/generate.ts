@@ -1,4 +1,4 @@
-import { Args } from './args'
+import { Args } from './args.js'
 import {
     CaptchaTypes,
     CaptchaWithoutId,
@@ -12,7 +12,7 @@ import {
     RawSolution,
 } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
-import { checkDuplicates } from '../util'
+import { checkDuplicates } from '../util.js'
 import { lodash, setSeedGlobal } from '@prosopo/util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-/* eslint-disable @typescript-eslint/no-var-requires */
+// @ts-nocheck
 import { BatchCommitmentsTask } from '@prosopo/provider'
 import { CalculateSolutionsTask } from '@prosopo/provider'
 import { Compact, u128 } from '@polkadot/types'
@@ -21,14 +21,13 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { cwd } from 'process'
 import { encodeStringAddress } from '@prosopo/provider'
-import { loadJSONFile, writeJSONFile } from './files'
+import { loadJSONFile, writeJSONFile } from './files.js'
 import { stringToU8a } from '@polkadot/util'
 import { wrapQuery } from '@prosopo/contract'
 import parser from 'cron-parser'
 import pm2 from 'pm2'
-const yargs = require('yargs')
-
-const validateAddress = (argv) => {
+import yargs from 'yargs/yargs'
+const validateAddress = (argv): { address: string } => {
     const address = encodeStringAddress(argv.address as string)
 
     return { address }
@@ -77,7 +76,9 @@ const validateScheduleExpression = (argv) => {
 export function processArgs(args, env: ProviderEnvironment) {
     const tasks = new Tasks(env)
     const logger = getLogger(env.config.logLevel, 'CLI')
-    return yargs
+    // @ts-ignore
+    // @ts-ignore
+    return yargs(args)
         .usage('Usage: $0 [global options] <command> [options]')
         .option('api', { demand: false, default: false, type: 'boolean' })
         .command(
@@ -145,7 +146,7 @@ export function processArgs(args, env: ProviderEnvironment) {
                 const provider = (await tasks.contract.query.getProvider(argv.address, {})).value.unwrap().unwrap()
                 if (provider && (argv.url || argv.fee || argv.payee || argv.value)) {
                     await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
-                        argv.url || provider.url,
+                        argv.url ? argv.url.toString() : provider.url,
                         argv.fee || provider.fee,
                         argv.payee || provider.payee,
                         { value: argv.value || 0 }
@@ -207,6 +208,7 @@ export function processArgs(args, env: ProviderEnvironment) {
         .command(
             'dapp_register',
             'Register a Dapp',
+            // @ts-ignore
             (yargs) =>
                 yargs
                     .option('contract', {
@@ -362,7 +364,9 @@ export function processArgs(args, env: ProviderEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    const result = (await tasks.contract.query.getDapp(argv.address)).value.unwrap().unwrap()
+                    const result = (await tasks.contract.query.getDapp(validateAddress(argv.address).address)).value
+                        .unwrap()
+                        .unwrap()
 
                     logger.info(JSON.stringify(result, null, 2))
                 } catch (err) {

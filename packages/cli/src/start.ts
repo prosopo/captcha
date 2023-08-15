@@ -14,8 +14,8 @@
 import { ProsopoApiError, getPair, i18nMiddleware } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Server } from 'http'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
-import { loadEnv } from './env'
+import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
+import { loadEnv } from './env.js'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import express from 'express'
@@ -100,7 +100,7 @@ function stop() {
     apiAppSrv.close()
 }
 //if main process
-if (typeof require !== undefined && require.main === module) {
+if (typeof module !== 'undefined' && !module.parent) {
     start().catch((error) => {
         console.error(error)
     })

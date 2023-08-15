@@ -13,7 +13,7 @@
 // limitations under the License.
 import { HandleOptions, handle } from 'i18next-http-middleware'
 
-import i18n from '../i18n'
+import i18n from '../i18n.js'
 
 function i18nMiddleware(options: HandleOptions): ReturnType<typeof handle> {
     return handle(i18n, { ...options })

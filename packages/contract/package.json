@@ -10,6 +10,7 @@
     "lint:fix": "npx eslint . --fix"
   },
   "main": "./dist/index.js",
+  "type": "module",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
@@ -31,7 +32,7 @@
   },
   "dependencies": {
     "@727-ventures/typechain-polkadot": "1.1.0",
-    "@727-ventures/typechain-types": "1.1.0",
+    "@727-ventures/typechain-types": "^1.1.0",
     "@polkadot/api": "10.9.1",
     "@polkadot/api-contract": "10.9.1",
     "@polkadot/keyring": "12.3.2",
@@ -48,7 +49,7 @@
   "devDependencies": {
     "@polkadot/api-augment": "10.9.1",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.4"
+    "typescript": "^5.1.6"
   },
   "repository": {
     "type": "git",

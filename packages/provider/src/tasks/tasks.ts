@@ -50,7 +50,7 @@ import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 import { SubmittableResult } from '@polkadot/api'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import { shuffleArray } from '../util'
+import { shuffleArray } from '../util.js'
 
 /**
  * @description Tasks that are shared by the API and CLI

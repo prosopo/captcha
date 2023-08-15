@@ -26,7 +26,7 @@ import type BN from 'bn.js'
 import { getTypeDescription } from './../shared/utils'
 // @ts-ignore
 import { EventRecord } from '@polkadot/types/interfaces'
-import { decodeEvents } from '../shared/utils'
+import { decodeEvents } from '../shared/utils.js'
 import DATA_TYPE_DESCRIPTIONS from '../data/proxy.json'
 import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/proxy.json'
 

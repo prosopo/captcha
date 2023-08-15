@@ -3,7 +3,7 @@
     "esModuleInterop": true,
     "importHelpers": true,
     "jsx": "react-jsx",
-    "module": "commonjs",
+    "module": "esnext",
     "skipLibCheck": true,
     "target": "esnext",
     "lib": [

@@ -19,15 +19,15 @@ import {
     verifyProof,
 } from '@prosopo/datasets'
 import { CaptchaSolution, CaptchaWithProof } from '@prosopo/types'
-import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api'
+import { CaptchaSolutionResponse, GetCaptchaResponse } from '../types/api.js'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
-import { ProsopoApiError } from '../api/handlers'
+import { ProsopoApiError } from '../api/handlers.js'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
 import { ProsopoEnvError } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/types'
 import { Signer } from '@polkadot/api/types'
-import { TCaptchaSubmitResult } from '../types/client'
+import { TCaptchaSubmitResult } from '../types/client.js'
 import { stringToHex } from '@polkadot/util'
 
 export class ProsopoCaptchaApi {

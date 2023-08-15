@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './config'
-export * from './contract'
-export * from './datasets'
-export * from './provider'
-export * from './procaptcha'
+export * from './config/index.js'
+export * from './contract/index.js'
+export * from './datasets/index.js'
+export * from './provider/index.js'
+export * from './procaptcha/index.js'

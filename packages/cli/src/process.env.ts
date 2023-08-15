@@ -14,10 +14,13 @@
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoConfig } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import prosopoConfig from './prosopo.config'
+import prosopoConfig from './prosopo.config.js'
 
 export function getEnv() {
-    return process.env.NODE_ENV || 'development'
+    if (process.env.NODE_ENV) {
+        return process.env.NODE_ENV.replace(/[^0-9a-z_]/gi, '')
+    }
+    return 'development'
 }
 
 export function getSs58Format(): number {

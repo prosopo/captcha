@@ -11,13 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, getLogger, getPair } from '@prosopo/common'
+import { LogLevelSchema, getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
-import { loadEnv } from './env'
-import { processArgs } from './argv'
-import { start } from './start'
-const log = getLogger(LogLevel.Info, 'cli')
+import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
+import { loadEnv } from './env.js'
+import { processArgs } from './argv.js'
+import { start } from './start.js'
+const log = getLogger(LogLevelSchema.enum.Info, 'cli')
 async function main() {
     loadEnv()
 

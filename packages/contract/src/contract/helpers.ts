@@ -30,7 +30,7 @@ import { Bytes } from '@polkadot/types-codec'
 import { Compact } from '@polkadot/types'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { Logger, capitaliseFirstLetter } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers'
+import { ProsopoContractError } from '../handlers.js'
 import { Registry } from '@polkadot/types-codec/types/registry'
 import { Weight } from '@polkadot/types/interfaces/runtime/index'
 

@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { BN } from '@polkadot/util'
-import { getPair } from '@prosopo/common'
-import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
 import { Environment } from '@prosopo/env'
+import { config } from 'dotenv'
+import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
+import { getPair } from '@prosopo/common'
 import { sendFunds } from '../setup'
 
-require('dotenv').config()
+config()
 
 async function main(account: string) {
     const pair = await getPair(getPairType(), getSs58Format(), '//Alice')

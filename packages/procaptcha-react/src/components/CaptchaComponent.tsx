@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { GetCaptchaResponse } from '@prosopo/api'
-import { useTranslation } from '@prosopo/common'
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
-import CaptchaWidget from './CaptchaWidget'
-import ThemeProvider from '@mui/material/styles/ThemeProvider'
-import Typography from '@mui/material/Typography'
-import addDataAttr from '../util'
-import theme from './theme'
+import Box from '@mui/material/Box/Box.js'
+import Button from '@mui/material/Button/Button.js'
+import CaptchaWidget from './CaptchaWidget.js'
+import ThemeProvider from '@mui/material/styles/ThemeProvider.js'
+import Typography from '@mui/material/Typography/Typography.js'
+import addDataAttr from '../util/index.js'
+import theme from './theme.js'
+import useTranslation from '@prosopo/common/react/useTranslation'
+
+const CWidget = 'default' in CaptchaWidget && CaptchaWidget.default ? CaptchaWidget.default : CaptchaWidget
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse
@@ -31,7 +33,7 @@ export interface CaptchaComponentProps {
     onNext: () => void
 }
 
-export const CaptchaComponent = (props: CaptchaComponentProps) => {
+const CaptchaComponent = (props: CaptchaComponentProps) => {
     const { t } = useTranslation()
     const { challenge, index, solutions, onSubmit, onCancel, onClick, onNext } = props
     const captcha = challenge.captchas[index]

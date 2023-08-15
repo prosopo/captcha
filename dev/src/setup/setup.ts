@@ -14,7 +14,7 @@
 import { ArgumentTypes } from '@prosopo/types'
 import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
-import { LogLevel, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
+import { LogLevelSchema, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { defaultConfig, getEnvFile, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
@@ -23,7 +23,7 @@ import { registerProvider } from './provider'
 import { setupDapp } from './dapp'
 import fse from 'fs-extra'
 import path from 'path'
-const logger = getLogger(LogLevel.Info, 'setup')
+const logger = getLogger(LogLevelSchema.enum.Info, 'setup')
 
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {

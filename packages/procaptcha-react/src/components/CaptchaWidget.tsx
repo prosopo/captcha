@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
-import { Theme, useTheme } from '@mui/material'
-import Box from '@mui/material/Box'
-import CheckIcon from '@mui/icons-material/Check'
-import Fade from '@mui/material/Fade'
+import { Theme } from '@mui/material'
+import Box from '@mui/material/Box/index.js'
+import CheckIcon from '@mui/icons-material/Check.js'
+import Fade from '@mui/material/Fade/Fade.js'
+import React from 'react'
+import useTheme from '@mui/material/styles/useTheme.js'
 
 export interface CaptchaWidgetProps {
     challenge: CaptchaResponseCaptcha
@@ -30,7 +32,7 @@ const getHash = (item: any) => {
     return item.hash
 }
 
-export const CaptchaWidget = (props: CaptchaWidgetProps) => {
+const CaptchaWidget = (props: CaptchaWidgetProps) => {
     // env
     const { challenge, solution, onClick } = props
     const items = challenge.captcha.items

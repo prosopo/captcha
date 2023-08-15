@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel } from '@prosopo/common'
+import { LogLevelSchema } from '@prosopo/common'
 import { z } from 'zod'
 
 export const DatabaseTypes = z.enum(['mongo', 'mongoMemory'])
@@ -48,7 +48,7 @@ export type BatchCommitConfig = z.infer<typeof BatchCommitConfigSchema>
 export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 
 export const ProsopoBaseConfigSchema = z.object({
-    logLevel: z.nativeEnum(LogLevel),
+    logLevel: LogLevelSchema,
     defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.development),
     // The account with which to query the contract and sign transactions
     account: z.object({

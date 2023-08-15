@@ -1,3 +1,3 @@
-export * from './scale'
-export * from './cli'
-export * from './args'
+export * from './scale.js'
+export * from './cli.js'
+export * from './args.js'

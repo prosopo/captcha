@@ -15,14 +15,14 @@ import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
 import { ContractDeployer } from '@prosopo/contract'
-import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
+import { LogLevelSchema, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
 import { getPair } from '@prosopo/common'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
-const log = getLogger(LogLevel.Info, 'dev.deploy')
+const log = getLogger(LogLevelSchema.enum.Info, 'dev.deploy')
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()

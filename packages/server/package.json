@@ -3,6 +3,7 @@
   "version": "0.1.17",
   "description": "NodeJS package for server side communication with the prosopo captcha client",
   "main": "./dist/index.js",
+  "type": "module",
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
@@ -32,6 +33,6 @@
     "@prosopo/types": "^0.1.17"
   },
   "devDependencies": {
-    "typescript": "^4.9.4"
+    "typescript": "^5.1.6"
   }
 }
