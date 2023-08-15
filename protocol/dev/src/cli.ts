@@ -300,12 +300,6 @@ Cargo pass-through commands:
                 return yargs
             },
             async (argv) => {
-                // set the env variables using find and replace
-                const env: Env = {
-                    git_commit_id: await getGitCommitId(),
-                }
-                setEnvVariables(packagePaths, env)
-
                 const contracts = argv.contract as string[]
                 delete argv.contract
                 for (const contract in contracts) {
@@ -348,6 +342,12 @@ Cargo pass-through commands:
                 return yargs
             },
             async (argv) => {
+                // set the env variables using find and replace
+                const env: Env = {
+                    git_commit_id: await getGitCommitId(),
+                }
+                setEnvVariables(packagePaths, env)
+
                 const contracts = argv.contract as string[]
                 delete argv.contract
 
