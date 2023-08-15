@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { config } from 'dotenv'
 import { hexToU8a } from '@polkadot/util'
 import { readdirSync } from 'fs'
 import { spawn } from 'child_process'
@@ -22,20 +21,23 @@ import process from 'process'
 import yargs from 'yargs'
 
 const contractSrcFileExtension = '.rs'
-const backupFileExtension = '.bak'
+
+// string to string map of env variables
+interface Env {
+    [key: string]: string
+}
 
 // add in the git commit to env
-const addGitCommitIdToEnv = async () => {
+const getGitCommitId = async () => {
     // get the git commit id
     const gitCommitIdResult = await exec('git rev-parse HEAD')
     const gitCommitId = gitCommitIdResult.stdout.trim()
     // console.log("git commit id:", gitCommitId)
     const gitCommitIdBytes = hexToU8a(gitCommitId)
     // console.log("git commit id bytes:", gitCommitIdBytes)
-    const gitCommitIdBytesString = '[' + gitCommitIdBytes.toString() + ']'
+    const gitCommitIdBytesString: string = '[' + gitCommitIdBytes.toString() + ']'
     // console.log("git commit id byte string:", gitCommitIdBytesString)
-    // add it to the env
-    process.env['ENV_GIT_COMMIT_ID'] = gitCommitIdBytesString
+    return gitCommitIdBytesString
 }
 
 const setEnvVariable = (filePath: string, name: string, value: string) => {
@@ -53,19 +55,17 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     // let ENV_ABC: u32 = 3;
     //
 
+    name = 'env_' + name // add the env prefix to the name
     // names could be lower, upper or specific case
-    const names = [...new Set([name, name.toLowerCase(), name.toUpperCase()])]
-    for (const name of names) {
-        for (const declaration of ['let', 'const']) {
-            const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gms')
-            const regexMatch = regex.test(result)
-            if (!regexMatch) {
-                // console.log('no match for', regex, 'in', filePath);
-                continue
-            }
-            // console.log('match for', regex, 'in', filePath);
-            result = result.replaceAll(regex, `${declaration} ${name}:$1= ${value};`)
+    for (const declaration of ['let', 'const']) {
+        const regex = new RegExp(`${declaration}\\s+${name}:([^=]+)=[^;]+;`, 'gmsi')
+        const regexMatch = regex.test(result)
+        if (!regexMatch) {
+            // console.log('no match for', regex, 'in', filePath);
+            continue
         }
+        // console.log('match for', regex, 'in', filePath);
+        result = result.replaceAll(regex, `${declaration} ${name}:$1= ${value};`)
     }
     if (result === content) {
         // no change has been made
@@ -77,26 +77,21 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     fs.writeFileSync(filePath, result)
 }
 
-const setEnvVariables = (filePath: string) => {
+const setEnvVariables = (filePath: string, env: Env) => {
     const stats = fs.lstatSync(filePath)
     if (stats.isDirectory()) {
         // recurse into directory
         const files = fs.readdirSync(filePath)
         files.forEach((file) => {
-            setEnvVariables(path.join(filePath, file))
+            setEnvVariables(path.join(filePath, file), env)
         })
     } else if (stats.isFile()) {
         // process file
         if (filePath.endsWith(contractSrcFileExtension)) {
             // loop through all env variables and set them
-            for (const [name, value] of Object.entries(process.env)) {
-                if (value === undefined) {
-                    continue
-                }
+            for (const [name, value] of Object.entries(env)) {
                 // env vars have to start with the correct prefix, otherwise normal env vars (e.g. PWD, EDITOR, SHELL, etc.) would be propagated into the contract, which is not desired
-                if (name.startsWith('ENV_')) {
-                    setEnvVariable(filePath, name, value)
-                }
+                setEnvVariable(filePath, name, value)
             }
         }
     } else {
@@ -150,30 +145,10 @@ const exec = (
 }
 
 export async function processArgs(args: string[]) {
-    await addGitCommitIdToEnv()
-    // const parsed = await yargs.option('logLevel', {
-    //     describe: 'set log level',
-    //     choices: Object.keys(LogLevel),
-    // }).argv
-
-    config({ path: `.env.${process.env.NODE_ENV}` })
-    console.log('NODE_ENV:', process.env.NODE_ENV)
-    // const env = Object.keys(process.env)
-    // .filter(key => key.startsWith("ENV_"))
-    // .reduce((obj, key) => {
-    //     obj[key] = process.env[key];
-    //     return obj;
-    // }, {});
-    // console.log("env vars:", env)
-
-    // const logger = consola.create({ level: LogLevel[parsed.logLevel || 'Info'] })
-
     const repoDir = path.join(__dirname, '../..')
     const contractsDir = path.join(__dirname, '../../contracts')
     const cratesDir = path.join(__dirname, '../../crates')
     const contractsCiVersion = '3.0.1'
-    const relDirContracts = path.relative(repoDir, contractsDir)
-    const relDirCrates = path.relative(repoDir, cratesDir)
     const crates = readdirSync(cratesDir, { withFileTypes: true })
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => dirent.name)
@@ -184,10 +159,17 @@ export async function processArgs(args: string[]) {
     const outputDir = path.join(repoDir, 'target/ink')
     const ignoredContractsBuild = ['common_dev'] // contracts to ignore when building
 
-    console.log(`repoDir: ${repoDir}`)
-    console.log(`contractsDir: ${contractsDir}`)
-    console.log(`cratesDir: ${cratesDir}`)
-    console.log(`outputDir: ${outputDir}`)
+    // set the env variables using find and replace
+    const env: Env = {
+        git_commit_id: await getGitCommitId(),
+    }
+    setEnvVariables(contractsDir, env)
+    setEnvVariables(cratesDir, env)
+
+    // console.log(`repoDir: ${repoDir}`)
+    // console.log(`contractsDir: ${contractsDir}`)
+    // console.log(`cratesDir: ${cratesDir}`)
+    // console.log(`outputDir: ${outputDir}`)
 
     const getContractsToBuild = (contracts: string[]): string[] => {
         // ignore contracts which should not be built
@@ -402,10 +384,6 @@ export async function processArgs(args: string[]) {
             async (argv) => {
                 const contracts = getContractsToBuild(argv.package as string[])
                 delete argv.package
-
-                // set the env variables using find and replace
-                setEnvVariables(contractsDir)
-                setEnvVariables(cratesDir)
 
                 for (const contract of contracts) {
                     const contractPath = `${contractsDir}/${contract}`
