@@ -157,7 +157,6 @@ export async function processArgs(args: string[]) {
         .map((dirent) => dirent.name)
     const packages = [...crates, ...contracts]
     const outputDir = path.join(repoDir, 'target/ink')
-    const ignoredContractsBuild = ['common_dev'] // contracts to ignore when building
 
     // set the env variables using find and replace
     const env: Env = {
@@ -170,11 +169,6 @@ export async function processArgs(args: string[]) {
     // console.log(`contractsDir: ${contractsDir}`)
     // console.log(`cratesDir: ${cratesDir}`)
     // console.log(`outputDir: ${outputDir}`)
-
-    const getContractsToBuild = (contracts: string[]): string[] => {
-        // ignore contracts which should not be built
-        return contracts.filter((contract) => !ignoredContractsBuild.includes(contract))
-    }
 
     const addPackageOption = (yargs: yargs.Argv, customPackages?: string[]) => {
         return yargs.option('package', {
@@ -192,24 +186,6 @@ export async function processArgs(args: string[]) {
             demand: false,
             desc: 'Use a specific toolchain',
             default: '',
-        })
-    }
-
-    const addReleaseOption = (yargs: yargs.Argv) => {
-        return yargs.option('release', {
-            type: 'boolean',
-            demand: false,
-            desc: 'Build in release mode',
-            default: false,
-        })
-    }
-
-    const addFixOption = (yargs: yargs.Argv) => {
-        return yargs.option('fix', {
-            type: 'boolean',
-            demand: false,
-            desc: 'Fix the code',
-            default: false,
         })
     }
 
@@ -267,6 +243,11 @@ export async function processArgs(args: string[]) {
             error = true
         }
 
+        if (argv.docker) {
+            // docker ci image runs as root, so chown the target dir
+            await exec(`cd ${repoDir} sudo chown -R $(whoami):$(whoami) ../target || true`)
+        }
+
         await new Promise((resolve, reject) => {
             if (error) {
                 reject()
@@ -277,28 +258,14 @@ export async function processArgs(args: string[]) {
     }
 
     await yargs
-        .usage('Usage: $0 [global options] <command> [options]')
-        .command(
-            'chown',
-            'Take ownership of any contract files/build artifacts post docker',
-            (yargs) => {
-                return yargs
-            },
-            async (argv) => {
-                await exec(`cd ${repoDir} sudo chown -R $(whoami):$(whoami) ../target || true`)
-            },
-            []
-        )
-        .command(
-            'clean',
-            'Clean build artifacts',
-            (yargs) => {
-                return yargs
-            },
-            async (argv) => {
-                await exec(`cd ${repoDir}/dev && npm run cli -- chown && rm -rf ../target`)
-            },
-            []
+        .usage(
+            `Usage: $0 [global options] <command> [options]
+
+Cargo pass-through commands:
+    test
+    clean
+    "contract <xyz>" <-- speech marks important! 'xyz' is the cargo contract command
+`
         )
         .command(
             'expand',
@@ -379,55 +346,19 @@ export async function processArgs(args: string[]) {
             []
         )
         .command(
-            'test',
-            'Test the crates and contracts',
+            '$0',
+            'Pass-through to command cargo',
             (yargs) => {
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
-                await execCargo(argv, 'test')
-            },
-            []
-        )
-        .command(
-            'fmt',
-            'Format the crates and contracts',
-            (yargs) => {
-                yargs = addToolchainOption(yargs)
-                yargs = addDockerOption(yargs)
-                yargs = yargs.option('check', {
-                    type: 'boolean',
-                    demand: false,
-                    desc: 'Check the code instead of making changes',
-                    default: false,
-                })
-                return yargs
-            },
-            async (argv) => {
-                if (!argv._.includes('--all')) {
-                    argv._.push('--all')
+                const cmd = argv._.shift() // remove the first arg (the command) to get the rest of the args
+                if (!cmd) {
+                    throw new Error('No command specified')
                 }
-                if (!argv._.includes('--verbose')) {
-                    argv._.push('--verbose')
-                }
-
-                await execCargo(argv, 'fmt')
-            },
-            []
-        )
-        .command(
-            'clippy',
-            'Clippy the crates and contracts',
-            (yargs) => {
-                yargs = addToolchainOption(yargs)
-                yargs = addDockerOption(yargs)
-                return yargs
-            },
-            async (argv) => {
-                argv._.push('-- -D warnings -A clippy::too_many_arguments')
-                await execCargo(argv, 'clippy')
+                await execCargo(argv, cmd.toString())
             },
             []
         )
