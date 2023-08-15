@@ -69,6 +69,24 @@ macro_rules! lazy {
 #[ink::contract]
 pub mod common {
 
+    pub mod config {
+        use super::*;
+
+        /// Get the git commit id from when this contract was built
+        pub fn get_git_commit_id() -> [u8; 20] {
+            let env_git_commit_id: [u8; 20] = [5,30,169,137,207,136,124,145,137,56,16,111,177,86,118,18,75,128,137,117];
+            env_git_commit_id
+        }
+
+        pub fn get_admin() -> AccountId {
+            AccountId::from([
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ])
+        }
+
+    }
+
     /// The errors that can be returned by the Proxy contract.
     #[derive(Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(
@@ -181,11 +199,7 @@ pub mod common {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [
-                25, 175, 186, 108, 140, 91, 98, 141, 48, 59, 196, 39, 26, 58, 56, 221, 240, 54,
-                155, 164,
-            ];
-            env_git_commit_id
+            config::get_git_commit_id()
         }
     }
 
