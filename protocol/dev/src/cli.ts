@@ -263,8 +263,8 @@ export async function processArgs(args: string[]) {
 Cargo pass-through commands:
     test
     clean
-    fmt
-    clippy
+    fmt --all --verbose
+    clippy -- -D warnings -A clippy::too_many_arguments
     "contract <xyz>" <-- speech marks important! 'xyz' is the cargo contract command
 `
         )
