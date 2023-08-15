@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #![cfg_attr(
-    any(not(feature = "std"), feature = "ink-as-dependency"),
+    not(feature = "std"),
     no_std,
     no_main
 )]
