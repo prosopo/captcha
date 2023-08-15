@@ -18,9 +18,9 @@
 #[ink::contract]
 pub mod proxy {
 
+    use common::common::config;
     use common::common::Error;
     use common::err;
-    use common::common::config;
     #[allow(unused_imports)]
     use ink::env::debug_println as debug;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives

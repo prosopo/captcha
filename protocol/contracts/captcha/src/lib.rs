@@ -18,8 +18,8 @@ pub use self::captcha::{Captcha, CaptchaRef};
 #[ink::contract]
 pub mod captcha {
 
-    use common::common::Error;
     use common::common::config;
+    use common::common::Error;
     use common::err;
     use common::err_fn;
     use common::lazy;
