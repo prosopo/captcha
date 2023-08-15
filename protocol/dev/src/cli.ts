@@ -279,11 +279,13 @@ Cargo pass-through commands:
                 return yargs
             },
             async (argv) => {
-                const rest = argv._.slice(1) // remove the first arg (the command) to get the rest of the args
-                const contract = argv.package
-                await exec(
-                    `cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${rest} > ${repoDir}/expanded/${contract}.rs`
-                )
+                const pkgs = argv.package as string[]
+                delete argv.package
+                for (const contract in pkgs) {
+                    await exec(
+                        `cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${argv._} > ${repoDir}/expanded/${contract}.rs`
+                    )
+                }
             },
             []
         )
@@ -298,11 +300,13 @@ Cargo pass-through commands:
                 return yargs
             },
             async (argv) => {
-                const rest = argv._.slice(1) // remove the first arg (the command) to get the rest of the args
-                const contract = argv.package
-                await exec(
-                    `cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${rest}`
-                )
+                const pkgs = argv.package as string[]
+                delete argv.package
+                for (const contract in pkgs) {
+                    await exec(
+                        `cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${argv._}`
+                    )
+                }
             },
             []
         )
@@ -317,11 +321,13 @@ Cargo pass-through commands:
                 return yargs
             },
             async (argv) => {
-                const rest = argv._.slice(1) // remove the first arg (the command) to get the rest of the args
-                const contract = argv.package
-                await exec(
-                    `cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${rest}`
-                )
+                const pkgs = argv.package as string[]
+                delete argv.package
+                for (const contract in pkgs) {
+                    await exec(
+                        `cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${argv._}`
+                    )
+                }
             },
             []
         )
@@ -336,7 +342,7 @@ Cargo pass-through commands:
                 return yargs
             },
             async (argv) => {
-                const contracts = getContractsToBuild(argv.package as string[])
+                const contracts = argv.package as string[]
                 delete argv.package
 
                 for (const contract of contracts) {
