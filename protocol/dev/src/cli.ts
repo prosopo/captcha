@@ -77,25 +77,27 @@ const setEnvVariable = (filePath: string, name: string, value: string) => {
     fs.writeFileSync(filePath, result)
 }
 
-const setEnvVariables = (filePath: string, env: Env) => {
-    const stats = fs.lstatSync(filePath)
-    if (stats.isDirectory()) {
-        // recurse into directory
-        const files = fs.readdirSync(filePath)
-        files.forEach((file) => {
-            setEnvVariables(path.join(filePath, file), env)
-        })
-    } else if (stats.isFile()) {
-        // process file
-        if (filePath.endsWith(contractSrcFileExtension)) {
-            // loop through all env variables and set them
-            for (const [name, value] of Object.entries(env)) {
-                // env vars have to start with the correct prefix, otherwise normal env vars (e.g. PWD, EDITOR, SHELL, etc.) would be propagated into the contract, which is not desired
-                setEnvVariable(filePath, name, value)
+const setEnvVariables = (filePaths: string[], env: Env) => {
+    for (const filePath of filePaths) {
+        const stats = fs.lstatSync(filePath)
+        if (stats.isDirectory()) {
+            // recurse into directory
+            const files = fs.readdirSync(filePath)
+            files.forEach((file) => {
+                setEnvVariables([path.join(filePath, file)], env)
+            })
+        } else if (stats.isFile()) {
+            // process file
+            if (filePath.endsWith(contractSrcFileExtension)) {
+                // loop through all env variables and set them
+                for (const [name, value] of Object.entries(env)) {
+                    // env vars have to start with the correct prefix, otherwise normal env vars (e.g. PWD, EDITOR, SHELL, etc.) would be propagated into the contract, which is not desired
+                    setEnvVariable(filePath, name, value)
+                }
             }
+        } else {
+            throw new Error(`Unknown file type: ${filePath}`)
         }
-    } else {
-        throw new Error(`Unknown file type: ${filePath}`)
     }
 }
 
@@ -162,8 +164,7 @@ export async function processArgs(args: string[]) {
     const env: Env = {
         git_commit_id: await getGitCommitId(),
     }
-    setEnvVariables(contractsDir, env)
-    setEnvVariables(cratesDir, env)
+    setEnvVariables(packages, env)
 
     // console.log(`repoDir: ${repoDir}`)
     // console.log(`contractsDir: ${contractsDir}`)
