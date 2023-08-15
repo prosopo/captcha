@@ -164,12 +164,6 @@ export async function processArgs(args: string[]) {
     ]
     const outputDir = path.join(repoDir, 'target/ink')
 
-    // set the env variables using find and replace
-    const env: Env = {
-        git_commit_id: await getGitCommitId(),
-    }
-    setEnvVariables(packagePaths, env)
-
     // console.log(`repoDir: ${repoDir}`)
     // console.log(`contractsDir: ${contractsDir}`)
     // console.log(`cratesDir: ${cratesDir}`)
@@ -306,6 +300,12 @@ Cargo pass-through commands:
                 return yargs
             },
             async (argv) => {
+                // set the env variables using find and replace
+                const env: Env = {
+                    git_commit_id: await getGitCommitId(),
+                }
+                setEnvVariables(packagePaths, env)
+
                 const contracts = argv.contract as string[]
                 delete argv.contract
                 for (const contract in contracts) {
