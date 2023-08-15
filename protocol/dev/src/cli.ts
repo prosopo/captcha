@@ -367,7 +367,10 @@ Cargo pass-through commands:
                 return yargs
             },
             async (argv) => {
-                const cmd = argv._.shift() // remove the first arg (the command) to get the rest of the args
+                if (argv._ && argv._.length == 0) {
+                    throw new Error('No command specified')
+                }
+                const cmd = argv._[0] // the first arg (the command)
                 if (!cmd) {
                     throw new Error('No command specified')
                 }
