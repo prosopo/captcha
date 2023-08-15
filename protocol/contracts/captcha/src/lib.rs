@@ -268,7 +268,7 @@ pub mod captcha {
         #[ink(constructor, payable)]
         pub fn new() -> Result<Self, Error> {
             let result = Self::new_unguarded();
-            let author = AccountId::from(Self::get_author_bytes(&result));
+            let author = Self::get_admin(&result);
             let caller = Self::env().caller();
             if caller != author {
                 return Err(Error::NotAuthor);
@@ -309,32 +309,14 @@ pub mod captcha {
             env_git_commit_id
         }
 
-        fn get_author_bytes(&self) -> [u8; 32] {
-            let env_author_bytes: [u8; 32] = [
-                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
-                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-            ]; // the account which can instantiate the contract
-            env_author_bytes
-        }
-
-        /// the account which can instantiate the contract
+        /// the admin which can control this contract. set to author/instantiator by default
         #[ink(message)]
-        pub fn get_author(&self) -> AccountId {
-            AccountId::from(self.get_author_bytes())
-        }
-
-        fn get_admin_bytes(&self) -> [u8; 32] {
+        pub fn get_admin(&self) -> AccountId {
             let env_admin_bytes: [u8; 32] = [
                 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
                 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
             ];
-            env_admin_bytes
-        }
-
-        /// the admin which can control this contract. set to author/instantiator by default
-        #[ink(message)]
-        pub fn get_admin(&self) -> AccountId {
-            AccountId::from(self.get_admin_bytes())
+            AccountId::from(env_admin_bytes)
         }
 
         /// Get all payee options
