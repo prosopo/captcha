@@ -158,13 +158,17 @@ export async function processArgs(args: string[]) {
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => dirent.name)
     const packages = [...crates, ...contracts]
+    const packagePaths = [
+        ...crates.map((p) => path.join(cratesDir, p)),
+        ...contracts.map((p) => path.join(contractsDir, p)),
+    ]
     const outputDir = path.join(repoDir, 'target/ink')
 
     // set the env variables using find and replace
     const env: Env = {
         git_commit_id: await getGitCommitId(),
     }
-    setEnvVariables(packages, env)
+    setEnvVariables(packagePaths, env)
 
     // console.log(`repoDir: ${repoDir}`)
     // console.log(`contractsDir: ${contractsDir}`)
