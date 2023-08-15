@@ -171,13 +171,13 @@ export async function processArgs(args: string[]) {
     // console.log(`cratesDir: ${cratesDir}`)
     // console.log(`outputDir: ${outputDir}`)
 
-    const addPackageOption = (yargs: yargs.Argv, customPackages?: string[]) => {
-        return yargs.option('package', {
+    const addContractOption = (yargs: yargs.Argv, customContracts?: string[]) => {
+        return yargs.option('contract', {
             type: 'array',
             demand: false,
             desc: 'Target a specific crate/contract',
-            default: customPackages || [],
-            choices: customPackages || packages,
+            default: customContracts || [],
+            choices: customContracts || contracts,
         })
     }
 
@@ -214,10 +214,10 @@ export async function processArgs(args: string[]) {
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
 
-        if (cmd.startsWith('contract') && argv.package) {
+        if (cmd.startsWith('contract') && argv.contract) {
             throw new Error('Cannot run contract commands on specific packages')
         } else {
-            for (const pkg of (argv.package as string[]) || []) {
+            for (const pkg of (argv.contract as string[]) || []) {
                 // add the package to the end of the cmd
                 cmd = `${cmd} --package ${pkg}`
             }
@@ -273,15 +273,15 @@ Cargo pass-through commands:
             'Expand the contract (processing all macros, etc)',
             (yargs) => {
                 // cannot build crates
-                yargs = addPackageOption(yargs, contracts)
+                yargs = addContractOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
-                const pkgs = argv.package as string[]
-                delete argv.package
-                for (const contract in pkgs) {
+                const contracts = argv.contract as string[]
+                delete argv.contract
+                for (const contract in contracts) {
                     await exec(
                         `cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${argv._} > ${repoDir}/expanded/${contract}.rs`
                     )
@@ -294,15 +294,15 @@ Cargo pass-through commands:
             'Build the metadata',
             (yargs) => {
                 // cannot build crates
-                yargs = addPackageOption(yargs, contracts)
+                yargs = addContractOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
-                const pkgs = argv.package as string[]
-                delete argv.package
-                for (const contract in pkgs) {
+                const contracts = argv.contract as string[]
+                delete argv.contract
+                for (const contract in contracts) {
                     await exec(
                         `cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${argv._}`
                     )
@@ -315,15 +315,15 @@ Cargo pass-through commands:
             'Instantiate the contract',
             (yargs) => {
                 // cannot build crates
-                yargs = addPackageOption(yargs, contracts)
+                yargs = addContractOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
-                const pkgs = argv.package as string[]
-                delete argv.package
-                for (const contract in pkgs) {
+                const contracts = argv.contract as string[]
+                delete argv.contract
+                for (const contract in contracts) {
                     await exec(
                         `cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${argv._}`
                     )
@@ -336,14 +336,14 @@ Cargo pass-through commands:
             'Build the contracts',
             (yargs) => {
                 // cannot build crates
-                yargs = addPackageOption(yargs, contracts)
+                yargs = addContractOption(yargs, contracts)
                 yargs = addToolchainOption(yargs)
                 yargs = addDockerOption(yargs)
                 return yargs
             },
             async (argv) => {
-                const contracts = argv.package as string[]
-                delete argv.package
+                const contracts = argv.contract as string[]
+                delete argv.contract
 
                 for (const contract of contracts) {
                     const contractPath = `${contractsDir}/${contract}`
