@@ -176,20 +176,6 @@ export async function processArgs(args: string[]) {
         return contracts.filter((contract) => !ignoredContractsBuild.includes(contract))
     }
 
-    const moveMetadata = (contracts: string[]) => {
-        for (const contract of contracts) {
-            console.log(`moving metadata for ${contract} contract`)
-
-            const metadataPath = `${outputDir}/${contract}/metadata.json`
-            const exists = fs.existsSync(metadataPath)
-            if (exists) {
-                // move the metadata to be named after the contract
-                const newPath = `${outputDir}/${contract}/${contract}.json`
-                fs.renameSync(metadataPath, newPath)
-            }
-        }
-    }
-
     const addPackageOption = (yargs: yargs.Argv, customPackages?: string[]) => {
         return yargs.option('package', {
             type: 'array',
@@ -389,9 +375,6 @@ export async function processArgs(args: string[]) {
                     const contractPath = `${contractsDir}/${contract}`
                     await execCargo(argv, 'contract build', contractPath)
                 }
-
-                // move metadata.json to <contract_name>.json
-                moveMetadata(contracts)
             },
             []
         )
