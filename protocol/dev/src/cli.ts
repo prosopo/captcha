@@ -35,7 +35,7 @@ const getGitCommitId = async () => {
     // console.log("git commit id:", gitCommitId)
     const gitCommitIdBytes = hexToU8a(gitCommitId)
     // console.log("git commit id bytes:", gitCommitIdBytes)
-    const gitCommitIdBytesString: string = '[' + gitCommitIdBytes.toString() + ']'
+    const gitCommitIdBytesString: string = '[' + gitCommitIdBytes.toString().split(',').join(', ') + ', ]'
     // console.log("git commit id byte string:", gitCommitIdBytesString)
     return gitCommitIdBytesString
 }
