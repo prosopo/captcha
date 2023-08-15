@@ -11,11 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#![cfg_attr(
-    not(feature = "std"),
-    no_std,
-    no_main
-)]
+#![cfg_attr(not(feature = "std"), no_std, no_main)]
 
 pub use self::common::{Common, CommonRef};
 
@@ -74,7 +70,10 @@ pub mod common {
 
         /// Get the git commit id from when this contract was built
         pub fn get_git_commit_id() -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [53,132,108,15,246,40,224,20,172,142,185,77,195,64,177,232,202,171,25,238];
+            let env_git_commit_id: [u8; 20] = [
+                224, 160, 226, 204, 174, 149, 189, 3, 243, 40, 23, 37, 10, 27, 145, 178, 175, 224,
+                50, 52,
+            ];
             env_git_commit_id
         }
 
@@ -84,7 +83,6 @@ pub mod common {
                 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
             ])
         }
-
     }
 
     /// The errors that can be returned by the Proxy contract.
