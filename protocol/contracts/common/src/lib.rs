@@ -70,13 +70,11 @@ pub mod common {
 
         /// Get the git commit id from when this contract was built
         pub fn get_git_commit_id() -> [u8; 20] {
-            #![rustfmt::skip]
-            let env_git_commit_id: [u8; 20] = [80, 8, 140, 26, 0, 1, 206, 78, 109, 26, 111, 82, 48, 164, 112, 32, 169, 107, 13, 229];
+            let env_git_commit_id: [u8; 20] = [148, 2, 10, 8, 165, 206, 61, 236, 126, 145, 147, 70, 125, 143, 146, 106, 122, 225, 228, 181, ];
             env_git_commit_id
         }
 
         pub fn get_admin() -> AccountId {
-            #![rustfmt::skip]
             AccountId::from([
                 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
             ])
