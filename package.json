@@ -116,7 +116,7 @@
     "prettier": "2.8.8",
     "tsc-alias": "^1.8.6",
     "tslib": "^2.5.2",
-    "typescript": "^4.9.4"
+    "typescript": "^5.1.6"
   },
   "description": "Integrates prosopo packages for development purposes",
   "bugs": {
