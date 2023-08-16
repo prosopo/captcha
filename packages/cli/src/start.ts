@@ -50,27 +50,6 @@ function startApi(env: ProviderEnvironment) {
     })
 }
 
-function startFileSrv(port: number | string, locations: string[]) {
-    const app = express()
-
-    locations.forEach((loc) => {
-        // allow local filesystem lookup at each location
-        // http://localhost:3000/a.jpg
-        // serve path set to /
-        // url: pronode1.duckdns.org/img/a.jpg
-        // serve path set to /img
-        // url: pronode1.duckdns.org/a.jpg`
-        app.use('/', express.static(loc))
-    })
-
-    // only run server if locations have been specified
-    if (locations.length > 0) {
-        app.listen(port, () => {
-            console.log(`File server running on port ${port} serving [${locations}]`)
-        })
-    }
-}
-
 export async function start(env?: ProviderEnvironment) {
     if (!env) {
         loadEnv()
@@ -85,15 +64,6 @@ export async function start(env?: ProviderEnvironment) {
     }
     await env.isReady()
     startApi(env)
-
-    // set up the file server
-    const port = env.config.server.port
-    // accept multiple paths for locations of files
-    const paths = env.config.server.fileServePaths
-    // if single path given convert to array
-    const parsed: string | string[] = JSON.parse(paths)
-    const locations = Array.isArray(parsed) ? parsed : [parsed]
-    startFileSrv(port, locations)
 }
 
 function stop() {

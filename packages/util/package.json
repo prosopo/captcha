@@ -10,7 +10,7 @@
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix",
         "cli": "node ./dist/js/cli.js",
-        "test": "NODE_ENV=test ts-mocha \"./tests/js/**/*.test.ts\" --timeout 120000 --recursive --exit"
+        "test": "NODE_ENV=test ts-mocha 'tests/**/*.test.ts'"
     },
     "main": "./dist/index.js",
     "type": "module",
@@ -20,6 +20,9 @@
         "seedrandom": "^3.0.5"
     },
     "devDependencies": {
+        "@types/chai": "^4.3.5",
+        "@types/mocha": "^10.0.1",
+        "chai": "^4.3.7",
         "typescript": "^5.1.6"
     },
     "repository": {

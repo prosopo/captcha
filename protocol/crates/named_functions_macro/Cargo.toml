@@ -1,6 +1,5 @@
 [lib]
 proc-macro = true
-name = "named_functions_macro"
 
 [package]
 name = "named_functions_macro"

@@ -17,11 +17,6 @@
 
 #[ink::contract]
 pub mod proxy {
-    const ENV_AUTHOR_BYTES: [u8; 32] = [
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0,
-    ]; // the account which can instantiate the contract
-       // alice: [ 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125, ]
 
     use common::err;
     #[allow(unused_imports)]
@@ -42,13 +37,13 @@ pub mod proxy {
         SetCodeHashFailed,
         InvalidDestination,
         UnknownMessage,
+        NotAuthor,
     }
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProxyMessages {
         GetGitCommitId,
-        GetAuthor,
         GetAdmin,
         GetDestination,
         ProxyWithdraw(Amount),
@@ -59,33 +54,33 @@ pub mod proxy {
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum ProxyReturnTypes {
-        GetGitCommitId([u8; 20]),
-        GetAuthor(AccountId),
-        GetAdmin(AccountId),
-        GetDestination(AccountId),
-        ProxyWithdraw,
-        ProxyTerminate,
-        ProxySetCodeHash,
+        U8x32([u8; 32]),
+        U8x20([u8; 20]),
+        AccountId(AccountId),
+        Void,
     }
 
     pub type Amount = Balance;
 
     impl Proxy {
-        /// Instantiate this contract with an address of the `logic` contract.
-        ///
-        /// Sets the privileged account to the caller. Only this account may
-        /// later changed the `forward_to` address.
         #[ink(constructor)]
-        pub fn new() -> Self {
-            let author = AccountId::from(ENV_AUTHOR_BYTES);
+        pub fn new() -> Result<Self, Error> {
+            let result = Self::new_unguarded();
+            let author = Self::get_admin(&result);
             let caller = Self::env().caller();
             if caller != author {
-                panic!(
-                    "Not authorised to instantiate this contract: {:?} != {:?}",
-                    caller, author
-                );
+                return Err(Error::NotAuthor);
             }
-            Self::new_unguarded()
+            Ok(result)
+        }
+
+        #[ink(constructor)]
+        pub fn new_panic() -> Self {
+            let result = Self::new();
+            if let Err(e) = result {
+                panic!("{:?}", e);
+            }
+            result.unwrap()
         }
 
         fn new_unguarded() -> Self {
@@ -101,13 +96,12 @@ pub mod proxy {
             env_git_commit_id
         }
 
-        fn get_author(&self) -> AccountId {
-            AccountId::from(ENV_AUTHOR_BYTES)
-        }
-
         /// the admin which can control this contract. set to author/instantiator by default
         fn get_admin(&self) -> AccountId {
-            let env_admin_bytes: [u8; 32] = ENV_AUTHOR_BYTES;
+            let env_admin_bytes: [u8; 32] = [
+                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
+                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+            ];
             AccountId::from(env_admin_bytes)
         }
 
@@ -131,7 +125,7 @@ pub mod proxy {
             self.check_is_admin(caller)?;
 
             match self.env().transfer(caller, amount) {
-                Ok(()) => Ok(ProxyReturnTypes::ProxyWithdraw),
+                Ok(()) => Ok(ProxyReturnTypes::Void),
                 Err(_) => Err(Error::TransferFailed),
             }
         }
@@ -203,22 +197,19 @@ pub mod proxy {
         pub fn handler(&mut self, msg: ProxyMessages) -> Result<ProxyReturnTypes, Error> {
             match msg {
                 ProxyMessages::GetGitCommitId => {
-                    Ok(ProxyReturnTypes::GetGitCommitId(self.get_git_commit_id()))
+                    Ok(ProxyReturnTypes::U8x20(self.get_git_commit_id()))
                 }
-                ProxyMessages::GetAuthor => Ok(ProxyReturnTypes::GetAuthor(self.get_author())),
-                ProxyMessages::GetAdmin => Ok(ProxyReturnTypes::GetAdmin(self.get_admin())),
+                ProxyMessages::GetAdmin => Ok(ProxyReturnTypes::AccountId(self.get_admin())),
                 ProxyMessages::GetDestination => {
-                    Ok(ProxyReturnTypes::GetDestination(self.get_destination()))
+                    Ok(ProxyReturnTypes::AccountId(self.get_destination()))
                 }
-                ProxyMessages::ProxyWithdraw(amount) => self
-                    .withdraw(amount)
-                    .map(|_| ProxyReturnTypes::ProxyWithdraw),
-                ProxyMessages::ProxyTerminate => {
-                    self.terminate().map(|_| ProxyReturnTypes::ProxyTerminate)
+                ProxyMessages::ProxyWithdraw(amount) => {
+                    self.withdraw(amount).map(|_| ProxyReturnTypes::Void)
                 }
+                ProxyMessages::ProxyTerminate => self.terminate().map(|_| ProxyReturnTypes::Void),
                 ProxyMessages::ProxySetCodeHash(code_hash) => self
                     .set_code_hash(code_hash)
-                    .map(|_| ProxyReturnTypes::ProxySetCodeHash),
+                    .map(|_| ProxyReturnTypes::Void),
             }
         }
     }
@@ -244,7 +235,7 @@ pub mod proxy {
         )
     )]
     mod tests {
-        use common_dev::common_dev::tests::*;
+        use common::common::tests::*;
         use ink;
         use ink::codegen::Env;
         use ink::env::hash::Blake2x256;
@@ -253,6 +244,12 @@ pub mod proxy {
 
         /// Imports all the definitions from the outer scope so we can use them here.
         use super::*;
+
+        const ENV_AUTHOR_BYTES: [u8; 32] = [
+            212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133,
+            88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+        ]; // the account which can instantiate the contract
+           // alice: [ 212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125, ]
 
         /// get the nth contract. This ensures against account collisions, e.g. 1 account being both a provider and an admin, which can obviously cause issues with caller guards / permissions in the contract.
         fn get_contract_unguarded(index: u128) -> Proxy {
@@ -272,7 +269,6 @@ pub mod proxy {
         }
 
         #[ink::test]
-        #[should_panic]
         fn test_ctor_guard_fail() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             reset_caller();
@@ -281,7 +277,7 @@ pub mod proxy {
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
             let contract = Proxy::new();
-            // should fail to construct and panic
+            assert_eq!(contract.unwrap_err(), Error::NotAuthor);
         }
 
         #[ink::test]
@@ -295,7 +291,7 @@ pub mod proxy {
 
             // check the caller is admin
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
-            if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
+            if let ProxyReturnTypes::AccountId(admin) = admin_result {
                 assert_eq!(admin, AccountId::from(ENV_AUTHOR_BYTES));
             }
         }
@@ -309,7 +305,7 @@ pub mod proxy {
             let mut contract = get_contract_unguarded(0);
             set_callee(get_contract_account(0));
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
-            if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
+            if let ProxyReturnTypes::AccountId(admin) = admin_result {
                 set_caller(admin); // an account which does have permission to call terminate
                 debug!("Admin account {:?}", admin);
                 assert_eq!(admin, AccountId::from(ENV_AUTHOR_BYTES));
@@ -362,15 +358,16 @@ pub mod proxy {
             // give the contract funds
             set_account_balance(contract.env().account_id(), 10000000000);
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
-            if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
+            if let ProxyReturnTypes::AccountId(admin) = admin_result {
                 set_caller(admin); // use the admin acc
+                set_account_balance(admin, 10000000000); // give the admin some funds so the account exists
                 let admin_bal: u128 = get_account_balance(admin).unwrap();
                 let contract_bal: u128 = get_account_balance(contract.env().account_id()).unwrap();
                 let withdraw_amount: u128 = 1;
                 let withdraw_result = contract
                     .handler(ProxyMessages::ProxyWithdraw(withdraw_amount))
                     .unwrap();
-                if let ProxyReturnTypes::ProxyWithdraw = withdraw_result {
+                if let ProxyReturnTypes::Void = withdraw_result {
                     assert_eq!(
                         get_account_balance(admin).unwrap(),
                         admin_bal + withdraw_amount
@@ -397,7 +394,7 @@ pub mod proxy {
             let mut contract = get_contract_unguarded(0);
             set_callee(get_contract_account(0));
             let admin_result = contract.handler(ProxyMessages::GetAdmin).unwrap();
-            if let ProxyReturnTypes::GetAdmin(admin) = admin_result {
+            if let ProxyReturnTypes::AccountId(admin) = admin_result {
                 set_caller(admin); // use the admin acc
                 let admin_bal = get_account_balance(admin).unwrap();
                 let contract_bal = get_account_balance(contract.env().account_id()).unwrap();

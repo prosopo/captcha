@@ -1,32 +1,31 @@
 {
-  "name": "@prosopo/api",
-  "version": "0.1.17",
-  "description": "Wrapper for the provider API",
-  "main": "dist/index.js",
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose",
-    "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/prosopo/captcha.git"
-  },
-  "author": "PROSOPO LIMITED <info@prosopo.io>",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/prosopo/captcha/issues"
-  },
-  "homepage": "https://github.com/prosopo/captcha#readme",
-  "dependencies": {
-    "@prosopo/types": "^0.1.17",
-    "axios": "^0.27.2"
-  },
-  "devDependencies": {
-    "typescript": "^5.1.6"
-  },
-  "sideEffects": false
+    "name": "@prosopo/api",
+    "version": "0.1.17",
+    "description": "Wrapper for the provider API",
+    "main": "dist/index.js",
+    "type": "module",
+    "scripts": {
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "lint": "npx eslint .",
+        "lint:fix": "npx eslint . --fix"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/prosopo/captcha.git"
+    },
+    "author": "PROSOPO LIMITED <info@prosopo.io>",
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/prosopo/captcha/issues"
+    },
+    "homepage": "https://github.com/prosopo/captcha#readme",
+    "dependencies": {
+        "@prosopo/types": "^0.1.17",
+        "axios": "^0.27.2"
+    },
+    "devDependencies": {
+        "typescript": "^5.1.6"
+    },
+    "sideEffects": false
 }
