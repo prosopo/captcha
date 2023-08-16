@@ -36,7 +36,7 @@ jobs:
               uses: actions/cache/restore@v3
               with:
                   path: |
-                      target
+                      protocol/target
                   # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
                   # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
                   # "abcdef123" could be anything, it is a random string to differentiate cache usages
@@ -97,6 +97,6 @@ jobs:
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
               with:
                   path: |
-                      target
+                      protocol/target
                   # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
                   key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
