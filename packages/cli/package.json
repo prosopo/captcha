@@ -6,7 +6,7 @@
     "scripts": {
         "clean": "tsc --build --clean",
         "build:webpack:prod": "webpack --config webpack.config.production.js --mode production",
-        "build:webpack:dev": "webpack --config webpack.config.js --mode development",
+        "build:webpack:dev": "webpack --config webpack.config.base.js --mode development",
         "build": "tsc --build --verbose",
         "cli": "node ./dist/cli.js",
         "start": "node ./dist/start.js",
