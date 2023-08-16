@@ -31,24 +31,21 @@ services:
           memory: 512M
     networks:
       - internal
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
+  substrate:
+    image: prosopo/substrate-contracts-node:v0.29
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./docker/provider.Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - external
+      - "9615:9615"
+      - "9944:9944"
+      - "9933:9933"
+      - "30333:30333"
+    deploy:
+      # replicas: 1
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
 networks:
     internal:
         name: internal
     external:
         name: external
-volumes:
-    caddy_data:
-    caddy_config:
