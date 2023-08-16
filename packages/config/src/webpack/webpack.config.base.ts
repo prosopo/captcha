@@ -5,7 +5,6 @@ import { loadEnv } from '@prosopo/cli'
 import CompressionPlugin from 'compression-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
-import fs from 'node:fs'
 import glob from 'glob'
 import i18nextWebpackPlugin from 'i18next-scanner-webpack'
 import path from 'path'
@@ -14,8 +13,7 @@ const { IgnorePlugin, ProvidePlugin } = webpack
 
 //set __dirname
 const __dirname = path.resolve()
-
-const log = getLogger(`Info`, `webpack.config.js`)
+const log = getLogger(`Info`, `webpack.config.base.js`)
 log.info(`dirname: ${__dirname}`)
 const moduleDirs = [
     path.resolve(__dirname, 'node_modules'),
@@ -26,155 +24,18 @@ const moduleDirs = [
     path.resolve(__dirname, '../procaptcha-react/node_modules'),
 ]
 
-const allowList = [
-    '@emotion',
-    '@mui/base',
-    '@mui/material',
-    '@mui/private-theming',
-    '@mui/react-transition-group',
-    '@mui/styled-engine',
-    '@mui/styles',
-    '@mui/system',
-    '@mui/types',
-    '@mui/utils',
-    '@noble',
-    '@polkadot/api',
-    '@polkadot/api-augment',
-    '@polkadot/api-base',
-    '@polkadot/api-contract',
-    '@polkadot/api-derive',
-    '@polkadot/bn.js',
-    '@polkadot/connect',
-    '@polkadot/dist',
-    '@polkadot/extension-dapp',
-    '@polkadot/icons-material',
-    '@polkadot/keyring',
-    '@polkadot/lib',
-    '@polkadot/networks',
-    '@polkadot/rpc-augment',
-    '@polkadot/rpc-core',
-    '@polkadot/rpc-provider',
-    '@polkadot/ss58-registry',
-    '@polkadot/types',
-    '@polkadot/types-augment',
-    '@polkadot/types-codec',
-    '@polkadot/types-create',
-    '@polkadot/util',
-    '@polkadot/util-crypto',
-    '@polkadot/wasm-bridge',
-    '@polkadot/wasm-crypto',
-    '@polkadot/wasm-crypto-init',
-    '@polkadot/wasm-util',
-    '@polkadot/x-bigint',
-    '@polkadot/x-global',
-    '@polkadot/x-randomvalues',
-    '@popperjs/base',
-    '@popperjs/core',
-    '@prosopo',
-    '@substrate/connect',
-    '@substrate/networks',
-    '@substrate/rpc-provider',
-    '@types/express-serve-static-core',
-    '@types/material',
-    '@types/qs',
-    '@types/range-parser',
-    '@types/react',
-    '@types/react-dom',
-    '@types/scheduler',
-    '@types/send',
-    '@types/types',
-    '@types/util',
-    'axios',
-    'clsx',
-    'consola/extension-inject',
-    'csstype',
-    'i18next',
-    'i18next-http-middleware',
-    'react',
-    'react-dom',
-    'react-i18next/mime',
-    'rxjs/dist',
-    'rxjs/types',
-    'scheduler',
-    'seedrandom',
-    'stylis',
-    'tslib',
-    'zod',
-]
-
-const interfacesToIgnore = [
-    // api-derive
-    'alliance',
-    'bagsList',
-    'bounties',
-    'council',
-    // types/interfaces
-    'assets',
-    'attestations',
-    'aura',
-    'author',
-    'authorship',
-    'beefy',
-    'benchmark',
-    'blockbuilder',
-    'bridges',
-    'childstate',
-    'claims',
-    'collective',
-    'crowdloan',
-    'cumulus',
-    'democracy',
-    'dev',
-    'discovery',
-    'elections',
-    'eth',
-    'evm',
-    'fungibles',
-    'genericAsset',
-    'gilt',
-    'identity',
-    'imOnline',
-    'lottery',
-    'mmr',
-    'nfts',
-    'nimbus',
-    'nompools',
-    'offchain',
-    'offences',
-    'ormlOracle',
-    'ormlTokens',
-    'parachains',
-    'payment',
-    'poll',
-    'pow',
-    'proxy',
-    'purchase',
-    'recovery',
-    'scaleInfo',
-    'scheduler',
-    'session',
-    'society',
-    'staking',
-    'state',
-    'support',
-    'syncstate',
-    'treasury',
-    'uniques',
-    'vesting',
-    'xcm',
-]
 // Takes an array of partial module directories, finds the full path, and returns an array containing the file paths
 // of the files contained within the matching module directories [ filePath, filePath, ... ]
-function getFilesInDirs(startDir, excludeDirs = [], includeDirs = []) {
-    const emptyAliases = []
+function getFilesInDirs(startDir, excludeDirs: string[] = [], includeDirs: string[] = []) {
+    const emptyAliases: string[] = []
     log.info(`getFilesInDirs: ${startDir} excluding ${excludeDirs} including ${includeDirs}`)
     const ignorePatterns = includeDirs.map((dir) => `${startDir}/**/${dir}`)
     excludeDirs.forEach((searchPattern) => {
         // get matching module directories
         const globPattern = `${startDir}/**/${searchPattern}${searchPattern.indexOf('.') > -1 ? '' : '/*'}`
-        log.info(`globPattern: ${globPattern}`)
+        //log.info(`globPattern: ${globPattern}`)
         const globResult = glob.sync(globPattern, { recursive: true, ignore: ignorePatterns })
-        log.info(`globResult: ${globResult}`)
+        //log.info(`globResult: ${globResult}`)
         for (const filePath of globResult) {
             emptyAliases.push(filePath)
             //log.info(`ignoring ${filePath}`)
@@ -183,71 +44,37 @@ function getFilesInDirs(startDir, excludeDirs = [], includeDirs = []) {
     return emptyAliases
 }
 
-function excludeMui() {
-    const includeDirs = [
-        'Autocomplete',
-        'Box',
-        'Button',
-        'Checkbox',
-        'Fade',
-        'Link',
-        'styles',
-        'TextField',
-        'Typography',
-        'utils',
-    ]
-    const startDir = path.resolve(__dirname, '../../node_modules/@mui/material')
-    log.info(`startDir: ${startDir}`)
-    return getFilesInDirs(startDir, ['*'], includeDirs)
-}
-
 function excludePolkadot() {
     const excludeFiles = ['kusama.js', 'westend.js'] //'bytes.js'] //...interfacesToIgnore]
     const startDir = path.resolve(__dirname, '../../node_modules/@polkadot')
     log.info(`startDir: ${startDir}`)
     return getFilesInDirs(startDir, excludeFiles)
 }
-const externals = excludePolkadot()
 
-// Create a regex that captures packages that are in the allow list
-// const packagesDir = path.resolve(__dirname, '../../packages')
-// // DO NOT USE global flag here
-// const allowedPackagesRegex = new RegExp(
-//     `(${packagesDir}|${allowList.map((item) => item.replace('/', '\\/')).join('|')})+`
-// )
-// if (!allowedPackagesRegex.test(packagesDir)) {
-//     throw new Error('Regex is not working')
-// }
-loadEnv()
-
-// function externalsFn({ context, request }, callback) {
-//     const filePath = `${context}${request.replace(':', '/').replace('./', '/')}`
-//     if (allowedPackagesRegex.test(context) || allowedPackagesRegex.test(request)) {
-//         //Continue without externalizing the import
-//         return callback()
-//     } else {
-//         log.warn(`Externalizing ${filePath}`)
-//         // Externalize the request
-//         return callback(null, 'module' + request)
-//     }
-// }
-
-//const excludedFiles = [...excludePolkadot()]
-// make an alias object from the array of files to exclude
-const alias = {}
-
-externals.forEach((file) => {
-    alias[file] = path.resolve(__dirname, 'mock.js')
-})
-log.info(`alias ${JSON.stringify(alias)}`)
-
-export default (env, argv) => {
+export function webpackConfigBase(env, argv) {
+    if (!env.BASE_DIR) {
+        throw new Error('BASE_DIR env var is required')
+    }
+    // load the environment file relative to the base dir
+    loadEnv(env.BASE_DIR)
+    const alias = {}
+    // get a list of polkdaot files to exclude from the bundle
+    const externals = excludePolkadot()
+    // alias the files to mock.js
+    const mockFile = path.resolve(__dirname, '../config/dist/webpack/mock.js')
+    externals.forEach((file) => {
+        log.info(`resolving to mock.js: ${path.resolve(__dirname, 'mock.js')}`)
+        alias[file] = mockFile
+    })
+    log.info(`Aliasing ${JSON.stringify(alias)}`)
     const isProduction = argv && argv.mode === 'production'
-    //const externals = isProduction ? [externalsFn] : undefined
     log.info(`Production: ${isProduction}`)
-    const libraryName = 'procaptcha_bundle'
+    if (!env.BUNDLE_NAME) {
+        throw new Error('BUNDLE_NAME env var is required')
+    }
+    const libraryName = env.BUNDLE_NAME
+    const baseDir = env.BASE_DIR
     const defineVars = {
-        // TODO decide on what NODE_ENV is for
         'process.env.NODE_ENV': process.env.NODE_ENV || JSON.stringify(isProduction ? 'production' : 'development'),
         'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
         'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
@@ -264,7 +91,7 @@ export default (env, argv) => {
         watchOptions: {
             followSymlinks: true,
             poll: true,
-            //ignored: /node_modules/,
+            ignored: /node_modules/,
         },
         target: 'web',
         resolve: {
@@ -279,10 +106,10 @@ export default (env, argv) => {
         resolveLoader: {
             symlinks: false,
         },
-        entry: path.resolve(__dirname, './src/index.tsx'),
+        entry: path.resolve(baseDir, './src/index.tsx'),
         output: {
             filename: `${libraryName}.[name].bundle.js`,
-            path: path.resolve(__dirname, 'dist'),
+            path: path.resolve(baseDir, 'dist'),
             library: libraryName,
             chunkFilename: `${libraryName}.[name].bundle.js`,
         },
@@ -324,7 +151,7 @@ export default (env, argv) => {
                         {
                             loader: 'ts-loader',
                             options: {
-                                configFile: 'tsconfig.webpack.json',
+                                configFile: path.resolve(baseDir, './tsconfig.webpack.json'),
                                 transpileOnly: true,
                                 onlyCompileBundledFiles: false,
                             },
@@ -341,7 +168,7 @@ export default (env, argv) => {
         plugins: [
             new webpack.NormalModuleReplacementPlugin(
                 /(centrifuge-chain|kusama|node-template|shell|statemint|westend)\.js/,
-                path.resolve(__dirname, 'mock.js')
+                mockFile
             ),
             new HtmlWebpackPlugin({
                 template: './src/index.html',
@@ -370,26 +197,6 @@ export default (env, argv) => {
                 },
                 async: true,
             }),
-            {
-                apply: (compiler) => {
-                    compiler.hooks.done.tap('DonePlugin', (stats) => {
-                        log.info('Compile is done !')
-                        if (process.env.WEBPACK_COPY === 'true') {
-                            for (const file of fs.readdirSync(path.resolve(__dirname, './dist'))) {
-                                if (file.startsWith('procaptcha_bundle') && file.endsWith('.js')) {
-                                    const src = path.resolve(__dirname, `./dist/${file}`)
-                                    const dest = path.resolve(
-                                        __dirname,
-                                        `../../demos/client-bundle-example/src/${file}`
-                                    )
-                                    fs.copyFileSync(src, dest)
-                                    log.info(`Copied ${src} to ${dest}`)
-                                }
-                            }
-                        }
-                    })
-                },
-            },
         ],
         externalsPresets: { node: false }, // do not set this to true, it will break the build
         externals,

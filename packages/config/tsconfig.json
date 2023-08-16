@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "module": "esnext",
+    "target": "esnext",
+    "lib": [
+      "es6",
+      "dom"
+    ],
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src/**/*",
+  ],
+  "references": [
+    {
+      "path": "../common"
+    },
+    {
+      "path": "../cli"
+    }
+  ]
+}

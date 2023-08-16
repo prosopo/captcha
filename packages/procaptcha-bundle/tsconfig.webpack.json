@@ -16,7 +16,6 @@
   "ts-node": {
     "compilerOptions": {
       "module": "esnext",
-
     },
     "swc": true,
     "exclude": [

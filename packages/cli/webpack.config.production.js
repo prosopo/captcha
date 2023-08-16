@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const TerserPlugin = require('terser-webpack-plugin')
 
-module.exports = () => {
+export default () => {
     return {
-        extends: './webpack.config.base.js',
+        mode: 'production',
+        extends: './webpack.config.development.js',
 
         optimization: {
             minimize: true,
