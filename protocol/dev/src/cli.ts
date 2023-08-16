@@ -162,7 +162,7 @@ export async function processArgs(args: string[]) {
         ...crates.map((p) => path.join(cratesDir, p)),
         ...contracts.map((p) => path.join(contractsDir, p)),
     ]
-    const outputDir = path.join(repoDir, 'target/ink')
+    const targetDir = path.join(repoDir, 'target')
 
     // console.log(`repoDir: ${repoDir}`)
     // console.log(`contractsDir: ${contractsDir}`)
@@ -244,7 +244,7 @@ export async function processArgs(args: string[]) {
 
         if (argv.docker) {
             // docker ci image runs as root, so chown the target dir
-            await exec(`cd ${repoDir} && sudo chown -R $(whoami):$(whoami) ../target || true`)
+            await exec(`cd ${repoDir} && sudo chown -R $(whoami):$(whoami) ${targetDir} || true`)
         }
 
         await new Promise((resolve, reject) => {
