@@ -17,7 +17,7 @@ import { SyntheticEvent, useEffect, useState } from 'react'
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'
 import Autocomplete from '@mui/material/Autocomplete/Autocomplete.js'
 import TextField from '@mui/material/TextField/TextField.js'
-import useTranslation from '@prosopo/common/react/useTranslation'
+import useTranslation from '@prosopo/common/react/useTranslation.js'
 
 export const ExtensionAccountSelect = ({
     value,

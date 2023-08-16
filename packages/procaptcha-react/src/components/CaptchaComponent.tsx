@@ -20,7 +20,7 @@ import ThemeProvider from '@mui/material/styles/ThemeProvider.js'
 import Typography from '@mui/material/Typography/Typography.js'
 import addDataAttr from '../util/index.js'
 import theme from './theme.js'
-import useTranslation from '@prosopo/common/react/useTranslation'
+import useTranslation from '@prosopo/common/react/useTranslation.js'
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse
