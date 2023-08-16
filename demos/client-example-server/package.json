@@ -8,6 +8,7 @@
     "start": "node ./dist/prosopo_client_example_server.main.bundle.js",
     "build": "webpack build",
     "build:dev": "webpack build --mode=development",
+    "clean": "tsc --build --clean",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:fix": "npx eslint . --fix"
   },
