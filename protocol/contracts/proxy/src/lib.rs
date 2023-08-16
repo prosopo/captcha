@@ -19,7 +19,6 @@
 pub mod proxy {
 
     use common::common::config;
-    use common::common::config;
     use common::common::Error;
     use common::err;
     #[allow(unused_imports)]
