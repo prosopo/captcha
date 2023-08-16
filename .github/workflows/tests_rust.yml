@@ -56,7 +56,7 @@ jobs:
             - name: Clippy
               run: |
                   cd protocol/dev
-                  npm run cli -- clippy --docker
+                  npm run cli -- clippy --docker -- -D warnings
                   # take ownership of the build files so they can be cached
                   npm run cli -- chown
 
