@@ -11,17 +11,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { CaptchaWidget } from './CaptchaWidget.js'
 import { GetCaptchaResponse } from '@prosopo/api'
 import Box from '@mui/material/Box/Box.js'
 import Button from '@mui/material/Button/Button.js'
-import CaptchaWidget from './CaptchaWidget.js'
+import React from 'react'
 import ThemeProvider from '@mui/material/styles/ThemeProvider.js'
 import Typography from '@mui/material/Typography/Typography.js'
 import addDataAttr from '../util/index.js'
 import theme from './theme.js'
 import useTranslation from '@prosopo/common/react/useTranslation'
-
-const CWidget = 'default' in CaptchaWidget && CaptchaWidget.default ? CaptchaWidget.default : CaptchaWidget
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse

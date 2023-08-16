@@ -377,10 +377,13 @@ export default (env, argv) => {
                         if (process.env.WEBPACK_COPY === 'true') {
                             for (const file of fs.readdirSync(path.resolve(__dirname, './dist'))) {
                                 if (file.startsWith('procaptcha_bundle') && file.endsWith('.js')) {
-                                    fs.copyFileSync(
-                                        path.resolve(__dirname, `./dist/${file}`),
-                                        path.resolve(__dirname, `../../demos/client-bundle-example/src/${file}`)
+                                    const src = path.resolve(__dirname, `./dist/${file}`)
+                                    const dest = path.resolve(
+                                        __dirname,
+                                        `../../demos/client-bundle-example/src/${file}`
                                     )
+                                    fs.copyFileSync(src, dest)
+                                    log.info(`Copied ${src} to ${dest}`)
                                 }
                             }
                         }

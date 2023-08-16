@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
-import { Theme } from '@mui/material'
+import { SvgIcon, Theme } from '@mui/material'
 import Box from '@mui/material/Box/index.js'
 import CheckIcon from '@mui/icons-material/Check.js'
 import Fade from '@mui/material/Fade/Fade.js'
@@ -25,6 +25,13 @@ export interface CaptchaWidgetProps {
     onClick: (hash: string) => void
 }
 
+const normalizeIcon = (Icon: typeof SvgIcon) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    return ((Icon as any).default ? (Icon as any).default : Icon) as typeof SvgIcon
+}
+
+const CheckIconNormalized = normalizeIcon(CheckIcon)
+
 const getHash = (item: any) => {
     if (!item.hash) {
         throw new Error('item.hash is undefined')
@@ -32,7 +39,7 @@ const getHash = (item: any) => {
     return item.hash
 }
 
-const CaptchaWidget = (props: CaptchaWidgetProps) => {
+export function CaptchaWidget(props: CaptchaWidgetProps) {
     // env
     const { challenge, solution, onClick } = props
     const items = challenge.captcha.items
@@ -123,7 +130,7 @@ const CaptchaWidget = (props: CaptchaWidgetProps) => {
                                                 backgroundColor: 'rgba(0,0,0,0.5)',
                                             }}
                                         >
-                                            <CheckIcon
+                                            <CheckIconNormalized
                                                 htmlColor={theme.palette.background.default}
                                                 sx={{
                                                     // img must be displayed as block otherwise get's a bottom whitespace border
@@ -145,4 +152,4 @@ const CaptchaWidget = (props: CaptchaWidgetProps) => {
     )
 }
 
-export default CaptchaWidget
+//export default CaptchaWidget
