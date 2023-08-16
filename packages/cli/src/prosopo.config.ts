@@ -22,9 +22,9 @@ function getMongoURI(): string {
     const password = process.env.DATABASE_PASSWORD || ''
     const username = process.env.DATABASE_USERNAME || ''
     const host = process.env.DATABASE_HOST || 'localhost'
-    const port = mongoSrv ? '' : process.env.DATABASE_PORT ? process.env.DATABASE_PORT : 27017
+    const port = mongoSrv ? '' : `:${process.env.DATABASE_PORT ? process.env.DATABASE_PORT : 27017}`
     const retries = mongoSrv ? '?retryWrites=true&w=majority' : ''
-    return `${protocol}://${username}:${password}@${host}:${port}/${retries}`
+    return `${protocol}://${username}:${password}@${host}${port}/${retries}`
 }
 
 export default (): ProsopoConfig => ({

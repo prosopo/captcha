@@ -23,6 +23,7 @@ pub mod captcha {
     use common::err;
     use common::err_fn;
     use common::lazy;
+    use common::common::config;
     use ink::env::hash::{Blake2x128, Blake2x256, CryptoHash, HashOutput};
     use ink::prelude::collections::btree_set::BTreeSet;
     use ink::prelude::vec;
