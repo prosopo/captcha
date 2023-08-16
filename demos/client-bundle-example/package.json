@@ -2,7 +2,8 @@
   "name": "client-bundle-example",
   "main": "index.js",
   "scripts": {
-    "start": "light-server -s ./src -p 9230 -w \"**/*.html,**/*.css,**/*.js,**/*.gz\""
+    "start": "light-server -s ./src -p 9230 -w \"**/*.html,**/*.css,**/*.js,**/*.gz\"",
+    "clean": "echo 'nothing to clean'"
   },
   "dependencies": {
     "dotenv": "^16.0.1",
