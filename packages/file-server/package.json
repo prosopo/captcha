@@ -18,7 +18,7 @@
         "sharp": "^0.32.4"
     },
     "devDependencies": {
-        "typescript": "^4.9.4"
+        "typescript": "^5.1.6"
     },
     "author": "Prosopo",
     "license": "Apache-2.0",
