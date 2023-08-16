@@ -31,6 +31,7 @@
     "scripts": {
         "start": "webpack serve --config webpack.config.base.js",
         "build": "webpack build --config webpack.config.production.js",
+        "clean": "tsc --build --clean",
         "test": "ts-node src/test",
         "cypress:open": "cypress open",
         "cypress:run": "cypress run",
