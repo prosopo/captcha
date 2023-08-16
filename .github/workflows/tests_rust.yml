@@ -54,7 +54,7 @@ jobs:
             - name: Clippy
               run: |
                   cd protocol/dev
-                  npm run cli -- clippy --docker -- -D warnings
+                  npm run cli -- clippy --docker -- -- -D warnings
 
             # Do the build
             - name: Build contract
