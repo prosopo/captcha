@@ -244,7 +244,7 @@ export async function processArgs(args: string[]) {
 
         if (argv.docker) {
             // docker ci image runs as root, so chown the target dir
-            await exec(`cd ${repoDir} sudo chown -R $(whoami):$(whoami) ../target || true`)
+            await exec(`cd ${repoDir} && sudo chown -R $(whoami):$(whoami) ../target || true`)
         }
 
         await new Promise((resolve, reject) => {
