@@ -1,7 +1,7 @@
 import { Logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
-import { validateAddress, validatePayee } from './validators.js'
+import { validateAddress, validatePayee } from './validators'
 import { wrapQuery } from '@prosopo/contract'
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger

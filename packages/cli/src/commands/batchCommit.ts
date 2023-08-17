@@ -3,7 +3,7 @@ import { BatchCommitmentsTask } from '@prosopo/provider/batch'
 import { Logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { cwd } from 'process'
-import { validateScheduleExpression } from './validators.js'
+import { validateScheduleExpression } from './validators'
 import pm2 from 'pm2'
 export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger

@@ -27,7 +27,7 @@ import {
     commandProviderRegister,
     commandProviderSetDataset,
     commandProviderUpdate,
-} from './commands/index.js'
+} from './commands'
 import { getLogger } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'
