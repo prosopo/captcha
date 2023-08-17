@@ -162,7 +162,8 @@ export async function processArgs(args: string[]) {
         ...crates.map((p) => path.join(cratesDir, p)),
         ...contracts.map((p) => path.join(contractsDir, p)),
     ]
-    const outputDir = path.join(repoDir, 'target/ink')
+    const targetDir = path.join(repoDir, 'target')
+    const cargoCacheDir = path.join(repoDir, 'cargo-cache')
 
     // console.log(`repoDir: ${repoDir}`)
     // console.log(`contractsDir: ${contractsDir}`)
@@ -225,7 +226,7 @@ export async function processArgs(args: string[]) {
         if (argv.docker) {
             const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
             pullDockerImage()
-            script = `docker run --rm -v ${repoDir}:/repo --entrypoint /bin/sh prosopo/contracts-ci-linux:${contractsCiVersion} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
+            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache --entrypoint /bin/sh prosopo/contracts-ci-linux:${contractsCiVersion} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
             if (dir) {
@@ -244,7 +245,7 @@ export async function processArgs(args: string[]) {
 
         if (argv.docker) {
             // docker ci image runs as root, so chown the target dir
-            await exec(`cd ${repoDir} && sudo chown -R $(whoami):$(whoami) ../target || true`)
+            await exec(`cd ${repoDir} && sudo chown -R $(whoami):$(whoami) ${targetDir} || true`)
         }
 
         await new Promise((resolve, reject) => {
