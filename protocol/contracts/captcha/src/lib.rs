@@ -18,6 +18,8 @@ pub use self::captcha::{Captcha, CaptchaRef};
 #[ink::contract]
 pub mod captcha {
 
+    use common::common::config;
+    use common::common::Error;
     use common::err;
     use common::err_fn;
     use common::lazy;
@@ -262,85 +264,26 @@ pub mod captcha {
         user_accounts: Lazy<BTreeSet<AccountId>>,
     }
 
-    /// The error types
-    ///
-    #[derive(
-        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
-    )]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum Error {
-        /// Returned if the caller is not the admin
-        NotAdmin,
-        /// Returned if the caller is not the owner of the dapp
-        NotOwner,
-        /// Returned when the contract to address transfer fails
-        ContractTransferFailed,
-        /// Returned if provider account exists when it shouldn't
-        ProviderAccountExists,
-        /// Returned if provider exists when it shouldn't
-        ProviderExists,
-        /// Returned if provider account does not exists when it shouldn't
-        ProviderAccountDoesNotExist,
-        /// Returned if provider does not exist when it should
-        ProviderDoesNotExist,
-        /// Returned if provider has insufficient funds to operate
-        ProviderInsufficientFunds,
-        /// Returned if provider is inactive and trying to use the service
-        ProviderInactive,
-        /// Returned if url is already used by another provider
-        ProviderUrlUsed,
-        /// Returned if dapp exists when it shouldn't
-        DappExists,
-        /// Returned if dapp does not exist when it should
-        DappDoesNotExist,
-        /// Returned if dapp is inactive and trying to use the service
-        DappInactive,
-        /// Returned if dapp has insufficient funds to operate
-        DappInsufficientFunds,
-        /// Returned if captcha data does not exist
-        CaptchaDataDoesNotExist,
-        /// Returned if solution commitment does not exist when it should
-        CommitDoesNotExist,
-        /// Returned if dapp user does not exist when it should
-        DappUserDoesNotExist,
-        /// Returned if there are no active providers
-        NoActiveProviders,
-        /// Returned if the dataset ID and dataset ID with solutions are identical
-        DatasetIdSolutionsSame,
-        /// CodeNotFound ink env error
-        CodeNotFound,
-        /// An unknown ink env error has occurred
-        #[default]
-        Unknown,
-        /// Invalid contract
-        InvalidContract,
-        /// Invalid payee. Returned when the payee value does not exist in the enum
-        InvalidPayee,
-        /// Returned if not all captcha statuses have been handled
-        InvalidCaptchaStatus,
-        /// No correct captchas in history (either history is empty or all captchas are incorrect)
-        NoCorrectCaptcha,
-        /// Returned if not enough providers are active
-        NotEnoughActiveProviders,
-        /// Returned if provider fee is too high
-        ProviderFeeTooHigh,
-        /// Returned if the commitment already exists
-        CommitAlreadyExists,
-    }
-
     impl Captcha {
         /// Constructor
         #[ink(constructor, payable)]
-        pub fn new() -> Self {
-            let author = AccountId::from(Self::get_author_bytes());
+        pub fn new() -> Result<Self, Error> {
+            let result = Self::new_unguarded();
+            let author = Self::get_admin(&result);
             let caller = Self::env().caller();
             if caller != author {
-                panic!(
-                    "Not authorised to instantiate this contract: {:?} != {:?}",
-                    caller, author
-                );
+                return Err(Error::NotAuthor);
             }
-            Self::new_unguarded()
+            Ok(result)
+        }
+
+        #[ink(constructor)]
+        pub fn new_panic() -> Self {
+            let result = Self::new();
+            if let Err(e) = result {
+                panic!("{:?}", e);
+            }
+            result.unwrap()
         }
 
         fn new_unguarded() -> Self {
@@ -360,39 +303,13 @@ pub mod captcha {
         /// Get the git commit id from when this contract was built
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [
-                25, 175, 186, 108, 140, 91, 98, 141, 48, 59, 196, 39, 26, 58, 56, 221, 240, 54,
-                155, 164,
-            ];
-            env_git_commit_id
-        }
-
-        fn get_author_bytes() -> [u8; 32] {
-            let env_author_bytes: [u8; 32] = [
-                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
-                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-            ]; // the account which can instantiate the contract
-            env_author_bytes
-        }
-
-        /// the account which can instantiate the contract
-        #[ink(message)]
-        pub fn get_author(&self) -> AccountId {
-            AccountId::from(Self::get_author_bytes())
-        }
-
-        fn get_admin_bytes(&self) -> [u8; 32] {
-            let env_admin_bytes: [u8; 32] = [
-                212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44,
-                133, 88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-            ];
-            env_admin_bytes
+            config::get_git_commit_id()
         }
 
         /// the admin which can control this contract. set to author/instantiator by default
         #[ink(message)]
         pub fn get_admin(&self) -> AccountId {
-            AccountId::from(self.get_admin_bytes())
+            config::get_admin()
         }
 
         /// Get all payee options
@@ -711,7 +628,7 @@ pub mod captcha {
             if balance > 0 {
                 self.env()
                     .transfer(provider_account, balance)
-                    .map_err(|_| Error::ContractTransferFailed)?;
+                    .map_err(|_| Error::TransferFailed)?;
             }
 
             Ok(())
@@ -763,7 +680,7 @@ pub mod captcha {
         fn check_dapp_owner_is_caller(&self, dapp: &Dapp) -> Result<(), Error> {
             let caller = self.env().caller();
             if dapp.owner != caller {
-                return err!(self, Error::NotOwner);
+                return err!(self, Error::NotAuthorised);
             }
 
             Ok(())
@@ -879,7 +796,7 @@ pub mod captcha {
             if balance > 0 {
                 self.env()
                     .transfer(dapp.owner, balance)
-                    .map_err(|_| Error::ContractTransferFailed)?;
+                    .map_err(|_| Error::TransferFailed)?;
             }
 
             // remove the dapp
@@ -1388,7 +1305,7 @@ pub mod captcha {
             let transfer_result =
                 ink::env::transfer::<ink::env::DefaultEnvironment>(caller, amount);
             if transfer_result.is_err() {
-                return err!(self, Error::ContractTransferFailed);
+                return err!(self, Error::TransferFailed);
             }
             Ok(())
         }
@@ -1404,7 +1321,7 @@ pub mod captcha {
                         return err!(self, Error::CodeNotFound);
                     }
                     _ => {
-                        return err!(self, Error::Unknown);
+                        return err!(self, Error::SetCodeHashFailed);
                     }
                 }
             }
@@ -1419,7 +1336,7 @@ pub mod captcha {
         /// Is the specified account the admin for this contract?
         fn check_is_admin(&self, acc: AccountId) -> Result<(), Error> {
             if self.get_admin() != acc {
-                return err!(self, Error::NotAdmin);
+                return err!(self, Error::NotAuthorised);
             }
             Ok(())
         }
@@ -1575,7 +1492,6 @@ pub mod captcha {
         }
 
         #[ink::test]
-        #[should_panic]
         fn test_ctor_guard_fail() {
             // always set the caller to the unused account to start, avoid any mistakes with caller checks
             set_caller(get_unused_account());
@@ -1583,7 +1499,7 @@ pub mod captcha {
             // only able to instantiate from the alice account
             set_caller(default_accounts().bob);
             let contract = Captcha::new();
-            // should fail to construct and panic
+            assert_eq!(contract.unwrap_err(), Error::NotAuthor);
         }
 
         #[ink::test]
@@ -1738,7 +1654,10 @@ pub mod captcha {
             set_caller(get_user_account(0)); // an account which does not have permission to call set code hash
 
             let new_code_hash = get_code_hash(1);
-            assert_eq!(contract.set_code_hash(new_code_hash), Err(Error::NotAdmin));
+            assert_eq!(
+                contract.set_code_hash(new_code_hash),
+                Err(Error::NotAuthorised)
+            );
         }
 
         #[ink::test]
@@ -1768,7 +1687,7 @@ pub mod captcha {
             let mut contract = get_contract(0);
             set_caller(get_user_account(0)); // an account which does not have permission to call terminate
 
-            assert_eq!(contract.terminate().unwrap_err(), Error::NotAdmin);
+            assert_eq!(contract.terminate().unwrap_err(), Error::NotAuthorised);
         }
 
         #[ink::test]
@@ -1819,7 +1738,7 @@ pub mod captcha {
 
             // give the contract funds
             set_caller(get_user_account(0)); // use the admin acc
-            assert_eq!(contract.withdraw(1), Err(Error::NotAdmin));
+            assert_eq!(contract.withdraw(1), Err(Error::NotAuthorised));
         }
 
         #[ink::test]
