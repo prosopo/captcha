@@ -1,36 +1,35 @@
 {
-  "name": "@prosopo/database",
-  "version": "0.1.17",
-  "description": "Prosopo database plugins for provider",
-  "main": "dist/index.js",
-  "scripts": {
-    "clean": "tsc --build --clean",
-    "build": "tsc --build --verbose",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/prosopo/captcha.git"
-  },
-  "author": "Prosopo Limited",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/prosopo/captcha/issues"
-  },
-  "homepage": "https://github.com/prosopo/captcha#readme",
-  "dependencies": {
-    "@prosopo/common": "^0.1.17",
-    "@prosopo/types": "^0.1.17",
-    "@prosopo/types-database": "^0.1.17",
-    "mongodb": "5.6.0",
-    "mongodb-memory-server": "^8.7.2",
-    "mongoose": "^7.3.3",
-    "zod": "^3.17.9"
-  },
-  "devDependencies": {
-    "typescript": "^4.9.4"
-  },
-  "sideEffects": false
+    "name": "@prosopo/database",
+    "version": "0.1.17",
+    "description": "Prosopo database plugins for provider",
+    "main": "dist/index.js",
+    "scripts": {
+        "clean": "tsc --build --clean",
+        "build": "tsc --build --verbose",
+        "lint": "npx eslint .",
+        "lint:fix": "npx eslint . --fix"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/prosopo/captcha.git"
+    },
+    "author": "Prosopo Limited",
+    "license": "Apache-2.0",
+    "bugs": {
+        "url": "https://github.com/prosopo/captcha/issues"
+    },
+    "homepage": "https://github.com/prosopo/captcha#readme",
+    "dependencies": {
+        "@prosopo/common": "^0.1.17",
+        "@prosopo/types": "^0.1.17",
+        "@prosopo/types-database": "^0.1.17",
+        "mongodb": "5.6.0",
+        "mongodb-memory-server": "^8.7.2",
+        "mongoose": "^7.3.3",
+        "zod": "^3.17.9"
+    },
+    "devDependencies": {
+        "typescript": "^4.9.4"
+    },
+    "sideEffects": false
 }
