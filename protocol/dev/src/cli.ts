@@ -163,6 +163,7 @@ export async function processArgs(args: string[]) {
         ...contracts.map((p) => path.join(contractsDir, p)),
     ]
     const targetDir = path.join(repoDir, 'target')
+    const cargoCacheDir = path.join(repoDir, 'cargo-cache')
 
     // console.log(`repoDir: ${repoDir}`)
     // console.log(`contractsDir: ${contractsDir}`)
@@ -225,7 +226,7 @@ export async function processArgs(args: string[]) {
         if (argv.docker) {
             const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
             pullDockerImage()
-            script = `docker run --rm -v ${repoDir}:/repo --entrypoint /bin/sh prosopo/contracts-ci-linux:${contractsCiVersion} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
+            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache --entrypoint /bin/sh prosopo/contracts-ci-linux:${contractsCiVersion} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
             if (dir) {
