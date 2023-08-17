@@ -43,7 +43,7 @@ jobs:
                   # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
                   # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
                   # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}-
                   restore-keys: |
                       cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
                       cargo-build-${{ runner.os }}-${{ runner.arch }}-
