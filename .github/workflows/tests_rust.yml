@@ -7,7 +7,7 @@ on:
             - 'main'
         paths:
             - 'protocol/**'
-            - '.github/workflows/rust.yml'
+            - '.github/workflows/tests_rust.yml'
 
 env:
     CARGO_TERM_COLOR: always
