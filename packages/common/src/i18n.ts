@@ -42,7 +42,7 @@ const reactOptions: InitOptions = {
 const nodeOptions: InitOptions = {}
 
 if (isClientSide()) {
-    i18n.use(LanguageDetector)
+    i18n.use(LanguageDetector as unknown as any)
         .use(initReactI18next)
         .init({ ...commonOptions, ...reactOptions })
 } else {

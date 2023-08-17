@@ -15,10 +15,11 @@
         "rebuild:npm": "npm run clean:npm && npm i",
         "clean": "npm run --silent cmd \"npm run --silent -w @prosopo/%s clean\"",
         "clean:npm": "find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' + && find . -name \"package-lock.json\" -type f -delete ",
-        "clean:all": "npm run --workspaces clean",
+        "clean:all": "npm run clean:npm && npm run clean:ts",
         "clean:reset": "npm run clean:all && npm run clean:npm",
         "deploy_protocol": "npm run -w @prosopo/dev cli deploy_protocol -- --logLevel=Debug --update_env",
         "deploy_dapp": "npm run -w @prosopo/dev cli deploy_dapp -- --logLevel=Debug --update_env",
+        "clean:ts": "find . -name \"*.tsbuildinfo\" -type f -delete && find . -name \"dist\" -type d -prune -exec rm -rf '{}' + ",
         "version": "npm --no-git-tag-version --allow-same-version --workspaces --workspaces-update version",
         "publish:dry-run": "npm --workspaces publish --dry-run",
         "publish": "npm --workspaces publish --access=public",
@@ -67,7 +68,7 @@
         "tsc-alias": "^1.8.6",
         "tsconfig-paths-webpack-plugin": "^4.0.1",
         "tslib": "^2.5.2",
-        "typescript": "^5.1.6"
+        "typescript": "^4.9.5"
     },
     "description": "Integrates prosopo packages for development purposes",
     "bugs": {

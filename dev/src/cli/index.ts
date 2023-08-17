@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { LogLevelSchema, getLogger } from '@prosopo/common'
-import { deployDapp, deployProtocol } from '../contract/deploy/index'
-import { exec } from '../util'
+import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
+import { exec } from '../util/index.js'
 import { getLogLevel } from '@prosopo/common'
-import { importContract } from '../contract'
+import { hideBin } from 'yargs/helpers'
+import { importContract } from '../contract/index.js'
 import { loadEnv } from '@prosopo/cli'
-import { runTests } from '../test/index'
-import { setup } from '../setup/index'
-import { updateEnvFiles } from '../util/updateEnv'
+import { runTests } from '../test/index.js'
+import { setup } from '../setup/index.js'
+import { updateEnvFiles } from '../util/index.js'
 import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
@@ -28,14 +29,14 @@ const rootDir = path.resolve('.')
 loadEnv(rootDir)
 
 export async function processArgs(args) {
-    const parsed = await yargs.option('logLevel', {
+    const parsed = await yargs(hideBin(args)).option('logLevel', {
         describe: 'set log level',
         choices: Object.keys(LogLevelSchema.enum),
     }).argv
 
     const log = getLogger(getLogLevel(parsed.logLevel), 'CLI')
 
-    yargs
+    yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')
         .command(
             'deploy_protocol',
@@ -164,7 +165,7 @@ export async function processArgs(args) {
             },
         })
 
-    await yargs.parse()
+    await yargs(hideBin(args)).parse()
 }
 processArgs(process.argv.slice(2))
     .then(() => {

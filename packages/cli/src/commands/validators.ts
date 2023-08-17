@@ -1,7 +1,7 @@
 import { Compact, u128 } from '@polkadot/types'
-import { PayeeSchema } from '@prosopo/types/provider'
+import { PayeeSchema } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import { encodeStringAddress } from '@prosopo/provider/util'
+import { encodeStringAddress } from '@prosopo/provider'
 import parser from 'cron-parser'
 
 export const validateAddress = (argv): { address: string } => {

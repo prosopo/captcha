@@ -5,6 +5,7 @@
         "outDir": "./dist",
         "module": "esnext",
         "target": "esnext",
+        "moduleResolution": "node"
     },
     "include": [
         "./src/**/*.ts",

@@ -9,7 +9,7 @@
   "compilerOptions": {
     "target": "es6",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "composite": true,
     "allowJs": true,
     "esModuleInterop": true,
@@ -83,6 +83,9 @@
       ],
       "@prosopo/procaptcha-react/*": [
         "procaptcha-react/src/*"
+      ],
+      "@prosopo/provider": [
+        "provider/src"
       ],
       "@prosopo/provider/*": [
         "provider/src/*"

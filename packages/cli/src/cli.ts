@@ -13,10 +13,12 @@
 // limitations under the License.
 import { LogLevelSchema, getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
+import { fileURLToPath } from 'url'
 import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
 import { loadEnv } from './env.js'
 import { processArgs } from './argv.js'
 import { start } from './start.js'
+import process from 'process'
 const log = getLogger(LogLevelSchema.enum.Info, 'cli')
 async function main() {
     loadEnv()
@@ -45,7 +47,7 @@ async function main() {
 }
 
 // if main node process
-if (typeof require !== 'undefined' && require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
     main()
         .then(() => {
             log.info('Running main process...')

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { Keyring } from '@polkadot/keyring'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
 import { hexToU8a } from '@polkadot/util'
-import { Keyring } from '@polkadot/keyring'
 
 async function mnemonic() {
     const keyring = new Keyring({ type: 'ed25519', ss58Format: 5 })

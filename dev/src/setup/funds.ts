@@ -11,12 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvironment } from '@prosopo/types-env'
-import { BN } from '@polkadot/util'
-import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
 import { AnyNumber } from '@polkadot/types-codec/types'
-import { ProsopoEnvError } from '@prosopo/common'
+import { BN } from '@polkadot/util'
 import { ISubmittableResult } from '@polkadot/types/types'
+import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoEnvironment } from '@prosopo/types-env'
+import { dispatchErrorHandler, oneUnit } from '@prosopo/contract'
 
 const devMnemonics = ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie']
 let current = -1

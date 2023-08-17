@@ -24,13 +24,14 @@ import {
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
 import { Alert, Backdrop, CircularProgress } from '@mui/material'
+import { Box, Checkbox, Link, Typography } from '@mui/material'
 import { css } from '@emotion/react'
 import { useRef, useState } from 'react'
-import Box from '@mui/material/Box/Box.js'
 import CaptchaComponent from './CaptchaComponent.js'
-import Checkbox from '@mui/material/Checkbox/Checkbox.js'
-import Link from '@mui/material/Link/Link.js'
-import Typography from '@mui/material/Typography/Typography.js'
+// import Box from '@mui/material/Box/Box.js'
+// import Checkbox from '@mui/material/Checkbox/Checkbox.js'
+// import Link from '@mui/material/Link/Link.js'
+// import Typography from '@mui/material/Typography/Typography.js'
 
 const logoStyle = css`
     align-items: center;

@@ -1,11 +1,10 @@
 import PluginJsonAccessOptimizer from 'webpack-json-access-optimizer'
 const { JsonAccessOptimizer } = PluginJsonAccessOptimizer
+import { Glob } from 'glob'
 import { getLogger } from '@prosopo/common'
-import { loadEnv } from '@prosopo/cli'
 import CompressionPlugin from 'compression-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
-import glob from 'glob'
 import i18nextWebpackPlugin from 'i18next-scanner-webpack'
 import path from 'path'
 import webpack from 'webpack'
@@ -34,7 +33,7 @@ function getFilesInDirs(startDir, excludeDirs: string[] = [], includeDirs: strin
         // get matching module directories
         const globPattern = `${startDir}/**/${searchPattern}${searchPattern.indexOf('.') > -1 ? '' : '/*'}`
         //log.info(`globPattern: ${globPattern}`)
-        const globResult = glob.sync(globPattern, { recursive: true, ignore: ignorePatterns })
+        const globResult = new Glob(globPattern, { recursive: true, ignore: ignorePatterns }).walkSync()
         //log.info(`globResult: ${globResult}`)
         for (const filePath of globResult) {
             emptyAliases.push(filePath)
@@ -52,11 +51,12 @@ function excludePolkadot() {
 }
 
 export function webpackConfigBase(env, argv) {
-    if (!env.BASE_DIR) {
-        throw new Error('BASE_DIR env var is required')
-    }
-    // load the environment file relative to the base dir
-    loadEnv(env.BASE_DIR)
+    const requiredEnv = ['BASE_DIR', 'BUNDLE_NAME']
+    requiredEnv.forEach((envVar) => {
+        if (!env[envVar]) {
+            throw new Error(`${envVar} env var is required`)
+        }
+    })
     const alias = {}
     // get a list of polkdaot files to exclude from the bundle
     const externals = excludePolkadot()
@@ -74,6 +74,7 @@ export function webpackConfigBase(env, argv) {
     }
     const libraryName = env.BUNDLE_NAME
     const baseDir = env.BASE_DIR
+    const target = 'web'
     const defineVars = {
         'process.env.NODE_ENV': process.env.NODE_ENV || JSON.stringify(isProduction ? 'production' : 'development'),
         'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
@@ -93,7 +94,7 @@ export function webpackConfigBase(env, argv) {
             poll: true,
             ignored: /node_modules/,
         },
-        target: 'web',
+        target,
         resolve: {
             // Uncomment the following line when working with local packages
             // More reading : https://webpack.js.org/configuration/resolve/#resolvesymlinks
@@ -140,7 +141,10 @@ export function webpackConfigBase(env, argv) {
                         fullySpecified: false,
                     },
                 },
-
+                {
+                    test: /\.m?js/,
+                    type: 'javascript/auto',
+                },
                 {
                     //exclude: /node_modules/,
                     test: /\.(ts|tsx)$/,
@@ -198,7 +202,7 @@ export function webpackConfigBase(env, argv) {
                 async: true,
             }),
         ],
-        externalsPresets: { node: false }, // do not set this to true, it will break the build
+        externalsPresets: { node: false }, // do not set this to true for web, it will break the build
         externals,
     }
 }

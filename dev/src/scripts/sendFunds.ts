@@ -16,7 +16,7 @@ import { Environment } from '@prosopo/env'
 import { config } from 'dotenv'
 import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
 import { getPair } from '@prosopo/common'
-import { sendFunds } from '../setup'
+import { sendFunds } from '../setup/index.js'
 
 config()
 

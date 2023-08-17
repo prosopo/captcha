@@ -6,7 +6,8 @@
         "module": "esnext",
         "target": "esnext",
         "lib": ["esnext", "dom"],
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "moduleResolution": "NodeNext"
     },
     "include": ["./src/**/*.ts", "./src/**/*.json"],
     "references": [

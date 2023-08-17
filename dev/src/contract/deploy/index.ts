@@ -11,5 +11,5 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { run as deployProtocol } from './protocol'
-export { run as deployDapp } from './dapp'
+export { run as deployProtocol } from './protocol.js'
+export { run as deployDapp } from './dapp.js'

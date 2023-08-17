@@ -5,7 +5,8 @@
     "main": "dist/index.js",
     "scripts": {
         "build": "tsc",
-        "cli": "ts-node src/cli.ts"
+        "cli": "ts-node src/cli.ts",
+        "clean": "tsc --build --clean"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",

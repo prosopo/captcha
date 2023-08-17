@@ -11,13 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Box, Fade, useTheme } from '@mui/material'
 import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
+import { default as CheckIcon } from '@mui/icons-material/Check.js'
 import { SvgIcon, Theme } from '@mui/material'
-import Box from '@mui/material/Box/index.js'
-import CheckIcon from '@mui/icons-material/Check.js'
-import Fade from '@mui/material/Fade/Fade.js'
 import React from 'react'
-import useTheme from '@mui/material/styles/useTheme.js'
 
 export interface CaptchaWidgetProps {
     challenge: CaptchaResponseCaptcha
@@ -30,6 +28,7 @@ const normalizeIcon = (Icon: typeof SvgIcon) => {
     return ((Icon as any).default ? (Icon as any).default : Icon) as typeof SvgIcon
 }
 
+// @ts-ignore https://github.com/mui/material-ui/issues/35535
 const CheckIconNormalized = normalizeIcon(CheckIcon)
 
 const getHash = (item: any) => {
@@ -49,6 +48,7 @@ export function CaptchaWidget(props: CaptchaWidgetProps) {
     return (
         <>
             <Box
+                component="div"
                 pr={0.5}
                 pb={0.5}
                 sx={{

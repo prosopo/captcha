@@ -28,6 +28,9 @@
             "path": "../packages/common"
         },
         {
+            "path": "../packages/config"
+        },
+        {
             "path": "../packages/contract"
         },
         {
@@ -37,7 +40,13 @@
             "path": "../packages/datasets"
         },
         {
+            "path": "../packages/datasets-fs"
+        },
+        {
             "path": "../packages/env"
+        },
+        {
+            "path": "../packages/file-server"
         },
         {
             "path": "../packages/procaptcha"

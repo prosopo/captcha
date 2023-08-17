@@ -6,9 +6,8 @@
   "type": "module",
   "scripts": {
     "clean": "tsc --build --clean",
-    "build:webpack:prod": "webpack --config webpack.config.production.js --mode production",
-    "build:webpack:dev": "webpack --config webpack.config.base.js --mode development",
     "build": "tsc --build --verbose",
+    "bundle": "npm run build && vite build",
     "cli": "node ./dist/cli.js",
     "start": "node ./dist/start.js",
     "lint": "npx eslint .",
@@ -25,8 +24,16 @@
   },
   "devDependencies": {
     "@prosopo/config": "^0.1.17",
-    "typescript": "^5.1.6",
-    "webpack-merge": "^5.9.0"
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-wasm": "^6.1.3",
+    "rollup-plugin-import-css": "^3.3.1",
+    "rollup-plugin-natives": "^0.7.6",
+    "typescript": "^4.9.5",
+    "vite-plugin-dts": "^3.5.2",
+    "vite-plugin-node": "^3.0.2",
+    "vite-tsconfig-paths": "^4.2.0",
+    "webpack-merge": "^5.9.0",
+    "webpack-node-externals": "^3.0.0"
   },
   "author": "Prosopo",
   "license": "Apache-2.0",

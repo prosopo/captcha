@@ -80,6 +80,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     const convertFromConsolaLevel = (logLevel: ConsolaLogLevel): LogLevel => {
         return parseLogLevel(logLevel as unknown as LogLevel)
     }
+    // @ts-ignore
     const logger = consola.create({ level: convertToConsolaLevel(logLevel) }).withScope(scope)
     return {
         log: logger.log,

@@ -11,15 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { u8aToHex } from '@polkadot/util'
 
 const arg = process.argv.slice(2)[0].trim()
 console.log(`arg          : ${arg}`)
 
-const byteArray = arg.split(',').map((x) => parseInt(x));
+const byteArray = arg.split(',').map((x) => parseInt(x))
 
-const hex = Array.from(byteArray, function(byte) {
-    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+const hex = Array.from(byteArray, function (byte) {
+    return ('0' + (byte & 0xff).toString(16)).slice(-2)
 }).join('')
 
-console.log(hex);
+console.log(hex)

@@ -14,7 +14,7 @@
 import { GetCaptchaResponse } from '@prosopo/api'
 import { InjectedAccount, InjectedExtension } from '@polkadot/extension-inject/types'
 import { ProcaptchaClientConfig, ProcaptchaOutput } from '@prosopo/types'
-import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi'
+import { ProsopoCaptchaApi } from '../modules/ProsopoCaptchaApi.js'
 import { TCaptchaSubmitResult } from './client.js'
 /**
  * House the account and associated extension.

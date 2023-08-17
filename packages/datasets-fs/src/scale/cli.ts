@@ -1,7 +1,7 @@
 import { ArgumentsCamelCase, Argv } from 'yargs'
 import { Logger } from '@prosopo/common'
-import { argsSchema } from './js.js'
-import scale from './js.js'
+import { argsSchema } from './args.js'
+import scale from './scale.js'
 
 export default (cmdArgs?: { logger?: Logger }) => {
     return {

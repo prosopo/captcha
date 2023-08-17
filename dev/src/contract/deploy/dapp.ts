@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract'
-import { AbiJSON, Wasm } from '../../util'
+import { AbiJSON, Wasm } from '../../util/index.js'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
 import { ContractDeployer } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/env'

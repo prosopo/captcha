@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ExecOutput, exec } from '../util'
+import { ExecOutput, exec } from '../util/index.js'
 
 async function importContract(relPathToABIs: string, relPathToOutput: string): Promise<ExecOutput> {
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73

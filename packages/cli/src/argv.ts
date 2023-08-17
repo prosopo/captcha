@@ -36,7 +36,7 @@ export function processArgs(args, env: ProviderEnvironment) {
     const tasks = new Tasks(env)
     const logger = getLogger(env.config.logLevel, 'CLI')
 
-    return yargs(hideBin(process.argv))
+    return yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')
         .option('api', { demand: false, default: false, type: 'boolean' } as const)
         .command(commandProviderRegister(env, tasks, { logger }))

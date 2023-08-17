@@ -11,6 +11,7 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "start": "webpack serve --mode development",
+        "bundle": "build && vite build",
         "build:webpack:prod": "webpack  --config webpack.config.production.js --mode production",
         "build:webpack:prod:copy": "webpack --config webpack.config.production.js --mode production && cp dist/procaptcha_bundle.*.bundle.js ../../demos/client-bundle-example/src",
         "build:webpack:dev": "webpack --config webpack.config.development.js --mode development --watch",

@@ -11,62 +11,64 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { spawn } from "child_process";
-import { stdout, stderr, stdin } from 'process';
+import { spawn } from 'child_process'
+import { stdin } from 'process'
 
 export interface ExecOutput {
-    stdout: string;
-    stderr: string;
-    code: number | null;
+    stdout: string
+    stderr: string
+    code: number | null
 }
 
-export const exec = (command: string, options?: {
-    pipe?: boolean,
-    printCmd?: boolean,
-}): Promise<ExecOutput> => {
+export const exec = (
+    command: string,
+    options?: {
+        pipe?: boolean
+        printCmd?: boolean
+    }
+): Promise<ExecOutput> => {
+    let { pipe, printCmd } = options || {}
+    pipe = pipe === undefined || pipe // map undefined to true
+    printCmd = printCmd === undefined || printCmd // map undefined to true
 
-    let { pipe, printCmd } = options || {};
-    pipe = pipe === undefined || pipe; // map undefined to true
-    printCmd = printCmd === undefined || printCmd; // map undefined to true
-
-    if(printCmd) {
+    if (printCmd) {
         console.log(`[exec] ${command}`)
     }
 
     const prc = spawn(command, {
         shell: true,
-    });
+    })
 
-    if(pipe || pipe === undefined) {
-        prc.stdout.pipe(process.stdout);
-        prc.stderr.pipe(process.stderr);
+    if (pipe || pipe === undefined) {
+        prc.stdout.pipe(process.stdout)
+        prc.stderr.pipe(process.stderr)
     }
-    stdin.pipe(prc.stdin);
+    stdin.pipe(prc.stdin)
 
-    const stdoutData: string[] = [];
-    const stderrData: string[] = [];
+    const stdoutData: string[] = []
+    const stderrData: string[] = []
     prc.stdout.on('data', (data) => {
-        stdoutData.push(data.toString());
+        stdoutData.push(data.toString())
     })
     prc.stderr.on('data', (data) => {
-        stderrData.push(data.toString());
+        stderrData.push(data.toString())
     })
 
     return new Promise((resolve, reject) => {
         prc.on('close', function (code) {
-            if(pipe || pipe === undefined) {
-                console.log("")
+            if (pipe || pipe === undefined) {
+                console.log('')
             }
-            const output: ExecOutput  = {
+            const output: ExecOutput = {
                 stdout: stdoutData.join(''),
                 stderr: stderrData.join(''),
                 code,
-            };
-            if (code === 0) {
-                resolve(output);
-            } else {
-                reject(output);
             }
-        });
-    });
+            if (code === 0) {
+                resolve(output)
+            } else {
+                reject(output)
+            }
+        })
+    })
 }

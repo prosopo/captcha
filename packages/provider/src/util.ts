@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Captcha, CaptchaSolution, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
-import { Database } from '@prosopo/types-database/types'
+import { Database } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import { arrayJoin } from '@prosopo/common'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
