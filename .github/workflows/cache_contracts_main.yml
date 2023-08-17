@@ -51,7 +51,7 @@ jobs:
               id: build
               run: |
                   cd protocol/dev
-                  npm run cli -- build --release --docker
+                  npm run cli -- build --docker
 
             - name: Cleanup cargo build caches
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
