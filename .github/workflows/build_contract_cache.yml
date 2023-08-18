@@ -8,7 +8,7 @@ on:
             - 'main'
         paths:
             - 'protocol/**'
-            - '.github/workflows/cache_contracts_main.yml'
+            - '.github/workflows/**'
 
 env:
     CARGO_TERM_COLOR: always
