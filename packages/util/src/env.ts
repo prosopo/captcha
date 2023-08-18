@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevelSchema, getLogger } from '@prosopo/common'
 import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 import path from 'path'
@@ -33,9 +32,6 @@ export function loadEnv(rootDir?: string, filename?: string, filePath?: string) 
 }
 
 export function getEnvFile(rootDir?: string, filename = '.env', filepath = path.join(__dirname, '../..')) {
-    const log = getLogger(LogLevelSchema.enum.Info, 'cli.env')
     const env = getEnv()
-    const envPath = path.join(rootDir || filepath, `${filename}.${env}`)
-    log.info(`Env path: ${envPath}`)
-    return envPath
+    return path.join(rootDir || filepath, `${filename}.${env}`)
 }
