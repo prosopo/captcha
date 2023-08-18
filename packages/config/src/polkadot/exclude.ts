@@ -6,5 +6,5 @@ export default function excludePolkadot() {
     //const startDir = path.resolve(path.resolve(), '../../node_modules/@polkadot')
     //log.info(`startDir: ${startDir}`)
     //return getFilesInDirs(startDir, excludeFiles)
-    return ['./kusama.js', './westend.js']
+    return ['./kusama.js', './westend.js', 'bytes.js']
 }

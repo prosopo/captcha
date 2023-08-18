@@ -13,7 +13,8 @@
 // limitations under the License.
 import { ApiPromise, WsProvider } from '@polkadot/api'
 
-const yargs = require('yargs')
+import { hideBin } from 'yargs/helpers'
+import yargs from 'yargs'
 
 const providers = {
     local: { endpoint: 'ws://substrate-node:9944' },
@@ -28,7 +29,7 @@ async function getContractInfoOf(contractAddress: string, provider: string) {
 }
 
 async function run(argv) {
-    const parsed = yargs(argv)
+    const parsed = await yargs(hideBin(argv))
         .usage('Usage:  [options]')
         .option('contract', {
             type: 'string',
@@ -41,7 +42,7 @@ async function run(argv) {
             desc: 'The network to use',
         })
         .parse()
-    return await getContractInfoOf(parsed.contract, parsed.network)
+    return await getContractInfoOf(parsed.contract, parsed.network ? parsed.network : 'development')
 }
 run(process.argv.slice(2))
     .then((result) => {
