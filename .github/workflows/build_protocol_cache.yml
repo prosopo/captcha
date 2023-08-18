@@ -23,7 +23,6 @@ jobs:
 
             - run: mkdir -p cargo-cache
             - run: mkdir -p protocol/target/ink
-            - run: mkdir -p image-cache
 
             # Restore the cargo build from cache, if available
             - name: Restore cached cargo build
@@ -31,7 +30,6 @@ jobs:
               id: cache-restore
               with:
                   path: |
-                      image-cache
                       cargo-cache
                       protocol/target
                       node_modules
@@ -52,17 +50,8 @@ jobs:
                   ls -la
                   ls -la cargo-cache
                   ls -la protocol/target/ink
-                  ls -la image-cache
             
-            - if: steps.cache-restore.outputs.cache-hit != 'true'
-              run: |
-                docker pull prosopo/contracts-ci-linux:3.0.1
-                docker save -o image-cache/ci.tar prosopo/contracts-ci-linux:3.0.1
-
-            - if: steps.cache-restore.outputs.cache-hit == 'true'
-              run: |
-                ls image-cache
-                docker load -i image-cache/ci.tar
+            - run: docker pull prosopo/contracts-ci-linux:3.0.1
 
             # print cache state before build, etc
             - name: ls
@@ -71,7 +60,6 @@ jobs:
                   ls -la
                   ls -la cargo-cache
                   ls -la protocol/target/ink
-                  ls -la image-cache
 
             - name: Npm install
               run: |
@@ -82,7 +70,7 @@ jobs:
             - name: Build contract
               id: build
               run: |
-                  touch protocol/target/ink/hello
+                  touch protocol/target/ink/$(date | tr ' ' '_')
 
             # print cache state after build, etc
             - name: ls
@@ -91,7 +79,6 @@ jobs:
                   ls -la
                   ls -la cargo-cache
                   ls -la protocol/target/ink
-                  ls -la image-cache
 
             - name: Cleanup cargo build caches
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
@@ -119,7 +106,6 @@ jobs:
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
               with:
                   path: |
-                      image-cache
                       cargo-cache
                       protocol/target
                       node_modules
