@@ -36,7 +36,7 @@ jobs:
                   # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
                   # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
                   # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-                  key: protocol-${{ runner.os }}-${{ runner.arch }}
+                  key: protocol-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
                   restore-keys: |
                       protocol-${{ runner.os }}-${{ runner.arch }}-
 
@@ -49,3 +49,14 @@ jobs:
                   ls -la cargo-cache
                   ls -la protocol/target/ink
                   ls -la image-cache
+
+            
+            - name: Cleanup cargo build caches
+              run: |
+                  set +e; gh extension install actions/gh-actions-cache; set -e
+                  REPO=${{ github.repository }}
+                  echo $REPO
+                  echo "Fetching list of cache key"
+                  # remove all except the most recent cached build
+                  # we leave the latest cached build to be used by other workflows which may be running in parallel (i.e. there is always at least one cached build at any given time)
+                  gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key protocol-${{ runner.os }}-${{ runner.arch }}-
