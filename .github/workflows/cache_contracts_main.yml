@@ -1,13 +1,14 @@
 name: Rust
 
+# on push to main when rust code has changed
+# we do this because any branch can use the cache built from main, whereas caches built from other branches are only available to that branch and its children
 on:
-    pull_request:
+    push:
         branches:
-            - 'develop'
             - 'main'
         paths:
             - 'protocol/**'
-            - '.github/workflows/tests_rust.yml'
+            - '.github/workflows/cache_contracts_main.yml'
 
 env:
     CARGO_TERM_COLOR: always
@@ -25,17 +26,12 @@ jobs:
                   cd protocol/dev
                   npm install
 
-            # Check if rust is formatted correctly
-            - name: Rust formatting check
-              run: |
-                  cd protocol/dev
-                  npm run cli -- fmt --all --verbose --check --docker
-
             # Restore the cargo build from cache, if available
             - name: Restore cached cargo build
               uses: actions/cache/restore@v3
               with:
                   path: |
+                      protocol/cargo-cache
                       protocol/target
                   # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
                   # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
@@ -50,26 +46,16 @@ jobs:
                       cargo-build-${{ runner.os }}-
                       cargo-build-
 
-            # Check for clippy advice
-            - name: Clippy
-              run: |
-                  cd protocol/dev
-                  npm run cli -- clippy --docker -- -- -D warnings
-
             # Do the build
             - name: Build contract
               id: build
               run: |
                   cd protocol/dev
-                  npm run cli -- build --release --docker
+                  npm run cli -- build --docker
 
-            # Do unit testing
-            - name: Test contract
+            - name: ls
               run: |
-                  cd protocol/dev
-                  RUST_BACKTRACE=1 npm run cli -- test --docker
-                  result=$?
-                  exit $result
+                  ls -la protocol/cargo-cache
 
             - name: Cleanup cargo build caches
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
@@ -97,6 +83,7 @@ jobs:
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
               with:
                   path: |
+                      protocol/cargo-cache
                       protocol/target
                   # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
                   key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}

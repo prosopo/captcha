@@ -18,8 +18,9 @@
 #[ink::contract]
 pub mod proxy {
 
-    use common::err;
     use common::common::config;
+    use common::common::Error;
+    use common::err;
     #[allow(unused_imports)]
     use ink::env::debug_println as debug;
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
@@ -28,18 +29,6 @@ pub mod proxy {
     #[ink(storage)]
     #[derive(Default)]
     pub struct Proxy {}
-
-    /// The errors that can be returned by the Proxy contract.
-    #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum Error {
-        NotAuthorised,
-        TransferFailed,
-        SetCodeHashFailed,
-        InvalidDestination,
-        UnknownMessage,
-        NotAuthor,
-    }
 
     #[derive(PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -99,11 +88,11 @@ pub mod proxy {
         }
 
         fn get_destination(&self) -> AccountId {
-            let env_proxy_destination_bytes: [u8; 32] = [
+            // the destination contract to forward to, set to 0 by default
+            AccountId::from([
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0,
-            ]; // the destination contract to forward to, set to 0 by default
-            AccountId::from(env_proxy_destination_bytes)
+            ])
         }
 
         fn check_is_admin(&self, account: AccountId) -> Result<(), Error> {
@@ -142,6 +131,7 @@ pub mod proxy {
 
             match ink::env::set_code_hash(&code_hash) {
                 Ok(()) => Ok(()),
+                Err(ink::env::Error::CodeNotFound) => err!(self, Error::CodeNotFound),
                 Err(_) => err!(self, Error::SetCodeHashFailed),
             }
         }
