@@ -82,8 +82,7 @@ jobs:
             - name: Build contract
               id: build
               run: |
-                  cd protocol/dev
-                  npm run cli -- build --docker "prosopo/contracts-ci-linux:3.0.1"
+                  touch protocol/target/ink/hello
 
             # print cache state after build, etc
             - name: ls
