@@ -22,7 +22,7 @@ jobs:
 
             # Restore the cargo build from cache, if available
             - name: Restore cached cargo build
-              uses: actions/cache/restore@v3
+              uses: actions/cache@v3
               id: cache-restore
               with:
                   path: |
