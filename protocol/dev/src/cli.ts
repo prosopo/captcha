@@ -150,7 +150,6 @@ export async function processArgs(args: string[]) {
     const repoDir = path.join(__dirname, '../..')
     const contractsDir = path.join(__dirname, '../../contracts')
     const cratesDir = path.join(__dirname, '../../crates')
-    const contractsCiVersion = '3.0.1'
     const crates = readdirSync(cratesDir, { withFileTypes: true })
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => dirent.name)
@@ -191,27 +190,18 @@ export async function processArgs(args: string[]) {
 
     const addDockerOption = (yargs: yargs.Argv) => {
         return yargs.option('docker', {
-            type: 'boolean',
+            type: 'string',
             demand: false,
-            desc: 'Use docker contracts-ci image to build instead of local toolchain',
-            default: false,
+            desc: 'Use a docker contracts-ci image to build instead of local toolchain',
+            default: 'prosopo/contracts-ci-linux:3.0.1',
         })
-    }
-
-    const pullDockerImage = async () => {
-        // check if the docker image is already pulled
-        try {
-            await exec(`docker images -q prosopo/contracts-ci-linux:${contractsCiVersion}`)
-        } catch (e: any) {
-            // if not, pull it
-            await exec(`docker pull prosopo/contracts-ci-linux:${contractsCiVersion}`)
-        }
     }
 
     const execCargo = async (argv: yargs.Arguments<{}>, cmd: string, dir?: string) => {
         const rest = argv._.slice(1).join(' ') // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
+        const dockerImage = argv.docker ?? ''
 
         if (cmd.startsWith('contract') && argv.contract) {
             throw new Error('Cannot run contract commands on specific packages')
@@ -223,10 +213,16 @@ export async function processArgs(args: string[]) {
         }
 
         let script = ''
-        if (argv.docker) {
+        if (dockerImage) {
             const manifestPath = path.join('/repo', relDir, '/Cargo.toml')
-            pullDockerImage()
-            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache --entrypoint /bin/sh prosopo/contracts-ci-linux:${contractsCiVersion} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
+            // check if the docker image is already pulled
+            try {
+                await exec(`docker images -q ${dockerImage}`)
+            } catch (e: any) {
+                // if not, pull it
+                await exec(`docker pull ${dockerImage}`)
+            }
+            script = `docker run --rm -v ${repoDir}:/repo -v ${cargoCacheDir}:/cargo-cache --entrypoint /bin/sh ${dockerImage} -c 'cargo ${toolchain} ${cmd} --manifest-path=${manifestPath} ${rest}'`
         } else {
             script = `cargo ${toolchain} ${cmd} ${rest}`
             if (dir) {
@@ -243,7 +239,7 @@ export async function processArgs(args: string[]) {
             error = true
         }
 
-        if (argv.docker) {
+        if (dockerImage) {
             // docker ci image runs as root, so chown the target dir
             await exec(`cd ${repoDir} && sudo chown -R $(whoami):$(whoami) ${targetDir} || true`)
         }
