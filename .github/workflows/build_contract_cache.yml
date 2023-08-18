@@ -23,6 +23,7 @@ jobs:
 
             - run: mkdir -p cargo-cache
             - run: mkdir -p protocol/target/ink
+            - run: mkdir -p image-cache
 
             # Restore the cargo build from cache, if available
             - name: Restore cached cargo build
