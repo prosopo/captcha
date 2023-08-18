@@ -28,6 +28,7 @@ const normalizeIcon = (Icon: typeof SvgIcon) => {
     return ((Icon as any).default ? (Icon as any).default : Icon) as typeof SvgIcon
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore https://github.com/mui/material-ui/issues/35535
 const CheckIconNormalized = normalizeIcon(CheckIcon)
 

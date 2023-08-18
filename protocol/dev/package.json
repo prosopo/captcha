@@ -3,6 +3,7 @@
     "version": "0.1.17",
     "description": "Dev tools for working with prosopo contracts",
     "main": "dist/index.js",
+    "type": "module",
     "scripts": {
         "build": "tsc",
         "cli": "ts-node src/cli.ts",

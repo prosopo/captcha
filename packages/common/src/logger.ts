@@ -80,6 +80,7 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     const convertFromConsolaLevel = (logLevel: ConsolaLogLevel): LogLevel => {
         return parseLogLevel(logLevel as unknown as LogLevel)
     }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     const logger = consola.create({ level: convertToConsolaLevel(logLevel) }).withScope(scope)
     return {

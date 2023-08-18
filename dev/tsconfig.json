@@ -58,6 +58,9 @@
             "path": "../packages/procaptcha-react"
         },
         {
+            "path": "../protocol/dev"
+        },
+        {
             "path": "../packages/provider"
         },
         {
