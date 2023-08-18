@@ -26,16 +26,12 @@ jobs:
               id: cache-restore
               with:
                   path: |
-                      image-cache
-                      cargo-cache
+                      protocol/cargo-cache
                       protocol/target
                       node_modules
-                  # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
-                  # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
-                  # "abcdef123" could be anything, it is a random string to differentiate cache usages
-                  # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
-                  # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
-                  # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
+                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+                  # here we're using the run id and run attempt, which are unique to each run
                   key: protocol-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
                   restore-keys: |
                       protocol-${{ runner.os }}-${{ runner.arch }}-
