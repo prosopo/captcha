@@ -1,11 +1,12 @@
+import { AliasOptions, UserConfig, defineConfig } from 'vite'
 import { ClosePlugin, filterDependencies, getDependencies } from '@prosopo/config'
-import { UserConfig, defineConfig } from 'vite'
 import { builtinModules } from 'module'
 import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/util'
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
 import { wasm } from '@rollup/plugin-wasm'
 import css from 'rollup-plugin-import-css'
+import excludePolkadot from '@prosopo/config/dist/polkadot/exclude'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import path from 'path'
 const logger = getLogger(`Info`, `vite.config.js`)
@@ -47,6 +48,15 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
     const libraryName = 'procaptcha'
     const isProduction = mode === 'production'
+    const polkadotFilesToAlias = excludePolkadot()
+    const alias: AliasOptions = {}
+    const mockFile = path.resolve(dir, '../config/dist/polkadot/mock.js')
+    polkadotFilesToAlias.forEach((file) => {
+        logger.info(`resolving ${file} to mock.js`)
+        alias[file] = mockFile
+    })
+    alias['react'] = path.resolve(dir, '../../node_modules/react')
+    logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
     return {
         mode: mode || 'development',
         optimizeDeps: {
@@ -59,9 +69,7 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
         },
         define,
         resolve: {
-            alias: {
-                react: path.resolve(dir, '../../node_modules/react'),
-            },
+            alias,
         },
 
         build: {
