@@ -1,6 +1,6 @@
 name: Rust
 
-# on push to main when rust code has changed
+# on push to main when contract code has changed
 # we do this because any branch can use the cache built from main, whereas caches built from other branches are only available to that branch and its children
 on:
     push:
