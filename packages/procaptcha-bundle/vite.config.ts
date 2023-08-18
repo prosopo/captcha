@@ -46,6 +46,7 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
     const allExternal = [...builtinModules, ...builtinModules.map((m) => `node:${m}`), ...external]
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
     const libraryName = 'procaptcha'
+    const isProduction = mode === 'production'
     return {
         mode: mode || 'development',
         optimizeDeps: {
@@ -65,7 +66,7 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
 
         build: {
             outDir: path.resolve(dir, 'dist/bundle'),
-            minify: false,
+            minify: isProduction,
             ssr: false,
             lib: {
                 entry: path.resolve(dir, './src/index.tsx'),
