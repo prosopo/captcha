@@ -1,4 +1,4 @@
-import { AliasOptions, UserConfig, defineConfig } from 'vite'
+import { Alias, UserConfig, defineConfig } from 'vite'
 import { ClosePlugin, filterDependencies, getDependencies } from '@prosopo/config'
 import { builtinModules } from 'module'
 import { getLogger } from '@prosopo/common'
@@ -9,7 +9,19 @@ import css from 'rollup-plugin-import-css'
 import excludePolkadot from '@prosopo/config/dist/polkadot/exclude'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import path from 'path'
+import react from '@vitejs/plugin-react'
 const logger = getLogger(`Info`, `vite.config.js`)
+
+function getAliases(dir): Alias[] {
+    const polkadotFilesToAlias = excludePolkadot()
+    const alias: Alias[] = []
+    const mockFile = path.resolve(dir, '../config/dist/polkadot/mock.js')
+    polkadotFilesToAlias.forEach((file) => {
+        logger.info(`resolving ${file} to mock.js`)
+        alias.push({ find: file, replacement: mockFile })
+    })
+    return alias
+}
 
 export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
     const dir = path.resolve()
@@ -21,7 +33,8 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
     // NODE_ENV must be wrapped in quotes. We just set it to the mode and ignore what's in the env file, otherwise the
     // mode and NODE_ENV can end up out of sync (one set to development and the other set to production, which causes
     // issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
-    process.env.NODE_ENV = `"${mode}"`
+    process.env.NODE_ENV = `${mode}`
+    logger.info(`NODE_ENV: ${process.env.NODE_ENV}`)
 
     // Set the env vars that we want to be available in the browser
     const define = {
@@ -48,14 +61,8 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
     const libraryName = 'procaptcha'
     const isProduction = mode === 'production'
-    const polkadotFilesToAlias = excludePolkadot()
-    const alias: AliasOptions = {}
-    const mockFile = path.resolve(dir, '../config/dist/polkadot/mock.js')
-    polkadotFilesToAlias.forEach((file) => {
-        logger.info(`resolving ${file} to mock.js`)
-        alias[file] = mockFile
-    })
-    alias['react'] = path.resolve(dir, '../../node_modules/react')
+    const alias = isProduction ? getAliases(dir) : []
+    RegExp.prototype['toJSON'] = RegExp.prototype.toString
     logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
     return {
         mode: mode || 'development',
@@ -118,7 +125,7 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
         },
         plugins: [
             // Not sure if we need this plugin or not, it works without it
-            //react(),
+            react(),
             viteCommonjs(),
             // Closes the bundler and copies the bundle to the client-bundle-example project
             ClosePlugin({
