@@ -59,6 +59,4 @@ jobs:
                   echo "Fetching list of cache key"
                   # remove all except the most recent cached build
                   # we leave the latest cached build to be used by other workflows which may be running in parallel (i.e. there is always at least one cached build at any given time)
-                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key protocol-${{ runner.os }}-${{ runner.arch }}- | cut -f 1)
-                  echo caches to be removed:
-                  echo ${cacheKeys}
+                  gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key protocol-
