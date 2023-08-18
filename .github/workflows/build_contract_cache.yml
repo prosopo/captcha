@@ -33,7 +33,7 @@ jobs:
                   path: |
                       image-cache
                       cargo-cache
-                      protocol/target/*
+                      protocol/target
                       node_modules
                   # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
                   # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
@@ -41,9 +41,9 @@ jobs:
                   # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
                   # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
                   # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-                  key: cargo-build-Linux-X64-4272be834f81415739ca041ad13e2e2cf009e9bca53a10893822ca1af4b8b0a8
+                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}
                   restore-keys: |
-                      cargo-build-Linux-X64-4272be834f81415739ca041ad13e2e2cf009e9bca53a10893822ca1af4b8b0a8-
+                      cargo-build-${{ runner.os }}-${{ runner.arch }}-
 
             # print cache state before build, etc
             - name: ls
@@ -125,4 +125,4 @@ jobs:
                       protocol/target
                       node_modules
                   # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
-                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}
