@@ -22,7 +22,7 @@ jobs:
             - uses: actions/checkout@v3
 
             - run: mkdir -p cargo-cache
-            - run: mkdir -p protocol/target
+            - run: mkdir -p protocol/target/ink
 
             # Restore the cargo build from cache, if available
             - name: Restore cached cargo build
