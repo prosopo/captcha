@@ -57,7 +57,7 @@ jobs:
             - if: steps.cache-restore.outputs.cache-hit != 'true'
               run: |
                 docker pull prosopo/contracts-ci-linux:3.0.1
-                docker save -o image-cache/ci.tar prosopo/prosopo/contracts-ci-linux:3.0.1
+                docker save -o image-cache/ci.tar prosopo/contracts-ci-linux:3.0.1
 
             - if: steps.cache-restore.outputs.cache-hit == 'true'
               run: |
