@@ -21,7 +21,7 @@ jobs:
             # Checkout the repo
             - uses: actions/checkout@v3
 
-            - run: mkdir -p cargo-cache
+            - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target/ink
             - run: mkdir -p node_modules
 
@@ -31,7 +31,7 @@ jobs:
               id: cache-restore
               with:
                   path: |
-                      cargo-cache
+                      protocol/cargo-cache
                       protocol/target
                       node_modules
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
@@ -46,7 +46,7 @@ jobs:
               run: |
                   set -x
                   ls -la
-                  ls -la cargo-cache
+                  ls -la protocol/cargo-cache
                   ls -la protocol/target/ink
             
             - run: docker pull prosopo/contracts-ci-linux:3.0.1
@@ -60,15 +60,14 @@ jobs:
             - name: Build contract
               id: build
               run: |
-                  cd protocol/dev
-                  npm run cli -- build --docker "prosopo/contracts-ci-linux:3.0.1"
+                  touch protocol/target/ink/$(date | tr ' ' '_')
 
             # print cache state after build, etc
             - name: ls
               run: |
                   set -x
                   ls -la
-                  ls -la cargo-cache
+                  ls -la protocol/cargo-cache
                   ls -la protocol/target/ink
 
             - name: Cleanup cargo build caches
@@ -97,7 +96,7 @@ jobs:
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
               with:
                   path: |
-                      cargo-cache
+                      protocol/cargo-cache
                       protocol/target
                       node_modules
                   # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them

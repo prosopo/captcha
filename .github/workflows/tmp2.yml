@@ -1,0 +1,47 @@
+name: tmp2
+
+on:
+    pull_request:
+        branches:
+            - 'develop'
+            - 'main'
+        paths:
+            - 'protocol/**'
+            - '.github/workflows/**'
+
+env:
+    CARGO_TERM_COLOR: always
+    GH_TOKEN: ${{ github.token }}
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            # Checkout the repo
+            - uses: actions/checkout@v3
+
+            # Restore the cargo build from cache, if available
+            - name: Restore cached cargo build
+              uses: actions/cache/restore@v3
+              id: cache
+              with:
+                  path: |
+                      protocol/cargo-cache
+                      protocol/target
+                      node_modules
+                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+                  # here we're using the run id and run attempt, which are unique to each run
+                  key: protocol-Linux-X64-5905544512-1
+                  restore-keys: |
+                      protocol-${{ runner.os }}-${{ runner.arch }}-
+
+
+            # print cache state before build, etc
+            - name: ls
+              run: |
+                  set -x
+                  ls -la
+                  ls -la cargo-cache
+                  ls -la protocol/target/ink
+            
