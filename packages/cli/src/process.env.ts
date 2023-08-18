@@ -16,13 +16,6 @@ import { ProsopoConfig } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import prosopoConfig from './prosopo.config.js'
 
-export function getEnv() {
-    if (process.env.NODE_ENV) {
-        return process.env.NODE_ENV.replace(/[^0-9a-z_]/gi, '')
-    }
-    return 'development'
-}
-
 export function getSs58Format(): number {
     return parseInt(process.env.SS58_FORMAT || '') || 42
 }

@@ -14,7 +14,6 @@
 export * from './argv.js'
 export * from './cli.js'
 export * from './start.js'
-export * from './env.js'
 export * from './process.env.js'
 export * from './files.js'
 export { default as defaultConfig } from './prosopo.config.js'

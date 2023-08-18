@@ -1,6 +1,6 @@
 import PluginJsonAccessOptimizer from 'webpack-json-access-optimizer'
 const { JsonAccessOptimizer } = PluginJsonAccessOptimizer
-import { Glob } from 'glob'
+import { excludePolkadot } from '../polkadot/index.js'
 import { getLogger } from '@prosopo/common'
 import CompressionPlugin from 'compression-webpack-plugin'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
@@ -22,33 +22,6 @@ const moduleDirs = [
     path.resolve(__dirname, '../procaptcha/node_modules'),
     path.resolve(__dirname, '../procaptcha-react/node_modules'),
 ]
-
-// Takes an array of partial module directories, finds the full path, and returns an array containing the file paths
-// of the files contained within the matching module directories [ filePath, filePath, ... ]
-function getFilesInDirs(startDir, excludeDirs: string[] = [], includeDirs: string[] = []) {
-    const emptyAliases: string[] = []
-    log.info(`getFilesInDirs: ${startDir} excluding ${excludeDirs} including ${includeDirs}`)
-    const ignorePatterns = includeDirs.map((dir) => `${startDir}/**/${dir}`)
-    excludeDirs.forEach((searchPattern) => {
-        // get matching module directories
-        const globPattern = `${startDir}/**/${searchPattern}${searchPattern.indexOf('.') > -1 ? '' : '/*'}`
-        //log.info(`globPattern: ${globPattern}`)
-        const globResult = new Glob(globPattern, { recursive: true, ignore: ignorePatterns }).walkSync()
-        //log.info(`globResult: ${globResult}`)
-        for (const filePath of globResult) {
-            emptyAliases.push(filePath)
-            //log.info(`ignoring ${filePath}`)
-        }
-    })
-    return emptyAliases
-}
-
-function excludePolkadot() {
-    const excludeFiles = ['kusama.js', 'westend.js'] //'bytes.js'] //...interfacesToIgnore]
-    const startDir = path.resolve(__dirname, '../../node_modules/@polkadot')
-    log.info(`startDir: ${startDir}`)
-    return getFilesInDirs(startDir, excludeFiles)
-}
 
 export function webpackConfigBase(env, argv) {
     const requiredEnv = ['BASE_DIR', 'BUNDLE_NAME']

@@ -11,11 +11,12 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "start": "webpack serve --mode development",
-        "bundle": "build && vite build",
-        "build:webpack:prod": "webpack  --config webpack.config.production.js --mode production",
-        "build:webpack:prod:copy": "webpack --config webpack.config.production.js --mode production && cp dist/procaptcha_bundle.*.bundle.js ../../demos/client-bundle-example/src",
-        "build:webpack:dev": "webpack --config webpack.config.development.js --mode development --watch",
-        "build:webpack:dev:copy": "WEBPACK_COPY=true webpack --config webpack.config.development.js --mode development --watch",
+        "build:dev": "npm run build && vite build --mode development",
+        "build:prod": "npm run build && vite build --mode production",
+        "build:webpack:prod": "npm run build && webpack  --config webpack.config.production.js --mode production",
+        "build:webpack:prod:copy": "npm run build && webpack --config webpack.config.production.js --mode production && cp dist/procaptcha_bundle.*.bundle.js ../../demos/client-bundle-example/src",
+        "build:webpack:dev": "npm run build && webpack --config webpack.config.development.js --mode development --watch",
+        "build:webpack:dev:copy": "npm run build && webpack --config webpack.config.development.js --mode development --watch",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix"
     },
@@ -43,7 +44,10 @@
         "registry": "https://registry.npmjs.org"
     },
     "devDependencies": {
+        "@originjs/vite-plugin-commonjs": "^1.0.3",
         "@prosopo/config": "^0.1.17",
+        "@rollup/plugin-typescript": "^11.1.2",
+        "@vitejs/plugin-react": "^4.0.4",
         "webpack-merge": "^5.9.0"
     }
 }

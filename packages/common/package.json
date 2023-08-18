@@ -12,13 +12,7 @@
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix"
     },
-    "exports": {
-        ".": "./dist/index.js",
-        "./cli": "./dist/cli/index.js",
-        "./react": "./dist/react/index.js",
-        "./react/useTranslation": "./dist/react/useTranslation.js",
-        "./logger": "./dist/logger.js"
-    },
+
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
     "dependencies": {

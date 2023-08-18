@@ -13,12 +13,18 @@
 // limitations under the License.
 import { LogLevelSchema, getLogger } from '@prosopo/common'
 import { fileURLToPath } from 'url'
-import { getEnv } from './process.env.js'
 import dotenv from 'dotenv'
 import path from 'path'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+export function getEnv() {
+    if (process.env.NODE_ENV) {
+        return process.env.NODE_ENV.replace(/[^0-9a-z_]/gi, '')
+    }
+    return 'development'
+}
 
 export function loadEnv(rootDir?: string, filename?: string, filePath?: string) {
     const envPath = getEnvFile(path.resolve(rootDir || '.'), filename, filePath)

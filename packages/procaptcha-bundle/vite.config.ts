@@ -1,246 +1,122 @@
-import { loadEnv } from '@prosopo/cli'
-import glob from 'glob'
+import { ClosePlugin, filterDependencies, getDependencies } from '@prosopo/config'
+import { UserConfig, defineConfig } from 'vite'
+import { builtinModules } from 'module'
+import { getLogger } from '@prosopo/common'
+import { loadEnv } from '@prosopo/util'
+import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
+import { wasm } from '@rollup/plugin-wasm'
+import css from 'rollup-plugin-import-css'
+import nodeResolve from '@rollup/plugin-node-resolve'
 import path from 'path'
+const logger = getLogger(`Info`, `vite.config.js`)
 
-const allowList = [
-    '@emotion',
-    '@mui/base',
-    '@mui/material',
-    '@mui/private-theming',
-    '@mui/react-transition-group',
-    '@mui/styled-engine',
-    '@mui/styles',
-    '@mui/system',
-    '@mui/types',
-    '@mui/utils',
-    '@noble',
-    '@polkadot/api',
-    '@polkadot/api-augment',
-    '@polkadot/api-base',
-    '@polkadot/api-contract',
-    '@polkadot/api-derive',
-    '@polkadot/bn.js',
-    '@polkadot/connect',
-    '@polkadot/dist',
-    '@polkadot/extension-dapp',
-    '@polkadot/icons-material',
-    '@polkadot/keyring',
-    '@polkadot/lib',
-    '@polkadot/networks',
-    '@polkadot/rpc-augment',
-    '@polkadot/rpc-core',
-    '@polkadot/rpc-provider',
-    '@polkadot/ss58-registry',
-    '@polkadot/types',
-    '@polkadot/types-augment',
-    '@polkadot/types-codec',
-    '@polkadot/types-create',
-    '@polkadot/util',
-    '@polkadot/util-crypto',
-    '@polkadot/wasm-bridge',
-    '@polkadot/wasm-crypto',
-    '@polkadot/wasm-crypto-init',
-    '@polkadot/wasm-util',
-    '@polkadot/x-bigint',
-    '@polkadot/x-global',
-    '@polkadot/x-randomvalues',
-    '@popperjs/base',
-    '@popperjs/core',
-    '@prosopo',
-    '@substrate/connect',
-    '@substrate/networks',
-    '@substrate/rpc-provider',
-    '@types/express-serve-static-core',
-    '@types/material',
-    '@types/qs',
-    '@types/range-parser',
-    '@types/react',
-    '@types/react-dom',
-    '@types/scheduler',
-    '@types/send',
-    '@types/types',
-    '@types/util',
-    'axios',
-    'clsx',
-    'consola/extension-inject',
-    'csstype',
-    'i18next',
-    'i18next-http-middleware',
-    'react',
-    'react-dom',
-    'react-i18next/mime',
-    'rxjs/dist',
-    'rxjs/types',
-    'scheduler',
-    'seedrandom',
-    'stylis',
-    'tslib',
-    'zod',
-]
-const externalsRegex = `(?!${allowList.map((item) => item.replace('/', '\\/')).join('|')})`
+export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
+    const dir = path.resolve()
+    logger.info(`Running at ${dir} in ${mode} mode`)
 
-const interfacesToIgnore = [
-    // api-derive
-    'alliance',
-    'bagsList',
-    'bounties',
-    'council',
-    // types/interfaces
-    'assets',
-    'attestations',
-    'aura',
-    'author',
-    'authorship',
-    'beefy',
-    'benchmark',
-    'blockbuilder',
-    'bridges',
-    'childstate',
-    'claims',
-    'collective',
-    'crowdloan',
-    'cumulus',
-    'democracy',
-    'dev',
-    'discovery',
-    'elections',
-    'eth',
-    'evm',
-    'fungibles',
-    'genericAsset',
-    'gilt',
-    'identity',
-    'imOnline',
-    'lottery',
-    'mmr',
-    'nfts',
-    'nimbus',
-    'nompools',
-    'offchain',
-    'offences',
-    'ormlOracle',
-    'ormlTokens',
-    'parachains',
-    'payment',
-    'poll',
-    'pow',
-    'proxy',
-    'purchase',
-    'recovery',
-    'scaleInfo',
-    'scheduler',
-    'session',
-    'society',
-    'staking',
-    'state',
-    'support',
-    'syncstate',
-    'treasury',
-    'uniques',
-    'vesting',
-    'xcm',
-]
-// Takes an array of partial module directories, finds the full path, and returns an array containing the file paths
-// of the files contained within the matching module directories [ filePath, filePath, ... ]
-function getFilesInDirs(startDir, excludeDirs: string[] = [], includeDirs: string[] = []) {
-    const emptyAliases: string[] = []
-    console.info(`getFilesInDirs: ${startDir} excluding ${excludeDirs} including ${includeDirs}`)
-    const ignorePatterns = includeDirs.map((dir) => `${startDir}/**/${dir}`)
-    excludeDirs.forEach((searchPattern) => {
-        // get matching module directories
-        const globPattern = `${startDir}/**/${searchPattern}${searchPattern.indexOf('.') > -1 ? '' : '/*'}`
-        console.info(`globPattern: ${globPattern}`)
-        const globResult = glob.sync(globPattern, { recursive: true, ignore: ignorePatterns })
-        console.info(`globResult: ${globResult}`)
-        for (const filePath of globResult) {
-            emptyAliases.push(filePath)
-            //console.info(`ignoring ${filePath}`)
-        }
-    })
-    return emptyAliases
-}
+    // load env using our util because vite loadEnv is not working for .env.development
+    loadEnv()
 
-function getExcludedFilePaths() {
-    const excludeFiles = [
-        'react.development.js',
-        'react-dom.development.js',
-        'kusama.js',
-        'westend.js',
-        'bytes.js',
-        ...interfacesToIgnore,
-    ]
-    const startDir = path.resolve(__dirname, '../../node_modules/@polkadot')
-    console.info(`startDir: ${startDir}`)
-    return getFilesInDirs(startDir, excludeFiles)
-}
+    // NODE_ENV must be wrapped in quotes. We just set it to the mode and ignore what's in the env file, otherwise the
+    // mode and NODE_ENV can end up out of sync (one set to development and the other set to production, which causes
+    // issues like this: https://github.com/hashicorp/next-mdx-remote/pull/323
+    process.env.NODE_ENV = `"${mode}"`
 
-// Create a regex that captures packages that are in the allow list
-// const packagesDir = path.resolve(__dirname, '../../packages')
-// // DO NOT USE global flag here
-// const allowedPackagesRegex = new RegExp(
-//     `(${packagesDir}|${allowList.map((item) => item.replace('/', '\\/')).join('|')})+`
-// )
-// if (!allowedPackagesRegex.test(packagesDir)) {
-//     throw new Error('Regex is not working')
-// }
-loadEnv()
+    // Set the env vars that we want to be available in the browser
+    const define = {
+        'process.env.WS_NO_BUFFER_UTIL': JSON.stringify('true'),
+        'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+        'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
+        'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
+        'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
+        //only needed if bundling with a site key
+        'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
+    }
 
-// function externalsFn({ context, request }, callback) {
-//     const filePath = `${context}${request.replace(':', '/').replace('./', '/')}`
-//     if (allowedPackagesRegex.test(context) || allowedPackagesRegex.test(request)) {
-//         //Continue without externalizing the import
-//         return callback()
-//     } else {
-//         console.warn(`Externalizing ${filePath}`)
-//         // Externalize the request
-//         return callback(null, 'module' + request)
-//     }
-// }
+    logger.info(`Env vars: ${JSON.stringify(define, null, 4)}`)
 
-const excludedFiles = [...getExcludedFilePaths()]
-// make an alias object from the array of files to exclude
-// const alias = {
-//     '/home/chris/dev/prosopo/captcha/node_modules/@polkadot/types/cjs/interfaces/scheduler/definitions.js': false,
-//     '/home/chris/dev/prosopo/captcha/node_modules/@polkadot/types/cjs/interfaces/scheduler/index.js': false,
-//     '/home/chris/dev/prosopo/captcha/node_modules/@polkadot/types/cjs/interfaces/scheduler/types.js': false,
-//     '/home/chris/dev/prosopo/captcha/node_modules/@polkadot/types/interfaces/scheduler/definitions.d.ts': false,
-//     '/home/chris/dev/prosopo/captcha/node_modules/@polkadot/types/interfaces/scheduler/definitions.js': false,
-//     '/home/chris/dev/prosopo/captcha/node_modules/@polkadot/types/interfaces/scheduler/index.d.ts': false,
-//     '/home/chris/dev/prosopo/captcha/node_modules/@polkadot/types/interfaces/scheduler/index.js': false,
-//     '/home/chris/dev/prosopo/captcha/node_modules/@polkadot/types/interfaces/scheduler/types.d.ts': false,
-//     '/home/chris/dev/prosopo/captcha/node_modules/@polkadot/types/interfaces/scheduler/types.js': false,
-// }
-const alias = {}
-excludedFiles.forEach((file) => {
-    alias[file] = false
-})
+    // Get all dependencies of the current package
+    const deps = await getDependencies('procaptcha-bundle')
 
-export default {
-    optimizeDeps: {
-        include: ['linked-dep'],
-    },
-    build: {
-        type: 'module',
-        lib: {
-            entry: path.resolve(__dirname, './src/index.tsx'),
-            formats: ['umd'],
-            name: 'procaptcha_bundle',
+    // Get rid of any dependencies we don't want to bundle
+    const { external, internal } = filterDependencies(deps, ['pm2', 'nodejs-polars', 'aws', 'webpack', 'vite'])
+
+    // Add the node builtins (path, fs, os, etc.) to the external list
+    const allExternal = [...builtinModules, ...builtinModules.map((m) => `node:${m}`), ...external]
+    logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
+    const libraryName = 'procaptcha'
+    return {
+        mode: mode || 'development',
+        optimizeDeps: {
+            include: ['linked-dep', 'esm-dep > cjs-dep', 'node_modules'], //'node_modules'
+            //exclude: ['react', 'react-dom'],
         },
-        rollupOptions: {
-            external: externalsRegex,
-            treeshake: 'smallest',
-            exclude: [...excludedFiles],
+        esbuild: {
+            platform: 'browser',
+            target: ['es2020', 'chrome58', 'edge16', 'firefox57', 'node12', 'safari11'],
         },
+        define,
         resolve: {
-            alias,
-            //modules: [path.resolve(__dirname, '../node_modules')],
+            alias: {
+                react: path.resolve(dir, '../../node_modules/react'),
+            },
         },
-    },
 
-    plugins: [
-        // commonjs({
-        //     include: /packages\/.*\/dist/,
-        //     requireReturnsDefault: 'auto', // <---- this solves default issue
-        // }),
-    ],
-}
+        build: {
+            outDir: path.resolve(dir, 'dist/bundle'),
+            minify: false,
+            ssr: false,
+            lib: {
+                entry: path.resolve(dir, './src/index.tsx'),
+                name: libraryName,
+                fileName: `${libraryName}.[name].bundle`,
+                // sets the bundle to an instantly invoked function expression (IIFE)
+                formats: ['iife'],
+            },
+            modulePreload: { polyfill: true },
+            commonjsOptions: {
+                exclude: ['mongodb/*'],
+                transformMixedEsModules: true,
+            },
+
+            rollupOptions: {
+                //treeshake: 'smallest',
+                external: allExternal,
+                watch: false,
+                output: {
+                    dir: path.resolve(dir, 'dist/bundle'),
+                },
+
+                plugins: [
+                    css(),
+                    wasm(),
+                    nodeResolve({
+                        browser: true,
+                        preferBuiltins: false,
+                        rootDir: path.resolve(dir, '../../'),
+                        dedupe: ['react', 'react-dom'],
+                    }),
+                    // I think we can use this plugin to build all packages instead of relying on the tsc step that's
+                    // currently a precursor in package.json. However, it fails for the following reason:
+                    // https://github.com/rollup/plugins/issues/243
+                    // typescript({
+                    //     tsconfig: path.resolve('./tsconfig.json'),
+                    //     compilerOptions: { rootDir: path.resolve('./src') },
+                    // }),
+                ],
+            },
+        },
+        plugins: [
+            // Not sure if we need this plugin or not, it works without it
+            //react(),
+            viteCommonjs(),
+            // Closes the bundler and copies the bundle to the client-bundle-example project
+            ClosePlugin({
+                srcDir: './dist/bundle',
+                destDir: '../../demos/client-bundle-example/src',
+                bundleName: libraryName,
+            }),
+        ],
+    }
+})

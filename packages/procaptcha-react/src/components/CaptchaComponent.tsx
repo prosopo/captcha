@@ -14,14 +14,10 @@
 import { Box, Button, ThemeProvider, Typography } from '@mui/material'
 import { CaptchaWidget } from './CaptchaWidget.js'
 import { GetCaptchaResponse } from '@prosopo/api'
+import { useTranslation } from '@prosopo/common'
 import React from 'react'
 import addDataAttr from '../util/index.js'
 import theme from './theme.js'
-import useTranslation from '@prosopo/common/react/useTranslation.js'
-// import Box from '@mui/material/Box/Box.js'
-// import Button from '@mui/material/Button/Button.js'
-// import ThemeProvider from '@mui/material/styles/ThemeProvider.js'
-// import Typography from '@mui/material/Typography/Typography.js'
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse

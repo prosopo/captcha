@@ -14,7 +14,7 @@
 import { DatabaseTypes, EnvironmentTypesSchema, ProsopoConfigSchema } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLogLevel, getLogger } from '@prosopo/common'
 import { glob } from 'glob'
-import { loadEnv } from '@prosopo/cli'
+import { loadEnv } from '@prosopo/util'
 require('ts-mocha')
 import Mocha from 'mocha'
 loadEnv()

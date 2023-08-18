@@ -1,23 +1,30 @@
 import { Glob } from 'glob'
-import { getLogger } from '@prosopo/common'
+import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import child_process from 'child_process'
 import path from 'path'
 import util from 'util'
 const logger = getLogger(`Info`, `config.dependencies.js`)
 /**
  * Get the dependencies for a package
+ * @param dir
  * @param packageName
  */
 export async function getDependencies(packageName?: string): Promise<string[]> {
     let cmd = 'npm ls --pa'
     if (packageName) {
-        const dir = path.resolve(__dirname, '../../packages', packageName)
-        cmd = `cd ${dir} && npm ls --pa`
+        const packagesDirectory = path.resolve(`..`)
+        // check in folder called packages
+        if (!packagesDirectory.endsWith('packages')) {
+            throw new ProsopoEnvError('CONFIG.INVALID_PACKAGES_DIRECTORY', undefined, undefined, { packagesDirectory })
+        }
+        const directory = path.resolve(packagesDirectory, packageName)
+        cmd = `cd ${directory} && npm ls --pa`
+        logger.info(`Running command ${cmd} in ${directory}`)
     }
     const exec = util.promisify(child_process.exec)
     const { stdout, stderr } = await exec(cmd)
     if (stderr) {
-        throw new Error(stderr)
+        throw new ProsopoEnvError(new Error(stderr))
     }
     const deps: string[] = []
     // for each line, split on "/" and take the last part
