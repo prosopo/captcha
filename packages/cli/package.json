@@ -7,7 +7,8 @@
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
-    "bundle": "npm run build && vite build",
+    "build:dev": "npm run build && vite build --mode development",
+    "build:prod": "npm run build && vite build --mode production",
     "cli": "node ./dist/cli.js",
     "start": "node ./dist/start.js",
     "lint": "npx eslint .",
