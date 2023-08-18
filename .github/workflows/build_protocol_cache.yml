@@ -53,14 +53,6 @@ jobs:
             
             - run: docker pull prosopo/contracts-ci-linux:3.0.1
 
-            # print cache state before build, etc
-            - name: ls
-              run: |
-                  set -x
-                  ls -la
-                  ls -la cargo-cache
-                  ls -la protocol/target/ink
-
             - name: Npm install
               run: |
                   cd protocol/dev
