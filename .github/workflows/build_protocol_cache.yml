@@ -21,6 +21,7 @@ jobs:
             # Checkout the repo
             - uses: actions/checkout@v3
 
+            # make cache dirs
             - run: mkdir -p cargo-cache
             - run: mkdir -p protocol/target/ink
             - run: mkdir -p node_modules
@@ -56,7 +57,6 @@ jobs:
                   cd protocol/dev
                   npm install
 
-            # Do the build
             - name: Build contract
               id: build
               run: |
@@ -71,14 +71,13 @@ jobs:
                   ls -la cargo-cache
                   ls -la protocol/target/ink
 
-            - name: Cleanup cargo build caches
-              if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
+            # remove old caches
+            - name: Cleanup protocol caches
+              if: always()
               run: |
                   set +e; gh extension install actions/gh-actions-cache; set -e
                   REPO=${{ github.repository }}
                   echo "Fetching list of cache key"
-                  # remove all except the most recent cached build
-                  # we leave the latest cached build to be used by other workflows which may be running in parallel (i.e. there is always at least one cached build at any given time)
                   cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key protocol-${{ runner.os }}-${{ runner.arch }}- | cut -f 1)
                   echo caches to be removed:
                   echo ${cacheKeys}
@@ -90,15 +89,13 @@ jobs:
                       gh actions-cache delete $cacheKey -R $REPO --confirm
                   done
 
-            # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
-            - name: Save cargo build to cache
+            # save new cache
+            - name: Save protocol cache
               uses: actions/cache/save@v3
-              # save cache if build work has been done, independent of whether it failed/succeeded
-              if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
+              if: always()
               with:
                   path: |
                       cargo-cache
                       protocol/target
                       node_modules
-                  # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
                   key: protocol-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
