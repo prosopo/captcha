@@ -70,7 +70,7 @@ jobs:
         run: |
           cd captcha
           cp ./dev/env.rococo ./packages/cli/.env.rococo
-          NODE_ENV=rococo npm run -w @prosopo/cli build:webpack:prod
+          NODE_ENV=rococo npm run -w @prosopo/cli build:prod
 
       # create the provider image
       - name: Build provider image
@@ -92,7 +92,7 @@ jobs:
           if [ "${{ github.ref }}" != "refs/heads/main" ]; then exit 0; fi
           cd captcha
           cp ./dev/env.rococo ./packages/cli/.env.rococo
-          NODE_ENV=rococo npm run -w @prosopo/procaptcha-bundle build:webpack:prod
+          NODE_ENV=rococo npm run -w @prosopo/procaptcha-bundle build:prod
           docker build -f ./docker/images/js.server.dockerfile . -t prosopo/js_server:latest
           docker push prosopo/js_server:latest
           docker tag prosopo/js_server:latest prosopo/js_server:${{ env.PROVIDER_IMAGE_VERSION }}
