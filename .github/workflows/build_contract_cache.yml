@@ -27,8 +27,10 @@ jobs:
             # Restore the cargo build from cache, if available
             - name: Restore cached cargo build
               uses: actions/cache/restore@v3
+              id: cache-restore
               with:
                   path: |
+                      image-cache
                       cargo-cache
                       protocol/target/*
                       node_modules
@@ -38,12 +40,9 @@ jobs:
                   # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
                   # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
                   # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
+                  key: cargo-build-Linux-X64-4272be834f81415739ca041ad13e2e2cf009e9bca53a10893822ca1af4b8b0a8
                   restore-keys: |
-                      cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
-                      cargo-build-${{ runner.os }}-${{ runner.arch }}-
-                      cargo-build-${{ runner.os }}-
-                      cargo-build-
+                      cargo-build-Linux-X64-4272be834f81415739ca041ad13e2e2cf009e9bca53a10893822ca1af4b8b0a8-
 
             # print cache state before build, etc
             - name: ls
@@ -52,6 +51,26 @@ jobs:
                   ls -la
                   ls -la cargo-cache
                   ls -la protocol/target/ink
+                  ls -la image-cache
+            
+            - if: steps.cache-restore.outputs.cache-hit != 'true'
+              run: |
+                docker pull prosopo/contracts-ci-linux:3.0.1
+                docker save -o image-cache/ci.tar prosopo/prosopo/contracts-ci-linux:3.0.1
+
+            - if: steps.cache-restore.outputs.cache-hit == 'true'
+              run: |
+                ls image-cache
+                docker load -i image-cache/ci.tar
+
+            # print cache state before build, etc
+            - name: ls
+              run: |
+                  set -x
+                  ls -la
+                  ls -la cargo-cache
+                  ls -la protocol/target/ink
+                  ls -la image-cache
 
             - name: Npm install
               run: |
@@ -63,7 +82,7 @@ jobs:
               id: build
               run: |
                   cd protocol/dev
-                  npm run cli -- build --docker
+                  npm run cli -- build --docker "prosopo/contracts-ci-linux:3.0.1"
 
             # print cache state after build, etc
             - name: ls
@@ -72,6 +91,7 @@ jobs:
                   ls -la
                   ls -la cargo-cache
                   ls -la protocol/target/ink
+                  ls -la image-cache
 
             - name: Cleanup cargo build caches
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
@@ -99,6 +119,7 @@ jobs:
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
               with:
                   path: |
+                      image-cache
                       cargo-cache
                       protocol/target
                       node_modules
