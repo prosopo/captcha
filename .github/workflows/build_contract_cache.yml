@@ -21,30 +21,41 @@ jobs:
             # Checkout the repo
             - uses: actions/checkout@v3
 
-            - name: Npm install
-              run: |
-                  cd protocol/dev
-                  npm install
+            - run: mkdir -p cargo-cache
+            - run: mkdir -p protocol/target
 
             # Restore the cargo build from cache, if available
             - name: Restore cached cargo build
               uses: actions/cache/restore@v3
               with:
                   path: |
-                      protocol/cargo-cache
-                      protocol/target
+                      cargo-cache
+                      protocol/target/*
+                      node_modules
                   # the cached build is based on the OS, architecture, a tag and the hash of the config files for this build, i.e. the Cargo configuration. The cargo configs may differ across workflows, so the files have to be the same to reuse the cached build image across workflows
                   # restore from a cache matching the key, e.g. "Linux-X64-cargo-env-abcdef123"
                   # "abcdef123" could be anything, it is a random string to differentiate cache usages
                   # e.g. "Linux-X64-cargo-a1" may be from 1/1/23, whereas "Linux-X64-cargo-b2" may be from 2/1/23.
                   # github will match the most recent cache ("b2") when searching for caches and finding multiple matches
                   # the "-" on the end of the key acts like "-*" where the "*" can be any number of characters, including none
-                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
                   restore-keys: |
                       cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-
                       cargo-build-${{ runner.os }}-${{ runner.arch }}-
                       cargo-build-${{ runner.os }}-
                       cargo-build-
+
+            # print cache state before build, etc
+            - name: ls
+              run: |
+                  ls -la
+                  ls -la cargo-cache
+                  ls -la protocol/target/ink
+
+            - name: Npm install
+              run: |
+                  cd protocol/dev
+                  npm install
 
             # Do the build
             - name: Build contract
@@ -52,10 +63,6 @@ jobs:
               run: |
                   cd protocol/dev
                   npm run cli -- build --docker
-
-            - name: ls
-              run: |
-                  ls -la protocol/cargo-cache
 
             - name: Cleanup cargo build caches
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
@@ -65,7 +72,7 @@ jobs:
                   echo "Fetching list of cache key"
                   # remove all except the most recent cached build
                   # we leave the latest cached build to be used by other workflows which may be running in parallel (i.e. there is always at least one cached build at any given time)
-                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1 | tail -n +3)
+                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}- | cut -f 1)
                   echo caches to be removed:
                   echo ${cacheKeys}
                   # delete the stale caches
@@ -83,7 +90,8 @@ jobs:
               if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
               with:
                   path: |
-                      protocol/cargo-cache
+                      cargo-cache
                       protocol/target
+                      node_modules
                   # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
-                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: cargo-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/Cargo.toml', '**/Cargo.lock') }}
