@@ -32,9 +32,7 @@ jobs:
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
                   # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
                   # here we're using the run id and run attempt, which are unique to each run
-                  key: protocol-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
-                  restore-keys: |
-                      protocol-${{ runner.os }}-${{ runner.arch }}-
+                  key: protocol-${{ runner.os }}-${{ runner.arch }}-
 
 
             # print cache state before build, etc
