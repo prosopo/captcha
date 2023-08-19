@@ -1,4 +1,4 @@
-name: Rust
+name: build_protocol_cache
 
 # on push to main when contract code has changed
 # we do this because any branch can use caches built on main, whereas caches built on other branches are only available to that branch and its children
@@ -18,15 +18,13 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            # Checkout the repo
             - uses: actions/checkout@v3
 
             - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target/ink
+            - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
 
-            # Restore the cargo build from cache, if available
-            - name: Restore cached cargo build
+            - name: Restore protocol cache
               uses: actions/cache/restore@v3
               id: cache-restore
               with:
@@ -36,68 +34,56 @@ jobs:
                       node_modules
                   # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
                   # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
-                  # here we're using the run id and run attempt, which are unique to each run
-                  key: protocol-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+                  key: some-unused-cache-key
                   restore-keys: |
                       protocol-${{ runner.os }}-${{ runner.arch }}-
 
-            # print cache state before build, etc
             - name: ls
               run: |
                   set -x
                   ls -la
                   ls -la protocol/cargo-cache
-                  ls -la protocol/target/ink
+                  ls -la protocol/target/*
             
-            - run: docker pull prosopo/contracts-ci-linux:3.0.1
-
             - name: Npm install
               run: |
                   cd protocol/dev
                   npm install
 
-            # Do the build
-            - name: Build contract
+            - name: Build contracts
               id: build
               run: |
                   touch protocol/target/ink/$(date | tr ' ' '_')
 
-            # print cache state after build, etc
             - name: ls
               run: |
                   set -x
                   ls -la
                   ls -la protocol/cargo-cache
-                  ls -la protocol/target/ink
+                  ls -la protocol/target/*
 
-            - name: Cleanup cargo build caches
-              if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
+            - name: Cleanup protocol caches
+              if: always()
               run: |
                   set +e; gh extension install actions/gh-actions-cache; set -e
                   REPO=${{ github.repository }}
                   echo "Fetching list of cache key"
-                  # remove all except the most recent cached build
-                  # we leave the latest cached build to be used by other workflows which may be running in parallel (i.e. there is always at least one cached build at any given time)
                   cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key protocol-${{ runner.os }}-${{ runner.arch }}- | cut -f 1)
                   echo caches to be removed:
                   echo ${cacheKeys}
-                  # delete the stale caches
-                  ## Setting this to not fail the workflow while deleting cache keys. 
                   set +e
                   for cacheKey in $cacheKeys
                   do
                       gh actions-cache delete $cacheKey -R $REPO --confirm
                   done
 
-            # Save build + test files to cache, use for incremental builds in other runs to speed up future workflows with minor changes
-            - name: Save cargo build to cache
+            - name: Save protocol cache
               uses: actions/cache/save@v3
-              # save cache if build work has been done, independent of whether it failed/succeeded
-              if: always() && (${{ steps.build.conclusion }} == "success" || ${{ steps.build.conclusion }} == "failure")
+              if: always()
               with:
                   path: |
                       protocol/cargo-cache
                       protocol/target
                       node_modules
-                  # store this version in the cache tagged with the id of this job. This differentiates it from any other caches for the same build without mutating them, as other workflows may be using them
                   key: protocol-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
