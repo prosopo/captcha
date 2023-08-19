@@ -12,3 +12,6 @@ description = "macro that injects a getter for the self variable into a function
 [dependencies]
 quote = "1.0"
 proc-macro2 = "1.0.51"
+
+[net]
+git-fetch-with-cli = true

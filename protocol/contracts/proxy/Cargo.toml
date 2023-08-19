@@ -48,3 +48,6 @@ std = [
     "scale-info/std",
 ]
 ink-as-dependency = []
+
+[net]
+git-fetch-with-cli = true
