@@ -45,17 +45,17 @@ jobs:
                   ls -la protocol/cargo-cache
                   ls -la protocol/target/* || true
 
-
-
-            - run: docker pull mongo:5.0.4
-
-            - run: docker pull prosopo/substrate-contracts-node:v0.25
-
             - name: Build contracts
               id: build
               run: |
                   cd protocol/dev
                   npm run cli -- build --docker "prosopo/contracts-ci-linux:3.0.1"
+
+            # Do unit testing
+            - name: Test contract
+              run: |
+                  cd protocol/dev
+                  RUST_BACKTRACE=1 npm run cli -- test --docker "prosopo/contracts-ci-linux:3.0.1"
             
             - name: ls
               run: |
