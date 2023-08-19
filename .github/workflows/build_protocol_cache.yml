@@ -38,6 +38,10 @@ jobs:
                   restore-keys: |
                       protocol-${{ runner.os }}-${{ runner.arch }}-
 
+            - run: docker pull mongo:5.0.4
+
+            - run: docker pull prosopo/substrate-contracts-node:v0.25
+
             - name: ls
               run: |
                   set -x
