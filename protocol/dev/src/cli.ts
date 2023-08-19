@@ -201,7 +201,7 @@ export async function processArgs(args: string[]) {
         const rest = argv._.slice(1).join(' ') // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
-        const dockerImage = argv.docker ?? ''
+        const dockerImage = argv.docker || ''
 
         if (cmd.startsWith('contract') && argv.contract) {
             throw new Error('Cannot run contract commands on specific packages')
