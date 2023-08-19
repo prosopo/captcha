@@ -1,4 +1,4 @@
-name: Provider Docker Image
+name: image_provider
 
 on:
   push:
