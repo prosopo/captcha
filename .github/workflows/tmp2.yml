@@ -43,5 +43,5 @@ jobs:
                   set -x
                   ls -la
                   ls -la protocol/cargo-cache
-                  ls -la protocol/target/*
+                  ls -la protocol/target/* || true
             
