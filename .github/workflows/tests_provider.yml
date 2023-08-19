@@ -1,4 +1,4 @@
-name: Provider Tests
+name: tests_provider
 
 on:
   pull_request:
