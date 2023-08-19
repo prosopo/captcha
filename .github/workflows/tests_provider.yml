@@ -40,27 +40,26 @@ jobs:
           path: captcha
           submodules: recursive
 
+      - run: mkdir -p protocol/cargo-cache
+      - run: mkdir -p protocol/target
+      - run: mkdir -p node_modules
 
-      - run: mkdir -p ~/image-cache
-
-      - id: image-cache
-        uses: actions/cache@v3
+      - name: Restore cache
+        uses: actions/cache/restore@v3
         with:
-          path: ~/image-cache
-          key: image-cache-docker-${{ runner.os }}-${{ hashFiles('./captcha/docker/docker-compose.test.yml') }}
+            path: |
+                protocol/cargo-cache
+                protocol/target
+                node_modules
+            # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+            # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+            # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+            key: some-unused-cache-key
+            restore-keys: |
+                project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-      - if: steps.image-cache.outputs.cache-hit != 'true'
-        run: |
-          docker pull prosopo/substrate-contracts-node:v0.25
-          docker save -o ~/image-cache/prosopo.tar prosopo/substrate-contracts-node:v0.25
-          docker pull mongo:5.0.4
-          docker save -o ~/image-cache/mongo.tar mongo:5.0.4
-
-      - if: steps.image-cache.outputs.cache-hit == 'true'
-        run: |
-          ls ~/image-cache
-          docker load -i ~/image-cache/prosopo.tar
-          docker load -i ~/image-cache/mongo.tar
+      - run: docker pull prosopo/substrate-contracts-node:v0.25
+      - run: docker pull mongo:5.0.4
 
       - name: Start the docker images
         run: |
@@ -68,24 +67,7 @@ jobs:
           docker compose --file ./docker/docker-compose.test.yml up -d
           docker container ls
 
-      - id: node-cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: node-cache-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            node-cache-${{ runner.os }}-
-
-      - if: ${{ steps.node-cache.outputs.cache-hit == 'true' }}
-        run: |
-          cd ~/.npm
-          ls
-
-      - name: Install dependencies
-        run: |
-          cd captcha
-          ls .
-          npm install
+      - run: npm install
 
       # Checks if the git hash of packages is the same after running linting by comparing the git tree hash before
       # linting to a temporary git index file and root tree hash after linting
