@@ -42,6 +42,6 @@ jobs:
               run: |
                   set -x
                   ls -la
-                  ls -la cargo-cache
-                  ls -la protocol/target/ink
+                  ls -la protocol/cargo-cache
+                  ls -la protocol/target/*
             
