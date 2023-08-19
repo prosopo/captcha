@@ -8,6 +8,8 @@ on:
             - 'main'
         paths:
             - 'protocol/**'
+            - '**/package.json'
+            - '**/package-lock.json'
             - '.github/workflows/**'
 
 env:
@@ -24,7 +26,7 @@ jobs:
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
 
-            - name: Restore protocol cache
+            - name: Restore cache
               uses: actions/cache/restore@v3
               with:
                   path: |
@@ -36,7 +38,7 @@ jobs:
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      protocol-${{ runner.os }}-${{ runner.arch }}-
+                      project-cache-${{ runner.os }}-${{ runner.arch }}-
 
             - name: ls
               run: |
@@ -44,14 +46,11 @@ jobs:
                   ls -la
                   ls -la protocol/cargo-cache
                   ls -la protocol/target/* || true
+                  ls -la node_modules
             
-            - name: Npm install
-              run: |
-                  cd protocol/dev
-                  npm install
+            - run: npm install
 
             - name: Build contracts
-              id: build
               run: |
                   cd protocol/dev
                   npm run cli -- build --docker "prosopo/contracts-ci-linux:3.0.1"
@@ -62,14 +61,18 @@ jobs:
                   ls -la
                   ls -la protocol/cargo-cache
                   ls -la protocol/target/* || true
+                  ls -la node_modules
 
-            - name: Cleanup protocol caches
+            # remove all but the latest cache (this ensures there's at least one cache available for the next run, just in case this takes place while we're clearing up caches)
+            # this means there will be the previous cache (the latest) and the current cache (the one we're building now) after this workflow finishes
+            # github actions will prefer the latest cache, so the one output from this workflow will take precedence in future jobs
+            - name: Cleanup caches
               if: always()
               run: |
                   set +e; gh extension install actions/gh-actions-cache; set -e
                   REPO=${{ github.repository }}
                   echo "Fetching list of cache key"
-                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key protocol-${{ runner.os }}-${{ runner.arch }}- | cut -f 1)
+                  cacheKeys=$(gh actions-cache list --sort created-at --order desc --limit 100 -R $REPO --key project-cache-${{ runner.os }}-${{ runner.arch }}- | cut -f 1 | tail -n +3)
                   echo caches to be removed:
                   echo ${cacheKeys}
                   set +e
@@ -78,7 +81,7 @@ jobs:
                       gh actions-cache delete $cacheKey -R $REPO --confirm
                   done
 
-            - name: Save protocol cache
+            - name: Save cache
               uses: actions/cache/save@v3
               if: always()
               with:
@@ -86,4 +89,4 @@ jobs:
                       protocol/cargo-cache
                       protocol/target
                       node_modules
-                  key: protocol-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+                  key: project-cache-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
