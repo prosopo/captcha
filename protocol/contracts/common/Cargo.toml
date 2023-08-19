@@ -21,3 +21,6 @@ default = ["std"]
 std = ["ink/std", "scale/std", "scale-info/std"]
 ink-as-dependency = [ "scale-info/derive" ]
 test-dependency = []
+
+[net]
+git-fetch-with-cli = true

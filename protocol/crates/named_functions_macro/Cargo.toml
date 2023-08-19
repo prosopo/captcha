@@ -12,3 +12,6 @@ description = "macro that expands to the name of the function it is in"
 [dependencies]
 quote = "1.0"
 proc-macro2 = "1.0.51"
+
+[net]
+git-fetch-with-cli = true
