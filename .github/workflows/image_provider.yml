@@ -21,18 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checkout the repo
-      - name: Clone captcha
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
-          repository: prosopo/captcha
-          path: captcha
-          submodules: recursive
+      - uses: actions/checkout@v3
 
+      
       # Get the provider image version from the root package.json and the latest package version from npm
       - name: Get provider image version
         run: |
-          cd captcha
           echo "PROVIDER_IMAGE_VERSION=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
           echo "LATEST_PROVIDER_VERSION=$(npm view @prosopo/provider version)" >> $GITHUB_ENV
 
@@ -70,23 +64,18 @@ jobs:
               exit 1
           fi
 
-      # npm install
-      - name: Npm install
-        run: |
-          cd captcha
-          npm install
+      - run: npm install
 
       # build the packages
       - name: Build packages
         run: |
-          cd captcha/dev
+          cd dev
           npm run build
       
 
       # build the cli production bundle
       - name: Build cli production bundle
         run: |
-          cd captcha
           cp ./dev/env.rococo ./packages/cli/.env.rococo
           NODE_ENV=rococo npm run -w @prosopo/cli build:webpack:prod
 
@@ -94,7 +83,6 @@ jobs:
       - name: Build provider image
         run: |
           echo "Building Image Version ${{ env.PROVIDER_IMAGE_VERSION }}"
-          cd captcha
           docker build -f ./docker/images/provider.dockerfile . -t prosopo/provider:${{ env.PROVIDER_IMAGE_VERSION }}
 
       # Push the provider image to docker hub, if the push target is `main`
@@ -108,7 +96,6 @@ jobs:
       - name: Create new procaptcha JS bundle
         run: |
           if [ "${{ github.ref }}" != "refs/heads/main" ]; then exit 0; fi
-          cd captcha
           cp ./dev/env.rococo ./packages/cli/.env.rococo
           NODE_ENV=rococo npm run -w @prosopo/procaptcha-bundle build:webpack:prod
           docker build -f ./docker/images/js.server.dockerfile . -t prosopo/js_server:latest
