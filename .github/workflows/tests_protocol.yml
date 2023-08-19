@@ -1,9 +1,8 @@
-name: tmp2
+name: tests_protocol
 
 on:
     pull_request:
         branches:
-            - 'develop'
             - 'main'
         paths:
             - 'protocol/**'
@@ -19,13 +18,8 @@ jobs:
         steps:
             - uses: actions/checkout@v3
 
-            - run: mkdir -p protocol/cargo-cache
-            - run: mkdir -p protocol/target
-            - run: mkdir -p node_modules
-
-            - name: Restore protocol cache
+            - name: Restore cache
               uses: actions/cache/restore@v3
-              id: cache
               with:
                   path: |
                       protocol/cargo-cache
@@ -36,30 +30,27 @@ jobs:
                   # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
                   key: some-unused-cache-key
                   restore-keys: |
-                      protocol-${{ runner.os }}-${{ runner.arch }}-
+                      project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            - name: ls
+            - run: npm install
+
+            - name: Rust formatting check
               run: |
-                  set -x
-                  ls -la
-                  ls -la protocol/cargo-cache
-                  ls -la protocol/target/* || true
+                  cd protocol/dev
+                  npm run cli -- fmt --all --verbose --check --docker
 
+            - name: Clippy
+              run: |
+                  cd protocol/dev
+                  npm run cli -- clippy --docker -- -- -D warnings
 
-
-            - run: docker pull mongo:5.0.4
-
-            - run: docker pull prosopo/substrate-contracts-node:v0.25
-
-            - name: Build contracts
+            - name: Build contract
               id: build
               run: |
                   cd protocol/dev
-                  npm run cli -- build --docker "prosopo/contracts-ci-linux:3.0.1"
-            
-            - name: ls
+                  npm run cli -- build --docker
+
+            - name: Test contract
               run: |
-                  set -x
-                  ls -la
-                  ls -la protocol/cargo-cache
-                  ls -la protocol/target/* || true
+                  cd protocol/dev
+                  RUST_BACKTRACE=1 npm run cli -- test --docker
