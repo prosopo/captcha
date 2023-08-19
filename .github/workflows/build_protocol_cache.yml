@@ -26,7 +26,6 @@ jobs:
 
             - name: Restore protocol cache
               uses: actions/cache/restore@v3
-              id: cache-restore
               with:
                   path: |
                       protocol/cargo-cache
