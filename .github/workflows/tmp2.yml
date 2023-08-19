@@ -44,4 +44,16 @@ jobs:
                   ls -la
                   ls -la protocol/cargo-cache
                   ls -la protocol/target/* || true
+
+            - name: Build contracts
+              id: build
+              run: |
+                  cd protocol/dev
+                  npm run cli -- build --docker "prosopo/contracts-ci-linux:3.0.1"
             
+            - name: ls
+              run: |
+                  set -x
+                  ls -la
+                  ls -la protocol/cargo-cache
+                  ls -la protocol/target/* || true
