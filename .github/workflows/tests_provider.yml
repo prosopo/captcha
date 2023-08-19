@@ -43,7 +43,6 @@ jobs:
 
       - name: Start the docker images
         run: |
-          cd captcha
           docker compose --file ./docker/docker-compose.test.yml up -d
           docker container ls
 
@@ -55,7 +54,6 @@ jobs:
       # linting to a temporary git index file and root tree hash after linting
       - name: Linting check
         run: |
-          cd captcha
           PACKAGES_HASH=$(git show HEAD --format=%T | head -1)
           npm run lint:fix
           cp .git/index /tmp/git_index
@@ -72,7 +70,6 @@ jobs:
       - name: Build provider and dependencies
         # Next few lines should contain the number of packages that provider depends on (check tsconfig.json)
         run: |
-          cd captcha
           echo $(npx tsc --version)
           cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cp env.test .env.test
@@ -82,7 +79,6 @@ jobs:
 
       - name: Deploy the contracts and run the unit tests
         run: |
-          cd captcha
           npm run deploy_protocol
           npm run deploy_dapp
           git status | head -n 1
@@ -94,7 +90,6 @@ jobs:
 
       - name: Reset the docker containers
         run: |
-          cd captcha
           docker compose --file ./docker/docker-compose.test.yml down
           docker compose --file ./docker/docker-compose.test.yml up -d
           docker container ls
@@ -105,7 +100,6 @@ jobs:
 
       - name: Deploy the contracts and run the cypress tests on client-example
         run: |
-          cd captcha
           cp demos/client-example-server/env.development demos/client-example-server/.env.test
           cp demos/client-example/env.development demos/client-example/.env.test
           cp dev/env.test dev/.env.test
