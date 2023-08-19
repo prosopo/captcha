@@ -53,7 +53,8 @@ jobs:
             - name: Build contracts
               id: build
               run: |
-                  touch protocol/target/ink/$(date | tr ' ' '_')
+                  cd protocol/dev
+                  npm run cli -- build --docker "prosopo/contracts-ci-linux:3.0.1"
 
             - name: ls
               run: |
