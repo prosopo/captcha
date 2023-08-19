@@ -18,13 +18,6 @@ jobs:
         steps:
             - uses: actions/checkout@v3
 
-            - run: npm install
-
-            - name: Rust formatting check
-              run: |
-                  cd protocol/dev
-                  npm run cli -- fmt --all --verbose --check --docker
-
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
@@ -38,6 +31,13 @@ jobs:
                   key: some-unused-cache-key
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
+
+            - run: npm install
+
+            - name: Rust formatting check
+              run: |
+                  cd protocol/dev
+                  npm run cli -- fmt --all --verbose --check --docker
 
             - name: Clippy
               run: |
