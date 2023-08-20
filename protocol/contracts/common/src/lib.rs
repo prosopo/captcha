@@ -153,6 +153,8 @@ pub mod common {
         CommitAlreadyExists,
         /// Returned if the caller is not the author
         NotAuthor,
+        InvalidCommitRecordSize,
+        InvalidCommitRecordSymbol,
     }
 
     /// get the account id in byte array format
