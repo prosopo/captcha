@@ -7,6 +7,7 @@ export const argsSchema = z.object({
     out: z.string(),
     overwrite: z.boolean().optional(),
     size: z.number(),
+    square: z.boolean().optional(),
 })
 
 export type Args = z.infer<typeof argsSchema>
