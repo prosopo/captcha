@@ -32,6 +32,17 @@ pub mod captcha {
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
 
+    #[derive(
+        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
+    )]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub enum CommitRecord {
+        Approved,
+        Disapproved,
+        #[default]
+        None,
+    }
+
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
         Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
@@ -298,6 +309,69 @@ pub mod captcha {
                 user_accounts: Default::default(),
                 commits: Default::default(),
             }
+        }
+
+        fn get_commit_record_types(&self) -> Vec<CommitRecord> {
+            vec![
+                CommitRecord::Approved,
+                CommitRecord::Disapproved,
+                CommitRecord::None,
+            ]
+        }
+
+        /// Take an vector of bytes and convert to a vector of commit records
+        /// This applies any error checking and run length encoding
+        fn unpack_commit_log(&self, log: &Vec<u8>) -> Result<Vec<CommitRecord>, Error> {
+            // take the log and convert it into a vector of symbols
+            let mut symbols: Vec<u8> = Vec::new();
+            for byte in log {
+                symbols.push((byte & 0b11000000) >> 6);
+                symbols.push((byte & 0b00110000) >> 4);
+                symbols.push((byte & 0b00001100) >> 2);
+                symbols.push(byte & 0b00000011);
+            }
+
+            // take the symbols and process any run length encoding
+            let mut result: Vec<CommitRecord> = Vec::new();
+            let types = self.get_commit_record_types();
+            for symbol in symbols {
+                if symbol as usize > types.len() {
+                    // symbol is out of range
+                    return err!(self, Error::InvalidCommitRecordSymbol);
+                }
+                result.push(types[symbol as usize]);
+            }
+
+            Ok(result)
+        }
+
+        /// Take a vector of commit records and convert to a vector of bytes
+        /// This applies any error checking and run length encoding
+        fn pack_commit_log(&self, log: &Vec<CommitRecord>) -> Result<Vec<u8>, Error> {
+            if log.len() % 4 != 0 {
+                // symbols are 2 bits in length, so the log must be a multiple of 4 in order to pack all symbols into bytes
+                return err!(self, Error::InvalidCommitRecordSize);
+            }
+
+            // take the log and convert it into a vector of bytes, each packed with 4x symbols of 2 bits each
+            let mut bytes: Vec<u8> = Vec::new();
+            let mut byte: u8 = 0;
+            let mut i: usize = 0;
+            for record in log {
+                // bit shift byte by index to fit four bytes of 2 bits into a byte
+                byte |= (*record as u8) << (6 - i * 2);
+                i = i + 1;
+                if i == 4 {
+                    // add the byte to the bytes vector
+                    bytes.push(byte);
+                    // reset the byte
+                    byte = 0;
+                    // reset the index
+                    i = 0;
+                }
+            }
+
+            Ok(bytes)
         }
 
         /// Get the git commit id from when this contract was built
@@ -1658,6 +1732,112 @@ pub mod captcha {
                 contract.set_code_hash(new_code_hash),
                 Err(Error::NotAuthorised)
             );
+        }
+
+        #[ink::test]
+        fn test_commit_record_types_indices() {
+            let mut contract = get_contract(0);
+
+            let types = contract.get_commit_record_types();
+            for record_type_ref in types.iter() {
+                let record_type = *record_type_ref;
+                let index = record_type as u8 as usize;
+                let record_type_lookup = types[index];
+                assert_eq!(record_type, record_type_lookup);
+            }
+        }
+
+        #[ink::test]
+        fn test_commit_record_pack() {
+            let mut contract = get_contract(0);
+
+            let symbols: Vec<CommitRecord> = vec![
+                CommitRecord::Approved,
+                CommitRecord::Disapproved,
+                CommitRecord::None,
+                CommitRecord::None,
+                CommitRecord::Disapproved,
+                CommitRecord::Approved,
+                CommitRecord::Approved,
+                CommitRecord::Disapproved,
+            ];
+
+            let bytes = contract.pack_commit_log(&symbols).unwrap();
+
+            assert_eq!(vec![0b00011010, 0b01000001], bytes);
+        }
+
+        #[ink::test]
+        fn test_commit_record_pack_empty() {
+            let mut contract = get_contract(0);
+
+            let symbols: Vec<CommitRecord> = vec![];
+
+            let bytes = contract.pack_commit_log(&symbols).unwrap();
+
+            assert!(bytes.is_empty());
+        }
+
+        #[ink::test]
+        fn test_commit_record_unpack() {
+            let mut contract = get_contract(0);
+
+            let bytes = vec![0b00011010, 0b01000001];
+
+            let symbols = contract.unpack_commit_log(&bytes).unwrap();
+
+            assert_eq!(
+                symbols,
+                vec![
+                    CommitRecord::Approved,
+                    CommitRecord::Disapproved,
+                    CommitRecord::None,
+                    CommitRecord::None,
+                    CommitRecord::Disapproved,
+                    CommitRecord::Approved,
+                    CommitRecord::Approved,
+                    CommitRecord::Disapproved,
+                ]
+            );
+        }
+
+        #[ink::test]
+        fn test_commit_record_unpack_empty() {
+            let mut contract = get_contract(0);
+
+            let bytes = vec![];
+
+            let symbols = contract.unpack_commit_log(&bytes).unwrap();
+
+            assert!(symbols.is_empty());
+        }
+
+        #[ink::test]
+        fn test_commit_record_unpack_invalid_size() {
+            let mut contract = get_contract(0);
+
+            for i in 0..100 {
+                let bytes: Vec<u8> = vec![0; i];
+                let symbols = contract.unpack_commit_log(&bytes);
+                // should produce 4 symbols per byte
+                assert_eq!(symbols.unwrap().len(), i * 4);
+            }
+        }
+
+        #[ink::test]
+        fn test_commit_record_pack_invalid_size() {
+            let mut contract = get_contract(0);
+
+            for i in 0..100 {
+                let symbols: Vec<CommitRecord> = vec![CommitRecord::Approved; i];
+                let bytes = contract.pack_commit_log(&symbols);
+                // packing should fail if the size is not a multiple of 4
+                if i % 4 != 0 {
+                    assert_eq!(bytes, Err(Error::InvalidCommitRecordSize));
+                } else {
+                    assert!(bytes.is_ok());
+                }
+            }
         }
 
         #[ink::test]
