@@ -32,18 +32,6 @@ pub mod captcha {
     #[allow(unused_imports)] // do not remove StorageLayout, it is used in derives
     use ink::storage::{traits::StorageLayout, Mapping};
 
-    #[derive(
-        Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
-    )]
-    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum CommitLogEntry {
-        Approved,
-        Disapproved,
-        #[default]
-        None,
-        Sequence, // used to indicate that the log contains multiple entries of the same type in a sequence
-    }
-
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
     #[derive(
         Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
@@ -310,41 +298,6 @@ pub mod captcha {
                 user_accounts: Default::default(),
                 commits: Default::default(),
             }
-        }
-
-        fn unpack_commit_log(&self, log: Vec<u8>) -> Vec<u8> {
-            // the log is currently encoded as:
-            // - commit approve: 0
-            // - commit disapprove: 1
-            // - no commit: 2
-            // - run length encoded
-            // these take 2 bits to represent (4 symbols) so 1 byte consists of 4 symbols
-
-            // take the log and convert it into a vector of symbols
-            let mut symbols: Vec<u8> = Vec::new();
-            for byte in log {
-                symbols.push(byte & 0b00000011);
-                symbols.push((byte & 0b00001100) >> 2);
-                symbols.push((byte & 0b00110000) >> 4);
-                symbols.push((byte & 0b11000000) >> 6);
-            }
-
-            // take the symbols and process any run length encoding
-            let mut result: Vec<u8> = Vec::new();
-            for symbol in symbols {
-                if symbol == CommitLogEntry::Sequence as u8 {
-                    // the next symbol is the run length
-                    let run_length = result.pop().unwrap();
-                    let symbol = result.pop().unwrap();
-                    for _ in 0..run_length {
-                        result.push(symbol);
-                    }
-                } else {
-                    result.push(symbol);
-                }
-            }
-
-            result
         }
 
         /// Get the git commit id from when this contract was built
