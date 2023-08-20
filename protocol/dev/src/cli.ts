@@ -321,9 +321,7 @@ Cargo pass-through commands:
                 const contracts = argv.contract as string[]
                 delete argv.contract
                 for (const contract in contracts) {
-                    await exec(
-                        `cd ${repoDir} && cargo contract instantiate target/ink/${contract}/${contract}.contract ${argv._}`
-                    )
+                    await exec(`cd ${contractsDir}/${contract} && cargo contract instantiate ${argv._}`)
                 }
             },
             []
