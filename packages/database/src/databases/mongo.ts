@@ -69,9 +69,13 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     logger: Logger
 
     public async init(url: string, dbname: string, logger: Logger, authSource?: string) {
-        const authSourceString = authSource ? `?authSource=${authSource}` : ''
-        const separator = url.slice(-1) === '/' ? '' : '/'
-        this.url = `${url || DEFAULT_ENDPOINT}${separator}${dbname}${authSourceString}`
+        const baseEndpoint = url || DEFAULT_ENDPOINT
+        const parsedUrl = new URL(baseEndpoint)
+        parsedUrl.pathname = dbname
+        if (authSource) {
+            parsedUrl.searchParams.set('authSource', authSource)
+        }
+        this.url = parsedUrl.toString()
         this.dbname = dbname
         this.logger = logger
         return this
@@ -147,11 +151,14 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 solutionTree: parsedDataset.solutionTree,
             }
 
-            await this.tables?.dataset.updateOne(
-                { datasetId: parsedDataset.datasetId },
-                { $set: datasetDoc },
-                { upsert: true }
-            )
+            await this.tables?.dataset
+                .updateOne({ datasetId: parsedDataset.datasetId }, { $set: datasetDoc }, { upsert: true })
+                .catch((err) => {
+                    console.log(err)
+                })
+
+            console.log('parsedDataset.captchas', parsedDataset.captchas)
+
             // put the dataset id on each of the captcha docs and remove the solution
             const captchaDocs = parsedDataset.captchas.map(({ solution, ...captcha }, index) => ({
                 ...captcha,
@@ -160,6 +167,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 index,
                 solved: !!solution?.length,
             }))
+
+            console.log('captchaDocs', captchaDocs)
 
             // create a bulk upsert operation and execute
             if (captchaDocs.length) {
@@ -174,6 +183,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 )
             }
 
+            console.log('parsedDataset.captchas', parsedDataset.captchas)
+
             // insert any captcha solutions into the solutions collection
             const captchaSolutionDocs = parsedDataset.captchas
                 .filter(({ solution }) => solution?.length)
@@ -185,6 +196,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     datasetId: parsedDataset.datasetId,
                     datasetContentId: parsedDataset.datasetContentId,
                 }))
+
+            console.log('captchaSolutionDocs', captchaSolutionDocs)
 
             // create a bulk upsert operation and execute
             if (captchaSolutionDocs.length) {
@@ -198,6 +211,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     }))
                 )
             }
+
+            console.log('parsedDataset.captchas', parsedDataset.captchas)
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.DATASET_LOAD_FAILED')
         }

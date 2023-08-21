@@ -275,6 +275,7 @@ export function processArgs(args, env: ProviderEnvironment) {
                     const result = await tasks.contract.contract['providerAccounts']()
 
                     logger.info(JSON.stringify(result, null, 2))
+                    console.log(JSON.stringify(result, null, 2), 'i logged lots \n\n\n logloglog')
                 } catch (err) {
                     logger.error(err)
                 }
@@ -307,9 +308,10 @@ export function processArgs(args, env: ProviderEnvironment) {
                 }),
             async (argv) => {
                 try {
+                    console.log('asdfasdf\n\n\nasdasdasd\n\n\nsdkjaskdj')
                     const result = (await tasks.contract.query.getProvider(argv.address, {})).value.unwrap().unwrap()
 
-                    logger.info(JSON.stringify(result, null, 2))
+                    logger.info('provider', JSON.stringify(result))
                 } catch (err) {
                     logger.error(err)
                 }

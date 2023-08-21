@@ -17,8 +17,11 @@ import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { loadEnv } from './env'
 import { processArgs } from './argv'
 import { start } from './start'
+import { time } from 'console'
+import { TIMEOUT } from 'dns'
 const log = getLogger(LogLevel.Info, 'cli')
 async function main() {
+    log.setLogLevel(LogLevel.Verbose)
     loadEnv()
 
     const secret = getSecret()
@@ -40,7 +43,9 @@ async function main() {
         log.info('Starting API')
         await start(env)
     } else {
-        process.exit(0)
+        await setTimeout(() => {
+            process.exit(0)
+        }, 10000)
     }
 }
 

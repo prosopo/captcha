@@ -92,7 +92,7 @@ module.exports = (env, argv) => {
                 ),
                 'process.env.REACT_APP_WEB2': JSON.stringify(process.env.REACT_APP_WEB2 || 'true'),
                 'process.env.REACT_APP_SUBSTRATE_ENDPOINT': JSON.stringify(
-                    process.env.REACT_APP_SUBSTRATE_ENDPOINT || 'http://localhost:9944'
+                    process.env.REACT_APP_SUBSTRATE_ENDPOINT || 'ws://localhost:9944'
                 ),
                 'process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS': JSON.stringify(
                     process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || ''
