@@ -1333,14 +1333,6 @@ pub mod captcha {
         fn check_caller_admin(&self) -> Result<(), Error> {
             check_is_admin(self.env().caller())
         }
-
-        /// Is the specified account the admin for this contract?
-        fn check_is_admin(&self, acc: AccountId) -> Result<(), Error> {
-            if self.get_admin() != acc {
-                return err!(self, Error::NotAuthorised);
-            }
-            Ok(())
-        }
     }
 
     /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
