@@ -18,6 +18,7 @@ pub use self::captcha::{Captcha, CaptchaRef};
 #[ink::contract]
 pub mod captcha {
 
+    use common::common::check_is_admin;
     use common::common::config;
     use common::common::Error;
     use common::err;
@@ -1300,7 +1301,7 @@ pub mod captcha {
         #[ink(message)]
         pub fn withdraw(&mut self, amount: Balance) -> Result<(), Error> {
             let caller = self.env().caller();
-            self.check_is_admin(caller)?;
+            check_is_admin(caller)?;
 
             let transfer_result =
                 ink::env::transfer::<ink::env::DefaultEnvironment>(caller, amount);
@@ -1330,7 +1331,7 @@ pub mod captcha {
 
         /// Is the caller the admin for this contract?
         fn check_caller_admin(&self) -> Result<(), Error> {
-            self.check_is_admin(self.env().caller())
+            check_is_admin(self.env().caller())
         }
 
         /// Is the specified account the admin for this contract?
