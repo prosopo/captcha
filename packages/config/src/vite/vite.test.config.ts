@@ -7,7 +7,7 @@ export default function () {
             minify: false,
             sourcemap: false,
             rollupOptions: {
-                maxParallelFileOps: 2,
+                maxParallelFileOps: 1,
                 cache: false,
                 output: {
                     sourcemap: false,
