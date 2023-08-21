@@ -15,9 +15,11 @@ import { DatabaseTypes, EnvironmentTypesSchema, ProsopoConfigSchema } from '@pro
 import { Logger, ProsopoEnvError, getLogLevel, getLogger } from '@prosopo/common'
 import { glob } from 'glob'
 import { loadEnv } from '@prosopo/util'
-require('ts-mocha')
 import Mocha from 'mocha'
 loadEnv()
+if (!process.env.SUBSTRATE_NODE_URL || !process.env.PROTOCOL_CONTRACT_ADDRESS) {
+    throw new Error('Missing SUBSTRATE_NODE_URL and PROTOCOL_CONTRACT_ADDRESS must be defined')
+}
 const logLevel = getLogLevel()
 const testConfig = {
     logLevel,
@@ -29,9 +31,9 @@ const testConfig = {
     },
     networks: {
         development: {
-            endpoint: process.env.SUBSTRATE_NODE_URL!,
+            endpoint: process.env.SUBSTRATE_NODE_URL,
             contract: {
-                address: process.env.PROTOCOL_CONTRACT_ADDRESS!,
+                address: process.env.PROTOCOL_CONTRACT_ADDRESS,
                 name: 'prosopo',
             },
             accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],

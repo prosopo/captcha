@@ -18,6 +18,7 @@ import { hexToU8a, isWasm } from '@polkadot/util'
 import fse from 'fs-extra'
 import path from 'path'
 
+const __dirname = path.resolve()
 export async function AbiJSON(filePath: string): Promise<Abi> {
     const resolvedFilePath = path.resolve(__dirname, filePath)
     await fse.ensureFile(resolvedFilePath)

@@ -36,7 +36,7 @@ export async function processArgs(args) {
 
     const log = getLogger(getLogLevel(parsed.logLevel), 'CLI')
 
-    yargs(hideBin(args))
+    await yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')
         .command(
             'deploy_protocol',
@@ -163,11 +163,9 @@ export async function processArgs(args) {
                     )
                 }
             },
-        })
-
-    await yargs(hideBin(args)).parse()
+        }).argv
 }
-processArgs(process.argv.slice(2))
+processArgs(process.argv)
     .then(() => {
         process.exit(0)
     })

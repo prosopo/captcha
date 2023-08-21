@@ -18,6 +18,7 @@ import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
 
+const __dirname = path.resolve()
 export async function findEnvFiles(logger: Logger) {
     const env = getEnv()
     const fileName = `.env.${env}`
