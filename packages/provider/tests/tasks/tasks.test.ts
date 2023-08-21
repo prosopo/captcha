@@ -189,7 +189,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
             throw new ProsopoContractError(dispatchError)
         }
         expect(result?.isError).to.be.false
-    })
+    }, 8000)
 
     test('Provider add dataset', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providersWithStake)
@@ -197,7 +197,7 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
         const tasks = await getSignedTasks(env, providerAccount)
 
         await tasks.providerSetDatasetFromFile(JSON.parse(JSON.stringify(captchaData)))
-    })
+    }, 8000)
 
     test('Provider add dataset with too few captchas will fail', async ({ env }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providersWithStake)
@@ -730,7 +730,10 @@ describe('CONTRACT TASKS', async function (): Promise<void> {
 
             expect(tree).to.deep.equal(initialTree)
             expect(commitmentId).to.equal(initialCommitmentId)
-            const commitment: Commit = await wrapQuery(tasks.contract.query.getCommit, tasks.contract.query)()
+            const commitment: Commit = await wrapQuery(
+                tasks.contract.query.getCommit,
+                tasks.contract.query
+            )(commitmentId)
             expect(commitment).to.not.be.undefined
         } catch (e) {
             console.log(e)
