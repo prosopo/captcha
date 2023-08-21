@@ -18,7 +18,6 @@ import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
 import { loadEnv } from '@prosopo/util'
-import { runTests } from '../test/index.js'
 import { setup } from '../setup/index.js'
 import { updateEnvFiles } from '../util/index.js'
 import fs from 'fs'
@@ -101,15 +100,6 @@ export async function processArgs(args) {
             handler: async () => {
                 log.info('Running setup scripts')
                 await setup()
-            },
-        })
-        .command({
-            command: 'test',
-            describe: 'Run all of the tests in the workspace',
-            handler: async () => {
-                log.info('Running tests')
-                await runTests()
-                process.exit(0)
             },
         })
         .command({

@@ -16,6 +16,11 @@
     "include": [
         "./src/**/*.ts", "./src/*.ts"
     ],
+    "ts-node": {
+        "moduleTypes": {
+            "*.ts": "cjs"
+        }
+    },
 
     "references": [
         {

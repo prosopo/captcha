@@ -7,7 +7,7 @@
   "scripts": {
     "clean": "tsc --build --clean",
     "build": "tsc --build --verbose",
-    "test": "tsc --build --verbose && node dist/cli/index.js test",
+    "test": "NODE_OPTIONS=--max-old-space-size=4096 npx vitest --config ./vite.config.ts",
     "deploy": "node dist/deploy/protocol.js",
     "cli": "node dist/cli/index.js",
     "setup": "node dist/cli/index.js setup",
@@ -39,18 +39,18 @@
     "@prosopo/types-database": "^0.1.17",
     "@prosopo/types-env": "^0.1.17",
     "@prosopo/util": "^0.1.17",
-    "@types/chai-as-promised": "^7.1.5",
     "consola": "^2.15.3",
     "dotenv": "^16.0.3",
     "glob": "^10.0.0",
-    "mocha": "^10.2.0",
     "yargs": "^17.5.1",
     "yargs-parser": "^21.0.1"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.1",
+    "@esm-bundle/chai": "^4.3.4-fix.0",
+    "@web/test-runner": "^0.17.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.5.3",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "vitest": "^0.34.2"
   }
 }
