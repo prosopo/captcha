@@ -78,11 +78,6 @@ pub mod proxy {
             Self {}
         }
 
-        /// Get the git commit id from when this contract was built
-        fn get_git_commit_id(&self) -> [u8; 20] {
-            get_git_commit_id()
-        }
-
         fn get_destination(&self) -> AccountId {
             // the destination contract to forward to, set to 0 by default
             AccountId::from([
@@ -167,9 +162,7 @@ pub mod proxy {
         #[ink(message, selector = 0x9BAE9D5E)]
         pub fn handler(&mut self, msg: ProxyMessages) -> Result<ProxyReturnTypes, Error> {
             match msg {
-                ProxyMessages::GetGitCommitId => {
-                    Ok(ProxyReturnTypes::U8x20(self.get_git_commit_id()))
-                }
+                ProxyMessages::GetGitCommitId => Ok(ProxyReturnTypes::U8x20(get_git_commit_id())),
                 ProxyMessages::GetAdmin => Ok(ProxyReturnTypes::AccountId(get_admin())),
                 ProxyMessages::GetDestination => {
                     Ok(ProxyReturnTypes::AccountId(self.get_destination()))
