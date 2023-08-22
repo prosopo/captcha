@@ -101,18 +101,28 @@ export function processArgs(args, env: ProviderEnvironment) {
                         desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                     }),
             async (argv) => {
-                const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
-                    Array.from(stringToU8a(argv.url)),
-                    argv.fee,
-                    argv.payee,
-                    {
-                        value: 0,
-                    },
-                ]
-                await wrapQuery(tasks.contract.query.providerRegister, tasks.contract.query)(...providerRegisterArgs)
-                const result = await tasks.contract.tx.providerRegister(...providerRegisterArgs)
+                try {
+                    const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
+                        Array.from(stringToU8a(argv.url)),
+                        argv.fee,
+                        argv.payee,
+                        {
+                            value: 0,
+                        },
+                    ]
+                    await wrapQuery(
+                        tasks.contract.query.providerRegister,
+                        tasks.contract.query
+                    )(...providerRegisterArgs)
+                    const result = await tasks.contract.tx.providerRegister(...providerRegisterArgs)
 
-                logger.info(JSON.stringify(result, null, 2))
+                    logger.info(JSON.stringify(result, null, 2))
+                    process.exit(0)
+                } catch (err) {
+                    logger.error(err)
+                    logger.info(err)
+                    process.exit(0)
+                }
             },
             [validatePayee]
         )
@@ -198,8 +208,10 @@ export function processArgs(args, env: ProviderEnvironment) {
                     const result = await tasks.providerSetDatasetFromFile(jsonFile)
 
                     logger.info(JSON.stringify(result, null, 2))
+                    process.exit(0)
                 } catch (err) {
                     logger.error(err)
+                    process.exit(0)
                 }
             },
             []
@@ -308,15 +320,19 @@ export function processArgs(args, env: ProviderEnvironment) {
                 }),
             async (argv) => {
                 try {
-                    console.log('asdfasdf\n\n\nasdasdasd\n\n\nsdkjaskdj')
-                    const result = (await tasks.contract.query.getProvider(argv.address, {})).value.unwrap().unwrap()
+                    logger.info('Getting provider details')
+                    await wrapQuery(tasks.contract.query.getProvider, tasks.contract.query)(argv.address)
+                    logger.info('wrpaQuery complete')
+                    const result = await tasks.contract.query.getProvider(argv.address)
 
-                    logger.info('provider', JSON.stringify(result))
+                    logger.info(JSON.stringify(result, null, 2))
+                    process.exit(0)
                 } catch (err) {
                     logger.error(err)
+                    process.exit(0)
                 }
             },
-            [validateAddress]
+            []
         )
         .command(
             'provider_dataset',
@@ -468,5 +484,6 @@ export function processArgs(args, env: ProviderEnvironment) {
                 }
             },
             [validateScheduleExpression]
-        ).argv
+        )
+        .parse()
 }

@@ -17,11 +17,9 @@ import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { loadEnv } from './env'
 import { processArgs } from './argv'
 import { start } from './start'
-import { time } from 'console'
-import { TIMEOUT } from 'dns'
-const log = getLogger(LogLevel.Info, 'cli')
+const log = getLogger(LogLevel.Verbose, 'cli')
 async function main() {
-    log.setLogLevel(LogLevel.Verbose)
+    console.log('main')
     loadEnv()
 
     const secret = getSecret()
@@ -38,15 +36,19 @@ async function main() {
 
     await env.isReady()
 
-    const processedArgs = await processArgs(process.argv.slice(2), env)
-    if (processedArgs.api) {
-        log.info('Starting API')
-        await start(env)
-    } else {
-        await setTimeout(() => {
-            process.exit(0)
-        }, 10000)
-    }
+    log.info('args', process.argv)
+
+    const processedArgs = await processArgs(process.argv.slice(2), env).then(() => log.info('done'))
+
+    log.info('this has been processed', processedArgs)
+    process.exit(0)
+    return processedArgs
+    // if (false) {
+    //     log.info('Starting API')
+    //     await start(env)
+    // } else {
+    //     process.exit(0)
+    // }
 }
 
 // if main node process
