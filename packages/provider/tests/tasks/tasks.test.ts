@@ -55,7 +55,7 @@ declare module 'vitest' {
     export interface TestContext extends ViteTestContext {}
 }
 
-describe('CONTRACT TASKS', async function (): Promise<void> {
+describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     beforeEach(async function (context) {
         context.ss58Format = 42
         context.pairType = 'sr25519' as KeypairType

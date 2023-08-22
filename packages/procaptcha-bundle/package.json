@@ -13,10 +13,6 @@
         "start": "webpack serve --mode development",
         "build:dev": "npm run build && vite build --mode development",
         "build:prod": "npm run build && vite build --mode production",
-        "build:webpack:prod": "npm run build && webpack  --config webpack.config.production.js --mode production",
-        "build:webpack:prod:copy": "npm run build && webpack --config webpack.config.production.js --mode production && cp dist/procaptcha_bundle.*.bundle.js ../../demos/client-bundle-example/src",
-        "build:webpack:dev": "npm run build && webpack --config webpack.config.development.js --mode development --watch",
-        "build:webpack:dev:copy": "npm run build && webpack --config webpack.config.development.js --mode development --watch",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix"
     },

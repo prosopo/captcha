@@ -1,27 +1,16 @@
-import { Alias, UserConfig, defineConfig } from 'vite'
 import { ClosePlugin, filterDependencies, getDependencies } from '@prosopo/config'
+import { UserConfig, defineConfig } from 'vite'
 import { builtinModules } from 'module'
+import { getAliases } from '@prosopo/config/dist'
 import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/util'
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
 import { wasm } from '@rollup/plugin-wasm'
 import css from 'rollup-plugin-import-css'
-import excludePolkadot from '@prosopo/config/dist/polkadot/exclude'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import path from 'path'
 import react from '@vitejs/plugin-react'
 const logger = getLogger(`Info`, `vite.config.js`)
-
-function getAliases(dir): Alias[] {
-    const polkadotFilesToAlias = excludePolkadot()
-    const alias: Alias[] = []
-    const mockFile = path.resolve(dir, '../config/dist/polkadot/mock.js')
-    polkadotFilesToAlias.forEach((file) => {
-        logger.info(`resolving ${file} to mock.js`)
-        alias.push({ find: file, replacement: mockFile })
-    })
-    return alias
-}
 
 export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
     const dir = path.resolve()
@@ -38,13 +27,14 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
 
     // Set the env vars that we want to be available in the browser
     const define = {
+        // used to stop websockets package from breaking
         'process.env.WS_NO_BUFFER_UTIL': JSON.stringify('true'),
         'process.env.WS_NO_UTF_8_VALIDATE': JSON.stringify('true'),
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
         'process.env.PROTOCOL_CONTRACT_ADDRESS': JSON.stringify(process.env.PROTOCOL_CONTRACT_ADDRESS),
         'process.env.SUBSTRATE_NODE_URL': JSON.stringify(process.env.SUBSTRATE_NODE_URL),
         'process.env.DEFAULT_ENVIRONMENT': JSON.stringify(process.env.DEFAULT_ENVIRONMENT),
-        //only needed if bundling with a site key
+        // only needed if bundling with a site key
         'process.env.PROSOPO_SITE_KEY': JSON.stringify(process.env.PROSOPO_SITE_KEY),
     }
 
@@ -62,6 +52,8 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
     const libraryName = 'procaptcha'
     const isProduction = mode === 'production'
     const alias = isProduction ? getAliases(dir) : []
+
+    // Required to print RegExp in console (e.g. alias keys)
     RegExp.prototype['toJSON'] = RegExp.prototype.toString
     logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
     return {
@@ -97,7 +89,7 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
             },
 
             rollupOptions: {
-                //treeshake: 'smallest',
+                treeshake: 'smallest',
                 external: allExternal,
                 watch: false,
                 output: {
