@@ -15,41 +15,55 @@ import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util/index.js'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
 import { ContractDeployer } from '@prosopo/contract'
+import { LogLevelSchema, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
 import { getPair } from '@prosopo/common'
-import { loadEnv } from '@prosopo/util'
+import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
+
+const log = getLogger(LogLevelSchema.enum.Info, 'dev.deploy')
 
 async function deploy(wasm: Uint8Array, abi: Abi) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
     const pair = await getPair(pairType, ss58Format, '//Alice')
-    const env = new ProviderEnvironment(pair, defaultConfig())
+    const config = defaultConfig()
+    const env = new ProviderEnvironment(pair, config)
     await env.isReady()
-    // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
-    const params = ['1000000000000000', 1000, process.env.PROTOCOL_CONTRACT_ADDRESS, 50, 1000000]
+    log.debug(reverseHexString(env.api.createType('u16', 10).toHex().toString()), 'max_user_history_len')
+    log.debug(reverseHexString(env.api.createType('BlockNumber', 32).toHex().toString()), 'max_user_history_age')
+    log.debug(reverseHexString(env.api.createType('u16', 1).toHex().toString()), 'min_num_active_providers')
+    const params = []
+
     const deployer = new ContractDeployer(env.api, abi, wasm, env.pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()
 }
-export async function run(): Promise<AccountId> {
-    const wasm = await Wasm(path.resolve(process.env.DAPP_WASM_PATH || '.'))
-    const abi = await AbiJSON(path.resolve(process.env.DAPP_ABI_PATH || '.'))
+
+export async function run(wasmPath: string, abiPath: string): Promise<AccountId> {
+    log.info('WASM Path', wasmPath)
+    log.info('ABI Path', abiPath)
+    const wasm = await Wasm(path.resolve(wasmPath))
+    const abi = await AbiJSON(path.resolve(abiPath))
     const deployResult = await deploy(wasm, abi)
 
     const instantiateEvent: EventRecord | undefined = deployResult.events.find(
         (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
     )
-    console.log('instantiateEvent', instantiateEvent?.toHuman())
+    log.info('instantiateEvent', instantiateEvent?.toHuman())
     return instantiateEvent?.event.data['contract'].toString()
 }
 // run the script if the main process is running this file
 if (typeof require !== 'undefined' && require.main === module) {
-    loadEnv(path.resolve('../..'))
-    run()
+    log.info('Loading env from', path.resolve('.'))
+    loadEnv(path.resolve('.'))
+    if (!process.env.CAPTCHA_WASM_PATH || !process.env.CAPTCHA_ABI_PATH) {
+        throw new Error('Missing protocol wasm or abi path')
+    }
+    run(process.env.CAPTCHA_WASM_PATH, process.env.CAPTCHA_ABI_PATH)
         .then((deployResult) => {
-            console.log('Deployed with address', deployResult)
+            log.info('Deployed with address', deployResult)
             process.exit(0)
         })
         .catch((e) => {

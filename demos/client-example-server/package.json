@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/app.ts",
     "start": "node ./dist/prosopo_client_example_server.main.bundle.js",
-    "build": "webpack build",
-    "build:dev": "webpack build --mode=development",
+    "build": "vite build --mode=production",
+    "build:dev": "vite build --mode=development",
     "clean": "tsc --build --clean",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:fix": "npx eslint . --fix"
@@ -41,6 +41,7 @@
   "devDependencies": {
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.1",
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "vite": "^4.4.9"
   }
 }

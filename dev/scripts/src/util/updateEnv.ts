@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Logger } from '@prosopo/common'
-import { getEnv } from '@prosopo/util'
+import { getEnv } from '@prosopo/cli'
 import { glob } from 'glob'
 import dotenv from 'dotenv'
 import fs from 'fs'

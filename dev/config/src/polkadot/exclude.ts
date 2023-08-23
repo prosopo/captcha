@@ -22,7 +22,7 @@ export function getAliases(dir): Alias[] {
     })
     for (const pkg of ['api', 'api-contract', 'extension-dapp', 'types', 'util', 'util-crypto']) {
         alias.push({
-            find: `@polkadot/${pkg}`,
+            find: new RegExp(`/@polkadot/${pkg}$/`),
             replacement: path.resolve(dir, `../../node_modules/@polkadot/${pkg}/bundle-polkadot-${pkg}.js`),
         })
     }

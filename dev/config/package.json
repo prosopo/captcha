@@ -16,7 +16,6 @@
     "dependencies": {
         "@prosopo/common": "^0.1.17",
         "@prosopo/types": "^0.1.17",
-        "@prosopo/util": "^0.1.17",
         "glob": "^10.0.0"
     },
     "devDependencies": {

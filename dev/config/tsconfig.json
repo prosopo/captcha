@@ -16,10 +16,10 @@
   ],
   "references": [
     {
-      "path": "../common"
+      "path": "../../packages/common"
     },
     {
-      "path": "../cli"
+      "path": "../../packages/types"
     }
   ]
 }
