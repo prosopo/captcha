@@ -114,6 +114,7 @@ export default function (bundleName: string, dir: string, entry: string): UserCo
             },
             plugins: [
                 // Not sure if we need this plugin or not, it works without it
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 viteReact(),
                 viteCommonjs(),
