@@ -50,6 +50,11 @@ jobs:
 
       - run: ls -lah
 
+      # pin npm as later version (9.7.X) causes an issue with npm ls -ap
+      #      npm ERR! code ELSPROBLEMS
+      #      npm ERR! invalid: @pm2/pm2-version-check@1.0.4 .../captcha/node_modules/@pm2/pm2-version-check
+      - run: npm install -g npm@8.9
+
       - run: npm install
 
       # Checks if the git hash of packages is the same after running linting by comparing the git tree hash before
