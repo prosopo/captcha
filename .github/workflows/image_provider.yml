@@ -71,7 +71,7 @@ jobs:
       # build the packages
       - name: Build packages
         run: |
-          cd dev
+          cd dev/scripts
           npm run build
       
 

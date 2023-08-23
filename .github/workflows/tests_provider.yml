@@ -73,7 +73,7 @@ jobs:
         # Next few lines should contain the number of packages that provider depends on (check tsconfig.json)
         run: |
           echo $(npx tsc --version)
-          cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd dev/scripts && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cp env.test .env.test
           echo "NODE_ENV=test" >> $GITHUB_ENV
           echo $NODE_ENV
@@ -84,7 +84,7 @@ jobs:
           npm run deploy_protocol
           npm run deploy_dapp
           git status | head -n 1
-          cd dev
+          cd dev/scripts
           git status | head -n 1
           docker container ls
           cat .env.test
