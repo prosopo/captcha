@@ -15,8 +15,8 @@ export default function () {
             },
         },
         test: {
-            include: ['../packages/*/tests/**/*.test.ts'],
-            exclude: ['../demos/**/*'], // '../!packages/**/*'],
+            include: ['../../packages/*/tests/**/*.test.ts'],
+            exclude: ['../../demos/**/*'], // '../!packages/**/*'],
             minThreads: 1,
             maxThreads: 1,
             watchExclude: ['**/node_modules/**', '**/dist/**'],
