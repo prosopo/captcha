@@ -11,19 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { defineConfig } from "cypress";
+import { defineConfig } from 'cypress'
 
 export default defineConfig({
-  e2e: {
-    setupNodeEvents(on, config) {
-      // implement node event listeners here
+    e2e: {
+        setupNodeEvents(on, config) {
+            // implement node event listeners here
+        },
     },
-  },
 
-  component: {
-    devServer: {
-      framework: "create-react-app",
-      bundler: "webpack",
+    component: {
+        devServer: {
+            framework: 'create-react-app',
+            bundler: 'webpack',
+        },
     },
-  },
-});
+})

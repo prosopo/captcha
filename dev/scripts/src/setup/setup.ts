@@ -25,7 +25,7 @@ import { setupDapp } from './dapp.js'
 import fse from 'fs-extra'
 import path from 'path'
 const logger = getLogger(LogLevelSchema.enum.Info, 'setup')
-
+const __dirname = path.resolve()
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
     return process.env.ROOT_DIR || path.resolve(__dirname, '../..')

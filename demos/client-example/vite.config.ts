@@ -1,4 +1,5 @@
 import * as path from 'path'
+import { ClosePlugin } from '@prosopo/config/dist'
 import { defineConfig } from 'vite'
 import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
@@ -38,6 +39,11 @@ export default defineConfig(function ({ command, mode }) {
     return {
         define,
         build: { lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' } },
-        plugins: [react()],
+        plugins: [
+            react(),
+            // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
+            // mode, in which case we don't want to close the bundler because it will close the server
+            command !== 'serve' ? ClosePlugin() : undefined,
+        ],
     }
 })

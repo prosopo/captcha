@@ -1,3 +1,4 @@
+import * as fs from 'fs'
 import * as path from 'path'
 import { ViteFrontendConfig } from '@prosopo/config'
 import { defineConfig } from 'vite'
@@ -20,7 +21,14 @@ const copyOptions = copyTo
           bundleName: bundleName,
       }
     : undefined
-
+const tsConfigPaths = [path.resolve('./tsconfig.json')]
+const packagesDir = path.resolve('..')
+// Get all folders in packagesDir
+const packages = fs.readdirSync(packagesDir).filter((f) => fs.statSync(path.join(packagesDir, f)).isDirectory())
+for (const packageName of packages) {
+    // Add the tsconfig for each package to tsConfigPaths
+    tsConfigPaths.push(path.resolve(`../${packageName}/tsconfig.json`))
+}
 // Merge with generic frontend config
 export default defineConfig(async ({ command, mode }) => {
     const frontendConfig = await ViteFrontendConfig(
@@ -30,7 +38,8 @@ export default defineConfig(async ({ command, mode }) => {
         entry,
         command,
         mode,
-        copyOptions
+        copyOptions,
+        tsConfigPaths
     )
     return {
         ...frontendConfig,

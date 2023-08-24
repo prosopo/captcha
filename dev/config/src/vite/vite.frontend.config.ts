@@ -11,6 +11,7 @@ import { default as viteReact } from '@vitejs/plugin-react'
 import { wasm } from '@rollup/plugin-wasm'
 import css from 'rollup-plugin-import-css'
 import path from 'path'
+import viteTsconfigPaths from 'vite-tsconfig-paths'
 const logger = getLogger(`Info`, `vite.config.js`)
 
 export default async function (
@@ -20,7 +21,8 @@ export default async function (
     entry: string,
     command?: string,
     mode?: string,
-    copyOptions?: ClosePluginOptions
+    copyOptions?: ClosePluginOptions,
+    tsConfigPaths?: string[]
 ): Promise<UserConfig> {
     logger.info(`Running at ${dir} in ${mode} mode`)
     const isProduction = mode === 'production'
@@ -132,6 +134,8 @@ export default async function (
             // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? ClosePlugin(copyOptions) : undefined,
+            // Means we can specify index.tsx instead of index.jsx in the index.html file
+            viteTsconfigPaths({ projects: tsConfigPaths }),
         ],
     }
 }

@@ -10,7 +10,7 @@
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
-        "start": "webpack serve --mode development",
+        "start": "vite serve --mode development --host",
         "build:dev": "npm run build && vite build --mode development --debug",
         "build:prod": "npm run build && vite build --mode production",
         "lint": "npx eslint .",

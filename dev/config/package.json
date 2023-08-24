@@ -41,9 +41,10 @@
         "regenerator-runtime": "^0.14.0",
         "rollup-plugin-cleanup": "^3.2.1",
         "tsconfig-paths": "^4.2.0",
+        "typescript": "^4.9.5",
         "vite": "^4.4.9",
         "vite-bundle-visualizer": "^0.10.0",
-        "typescript": "^4.9.5"
+        "vite-tsconfig-paths": "^4.2.0"
     },
     "repository": {
         "type": "git",
