@@ -24,7 +24,7 @@ export async function findEnvFiles(logger: Logger) {
     const fileName = `.env.${env}`
     // options is optional
     logger.info('Searching for files')
-    return await glob.glob(`../**/${fileName}`, {
+    return await glob.glob(`../../**/${fileName}`, {
         ignore: [
             'node_modules/**',
             'node_modules/**',

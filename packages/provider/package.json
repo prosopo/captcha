@@ -8,11 +8,9 @@
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
-        "esbuild": "npx esbuild src/**/*.ts,src/*.ts --tsconfig=tsconfig.json --platform=node --loader:.node=empty --outdir=dist",
         "build:debug": "tsc --build --verbose",
         "build:test": "tsc --build --verbose tsconfig.test.json",
         "build:config": "tsc --project",
-        "serve": "npm run setup && npm run start",
         "mnemonic": "ts-node ./scripts/generateMnemonic.ts",
         "coverage": "npx c8 npm run test",
         "populate-data": "ts-node ./tests/dataUtils/populateDatabase.ts",

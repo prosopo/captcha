@@ -3,11 +3,12 @@
   "version": "0.1.17",
   "description": "Backend for client-example",
   "main": "dist/app.js",
+  "type": "module",
   "scripts": {
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/app.ts",
-    "start": "node ./dist/prosopo_client_example_server.main.bundle.js",
-    "build": "vite build --mode=production",
-    "build:dev": "vite build --mode=development",
+    "dev": "vite serve --mode=development --config ./vite.config.ts --host",
+    "start": "node ./dist/bundle/app.js",
+    "build:prod": "vite build --mode=production --config ./vite.config.ts",
+    "build:dev": "vite build --mode=development --config ./vite.config.ts",
     "clean": "tsc --build --clean",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:fix": "npx eslint . --fix"

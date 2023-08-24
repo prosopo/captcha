@@ -10,7 +10,7 @@
     "build:dev": "npm run build && vite build --mode development",
     "build:prod": "npm run build && vite build --mode production",
     "cli": "node ./dist/cli.js",
-    "start": "node ./dist/start.js",
+    "start": "node ./dist/start.js --api",
     "lint": "npx eslint .",
     "lint:fix": "npx eslint . --fix"
   },
@@ -21,7 +21,8 @@
     "@prosopo/provider": "^0.1.17",
     "@prosopo/types": "^0.1.17",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.1"
+    "dotenv": "^16.0.1",
+    "es-main": "^1.2.0"
   },
   "devDependencies": {
     "@prosopo/config": "^0.1.17",

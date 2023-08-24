@@ -1,7 +1,6 @@
 import { Glob } from 'glob'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import child_process from 'child_process'
-import path from 'path'
 import util from 'util'
 const logger = getLogger(`Info`, `config.dependencies.js`)
 /**
@@ -11,17 +10,25 @@ const logger = getLogger(`Info`, `config.dependencies.js`)
  */
 export async function getDependencies(packageName?: string): Promise<string[]> {
     let cmd = 'npm ls --pa'
-    if (packageName) {
-        const packagesDirectory = path.resolve(`..`)
-        // check in folder called packages
-        if (!packagesDirectory.endsWith('packages')) {
-            throw new ProsopoEnvError('CONFIG.INVALID_PACKAGES_DIRECTORY', undefined, undefined, { packagesDirectory })
-        }
-        const directory = path.resolve(packagesDirectory, packageName)
-        cmd = `cd ${directory} && npm ls --pa`
-        logger.info(`Running command ${cmd} in ${directory}`)
-    }
     const exec = util.promisify(child_process.exec)
+
+    if (packageName) {
+        let pkg = packageName
+        if (packageName && !packageName.startsWith('@prosopo/')) {
+            pkg = `@prosopo/${packageName}`
+        }
+        const pkgCommand = `npm list ${pkg} -ap`
+        logger.info(`Running command ${pkgCommand}`)
+        // get package directory
+        const { stdout: packageDir, stderr } = await exec(pkgCommand)
+        console.log('packageDir', packageDir)
+        if (stderr) {
+            throw new ProsopoEnvError(new Error(stderr))
+        }
+        cmd = `cd ${packageDir.trim()} && npm ls --pa`
+        logger.info(`Running command ${cmd} in ${packageDir}`)
+    }
+
     const { stdout, stderr } = await exec(cmd)
     if (stderr) {
         throw new ProsopoEnvError(new Error(stderr))

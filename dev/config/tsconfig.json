@@ -9,10 +9,11 @@
       "es6",
       "dom"
     ],
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["vite/client"]
   },
   "include": [
-    "src/**/*",
+    "src/**/*", "./env.d.ts"
   ],
   "references": [
     {

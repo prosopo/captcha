@@ -60,12 +60,6 @@
       "@prosopo/common/*": [
         "common/src/*"
       ],
-      "@prosopo/config": [
-        "config/src"
-      ],
-      "@prosopo/config/*": [
-        "config/src/*"
-      ],
       "@prosopo/contract/*": [
         "contract/src/*"
       ],

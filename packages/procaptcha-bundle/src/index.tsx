@@ -51,6 +51,7 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
             },
         },
         solutionThreshold: 80,
+        serverUrl: process.env.SERVER_URL || '',
     }
 }
 

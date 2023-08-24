@@ -7,10 +7,10 @@ import { loadEnv } from '@prosopo/cli'
 loadEnv()
 
 // Package specific config
-const packageName = '@prosopo/cli'
-const bundleName = 'provider_cli_bundle'
+const packageName = '@prosopo/client-example-server'
+const bundleName = 'prosopo_client_example_server'
 const dir = path.resolve()
-const entry = './src/cli.ts'
+const entry = './src/app.ts'
 
 process.env.TS_NODE_PROJECT = path.resolve('./tsconfig.json')
 
@@ -19,5 +19,6 @@ export default defineConfig(async ({ command, mode }) => {
     const backendConfig = await ViteBackendConfig(packageName, bundleName, dir, entry, command, mode)
     return defineConfig({
         ...backendConfig,
+        server: { port: process.env.REACT_APP_SERVER_PORT },
     })
 })

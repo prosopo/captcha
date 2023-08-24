@@ -1,6 +1,6 @@
 import { LogLevel, LogLevelSchema, getLogger } from '@prosopo/common'
-import { fileURLToPath } from 'url'
 import { hideBin } from 'yargs/helpers'
+import esMain from 'es-main'
 import flatten from './flatten/cli.js'
 import generate from './generate/cli.js'
 import get from './get/cli.js'
@@ -36,7 +36,7 @@ const main = async () => {
 }
 
 //if main process
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (esMain(import.meta)) {
     main()
         .then(() => {
             logger.debug('done')

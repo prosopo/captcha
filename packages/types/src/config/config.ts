@@ -64,7 +64,7 @@ export const NetworkConfigSchema = z.object({
         address: z.string(),
         name: z.string(),
     }),
-    accounts: z.array(z.string()),
+    accounts: z.array(z.string()).optional(),
 })
 
 export type NetworkConfig = z.infer<typeof NetworkConfigSchema>
@@ -76,7 +76,7 @@ export const ProsopoNetworksSchema = z.record(NetworkNamesSchema, NetworkConfigS
             address: '',
             name: '',
         },
-        accounts: [''],
+        accounts: [],
     },
 })
 
@@ -116,14 +116,11 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
         web2: z.boolean(),
         solutionThreshold: z.number().positive().max(100),
         dappName: z.string(),
-    })
-)
-
-export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
-    z.object({
         serverUrl: z.string().url(),
     })
 )
+
+export const ProsopoServerConfigSchema = ProsopoClientConfigSchema
 
 export type ProsopoServerConfig = z.infer<typeof ProsopoServerConfigSchema>
 

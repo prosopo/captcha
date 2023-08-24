@@ -47,7 +47,6 @@
         "UNKNOWN_ENVIRONMENT": "Zatraženo je nepoznato okruženje",
         "INVALID_CAPTCHA_NUMBER": "Molimo vas da ispravno podesite captcha konfiguracije",
         "CONFIGURATIONS_LOAD_FAILED": "Učitavanje Prosopo konfiguracija nije uspelo",
-        "INVALID_PACKAGES_DIRECTORY": "Nevažeći direktorijum paketa",
         "INVALID_LOG_LEVEL": "Nevažeći nivo evidencije"
     },
     "DATASET": {

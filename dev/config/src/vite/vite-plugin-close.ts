@@ -3,7 +3,16 @@ import { getLogger } from '@prosopo/common'
 import fs from 'node:fs'
 import path from 'path'
 const log = getLogger(`Info`, `config.vite.vite-plugin-close.js`)
-export default function ClosePlugin(options?: { srcDir: string; destDir: string; bundleName: string }): Plugin {
+export interface ClosePluginOptions {
+    srcDir: string
+    destDir: string
+    bundleName: string
+}
+/**
+ *   description: Closes Vite after the bundle has been build. Optionally copies the bundle to a different directory.
+ *   @param { ClosePluginOptions } options - The options object
+ **/
+export default function ClosePlugin(options?: ClosePluginOptions): Plugin {
     const __dirname = path.resolve()
     return {
         name: 'ClosePlugin', // required, will show up in warnings and errors

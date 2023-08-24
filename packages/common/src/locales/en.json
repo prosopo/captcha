@@ -47,7 +47,6 @@
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",
         "INVALID_CAPTCHA_NUMBER": "Please configure captchas configurations correctly",
         "CONFIGURATIONS_LOAD_FAILED": "Prosopo configurations load failed",
-        "INVALID_PACKAGES_DIRECTORY": "Invalid packages directory",
         "INVALID_LOG_LEVEL": "Invalid log level"
     },
     "DATASET": {
