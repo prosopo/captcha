@@ -13,13 +13,12 @@
 // limitations under the License.
 import { LogLevel, getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
-import { loadEnv } from './env'
 import { processArgs } from './argv'
+import { loadEnv } from './env'
+import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
 import { start } from './start'
-const log = getLogger(LogLevel.Verbose, 'cli')
+const log = getLogger(LogLevel.Info, 'cli')
 async function main() {
-    console.log('main')
     loadEnv()
 
     const secret = getSecret()
@@ -36,19 +35,13 @@ async function main() {
 
     await env.isReady()
 
-    log.info('args', process.argv)
-
-    const processedArgs = await processArgs(process.argv.slice(2), env).then(() => log.info('done'))
-
-    log.info('this has been processed', processedArgs)
-    process.exit(0)
-    return processedArgs
-    // if (false) {
-    //     log.info('Starting API')
-    //     await start(env)
-    // } else {
-    //     process.exit(0)
-    // }
+    const processedArgs = await processArgs(process.argv.slice(2), env)
+    if (processedArgs.api) {
+        log.info('Starting API')
+        await start(env)
+    } else {
+        process.exit(0)
+    }
 }
 
 // if main node process

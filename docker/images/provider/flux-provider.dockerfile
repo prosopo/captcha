@@ -8,6 +8,8 @@ COPY ./docker/images/provider/provider-init.js ./provider-init.js
 
 RUN chmod +x ./provider-init.js
 
+RUN echo "$PWD"
+
 EXPOSE 9229 80 443
 
-CMD ["node", "./provider-init.js"]
+ENTRYPOINT ["node", "./provider-init.js"]
