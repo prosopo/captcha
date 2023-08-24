@@ -12,20 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { BatchCommitmentsTask } from '@prosopo/provider'
-import { CalculateSolutionsTask } from '@prosopo/provider'
 import { Compact, u128 } from '@polkadot/types'
-import { PayeeSchema } from '@prosopo/types'
-import { ProsopoEnvError, getLogger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
-import { Tasks } from '@prosopo/provider'
-import { cwd } from 'process'
-import { encodeStringAddress } from '@prosopo/provider'
-import { loadJSONFile, writeJSONFile } from './files'
 import { stringToU8a } from '@polkadot/util'
+import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { wrapQuery } from '@prosopo/contract'
+import { BatchCommitmentsTask, CalculateSolutionsTask, Tasks, encodeStringAddress } from '@prosopo/provider'
+import { PayeeSchema } from '@prosopo/types'
+import { ProviderEnvironment } from '@prosopo/types-env'
 import parser from 'cron-parser'
 import pm2 from 'pm2'
+import { cwd } from 'process'
+import { loadJSONFile, writeJSONFile } from './files'
 const yargs = require('yargs')
 
 const validateAddress = (argv) => {
@@ -484,6 +481,5 @@ export function processArgs(args, env: ProviderEnvironment) {
                 }
             },
             [validateScheduleExpression]
-        )
-        .parse()
+        ).argv
 }

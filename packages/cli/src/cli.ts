@@ -36,6 +36,8 @@ async function main() {
     await env.isReady()
 
     const processedArgs = await processArgs(process.argv.slice(2), env)
+    log.info(`Processed args: ${JSON.stringify(processedArgs)}`)
+
     if (processedArgs.api) {
         log.info('Starting API')
         await start(env)

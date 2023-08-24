@@ -19,14 +19,14 @@ async function main() {
     try {
         console.log('Check provider command executed.')
         const current_provider = await execShellCommand(
-            'node provider_cli_bundle.main.bundle.js provider_details --address 5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV'
+            `node provider_cli_bundle.main.bundle.js provider_details --address 5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV`
         )
         console.log('raw output \n\n\n\n', current_provider, 'end of raw output \n\n\n\n')
 
         if (!current_provider.includes(`"status": "Active"`)) {
             console.log('Registration command executed.')
             const registration = await execShellCommand(
-                'node provider_cli_bundle.main.bundle.js provider_register --url http://localhost:9229 --fee 0 --payee Provider'
+                `node provider_cli_bundle.main.bundle.js provider_register --url ${process.env.API_BASE_URL} --fee 0 --payee Provider`
             )
             console.log(registration)
         } else {
