@@ -373,6 +373,9 @@ Cargo pass-through commands:
                 if (!cmd) {
                     throw new Error('No command specified')
                 }
+                if (!cmd.toString().match(/^[a-z0-9]+/gims)) {
+                    throw new Error(`unknown command: ${cmd}`)
+                }
                 await execCargo(argv, cmd.toString())
             },
             []
