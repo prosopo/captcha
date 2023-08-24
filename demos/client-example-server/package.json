@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite serve --mode=development --config ./vite.config.ts --host",
     "start": "node ./dist/bundle/app.js",
+    "build": "npm run build:prod",
     "build:prod": "vite build --mode=production --config ./vite.config.ts",
     "build:dev": "vite build --mode=development --config ./vite.config.ts",
     "clean": "tsc --build --clean",
