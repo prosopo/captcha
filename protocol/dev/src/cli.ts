@@ -23,7 +23,6 @@ import yargs, { Arguments, Argv } from 'yargs'
 
 const contractSrcFileExtension = '.rs'
 const dir = path.resolve()
-
 // string to string map of env variables
 interface Env {
     [key: string]: string
@@ -150,8 +149,8 @@ const exec = (
 
 export async function processArgs(args: string[]) {
     const repoDir = path.join(dir, '../..')
-    const contractsDir = path.join(dir, '../../contracts')
-    const cratesDir = path.join(dir, '../../crates')
+    const contractsDir = path.join(dir, '../contracts')
+    const cratesDir = path.join(dir, '../crates')
     const crates = readdirSync(cratesDir, { withFileTypes: true })
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => dirent.name)
