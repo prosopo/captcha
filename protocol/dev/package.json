@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "build": "tsc",
-        "cli": "ts-node --esm src/cli.ts",
+        "cli": "f() { ts-node --esm src/cli.ts -- -- $@ ;}; f",
         "clean": "tsc --build --clean"
     },
     "author": "Prosopo Limited",
