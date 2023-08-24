@@ -36,11 +36,40 @@ pub mod captcha {
         Default, PartialEq, Debug, Eq, Clone, Copy, scale::Encode, scale::Decode, PartialOrd, Ord,
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub enum CommitRecord {
-        Approved,
-        Disapproved,
+    pub enum CommitSlot {
         #[default]
         None,
+        Approved,
+        Disapproved,
+    }
+
+    pub fn get_commit_slots() -> Vec<CommitSlot> {
+        vec![
+            CommitSlot::None,
+            CommitSlot::Approved,
+            CommitSlot::Disapproved,
+        ]
+    }
+
+    impl TryFrom<CommitSlot> for u8 {
+        type Error = ();
+
+        fn try_from(slot: CommitSlot) -> Result<Self, Self::Error> {
+            let i = slot as u8;
+            if (i as usize) < get_commit_slots().len() {
+                return Err(());
+            }
+            return Ok(i);
+        }
+    }
+
+    impl TryFrom<u8> for CommitSlot {
+        type Error = ();
+
+        fn try_from(i: u8) -> Result<Self, Self::Error> {
+            let slots: Vec<CommitSlot> = get_commit_slots();
+            slots.get(i as usize).ok_or(()).copied()
+        }
     }
 
     /// GovernanceStatus relates to DApps and Providers and determines if they are active or not
@@ -311,17 +340,9 @@ pub mod captcha {
             }
         }
 
-        fn get_commit_record_types(&self) -> Vec<CommitRecord> {
-            vec![
-                CommitRecord::Approved,
-                CommitRecord::Disapproved,
-                CommitRecord::None,
-            ]
-        }
-
-        /// Take an vector of bytes and convert to a vector of commit records
+        /// Take an vector of bytes and convert to a vector of commit slots
         /// This applies any error checking and run length encoding
-        fn unpack_commit_log(&self, log: &Vec<u8>) -> Result<Vec<CommitRecord>, Error> {
+        fn unpack_commit_log(&self, log: &Vec<u8>) -> Result<Vec<CommitSlot>, Error> {
             // take the log and convert it into a vector of symbols
             let mut symbols: Vec<u8> = Vec::new();
             for byte in log {
@@ -332,12 +353,12 @@ pub mod captcha {
             }
 
             // take the symbols and process any run length encoding
-            let mut result: Vec<CommitRecord> = Vec::new();
-            let types = self.get_commit_record_types();
+            let mut result: Vec<CommitSlot> = Vec::new();
+            let types = get_commit_slots();
             for symbol in symbols {
                 if symbol as usize > types.len() {
                     // symbol is out of range
-                    return err!(self, Error::InvalidCommitRecordSymbol);
+                    return err!(self, Error::InvalidCommitSlot);
                 }
                 result.push(types[symbol as usize]);
             }
@@ -345,21 +366,21 @@ pub mod captcha {
             Ok(result)
         }
 
-        /// Take a vector of commit records and convert to a vector of bytes
+        /// Take a vector of commit slots and convert to a vector of bytes
         /// This applies any error checking and run length encoding
-        fn pack_commit_log(&self, log: &Vec<CommitRecord>) -> Result<Vec<u8>, Error> {
+        fn pack_commit_log(&self, log: &Vec<CommitSlot>) -> Result<Vec<u8>, Error> {
             if log.len() % 4 != 0 {
                 // symbols are 2 bits in length, so the log must be a multiple of 4 in order to pack all symbols into bytes
-                return err!(self, Error::InvalidCommitRecordSize);
+                return err!(self, Error::InvalidCommitLog);
             }
 
             // take the log and convert it into a vector of bytes, each packed with 4x symbols of 2 bits each
             let mut bytes: Vec<u8> = Vec::new();
             let mut byte: u8 = 0;
             let mut i: usize = 0;
-            for record in log {
+            for slot in log {
                 // bit shift byte by index to fit four bytes of 2 bits into a byte
-                byte |= (*record as u8) << (6 - i * 2);
+                byte |= (*slot as u8) << (6 - i * 2);
                 i = i + 1;
                 if i == 4 {
                     // add the byte to the bytes vector
@@ -570,7 +591,7 @@ pub mod captcha {
                 } // else available
 
                 self.urls.remove(old_url_hash);
-                // don't record the default hash of the url as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
+                // don't slot the default hash of the url as this is a special placeholder hash which is used elsewhere, e.g. in testing / setting up a dummy or default provider, so multiple providers may have this hash set
                 if new_url_hash != default_dataset_id {
                     self.urls.insert(new_url_hash, &provider_account);
                 }
@@ -1735,10 +1756,10 @@ pub mod captcha {
         }
 
         #[ink::test]
-        fn test_commit_record_types_indices() {
+        fn test_commit_slot_types_indices() {
             let mut contract = get_contract(0);
 
-            let types = contract.get_commit_record_types();
+            let types = get_commit_slots();
             for record_type_ref in types.iter() {
                 let record_type = *record_type_ref;
                 let index = record_type as u8 as usize;
@@ -1748,18 +1769,18 @@ pub mod captcha {
         }
 
         #[ink::test]
-        fn test_commit_record_pack() {
+        fn test_commit_slot_pack() {
             let mut contract = get_contract(0);
 
-            let symbols: Vec<CommitRecord> = vec![
-                CommitRecord::Approved,
-                CommitRecord::Disapproved,
-                CommitRecord::None,
-                CommitRecord::None,
-                CommitRecord::Disapproved,
-                CommitRecord::Approved,
-                CommitRecord::Approved,
-                CommitRecord::Disapproved,
+            let symbols: Vec<CommitSlot> = vec![
+                CommitSlot::Approved,
+                CommitSlot::Disapproved,
+                CommitSlot::None,
+                CommitSlot::None,
+                CommitSlot::Disapproved,
+                CommitSlot::Approved,
+                CommitSlot::Approved,
+                CommitSlot::Disapproved,
             ];
 
             let bytes = contract.pack_commit_log(&symbols).unwrap();
@@ -1768,10 +1789,10 @@ pub mod captcha {
         }
 
         #[ink::test]
-        fn test_commit_record_pack_empty() {
+        fn test_commit_slot_pack_empty() {
             let mut contract = get_contract(0);
 
-            let symbols: Vec<CommitRecord> = vec![];
+            let symbols: Vec<CommitSlot> = vec![];
 
             let bytes = contract.pack_commit_log(&symbols).unwrap();
 
@@ -1779,7 +1800,7 @@ pub mod captcha {
         }
 
         #[ink::test]
-        fn test_commit_record_unpack() {
+        fn test_commit_slot_unpack() {
             let mut contract = get_contract(0);
 
             let bytes = vec![0b00011010, 0b01000001];
@@ -1789,20 +1810,20 @@ pub mod captcha {
             assert_eq!(
                 symbols,
                 vec![
-                    CommitRecord::Approved,
-                    CommitRecord::Disapproved,
-                    CommitRecord::None,
-                    CommitRecord::None,
-                    CommitRecord::Disapproved,
-                    CommitRecord::Approved,
-                    CommitRecord::Approved,
-                    CommitRecord::Disapproved,
+                    CommitSlot::Approved,
+                    CommitSlot::Disapproved,
+                    CommitSlot::None,
+                    CommitSlot::None,
+                    CommitSlot::Disapproved,
+                    CommitSlot::Approved,
+                    CommitSlot::Approved,
+                    CommitSlot::Disapproved,
                 ]
             );
         }
 
         #[ink::test]
-        fn test_commit_record_unpack_empty() {
+        fn test_commit_slot_unpack_empty() {
             let mut contract = get_contract(0);
 
             let bytes = vec![];
@@ -1813,7 +1834,7 @@ pub mod captcha {
         }
 
         #[ink::test]
-        fn test_commit_record_unpack_invalid_size() {
+        fn test_commit_slot_unpack_invalid_size() {
             let mut contract = get_contract(0);
 
             for i in 0..100 {
@@ -1825,15 +1846,15 @@ pub mod captcha {
         }
 
         #[ink::test]
-        fn test_commit_record_pack_invalid_size() {
+        fn test_commit_slot_pack_invalid_size() {
             let mut contract = get_contract(0);
 
             for i in 0..100 {
-                let symbols: Vec<CommitRecord> = vec![CommitRecord::Approved; i];
+                let symbols: Vec<CommitSlot> = vec![CommitSlot::Approved; i];
                 let bytes = contract.pack_commit_log(&symbols);
                 // packing should fail if the size is not a multiple of 4
                 if i % 4 != 0 {
-                    assert_eq!(bytes, Err(Error::InvalidCommitRecordSize));
+                    assert_eq!(bytes, Err(Error::InvalidCommitLog));
                 } else {
                     assert!(bytes.is_ok());
                 }
