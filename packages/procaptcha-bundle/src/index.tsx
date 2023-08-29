@@ -11,13 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import {
-    ApiParams,
-    EnvironmentTypes,
-    EnvironmentTypesSchema,
-    ProcaptchaCustomStyleAttributeNames,
-    ProcaptchaOutput,
-} from '@prosopo/types'
+import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { LogLevel } from '@prosopo/common'
 import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { Procaptcha } from '@prosopo/procaptcha-react'
@@ -79,12 +73,10 @@ export function render(callbacks?: ProcaptchaCallbacks) {
                 callbacks[callbackName] = window[callback.replace('window.', '')]
             }
         }
-        // get the custom data attributes, if set
-        for (const attr of Object.values(ProcaptchaCustomStyleAttributeNames.Values)) {
-            const customValue = element.getAttribute(`data-${attr.toLowerCase()}`)
-            if (customValue) {
-                config[attr] = customValue
-            }
+        // get the custom theme, if set
+        const customTheme = element.getAttribute(`data-custom-theme`)
+        if (customTheme) {
+            config['sx'] = JSON.parse(customTheme)
         }
 
         // set a default callback for onHuman, if not set

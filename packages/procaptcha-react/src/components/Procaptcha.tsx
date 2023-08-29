@@ -31,6 +31,7 @@ import CaptchaComponent from './CaptchaComponent'
 import Checkbox from '@mui/material/Checkbox'
 import Link from '@mui/material/Link'
 import Typography from '@mui/material/Typography'
+import stylelint from 'stylelint'
 
 const logoStyle = css`
     display: none;
@@ -158,21 +159,19 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     ]
 }
 
-function getCSSAttribute(defaultValue: string, cssAttr?: string): string {
-    if (cssAttr) {
-        // check if config.maxWidth is a valid css value for maxWidth
-        for (const postfix of ['px', '%', 'em', 'rem', 'ch', 'vw', 'vh', 'vmin', 'vmax']) {
-            if (cssAttr.endsWith(postfix) && !isNaN(Number(cssAttr.slice(0, cssAttr.length - postfix.length)))) {
-                return cssAttr
-            }
-        }
-        for (const keyword of ['initial', 'inherit', 'unset', 'revert', 'revert-layer']) {
-            if (cssAttr === keyword) {
-                return cssAttr
-            }
+async function parseCss(css?: Record<string, string>): Promise<Record<string, string>> {
+    const defaultCss = { maxWidth: '400px', minWidth: '200px' }
+    if (css) {
+        try {
+            const parsed = await stylelint.lint({
+                code: `div ${JSON.stringify(css)}`,
+            })
+            return parsed.output
+        } catch (e) {
+            return defaultCss
         }
     }
-    return defaultValue
+    return defaultCss
 }
 
 export const Procaptcha = (props: ProcaptchaProps) => {
@@ -183,7 +182,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
     const manager = Manager(config, state, updateState, callbacks)
-
+    const configSx = config.sx || { maxWidth: '400px', minWidth: '200px' }
     return (
         <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
             <Backdrop open={state.showModal} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
@@ -202,14 +201,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                 )}
             </Backdrop>
 
-            <Box
-                p={1}
-                sx={{
-                    maxWidth: getCSSAttribute('400px', config.maxWidth),
-                    minWidth: getCSSAttribute('200px', config.minWidth),
-                }}
-                data-cy={'button-human'}
-            >
+            <Box p={1} sx={[...(Array.isArray(configSx) ? configSx : [configSx])]} data-cy={'button-human'}>
                 {' '}
                 <Box
                     p={1}
