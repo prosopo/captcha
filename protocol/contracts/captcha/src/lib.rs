@@ -850,6 +850,18 @@ pub mod captcha {
                 }
             }
 
+            // check the signature is valid
+            // i.e. make sure the user signed various parts of the commit and the provider isn't forging these fields
+            let mut payload: [u8; 169] = [0; 169];
+            payload[0..32].copy_from_slice(&commit.id.as_ref());
+            payload[32..64].copy_from_slice(&commit.user_account.as_ref());
+            payload[64..96].copy_from_slice(&commit.dataset_id.as_ref());
+            payload[96..128].copy_from_slice(&commit.dapp_contract.as_ref());
+            payload[128..160].copy_from_slice(&commit.provider_account.as_ref());
+            payload[160..164].copy_from_slice(&commit.requested_at.to_le_bytes());
+            payload[164..168].copy_from_slice(&commit.completed_at.to_le_bytes());
+            payload[168] = commit.status as u8;
+
             // add the new commitment
             user.history.insert(0, *commit);
 
