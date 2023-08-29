@@ -6,12 +6,7 @@ on:
       - 'main'
     paths:
       - 'packages/**'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'packages/**'
-      - '.github/workflows/image_provider.yml'
-
+      
 env:
   CARGO_TERM_COLOR: always
   GH_TOKEN: ${{ github.token }}
