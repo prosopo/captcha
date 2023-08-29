@@ -1,0 +1,6 @@
+set -eu
+
+dir=$(dirname "$0")
+file=$(basename "$0")
+cd "$dir"
+npm run cli -- "$@"
