@@ -233,7 +233,6 @@ describe('CAPTCHA FUNCTIONS', async function () {
 
     it('Captcha solutions are correctly sorted and computed', () => {
         const idsAndHashes = sortAndComputeHashes(RECEIVED, STORED)
-        console.log(idsAndHashes)
         expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true
     })
 
