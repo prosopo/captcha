@@ -27,14 +27,13 @@ path = "../../contracts/common"
 default-features = false
 features = ["ink-as-dependency"]
 
-[dev-dependencies.common_dev]
+[dev-dependencies.common]
 version = "0.3.0"
-path = "../../contracts/common_dev"
+path = "../../contracts/common"
 default-features = false
-features = ["ink-as-dependency"]
+features = ["test-dependency"]
 
 [lib]
-name = "captcha"
 path = "src/lib.rs"
 
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.

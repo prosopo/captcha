@@ -10,7 +10,6 @@ scale = { package = "parity-scale-codec", version = "3.4", default-features = fa
 scale-info = { version = "2.7.0", default-features = false, features = ["derive"], optional = true }
 
 [lib]
-name = "common"
 path = "src/lib.rs"
 
 # Needed until https://github.com/paritytech/ink/issues/364 is resolved.
@@ -19,9 +18,6 @@ overflow-checks = false
 
 [features]
 default = ["std"]
-std = [
-    "ink/std",
-    "scale/std",
-    "scale-info/std",
-]
-ink-as-dependency = []
+std = ["ink/std", "scale/std", "scale-info/std"]
+ink-as-dependency = [ "scale-info/derive" ]
+test-dependency = []

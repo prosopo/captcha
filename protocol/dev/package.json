@@ -1,10 +1,11 @@
 {
     "name": "@prosopo/protocol-dev",
-    "version": "0.1.11",
+    "version": "0.1.17",
     "description": "Dev tools for working with prosopo contracts",
     "main": "dist/index.js",
     "scripts": {
         "build": "tsc",
+        "clean": "tsc --build --clean",
         "cli": "ts-node src/cli.ts"
     },
     "author": "Prosopo Limited",
