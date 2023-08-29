@@ -31,7 +31,6 @@ import CaptchaComponent from './CaptchaComponent'
 import Checkbox from '@mui/material/Checkbox'
 import Link from '@mui/material/Link'
 import Typography from '@mui/material/Typography'
-import stylelint from 'stylelint'
 
 const logoStyle = css`
     display: none;
@@ -157,21 +156,6 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
             }
         },
     ]
-}
-
-async function parseCss(css?: Record<string, string>): Promise<Record<string, string>> {
-    const defaultCss = { maxWidth: '400px', minWidth: '200px' }
-    if (css) {
-        try {
-            const parsed = await stylelint.lint({
-                code: `div ${JSON.stringify(css)}`,
-            })
-            return parsed.output
-        } catch (e) {
-            return defaultCss
-        }
-    }
-    return defaultCss
 }
 
 export const Procaptcha = (props: ProcaptchaProps) => {
