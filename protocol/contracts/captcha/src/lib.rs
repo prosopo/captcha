@@ -37,17 +37,18 @@ pub mod captcha {
     )]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub enum CommitSlot {
-        #[default]
-        None,
         Approved,
         Disapproved,
+        #[default]
+        None,
     }
 
     pub fn get_commit_slots() -> Vec<CommitSlot> {
         vec![
-            CommitSlot::None,
+            // must be in same order as enum
             CommitSlot::Approved,
             CommitSlot::Disapproved,
+            CommitSlot::None,
         ]
     }
 
@@ -356,11 +357,8 @@ pub mod captcha {
             let mut result: Vec<CommitSlot> = Vec::new();
             let types = get_commit_slots();
             for symbol in symbols {
-                if symbol as usize > types.len() {
-                    // symbol is out of range
-                    return err!(self, Error::InvalidCommitSlot);
-                }
-                result.push(types[symbol as usize]);
+                let slot = symbol.try_into()?;
+                result.push(slot);
             }
 
             Ok(result)
