@@ -11,6 +11,9 @@ export default async (args: Args, logger?: Logger) => {
 
     logger.debug(args, 'scaling...')
 
+    const size = args.size
+    const square = args.square ?? false
+
     const mapFile: string = args.data
     if (!fs.existsSync(mapFile)) {
         throw new ProsopoEnvError(new Error(`Map file does not exist: ${mapFile}`), 'FS.FILE_NOT_FOUND')
@@ -35,7 +38,13 @@ export default async (args: Args, logger?: Logger) => {
         // read the file
         const img = fs.readFileSync(inputItem.data)
         // resize the image
-        const resized = await sharp(img).resize(128).png()
+        const resized = await sharp(img)
+            .resize({
+                width: size,
+                height: size,
+                fit: square ? 'fill' : 'inside',
+            })
+            .png()
         const tmpFilePath = `${imgDir}/tmp.png`
         await resized.toFile(tmpFilePath)
         // read the resized image
