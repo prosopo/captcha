@@ -171,7 +171,7 @@ pub mod captcha {
     /// Commits are submitted by DAppUsers upon completion of one or more
     /// Captchas. They serve as proof of captcha completion to the outside world and can be used
     /// in dispute resolution.
-    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
+    #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode, Copy)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Commit {
         id: Hash,                    // the commitment id
@@ -222,7 +222,7 @@ pub mod captcha {
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct User {
         // the last n commitment hashes in chronological order (most recent first)
-        history: Vec<Hash>, // lookup the commitment in commitments
+        history: Vec<Commit>,
     }
 
     /// The summary of a user's captcha history using the n most recent captcha results limited by age and number of captcha results
@@ -258,7 +258,6 @@ pub mod captcha {
         datasets: Mapping<Hash, AccountId>,
         dapps: Mapping<AccountId, Dapp>,
         dapp_contracts: Lazy<BTreeSet<AccountId>>,
-        commits: Mapping<Hash, Commit>, // the commitments submitted by DappUsers
         users: Mapping<AccountId, User>,
         user_accounts: Lazy<BTreeSet<AccountId>>,
     }
@@ -295,7 +294,6 @@ pub mod captcha {
                 dapps: Default::default(),
                 dapp_contracts: Default::default(),
                 user_accounts: Default::default(),
-                commits: Default::default(),
             }
         }
 
@@ -817,8 +815,8 @@ pub mod captcha {
         }
 
         /// Trim the user history to the max length and age.
-        /// Returns the history and expired hashes.
-        fn trim_user_history(&self, mut history: Vec<Hash>) -> (Vec<Hash>, Vec<Hash>) {
+        /// Returns the history and expired commits.
+        fn trim_user_history(&self, mut history: Vec<Commit>) -> (Vec<Commit>, Vec<Commit>) {
             let block_number = self.env().block_number();
             let max_age = if block_number < self.get_max_user_history_age_blocks() {
                 block_number
@@ -829,42 +827,40 @@ pub mod captcha {
             let mut expired = Vec::new();
             // trim the history down to max length
             while history.len() > self.get_max_user_history_len().into() {
-                let hash = history.pop().unwrap();
-                expired.push(hash);
+                let commit = history.pop().unwrap();
+                expired.push(commit);
             }
             // trim the history down to max age
-            while !history.is_empty()
-                && self
-                    .commits
-                    .get(history.last().unwrap())
-                    .unwrap()
-                    .completed_at
-                    < age_threshold
-            {
-                let hash = history.pop().unwrap();
-                expired.push(hash);
+            while !history.is_empty() && history.last().unwrap().completed_at < age_threshold {
+                let commit = history.pop().unwrap();
+                expired.push(commit);
             }
             (history, expired)
         }
 
         /// Record a captcha result against a user, clearing out old captcha results as necessary.
         /// A minimum of 1 captcha result will remain irrelevant of max history length or age.
-        fn record_commitment(&mut self, user_account: AccountId, hash: Hash, result: &Commit) {
-            let mut user = self.get_user_or_create(user_account);
-            // add the new commitment
-            self.commits.insert(hash, result);
-            user.history.insert(0, hash);
+        fn record_commitment(&mut self, commit: &Commit) -> Result<(), Error> {
+            let mut user = self.get_user_or_create(commit.user_account);
 
-            // trim the user history by len and age, removing any expired commitments
-            let (history, expired) = self.trim_user_history(user.history);
-            // update the user history to the in age / length window set of commitment hashes
-            user.history = history;
-            // remove the expired commitments
-            for hash in expired.iter() {
-                self.commits.remove(hash);
+            // check commitment doesn't already exist
+            for entry in user.history.iter() {
+                if entry.id == commit.id {
+                    return err!(self, Error::CommitAlreadyExists);
+                }
             }
 
-            self.users.insert(user_account, &user);
+            // add the new commitment
+            user.history.insert(0, *commit);
+
+            // trim the user history by len and age, removing any expired commitments
+            let (history, _expired) = self.trim_user_history(user.history);
+            // update the user history to the in age / length window set of commitment hashes
+            user.history = history;
+
+            self.users.insert(commit.user_account, &user);
+
+            Ok(())
         }
 
         #[ink(message)]
@@ -880,11 +876,10 @@ pub mod captcha {
                 incorrect: 0,
                 score: 0,
             };
-            for hash in history.iter() {
-                let result = self.commits.get(hash).unwrap();
-                if result.status == CaptchaStatus::Approved {
+            for commit in history.iter() {
+                if commit.status == CaptchaStatus::Approved {
                     summary.correct += 1;
-                } else if result.status == CaptchaStatus::Disapproved {
+                } else if commit.status == CaptchaStatus::Disapproved {
                     summary.incorrect += 1;
                 } else {
                     return Err(Error::InvalidCaptchaStatus);
@@ -922,6 +917,8 @@ pub mod captcha {
 
         /// Record a commit from a provider and user
         fn provider_record_commit(&mut self, commit: &Commit) -> Result<(), Error> {
+            ink::env::debug_println!("{:?}", commit);
+
             let caller = self.env().caller();
             let provider = self.get_provider(caller)?;
             let dapp = self.get_dapp(commit.dapp_contract)?;
@@ -932,12 +929,7 @@ pub mod captcha {
             // ensure the dapp is active
             self.check_dapp_active(&dapp)?;
 
-            // check commitment doesn't already exist
-            if self.commits.get(commit.id).is_some() {
-                return err!(self, Error::CommitAlreadyExists);
-            }
-
-            self.record_commitment(commit.user_account, commit.id, commit);
+            self.record_commitment(commit)?;
 
             self.pay_fee(caller, commit.dapp_contract)?;
 
@@ -1008,8 +1000,7 @@ pub mod captcha {
             let user = self.get_user(user_account)?;
             let (history, _expired) = self.trim_user_history(user.history);
             let mut last_correct_captcha = None;
-            for hash in history {
-                let entry = self.commits.get(hash).unwrap();
+            for entry in history {
                 if entry.status == CaptchaStatus::Approved {
                     last_correct_captcha = Some(entry);
                     break;
@@ -1075,16 +1066,6 @@ pub mod captcha {
             self.users
                 .get(user_account)
                 .ok_or_else(err_fn!(self, Error::DappUserDoesNotExist))
-        }
-
-        /// Get a solution commitment
-        ///
-        /// Returns an error if the commitment does not exist
-        #[ink(message)]
-        pub fn get_commit(&self, commit_id: Hash) -> Result<Commit, Error> {
-            self.commits
-                .get(commit_id)
-                .ok_or_else(err_fn!(self, Error::CommitDoesNotExist))
         }
 
         /// List providers given an array of account id
@@ -2333,7 +2314,8 @@ pub mod captcha {
                 id: solution_account,
                 user_signature: [0x0; 64],
             });
-            let commitment = contract.commits.get(solution_account).unwrap();
+            let usr = contract.get_user(user_account).unwrap();
+            let commitment = usr.history.get(0).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
             let new_dapp_balance = contract.get_dapp(dapp_contract).unwrap().balance;
             let new_provider_balance = contract.get_provider(provider_account).unwrap().balance;
@@ -2354,7 +2336,8 @@ pub mod captcha {
                 id: solution_account,
                 user_signature: [0x0; 64],
             });
-            let commitment = contract.commits.get(solution_account).unwrap();
+            let usr = contract.get_user(user_account).unwrap();
+            let commitment = usr.history.get(0).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
             assert_eq!(
                 balance - Balance::from(fee),
@@ -2492,7 +2475,8 @@ pub mod captcha {
                     user_signature: [0x0; 64],
                 })
                 .unwrap();
-            let commitment = contract.commits.get(solution_account).unwrap();
+            let usr = contract.get_user(user_account).unwrap();
+            let commitment = usr.history.get(0).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
             let new_dapp_balance = contract.get_dapp(dapp_contract).unwrap().balance;
             let new_provider_balance = contract.get_provider(provider_account).unwrap().balance;
@@ -2511,7 +2495,8 @@ pub mod captcha {
                 id: solution_account,
                 user_signature: [0x0; 64],
             });
-            let commitment = contract.commits.get(solution_account).unwrap();
+            let usr = contract.get_user(user_account).unwrap();
+            let commitment = usr.history.get(0).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
             assert_eq!(
                 balance - Balance::from(fee),
@@ -2583,7 +2568,8 @@ pub mod captcha {
                 id: solution_account,
                 user_signature: [0x0; 64],
             });
-            let commitment = contract.commits.get(solution_account).unwrap();
+            let usr = contract.get_user(user_account).unwrap();
+            let commitment = usr.history.get(0).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
 
             // Now make sure that the dapp user does not pass the human test
@@ -2773,7 +2759,9 @@ pub mod captcha {
             });
 
             // Get the commitment and make sure it is approved
-            let commitment = contract.get_commit(user_root1).unwrap();
+            let usr = contract.get_user(user_account).unwrap();
+            // println!("{:?}", usr);
+            let commitment = usr.history.get(0).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
 
             //Dapp User commit and disapprove
@@ -2792,7 +2780,9 @@ pub mod captcha {
             });
 
             // Get the commitment and make sure it is disapproved
-            let commitment = contract.get_commit(user_root2).unwrap();
+            let usr = contract.get_user(user_account).unwrap();
+            // println!("{:?}", usr);
+            let commitment = usr.history.get(0).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
         }
 
