@@ -22,10 +22,10 @@ import { loadJSONFile } from '@prosopo/cli'
 import { stringToU8a } from '@polkadot/util'
 import { wrapQuery } from '@prosopo/contract'
 
-export async function registerProvider(env: ProviderEnvironment, account: IProviderAccount) {
+export async function registerProvider(env: ProviderEnvironment, account: IProviderAccount, force?: boolean) {
     try {
         const provider = (await env.contractInterface.query.getProvider(account.address)).value.unwrap().unwrap()
-        if (provider.status.toString() === 'Active') {
+        if (provider.status.toString() === 'Active' && !force) {
             env.logger.info('Provider exists and is active, skipping registration.')
             return
         }

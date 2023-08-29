@@ -110,14 +110,14 @@ describe('CAPTCHA FUNCTIONS', async function () {
                     captchaId: '0x7e6d425c3aae7194e06ff5f6f40ae7ce3f28f3cedff572d94141294af357bec2',
                     captchaContentId: '0x01',
                     solution: [],
-                    salt: '0x01',
+                    salt: '0x010101010101010101010101010101',
                     target: 'bus',
                     items: ITEMS,
                 },
                 {
                     captchaId: '0x658d30c45a4a5b5109c50e3f25acf53641a38dec9f5af9ffdc27c9b30e75acca',
                     captchaContentId: '0x01',
-                    salt: '0x02',
+                    salt: '0x020202020202020202020202020202',
                     target: 'train',
                     items: ITEMS,
                 },
@@ -205,7 +205,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
     it('Captchas are hashed properly', () => {
         const captcha = {
             solution: matchItemsToSolutions([0], MOCK_ITEMS),
-            salt: '0x03',
+            salt: '0x030303030303030303030303030303',
             target: 'plane',
             items: MOCK_ITEMS,
         } as CaptchaWithoutId
@@ -306,7 +306,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
                 datasetId: '0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af',
                 index: 13,
                 items: [],
-                salt: '0x01',
+                salt: '0x010101010101010101010101010101',
                 target: 'car',
                 solved: true,
             },
@@ -316,7 +316,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
                 datasetId: '0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b',
                 index: 3,
                 items: [],
-                salt: '0x05',
+                salt: '0x050505050505050505050505050505',
                 target: 'plane',
                 solved: true,
             },
@@ -332,7 +332,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
     it('Computes a captcha solution hash correctly', () => {
         const captchaSolution = {
             captchaId: '1',
-            salt: '0x01',
+            salt: '0x010101010101010101010101010101',
             solution: matchItemsToSolutions([1, 2], MOCK_ITEMS),
         } as CaptchaSolution
         const hash = computeCaptchaSolutionHash(captchaSolution)

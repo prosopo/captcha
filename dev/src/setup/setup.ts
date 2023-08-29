@@ -87,7 +87,7 @@ async function registerDapp(env: ProviderEnvironment, dapp: IDappAccount) {
     await setupDapp(env, dapp)
 }
 
-export async function setup() {
+export async function setup(force: boolean) {
     const defaultProvider = getDefaultProvider()
     const defaultDapp = getDefaultDapp()
     if (defaultProvider.secret) {
@@ -134,7 +134,7 @@ export async function setup() {
 
         defaultProvider.pair = await getPair(pairType, ss58Format, mnemonic)
 
-        await registerProvider(env, defaultProvider)
+        await registerProvider(env, defaultProvider, force)
 
         defaultDapp.contractAccount = process.env.DAPP_SITE_KEY
 
