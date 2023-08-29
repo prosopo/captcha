@@ -107,17 +107,17 @@ describe('CAPTCHA FUNCTIONS', async function () {
             format: CaptchaTypes.SelectAll,
             captchas: [
                 {
-                    captchaId: '0x7e6d425c3aae7194e06ff5f6f40ae7ce3f28f3cedff572d94141294af357bec2',
+                    captchaId: '0xbd9cab1f7aa219ee1b2afb4a0df4649cceaf028549ca3959a4adcb8fa7e5b60b',
                     captchaContentId: '0x01',
                     solution: [],
-                    salt: '0x010101010101010101010101010101',
+                    salt: '0x01010101010101010101010101010101',
                     target: 'bus',
                     items: ITEMS,
                 },
                 {
-                    captchaId: '0x658d30c45a4a5b5109c50e3f25acf53641a38dec9f5af9ffdc27c9b30e75acca',
+                    captchaId: '0xf1e9b2d9d6ca3a3740c29934768451b6790d38a8595a4b0fa5d5c3cf244b5dfa',
                     captchaContentId: '0x01',
-                    salt: '0x020202020202020202020202020202',
+                    salt: '0x02020202020202020202020202020202',
                     target: 'train',
                     items: ITEMS,
                 },
@@ -126,32 +126,32 @@ describe('CAPTCHA FUNCTIONS', async function () {
 
         RECEIVED = [
             {
-                captchaId: '0x65389f35bfda0ce10a80baea75e34c8defc5ec22931ccc5ef66f3c273ba4ec38',
+                captchaId: '0x21eaa7d782eaf2930d5e1f0800328fb3be125936b18086efb20f9300c5d6f6f8',
                 captchaContentId: '0x01',
                 solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
-                salt: '',
+                salt: '0x01010101010101010101010101010101',
             },
             {
-                captchaId: '0x138c099916b1877ceba74fbd93a441bc561103b087e3dbe751d486bd854644d3',
+                captchaId: '0x9c2a2b6a556d83cf74c275cd9fdb8a30fdd7bbef8d09c83af7b1d08d91bc50a0',
                 captchaContentId: '0x01',
                 solution: matchItemsToSolutions([0, 1, 2], MOCK_ITEMS),
-                salt: '',
+                salt: '0x02020202020202020202020202020202',
             },
         ]
 
         STORED = [
             {
-                captchaId: '0x65389f35bfda0ce10a80baea75e34c8defc5ec22931ccc5ef66f3c273ba4ec38',
+                captchaId: '0x21eaa7d782eaf2930d5e1f0800328fb3be125936b18086efb20f9300c5d6f6f8',
                 captchaContentId: '0x01',
-                salt: '0x1',
+                salt: '0x01010101010101010101010101010101',
                 items: MOCK_ITEMS,
                 target: '',
                 solved: true,
             },
             {
-                captchaId: '0x138c099916b1877ceba74fbd93a441bc561103b087e3dbe751d486bd854644d3',
+                captchaId: '0x9c2a2b6a556d83cf74c275cd9fdb8a30fdd7bbef8d09c83af7b1d08d91bc50a0',
                 captchaContentId: '0x01',
-                salt: '0x2',
+                salt: '0x02020202020202020202020202020202',
                 items: MOCK_ITEMS,
                 target: '',
                 solved: true,
@@ -186,7 +186,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
 
     it('Captcha solutions are successfully parsed', () => {
         const captchaSolutions = JSON.parse(
-            '[{ "captchaId": "1", "captchaContentId": "1", "solution": ["0x1", "0x2", "0x3"], "salt" : "salt" }, { "captchaId": "2", "captchaContentId": "2", "solution": ["0x1", "0x2", "0x3"], "salt" : "salt" }]'
+            '[{ "captchaId": "1", "captchaContentId": "1", "solution": ["0x1", "0x2", "0x3"], "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }, { "captchaId": "2", "captchaContentId": "2", "solution": ["0x1", "0x2", "0x3"], "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }]'
         ) as CaptchaSolution[]
 
         expect(parseAndSortCaptchaSolutions(captchaSolutions).length).to.equal(2)
@@ -194,7 +194,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
 
     it('Invalid Captcha solutions are not successfully parsed', () => {
         const captchaSolutions = JSON.parse(
-            '[{ "captchaId": "1", "salt" : "salt" }, { "captchaId": "2", "solution": ["1", "2", "3"], "salt" : "salt" }]'
+            '[{ "captchaId": "1", "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }, { "captchaId": "2", "solution": ["1", "2", "3"], "salt" : "0xsaltsaltsaltsaltsaltsaltsaltsalt" }]'
         ) as CaptchaSolution[]
 
         expect(function () {
@@ -233,6 +233,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
 
     it('Captcha solutions are correctly sorted and computed', () => {
         const idsAndHashes = sortAndComputeHashes(RECEIVED, STORED)
+        console.log(idsAndHashes)
         expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true
     })
 
@@ -272,7 +273,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
             {
                 captchaId: '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
                 captchaContentId: '',
-                salt: '0x1',
+                salt: '0x01010101010101010101010101010101',
                 items: [],
                 target: '',
                 solved: true,
@@ -336,7 +337,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
             solution: matchItemsToSolutions([1, 2], MOCK_ITEMS),
         } as CaptchaSolution
         const hash = computeCaptchaSolutionHash(captchaSolution)
-        expect(hash).to.be.equal('0xebd5fd09ee37613693e6739b75ab38529b4ad77372440de55628945588ce3b1d')
+        expect(hash).to.be.equal('0x5d53f59e5a6a67e260f084e9b12cf9fa85c4a2cc42372edb14c063176ae0ccf1')
     })
 
     it('Verifies a valid merkle proof', () => {

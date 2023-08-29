@@ -15,7 +15,7 @@ export const captchaData = {
     datasetId: '0x0105797b3529e14b9ff72548ef16865d4d9e0f79f1e393decd2f435ff5f2cc0c',
     captchas: [
         {
-            salt: '0x010101010101010101010101010101',
+            salt: '0x01010101010101010101010101010101',
             solution: [1, 2, 3],
             timeLimit: 20,
             items: [
@@ -68,7 +68,7 @@ export const captchaData = {
             target: 'bus',
         },
         {
-            salt: '0x020202020202020202020202020202',
+            salt: '0x02020202020202020202020202020202',
             solution: [0, 7, 8],
             items: [
                 {
@@ -120,7 +120,7 @@ export const captchaData = {
             target: 'train',
         },
         {
-            salt: '0x030303030303030303030303030303',
+            salt: '0x03030303030303030303030303030303',
             solution: [],
             items: [
                 {
@@ -172,7 +172,7 @@ export const captchaData = {
             target: 'car',
         },
         {
-            salt: '0x050505050505050505050505050505',
+            salt: '0x05050505050505050505050505050505',
             items: [
                 {
                     hash: '0x7f4313a6d4240e206d7c7f16d368ddf12d5f1d78296fd3de7e91df1d7739a35f',
@@ -223,7 +223,7 @@ export const captchaData = {
             target: 'plane',
         },
         {
-            salt: '0x010101010101010101010101010101',
+            salt: '0x01010101010101010101010101010101',
             solution: [2, 3, 8],
             items: [
                 {
@@ -275,7 +275,7 @@ export const captchaData = {
             target: 'dog',
         },
         {
-            salt: '0x020202020202020202020202020202',
+            salt: '0x02020202020202020202020202020202',
             solution: [0, 1, 4],
             items: [
                 {
@@ -327,7 +327,7 @@ export const captchaData = {
             target: 'cat',
         },
         {
-            salt: '0x030303030303030303030303030303',
+            salt: '0x03030303030303030303030303030303',
             items: [
                 {
                     hash: '0x0138ab8b1951c2b36284f6abacfc40cc3ec8280adc38462cc5f6b852e17ffe59',
@@ -378,7 +378,7 @@ export const captchaData = {
             target: 'horse',
         },
         {
-            salt: '0x010101010101010101010101010101',
+            salt: '0x01010101010101010101010101010101',
             solution: [0, 7],
             items: [
                 {
@@ -430,7 +430,7 @@ export const captchaData = {
             target: 'plane',
         },
         {
-            salt: '0x020202020202020202020202020202',
+            salt: '0x02020202020202020202020202020202',
             solution: [4, 6, 8],
             items: [
                 {
@@ -482,7 +482,7 @@ export const captchaData = {
             target: 'dog',
         },
         {
-            salt: '0x030303030303030303030303030303',
+            salt: '0x03030303030303030303030303030303',
             solution: [2, 3, 5],
             items: [
                 {
@@ -534,7 +534,7 @@ export const captchaData = {
             target: 'horse',
         },
         {
-            salt: '0x040404040404040404040404040404',
+            salt: '0x04040404040404040404040404040404',
             items: [
                 {
                     hash: '0x6e0784791bf2edbb348ed69fb8080f69f4c38d3a8169f9204b5600a44bdaa600',
@@ -585,7 +585,7 @@ export const captchaData = {
             target: 'bird',
         },
         {
-            salt: '0x010101010101010101010101010101',
+            salt: '0x01010101010101010101010101010101',
             solution: [1, 6, 8],
             items: [
                 {
@@ -637,7 +637,7 @@ export const captchaData = {
             target: 'cat',
         },
         {
-            salt: '0x010101010101010101010101010101',
+            salt: '0x01010101010101010101010101010101',
             solution: [0, 3, 4],
             items: [
                 {
@@ -689,7 +689,7 @@ export const captchaData = {
             target: 'plane',
         },
         {
-            salt: '0x010101010101010101010101010101',
+            salt: '0x01010101010101010101010101010101',
             solution: [2, 5, 7],
             items: [
                 {
