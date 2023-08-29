@@ -938,8 +938,6 @@ pub mod captcha {
 
         /// Record a commit from a provider and user
         fn provider_record_commit(&mut self, commit: &Commit) -> Result<(), Error> {
-            ink::env::debug_println!("{:?}", commit);
-
             let caller = self.env().caller();
             let provider = self.get_provider(caller)?;
             let dapp = self.get_dapp(commit.dapp_contract)?;
@@ -2781,7 +2779,6 @@ pub mod captcha {
 
             // Get the commitment and make sure it is approved
             let usr = contract.get_user(user_account).unwrap();
-            // println!("{:?}", usr);
             let commitment = usr.history.get(0).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Approved);
 
@@ -2802,7 +2799,6 @@ pub mod captcha {
 
             // Get the commitment and make sure it is disapproved
             let usr = contract.get_user(user_account).unwrap();
-            // println!("{:?}", usr);
             let commitment = usr.history.get(0).unwrap();
             assert_eq!(commitment.status, CaptchaStatus::Disapproved);
         }
