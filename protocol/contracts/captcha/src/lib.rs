@@ -17,7 +17,7 @@ pub use self::captcha::{Captcha, CaptchaRef};
 
 #[ink::contract]
 pub mod captcha {
-
+    use common::common::account_id_bytes;
     use common::common::config;
     use common::common::Error;
     use common::err;
@@ -852,6 +852,7 @@ pub mod captcha {
 
             // check the signature is valid
             // i.e. make sure the user signed various parts of the commit and the provider isn't forging these fields
+            // first create the same payload as js side
             let mut payload: [u8; 169] = [0; 169];
             payload[0..32].copy_from_slice(&commit.id.as_ref());
             payload[32..64].copy_from_slice(&commit.user_account.as_ref());
@@ -861,6 +862,14 @@ pub mod captcha {
             payload[160..164].copy_from_slice(&commit.requested_at.to_le_bytes());
             payload[164..168].copy_from_slice(&commit.completed_at.to_le_bytes());
             payload[168] = commit.status as u8;
+
+            // then verify the signature against the payload
+            ink::env::sr25519_verify(
+                &commit.user_signature,
+                &payload,
+                account_id_bytes(&commit.user_account),
+            )
+            .map_err(|_| Error::InvalidSignature)?;
 
             // add the new commitment
             user.history.insert(0, *commit);

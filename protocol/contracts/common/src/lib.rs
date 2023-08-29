@@ -70,7 +70,7 @@ pub mod common {
 
         /// Get the git commit id from when this contract was built
         pub fn get_git_commit_id() -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [238, 38, 35, 194, 98, 56, 127, 248, 224, 48, 234, 56, 77, 27, 238, 172, 119, 103, 226, 138, ];
+            let env_git_commit_id: [u8; 20] = [36, 61, 131, 26, 57, 40, 192, 203, 137, 40, 152, 252, 171, 117, 72, 172, 12, 224, 225, 142, ];
             env_git_commit_id
         }
 
@@ -150,6 +150,8 @@ pub mod common {
         CommitAlreadyExists,
         /// Returned if the caller is not the author
         NotAuthor,
+        /// Returned if the signature for a payload is invalid
+        InvalidSignature,
     }
 
     /// get the account id in byte array format
