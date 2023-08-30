@@ -97,6 +97,7 @@ loadEnv()
 
 module.exports = (env, argv) => {
     const isProduction = argv.mode === 'production'
+    log.info(`Production: ${isProduction}`)
     const libraryName = 'procaptcha_bundle'
     const defineVars = {
         // TODO decide on what NODE_ENV is for

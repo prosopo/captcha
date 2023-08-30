@@ -193,7 +193,6 @@ export async function processArgs(args: string[]) {
             type: 'string',
             demand: false,
             desc: 'Use a docker contracts-ci image to build instead of local toolchain',
-            default: 'prosopo/contracts-ci-linux:3.0.1',
         })
     }
 
@@ -201,7 +200,8 @@ export async function processArgs(args: string[]) {
         const rest = argv._.slice(1).join(' ') // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')
-        const dockerImage = argv.docker || ''
+        const dockerImage = argv.docker === '' ? 'prosopo/contracts-ci-linux:3.0.1' : argv.docker ?? ''
+        console.log('dockerImage', dockerImage)
 
         if (cmd.startsWith('contract') && argv.contract) {
             throw new Error('Cannot run contract commands on specific packages')
@@ -278,7 +278,8 @@ Cargo pass-through commands:
             async (argv) => {
                 const contracts = argv.contract as string[]
                 delete argv.contract
-                for (const contract in contracts) {
+                console.log(contracts)
+                for (const contract of contracts) {
                     await exec(
                         `cd ${repoDir} && mkdir -p expanded && cd ${contractsDir}/${contract} && cargo expand ${argv._} > ${repoDir}/expanded/${contract}.rs`
                     )
@@ -299,7 +300,7 @@ Cargo pass-through commands:
             async (argv) => {
                 const contracts = argv.contract as string[]
                 delete argv.contract
-                for (const contract in contracts) {
+                for (const contract of contracts) {
                     await exec(
                         `cd ${repoDir} && cargo metadata --manifest-path ${contractsDir}/${contract}/Cargo.toml ${argv._}`
                     )

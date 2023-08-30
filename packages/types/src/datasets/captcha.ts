@@ -106,7 +106,7 @@ export type LastCorrectCaptchaSchema = {
 export const CaptchaSchema = z.object({
     captchaId: z.union([z.string(), z.undefined()]),
     captchaContentId: z.union([z.string(), z.undefined()]),
-    salt: z.string(),
+    salt: z.string().min(34),
     solution: z.number().array().optional(),
     unlabelled: z.number().array().optional(),
     timeLimit: z.number().optional(),
@@ -145,7 +145,7 @@ export const CaptchaSolutionSchema = z.object({
     captchaId: z.string(),
     captchaContentId: z.string(),
     solution: z.string().array(),
-    salt: z.string(),
+    salt: z.string().min(34),
 })
 
 export const CaptchaSolutionArraySchema = z.array(CaptchaSolutionSchema)
