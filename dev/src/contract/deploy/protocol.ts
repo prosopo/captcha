@@ -17,17 +17,18 @@ import { AccountId, EventRecord } from '@polkadot/types/interfaces'
 import { ContractDeployer } from '@prosopo/contract'
 import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { defaultConfig, getPairType, getSs58Format, loadEnv } from '@prosopo/cli'
+import { defaultConfig, getPairType, getSecret, getSs58Format, loadEnv } from '@prosopo/cli'
 import { getPair } from '@prosopo/common'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
 const log = getLogger(LogLevel.Info, 'dev.deploy')
 
-async function deploy(wasm: Uint8Array, abi: Abi) {
+async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
     const pairType = getPairType()
     const ss58Format = getSs58Format()
-    const pair = await getPair(pairType, ss58Format, '//Alice')
+    const secret = deployerPrefix ? getSecret(deployerPrefix) : '//Alice'
+    const pair = await getPair(pairType, ss58Format, secret)
     const config = defaultConfig()
     const env = new ProviderEnvironment(pair, config)
     await env.isReady()
@@ -40,12 +41,12 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     return await deployer.deploy()
 }
 
-export async function run(wasmPath: string, abiPath: string): Promise<AccountId> {
+export async function run(wasmPath: string, abiPath: string, deployer?: string): Promise<AccountId> {
     log.info('WASM Path', wasmPath)
     log.info('ABI Path', abiPath)
     const wasm = await Wasm(path.resolve(wasmPath))
     const abi = await AbiJSON(path.resolve(abiPath))
-    const deployResult = await deploy(wasm, abi)
+    const deployResult = await deploy(wasm, abi, deployer)
 
     const instantiateEvent: EventRecord | undefined = deployResult.events.find(
         (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
