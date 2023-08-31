@@ -166,7 +166,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
     const manager = Manager(config, state, updateState, callbacks)
-
+    const configSx = config.sx || { maxWidth: '400px', minWidth: '200px' }
     return (
         <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
             <Backdrop open={state.showModal} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
@@ -185,7 +185,8 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                 )}
             </Backdrop>
 
-            <Box p={1} sx={{ maxWidth: '400px', minWidth: '200px' }} data-cy={'button-human'}>
+            <Box p={1} sx={[...(Array.isArray(configSx) ? configSx : [configSx])]} data-cy={'button-human'}>
+                {' '}
                 <Box
                     p={1}
                     border={1}
