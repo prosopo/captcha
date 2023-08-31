@@ -13,9 +13,9 @@
 // limitations under the License.
 import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { LogLevelSchema } from '@prosopo/common'
+import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { createRoot } from 'react-dom/client'
-import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 
 function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     if (!siteKey) {
