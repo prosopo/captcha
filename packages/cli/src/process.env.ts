@@ -24,12 +24,17 @@ export function getPairType(): KeypairType {
     return (process.env.PAIR_TYPE as KeypairType) || ('sr25519' as KeypairType)
 }
 
-export function getSecret(): string {
+export function getSecret(who?: string): string {
+    if (!who) {
+        who = 'PROVIDER'
+    } else {
+        who = who.toUpperCase()
+    }
     const secret =
-        process.env.PROVIDER_MNEMONIC ||
-        process.env.PROVIDER_SEED ||
-        process.env.PROVIDER_URI ||
-        process.env.PROVIDER_JSON
+        process.env[`${who}_MNEMONIC`] ||
+        process.env[`${who}_SEED`] ||
+        process.env[`${who}_URI`] ||
+        process.env[`${who}_JSON`]
     if (!secret) {
         throw new ProsopoEnvError('GENERAL.NO_MNEMONIC_OR_SEED')
     }

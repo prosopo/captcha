@@ -44,6 +44,14 @@ export default (): ProsopoConfig => ({
             },
             accounts: ['//Alice', '//Bob', '//Charlie', '//Dave', '//Eve', '//Ferdie'],
         },
+        rococo: {
+            endpoint: process.env.SUBSTRATE_NODE_URL || 'wss://rococo-contracts-rpc.polkadot.io:443',
+            contract: {
+                address: process.env.PROTOCOL_CONTRACT_ADDRESS || '',
+                name: 'prosopo',
+            },
+            accounts: [],
+        },
     },
     captchas: {
         solved: {

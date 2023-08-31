@@ -23,6 +23,7 @@ import { updateEnvFiles } from '../util/index.js'
 import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
+
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -41,19 +42,29 @@ export async function processArgs(args) {
             'deploy_protocol',
             'Deploy the prosopo protocol contract',
             (yargs) =>
-                yargs.option('update_env', {
-                    type: 'boolean',
-                    demand: false,
-                    desc: 'Update env files with the new contract address',
-                    default: false,
-                }),
+                yargs
+                    .option('update_env', {
+                        type: 'boolean',
+                        demand: false,
+                        desc: 'Update env files with the new contract address',
+                        default: false,
+                    })
+                    .option('deployer', {
+                        type: 'string',
+                        demand: false,
+                        desc: `The account prefix that will deploy the contract. Specifying PROVIDER will cause the 
+                        script to look for PROVIDER_JSON in the env file. Specifying DEPLOYER will cause the script to 
+                        look for DEPLOYER_JSON in the env file. Defaults to undefined.`,
+                        default: undefined,
+                    }),
             async (argv) => {
                 if (!process.env.CAPTCHA_WASM_PATH || !process.env.CAPTCHA_ABI_PATH) {
                     throw new Error('Missing protocol wasm or json path')
                 }
                 const protocolContractAddress = await deployProtocol(
                     process.env.CAPTCHA_WASM_PATH,
-                    process.env.CAPTCHA_ABI_PATH
+                    process.env.CAPTCHA_ABI_PATH,
+                    argv.deployer
                 )
                 log.info('contract address', protocolContractAddress)
                 if (argv.update_env) {
