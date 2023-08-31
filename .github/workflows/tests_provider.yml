@@ -7,9 +7,8 @@ on:
       - '**.ts'
       - '**.js'
       - '.github/workflows/tests_provider.yml'
-      - '**.json'
-    paths-ignore:
-      - 'protocol'
+      - 'packages/**.json'
+      - 'dev/**.json'
 
 env:
   CARGO_TERM_COLOR: always
