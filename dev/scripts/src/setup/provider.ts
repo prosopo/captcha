@@ -99,10 +99,8 @@ export async function setupProvider(env: ProviderEnvironment, provider: IProvide
         },
     ]
 
-    const queryProviderUpdate = await wrapQuery(
-        tasks.contract.query.providerUpdate,
-        tasks.contract.query
-    )(...providerUpdateArgs)
+    // Do this to catch any errors before running the tx
+    await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(...providerUpdateArgs)
 
     await tasks.contract.tx.providerUpdate(...providerUpdateArgs)
 
