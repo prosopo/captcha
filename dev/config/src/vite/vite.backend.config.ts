@@ -49,7 +49,7 @@ export default async function (
             external: allExternal,
         },
         optimizeDeps: {
-            include: ['linked-dep', 'node_modules', 'mongodb'],
+            include: ['linked-dep', 'node_modules'],
         },
         esbuild: {
             platform: 'node',
@@ -96,11 +96,6 @@ export default async function (
                     }),
                     css(),
                     wasm(),
-                    // nodeResolve({
-                    //     browser: false,
-                    //     preferBuiltins: false,
-                    //     rootDir: path.resolve(dir, '../../'),
-                    // }),
                 ],
             },
         },
