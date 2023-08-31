@@ -17,7 +17,7 @@ placed anywhere on the page. Inside the <head> tag or immediately after the .pro
 
 ```html
 
-<script src="https://prosopo.io/js/procaptcha_bundle.index.bundle.iife.js" async defer></script>
+<script src="https://prosopo.io/js/prosopo.procaptcha.bundle.js" async defer></script>
 ```
 
 Second, you must add an empty DOM container where the Procaptcha widget will be inserted automatically. The container is
@@ -46,7 +46,7 @@ solved.
 <html>
 <head>
     <title>Procaptcha Demo</title>
-    <script src="https://js.prosopo.io/procaptcha_bundle.index.bundle.iife.js" async defer></script>
+    <script src="https://js.prosopo.io/prosopo.procaptcha.bundle.js" async defer></script>
 </head>
 <body>
 <form action="" method="POST">
