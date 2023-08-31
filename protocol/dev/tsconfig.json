@@ -2,11 +2,9 @@
     "extends": "../../tsconfig.build.json",
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist",
-        "module": "commonjs",
-        "target": "esnext",
-        "lib": ["esnext", "dom"]
+        "outDir": "./dist"
     },
-    "include": ["./src/**/*.ts", "./src/*.ts"],
+    "include": ["./src/**/*.ts"],
+    "exclude": ["**/*.test.ts"],
     "references": []
 }

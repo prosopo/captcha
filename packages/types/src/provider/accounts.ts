@@ -13,7 +13,7 @@
 // limitations under the License.
 import { BN } from '@polkadot/util'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { Payee } from '../contract/typechain/captcha/types-arguments/captcha'
+import { Payee } from '../contract/typechain/captcha/types-arguments/captcha.js'
 
 export interface IUserAccount {
     secret?: string

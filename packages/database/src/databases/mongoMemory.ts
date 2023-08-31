@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Logger } from '@prosopo/common'
-import { ProsopoDatabase as MongoDatabase } from './mongo'
+import { ProsopoDatabase as MongoDatabase } from './mongo.js'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 
 export class MongoMemoryDatabase extends MongoDatabase {

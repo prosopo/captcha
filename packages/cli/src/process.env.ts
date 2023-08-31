@@ -14,11 +14,7 @@
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoConfig } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
-import prosopoConfig from './prosopo.config'
-
-export function getEnv() {
-    return process.env.NODE_ENV || 'development'
-}
+import prosopoConfig from './prosopo.config.js'
 
 export function getSs58Format(): number {
     return parseInt(process.env.SS58_FORMAT || '') || 42

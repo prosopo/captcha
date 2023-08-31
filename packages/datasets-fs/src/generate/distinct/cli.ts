@@ -1,7 +1,7 @@
 import { ArgumentsCamelCase, Argv } from 'yargs'
 import { Logger } from '@prosopo/common'
-import { argsSchema } from './args'
-import generate from './generate'
+import { argsSchema } from './args.js'
+import generate from './generate.js'
 
 export default (cmdArgs?: { logger?: Logger }) => {
     return {

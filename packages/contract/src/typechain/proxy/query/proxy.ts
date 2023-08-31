@@ -14,7 +14,7 @@
 /* This file is auto-generated */
 
 import { handleReturnType, queryOkJSON } from '@727-ventures/typechain-types'
-import type * as ReturnTypes from '../types-returns/proxy'
+import type * as ReturnTypes from '../types-returns/proxy.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
 import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/typechain-types'

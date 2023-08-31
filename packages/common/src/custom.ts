@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { DefaultNamespace, Namespace, TFuncReturn } from 'react-i18next'
-import { TranslationKey } from './utils'
+import { TranslationKey } from './utils.js'
 
 declare module 'i18next' {
     interface TFunction<N extends Namespace = DefaultNamespace, TKPrefix = undefined> {

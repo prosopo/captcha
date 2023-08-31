@@ -14,7 +14,7 @@
 /* This file is auto-generated */
 
 import { buildSubmittableExtrinsic } from '@727-ventures/typechain-types'
-import type * as ArgumentTypes from '../types-arguments/captcha'
+import type * as ArgumentTypes from '../types-arguments/captcha.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
 import type { GasLimit, GasLimitAndRequiredValue } from '@727-ventures/typechain-types'

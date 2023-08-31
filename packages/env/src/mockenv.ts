@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProviderEnvironment } from './provider'
+import { BN } from '@polkadot/util'
+import { KeypairType } from '@polkadot/util-crypto/types'
+import { ProviderEnvironment } from './provider.js'
 import { mnemonicGenerate } from '@polkadot/util-crypto'
-
 export class MockEnvironment extends ProviderEnvironment {
     public createAccountAndAddToKeyring(): [string, string] {
         const mnemonic: string = mnemonicGenerate()
@@ -21,4 +22,11 @@ export class MockEnvironment extends ProviderEnvironment {
         const { address } = account
         return [mnemonic, address]
     }
+}
+
+export interface ViteTestContext {
+    env: MockEnvironment
+    pairType: KeypairType
+    ss58Format: number
+    providerStakeThreshold: BN
 }

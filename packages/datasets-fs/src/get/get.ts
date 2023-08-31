@@ -1,4 +1,4 @@
-import { Args } from './args'
+import { Args } from './args.js'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import fetch from 'node-fetch'
 import fs from 'fs'

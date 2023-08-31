@@ -15,7 +15,7 @@
 
 import { handleReturnType, queryOkJSON } from '@727-ventures/typechain-types'
 import { txSignAndSend } from '@727-ventures/typechain-types'
-import type * as ReturnTypes from '../types-returns/proxy'
+import type * as ReturnTypes from '../types-returns/proxy.js'
 import type { ApiPromise } from '@polkadot/api'
 import type { ContractPromise } from '@polkadot/api-contract'
 import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/typechain-types'
@@ -26,7 +26,7 @@ import type BN from 'bn.js'
 import { getTypeDescription } from './../shared/utils'
 // @ts-ignore
 import { EventRecord } from '@polkadot/types/interfaces'
-import { decodeEvents } from '../shared/utils'
+import { decodeEvents } from '../shared/utils.js'
 import DATA_TYPE_DESCRIPTIONS from '../data/proxy.json'
 import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/proxy.json'
 
