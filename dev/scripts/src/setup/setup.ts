@@ -24,11 +24,21 @@ import { registerProvider } from './provider.js'
 import { setupDapp } from './dapp.js'
 import fse from 'fs-extra'
 import path from 'path'
+
 const logger = getLogger(LogLevelSchema.enum.Info, 'setup')
 const __dirname = path.resolve()
+
 // Take the root dir from the environment or assume it's the root of this package
 function getRootDir() {
-    return process.env.ROOT_DIR || path.resolve(__dirname, '../..')
+    const rootDir = process.env.ROOT_DIR || path.resolve(__dirname, '../..')
+    logger.info('Root dir:', rootDir)
+    return rootDir
+}
+
+function getDatasetFilePath() {
+    const datasetFile = process.env.PROVIDER_DATASET_FILE || path.resolve('../data/captchas.json')
+    logger.info('Dataset file:', datasetFile)
+    return datasetFile
 }
 
 function getDefaultProvider(): IProviderAccount {
@@ -37,7 +47,7 @@ function getDefaultProvider(): IProviderAccount {
         fee: 10,
         payee: ArgumentTypes.Payee.dapp,
         stake: Math.pow(10, 13),
-        datasetFile: path.resolve('./data/captchas.json'),
+        datasetFile: getDatasetFilePath(),
         address: process.env.PROVIDER_ADDRESS || '',
         secret: getSecret(),
         captchaDatasetId: '',
@@ -55,8 +65,10 @@ function getDefaultDapp(): IDappAccount {
 async function copyEnvFile() {
     try {
         const rootDir = getRootDir()
-        const tplEnvFile = getEnvFile(rootDir, 'env')
-        const envFile = getEnvFile(rootDir, '.env')
+        // TODO move all env files to a single template location
+        const tplLocation = path.resolve(rootDir, './dev/scripts')
+        const tplEnvFile = getEnvFile(tplLocation, 'env')
+        const envFile = getEnvFile(tplLocation, '.env')
         await fse.copy(tplEnvFile, envFile, { overwrite: false })
     } catch (err) {
         logger.debug(err)
@@ -156,6 +168,7 @@ export async function setup(force: boolean) {
         throw new ProsopoEnvError(`GENERAL.NO_MNEMONIC_OR_SEED`)
     }
 }
+
 //if main process
 // if (typeof require !== 'undefined' && require.main === module) {
 //     console.info('Running setup as main process')
