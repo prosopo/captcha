@@ -1,3 +1,3 @@
-export * from './labels'
-export * from './cli'
-export * from './args'
+export * from './labels.js'
+export * from './cli.js'
+export * from './args.js'

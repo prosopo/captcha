@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
-import { LogLevel } from '@prosopo/common'
+import { LogLevelSchema } from '@prosopo/common'
 import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { createRoot } from 'react-dom/client'
@@ -22,7 +22,7 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
         siteKey = process.env.DAPP_SITE_KEY || process.env.PROSOPO_SITE_KEY || ''
     }
     return {
-        logLevel: LogLevel.Info,
+        logLevel: LogLevelSchema.enum.Info,
         defaultEnvironment:
             (process.env.DEFAULT_ENVIRONMENT as EnvironmentTypes) || EnvironmentTypesSchema.enum.development,
         userAccountAddress: '',
@@ -40,8 +40,18 @@ function getConfig(siteKey?: string): ProcaptchaConfigOptional {
                 },
                 accounts: [],
             },
+            [EnvironmentTypesSchema.enum.rococo]: {
+                endpoint: process.env.SUBSTRATE_NODE_URL || 'wss://rococo-contracts-rpc.polkadot.io:443',
+                contract: {
+                    address:
+                        process.env.PROTOCOL_CONTRACT_ADDRESS || '5HiVWQhJrysNcFNEWf2crArKht16zrhro3FcekVWocyQjx5u',
+                    name: 'prosopo',
+                },
+                accounts: [],
+            },
         },
         solutionThreshold: 80,
+        serverUrl: process.env.SERVER_URL || '',
     }
 }
 

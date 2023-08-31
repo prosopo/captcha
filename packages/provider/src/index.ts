@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './tasks'
-export * from './util'
-export * from './batch'
-export * from './api/captcha'
+export * from './tasks/index.js'
+export * from './util.js'
+export * from './batch/index.js'
+export * from './api/captcha.js'

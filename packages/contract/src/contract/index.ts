@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import '@polkadot/api-augment'
-export * from './interface'
-export * from './helpers'
-export * from './useWeight'
-export * from './deploy'
-export * from './batch'
-export * from './storage'
+export * from './interface.js'
+export * from './helpers.js'
+export * from './useWeight.js'
+export * from './deploy.js'
+export * from './batch.js'
+export * from './storage.js'

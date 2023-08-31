@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CodePromise } from '@polkadot/api-contract'
-import { ContractFile } from '../contract-info/proxy'
+import { ContractFile } from '../contract-info/proxy.js'
 import { SignAndSendSuccessResponse, _genValidGasLimitAndValue, _signAndSend } from '@727-ventures/typechain-types'
 import type { ApiPromise } from '@polkadot/api'
 import type { ConstructorOptions } from '@727-ventures/typechain-types'

@@ -11,15 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Box, Button, ThemeProvider, Typography } from '@mui/material'
+import { CaptchaWidget } from './CaptchaWidget.js'
 import { GetCaptchaResponse } from '@prosopo/api'
 import { useTranslation } from '@prosopo/common'
-import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
-import CaptchaWidget from './CaptchaWidget'
-import ThemeProvider from '@mui/material/styles/ThemeProvider'
-import Typography from '@mui/material/Typography'
-import addDataAttr from '../util'
-import theme from './theme'
+import React from 'react'
+import addDataAttr from '../util/index.js'
+import theme from './theme.js'
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse
@@ -31,7 +29,7 @@ export interface CaptchaComponentProps {
     onNext: () => void
 }
 
-export const CaptchaComponent = (props: CaptchaComponentProps) => {
+const CaptchaComponent = (props: CaptchaComponentProps) => {
     const { t } = useTranslation()
     const { challenge, index, solutions, onSubmit, onCancel, onClick, onNext } = props
     const captcha = challenge.captchas[index]

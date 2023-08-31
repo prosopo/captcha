@@ -11,33 +11,34 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { ProsopoEnvError } from './error.js'
 import { lodash } from '@prosopo/util'
+import { z } from 'zod'
 import consola, { LogLevel as ConsolaLogLevel } from 'consola'
 
 export interface Logger {
     log(message: unknown, ...args: unknown[]): void
+
     info(message: unknown, ...args: unknown[]): void
+
     debug(message: unknown, ...args: unknown[]): void
+
     trace(message: unknown, ...args: unknown[]): void
+
     warn(message: unknown, ...args: unknown[]): void
+
     error(message: unknown, ...args: unknown[]): void
+
     setLogLevel(level: LogLevel | string): void
+
     getLogLevel(): LogLevel
 }
 
-export enum LogLevel {
-    Silent = Number.NEGATIVE_INFINITY,
-    Error = 0,
-    Warn = 1,
-    Log = 2,
-    Info = 3,
-    Debug = 4,
-    Trace = 5,
-    Verbose = Number.POSITIVE_INFINITY,
-}
+export const LogLevelSchema = z.enum(['Silent', 'Error', 'Warn', 'Log', 'Info', 'Debug', 'Trace', 'Verbose'])
+export type LogLevel = z.infer<typeof LogLevelSchema>
 
 export function* getLogLevelKeys(): Generator<string> {
-    for (const level in LogLevel) {
+    for (const level in LogLevelSchema.enum) {
         if (isNaN(Number(level))) {
             yield level
         }
@@ -45,42 +46,41 @@ export function* getLogLevelKeys(): Generator<string> {
 }
 
 export function* getLogLevelValues(): Generator<LogLevel> {
-    for (const level in LogLevel) {
-        if (!isNaN(Number(level))) {
-            yield Number(level) as unknown as LogLevel
-        }
+    for (const level in LogLevelSchema.Values) {
+        yield level as LogLevel
     }
 }
 
 export const parseLogLevel = (logLevel: string | LogLevel | number | undefined): LogLevel => {
     if (logLevel === undefined) {
-        return LogLevel.Info
+        return LogLevelSchema.Values.Info
     } else if (typeof logLevel === 'number') {
         // LogLevel or number can be out of range of the enum (e.g. you can do `const a: LogLevel = -1` and that's valid!) so need to check it
-        if (logLevel in LogLevel) {
-            return logLevel
+        if (LogLevelSchema.array.length > logLevel && LogLevelSchema.array[logLevel]) {
+            return LogLevelSchema.Values[logLevel]
         }
     } else {
         const int = parseInt(logLevel) // test if str can be parsed as int
         if (!isNaN(int)) {
             // if so then check if it's a valid log level
-            if (logLevel in LogLevel) {
+            if (LogLevelSchema.array.length > parseInt(logLevel) && LogLevelSchema.array[logLevel]) {
                 // if so then return it
-                return LogLevel[LogLevel[logLevel] as keyof typeof LogLevel]
+                return LogLevelSchema.Values[logLevel]
             }
         } else {
-            // else not an int so try to parse as a string log level
-            const _ = lodash()
-            const level: string = _.capitalize(logLevel.toString())
-
-            // if not found in LogLevel then throw an error
-            if (level in LogLevel) {
-                return LogLevel[level]
+            if (logLevel && typeof logLevel === 'string') {
+                // else not an int so try to parse as a string log level
+                const _ = lodash()
+                const levelUp: string = _.capitalize(logLevel.toString())
+                try {
+                    return LogLevelSchema.parse(levelUp)
+                } catch (err) {
+                    throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', parseLogLevel.name)
+                }
             }
         }
     }
-
-    throw new Error(`Invalid log level: ${logLevel}`)
+    throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', parseLogLevel.name)
 }
 
 // Create a new logger with the given level and scope
@@ -99,7 +99,7 @@ export function getLogger(logLevel: LogLevel | string, scope: string): Logger {
 
 // Get the default logger (i.e. the global logger)
 export function getLoggerDefault(): Logger {
-    return getLoggerAdapterConsola(LogLevel.Info, '')
+    return getLoggerAdapterConsola(LogLevelSchema.enum.Info, '')
 }
 
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
@@ -110,6 +110,8 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     const convertFromConsolaLevel = (logLevel: ConsolaLogLevel): LogLevel => {
         return parseLogLevel(logLevel as unknown as LogLevel)
     }
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const logger = consola.create({ level: convertToConsolaLevel(logLevel) }).withScope(scope)
     return {
         log: logger.log,
@@ -134,5 +136,5 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
 export function getLogLevel(logTypeOption?: string): LogLevel {
     const _ = lodash()
     const logType = _.capitalize(logTypeOption || process.env.LOG_LEVEL || 'info')
-    return LogLevel[logType as keyof typeof LogLevel]
+    return LogLevelSchema.parse(logType)
 }

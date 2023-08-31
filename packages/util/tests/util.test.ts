@@ -11,20 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { expect } from 'chai'
+import { describe, expect, test } from 'vitest'
 import { permutations, rng, seedLodash } from '../src/util'
 
 describe('util', () => {
     describe('permutations', () => {
-        it('handles empty array', () => {
+        test('handles empty array', () => {
             expect([...permutations([])]).to.deep.equal([])
         })
 
-        it('handles empty array with empty set', () => {
+        test('handles empty array with empty set', () => {
             expect([...permutations([], { includeEmpty: true })]).to.deep.equal([[]])
         })
 
-        it('permutes correctly using same size bins', () => {
+        test('permutes correctly using same size bins', () => {
             expect([...permutations([2, 2, 2])]).to.deep.equal([
                 [0, 0, 0],
                 [0, 0, 1],
@@ -37,7 +37,7 @@ describe('util', () => {
             ])
         })
 
-        it('permutes correctly using different size bins', () => {
+        test('permutes correctly using different size bins', () => {
             expect([...permutations([1, 2, 3])]).to.deep.equal([
                 [0, 0, 0],
                 [0, 0, 1],
@@ -50,7 +50,7 @@ describe('util', () => {
     })
 
     describe('rng', () => {
-        it('generates random numbers using a seed', () => {
+        test('generates random numbers using a seed', () => {
             const seed = 0
             const rand = rng(seed)
             const expected = [-1065104217, 665175191, 222529346, 1915458065, -720845602, -50645347, -775619164]
@@ -61,7 +61,7 @@ describe('util', () => {
     })
 
     describe('seeded_lodash', () => {
-        it('shuffles an array using a seed', () => {
+        test('shuffles an array using a seed', () => {
             let array = [1, 2, 3, 4, 5]
             const seed = 0
             const _ = seedLodash(seed)

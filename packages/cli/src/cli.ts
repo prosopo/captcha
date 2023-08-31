@@ -11,13 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevel, getLogger, getPair } from '@prosopo/common'
+import { LogLevelSchema, getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
-import { loadEnv } from './env'
-import { processArgs } from './argv'
-import { start } from './start'
-const log = getLogger(LogLevel.Info, 'cli')
+import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
+import { loadEnv } from '@prosopo/cli'
+import { processArgs } from './argv.js'
+import { start } from './start.js'
+import esMain from 'es-main'
+import process from 'process'
+const log = getLogger(LogLevelSchema.enum.Info, 'cli')
 async function main() {
     loadEnv()
 
@@ -35,7 +37,7 @@ async function main() {
 
     await env.isReady()
 
-    const processedArgs = await processArgs(process.argv.slice(2), env)
+    const processedArgs = await processArgs(process.argv, env)
     if (processedArgs.api) {
         log.info('Starting API')
         await start(env)
@@ -44,8 +46,8 @@ async function main() {
     }
 }
 
-// if main node process
-if (typeof require !== 'undefined' && require.main === module) {
+//if main process
+if (esMain(import.meta)) {
     main()
         .then(() => {
             log.info('Running main process...')
