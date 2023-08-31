@@ -23,5 +23,5 @@ export default async (args: Args, logger?: Logger) => {
     }
     const labelArray = Array.from(labels)
     labelArray.sort()
-    logger.log(JSON.stringify(labelArray, null, 4))
+    logger.log(JSON.stringify({ labels: labelArray }, null, 4))
 }

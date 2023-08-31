@@ -95,11 +95,19 @@ export async function processArgs(args) {
         )
         .command({
             command: 'setup',
+
             describe:
                 'Setup the development environment by registering a provider, staking, loading a data set and then registering a dapp and staking.',
-            handler: async () => {
+            builder: (yargs) =>
+                yargs.option('force', {
+                    type: 'boolean',
+                    demand: false,
+                    desc: 'Force provider re-registration and dataset setup',
+                }),
+
+            handler: async (argv) => {
                 log.info('Running setup scripts')
-                await setup()
+                await setup(argv.force)
             },
         })
         .command({

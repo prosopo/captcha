@@ -74,3 +74,14 @@ export interface ProcaptchaEvents {
     onExpired: () => void
     onFailed: () => void
 }
+
+export type TProcaptchaEventNames = keyof ProcaptchaEvents
+
+export const ProcapchaEventNames: TProcaptchaEventNames[] = [
+    'onError',
+    'onAccountNotFound',
+    'onHuman',
+    'onExtensionNotFound',
+    'onExpired',
+    'onFailed',
+]
