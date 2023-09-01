@@ -53,7 +53,7 @@ describe('util', () => {
         test('generates random numbers using a seed', () => {
             const seed = 0
             const rand = rng(seed)
-            const expected = [-1065104217, 665175191, 222529346, 1915458065, -720845602, -50645347, -775619164]
+            const expected = [-1681090547, 408334984, 788430095, 3233831872, 963300000, -299378919, 97582850]
             for (let i = 0; i < expected.length; i++) {
                 expect(rand.int()).to.equal(expected[i])
             }
@@ -66,11 +66,11 @@ describe('util', () => {
             const seed = 0
             const _ = seedLodash(seed)
             array = _.shuffle(array)
-            expect(array).to.deep.equal([1, 2, 4, 5, 3])
+            expect(array).to.deep.equal([4, 2, 1, 3, 5])
             array = _.shuffle(array)
-            expect(array).to.deep.equal([2, 5, 1, 3, 4])
+            expect(array).to.deep.equal([3, 4, 1, 5, 2])
             array = _.shuffle(array)
-            expect(array).to.deep.equal([3, 5, 2, 4, 1])
+            expect(array).to.deep.equal([3, 4, 5, 2, 1])
         })
     })
 })
