@@ -182,6 +182,9 @@ class UrlConverter {
             // symbol 4 uses the last 6 bits of the third byte
             const numIndex = (bitCount / this.symbolNBits) | 0
             const num = nums[numIndex]
+            if (num === undefined) {
+                throw new Error(`Could not find number at index ${numIndex} of '${nums}'`)
+            }
             const byteIndex = (bitCount / this.byteNBits) | 0
             const usedBitsInByte = bitCount % this.byteNBits
             const unusedBitsInByte = this.byteNBits - usedBitsInByte
