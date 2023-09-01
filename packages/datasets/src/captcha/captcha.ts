@@ -25,7 +25,7 @@ import {
     RawSolution,
 } from '@prosopo/types'
 import { ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
-import { downloadImage } from './util'
+import { downloadImage } from './util.js'
 import { isHex } from '@polkadot/util'
 
 export const NO_SOLUTION_VALUE = 'NO_SOLUTION'

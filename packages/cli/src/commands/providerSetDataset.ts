@@ -1,7 +1,7 @@
 import { Logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
-import { loadJSONFile } from '../files'
+import { loadJSONFile } from '../files.js'
 
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger

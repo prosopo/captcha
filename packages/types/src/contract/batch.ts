@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ArgumentTypes } from './typechain/captcha/types-arguments'
+import { ArgumentTypes } from './typechain/captcha/types-arguments/index.js'
 import { BN } from '@polkadot/util'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 

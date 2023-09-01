@@ -1,23 +1,23 @@
 /* This file is auto-generated */
 
-import type { ContractPromise } from '@polkadot/api-contract';
-import type { ApiPromise } from '@polkadot/api';
-import type { KeyringPair } from '@polkadot/keyring/types';
-import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/typechain-types';
-import type { QueryReturnType } from '@727-ventures/typechain-types';
-import { queryOkJSON, queryJSON, handleReturnType } from '@727-ventures/typechain-types';
-import { txSignAndSend } from '@727-ventures/typechain-types';
-import type * as ArgumentTypes from '../types-arguments/captcha';
-import type * as ReturnTypes from '../types-returns/captcha';
-import type BN from 'bn.js';
+import { handleReturnType, queryOkJSON } from '@727-ventures/typechain-types'
+import { txSignAndSend } from '@727-ventures/typechain-types'
+import type * as ArgumentTypes from '../types-arguments/captcha.js'
+import type * as ReturnTypes from '../types-returns/captcha.js'
+import type { ApiPromise } from '@polkadot/api'
+import type { ContractPromise } from '@polkadot/api-contract'
+import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/typechain-types'
+import type { KeyringPair } from '@polkadot/keyring/types'
+import type { QueryReturnType } from '@727-ventures/typechain-types'
+import type BN from 'bn.js'
 //@ts-ignore
-import {ReturnNumber} from '@727-ventures/typechain-types';
-import {getTypeDescription} from './../shared/utils';
+import { ReturnNumber } from '@727-ventures/typechain-types'
+import { getTypeDescription } from '../shared/utils.js'
 // @ts-ignore
-import type {EventRecord} from "@polkadot/api/submittable";
-import {decodeEvents} from "../shared/utils";
-import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json';
-import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/captcha.json';
+import { EventRecord } from '@polkadot/types/interfaces'
+import { decodeEvents } from '../shared/utils.js'
+import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json' assert { type: 'json' }
+import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/captcha.json' assert { type: 'json' }
 
 
 export default class Methods {

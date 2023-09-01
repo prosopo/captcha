@@ -15,16 +15,17 @@
         "rebuild:npm": "npm run clean:npm && npm i",
         "clean": "npm run --silent cmd \"npm run --silent -w @prosopo/%s clean\"",
         "clean:npm": "find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' + && find . -name \"package-lock.json\" -type f -delete ",
-        "clean:all": "npm run --workspaces clean",
+        "clean:all": "npm run clean:npm && npm run clean:ts",
         "clean:reset": "npm run clean:all && npm run clean:npm",
-        "deploy_protocol": "npm run -w @prosopo/dev cli deploy_protocol -- --logLevel=Debug --update_env",
-        "deploy_dapp": "npm run -w @prosopo/dev cli deploy_dapp -- --logLevel=Debug --update_env",
+        "deploy_protocol": "npm run -w @prosopo/scripts cli deploy_protocol -- --logLevel=Debug --update_env",
+        "deploy_dapp": "npm run -w @prosopo/scripts cli deploy_dapp -- --logLevel=Debug --update_env",
+        "clean:ts": "find . -name \"*.tsbuildinfo\" -type f -delete && find . -name \"dist\" -type d -prune -exec rm -rf '{}' + ",
         "version": "npm --no-git-tag-version --allow-same-version --workspaces --workspaces-update version",
         "publish:dry-run": "npm --workspaces publish --dry-run",
         "publish": "npm --workspaces publish --access=public",
         "ls:ws": "npm run --workspaces env | grep npm_package_name | cut -d '=' -f 2",
         "cli": "npm -w @prosopo/cli run cli",
-        "setup": "npm -w @prosopo/dev run setup",
+        "setup": "npm -w @prosopo/scripts run setup",
         "setup:all": "npm run deploy_protocol && npm run deploy_dapp && npm run setup",
         "start:provider": "npm -w @prosopo/cli run start",
         "start:server": "npm -w @prosopo/client-example-server run start",
@@ -32,7 +33,7 @@
         "start:demo": "npm -w @prosopo/client-example run start",
         "start:bundle": "npm -w client-bundle-example run start",
         "populate-data": "npm -w @prosopo/provider run populate-data",
-        "test": "npm -w @prosopo/dev run test",
+        "test": "npm -w @prosopo/scripts run test",
         "test:all": "npm run --workspaces --if-present test",
         "lint": "npm run lint --workspaces --if-present",
         "lint:fix": "npm run lint:fix --workspaces --if-present"
@@ -44,7 +45,7 @@
     "workspaces": [
         "packages/*",
         "demos/*",
-        "dev",
+        "dev/*",
         "protocol/dev"
     ],
     "devDependencies": {
@@ -67,7 +68,7 @@
         "tsc-alias": "^1.8.6",
         "tsconfig-paths-webpack-plugin": "^4.0.1",
         "tslib": "^2.5.2",
-        "typescript": "^4.9.4"
+        "typescript": "^4.9.5"
     },
     "description": "Integrates prosopo packages for development purposes",
     "bugs": {

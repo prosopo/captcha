@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // Create a user of specified type using the databasePopulator
-import { Account } from './accounts'
+import { Account } from './accounts.js'
 import { AccountKey, IDatabaseAccounts } from './dataUtils/DatabaseAccounts'
 import { DappAbiJSON, DappWasm } from './dataUtils/dapp-example-contract/loadFiles'
 import { ProsopoEnvError } from '@prosopo/common'

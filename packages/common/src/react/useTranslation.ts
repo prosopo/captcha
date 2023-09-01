@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { UseTranslationOptions, UseTranslationResponse, useTranslation as useTranslationDefault } from 'react-i18next'
-import i18n from '../i18n'
+import i18n from '../i18n.js'
 
-function useTranslation(options?: UseTranslationOptions): UseTranslationResponse<'translation'> & { t: typeof i18n.t } {
+function useTranslation(
+    options?: UseTranslationOptions<'translation'>
+): UseTranslationResponse<'translation', any> & { t: typeof i18n.t } {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore not sure how to fix this
     return useTranslationDefault('translation', { i18n, ...options })
 }
 

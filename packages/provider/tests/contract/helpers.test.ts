@@ -12,44 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
+import { BN, hexToU8a } from '@polkadot/util'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { LogLevel, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { LogLevelSchema, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
 import { MockEnvironment } from '@prosopo/env'
-import { ProsopoConfigSchema } from '@prosopo/types'
+import { ReturnNumber } from '@727-ventures/typechain-types'
 import { TypeDefInfo } from '@polkadot/types-create'
-import { describe } from 'mocha'
-import { encodeStringArgs } from '@prosopo/contract'
-import { getPair } from '@prosopo/common'
-import { hexToU8a } from '@polkadot/util'
-import chai from 'chai'
+import { ViteTestContext } from '@prosopo/env/mockenv.js'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { encodeStringArgs, wrapQuery } from '@prosopo/contract'
+import { testConfig } from '@prosopo/config'
 
-const expect = chai.expect
+declare module 'vitest' {
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface TestContext extends ViteTestContext {}
+}
 
 describe('CONTRACT HELPERS', function () {
-    const log = getLogger(LogLevel.Debug, 'TEST')
-    let env: MockEnvironment
-    let pairType: KeypairType
-    let ss58Format: number
+    const log = getLogger(LogLevelSchema.enum.Debug, 'TEST')
 
-    beforeEach(async function () {
-        ss58Format = 42
-        pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair(pairType, ss58Format, '//Alice')
-        const config = ProsopoConfigSchema.parse(JSON.parse(process.env.config ? process.env.config : '{}'))
-        env = new MockEnvironment(alicePair, config)
+    beforeEach(async function (context) {
+        context.ss58Format = 42
+        context.pairType = 'sr25519' as KeypairType
+        const alicePair = await getPair(context.pairType, context.ss58Format, '//Alice')
+        console.log(testConfig)
+        context.env = new MockEnvironment(alicePair, testConfig)
         try {
-            await env.isReady()
+            await context.env.isReady()
         } catch (e) {
             throw new ProsopoEnvError(e, 'isReady')
         }
+        const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
+            context.env.contractInterface.query.getProviderStakeThreshold,
+            context.env.contractInterface.query
+        )()
+        context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
     })
 
-    afterEach(async (): Promise<void> => {
-        await env.db?.close()
+    afterEach(async ({ env }): Promise<void> => {
+        if (env && 'db' in env) await env.db?.close()
     })
 
-    it('Properly encodes `Hash` arguments when passed unhashed', async function (done) {
+    test('Properly encodes `Hash` arguments when passed unhashed', async function ({ env }) {
         try {
             log.info('env ready')
             const args = ['https://localhost:9229']
@@ -72,10 +77,8 @@ describe('CONTRACT HELPERS', function () {
                 hexToU8a('0x0000000000000000000068747470733a2f2f6c6f63616c686f73743a39323239').toString()
             )
             log.info('end of test')
-            done()
         } catch (e) {
-            //throw new Error(e)
-            done(e)
+            throw new Error(e)
         }
     })
 })

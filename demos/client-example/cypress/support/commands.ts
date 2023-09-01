@@ -14,8 +14,6 @@
 /// <reference types="cypress" />
 /// <reference types="cypress-promise/register" />
 
-export {}
-
 declare global {
     namespace Cypress {
         interface Chainable {

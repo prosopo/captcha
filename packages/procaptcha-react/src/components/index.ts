@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './CaptchaWidget'
-export * from './CaptchaComponent'
-export { default as ExtensionAccountSelect } from './ExtensionAccountSelect'
-export * from './Procaptcha'
+export * from './CaptchaWidget.js'
+export * from './CaptchaComponent.js'
+export { default as ExtensionAccountSelect } from './ExtensionAccountSelect.js'
+export * from './Procaptcha.js'

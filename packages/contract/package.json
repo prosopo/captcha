@@ -9,6 +9,7 @@
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix"
     },
+    "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "files": [

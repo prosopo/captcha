@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Abi } from '@polkadot/api-contract'
-import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts'
+import { AccountKey, IDatabaseAccounts, exportDatabaseAccounts } from './DatabaseAccounts.js'
 import { DappAbiJSON, DappWasm } from './dapp-example-contract/loadFiles'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoConfig } from '@prosopo/types'
@@ -20,7 +20,7 @@ import { ProsopoEnvError } from '@prosopo/common'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { ProviderEnvironment } from '@prosopo/env'
 import { promiseQueue } from '../../src/util'
-import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator'
+import DatabasePopulator, { IDatabasePopulatorMethodNames } from './DatabasePopulator.js'
 import consola from 'consola'
 
 const msToSecString = (ms: number) => `${Math.round(ms / 100) / 10}s`

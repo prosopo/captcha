@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import '@polkadot/api-augment'
-export * from './accounts'
-export * from './balances'
-export * from './contract'
-export * from './handlers'
-export * from './typechain/captcha'
+export * from './accounts/index.js'
+export * from './balances/index.js'
+export * from './contract/index.js'
+export * from './handlers.js'
+export * from './typechain/captcha/index.js'

@@ -1,5 +1,6 @@
 import { getLogger } from '@prosopo/common'
 import dotenv from 'dotenv'
+import esMain from 'es-main'
 import express from 'express'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
@@ -92,8 +93,8 @@ const main = async () => {
     })
 }
 
-// if main process
-if (typeof require !== undefined && require.main === module) {
+//if main process
+if (esMain(import.meta)) {
     main().catch((error) => {
         console.error(error)
     })

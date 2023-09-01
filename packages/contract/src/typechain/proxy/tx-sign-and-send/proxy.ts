@@ -8,10 +8,9 @@ import { txSignAndSend } from '@727-ventures/typechain-types';
 import type * as ArgumentTypes from '../types-arguments/proxy';
 import type BN from 'bn.js';
 // @ts-ignore
-import type {EventRecord} from "@polkadot/api/submittable";
-import {decodeEvents} from "../shared/utils";
-import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/proxy.json';
-
+import { EventRecord } from '@polkadot/types/interfaces'
+import { decodeEvents } from '../shared/utils.js'
+import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/proxy.json'
 
 export default class Methods {
 	readonly __nativeContract : ContractPromise;
