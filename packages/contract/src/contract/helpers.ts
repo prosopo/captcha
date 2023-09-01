@@ -88,8 +88,10 @@ export function handleContractCallOutcomeErrors(response: ContractCallOutcome, c
     const isOk = 'isOk'
     const asOk = 'asOk'
     if (response.output) {
-        if (response.output[isOk]) {
-            const responseOk = response.output[asOk]
+        //@ts-ignore
+        if (response.output.isOk) {
+            //@ts-ignore
+            const responseOk = response.output.asOk
             if (responseOk.isErr) {
                 throw new ProsopoContractError(responseOk.toPrimitive().err.toString(), contractMethodName, {})
             }
