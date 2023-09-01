@@ -8,8 +8,8 @@
         "noImplicitReturns": true,
         "noPropertyAccessFromIndexSignature": false,
         "noUncheckedIndexedAccess": true,
-        "module": "es6",
-        "moduleResolution": "bundler",
+        "module": "node16",
+        "moduleResolution": "node16",
         "resolveJsonModule": true,
         "declaration": true,
         "declarationMap": true,
@@ -20,7 +20,7 @@
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
         "isolatedModules": true,
-        "target": "es5",
+        "target": "ES2015",
         "composite": true,
         "noErrorTruncation": true
     }
