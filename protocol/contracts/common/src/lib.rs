@@ -72,7 +72,7 @@ pub mod common {
 
         /// Get the git commit id from when this contract was built
         pub fn get_git_commit_id() -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [220, 75, 19, 157, 90, 105, 117, 70, 216, 242, 192, 63, 29, 38, 244, 56, 90, 182, 154, 174, ];
+            let env_git_commit_id: [u8; 20] = [32, 237, 216, 190, 163, 221, 41, 23, 48, 161, 24, 86, 14, 92, 200, 21, 250, 80, 161, 64, ];
             env_git_commit_id
         }
 
@@ -202,16 +202,16 @@ pub mod common {
             config::get_git_commit_id()
         }
 
-        // #[ink(message)]
-        // pub fn sr25519_verify(
-        //     &self,
-        //     sig: [u8; 64],
-        //     msg: Vec<u8>,
-        //     acc: AccountId,
-        // ) -> Result<(), Error> {
-        //     ink::env::sr25519_verify(&sig, &msg[..], account_id_bytes(&acc))
-        //         .map_err(|_| Error::Sr25519VerifyFailed)
-        // }
+        #[ink(message)]
+        pub fn sr25519_verify(
+            &self,
+            sig: [u8; 64],
+            msg: Vec<u8>,
+            acc: AccountId,
+        ) -> Result<(), Error> {
+            ink::env::sr25519_verify(&sig, &msg[..], account_id_bytes(&acc))
+                .map_err(|_| Error::Sr25519VerifyFailed)
+        }
     }
 
     #[cfg(any(test, feature = "test-dependency"))]
