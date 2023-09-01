@@ -46,13 +46,21 @@ export const getPrimitiveTypes = function (abiJson: AbiMetadata): PrimitiveTypes
             return true
         } else if (type.type.path && type.type.path.length > 0) {
             const path = Array.from(type.type.path) as string[]
-            return path[0].indexOf('primitive') > -1 && path[1] === 'types'
+            const item = path[0]
+            if (item === undefined) {
+                throw new Error('Invalid type path')
+            }
+            return item.indexOf('primitive') > -1 && path[1] === 'types'
         }
         return false
     })
 
     types.forEach((type) => {
-        primitiveTypes[type.id] = type.type.def.primitive || type.type.def.composite?.fields[0].typeName || ''
+        const item = type.type.def.composite?.fields[0]
+        if (item === undefined) {
+            throw new Error('Invalid type definition')
+        }
+        primitiveTypes[type.id] = type.type.def.primitive || item.typeName || ''
     })
     return primitiveTypes
 }
