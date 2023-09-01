@@ -79,7 +79,7 @@ checksum = "c3ac9f8b63eca6fd385229b3675f6cc0dc5c8a5c8a54a59d4f52ffd670d87b0c"
 
 [[package]]
 name = "captcha"
-version = "4.2.0"
+version = "0.1.17"
 dependencies = [
  "common",
  "disable_macro",
@@ -104,7 +104,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "common"
-version = "0.3.0"
+version = "0.1.17"
 dependencies = [
  "ink",
  "parity-scale-codec",
@@ -639,7 +639,7 @@ dependencies = [
 
 [[package]]
 name = "proxy"
-version = "4.0.0"
+version = "0.1.17"
 dependencies = [
  "common",
  "disable_macro",

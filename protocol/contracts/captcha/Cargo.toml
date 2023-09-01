@@ -1,8 +1,12 @@
 [package]
 name = "captcha"
-version = "4.2.0"
+version = "0.1.17"
 authors = ["Chris Taylor chris@prosopo.io", "George Oastler george@prosopo.io", "Vincenzo Ferrara", "Siniša Čanak"]
 edition = "2021"
+documentation = "https://github.com/prosopo/captcha"
+repository = "https://github.com/prosopo/captcha"
+homepage = "https://github.com/prosopo/captcha"
+license-file="../../../LICENSE"
 
 [dependencies]
 ink = { git = "https://github.com/prosopo/ink_sr25519", branch="4.3.0-custom", default-features = false }
@@ -22,13 +26,13 @@ version = "0.3.0"
 path = "../../crates/disable_macro"
 
 [dependencies.common]
-version = "0.3.0"
+version = "0.1.17"
 path = "../../contracts/common"
 default-features = false
 features = ["ink-as-dependency"]
 
 [dev-dependencies.common]
-version = "0.3.0"
+version = "0.1.17"
 path = "../../contracts/common"
 default-features = false
 features = ["test-dependency"]
