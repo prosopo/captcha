@@ -34,7 +34,17 @@ export interface Logger {
     getLogLevel(): LogLevel
 }
 
-export const LogLevelSchema = z.enum(['Silent', 'Error', 'Warn', 'Log', 'Info', 'Debug', 'Trace', 'Verbose'])
+enum LogLevelEnum {
+    Silent,
+    Error,
+    Warn,
+    Log,
+    Info,
+    Debug,
+    Trace,
+    Verbose,
+}
+export const LogLevelSchema = z.nativeEnum(LogLevelEnum)
 export type LogLevel = z.infer<typeof LogLevelSchema>
 
 export function* getLogLevelKeys(): Generator<string> {
@@ -46,41 +56,21 @@ export function* getLogLevelKeys(): Generator<string> {
 }
 
 export function* getLogLevelValues(): Generator<LogLevel> {
-    for (const level in LogLevelSchema.Values) {
-        yield level as LogLevel
+    for (const level in LogLevelEnum) {
+        yield LogLevelSchema.parse(level)
     }
 }
 
 export const parseLogLevel = (logLevel: string | LogLevel | number | undefined): LogLevel => {
     if (logLevel === undefined) {
-        return LogLevelSchema.Values.Info
-    } else if (typeof logLevel === 'number') {
-        // LogLevel or number can be out of range of the enum (e.g. you can do `const a: LogLevel = -1` and that's valid!) so need to check it
-        if (LogLevelSchema.array.length > logLevel && LogLevelSchema.array[logLevel]) {
-            return LogLevelSchema.Values[logLevel]
-        }
+        return LogLevelEnum.Info
     } else {
-        const int = parseInt(logLevel) // test if str can be parsed as int
-        if (!isNaN(int)) {
-            // if so then check if it's a valid log level
-            if (LogLevelSchema.array.length > parseInt(logLevel) && LogLevelSchema.array[logLevel]) {
-                // if so then return it
-                return LogLevelSchema.Values[logLevel]
-            }
-        } else {
-            if (logLevel && typeof logLevel === 'string') {
-                // else not an int so try to parse as a string log level
-                const _ = lodash()
-                const levelUp: string = _.capitalize(logLevel.toString())
-                try {
-                    return LogLevelSchema.parse(levelUp)
-                } catch (err) {
-                    throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', parseLogLevel.name)
-                }
-            }
+        try {
+            return LogLevelSchema.parse(logLevel)
+        } catch (e) {
+            throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', parseLogLevel.name)
         }
     }
-    throw new ProsopoEnvError('CONFIG.INVALID_LOG_LEVEL', parseLogLevel.name)
 }
 
 // Create a new logger with the given level and scope
