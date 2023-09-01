@@ -179,7 +179,7 @@ export function getStorageEntry(
         return { storageEntry: json.storage.root.layout.struct?.fields[index], index }
     }
 
-    return { storageEntry: undefined, index: undefined }
+    return {}
 }
 
 /**
