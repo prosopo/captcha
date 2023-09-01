@@ -104,6 +104,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "common"
 version = "0.1.17"
 dependencies = [
+ "disable_macro",
  "ink",
  "parity-scale-codec",
  "scale-info",
@@ -187,7 +188,7 @@ dependencies = [
 
 [[package]]
 name = "disable_macro"
-version = "0.3.0"
+version = "0.1.17"
 dependencies = [
  "proc-macro2",
  "quote",
