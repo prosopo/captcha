@@ -70,7 +70,7 @@ export class ProsopoCaptchaContract extends Contract {
     contractName: string
     contract: ContractPromise
     pair: KeyringPair
-    options: ContractOptions
+    options: ContractOptions | undefined
     nonce: number
     logger: Logger
     json: AbiMetadata
