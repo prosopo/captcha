@@ -150,8 +150,12 @@ export function getStorageKeyAndType(
         }
 
         const rootKeyReversed = reverseHexString(rootKey.slice(2))
+        const item = abi.registry.lookup.types[storage.layout.leaf.ty]
+        if (item === undefined) {
+            throw new Error('Invalid storage type')
+        }
         return {
-            storageType: abi.registry.lookup.types[storage.layout.leaf.ty],
+            storageType: item,
             storageKey: rootKeyReversed,
         }
     }
