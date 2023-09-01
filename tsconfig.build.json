@@ -19,6 +19,7 @@
         "esModuleInterop": true,
         "isolatedModules": true,
         "composite": true,
+        "skipLibCheck": true,
         "noErrorTruncation": true
     }
 }
