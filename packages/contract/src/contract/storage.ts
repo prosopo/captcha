@@ -20,7 +20,9 @@ import { firstValueFrom } from 'rxjs'
 import { hexToNumber } from '@polkadot/util'
 import { reverseHexString } from '@prosopo/common'
 
-const primitivesSizeInBytes = {
+const primitivesSizeInBytes: {
+    [key: string]: number
+} = {
     u8: 1, // 2**0
     u16: 2, // 2**1
     u32: 4, // 2**2
@@ -74,7 +76,9 @@ export const getPrimitiveStorageFields = (
     storageFields: AbiStorageField[],
     primitiveStorageTypes: PrimitiveTypes
 ): PrimitiveStorageFields => {
-    const filteredStorageFields = {}
+    const filteredStorageFields: {
+        [key: string]: { storageType: string; index: number; startBytes: number; lengthBytes: number }
+    } = {}
     let primitiveStorageIndex = 0
     let startBytes = 0
     for (const storageField of storageFields) {
@@ -82,15 +86,23 @@ export const getPrimitiveStorageFields = (
         if (storageField.layout && storageField.layout.leaf && storageField.layout.leaf.ty !== undefined) {
             const type = storageField.layout.leaf.ty
             if (primitiveStorageTypes[type]) {
-                const typeName = primitiveStorageTypes[type]
+                const typeNameAny = primitiveStorageTypes[type]
+                if (typeNameAny === undefined) {
+                    throw new Error('Invalid storage type')
+                }
+                const typeName: string = typeNameAny.toString()
+                const size = primitivesSizeInBytes[typeName]
+                if (size === undefined) {
+                    throw new Error('Invalid storage type')
+                }
                 filteredStorageFields[storageName] = {
                     storageType: typeName,
                     index: primitiveStorageIndex,
                     startBytes: startBytes,
-                    lengthBytes: primitivesSizeInBytes[typeName],
+                    lengthBytes: size,
                 }
                 // Add the length of the primitive type to the startBytes
-                startBytes += primitivesSizeInBytes[typeName]
+                startBytes += size
                 // Primitive values are stored in the contract under a single key in order of declaration
                 primitiveStorageIndex++
             }
