@@ -10,7 +10,7 @@
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix",
         "cli": "node ./dist/js/cli.js",
-        "test": "vitest --run --coverage"
+        "test": "NODE_ENV=test vitest --run --coverage"
     },
     "main": "./dist/index.js",
     "type": "module",
