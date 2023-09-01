@@ -34,7 +34,7 @@ export interface Logger {
     getLogLevel(): LogLevel
 }
 
-enum LogLevelEnum {
+export enum LogLevelEnum {
     Silent,
     Error,
     Warn,
