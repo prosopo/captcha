@@ -34,7 +34,7 @@ import { useWeightImpl } from './useWeight.js'
 import Contract from '../typechain/captcha/contracts/captcha.js'
 import MixedMethods from '../typechain/captcha/mixed-methods/captcha.js'
 import QueryMethods from '../typechain/captcha/query/captcha.js'
-import type { ContractOptions } from '@polkadot/api-contract/types'
+import type { ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
 
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
 
@@ -164,18 +164,26 @@ export class ProsopoCaptchaContract extends Contract {
         }
         const extrinsic = func(this.pair.address, initialOptions, ...encodedArgs)
 
-        const response = await extrinsic
+        const response = (await extrinsic) as unknown as ContractCallOutcome
         if (response.result.isOk) {
             let options = getOptions(this.api, message.isMutating, value, response.gasRequired, response.storageDeposit)
-            const extrinsicTx = this.contract.tx[contractMethodName](options, ...encodedArgs)
+            let method = this.contract.tx[contractMethodName]
+            if (method === undefined) {
+                throw new RangeError(`Method ${contractMethodName} does not exist on contract ${this.contractName}`)
+            }
+            const extrinsicTx = method(options, ...encodedArgs)
             // paymentInfo is larger than gasRequired returned by query so use paymentInfo
             const paymentInfo = await extrinsicTx.paymentInfo(this.pair.address)
             this.logger.debug('Payment info: ', paymentInfo.partialFee.toHuman())
             // increase the gas limit to make sure the tx succeeds
             options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit, true)
             handleContractCallOutcomeErrors(response, contractMethodName)
+            method = this.contract.tx[contractMethodName]
+            if (method === undefined) {
+                throw new RangeError(`Method ${contractMethodName} does not exist on contract ${this.contractName}`)
+            }
             return {
-                extrinsic: this.contract.tx[contractMethodName](options, ...encodedArgs),
+                extrinsic: method(options, ...encodedArgs),
                 options,
                 storageDeposit: response.storageDeposit,
             }
