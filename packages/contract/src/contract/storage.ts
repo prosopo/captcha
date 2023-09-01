@@ -205,9 +205,13 @@ export async function getPrimitiveStorageValue<T>(
     // Remove first 4 bytes (0x00016101) - not sure what it is
     const trimmedStorageBytes = storageBytes.slice(4, storageBytes.length)
     // Extract the relevant bytes from the storageBytes
-    const startBytes = primitiveStorage[name].startBytes
-    const endBytes = startBytes + primitiveStorage[name].lengthBytes
+    const storage = primitiveStorage[name]
+    if (storage === undefined) {
+        throw new Error('Invalid storage type')
+    }
+    const startBytes = storage.startBytes
+    const endBytes = startBytes + storage.lengthBytes
     const primitiveBytes = trimmedStorageBytes.slice(startBytes, endBytes)
     // Construct the type from the bytes
-    return abi.registry.createType(primitiveStorage[name].storageType, primitiveBytes) as T
+    return abi.registry.createType(storage.storageType, primitiveBytes) as T
 }
