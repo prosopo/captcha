@@ -39,8 +39,5 @@
         "registry": "https://registry.npmjs.org"
     },
     "description": "Utility package to house all code that is not specific to prosopo. E.g. random number generation, string manipulation, etc.",
-    "directories": {
-        "test": "tests"
-    },
     "sideEffects": false
 }
