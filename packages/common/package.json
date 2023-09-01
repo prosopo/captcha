@@ -8,11 +8,10 @@
     "scripts": {
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
-        "test": "NODE_ENV=test vitest 'tests/**/*.test.ts'",
+        "test": "NODE_ENV=test vitest --run --coverage",
         "lint": "npx eslint .",
         "lint:fix": "npx eslint . --fix"
     },
-
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
     "dependencies": {
