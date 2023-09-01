@@ -224,6 +224,9 @@ class UrlConverter {
         for (let bitCount = 0; bitCount < nBits; ) {
             const byteIndex = (bitCount / this.byteNBits) | 0
             const byte = bytes[byteIndex]
+            if (byte === undefined) {
+                throw new Error(`Could not find byte at index ${byteIndex} of '${bytes}'`)
+            }
             const usedBitsInByte = bitCount % this.byteNBits
             const unusedBitsInByte = this.byteNBits - usedBitsInByte
             // unused bits correspond to the current symbol, so consume up to 6 bits
