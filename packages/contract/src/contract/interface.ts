@@ -151,12 +151,18 @@ export class ProsopoCaptchaContract extends Contract {
         const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(1))
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
         this.logger.debug('Sending address: ', this.pair.address)
-        const initialOptions = {
-            value,
+        const initialOptions: ContractOptions = {
             gasLimit,
             storageDepositLimit: null,
         }
-        const extrinsic = this.contract.query[message.method](this.pair.address, initialOptions, ...encodedArgs)
+        if (value !== undefined) {
+            initialOptions.value = value
+        }
+        const func = this.contract.query[message.method]
+        if (func === undefined) {
+            throw new RangeError(`Method ${contractMethodName} does not exist on contract ${this.contractName}`)
+        }
+        const extrinsic = func(this.pair.address, initialOptions, ...encodedArgs)
 
         const response = await extrinsic
         if (response.result.isOk) {
