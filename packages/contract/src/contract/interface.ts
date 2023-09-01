@@ -48,7 +48,7 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
             result = (await fn.bind(queryMethods)(...args)) as QueryReturnType<
                 Result<Result<QueryReturnTypeInner<QueryFunctionReturnType>, Error>, LangError>
             >
-        } catch (e) {
+        } catch (e: any) {
             throw new ProsopoContractError(e._asError, fn.name, undefined, {
                 args: args,
             })
