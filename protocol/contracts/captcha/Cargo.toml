@@ -13,7 +13,7 @@ ink = { git = "https://github.com/prosopo/ink_sr25519", branch="4.3.0-custom", d
 scale = { package = "parity-scale-codec", version = "3.4", default-features = false, features = ["derive"] }
 scale-info = { version = "2.7.0", default-features = false, features = ["derive"], optional = true }
 common = { version = "0.1.17", path = "../../contracts/common", default-features = false, features = ["ink-as-dependency"] }
-disable_macro = { version = "0.3.0", path = "../../crates/disable_macro" }
+disable_macro = { version = "0.1.17", path = "../../crates/disable_macro" }
 
 [dev-dependencies]
 common = { version = "0.1.17", path = "../../contracts/common", default-features = false, features = ["test-dependency"] }
