@@ -2,12 +2,7 @@
     "extends": "../../tsconfig.build.json",
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist",
-        "module": "esnext",
-        "target": "esnext",
-        "lib": ["esnext", "dom"],
-        "resolveJsonModule": true,
-        "moduleResolution": "NodeNext"
+        "outDir": "./dist"
     },
     "include": ["./src/**/*.ts", "./src/**/*.json"],
     "references": [
