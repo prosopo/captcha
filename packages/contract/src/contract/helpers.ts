@@ -116,9 +116,15 @@ export function decodeEvents(contractAddress: AccountId, records: EventRecord[],
         .filter(
             ({ event }) =>
                 function () {
+                    const data = event.toPrimitive().data
+                    if (data instanceof Array) {
+                        return false
+                    }
+                    if (!(data instanceof Object)) {
+                        return false
+                    }
                     return (
-                        event.toPrimitive().section === 'contracts' &&
-                        event.toPrimitive().data!['contract'] === contractAddress.toString()
+                        event.toPrimitive().section === 'contracts' && data['contracts'] === contractAddress.toString()
                     )
                 }
         )
