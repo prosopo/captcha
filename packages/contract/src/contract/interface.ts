@@ -121,11 +121,17 @@ export class ProsopoCaptchaContract extends Contract {
      */
     async queryAtBlock<T>(blockHash: BlockHash, methodName: string, args?: any[]): Promise<T> {
         const api = (await this.api.at(blockHash)) as ApiPromise
-        const methods = new MixedMethods(api, this.contract, this.signer)
+        const methods = new MixedMethods(api, this.contract, this.signer) as unknown as {
+            [key: string]: (...args: any[]) => Promise<QueryReturnType<any>>
+        }
+        const method = methods[methodName]
+        if (method === undefined) {
+            throw new RangeError(`Method ${methodName} does not exist on contract ${this.contractName}`)
+        }
         if (args) {
-            return (await methods[methodName](...args)).value.unwrap().unwrap() as T
+            return (await method(...args)).value.unwrap().unwrap() as T
         } else {
-            return (await methods[methodName]()).value.unwrap().unwrap() as T
+            return (await method()).value.unwrap().unwrap() as T
         }
     }
 
