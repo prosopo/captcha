@@ -103,7 +103,10 @@ export class ProsopoCaptchaContract extends Contract {
         if (this.json.storage.root.layout.struct) {
             for (const storageField of this.json.storage.root.layout.struct.fields) {
                 const functionName = `${snakeToCamelCase(storageField.name)}`
-                ProsopoCaptchaContract.prototype[functionName] = () => {
+                const proto = ProsopoCaptchaContract.prototype as unknown as {
+                    [key: string]: () => any
+                }
+                proto[functionName] = () => {
                     return this.getStorage(storageField.name)
                 }
             }
