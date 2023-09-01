@@ -151,6 +151,7 @@ export const AbiCellSpec = z.object({
 })
 export const AbiTypesSpec = z.array(AbiTypeSpec)
 
+//@ts-ignore
 export const AbiStorageFieldSpec = z.lazy(() =>
     z.object({
         name: AbiText.optional(),
