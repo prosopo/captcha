@@ -236,8 +236,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 datasetId,
                 datasetContentId,
                 format,
-                contentTree,
-                solutionTree,
+                contentTree: contentTree || [],
+                solutionTree: solutionTree || [],
                 captchas: captchas.map((captchaDoc) => {
                     const { captchaId, captchaContentId, items, target, salt, solved } = captchaDoc
                     const solution = solutionsKeyed[captchaId]
