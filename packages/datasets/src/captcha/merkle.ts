@@ -52,12 +52,12 @@ export class CaptchaMerkleTree {
         this.root = this.buildMerkleTree(this.leaves)
     }
 
-    buildMerkleTree(leaves: MerkleNode[]) {
+    buildMerkleTree(leaves: MerkleNode[]): MerkleNode[] {
         // Builds the Merkle tree from a list of leaves. In case of an odd number of leaves, the last leaf is duplicated.
 
         const numLeaves = leaves.length
         if (numLeaves === 1) {
-            return leaves[0]
+            return leaves
         }
 
         const parents: MerkleNode[] = []
