@@ -77,10 +77,10 @@ export class CaptchaMerkleTree {
         return this.buildMerkleTree(parents)
     }
 
-    createParent(leftChild, rightChild): MerkleNode {
+    createParent(leftChild: MerkleNode, rightChild: MerkleNode): MerkleNode {
         const parent = new MerkleNode(hexHashArray([leftChild.hash, rightChild.hash]))
-        leftChild.parent = parent
-        rightChild.parent = parent
+        leftChild.parent = parent.hash
+        rightChild.parent = parent.hash
         return parent
     }
 
