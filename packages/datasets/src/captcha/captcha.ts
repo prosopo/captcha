@@ -197,7 +197,8 @@ export function matchItemsToSolutions(
 ): HashedSolution[] {
     return (
         solutions?.map((solution: string | number) => {
-            const hash = items && items[solution] && items[solution].hash ? items[solution].hash : solution
+            const index = parseInt(solution.toString())
+            const hash = items && items[index] && (items[index]?.hash || solution)
 
             if (!hash) {
                 throw new ProsopoEnvError('CAPTCHA.MISSING_ITEM_HASH')
