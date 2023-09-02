@@ -14,6 +14,7 @@
 import { Abi, CodePromise } from '@polkadot/api-contract'
 import { ApiPromise } from '@polkadot/api'
 import { BN, BN_ZERO } from '@polkadot/util'
+import { BlueprintOptions } from '@polkadot/api-contract/types'
 import { CodeSubmittableResult } from '@polkadot/api-contract/base'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ISubmittableResult } from '@polkadot/types/types'
@@ -164,18 +165,16 @@ export async function dryRunDeploy(
             if (func === undefined) {
                 throw new Error('Unable to find method')
             }
-            contract = func(
-                {
-                    gasLimit: dryRunResult.gasRequired,
-                    storageDepositLimit: dryRunResult.storageDeposit.isCharge
-                        ? dryRunResult.storageDeposit.asCharge
-                        : null,
-                    //storageDepositLimit: null,
-                    value: message.isPayable ? value : undefined,
-                    salt: saltOrNull,
-                },
-                ...params
-            )
+            const options: BlueprintOptions = {
+                gasLimit: dryRunResult.gasRequired,
+                storageDepositLimit: dryRunResult.storageDeposit.isCharge ? dryRunResult.storageDeposit.asCharge : null,
+                //storageDepositLimit: null,
+                salt: saltOrNull,
+            }
+            if (value !== undefined) {
+                options.value = value
+            }
+            contract = func(options, ...params)
         }
     } catch (e) {
         error = (e as Error).message
