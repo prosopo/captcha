@@ -332,7 +332,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         try {
             await this.tables?.captcha.updateOne({ datasetId }, { $set: captcha }, { upsert: false })
         } catch (err) {
-            throw new ProsopoEnvError(err, this.updateCaptcha.name, {}, datasetId)
+            // TODO need to improve error handling
+            throw new ProsopoEnvError(err as Error)
         }
     }
 
