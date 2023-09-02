@@ -206,7 +206,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 )
             }
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.DATASET_LOAD_FAILED')
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.DATASET_LOAD_FAILED')
         }
     }
 
