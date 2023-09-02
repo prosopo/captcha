@@ -19,7 +19,7 @@ class MerkleNode implements MerkleNodeInterface {
 
     parent: string | null
 
-    constructor(hash) {
+    constructor(hash: string) {
         this.hash = hash
         this.parent = null
     }
