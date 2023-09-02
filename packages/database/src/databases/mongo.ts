@@ -672,7 +672,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 ?.updateMany({ captchaId: { $in: captchaIds } }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_FLAG_FAILED', {}, captchaIds)
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.SOLUTION_FLAG_FAILED', {}, captchaIds)
         }
     }
 
