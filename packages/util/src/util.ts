@@ -91,3 +91,23 @@ export function* permutations(
         i = arr.length - 1
     }
 }
+
+// Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null
+// Note undefined's are not allowed due to arrays returning undefined when accessing an out of bounds index
+export const get = <T>(arr: Exclude<T, undefined>[], i: number): Exclude<T, undefined> => {
+    const item = getu(arr, i)
+    if (item === undefined) {
+        throw new Error(`Array item at index ${i} is undefined or null`)
+    }
+    return item
+}
+
+// Get an element from an array, throwing an error if it's index is out of bounds
+// Note undefined's are allowed
+export const getu = <T>(arr: (T | undefined)[], i: number): T | undefined => {
+    if (i >= arr.length || i < 0) {
+        throw new Error(`Array index ${i} is out of bounds`)
+    }
+    const item = arr[i]
+    return item
+}
