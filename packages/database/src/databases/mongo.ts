@@ -226,7 +226,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
             const solutions: SolutionRecord[] = (await this.tables?.solution.find({ datasetId }).lean()) || []
 
-            const solutionsKeyed = {}
+            const solutionsKeyed: {
+                [key: string]: SolutionRecord
+            } = {}
             for (const solution of solutions) {
                 solutionsKeyed[solution.captchaId] = solution
             }
