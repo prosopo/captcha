@@ -70,7 +70,8 @@ export function parseAndSortCaptchaSolutions(captchaJSON: CaptchaSolution[]): Ca
             solution: captcha.solution.sort(),
         }))
     } catch (err) {
-        throw new ProsopoEnvError(err, 'ERRORS.CAPTCHA.PARSE_ERROR')
+        // TODO fix / improve error handling
+        throw new ProsopoEnvError(err as Error)
     }
 }
 
