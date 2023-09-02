@@ -241,9 +241,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 captchas: captchas.map((captchaDoc) => {
                     const { captchaId, captchaContentId, items, target, salt, solved } = captchaDoc
                     const solution = solutionsKeyed[captchaId]
-                    if (solution === undefined) {
-                        throw new RangeError(`Solution not found for captcha ${captchaId}`)
-                    }
                     return {
                         captchaId,
                         captchaContentId,
@@ -251,7 +248,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                         salt,
                         items,
                         target,
-                        solution: solved && solutionsKeyed[captchaId] ? solution.solution : null,
+                        solution: solved && solution ? solution.solution : ([] as string[]),
                     }
                 }),
             }
