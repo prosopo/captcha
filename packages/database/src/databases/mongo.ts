@@ -535,7 +535,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         throw new ProsopoEnvError('DATABASE.SOLUTION_GET_FAILED')
     }
 
-    async getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string> {
+    async getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount: number): Promise<string> {
         const cursor = this.tables?.solution.aggregate([
             {
                 $match: {},
