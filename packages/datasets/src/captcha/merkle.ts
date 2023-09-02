@@ -49,7 +49,7 @@ export class CaptchaMerkleTree {
             layerZero.push(node.hash)
         }
         this.layers.push(layerZero)
-        this.root = this.buildMerkleTree(this.leaves)
+        this.root = this.buildMerkleTree(this.leaves)[0]
     }
 
     buildMerkleTree(leaves: MerkleNode[]): MerkleNode[] {
