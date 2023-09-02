@@ -87,14 +87,18 @@ export function sortAndComputeHashes(
     stored.sort(captchaSort)
 
     return stored.map(({ salt, items = [], target = '', captchaId, solved }, index) => {
-        if (captchaId != received[index].captchaId) {
+        const item = received[index]
+        if (item === undefined) {
+            throw new ProsopoEnvError('CAPTCHA.ID_MISMATCH')
+        }
+        if (captchaId != item.captchaId) {
             throw new ProsopoEnvError('CAPTCHA.ID_MISMATCH')
         }
 
         return {
             hash: computeCaptchaHash(
                 {
-                    solution: solved ? received[index].solution : [],
+                    solution: solved ? item.solution : [],
                     salt,
                     items,
                     target,
