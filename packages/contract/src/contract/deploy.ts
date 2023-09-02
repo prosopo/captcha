@@ -138,9 +138,13 @@ export async function dryRunDeploy(
     const accountId = pair.address
     let contract: SubmittableExtrinsic<'promise'> | null = null
     let error: string | null = null
+    const saltOrNull = salt ? salt : null
 
     try {
         const message = contractAbi?.constructors[constructorIndex]
+        if (message === undefined) {
+            throw new Error('Unable to find constructor')
+        }
         const method = message.method
         if (code && message && accountId) {
             const dryRunParams: Parameters<typeof api.call.contractsApi.instantiate> = [
@@ -156,7 +160,11 @@ export async function dryRunDeploy(
             ]
 
             const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
-            contract = code.tx[method](
+            const func = code.tx[method]
+            if (func === undefined) {
+                throw new Error('Unable to find method')
+            }
+            contract = func(
                 {
                     gasLimit: dryRunResult.gasRequired,
                     storageDepositLimit: dryRunResult.storageDeposit.isCharge
@@ -164,7 +172,7 @@ export async function dryRunDeploy(
                         : null,
                     //storageDepositLimit: null,
                     value: message.isPayable ? value : undefined,
-                    salt,
+                    salt: saltOrNull,
                 },
                 ...params
             )
