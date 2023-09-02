@@ -37,9 +37,24 @@ export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
  */
 export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
     try {
-        return DatasetSchema.parse(datasetJSON)
+        const result = DatasetSchema.parse(datasetJSON)
+        const result2: DatasetRaw = {
+            format: result.format,
+            captchas: result.captchas.map((captcha) => {
+                return {
+                    ...captcha,
+                    solution: captcha.solution || [],
+                    unlabelled: captcha.unlabelled || [],
+                }
+            }),
+        }
+        if (result.datasetId !== undefined) result2.datasetId = result.datasetId
+        if (result.contentTree !== undefined) result2.contentTree = result.contentTree
+        if (result.datasetContentId !== undefined) result2.datasetContentId = result.datasetContentId
+        if (result.solutionTree !== undefined) result2.solutionTree = result.solutionTree
+        return result2
     } catch (err) {
-        throw new ProsopoEnvError(err, 'ERRORS.DATASET.PARSE_ERROR')
+        throw new ProsopoEnvError(err as Error)
     }
 }
 
