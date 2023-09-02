@@ -745,7 +745,10 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         task: ScheduledTaskNames,
         status?: ScheduledTaskStatus
     ): Promise<ScheduledTaskRecord | undefined> {
-        const lookup = { processName: task }
+        const lookup: {
+            processName: ScheduledTaskNames
+            status?: ScheduledTaskStatus
+        } = { processName: task }
         if (status) {
             lookup['status'] = status
         }
