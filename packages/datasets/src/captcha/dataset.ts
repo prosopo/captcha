@@ -15,6 +15,7 @@ import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
 import { CaptchaMerkleTree } from './merkle.js'
 import { ProsopoEnvError } from '@prosopo/common'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha.js'
+import { get } from '@prosopo/util'
 
 export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
     return datasetRaw.captchas.map(async (captcha) => {
@@ -44,7 +45,7 @@ export async function validateDatasetContent(datasetOriginal: Dataset): Promise<
             'captchaId' in captchaRaw ? captchaRaw.captchaId === captcha.captchaId : false
         )
         if (captchaRaw) {
-            return captcha.items.every((item, index) => item.hash === captchaRaw.items[index].hash)
+            return captcha.items.every((item, index) => item.hash === get(captchaRaw.items, index).hash)
         } else {
             return false
         }
@@ -62,8 +63,8 @@ export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
         (captcha: CaptchaWithoutId, index: number) =>
             ({
                 ...captcha,
-                captchaId: solutionTree.leaves[index].hash,
-                captchaContentId: contentTree.leaves[index].hash,
+                captchaId: get(solutionTree.leaves, index).hash,
+                captchaContentId: get(contentTree.leaves, index).hash,
                 datasetId: solutionTree.root?.hash,
                 datasetContentId: contentTree.root?.hash,
             } as Captcha)
