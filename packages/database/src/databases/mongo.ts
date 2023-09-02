@@ -27,7 +27,7 @@ import {
     ScheduledTaskResult,
     ScheduledTaskStatus,
 } from '@prosopo/types'
-import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
+import { AsyncFactory, Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import {
     CaptchaRecordSchema,
     Database,
@@ -67,6 +67,13 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     dbname: string
     connection?: Connection
     logger: Logger
+
+    constructor() {
+        super()
+        this.url = ''
+        this.dbname = ''
+        this.logger = getLoggerDefault()
+    }
 
     public async init(url: string, dbname: string, logger: Logger, authSource?: string) {
         const authSourceString = authSource ? `?authSource=${authSource}` : ''
