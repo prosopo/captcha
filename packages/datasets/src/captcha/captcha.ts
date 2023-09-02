@@ -158,7 +158,8 @@ export function computeCaptchaHash(
             sortItemHashes ? itemHashes.sort() : itemHashes,
         ])
     } catch (err) {
-        throw new ProsopoEnvError(err)
+        // TODO fix / improve error handling
+        throw new ProsopoEnvError(err as Error)
     }
 }
 
