@@ -100,5 +100,6 @@ export async function batch(
 
 // Get the error from inside the batch interrupted event
 function formatBatchInterruptedEvent({ data: [index, error] }: Event): string {
-    return `error: ${index.toString()}: ${getDispatchError(error as DispatchError)}`
+    const err = index === undefined ? 'unknown' : index.toString()
+    return `error: ${err}: ${getDispatchError(error as DispatchError)}`
 }
