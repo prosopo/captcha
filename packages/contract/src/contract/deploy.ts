@@ -41,7 +41,7 @@ export class ContractDeployer {
     private readonly constructorIndex: number
     private readonly value: number
     private readonly logger: Logger
-    private readonly salt?: string
+    private readonly salt: string | undefined
 
     constructor(
         api: ApiPromise,
