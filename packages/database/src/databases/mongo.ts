@@ -247,7 +247,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     return {
                         captchaId,
                         captchaContentId,
-                        solved,
+                        solved: !!solved,
                         salt,
                         items,
                         target,
