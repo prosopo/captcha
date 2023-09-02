@@ -688,7 +688,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
         }
     }
 
@@ -703,7 +704,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { batched: true } }, { upsert: false })
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
         }
     }
 
