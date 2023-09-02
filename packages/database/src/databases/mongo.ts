@@ -657,7 +657,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 )
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)
         }
     }
 
