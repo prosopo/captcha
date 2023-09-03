@@ -112,6 +112,20 @@ export const atUnsafe = <T>(arr: T[], i: number): T => {
     return item as T
 }
 
+// Get a value from an object, throwing an error if the key is not present
+export const get = <K extends string | number | symbol, V>(
+    obj: {
+        [key in K]: V
+    },
+    key: K
+): V => {
+    const value = obj[key]
+    if (value === undefined) {
+        throw new Error(`Object key ${String(key)} is undefined`)
+    }
+    return value
+}
+
 export const choice = <T>(
     items: T[],
     n: number,
