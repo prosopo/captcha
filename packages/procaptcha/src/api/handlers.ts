@@ -14,6 +14,7 @@
 import { AxiosError } from 'axios'
 
 export class ProsopoApiError extends Error {
+    cause: any
     constructor(error: AxiosError, context?: string, ...params: any[]) {
         super(error ? error.message : 'Unknown API Error')
 
