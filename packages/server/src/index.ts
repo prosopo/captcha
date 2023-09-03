@@ -48,10 +48,10 @@ export class ProsopoServer {
         ) {
             this.defaultEnvironment = this.config.defaultEnvironment
             this.network = get(this.config.networks, this.defaultEnvironment)
-            this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment].endpoint)
-            this.prosopoContractAddress = this.config.networks[this.defaultEnvironment].contract.address
+            this.wsProvider = new WsProvider(get(this.config.networks, this.defaultEnvironment).endpoint)
+            this.prosopoContractAddress = get(this.config.networks, this.defaultEnvironment).contract.address
             this.dappContractAddress = this.config.account.address
-            this.contractName = this.config.networks[this.defaultEnvironment].contract.name
+            this.contractName = get(this.config.networks, this.defaultEnvironment).contract.name
             this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
