@@ -113,12 +113,14 @@ export const atUnsafe = <T>(arr: T[], i: number): T => {
 }
 
 // Get a value from an object, throwing an error if the key is not present
-export const get = <K extends string | number | symbol, V>(
+export function get<K extends string | number | symbol, V>(
     obj: {
         [key in K]: V
     },
     key: K
-): V => {
+): V
+export function get(obj: JSON, key: string): string
+export function get<K extends keyof object, V>(obj: object, key: K): V {
     const value = obj[key]
     if (value === undefined) {
         throw new Error(`Object key ${String(key)} is undefined`)
