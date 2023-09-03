@@ -1,5 +1,6 @@
 import { Args } from './args.js'
 import { Logger, getLoggerDefault } from '@prosopo/common'
+import { get } from '@prosopo/util'
 import fs from 'fs'
 
 export default async (args: Args, logger?: Logger) => {
@@ -12,10 +13,12 @@ export default async (args: Args, logger?: Logger) => {
                 data[i] = replace(data[i], from, to)
             }
         } else if (typeof data === 'object') {
-            const obj = data as object
+            const obj = data as {
+                [key: string]: unknown
+            }
             for (const key of Object.keys(obj)) {
                 if (key === 'data') {
-                    const value = obj[key]
+                    const value = get(obj, key)
                     if (value.startsWith(from)) {
                         obj[key] = to + value.slice(from.length)
                     }
