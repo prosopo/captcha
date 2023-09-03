@@ -28,6 +28,7 @@ import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/types'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
+import { at } from '@prosopo/util'
 import { stringToHex } from '@polkadot/util'
 
 export class ProsopoCaptchaApi {
@@ -67,10 +68,12 @@ export class ProsopoCaptchaApi {
 
     public verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: GetCaptchaResponse): void {
         // TODO make sure root is equal to root on the provider
-        const proofLength = captchaChallenge.captchas[0].proof.length
+        const first = at(captchaChallenge.captchas, 0)
+        const proofLength = first.proof.length
         console.log(provider.provider)
 
-        if (provider.provider.datasetIdContent.toString() !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
+        const last = at(first.proof, proofLength - 1)
+        if (provider.provider.datasetIdContent.toString() !== at(last, 0)) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_DATASET_CONTENT_ID')
         }
 
