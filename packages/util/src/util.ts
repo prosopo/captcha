@@ -103,11 +103,11 @@ export const get = <T>(arr: Exclude<T, undefined>[], i: number): Exclude<T, unde
 }
 
 // Get an element from an array, throwing an error if it's index is out of bounds
-// Note undefined's are allowed
-export const getu = <T>(arr: (T | undefined)[], i: number): T | undefined => {
+// This is an unsafe method as it allows undefined's, so use with caution. I.e. if there are any undefined's in the array, this method will return them even if your generic type does not include undefined
+export const getu = <T>(arr: T[], i: number): T => {
     if (i >= arr.length || i < 0) {
         throw new Error(`Array index ${i} is out of bounds`)
     }
     const item = arr[i]
-    return item
+    return item as T
 }
