@@ -77,7 +77,7 @@ export class ProsopoServer {
             await this.getSigner()
             await this.getContractApi()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
+            throw new ProsopoEnvError(err as Error, 'GENERAL.ENVIRONMENT_NOT_READY')
         }
     }
 
