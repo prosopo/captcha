@@ -22,10 +22,11 @@ import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { WsProvider } from '@polkadot/rpc-provider'
+import { get } from '@prosopo/util'
 
 export class ProsopoServer {
     config: ProsopoServerConfig
-    contract: ProsopoCaptchaContract
+    contract: ProsopoCaptchaContract | undefined
     prosopoContractAddress: string
     dappContractAddress: string
     defaultEnvironment: string
@@ -35,7 +36,7 @@ export class ProsopoServer {
     wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair
-    api: ApiPromise
+    api: ApiPromise | undefined
     network: NetworkConfig
 
     constructor(pair: KeyringPair, config: ProsopoServerConfig) {
@@ -46,7 +47,7 @@ export class ProsopoServer {
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
         ) {
             this.defaultEnvironment = this.config.defaultEnvironment
-            this.network = this.config.networks[this.defaultEnvironment]
+            this.network = get(this.config.networks, this.defaultEnvironment)
             this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment].endpoint)
             this.prosopoContractAddress = this.config.networks[this.defaultEnvironment].contract.address
             this.dappContractAddress = this.config.account.address
