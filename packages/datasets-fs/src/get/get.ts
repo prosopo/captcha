@@ -1,6 +1,7 @@
 import { Args } from './args.js'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import { get } from '@prosopo/util'
+import { z } from 'zod'
 import fetch from 'node-fetch'
 import fs from 'fs'
 
@@ -17,7 +18,8 @@ export default async (args: Args, loggerOpt?: Logger) => {
         } else if (data instanceof Object) {
             for (const key of Object.keys(data)) {
                 if (key == 'data') {
-                    const url = get(data, key)
+                    const value = get(data, key)
+                    const url = z.string().parse(value)
                     if (url.startsWith('http')) {
                         try {
                             const response = await fetch(url)
@@ -39,7 +41,7 @@ export default async (args: Args, loggerOpt?: Logger) => {
                         }
                     }
                 } else {
-                    await traverse(data[key])
+                    await traverse(get(data, String(key)))
                 }
             }
         }
