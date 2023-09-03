@@ -12,8 +12,8 @@ import {
     RawSolution,
 } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { at, get, lodash, setSeedGlobal } from '@prosopo/util'
 import { checkDuplicates } from '../util.js'
-import { lodash, setSeedGlobal } from '@prosopo/util'
 import bcrypt from 'bcrypt'
 import cliProgress from 'cli-progress'
 import fs from 'fs'
@@ -111,7 +111,7 @@ export default async (args: Args, logger?: Logger) => {
         }
 
         // uniformly sample targets
-        const target = targets[i % targets.length]
+        const target = at(targets, i % targets.length)
         const notTargets = targets.filter((t) => t !== target)
 
         // how many correct items should be in the captcha?
@@ -119,7 +119,7 @@ export default async (args: Args, logger?: Logger) => {
         // how many incorrect items should be in the captcha?
         const nIncorrect = size - nCorrect
 
-        const targetItems: Item[] = labelToImages[target]
+        const targetItems: Item[] = get(labelToImages, target)
         const notTargetItems: Item[] = notTargets.map((notTarget) => labelToImages[notTarget]).flat()
 
         if (targetItems.length < nCorrect) {
