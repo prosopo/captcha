@@ -23,6 +23,7 @@ import { ProsopoBasicConfig } from '@prosopo/types'
 import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { WsProvider } from '@polkadot/rpc-provider'
+import { get } from '@prosopo/util'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoBasicConfig
@@ -138,7 +139,7 @@ export class Environment implements ProsopoEnvironment {
             if (this.config.database) {
                 const dbConfig = this.config.database[this.defaultEnvironment]
                 if (dbConfig) {
-                    const ProsopoDatabase = Databases[dbConfig.type]
+                    const ProsopoDatabase = get(Databases, dbConfig.type)
                     this.db = await ProsopoDatabase.create(
                         dbConfig.endpoint,
                         dbConfig.dbname,
