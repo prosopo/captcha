@@ -112,10 +112,11 @@ export const atUnsafe = <T>(arr: T[], i: number): T => {
     return item as T
 }
 
+type Key = string | number | symbol
 // Get a value from an object, throwing an error if the key is not present
-export function get<K extends string | number | symbol, V>(
+export function get<K extends Key, V>(
     obj: {
-        [key in K]: V
+        [key: Key]: V
     },
     key: K
 ): V
