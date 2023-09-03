@@ -32,6 +32,7 @@ import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
 import { WsProvider } from '@polkadot/rpc-provider'
+import { get } from '@prosopo/util'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util'
@@ -61,7 +62,8 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
         // mutate the current state. Note that this is in order of properties in the nextState object.
         // e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
         for (const key in nextState) {
-            state[key] = nextState[key]
+            const value = get(nextState, key)
+            Object.assign(state, { [key]: value })
         }
         // then call the update function for the frontend to do the same
         onStateUpdate(nextState)
