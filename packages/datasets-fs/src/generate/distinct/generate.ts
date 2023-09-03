@@ -144,7 +144,7 @@ export default async (args: Args, logger?: Logger) => {
         let items: Item[] = [...correctItems, ...incorrectItems]
         let indices: number[] = [...Array(items.length).keys()]
         indices = _.shuffle(indices)
-        items = indices.map((i) => items[i])
+        items = indices.map((i) => at(items, i))
         items = items.map((item) => {
             return {
                 data: item.data,
