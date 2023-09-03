@@ -1,5 +1,4 @@
 import { Item, LabelledItem } from '@prosopo/types'
-import { getu } from '@prosopo/util'
 
 export const checkDuplicates = (
     labelled: LabelledItem[],
@@ -25,40 +24,5 @@ export const checkDuplicates = (
                 throw new Error(`Duplicate data entry in unlabelled data: ${JSON.stringify(entry)}`)
             }
         }
-    }
-}
-
-export const choice = <T>(
-    items: T[],
-    n: number,
-    random: () => number,
-    options?: {
-        withReplacement?: boolean
-    }
-): {
-    choices: T[]
-    indices: number[]
-} => {
-    if (n > items.length) {
-        throw new Error(`n (${n}) cannot be greater than items.length (${items.length})`)
-    }
-    options = options || {}
-
-    const indicesSet = new Set<number>()
-    const indices: number[] = []
-    const choices: T[] = []
-    while (indices.length < n) {
-        const index = Math.abs(Math.round(random())) % items.length
-        // with replacement == allow duplicates
-        // without replacement == don't allow duplicates
-        if (options.withReplacement || indicesSet.add(index)) {
-            indices.push(index)
-            choices.push(getu(items, index))
-        }
-    }
-
-    return {
-        choices,
-        indices,
     }
 }
