@@ -75,8 +75,9 @@ export default async (args: Args, logger?: Logger) => {
     // split the labelled data by label
     const labelToImages: { [label: string]: Item[] } = {}
     for (const entry of labelled) {
-        labelToImages[entry.label] = labelToImages[entry.label] || []
-        labelToImages[entry.label].push(entry)
+        const arr = labelToImages[entry.label] || []
+        arr.push(entry)
+        labelToImages[entry.label] = arr
     }
     const targets = Object.keys(labelToImages)
 
