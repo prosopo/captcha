@@ -19,8 +19,10 @@ export default async (args: Args, logger?: Logger) => {
             for (const key of Object.keys(obj)) {
                 if (key === 'data') {
                     const value = get(obj, key)
-                    if (value.startsWith(from)) {
-                        obj[key] = to + value.slice(from.length)
+                    if (value instanceof String) {
+                        if (value.startsWith(from)) {
+                            obj[key] = to + value.slice(from.length)
+                        }
                     }
                 } else {
                     obj[key] = replace(obj[key], from, to)
