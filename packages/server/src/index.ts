@@ -93,12 +93,26 @@ export class ProsopoServer {
         }
     }
 
+    getApi(): ApiPromise {
+        if (this.api === undefined) {
+            throw new ProsopoEnvError(new Error('api undefined'))
+        }
+        return this.api
+    }
+
+    getContract(): ProsopoCaptchaContract {
+        if (this.contract === undefined) {
+            throw new ProsopoEnvError(new Error('contract undefined'))
+        }
+        return this.contract
+    }
+
     public async isVerified(payload: ProcaptchaOutput): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
         // first check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
-        const block = (await this.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash
-        const getRandomProviderResponse = await this.contract.queryAtBlock<RandomProvider>(
+        const block = (await this.getApi().rpc.chain.getBlockHash(blockNumber)) as BlockHash
+        const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
             block,
             'getRandomActiveProvider',
             [user, dapp]
@@ -122,7 +136,7 @@ export class ProsopoServer {
 
     public async getContractApi(): Promise<ProsopoCaptchaContract> {
         this.contract = new ProsopoCaptchaContract(
-            this.api,
+            this.getApi(),
             this.abi,
             this.prosopoContractAddress,
             this.pair,
