@@ -1,24 +1,16 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "module": "esnext",
-    "target": "esnext",
-    "lib": [
-      "esnext",
-      "dom"
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
+    },
+    "include": ["./src/**/*.ts", "./src/**/*.json"],
+    "references": [
+        {
+            "path": "../api"
+        },
+        {
+            "path": "../contract"
+        }
     ]
-  },
-  "include": [
-    "./src/**/*.ts"
-  ],
-  "references": [
-    {
-      "path": "../api"
-    },
-    {
-      "path": "../contract"
-    },
-  ]
 }
