@@ -149,8 +149,9 @@ export class Environment implements ProsopoEnvironment {
                 }
             }
         } catch (err) {
+            // TODO fix/improve error handling
             throw new ProsopoEnvError(
-                err,
+                err as Error,
                 'DATABASE.DATABASE_IMPORT_FAILED',
                 {},
                 this.config.database
