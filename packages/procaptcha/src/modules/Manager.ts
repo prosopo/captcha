@@ -33,7 +33,7 @@ import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
 import { WsProvider } from '@polkadot/rpc-provider'
-import { get } from '@prosopo/util'
+import { at, get } from '@prosopo/util'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util'
@@ -119,7 +119,8 @@ export function Manager(
         callbacks
     )
 
-    const dispatchErrorEvent = (error: Error) => {
+    const dispatchErrorEvent = (err: unknown) => {
+        const error = err instanceof Error ? err : new Error(String(err))
         if (error instanceof AccountNotFoundError) {
             events.onAccountNotFound(error.message)
         } else {
@@ -150,12 +151,24 @@ export function Manager(
         return config
     }
 
+    const fallable = async (fn: () => Promise<void>) => {
+        try {
+            await fn()
+        } catch (err) {
+            console.error(err)
+            // dispatch relevant error event
+            dispatchErrorEvent(err)
+            // hit an error, disallow user's claim to be human
+            updateState({ isHuman: false, showModal: false, loading: false })
+        }
+    }
+
     /**
      * Called on start of user verification. This is when the user ticks the box to claim they are human.
      */
     const start = async () => {
         console.log('Starting procaptcha')
-        try {
+        await fallable(async () => {
             if (state.loading) {
                 console.log('Procaptcha already loading')
                 return
@@ -278,18 +291,11 @@ export function Manager(
                 timeout,
                 blockNumber,
             })
-        } catch (err) {
-            console.error(err)
-            // dispatch relevant error event
-            // wrap the error in an Error object if it isn't already
-            dispatchErrorEvent(err instanceof Error ? err : new Error(String(err)))
-            // hit an error, disallow user's claim to be human
-            updateState({ isHuman: false, showModal: false, loading: false })
-        }
+        })
     }
 
     const submit = async () => {
-        try {
+        await fallable(async () => {
             console.log('submitting solutions')
             // disable the time limit, user has submitted their solution in time
             clearTimeout()
@@ -306,7 +312,7 @@ export function Manager(
 
             // append solution to each captcha in the challenge
             const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
-                const solution = state.solutions[index]
+                const solution = at(state.solutions, index)
                 return {
                     captchaId: captcha.captcha.captchaId,
                     captchaContentId: captcha.captcha.captchaContentId,
@@ -319,7 +325,8 @@ export function Manager(
             const blockNumber = getBlockNumber()
             const signer = account.extension.signer
 
-            if (!challenge.captchas[0].captcha.datasetId) {
+            const first = at(challenge.captchas, 0)
+            if (!first.captcha.datasetId) {
                 throw new Error('No datasetId set for challenge')
             }
 
@@ -329,7 +336,7 @@ export function Manager(
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
                 signer,
                 challenge.requestHash,
-                challenge.captchas[0].captcha.datasetId,
+                first.captcha.datasetId,
                 captchaSolution,
                 salt
             )
@@ -360,13 +367,7 @@ export function Manager(
                     blockNumber,
                 })
             }
-        } catch (err) {
-            // dispatch relevant error event
-            const event = errorToEventMap[err.constructor] || events.onError
-            event(err)
-            // hit an error, disallow user's claim to be human
-            updateState({ isHuman: false, showModal: false, loading: false })
-        }
+        })
     }
 
     const cancel = async () => {
