@@ -27,7 +27,7 @@ import { WsProvider } from '@polkadot/rpc-provider'
 export class Environment implements ProsopoEnvironment {
     config: ProsopoBasicConfig
     db: Database | undefined
-    contractInterface: ProsopoCaptchaContract
+    contractInterface: ProsopoCaptchaContract | undefined
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     contractName: string
@@ -37,7 +37,7 @@ export class Environment implements ProsopoEnvironment {
     wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair
-    api: ApiPromise
+    api: ApiPromise | undefined
 
     constructor(pair: KeyringPair, config: ProsopoBasicConfig) {
         this.config = config

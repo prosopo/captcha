@@ -33,7 +33,7 @@ export interface ProsopoEnvironment {
     wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair
-    api: ApiPromise
+    api: ApiPromise | undefined
     isReady(): Promise<void>
     importDatabase(): Promise<void>
     changeSigner(pair: KeyringPair): Promise<void>
