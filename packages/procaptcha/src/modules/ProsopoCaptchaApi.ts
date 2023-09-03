@@ -60,7 +60,8 @@ export class ProsopoCaptchaApi {
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
             return captchaChallenge
         } catch (e) {
-            throw new ProsopoEnvError(e)
+            // TODO fix/improve error handling
+            throw new ProsopoEnvError(e as Error)
         }
     }
 
@@ -130,7 +131,8 @@ export class ProsopoCaptchaApi {
                 signature
             )
         } catch (err) {
-            throw new ProsopoApiError(err)
+            // TODO fix/improve error handling
+            throw new ProsopoApiError(err as Error)
         }
 
         return [result, commitmentId, tx]
