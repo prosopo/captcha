@@ -166,7 +166,7 @@ async function verifyCaptchaData(captchaWithProof: CaptchaWithProof): Promise<bo
         return false
     }
     // Check that the captcha content id is present in the first layer of the proof
-    return proof[0].indexOf(captchaHash) !== -1
+    return at(proof, 0).indexOf(captchaHash) !== -1
 }
 
 export default ProsopoCaptchaApi
