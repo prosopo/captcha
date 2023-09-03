@@ -1,7 +1,7 @@
 import { getLogger } from '@prosopo/common'
 import dotenv from 'dotenv'
 import esMain from 'es-main'
-import express from 'express'
+import express, { Request, Response } from 'express'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
 import stream from 'stream'
@@ -42,7 +42,7 @@ const main = async () => {
 
     const app = express()
 
-    env.paths.forEach((loc) => {
+    env.paths.forEach((loc: string) => {
         // allow local filesystem lookup at each location
         // http://localhost:3000/a.jpg
         // serve path set to /
@@ -53,7 +53,7 @@ const main = async () => {
         logger.info(`Serving files from ${loc}`)
     })
 
-    app.get('*', async (req, res) => {
+    app.get('*', async (req: Request, res: Response) => {
         for (const remote of env.remotes) {
             logger.info('trying', remote, req.url)
             let img
