@@ -120,7 +120,7 @@ export default async (args: Args, logger?: Logger) => {
         const nIncorrect = size - nCorrect
 
         const targetItems: Item[] = get(labelToImages, target)
-        const notTargetItems: Item[] = notTargets.map((notTarget) => labelToImages[notTarget]).flat()
+        const notTargetItems: Item[] = notTargets.map((notTarget) => get(labelToImages, notTarget)).flat()
 
         if (targetItems.length < nCorrect) {
             throw new ProsopoEnvError(
