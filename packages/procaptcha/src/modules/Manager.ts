@@ -19,6 +19,7 @@ import {
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
 } from '../types/manager.js'
+import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise, Keyring } from '@polkadot/api'
 import {
     CaptchaSolution,
@@ -93,14 +94,15 @@ export function Manager(
 ) {
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
 
+    const alertError = (error: Error) => {
+        console.log(error)
+        alert(error.message)
+    }
+
     const events: ProcaptchaEvents = Object.assign(
         {
-            onAccountNotFound: (address: string) => {
-                alert(`Account ${address} not found`)
-            },
-            onError: (error: Error) => {
-                alert(`${error?.message ?? 'An unexpected error occurred'}, please try again`)
-            },
+            onAccountNotFound: alertError,
+            onError: alertError,
             onHuman: (output) => {
                 console.log('onHuman event triggered', output)
             },
@@ -117,12 +119,12 @@ export function Manager(
         callbacks
     )
 
-    // mapping of type of error to relevant event callback
-    const errorToEventMap = {
-        AccountNotFoundError: events.onAccountNotFound,
-        ExtensionNotFoundError: events.onExtensionNotFound,
-        Error: events.onError,
-        ExpiredError: events.onExpired,
+    const dispatchErrorEvent = (error: Error) => {
+        if (error instanceof AccountNotFoundError) {
+            events.onAccountNotFound(error.message)
+        } else {
+            events.onError(error)
+        }
     }
 
     // get the state update mechanism
@@ -279,8 +281,8 @@ export function Manager(
         } catch (err) {
             console.error(err)
             // dispatch relevant error event
-            const event = errorToEventMap[err.constructor] || events.onError
-            event(err)
+            // wrap the error in an Error object if it isn't already
+            dispatchErrorEvent(err instanceof Error ? err : new Error(String(err)))
             // hit an error, disallow user's claim to be human
             updateState({ isHuman: false, showModal: false, loading: false })
         }
