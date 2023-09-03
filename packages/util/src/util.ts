@@ -119,7 +119,7 @@ export function get<K extends string | number | symbol, V>(
     },
     key: K
 ): V
-export function get(obj: JSON, key: string): string
+export function get<V = JSON>(obj: JSON, key: string): V
 export function get<K extends keyof object, V>(obj: object, key: K): V {
     const value = obj[key]
     if (value === undefined) {
