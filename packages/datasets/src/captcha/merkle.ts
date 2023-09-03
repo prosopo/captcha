@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { MerkleLayer, MerkleLeaf, MerkleNodeInterface, MerkleProof, MerkleProofLayer } from '@prosopo/types'
-import { get } from '@prosopo/util'
+import { at } from '@prosopo/util'
 import { hexHashArray } from '@prosopo/common'
 
 class MerkleNode implements MerkleNodeInterface {
@@ -110,18 +110,18 @@ export class CaptchaMerkleTree {
             const pair: MerkleLeaf[] = [leafHash]
             check(pair, 2)
             // determine whether the leaf sits on the left or the right of its partner
-            const partner = get(layer, partnerIndex)
+            const partner = at(layer, partnerIndex)
             if (partnerIndex > leafIndex) {
                 pair.push(partner)
             } else {
                 pair.unshift(partner)
             }
-            proofTree.push([get(pair, 0), get(pair, 1)])
+            proofTree.push([at(pair, 0), at(pair, 1)])
             layerNum += 1
             leafHash = hexHashArray(pair)
         }
-        const last = get(this.layers, this.layers.length - 1)
-        return [...proofTree, [get(last, 0)]]
+        const last = at(this.layers, this.layers.length - 1)
+        return [...proofTree, [at(last, 0)]]
     }
 }
 
@@ -138,16 +138,16 @@ const check = <T>(arr: T[], len: number) => {
 
 export function verifyProof(leaf: MerkleLeaf, proof: MerkleProof): boolean {
     try {
-        if (get(proof, 0).indexOf(leaf) === -1) {
+        if (at(proof, 0).indexOf(leaf) === -1) {
             return false
         }
         for (const [layerIndex, layer] of proof.entries()) {
             leaf = hexHashArray(layer)
-            if (get(proof, layerIndex + 1).indexOf(leaf) === -1) {
+            if (at(proof, layerIndex + 1).indexOf(leaf) === -1) {
                 return false
             }
-            const last = get(proof, proof.length - 1)
-            if (leaf === get(last, 0)) {
+            const last = at(proof, proof.length - 1)
+            if (leaf === at(last, 0)) {
                 return true
             }
         }

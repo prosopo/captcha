@@ -94,8 +94,8 @@ export function* permutations(
 
 // Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null
 // Note undefined's are not allowed due to arrays returning undefined when accessing an out of bounds index
-export const get = <T>(arr: Exclude<T, undefined>[], i: number): Exclude<T, undefined> => {
-    const item = getu(arr, i)
+export const at = <T>(arr: Exclude<T, undefined>[], i: number): Exclude<T, undefined> => {
+    const item = atUnsafe(arr, i)
     if (item === undefined) {
         throw new Error(`Array item at index ${i} is undefined or null`)
     }
@@ -104,7 +104,7 @@ export const get = <T>(arr: Exclude<T, undefined>[], i: number): Exclude<T, unde
 
 // Get an element from an array, throwing an error if it's index is out of bounds
 // This is an unsafe method as it allows undefined's, so use with caution. I.e. if there are any undefined's in the array, this method will return them even if your generic type does not include undefined
-export const getu = <T>(arr: T[], i: number): T => {
+export const atUnsafe = <T>(arr: T[], i: number): T => {
     if (i >= arr.length || i < 0) {
         throw new Error(`Array index ${i} is out of bounds`)
     }
@@ -137,7 +137,7 @@ export const choice = <T>(
         // without replacement == don't allow duplicates
         if (options.withReplacement || indicesSet.add(index)) {
             indices.push(index)
-            choices.push(getu(items, index))
+            choices.push(atUnsafe(items, index))
         }
     }
 
