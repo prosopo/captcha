@@ -86,17 +86,24 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
+    getApi(): ApiPromise {
+        if (this.api === undefined) {
+            throw new ProsopoEnvError(new Error('api not setup'))
+        }
+        return this.api
+    }
+
     async changeSigner(pair: KeyringPair): Promise<void> {
-        await this.api.isReadyOrError
+        await this.getApi().isReadyOrError
         this.pair = pair
         await this.getSigner()
         this.contractInterface = await this.getContractApi()
     }
 
     async getContractApi(): Promise<ProsopoCaptchaContract> {
-        const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+        const nonce = await this.getApi().rpc.system.accountNextIndex(this.pair.address)
         this.contractInterface = new ProsopoCaptchaContract(
-            this.api,
+            this.getApi(),
             this.abi,
             this.contractAddress,
             this.pair,
