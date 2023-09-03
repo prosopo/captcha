@@ -1,4 +1,5 @@
 import { Item, LabelledItem } from '@prosopo/types'
+import { getu } from '@prosopo/util'
 
 export const checkDuplicates = (
     labelled: LabelledItem[],
@@ -45,17 +46,19 @@ export const choice = <T>(
 
     const indicesSet = new Set<number>()
     const indices: number[] = []
+    const choices: T[] = []
     while (indices.length < n) {
         const index = Math.abs(Math.round(random())) % items.length
         // with replacement == allow duplicates
         // without replacement == don't allow duplicates
         if (options.withReplacement || indicesSet.add(index)) {
             indices.push(index)
+            choices.push(getu(items, index))
         }
     }
 
     return {
-        choices: indices.map((index) => items[index]),
+        choices,
         indices,
     }
 }
