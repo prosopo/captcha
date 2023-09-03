@@ -95,10 +95,10 @@ export function Manager(
 
     const events: ProcaptchaEvents = Object.assign(
         {
-            onAccountNotFound: (address) => {
+            onAccountNotFound: (address: string) => {
                 alert(`Account ${address} not found`)
             },
-            onError: (error) => {
+            onError: (error: Error) => {
                 alert(`${error?.message ?? 'An unexpected error occurred'}, please try again`)
             },
             onHuman: (output) => {
