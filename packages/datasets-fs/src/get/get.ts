@@ -1,5 +1,6 @@
 import { Args } from './args.js'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { get } from '@prosopo/util'
 import fetch from 'node-fetch'
 import fs from 'fs'
 
@@ -16,7 +17,7 @@ export default async (args: Args, loggerOpt?: Logger) => {
         } else if (data instanceof Object) {
             for (const key of Object.keys(data)) {
                 if (key == 'data') {
-                    const url = data[key]
+                    const url = get(data, key)
                     if (url.startsWith('http')) {
                         try {
                             const response = await fetch(url)
