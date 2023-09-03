@@ -200,7 +200,7 @@ export default async (args: Args, logger?: Logger) => {
             )
         }
         const index = _.random(0, labels.length - 1)
-        const target = labels[index]
+        const target = at(labels, index)
         // randomly pick images from the unlabelled data
         const itemSet: Item[] = _.sampleSize(unlabelled, size)
         // shuffle the items
