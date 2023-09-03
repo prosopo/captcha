@@ -391,7 +391,7 @@ export function Manager(
         }
         const index = state.index
         const solutions = state.solutions
-        const solution = solutions[index]
+        const solution = at(solutions, index)
         if (solution.includes(hash)) {
             console.log('deselecting', hash)
             // remove the hash from the solution
