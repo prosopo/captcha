@@ -128,7 +128,8 @@ export class Environment implements ProsopoEnvironment {
             }
         } catch (err) {
             this.logger.error(err)
-            throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
+            // TODO fix / improve error handling
+            throw new ProsopoEnvError(err as Error, 'GENERAL.ENVIRONMENT_NOT_READY')
         }
     }
 
