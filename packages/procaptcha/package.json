@@ -36,10 +36,11 @@
     "@polkadot/util": "12.3.2",
     "@polkadot/util-crypto": "12.3.2",
     "@prosopo/api": "^0.1.17",
+    "@prosopo/common": "^0.1.17",
     "@prosopo/contract": "^0.1.17",
     "@prosopo/types": "^0.1.17",
-    "@prosopo/common": "^0.1.17",
-    "axios": "^0.27.2"
+    "axios": "^0.27.2",
+    "tslib": "^2.6.2"
   },
   "devDependencies": {
     "mocha": "^10.0.0",
