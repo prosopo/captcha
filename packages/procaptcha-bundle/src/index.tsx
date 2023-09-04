@@ -114,7 +114,7 @@ export function render(callbacks?: ProcaptchaCallbacks) {
 }
 
 //https://stackoverflow.com/questions/41174095/do-i-need-to-use-onload-to-start-my-webpack-bundled-code
-export default function ready(fn) {
+export default function ready(fn: () => void) {
     if (document && document.readyState != 'loading') {
         console.log('document.readyState ready!')
         fn()
