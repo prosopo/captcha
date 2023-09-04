@@ -50,6 +50,7 @@ import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { shuffleArray } from '../util.js'
 import { at } from '@prosopo/util'
+import { ContractPromise } from '@polkadot/api-contract'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -394,11 +395,11 @@ export class Tasks {
      * Block by block search for blockNo
      */
     async isRecentBlock(
-        contract,
+        contract: ContractPromise,
         header: Header,
         blockNo: number,
         depth = this.captchaSolutionConfig.captchaBlockRecency
-    ) {
+    ): Promise<boolean> {
         if (depth == 0) {
             return false
         }
