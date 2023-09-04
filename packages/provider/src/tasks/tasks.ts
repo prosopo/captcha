@@ -49,6 +49,7 @@ import { SubmittableResult } from '@polkadot/api'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { shuffleArray } from '../util.js'
+import { at } from '@prosopo/util'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -284,7 +285,7 @@ export class Tasks {
                 captchas
             )
         }
-        if (!storedCaptchas.every((captcha) => captcha.datasetId === storedCaptchas[0].datasetId)) {
+        if (!storedCaptchas.every((captcha) => captcha.datasetId === at(storedCaptchas,0).datasetId)) {
             throw new ProsopoEnvError(
                 'CAPTCHA.DIFFERENT_DATASET_IDS',
                 this.validateReceivedCaptchasAgainstStoredCaptchas.name,
