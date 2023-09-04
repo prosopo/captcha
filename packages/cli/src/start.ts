@@ -19,11 +19,11 @@ import { loadEnv } from '@prosopo/cli'
 import { prosopoRouter } from '@prosopo/provider'
 import cors from 'cors'
 import esMain from 'es-main'
-import express from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 
 let apiAppSrv: Server
 
-export const handleErrors = (err: ProsopoApiError, req, res, next) => {
+export const handleErrors = (err: ProsopoApiError, req: Request, res: Response, next: NextFunction) => {
     let message = err.message
     try {
         message = JSON.parse(err.message)
