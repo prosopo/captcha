@@ -17,6 +17,7 @@ import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } fr
 import { Procaptcha } from '@prosopo/procaptcha-react'
 import { createRoot } from 'react-dom/client'
 import { at } from '@prosopo/util'
+import React from 'react'
 
 function getConfig(siteKey?: string): ProcaptchaConfigOptional {
     if (!siteKey) {
