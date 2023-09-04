@@ -79,7 +79,7 @@ export function filterDependencies(deps: string[], filters: string[]): { interna
  * // [ '/home/.../node_modules/@polkadot/types/interfaces/bytes/bytes.js',
  * // '/home/.../node_modules/@polkadot/types/interfaces/bytes/bytes.d.ts']
  * */
-export function getFilesInDirs(startDir, includePatterns: string[] = [], excludePatterns: string[] = []) {
+export function getFilesInDirs(startDir: string, includePatterns: string[] = [], excludePatterns: string[] = []) {
     const files: string[] = []
     logger.info(`getFilesInDirs: ${startDir} excluding ${includePatterns} including ${excludePatterns}`)
     const ignorePatterns = excludePatterns.map((pattern) => `${startDir}/**/${pattern}`)
