@@ -53,8 +53,11 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         async (req, res, next) => {
             try {
                 const { blockNumber, datasetId, user, dapp } = CaptchaRequestBody.parse(req.params)
-
-                validateAddress(user, false, env.api.registry.chainSS58)
+                const api = env.api
+                if (api === undefined) {
+                    throw new Error('api not setup')
+                }
+                validateAddress(user, false, api.registry.chainSS58)
                 const blockNumberParsed = parseBlockNumber(blockNumber)
 
                 await tasks.validateProviderWasRandomlyChosen(user, dapp, datasetId, blockNumberParsed)
