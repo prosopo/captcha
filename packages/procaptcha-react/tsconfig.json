@@ -5,7 +5,7 @@
         "outDir": "./dist",
         "jsx": "react",
     },
-    "include": ["./src/**/*.ts", "./src/*.ts"],
+    "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/*.ts"],
     "exclude": ["**/*.test.ts"],
     "references": [
     {
