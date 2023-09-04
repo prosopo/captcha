@@ -77,7 +77,7 @@ export class ProsopoEnvError extends ProsopoBaseError {
 }
 
 export class ProsopoApiError extends ProsopoEnvError {
-    code?: number
+    code: number
     constructor(error: Error | TranslationKey, context?: string, code?: number, ...params: any[]) {
         const isError = error instanceof Error
         super(isError ? (error.message as TranslationKey) : error)
