@@ -32,7 +32,7 @@ import { getLogger } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'
 
-export function processArgs(args, env: ProviderEnvironment) {
+export function processArgs(args: string[], env: ProviderEnvironment) {
     const tasks = new Tasks(env)
     const logger = getLogger(env.config.logLevel, 'CLI')
 
