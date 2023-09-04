@@ -23,7 +23,8 @@ export function encodeStringAddress(address: string) {
     try {
         return encodeAddress(isHex(address) ? hexToU8a(address) : decodeAddress(address))
     } catch (error) {
-        throw new ProsopoEnvError(error, 'CONTRACT.INVALID_ADDRESS', {}, address)
+        // TODO fix error handling
+        throw new ProsopoEnvError(error as Error, 'CONTRACT.INVALID_ADDRESS', {}, address)
     }
 }
 
