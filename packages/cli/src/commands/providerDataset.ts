@@ -2,13 +2,15 @@ import { Logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { writeJSONFile } from '../files.js'
+import { ArgumentsCamelCase, Argv } from 'yargs'
+
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
 
     return {
         command: 'provider_dataset',
         description: 'Exports a dataset from the provider database',
-        builder: (yargs) =>
+        builder: (yargs: Argv) =>
             yargs
                 .option('dataset-id', {
                     type: 'string' as const,
@@ -20,7 +22,7 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     demand: true,
                     desc: 'The file path to export the dataset to',
                 } as const),
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
             try {
                 let datasetId = argv.datasetId
                 if (datasetId === undefined) {

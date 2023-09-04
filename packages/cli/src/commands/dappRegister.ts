@@ -3,6 +3,7 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { validateContract, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
+import { ArgumentsCamelCase, Argv } from 'yargs'
 
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
@@ -10,7 +11,7 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
     return {
         command: 'dapp_register',
         description: 'Register a Dapp',
-        builder: (yargs) =>
+        builder: (yargs: Argv) =>
             yargs
                 .option('contract', {
                     type: 'string' as const,
@@ -22,7 +23,7 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     demand: true,
                     desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                 } as const),
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
             const dappRegisterArgs: Parameters<typeof tasks.contract.query.dappRegister> = [
                 argv.contract,
                 argv.payee,

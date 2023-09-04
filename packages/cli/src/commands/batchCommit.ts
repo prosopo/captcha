@@ -5,6 +5,8 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { cwd } from 'process'
 import { validateScheduleExpression } from './validators.js'
 import pm2 from 'pm2'
+import { ArgumentsCamelCase, Argv } from 'yargs'
+
 export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
     return {
@@ -17,7 +19,7 @@ export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
                 desc: 'A Recurring schedule expression',
             } as const)
         },
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
             if (argv.schedule) {
                 pm2.connect((err) => {
                     if (err) {

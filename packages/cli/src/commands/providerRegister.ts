@@ -4,13 +4,15 @@ import { Tasks } from '@prosopo/provider'
 import { stringToU8a } from '@polkadot/util'
 import { validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
+import { ArgumentsCamelCase, Argv } from 'yargs'
+
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
 
     return {
         command: 'provider_register',
         decription: 'Register a Provider',
-        builder: (yargs) =>
+        builder: (yargs: Argv) =>
             yargs
                 .option('url', {
                     type: 'string' as const,
@@ -27,7 +29,7 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     demand: true,
                     desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                 } as const),
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
             const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
                 Array.from(stringToU8a(argv.url)),
                 argv.fee,

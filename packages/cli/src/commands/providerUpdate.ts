@@ -3,13 +3,15 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { validateAddress, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
+import { ArgumentsCamelCase, Argv } from 'yargs'
+
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
 
     return {
         command: 'provider_update',
         description: 'Update a Provider',
-        builder: (yargs) =>
+        builder: (yargs: Argv) =>
             yargs
                 .option('url', {
                     type: 'string' as const,
@@ -31,7 +33,7 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     demand: false,
                     desc: 'The value to stake in the contract',
                 } as const),
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
             const provider = (await tasks.contract.query.getProvider(argv.address, {})).value.unwrap().unwrap()
             if (provider && (argv.url || argv.fee || argv.payee || argv.value)) {
                 await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
