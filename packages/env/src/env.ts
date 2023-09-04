@@ -170,4 +170,11 @@ export class Environment implements ProsopoEnvironment {
             )
         }
     }
+
+    getContractInterface(): ProsopoCaptchaContract {
+        if (this.contractInterface === undefined) {
+            throw new ProsopoEnvError(new Error('contractInterface not setup'))
+        }
+        return this.contractInterface
+    }
 }
