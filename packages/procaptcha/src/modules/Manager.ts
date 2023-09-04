@@ -103,7 +103,12 @@ export function Manager(
         {
             onAccountNotFound: alertError,
             onError: alertError,
-            onHuman: (output) => {
+            onHuman: (output: {
+                user: string
+                dapp: string
+                commitmentId?: string
+                providerUrl?: string
+            }) => {
                 console.log('onHuman event triggered', output)
             },
             onExtensionNotFound: () => {
