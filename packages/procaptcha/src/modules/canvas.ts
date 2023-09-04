@@ -415,7 +415,7 @@ export function picassoCanvas(
         canvasElt.height = area.height
         canvasElt.style.display = 'none'
         const context = canvasElt.getContext('2d')
-        if (context == null) {
+        if (context !== null) {
             for (let i = 0; i < roundNumber; i++) {
                 addRandomCanvasGradient(prng, context, area)
                 context.shadowBlur = adaptRandomNumberToContext(prng.getNext(), maxShadowBlur, undefined)
