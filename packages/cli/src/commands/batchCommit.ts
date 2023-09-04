@@ -1,4 +1,3 @@
-import { Argv } from 'yargs'
 import { BatchCommitmentsTask } from '@prosopo/provider'
 import { Logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
