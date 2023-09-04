@@ -81,6 +81,7 @@ export function render(callbacks?: ProcaptchaCallbacks) {
             const dataCallbackName = `data-${callbackName.toLowerCase()}` // e.g. data-onhuman
             const callback = element.getAttribute(dataCallbackName)
             if (callback) {
+                // @ts-ignore
                 callbacks[callbackName] = window[callback.replace('window.', '')]
             }
         }
