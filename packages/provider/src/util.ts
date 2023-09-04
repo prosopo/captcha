@@ -18,7 +18,7 @@ import { arrayJoin } from '@prosopo/common'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import pl from 'nodejs-polars'
-import { at, atUnsafe } from '@prosopo/util'
+import { at, atUnsafe, get } from '@prosopo/util'
 
 export function encodeStringAddress(address: string) {
     try {
@@ -84,8 +84,11 @@ export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumbe
     let df = pl.readRecords(solutionsNoEmptyArrays)
     df = df.drop('salt')
     const group = df.groupBy(['captchaId', 'solutionKey']).agg(pl.count('captchaContentId').alias('count'))
-    const filtered = group.filter(pl.col('count').gt(winningNumberOfSolutions))
-    return filtered.withColumn(filtered['solutionKey'].str.split(',').rename('solution'))
+    const filtered: pl.DataFrame = group.filter(pl.col('count').gt(winningNumberOfSolutions))
+    // TODO is below correct? 'solutionKey' does not exist in the type
+    // @ts-ignore
+    const key = filtered['solutionKey']
+    return filtered.withColumn(key.str.split(',').rename('solution'))
 }
 
 export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], logger: Logger): Captcha[] {
