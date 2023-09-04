@@ -24,7 +24,8 @@ export const validatePayee = (argv) => {
 
         return { payee }
     } catch (error) {
-        throw new ProsopoEnvError(error, 'CLI.PARAMETER_ERROR', {}, [argv.payee])
+        // TODO fix error handling
+        throw new ProsopoEnvError(error as Error, 'CLI.PARAMETER_ERROR', {}, [argv.payee])
     }
 }
 
