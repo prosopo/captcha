@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
+        "noPropertyAccessFromIndexSignature": false,
+        "exactOptionalPropertyTypes": false,
+        "noUncheckedIndexedAccess": true,
         "allowUnusedLabels": false,
         "strict": true,
-        "exactOptionalPropertyTypes": false,
         "noFallthroughCasesInSwitch": true,
         "noImplicitOverride": true,
         "noImplicitReturns": true,
-        "noPropertyAccessFromIndexSignature": false,
-        "noUncheckedIndexedAccess": true,
         "resolveJsonModule": true,
         "declaration": true,
         "declarationMap": true,
@@ -20,6 +20,8 @@
         "isolatedModules": true,
         "composite": true,
         "skipLibCheck": true,
-        "noErrorTruncation": true
+        "noErrorTruncation": true,
+        "importHelpers": true,
+        "useUnknownInCatchVariables": true
     }
 }
