@@ -1,17 +1,12 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "rootDirs": ["./src", "./tests"],
-    "outDir": "./dist",
-    "module": "esnext",
-    "target": "esnext",
-    "noEmit": true
-  },
-  "include": [
-    "./src/**/*.ts",
-    "./tests/**/*.ts"
-  ],
-  "references": [
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
+    },
+    "include": ["./src/**/*.ts", "./src/*.ts"],
+    "exclude": ["**/*.test.ts"],
+    "references": [
     {
       "path": "../common"
     },
