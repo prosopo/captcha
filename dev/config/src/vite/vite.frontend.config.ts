@@ -49,13 +49,18 @@ export default async function (
     logger.info(`Env vars: ${JSON.stringify(define, null, 4)}`)
 
     // Get all dependencies of the current package
-    const deps = await getDependencies(packageName)
+    const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName)
 
     // Get rid of any dependencies we don't want to bundle
     const { external, internal } = filterDependencies(deps, ['pm2', 'nodejs-polars', 'aws', 'webpack', 'vite'])
 
     // Add the node builtins (path, fs, os, etc.) to the external list
-    const allExternal = [...builtinModules, ...builtinModules.map((m) => `node:${m}`), ...external]
+    const allExternal = [
+        ...builtinModules,
+        ...builtinModules.map((m) => `node:${m}`),
+        ...external,
+        ...optionalPeerDependencies,
+    ]
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
     const alias = isProduction ? getAliases(dir) : []
 
@@ -88,7 +93,7 @@ export default async function (
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
-                fileName: `${bundleName}.[name].bundle`,
+                fileName: `${bundleName}.bundle.js`,
                 // sets the bundle to an instantly invoked function expression (IIFE)
                 formats: ['iife'],
             },
@@ -104,6 +109,7 @@ export default async function (
                 watch: false,
                 output: {
                     dir: path.resolve(dir, 'dist/bundle'),
+                    entryFileNames: `${bundleName}.bundle.js`,
                 },
 
                 plugins: [
