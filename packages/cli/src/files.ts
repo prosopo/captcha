@@ -47,7 +47,7 @@ export function writeJSONFile(filePath: string, jsonData) {
     })
 }
 
-export async function readFile(filePath): Promise<Buffer> {
+export async function readFile(filePath: string): Promise<Buffer> {
     // const parsedFilePath = handleFileProtocol(filePath, undefined)
     return new Promise((resolve, reject) => {
         fs.readFile(filePath, (err, data) => {
