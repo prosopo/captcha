@@ -3,20 +3,21 @@ import { PayeeSchema } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { encodeStringAddress } from '@prosopo/provider'
 import parser from 'cron-parser'
+import { ArgumentsCamelCase, Argv } from 'yargs'
 
-export const validateAddress = (argv): { address: string } => {
+export const validateAddress = (argv: ArgumentsCamelCase): { address: string } => {
     const address = encodeStringAddress(argv.address as string)
 
     return { address }
 }
 
-export const validateContract = (argv) => {
+export const validateContract = (argv: ArgumentsCamelCase) => {
     const address = encodeStringAddress(argv.contract as string)
 
     return { address }
 }
 
-export const validatePayee = (argv) => {
+export const validatePayee = (argv: ArgumentsCamelCase) => {
     try {
         if (!argv.payee) return
         const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
@@ -29,7 +30,7 @@ export const validatePayee = (argv) => {
     }
 }
 
-export const validateValue = (argv) => {
+export const validateValue = (argv: ArgumentsCamelCase) => {
     if (typeof argv.value !== 'number') {
         throw new ProsopoEnvError('CLI.PARAMETER_ERROR', validateValue.name, {}, argv.value)
     }
@@ -37,7 +38,7 @@ export const validateValue = (argv) => {
     return { value }
 }
 
-export const validateScheduleExpression = (argv) => {
+export const validateScheduleExpression = (argv: ArgumentsCamelCase) => {
     if (typeof argv.schedule === 'string') {
         const result = parser.parseString(argv.schedule as string)
 
