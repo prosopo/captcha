@@ -3,7 +3,6 @@ import { UserConfig } from 'vite'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
-import { nodeResolve } from '@rollup/plugin-node-resolve'
 import { wasm } from '@rollup/plugin-wasm'
 import css from 'rollup-plugin-import-css'
 import nativePlugin from 'rollup-plugin-natives'
@@ -20,7 +19,7 @@ export default async function (
     mode?: string
 ): Promise<UserConfig> {
     // Get all dependencies of the current package
-    const deps = await getDependencies(packageName)
+    const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName)
 
     // Get rid of any dependencies we don't want to bundle
     const { external, internal } = filterDependencies(deps, [
@@ -33,7 +32,15 @@ export default async function (
     ])
 
     // Add the node builtins (path, fs, os, etc.) to the external list
-    const allExternal = [...builtinModules, ...builtinModules.map((m) => `node:${m}`), ...external]
+    const allExternal = [
+        ...builtinModules,
+        ...builtinModules.map((m) => `node:${m}`),
+        ...external,
+        ...optionalPeerDependencies,
+    ]
+
+    console.log('allExternal', allExternal)
+
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
 
     return {
@@ -61,17 +68,18 @@ export default async function (
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
-                fileName: `${bundleName}.main.bundle.js`,
+                fileName: `${bundleName}.[name].bundle.js`,
                 formats: ['es'],
             },
             modulePreload: { polyfill: false },
-            commonjsOptions: {
-                exclude: ['mongodb/*'],
-            },
             rollupOptions: {
                 treeshake: 'smallest',
                 external: allExternal,
                 watch: false,
+                output: {
+                    entryFileNames: `${bundleName}.[name].bundle.js`,
+                },
+
                 plugins: [
                     nativePlugin({
                         // Where we want to physically put the extracted .node files
@@ -88,11 +96,6 @@ export default async function (
                     }),
                     css(),
                     wasm(),
-                    nodeResolve({
-                        browser: false,
-                        preferBuiltins: false,
-                        rootDir: path.resolve(dir, '../../'),
-                    }),
                 ],
             },
         },

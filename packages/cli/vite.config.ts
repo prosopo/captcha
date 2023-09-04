@@ -8,7 +8,7 @@ loadEnv()
 
 // Package specific config
 const packageName = '@prosopo/cli'
-const bundleName = 'provider_cli_bundle'
+const bundleName = 'provider'
 const dir = path.resolve()
 const entry = './src/cli.ts'
 
