@@ -1,21 +1,14 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "module": "esnext",
-    "target": "esnext",
-    "lib": [
-      "es6",
-      "dom"
-    ],
-    "jsx": "react-jsx",
-    "types": ["vite/client"]
-  },
-  "include": [
-    "src/**/*", "./env.d.ts"
-  ],
-  "references": [
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "jsx": "react-jsx",
+        "types": ["vite/client"]
+    },
+    "include": ["./src/**/*.ts", "./src/*.ts", "./env.d.ts"],
+    "exclude": ["**/*.test.ts"],
+    "references": [
     {
       "path": "../../packages/common"
     },
