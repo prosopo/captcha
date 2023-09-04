@@ -6,7 +6,7 @@
         "jsx": "react-jsx",
         "types": ["vite/client"]
     },
-    "include": ["./src/**/*.ts", "./src/*.ts", "./env.d.ts"],
+    "include": ["./src/**/*.ts", "./src/**/*.d.ts"],
     "exclude": ["**/*.test.ts"],
     "references": [
     {
