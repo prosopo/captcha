@@ -27,7 +27,7 @@
         "i18next-http-backend": "^1.4.4",
         "i18next-http-middleware": "^3.2.1",
         "react-i18next": "^11.18.6",
-        "tslib": "^2.6.2",
+        "tslib": "2.4.1",
         "zod": "^3.17.9"
     },
     "devDependencies": {
