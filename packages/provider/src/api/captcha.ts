@@ -69,7 +69,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 }))
                 return res.json(taskData)
             } catch (err) {
-                return next(new ProsopoApiError(err, undefined, 400))
+                // TODO fix error handling
+                return next(new ProsopoApiError(err as Error, undefined, 400))
             }
         }
     )
@@ -87,7 +88,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         try {
             parsed = CaptchaSolutionBody.parse(req.body)
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
 
         try {
@@ -103,7 +105,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 ...result,
             })
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
     })
 
@@ -145,7 +148,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
                 solutionApproved: false,
             })
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
     })
 
@@ -157,7 +161,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             const status = await tasks.providerStatus()
             return res.json({ status })
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
     })
 
@@ -169,7 +174,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
             const details = await tasks.getProviderDetails()
             return res.json(details)
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
     })
 
