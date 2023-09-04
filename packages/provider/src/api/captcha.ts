@@ -124,7 +124,8 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
         try {
             parsed = VerifySolutionBody.parse(req.body)
         } catch (err) {
-            return next(new ProsopoApiError(err, undefined, 400))
+            // TODO fix error handling
+            return next(new ProsopoApiError(err as Error, undefined, 400))
         }
         try {
             let solution: UserCommitmentRecord | undefined
