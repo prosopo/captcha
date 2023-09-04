@@ -99,6 +99,7 @@ export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], lo
         if (!captcha.solution) {
             try {
                 const captchaSolutions = [
+                    //@ts-ignore TODO is below correct? 'solution' is not in the type
                     ...solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId)))['solution'].values(),
                 ]
                 if (captchaSolutions.length > 0) {
