@@ -34,7 +34,7 @@ export const validateValue = (argv: ArgumentsCamelCase) => {
     if (typeof argv.value !== 'number') {
         throw new ProsopoEnvError('CLI.PARAMETER_ERROR', validateValue.name, {}, argv.value)
     }
-    const value: Compact<u128> = argv.value as Compact<u128>
+    const value: Compact<u128> = argv.value as unknown as Compact<u128>
     return { value }
 }
 
