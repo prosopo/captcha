@@ -1,20 +1,14 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "module": "esnext",
-    "target": "esnext",
-    "lib": [
-      "es6",
-      "dom"
-    ],
-    "jsx": "react-jsx"
-  },
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
+    },
   "include": [
     "src/index.tsx",
     "src/index.html"
   ],
+    "exclude": ["**/*.test.ts"],
   "references": [
     {
       "path": "../../dev/config"
