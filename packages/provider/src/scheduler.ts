@@ -26,7 +26,7 @@ export async function calculateSolutionsScheduler(pair: KeyringPair, config: Pro
     const env = new ProviderEnvironment(pair, config)
     await env.isReady()
     const tasks = new CalculateSolutionsTask(env)
-    const job = new CronJob(process.argv[2], () => {
+    const job = new CronJob(at(process.argv,2), () => {
         env.logger.debug('CalculateSolutionsTask....')
         tasks.run().catch((err) => {
             env.logger.error(err)
