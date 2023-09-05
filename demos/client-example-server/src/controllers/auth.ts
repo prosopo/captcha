@@ -73,7 +73,7 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req: R
         }
     } catch (err) {
         console.error('error', err)
-        res.status(500).json({ message: err.message || 'internal server error' })
+        res.status(500).json({ message: (err as Error).message || 'internal server error' })
     }
 }
 
@@ -122,7 +122,7 @@ const isAuth = (req: Request, res: Response) => {
     try {
         decodedToken = jwt.verify(token, 'secret')
     } catch (err) {
-        return res.status(500).json({ message: err.message || 'could not decode the token' })
+        return res.status(500).json({ message: (err as Error).message || 'could not decode the token' })
     }
 
     if (!decodedToken) {
