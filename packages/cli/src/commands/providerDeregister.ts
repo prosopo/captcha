@@ -18,9 +18,11 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
             } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
-                await tasks.contract.tx.providerDeregister(argv.address)
+                // TODO implement. ProviderDeregister currently takes no arguments for address?
+                throw new Error('Not implemented')
+                // await tasks.contract.tx.providerDeregister(argv.address)
 
-                logger.info('Provider registered')
+                logger.info('Provider deregistered')
             } catch (err) {
                 logger.error(err)
             }
