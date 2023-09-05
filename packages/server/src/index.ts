@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
 import { BlockHash } from '@polkadot/types/interfaces'
-import { ContractAbi, NetworkConfig, ProsopoServerConfig, RandomProvider } from '@prosopo/types'
+import { ContractAbi, NetworkConfig, NetworkNamesSchema, ProsopoServerConfig, RandomProvider } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
@@ -47,11 +47,12 @@ export class ProsopoServer {
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
         ) {
             this.defaultEnvironment = this.config.defaultEnvironment
-            this.network = get(this.config.networks, this.defaultEnvironment)
-            this.wsProvider = new WsProvider(get(this.config.networks, this.defaultEnvironment).endpoint)
-            this.prosopoContractAddress = get(this.config.networks, this.defaultEnvironment).contract.address
+            const networkName = NetworkNamesSchema.parse(this.defaultEnvironment)
+            this.network = get(this.config.networks, networkName)
+            this.wsProvider = new WsProvider(this.network.endpoint)
+            this.prosopoContractAddress = this.network.contract.address
             this.dappContractAddress = this.config.account.address
-            this.contractName = get(this.config.networks, this.defaultEnvironment).contract.name
+            this.contractName = this.network.contract.name
             this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
