@@ -1,33 +1,12 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "target": "esnext",
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    // "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    // "isolatedModules": true,
-    // "noEmit": true,
-    "jsx": "react-jsx"
-  },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.js"
-  ],
-  "exclude": ["node_modules", "dist"],
-  "references": [
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
+    },
+    "include": ["./src/**/*.ts", "./src/*.ts"],
+    "exclude": ["**/*.test.ts"],
+    "references": [
     {
       "path": "../../packages/api"
     },
