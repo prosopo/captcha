@@ -121,7 +121,7 @@ export const at = <T>(arr: T[], i: number, options: {
     return item
 }
 
-export function get<T>(obj: T, key: string | symbol | number, options: {
+export function get<T>(obj: T, key: unknown, options: {
 	required?: boolean
 } = {
 	required: true
