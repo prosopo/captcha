@@ -5,6 +5,9 @@ import { stringToU8a } from '@polkadot/util'
 import { validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
 import { ArgumentsCamelCase, Argv } from 'yargs'
+import { z } from 'zod'
+import { get } from '@prosopo/util'
+import { Payee } from '@prosopo/types'
 
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
@@ -30,10 +33,15 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
+            const { url, fee, payee } = z.object({
+                url: z.string(),
+                fee: z.number(),
+                payee: z.string(),
+            }).parse(argv)
             const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
-                Array.from(stringToU8a(argv.url)),
-                argv.fee,
-                argv.payee,
+                Array.from(stringToU8a(url)),
+                fee,
+                get(Payee, payee),
                 {
                     value: 0,
                 },
