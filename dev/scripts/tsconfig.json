@@ -2,10 +2,15 @@
     "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "jsx": "react-jsx",
+        "lib": [
+          "dom",
+          "dom.iterable",
+          "esnext"
+        ]
     },
-    "include": ["./src/**/*.ts", "./src/*.ts"],
-    "exclude": ["**/*.test.ts"],
+    "include": ["./src/**/*.ts", "./src/**/*.d.ts"],
     "references": [
         {
             "path": "../../packages/api"

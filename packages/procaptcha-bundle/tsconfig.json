@@ -9,7 +9,6 @@
     "src/index.tsx",
     "src/index.html"
   ],
-    "exclude": ["**/*.test.ts"],
   "references": [
     {
       "path": "../../dev/config"
