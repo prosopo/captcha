@@ -94,36 +94,40 @@ export function* permutations(
 
 // Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null
 // Note undefined's are not allowed due to arrays returning undefined when accessing an out of bounds index
-export const at = <T>(arr: Exclude<T, undefined>[], i: number): Exclude<T, undefined> => {
-    const item = atUnsafe(arr, i)
-    if (item === undefined) {
-        throw new Error(`Array item at index ${i} is undefined or null`)
+export const at = <T>(arr: T[], i: number, options: {
+    allowUndefined?: boolean // whether to allow undefined elements in the array
+    checkBounds?: boolean // whether to check the index against the bounds of the array
+    wrap?: boolean // whether to wrap the index around the bounds of the array
+} = {
+        allowUndefined: false,
+        checkBounds: true,
+        wrap: false,
+    }): T => {
+    if (options.wrap) {
+        i = Math.abs(i)
+        if (arr.length !== 0) {
+            i %= arr.length
+        }
+    }
+    if (options.checkBounds) {
+        if (i >= arr.length || i < 0) {
+            throw new Error(`Array index ${i} is out of bounds for array of length ${arr.length}`)
+        }
+    }
+    const item = arr[i]
+    if (options.allowUndefined || item === undefined) {
+        throw new Error(`Array item at index ${i} is undefined for array of length ${arr.length}`)
     }
     return item
 }
 
-// Get an element from an array, throwing an error if it's index is out of bounds
-// This is an unsafe method as it allows undefined's, so use with caution. I.e. if there are any undefined's in the array, this method will return them even if your generic type does not include undefined
-export const atUnsafe = <T>(arr: T[], i: number): T => {
-    if (i >= arr.length || i < 0) {
-        throw new Error(`Array index ${i} is out of bounds`)
-    }
-    const item = arr[i]
-    return item as T
-}
-
-type Key = string | number | symbol
-// Get a value from an object, throwing an error if the key is not present
-export function get<K extends Key, V>(
-    obj: {
-        [key: Key]: V
-    },
-    key: K
-): V
-export function get<V = JSON>(obj: JSON, key: string): V
-export function get<K extends keyof object, V>(obj: object, key: K): V {
-    const value = obj[key]
-    if (value === undefined) {
+export function get<T>(obj: T, key: string | symbol | number, options: {
+	required?: boolean
+} = {
+	required: true
+}) {
+    const value = obj[key as unknown as keyof T]
+    if (options.required && value === undefined) {
         throw new Error(`Object key ${String(key)} is undefined`)
     }
     return value
@@ -154,7 +158,7 @@ export const choice = <T>(
         // without replacement == don't allow duplicates
         if (options.withReplacement || indicesSet.add(index)) {
             indices.push(index)
-            choices.push(atUnsafe(items, index))
+            choices.push(at(items, index, { allowUndefined: true }))
         }
     }
 
