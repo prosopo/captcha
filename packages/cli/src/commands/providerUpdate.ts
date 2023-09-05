@@ -42,11 +42,13 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                 urlStr,
                 fee,
                 payeeStr,
+                value,
             } = z.object({
                 address: z.string(),
                 urlStr: z.string().optional(),
                 fee: z.number().optional(),
                 payeeStr: z.string().optional(),
+                value: z.number().optional(),
             }).parse(argv)
             const provider = (await tasks.contract.query.getProvider(address, {})).value.unwrap().unwrap()
             const payee: Payee = payeeStr ? get(Payee, payeeStr) : provider.payee
@@ -56,13 +58,13 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     url,
                     fee || provider.fee,
                     payee || provider.payee,
-                    { value: argv.value || 0 }
+                    { value: value || 0 }
                 )
                 const result = await tasks.contract.tx.providerUpdate(
                     url || provider.url,
                     fee || provider.fee,
                     payee || provider.payee,
-                    { value: argv.value || 0 }
+                    { value: value || 0 }
                 )
 
                 logger.info(JSON.stringify(result, null, 2))
