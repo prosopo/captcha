@@ -10,7 +10,7 @@ export default async (args: Args, loggerOpt?: Logger) => {
 
     logger.debug(args, 'getting...')
 
-    const traverse = async (data: JSON) => {
+    const traverse = async (data: any) => {
         if (data instanceof Array) {
             for (let i = 0; i < data.length; i++) {
                 data[i] = await traverse(data[i])
@@ -41,7 +41,7 @@ export default async (args: Args, loggerOpt?: Logger) => {
                         }
                     }
                 } else {
-                    await traverse(get(data, String(key)))
+                    await traverse(get(data, key))
                 }
             }
         }
@@ -54,6 +54,6 @@ export default async (args: Args, loggerOpt?: Logger) => {
     }
 
     // read the map file
-    const data: JSON = JSON.parse(fs.readFileSync(file, 'utf8'))
+    const data: any = JSON.parse(fs.readFileSync(file, 'utf8'))
     await traverse(data)
 }
