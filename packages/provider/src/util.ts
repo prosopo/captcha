@@ -18,7 +18,7 @@ import { arrayJoin } from '@prosopo/common'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import pl from 'nodejs-polars'
-import { at, atUnsafe, get } from '@prosopo/util'
+import { at, get } from '@prosopo/util'
 
 export function encodeStringAddress(address: string) {
     try {
@@ -32,8 +32,8 @@ export function encodeStringAddress(address: string) {
 export function shuffleArray<T>(array: T[]): T[] {
     for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
         const randIndex = Math.floor(Math.random() * (arrayIndex + 1))
-        const tmp = atUnsafe(array, randIndex)
-        array[randIndex] = atUnsafe(array, arrayIndex)
+        const tmp = at(array, randIndex, { allowUndefined: true})
+        array[randIndex] = at(array, arrayIndex, { allowUndefined: true})
         array[arrayIndex] = tmp
     }
     return array
