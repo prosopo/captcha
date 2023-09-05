@@ -112,7 +112,7 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Re
 }
 
 const isAuth = (req: Request, res: Response) => {
-    const authHeader = req.get('Authorization')
+    const authHeader = req.get('Authorization') || ''
     if (!authHeader) {
         res.status(401).json({ message: 'not authenticated' })
     }
