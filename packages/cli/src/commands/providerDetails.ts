@@ -18,7 +18,8 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
             } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
-                const result = (await tasks.contract.query.getProvider(argv.address, {})).value.unwrap().unwrap()
+                const address = validateAddress(argv).address
+                const result = (await tasks.contract.query.getProvider(address, {})).value.unwrap().unwrap()
 
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {
