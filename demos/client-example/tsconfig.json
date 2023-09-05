@@ -8,7 +8,8 @@
           "dom",
           "dom.iterable",
           "esnext"
-        ]
+        ],
+        "types": ["vite/client"]
     },
     "include": ["./src/**/*.ts", "./src/**/*.d.ts"],
     "references": [
