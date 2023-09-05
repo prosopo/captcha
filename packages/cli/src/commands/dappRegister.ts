@@ -4,6 +4,9 @@ import { Tasks } from '@prosopo/provider'
 import { validateContract, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
 import { ArgumentsCamelCase, Argv } from 'yargs'
+import { z } from 'zod'
+import { get } from '@prosopo/util'
+import { DappPayee } from '@prosopo/types'
 
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
@@ -24,9 +27,13 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
+            const args = z.object({
+                contract: z.string(),
+                payee: z.string(),
+            }).parse(argv)
             const dappRegisterArgs: Parameters<typeof tasks.contract.query.dappRegister> = [
-                argv.contract,
-                argv.payee,
+                args.contract,
+                get(DappPayee, args.payee),
                 {
                     value: 0,
                 },
