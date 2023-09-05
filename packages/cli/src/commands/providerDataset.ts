@@ -3,6 +3,7 @@ import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { writeJSONFile } from '../files.js'
 import { ArgumentsCamelCase, Argv } from 'yargs'
+import { z } from 'zod'
 
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
@@ -24,7 +25,10 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
-                let datasetId = argv.datasetId
+                let { datasetId, file } = z.object({
+                    datasetId: z.string().optional(),
+                    file: z.string()
+                }).parse(argv)
                 if (datasetId === undefined) {
                     const providerAddress = env.config.account.address
                     const provider = (await tasks.contract.query.getProvider(providerAddress)).value.unwrap().unwrap()
@@ -34,7 +38,7 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                 // get the dataset from the provider database
                 const result = await tasks.getProviderDataset(datasetId)
                 // export the result to file
-                await writeJSONFile(argv.file, result)
+                await writeJSONFile(file, JSON.stringify(result))
             } catch (err) {
                 logger.error(err)
             }

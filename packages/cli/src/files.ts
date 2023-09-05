@@ -22,7 +22,7 @@ export function loadJSONFile(filePath: string, logger?: any) {
     }
 }
 
-export function writeJSONFile(filePath: string, jsonData: JSON) {
+export function writeJSONFile(filePath: string, jsonData: unknown) {
     return new Promise((resolve, reject) => {
         const writeStream: WriteStream = createWriteStream(filePath)
 
