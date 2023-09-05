@@ -22,6 +22,7 @@ import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
 import { Request, Response, NextFunction } from 'express'
+import { at } from '@prosopo/util'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({
@@ -117,7 +118,7 @@ const isAuth = (req: Request, res: Response) => {
         res.status(401).json({ message: 'not authenticated' })
     }
 
-    const token = authHeader.split(' ')[1]
+    const token = at(authHeader.split(' '), 1)
     let decodedToken
     try {
         decodedToken = jwt.verify(token, 'secret')
