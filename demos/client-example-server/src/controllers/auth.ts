@@ -21,6 +21,7 @@ import { randomAsHex } from '@polkadot/util-crypto'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
+import { Request, Response, NextFunction } from 'express'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({
@@ -33,7 +34,7 @@ function hashPassword(password: string): string {
     return u8aToHex(blake2b(password))
 }
 
-const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, res, next) => {
+const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Request, res: Response, next: NextFunction) => {
     try {
         const User = mongoose.model<UserInterface>('User')
         // checks if email exists
@@ -76,7 +77,7 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
     }
 }
 
-const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, res) => {
+const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Request, res: Response) => {
     const User = mongoose.model<UserInterface>('User')
     await prosopoServer.isReady()
     // checks if email exists
@@ -110,7 +111,7 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
         })
 }
 
-const isAuth = (req, res) => {
+const isAuth = (req: Request, res: Response) => {
     const authHeader = req.get('Authorization')
     if (!authHeader) {
         return res.status(401).json({ message: 'not authenticated' })
