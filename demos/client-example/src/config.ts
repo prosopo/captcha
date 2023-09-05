@@ -20,6 +20,16 @@
 import { EnvironmentTypesSchema } from '@prosopo/types'
 import { LogLevelSchema } from '@prosopo/common'
 import { ProsopoClientConfig } from '@prosopo/types'
+import { get } from '@prosopo/util'
+import { z } from 'zod'
+
+const {
+    REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+    REACT_APP_SUBSTRATE_ENDPOINT
+} = z.object({
+    REACT_APP_PROSOPO_CONTRACT_ADDRESS: z.string(),
+    REACT_APP_SUBSTRATE_ENDPOINT: z.string(),
+}).parse(process.env)
 
 const config: ProsopoClientConfig = {
     account: {
@@ -32,9 +42,9 @@ const config: ProsopoClientConfig = {
     logLevel: LogLevelSchema.enum.Info,
     networks: {
         development: {
-            endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
+            endpoint: REACT_APP_SUBSTRATE_ENDPOINT,
             contract: {
-                address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+                address: REACT_APP_PROSOPO_CONTRACT_ADDRESS,
                 name: 'prosopo',
             },
             accounts: [],
