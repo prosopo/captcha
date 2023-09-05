@@ -4,6 +4,8 @@ import { ProsopoEnvError } from '@prosopo/common'
 import { encodeStringAddress } from '@prosopo/provider'
 import parser from 'cron-parser'
 import { ArgumentsCamelCase, Argv } from 'yargs'
+import z from 'zod'
+import { lodash } from '@prosopo/util'
 
 export const validateAddress = (argv: ArgumentsCamelCase): { address: string } => {
     const address = encodeStringAddress(argv.address as string)
@@ -20,7 +22,8 @@ export const validateContract = (argv: ArgumentsCamelCase) => {
 export const validatePayee = (argv: ArgumentsCamelCase) => {
     try {
         if (!argv.payee) return
-        const payeeArg: string = argv.payee[0].toUpperCase() + argv.payee.slice(1).toLowerCase() || ''
+        const payeeStr = z.string().parse(argv.payee)
+        const payeeArg: string = lodash().capitalize(payeeStr)
         const payee = PayeeSchema.parse(payeeArg)
 
         return { payee }
