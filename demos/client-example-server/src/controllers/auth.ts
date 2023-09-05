@@ -86,7 +86,7 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Re
     })
         .then(async (dbUser) => {
             if (!dbUser) {
-                return res.status(404).json({ message: 'user not found' })
+                res.status(404).json({ message: 'user not found' })
             } else {
                 const payload = SubscribeBodySpec.parse(req.body)
 
@@ -114,7 +114,7 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Re
 const isAuth = (req: Request, res: Response) => {
     const authHeader = req.get('Authorization')
     if (!authHeader) {
-        return res.status(401).json({ message: 'not authenticated' })
+        res.status(401).json({ message: 'not authenticated' })
     }
 
     const token = authHeader.split(' ')[1]
@@ -122,7 +122,7 @@ const isAuth = (req: Request, res: Response) => {
     try {
         decodedToken = jwt.verify(token, 'secret')
     } catch (err) {
-        return res.status(500).json({ message: (err as Error).message || 'could not decode the token' })
+        res.status(500).json({ message: (err as Error).message || 'could not decode the token' })
     }
 
     if (!decodedToken) {
