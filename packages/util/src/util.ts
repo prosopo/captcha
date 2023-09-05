@@ -124,7 +124,7 @@ export const at = <T>(arr: T[], i: number, options: {
 export type GetOptions = {
     required?: boolean
 }
-export function get<T>(obj: T, key: unknown, options?: GetOptions): T[keyof T]
+export function get<T>(obj: T, key: unknown, options?: GetOptions): Exclude<T[keyof T], undefined>
 export function get<V>(obj: unknown, key: unknown, options?: GetOptions): V
 export function get<T, V>(obj: T, key: unknown, options: GetOptions = {
 	required: true
@@ -134,6 +134,14 @@ export function get<T, V>(obj: T, key: unknown, options: GetOptions = {
         throw new Error(`Object key ${String(key)} is undefined`)
     }
     return value as V
+}
+
+export function get2<T>(obj: T, key: keyof T): Exclude<T[keyof T], undefined> {
+    const value = obj[key as unknown as keyof T]
+    if (value === undefined) {
+        throw new Error(`Object key ${String(key)} is undefined`)
+    }
+    return value as Exclude<T[keyof T], undefined>
 }
 
 export const choice = <T>(
