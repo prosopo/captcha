@@ -4,6 +4,9 @@ import { Tasks } from '@prosopo/provider'
 import { validateContract, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
 import { ArgumentsCamelCase, Argv } from 'yargs'
+import { z } from 'zod'
+import { DappPayee } from '@prosopo/types'
+import { get } from '@prosopo/util'
 
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
@@ -24,11 +27,16 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
+            const args = z.object({
+                contract: z.string(),
+                payee: z.string(),
+                owner: z.string(),
+            }).parse(argv)
             const stakeThreshold = (await tasks.contract.query.getDappStakeThreshold({})).value.unwrap()
             const dappRegisterArgs: Parameters<typeof tasks.contract.query.dappUpdate> = [
-                argv.contract,
-                argv.payee,
-                argv.owner,
+                args.contract,
+                get(DappPayee, args.payee),
+                args.owner,
                 {
                     value: stakeThreshold.toNumber(),
                 },
