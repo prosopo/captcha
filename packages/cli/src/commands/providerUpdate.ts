@@ -1,9 +1,12 @@
-import { Logger } from '@prosopo/common'
+import { Logger, UrlConverter } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { validateAddress, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
 import { ArgumentsCamelCase, Argv } from 'yargs'
+import { z } from 'zod'
+import { Payee } from '@prosopo/types'
+import { get } from '@prosopo/util'
 
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger
@@ -34,18 +37,31 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     desc: 'The value to stake in the contract',
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
-            const provider = (await tasks.contract.query.getProvider(argv.address, {})).value.unwrap().unwrap()
+            const {
+                address,
+                urlStr,
+                fee,
+                payeeStr,
+            } = z.object({
+                address: z.string(),
+                urlStr: z.string().optional(),
+                fee: z.number().optional(),
+                payeeStr: z.string().optional(),
+            }).parse(argv)
+            const provider = (await tasks.contract.query.getProvider(address, {})).value.unwrap().unwrap()
+            const payee: Payee = payeeStr ? get(Payee, payeeStr) : provider.payee
+            const url = urlStr ? Array.from(new UrlConverter().encode(urlStr)) : provider.url
             if (provider && (argv.url || argv.fee || argv.payee || argv.value)) {
                 await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
-                    argv.url ? argv.url.toString() : provider.url,
-                    argv.fee || provider.fee,
-                    argv.payee || provider.payee,
+                    url,
+                    fee || provider.fee,
+                    payee || provider.payee,
                     { value: argv.value || 0 }
                 )
                 const result = await tasks.contract.tx.providerUpdate(
-                    argv.url || provider.url,
-                    argv.fee || provider.fee,
-                    argv.payee || provider.payee,
+                    url || provider.url,
+                    fee || provider.fee,
+                    payee || provider.payee,
                     { value: argv.value || 0 }
                 )
 
