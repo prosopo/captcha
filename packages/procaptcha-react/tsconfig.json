@@ -8,7 +8,7 @@
             "dom"
         ],
     },
-    "include": ["./src/**/*.ts", "./src/**/*.tsx", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
     {
       "path": "../api"

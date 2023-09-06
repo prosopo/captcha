@@ -4,6 +4,6 @@
         "rootDir": "./src",
         "outDir": "./dist"
     },
-    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": []
 }
