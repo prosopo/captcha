@@ -27,6 +27,7 @@
         "@types/node": "^20.1.2",
         "@types/yargs": "^17.0.24",
         "ts-node": "^10.9.1",
-        "tslib": "^2.5.3"
+        "tslib": "^2.5.2",
+        "typescript": "^5.2.2"
     }
 }

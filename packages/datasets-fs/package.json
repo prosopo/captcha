@@ -35,7 +35,8 @@
         "@types/bcrypt": "^5.0.0",
         "@types/cli-progress": "^3.11.0",
         "@types/mocha": "^10.0.0",
-        "typescript": "^4.9.5"
+        "tslib": "^2.5.2",
+        "typescript": "^5.2.2"
     },
     "repository": {
         "type": "git",

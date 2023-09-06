@@ -11,17 +11,18 @@
         "lint:fix": "npx eslint . --fix"
     },
     "dependencies": {
-        "dotenv": "^16.0.1",
         "@polkadot/util-crypto": "12.3.2",
         "@prosopo/common": "^0.1.17",
         "@prosopo/contract": "^0.1.17",
         "@prosopo/database": "^0.1.17",
         "@prosopo/types": "^0.1.17",
         "@prosopo/types-database": "^0.1.17",
-        "@prosopo/types-env": "^0.1.17"
+        "@prosopo/types-env": "^0.1.17",
+        "dotenv": "^16.0.1"
     },
     "devDependencies": {
-        "typescript": "^4.9.5"
+        "tslib": "^2.5.2",
+        "typescript": "^5.2.2"
     },
     "author": "Prosopo",
     "license": "Apache-2.0",

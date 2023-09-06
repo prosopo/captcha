@@ -29,7 +29,8 @@
         "zod": "^3.17.9"
     },
     "devDependencies": {
-        "typescript": "^4.9.5"
+        "tslib": "^2.5.2",
+        "typescript": "^5.2.2"
     },
     "sideEffects": false
 }
