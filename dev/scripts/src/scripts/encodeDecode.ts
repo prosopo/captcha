@@ -14,9 +14,11 @@
 import { blake2AsHex, isAddress } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToNumber, hexToString, hexToU8a, isHex, stringToHex, u8aToHex } from '@polkadot/util'
+import { at } from "@prosopo/util"
 
 const ss58Format = 42
-const arg = process.argv.slice(2)[0].trim()
+
+const arg = at(process.argv.slice(2), 0).trim()
 const argIsHex = isHex(arg)
 const argIsAddress = isAddress(arg, false, ss58Format)
 console.log(`arg          : ${arg}`)

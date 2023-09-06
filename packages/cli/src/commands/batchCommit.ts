@@ -48,7 +48,7 @@ export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
                 if (env.db) {
                     const batchCommitter = new BatchCommitmentsTask(
                         env.config.batchCommit,
-                        env.contractInterface,
+                        env.getContractInterface(),
                         env.db,
                         0n,
                         env.logger

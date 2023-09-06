@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise, WsProvider } from '@polkadot/api'
+import { at } from '@prosopo/util'
 
 async function run(blockNumber: string | number) {
     // Construct
@@ -26,7 +27,7 @@ async function run(blockNumber: string | number) {
     console.log(JSON.stringify(block.toJSON(), null, 2))
 }
 
-run(process.argv.slice(2)[0])
+run(at(process.argv.slice(2),0))
     .then(() => process.exit(0))
     .catch((error) => {
         console.error(error)

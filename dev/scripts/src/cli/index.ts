@@ -28,7 +28,7 @@ const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
 
-export async function processArgs(args) {
+export async function processArgs(args: string[]) {
     const parsed = await yargs(hideBin(args)).option('logLevel', {
         describe: 'set log level',
         choices: Object.keys(LogLevel.enum),

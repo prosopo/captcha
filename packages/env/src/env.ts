@@ -75,10 +75,7 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getSigner(): Promise<void> {
-        if (!this.api) {
-            this.api = await ApiPromise.create({ provider: this.wsProvider })
-        }
-        await this.api.isReadyOrError
+        await this.getApi().isReadyOrError
         try {
             this.pair = this.keyring.addPair(this.pair)
         } catch (err) {
@@ -86,9 +83,16 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
+    getContractInterface(): ProsopoCaptchaContract {
+        if (this.contractInterface === undefined) {
+            throw new ProsopoEnvError(new Error('contractInterface not setup! Please call isReady() first'))
+        }
+        return this.contractInterface
+    }
+
     getApi(): ApiPromise {
         if (this.api === undefined) {
-            throw new ProsopoEnvError(new Error('api not setup'))
+            throw new ProsopoEnvError(new Error('api not setup! Please call isReady() first'))
         }
         return this.api
     }
@@ -171,10 +175,4 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
-    getContractInterface(): ProsopoCaptchaContract {
-        if (this.contractInterface === undefined) {
-            throw new ProsopoEnvError(new Error('contractInterface not setup'))
-        }
-        return this.contractInterface
-    }
 }

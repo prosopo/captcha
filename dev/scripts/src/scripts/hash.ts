@@ -25,6 +25,7 @@ import {
     u8aToHex,
     u8aToString,
 } from '@polkadot/util'
+import { get } from '@prosopo/util'
 
 function main() {
     const fns: {
@@ -55,7 +56,7 @@ function main() {
 
     const max = Object.keys(fns).reduce((max, key) => Math.max(max, key.length), 0)
     for (const fnName in fns) {
-        const fn = fns[fnName]
+        const fn = get(fns, fnName)
         let result = ''
         try {
             result = fn(arg)

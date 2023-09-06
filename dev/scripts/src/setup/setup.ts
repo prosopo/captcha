@@ -24,6 +24,7 @@ import { registerProvider } from './provider.js'
 import { setupDapp } from './dapp.js'
 import fse from 'fs-extra'
 import path from 'path'
+import { get } from '@prosopo/util'
 
 const logger = getLogger(LogLevel.enum.info, 'setup')
 const __dirname = path.resolve()
@@ -90,7 +91,7 @@ async function updateEnvFile(vars: Record<string, string>) {
     let readEnvFile = await fse.readFile(envFile, 'utf8')
 
     for (const key in vars) {
-        readEnvFile = updateEnvFileVar(readEnvFile, key, vars[key])
+        readEnvFile = updateEnvFileVar(readEnvFile, key, get(vars, key))
     }
 
     await fse.writeFile(envFile, readEnvFile)
@@ -128,8 +129,8 @@ export async function setup(force: boolean) {
         await env.isReady()
 
         const result: ReturnNumber = await wrapQuery(
-            env.contractInterface.query.getDappStakeThreshold,
-            env.contractInterface.query
+            env.getContractInterface().query.getDappStakeThreshold,
+            env.getContractInterface().query
         )()
         const stakeAmount = result.rawNumber
         let fundAmount: BN = new BN(0)

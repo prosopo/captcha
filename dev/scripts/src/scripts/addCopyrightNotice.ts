@@ -13,6 +13,7 @@
 // limitations under the License.
 import { glob } from 'glob'
 import fs from 'fs'
+import { at } from '@prosopo/util'
 
 const searchPaths = [
     '../**/*.ts',
@@ -69,21 +70,21 @@ for (const file of files) {
         //check if file is a file, not a directory
         const fileContents = fs.readFileSync(file, 'utf8')
         const lines = fileContents.split('\n')
-        if (lines[0].startsWith('// Copyright')) {
+        if (at(lines, 0).startsWith('// Copyright')) {
             //remove the old license and replace with the new one
             // find the line containing `// along with Prosopo Procaptcha.  If not, see <http://www.gnu.org/licenses/>.` and take the lines array from there
             let count = 0
-            let line = lines[count]
+            let line = at(lines,count)
             let lineStartsWithSlashes = line.startsWith('//')
             while (lineStartsWithSlashes) {
                 lineStartsWithSlashes = line.startsWith('//')
                 if (lineStartsWithSlashes) {
-                    line = lines[++count]
+                    line = at(lines,++count)
                 }
             }
             if (!line.startsWith('//')) {
                 count = count - 1
-                line = lines[count]
+                line = at(lines, count)
             }
             if (
                 line.endsWith('If not, see <http://www.gnu.org/licenses/>.') ||

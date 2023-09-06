@@ -17,6 +17,7 @@ import { config } from 'dotenv'
 import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
 import { getPair } from '@prosopo/common'
 import { sendFunds } from '../setup/index.js'
+import { at } from '@prosopo/util'
 
 config()
 
@@ -24,11 +25,11 @@ async function main(account: string) {
     const pair = await getPair(getPairType(), getSs58Format(), '//Alice')
     const env = new Environment(pair, defaultConfig())
     await env.isReady()
-    await sendFunds(env, account, 'Provider', new BN(100000000000000000))
+    await sendFunds(env, account, 'Provider', new BN('100000000000000000'))
     process.exit()
 }
 
-main(process.argv.slice(2)[0].trim()).catch((error) => {
+main(at(process.argv.slice(2), 0).trim()).catch((error) => {
     console.error(error)
     process.exit()
 })
