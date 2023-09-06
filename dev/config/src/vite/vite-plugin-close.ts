@@ -22,6 +22,7 @@ export default function ClosePlugin(options?: ClosePluginOptions): Plugin {
         buildEnd(error) {
             log.info('Build end')
             if (error) {
+                console.log(error)
                 log.error(error)
             }
         },
