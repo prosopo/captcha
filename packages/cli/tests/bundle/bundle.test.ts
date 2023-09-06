@@ -5,7 +5,7 @@ import { promisify } from 'util'
 const execPromise = promisify(exec)
 
 describe('provider bundle', () => {
-    test.only('bundle runs after bundling', async () => {
+    test('bundle runs after bundling', async () => {
         // get file location
         const dir = getCurrentFileDirectory(import.meta.url)
 
