@@ -14,7 +14,10 @@
     },
     {
       "path": "../procaptcha"
-    }
+    },
+        {
+            "path": "../util"
+        }
 
   ]
 }

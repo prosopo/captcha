@@ -23,6 +23,9 @@
         },
         {
             "path": "../types-env"
+        },
+        {
+            "path": "../util"
         }
     ]
 }
