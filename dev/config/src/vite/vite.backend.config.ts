@@ -1,5 +1,5 @@
+import { AliasOptions, UserConfig } from 'vite'
 import { default as ClosePlugin } from './vite-plugin-close.js'
-import { UserConfig } from 'vite'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
@@ -13,8 +13,32 @@ import replace from 'vite-plugin-filter-replace'
 
 const logger = getLogger(`Info`, `vite.backend.config.js`)
 
+const nodeJsPolarsDeps = [
+    'nodejs-polars.android-arm64.node',
+    'nodejs-polars.android-arm-eabi.node',
+    'nodejs-polars.win32-x64-msvc.node',
+    'nodejs-polars.win32-ia32-msvc.node',
+    'nodejs-polars.win32-arm64-msvc.node',
+    'nodejs-polars.darwin-x64.node',
+    'nodejs-polars.darwin-arm64.node',
+    'nodejs-polars.freebsd-x64.node',
+    'nodejs-polars.linux-x64-musl.node',
+    //'nodejs-polars.linux-x64-gnu.node', // - this is the only file that will be present
+    'nodejs-polars.linux-arm64-musl.node',
+    'nodejs-polars.linux-arm64-gnu.node',
+    'nodejs-polars.linux-arm-gnueabihf.node',
+]
+
+const nodeJsPolarsResolve: AliasOptions = [
+    ...nodeJsPolarsDeps.map((dep) => ({
+        find: `./${dep}`,
+        replacement: 'nodejs-polars.linux-x64-gnu.node',
+    })),
+]
+
 export default async function (
     packageName: string,
+    packageVersion: string,
     bundleName: string,
     packageDir: string,
     entry: string,
@@ -52,7 +76,18 @@ export default async function (
     )
     logger.info(`.node files to copy ${nodeJsNodeFileToCopy}`)
 
+    const define = {
+        'process.env.WS_NO_BUFFER_UTIL': 'true',
+        'process.env.WS_NO_UTF_8_VALIDATE': 'true',
+        'process.env.PROSOPO_PACKAGE_VERSION': JSON.stringify(packageVersion),
+    }
+
+    logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`)
+
     return {
+        resolve: {
+            alias: nodeJsPolarsResolve,
+        },
         ssr: {
             noExternal: internal,
             external: allExternal,
@@ -69,10 +104,7 @@ export default async function (
             platform: 'node',
             target: 'node16',
         },
-        define: {
-            'process.env.WS_NO_BUFFER_UTIL': 'true',
-            'process.env.WS_NO_UTF_8_VALIDATE': 'true',
-        },
+        define,
         build: {
             outDir,
             minify: false,

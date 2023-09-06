@@ -1,12 +1,14 @@
 import { Argv } from 'yargs'
 import { BatchCommitmentsTask } from '@prosopo/provider'
-import { Logger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevelSchema, Logger, getLogger } from '@prosopo/common'
+import { ProsopoConfig } from '@prosopo/types'
+import { ProviderEnvironment } from '@prosopo/env'
 import { cwd } from 'process'
 import { validateScheduleExpression } from './validators.js'
 import pm2 from 'pm2'
-export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || env.logger
+export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevelSchema.Values.Info, 'cli.batch_commit')
     return {
         command: 'batch_commit',
         describe: 'Batch commit user solutions to contract' as const,
@@ -18,6 +20,8 @@ export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
             } as const)
         },
         handler: async (argv) => {
+            const env = new ProviderEnvironment(pair, config)
+            await env.isReady()
             if (argv.schedule) {
                 pm2.connect((err) => {
                     if (err) {

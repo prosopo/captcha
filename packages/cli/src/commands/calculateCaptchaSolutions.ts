@@ -1,16 +1,18 @@
 import { Argv } from 'yargs'
 import { CalculateSolutionsTask } from '@prosopo/provider'
-import { Logger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevelSchema, Logger, getLogger } from '@prosopo/common'
+import { ProsopoConfig } from '@prosopo/types'
+import { ProviderEnvironment } from '@prosopo/env'
 import { cwd } from 'process'
 import { validateScheduleExpression } from './validators.js'
 import pm2 from 'pm2'
-export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || env.logger
+export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevelSchema.Values.Info, 'cli.calculate_captcha_solutions')
 
     return {
         command: 'calculate_captcha_solutions',
-        description: 'Calculate captcha solutions',
+        describe: 'Calculate captcha solutions',
         builder: (yargs: Argv) => {
             return yargs.option('schedule', {
                 type: 'string' as const,
@@ -19,6 +21,8 @@ export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
             } as const)
         },
         handler: async (argv) => {
+            const env = new ProviderEnvironment(pair, config)
+            await env.isReady()
             if (argv.schedule) {
                 pm2.connect((err) => {
                     if (err) {

@@ -11,8 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProviderEnvironment } from '@prosopo/types-env'
-import { Tasks } from '@prosopo/provider'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevelSchema, getLogger } from '@prosopo/common'
+import { ProsopoConfig } from '@prosopo/types'
 import {
     commandBatchCommit,
     commandCalculateCaptchaSolutions,
@@ -27,29 +28,29 @@ import {
     commandProviderRegister,
     commandProviderSetDataset,
     commandProviderUpdate,
+    commandVersion,
 } from './commands/index.js'
-import { getLogger } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import yargs from 'yargs'
 
-export function processArgs(args, env: ProviderEnvironment) {
-    const tasks = new Tasks(env)
-    const logger = getLogger(env.config.logLevel, 'CLI')
-
+export function processArgs(args, pair: KeyringPair, config: ProsopoConfig) {
+    const logger = getLogger(LogLevelSchema.Values.Info, 'CLI')
     return yargs(hideBin(args))
         .usage('Usage: $0 [global options] <command> [options]')
         .option('api', { demand: false, default: false, type: 'boolean' } as const)
-        .command(commandProviderRegister(env, tasks, { logger }))
-        .command(commandProviderUpdate(env, tasks, { logger }))
-        .command(commandProviderDeregister(env, tasks, { logger }))
-        .command(commandProviderSetDataset(env, tasks, { logger }))
-        .command(commandDappRegister(env, tasks, { logger }))
-        .command(commandDappUpdate(env, tasks, { logger }))
-        .command(commandProviderAccounts(env, tasks, { logger }))
-        .command(commandDappAccounts(env, tasks, { logger }))
-        .command(commandProviderDetails(env, tasks, { logger }))
-        .command(commandProviderDataset(env, tasks, { logger }))
-        .command(commandDappDetails(env, tasks, { logger }))
-        .command(commandCalculateCaptchaSolutions(env, { logger }))
-        .command(commandBatchCommit(env, { logger })).argv
+        .command(commandProviderRegister(pair, config, { logger }))
+        .command(commandProviderUpdate(pair, config, { logger }))
+        .command(commandProviderDeregister(pair, config, { logger }))
+        .command(commandProviderSetDataset(pair, config, { logger }))
+        .command(commandDappRegister(pair, config, { logger }))
+        .command(commandDappUpdate(pair, config, { logger }))
+        .command(commandProviderAccounts(pair, config, { logger }))
+        .command(commandDappAccounts(pair, config, { logger }))
+        .command(commandProviderDetails(pair, config, { logger }))
+        .command(commandProviderDataset(pair, config, { logger }))
+        .command(commandDappDetails(pair, config, { logger }))
+        .command(commandCalculateCaptchaSolutions(pair, config, { logger }))
+        .command(commandBatchCommit(pair, config, { logger }))
+        .command(commandVersion(pair, config, { logger }))
+        .parse()
 }
