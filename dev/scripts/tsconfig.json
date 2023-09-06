@@ -3,7 +3,6 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
-        "jsx": "react-jsx",
         "lib": [
           "dom",
           "dom.iterable",
