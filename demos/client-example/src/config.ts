@@ -18,7 +18,7 @@
 // https://create-react-app.dev/docs/adding-custom-environment-variables/
 
 import { EnvironmentTypesSchema } from '@prosopo/types'
-import { LogLevelSchema } from '@prosopo/common'
+import { LogLevel } from '@prosopo/common'
 import { ProsopoClientConfig } from '@prosopo/types'
 import { get } from '@prosopo/util'
 import { z } from 'zod'
@@ -39,7 +39,7 @@ const config: ProsopoClientConfig = {
     solutionThreshold: 80,
     web2: process.env.REACT_APP_WEB2 === 'true',
     defaultEnvironment: EnvironmentTypesSchema.enum.development,
-    logLevel: LogLevelSchema.enum.Info,
+    logLevel: LogLevel.enum.info,
     networks: {
         development: {
             endpoint: REACT_APP_SUBSTRATE_ENDPOINT,

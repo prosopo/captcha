@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { LogLevelSchema, getLogger } from '@prosopo/common'
+import { LogLevel, getLogger } from '@prosopo/common'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
 import { getLogLevel } from '@prosopo/common'
@@ -31,7 +31,7 @@ loadEnv(rootDir)
 export async function processArgs(args) {
     const parsed = await yargs(hideBin(args)).option('logLevel', {
         describe: 'set log level',
-        choices: Object.keys(LogLevelSchema.enum),
+        choices: Object.keys(LogLevel.enum),
     }).argv
 
     const log = getLogger(getLogLevel(parsed.logLevel), 'CLI')

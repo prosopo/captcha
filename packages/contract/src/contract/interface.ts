@@ -18,7 +18,7 @@ import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
 import { ContractPromise } from '@polkadot/api-contract'
 import { Error, LangError } from '../typechain/captcha/types-returns/captcha.js'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, LogLevelSchema, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
+import { LogLevel, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers.js'
 import { QueryReturnType, Result } from '@727-ventures/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
@@ -91,7 +91,7 @@ export class ProsopoCaptchaContract extends Contract {
         this.pair = pair
         this.contractName = contractName
         this.nonce = currentNonce
-        this.logger = getLogger(logLevel || LogLevelSchema.enum.Info, `${ProsopoCaptchaContract.name}.${contractName}`)
+        this.logger = getLogger(logLevel || LogLevel.enum.info, `${ProsopoCaptchaContract.name}.${contractName}`)
         this.json = AbiMetaDataSpec.parse(this.abi.json)
         this.createStorageGetters()
     }
