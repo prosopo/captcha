@@ -13,7 +13,9 @@
 // limitations under the License.
 import { TFunction } from 'i18next'
 import { hexToString } from '@polkadot/util'
-import translationEn from './locales/en.json'
+import translationEn from './locales/en.json' assert {
+    type: 'json'
+}
 
 export function isClientSide(): boolean {
     return !!(typeof window !== 'undefined' && window.document && window.document.createElement)

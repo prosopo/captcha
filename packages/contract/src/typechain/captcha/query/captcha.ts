@@ -24,7 +24,9 @@ import type BN from 'bn.js'
 //@ts-ignore
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { getTypeDescription } from '../shared/utils.js'
-import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json'
+import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json' assert {
+    type: 'json'
+}
 
 export default class Methods {
     readonly __nativeContract: ContractPromise

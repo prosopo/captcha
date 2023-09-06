@@ -29,8 +29,12 @@ import { getTypeDescription } from '../shared/utils.js'
 // @ts-ignore
 import { EventRecord } from '@polkadot/types/interfaces'
 import { decodeEvents } from '../shared/utils.js'
-import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json'
-import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/captcha.json'
+import DATA_TYPE_DESCRIPTIONS from '../data/captcha.json' assert {
+    type: 'json'
+}
+import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/captcha.json' assert {
+    type: 'json'
+}
 
 export default class Methods {
     readonly __nativeContract: ContractPromise
