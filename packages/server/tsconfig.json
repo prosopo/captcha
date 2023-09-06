@@ -2,7 +2,11 @@
     "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "lib": [
+            "es6",
+            "dom"
+        ],
     },
     "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts"],
     "references": [
