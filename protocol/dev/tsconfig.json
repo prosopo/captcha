@@ -5,9 +5,5 @@
         "outDir": "./dist"
     },
     "include": ["./src/**/*.ts", "./src/**/*.d.ts"],
-    "references": [
-        {
-            "path": "../util"
-        }
-    ]
+    "references": []
 }
