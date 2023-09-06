@@ -9,7 +9,7 @@
           "esnext"
         ]
     },
-    "include": ["./src/**/*.ts", "./src/**/*.d.ts"],
+    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
     {
       "path": "../../packages/api"
