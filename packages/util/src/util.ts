@@ -144,14 +144,6 @@ export function get<T, V>(
     return value as V
 }
 
-export function get2<T>(obj: T, key: keyof T): Exclude<T[keyof T], undefined> {
-    const value = obj[key as unknown as keyof T]
-    if (value === undefined) {
-        throw new Error(`Object key ${String(key)} is undefined`)
-    }
-    return value as Exclude<T[keyof T], undefined>
-}
-
 export const choice = <T>(
     items: T[],
     n: number,
