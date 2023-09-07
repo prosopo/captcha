@@ -36,8 +36,8 @@
         "populate-data": "npm -w @prosopo/provider run populate-data",
         "test": "npm -w @prosopo/scripts run test",
         "test:all": "npm run --workspaces --if-present test",
-        "lint": "npm run lint --workspaces --if-present",
-        "lint:fix": "npm run lint:fix --workspaces --if-present"
+        "lint": "npm --workspaces exec eslint -- '**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
+        "lint:fix": "npm run lint -- --fix"
     },
     "private": true,
     "engines": {
@@ -63,6 +63,7 @@
         "eslint-plugin-prettier": "^5.0.0",
         "eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
         "eslint-plugin-unused-imports": "^2.0.0",
+        "eslint-plugin-workspaces": "^0.9.0",
         "node-loader": "^2.0.0",
         "npm-check-updates": "^15.3.4",
         "prettier": "^3.0.3",
