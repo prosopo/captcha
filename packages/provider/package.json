@@ -28,6 +28,8 @@
         "@prosopo/database": "^0.1.17",
         "@prosopo/datasets": "^0.1.17",
         "@prosopo/env": "^0.1.17",
+        "@prosopo/config": "^0.1.17",
+        "@prosopo/util": "^0.1.17",
         "@prosopo/types": "^0.1.17",
         "@prosopo/types-database": "^0.1.17",
         "@prosopo/types-env": "^0.1.17",
