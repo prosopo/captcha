@@ -27,7 +27,6 @@
         "@prosopo/common": "^0.1.17",
         "@prosopo/cli": "^0.1.17",
         "@prosopo/procaptcha": "^0.1.17",
-        "@prosopo/procatpcha-react": "^0.1.17",
         "@prosopo/util": "^0.1.17",
         "@prosopo/types": "^0.1.17",
         "@prosopo/procaptcha-react": "^0.1.17"
