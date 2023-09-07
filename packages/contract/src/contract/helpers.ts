@@ -85,13 +85,10 @@ export function encodeStringArgs(abi: Abi, methodObj: AbiMessage, args: any[]): 
 /** Handle errors returned from contract queries by throwing them
  */
 export function handleContractCallOutcomeErrors(response: ContractCallOutcome, contractMethodName: string): void {
-    const isOk = 'isOk'
-    const asOk = 'asOk'
     if (response.output) {
-        //@ts-ignore
-        if (response.output.isOk) {
-            //@ts-ignore
-            const responseOk = response.output.asOk
+        const out: any = response.output
+        if (out.isOk) {
+            const responseOk = out.asOk
             if (responseOk.isErr) {
                 throw new ProsopoContractError(responseOk.toPrimitive().err.toString(), contractMethodName, {})
             }

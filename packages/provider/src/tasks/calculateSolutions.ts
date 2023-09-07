@@ -65,8 +65,7 @@ export class CalculateSolutionsTask extends Tasks {
                         )
                         try {
                             // TODO polars doesn't have the captchaId field in the type
-                            // @ts-ignore
-                            const captchaIdsToUpdate = [...solutionsToUpdate['captchaId'].values()]
+                            const captchaIdsToUpdate = [...(solutionsToUpdate as any)['captchaId'].values()]
                             const commitmentIds = solutions
                                 .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
                                 .map((s) => s.commitmentId)

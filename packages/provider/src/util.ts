@@ -86,8 +86,7 @@ export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumbe
     const group = df.groupBy(['captchaId', 'solutionKey']).agg(pl.count('captchaContentId').alias('count'))
     const filtered: pl.DataFrame = group.filter(pl.col('count').gt(winningNumberOfSolutions))
     // TODO is below correct? 'solutionKey' does not exist in the type
-    // @ts-ignore
-    const key = filtered['solutionKey']
+    const key = (filtered as any)['solutionKey']
     return filtered.withColumn(key.str.split(',').rename('solution'))
 }
 
@@ -99,8 +98,8 @@ export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], lo
         if (!captcha.solution) {
             try {
                 const captchaSolutions = [
-                    //@ts-ignore TODO is below correct? 'solution' is not in the type
-                    ...solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId)))['solution'].values(),
+                    // TODO is below correct? 'solution' is not in the type
+                    ...(solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId))) as any)['solution'].values(),
                 ]
                 if (captchaSolutions.length > 0) {
                     captcha.solution = captchaSolutions[0]
