@@ -133,7 +133,9 @@ export default async function (
         },
         plugins: [
             // Not sure if we need this plugin or not, it works without it
-            viteReact.default(),
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            viteReact(),
             viteCommonjs(),
             // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
             // mode, in which case we don't want to close the bundler because it will close the server
