@@ -1,7 +1,7 @@
 module.exports = {
     env: {
         browser: true,
-        es2022: true,
+        es2021: true,
         node: true,
     },
     extends: ['plugin:workspaces/recommended', 'eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended', 'prettier'],
@@ -9,6 +9,9 @@ module.exports = {
     parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
+        ecmaFeatures: {
+            "jsx": true
+        }
     },
     plugins: ['workspaces', 'unused-imports', '@typescript-eslint', 'sort-imports-es6-autofix', 'prettier'],
     rules: {
