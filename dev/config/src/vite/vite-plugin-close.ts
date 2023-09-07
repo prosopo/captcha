@@ -15,7 +15,7 @@ export interface ClosePluginOptions {
 export default function ClosePlugin(options?: ClosePluginOptions): Plugin {
     const __dirname = path.resolve()
     return {
-        name: 'ClosePlugin', // required, will show up in warnings and errors
+        name: 'close-plugin', // required, will show up in warnings and errors
         buildStart() {
             log.info('Bundle build started')
         },

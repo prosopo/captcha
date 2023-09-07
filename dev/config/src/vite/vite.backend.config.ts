@@ -56,7 +56,7 @@ export default async function (
     const outDir = path.resolve(packageDir, 'dist/bundle')
 
     // Get rid of any dependencies we don't want to bundle
-    const { external, internal } = filterDependencies(deps, ['pm2', 'aws', 'webpack', 'vite', 'eslint'])
+    const { external, internal } = filterDependencies(deps, ['aws', 'webpack', 'vite', 'eslint'])
 
     // Add the node builtins (path, fs, os, etc.) to the external list
     const allExternal = [
@@ -157,9 +157,10 @@ export default async function (
         },
         plugins: [
             command !== 'serve' ? ClosePlugin() : undefined,
-            // nodejs-polars is not being transformed by commonjsOptions (above) so we need to do a manual replace of
-            // __dirname here
+
             replace.default([
+                // nodejs-polars is not being transformed by commonjsOptions (above) so we need to do a manual replace of
+                // __dirname here
                 {
                     filter: ['node_modules/nodejs-polars/bin/native-polars.js'],
                     replace: {
