@@ -31,7 +31,7 @@ import {
     ProviderRegistered,
     RandomProvider,
 } from '@prosopo/types'
-import { BlockHash } from '@polkadot/types/interfaces/chain/index'
+import { BlockHash, Header, RuntimeDispatchInfoV1, SignedBlock } from '@polkadot/types/interfaces'
 import {
     CaptchaMerkleTree,
     buildDataset,
@@ -42,15 +42,13 @@ import {
     parseCaptchaDataset,
 } from '@prosopo/datasets'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
-import { Header, SignedBlock } from '@polkadot/types/interfaces/runtime/index'
 import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
-import { RuntimeDispatchInfoV1 } from '@polkadot/types/interfaces/payment/index'
 import { SubmittableResult } from '@polkadot/api'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
-import { shuffleArray } from '../util'
+import { shuffleArray } from '../util.js'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -113,6 +111,11 @@ export class Tasks {
         }
 
         await this.db?.storeDataset(dataset)
+        // catch any errors before running the tx
+        await wrapQuery(this.contract.query.providerSetDataset, this.contract.query)(
+            dataset.datasetId,
+            dataset.datasetContentId
+        )
         const txResult = await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {
             value: 0,
         })

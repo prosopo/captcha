@@ -1,4 +1,4 @@
-import { Args } from './args'
+import { Args } from './args.js'
 import { Data, DataSchema, Item } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'

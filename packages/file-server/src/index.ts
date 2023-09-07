@@ -1,9 +1,15 @@
+import { dirname } from 'path'
+import { fileURLToPath } from 'url'
 import { getLogger } from '@prosopo/common'
 import dotenv from 'dotenv'
+import esMain from 'es-main'
 import express from 'express'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
 import stream from 'stream'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const parseArray = (value: string) => {
     try {
@@ -92,8 +98,8 @@ const main = async () => {
     })
 }
 
-// if main process
-if (typeof require !== undefined && require.main === module) {
+//if main process
+if (esMain(import.meta)) {
     main().catch((error) => {
         console.error(error)
     })

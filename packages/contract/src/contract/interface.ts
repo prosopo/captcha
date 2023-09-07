@@ -16,19 +16,24 @@ import { ApiPromise } from '@polkadot/api'
 import { BN } from '@polkadot/util'
 import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
 import { ContractPromise } from '@polkadot/api-contract'
-import { Error, LangError } from '../typechain/captcha/types-returns/captcha'
+import { Error, LangError } from '../typechain/captcha/types-returns/captcha.js'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers'
+import { LogLevel, LogLevelSchema, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
+import { ProsopoContractError } from '../handlers.js'
 import { QueryReturnType, Result } from '@727-ventures/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
-import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers'
+import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
 import { firstValueFrom } from 'rxjs'
-import { getPrimitiveStorageFields, getPrimitiveStorageValue, getPrimitiveTypes, getStorageKeyAndType } from './storage'
-import { useWeightImpl } from './useWeight'
-import Contract from '../typechain/captcha/contracts/captcha'
-import MixedMethods from '../typechain/captcha/mixed-methods/captcha'
-import QueryMethods from '../typechain/captcha/query/captcha'
+import {
+    getPrimitiveStorageFields,
+    getPrimitiveStorageValue,
+    getPrimitiveTypes,
+    getStorageKeyAndType,
+} from './storage.js'
+import { useWeightImpl } from './useWeight.js'
+import Contract from '../typechain/captcha/contracts/captcha.js'
+import MixedMethods from '../typechain/captcha/mixed-methods/captcha.js'
+import QueryMethods from '../typechain/captcha/query/captcha.js'
 import type { ContractOptions } from '@polkadot/api-contract/types'
 
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
@@ -86,7 +91,7 @@ export class ProsopoCaptchaContract extends Contract {
         this.pair = pair
         this.contractName = contractName
         this.nonce = currentNonce
-        this.logger = getLogger(logLevel || LogLevel.Info, `${ProsopoCaptchaContract.name}.${contractName}`)
+        this.logger = getLogger(logLevel || LogLevelSchema.enum.Info, `${ProsopoCaptchaContract.name}.${contractName}`)
         this.json = AbiMetaDataSpec.parse(this.abi.json)
         this.createStorageGetters()
     }

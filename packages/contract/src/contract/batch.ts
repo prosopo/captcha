@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise, SubmittableResult } from '@polkadot/api'
-import { ContractPromise } from '@polkadot/api-contract'
+import { ContractPromise } from '@polkadot/api-contract/promise'
 import { DispatchError, Event } from '@polkadot/types/interfaces'
 import { IKeyringPair, SignatureOptions } from '@polkadot/types/types'
 import { Logger } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers'
+import { ProsopoContractError } from '../handlers.js'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
-import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers'
-import { oneUnit } from '../balances'
+import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers.js'
+import { oneUnit } from '../balances/index.js'
 /**
  * Batch commits an array of transactions to the contract
  * @param contract

@@ -1,13 +1,14 @@
-import { Logger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevelSchema, Logger, getLogger } from '@prosopo/common'
+import { ProsopoConfig } from '@prosopo/types'
+import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { writeJSONFile } from '../files'
-export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || env.logger
-
+import { writeJSONFile } from '../files.js'
+export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevelSchema.Values.Info, 'cli.provider_dataset')
     return {
         command: 'provider_dataset',
-        description: 'Exports a dataset from the provider database',
+        describe: 'Exports a dataset from the provider database',
         builder: (yargs) =>
             yargs
                 .option('dataset-id', {
@@ -22,6 +23,9 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                 } as const),
         handler: async (argv) => {
             try {
+                const env = new ProviderEnvironment(pair, config)
+                await env.isReady()
+                const tasks = new Tasks(env)
                 let datasetId = argv.datasetId
                 if (datasetId === undefined) {
                     const providerAddress = env.config.account.address

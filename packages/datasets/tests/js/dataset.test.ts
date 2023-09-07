@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Captcha, CaptchaItemTypes, CaptchaSolution, CaptchaTypes, Dataset, Item } from '@prosopo/types'
+import { beforeAll, describe, expect, test } from 'vitest'
 import { computeItemHash, matchItemsToSolutions } from '@prosopo/datasets'
-import { expect } from 'chai'
-import { it } from 'mocha'
 import { validateDatasetContent } from '../../src'
 import path from 'path'
 
@@ -23,7 +22,7 @@ describe('DATASET FUNCTIONS', async function () {
     let DATASET: Dataset
     let RECEIVED: CaptchaSolution[]
     let STORED: Captcha[]
-    before(async () => {
+    beforeAll(async () => {
         MOCK_ITEMS = await Promise.all(
             new Array(9).fill(0).map((_, i) =>
                 computeItemHash({
@@ -137,7 +136,7 @@ describe('DATASET FUNCTIONS', async function () {
         ]
     })
 
-    it('Validates a captcha dataset correctly', async () => {
+    test('Validates a captcha dataset correctly', async () => {
         // duplicate the CAPTCHAS in DATASET.captchas by 1000 times
         DATASET.captchas = new Array(10000).fill(0).map(() => DATASET.captchas[0])
         const validated = await validateDatasetContent(DATASET)

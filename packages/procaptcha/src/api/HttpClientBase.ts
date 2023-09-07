@@ -18,7 +18,7 @@ export class HttpClientBase {
 
     constructor(baseURL: string, prefix = '') {
         baseURL = baseURL + prefix
-        this.axios = axios.create({ baseURL })
+        this.axios = axios.default.create({ baseURL })
         this.axios.interceptors.response.use(this.responseHandler, this.errorHandler)
     }
 

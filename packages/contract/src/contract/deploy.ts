@@ -18,13 +18,13 @@ import { CodeSubmittableResult } from '@polkadot/api-contract/base'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, Logger, getLogger } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers'
+import { LogLevel, LogLevelSchema, Logger, getLogger } from '@prosopo/common'
+import { ProsopoContractError } from '../handlers.js'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { UseWeight } from '@prosopo/types'
-import { calcInterval } from './useBlockInterval'
-import { dispatchErrorHandler } from './helpers'
-import { useWeightImpl } from './useWeight'
+import { calcInterval } from './useBlockInterval.js'
+import { dispatchErrorHandler } from './helpers.js'
+import { useWeightImpl } from './useWeight.js'
 
 interface DryRunResult {
     contract: null | SubmittableExtrinsic<'promise'>
@@ -62,7 +62,7 @@ export class ContractDeployer {
         this.constructorIndex = constructorIndex
         this.value = value
         this.salt = salt
-        this.logger = getLogger(logLevel || LogLevel.Info, 'ContractDeployer')
+        this.logger = getLogger(logLevel || LogLevelSchema.enum.Info, 'ContractDeployer')
         this.code = new CodePromise(api, abi, wasm)
     }
 

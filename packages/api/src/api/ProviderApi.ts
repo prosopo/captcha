@@ -21,9 +21,14 @@ import {
     RandomProvider,
     VerifySolutionBodyType,
 } from '@prosopo/types'
-import { CaptchaSolutionResponse, GetCaptchaResponse, ProviderRegistered, VerificationResponse } from '../types'
+import {
+    CaptchaSolutionResponse,
+    GetCaptchaResponse,
+    ProviderRegistered,
+    VerificationResponse,
+} from '../types/index.js'
 import { NetworkConfig } from '@prosopo/types'
-import HttpClientBase from './HttpClientBase'
+import HttpClientBase from './HttpClientBase.js'
 
 export default class ProviderApi extends HttpClientBase {
     private network: NetworkConfig

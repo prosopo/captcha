@@ -18,7 +18,7 @@ import {
     ProcaptchaEvents,
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
-} from '../types/manager'
+} from '../types/manager.js'
 import { ApiPromise, Keyring } from '@polkadot/api'
 import {
     CaptchaSolution,
@@ -30,16 +30,16 @@ import {
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
-import { TCaptchaSubmitResult } from '../types/client'
+import { TCaptchaSubmitResult } from '../types/client.js'
 import { WsProvider } from '@polkadot/rpc-provider'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { sleep } from '../utils/utils'
+import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util'
 import { trimProviderUrl } from '@prosopo/common'
-import ExtensionWeb2 from '../api/ExtensionWeb2'
-import ExtensionWeb3 from '../api/ExtensionWeb3'
-import ProsopoCaptchaApi from './ProsopoCaptchaApi'
-import storage from './storage'
+import ExtensionWeb2 from '../api/ExtensionWeb2.js'
+import ExtensionWeb3 from '../api/ExtensionWeb3.js'
+import ProsopoCaptchaApi from './ProsopoCaptchaApi.js'
+import storage from './storage.js'
 
 export const defaultState = (): Partial<ProcaptchaState> => {
     return {
@@ -83,12 +83,12 @@ export const getNetwork = (config: ProsopoClientConfig) => {
 /**
  * The state operator. This is used to mutate the state of Procaptcha during the captcha process. State updates are published via the onStateUpdate callback. This should be used by frontends, e.g. react, to maintain the state of Procaptcha across renders.
  */
-export const Manager = (
+export function Manager(
     configOptional: ProcaptchaConfigOptional,
     state: ProcaptchaState,
     onStateUpdate: ProcaptchaStateUpdateFn,
     callbacks: ProcaptchaCallbacks
-) => {
+) {
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
 
     const events: ProcaptchaEvents = Object.assign(

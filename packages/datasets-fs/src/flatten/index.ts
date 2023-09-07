@@ -1,3 +1,3 @@
-export * from './flatten'
-export * from './cli'
-export * from './args'
+export * from './flatten.js'
+export * from './cli.js'
+export * from './args.js'

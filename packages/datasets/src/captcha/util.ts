@@ -17,7 +17,7 @@ import client from 'axios'
 export async function downloadImage(url: string): Promise<Uint8Array> {
     try {
         return new Uint8Array(
-            (await client.get<ArrayBuffer>(url, { url, method: 'GET', responseType: 'arraybuffer' })).data
+            (await client.default.get<ArrayBuffer>(url, { url, method: 'GET', responseType: 'arraybuffer' })).data
         )
     } catch (error) {
         throw new ProsopoEnvError(error, downloadImage.name)

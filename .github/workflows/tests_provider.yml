@@ -7,9 +7,8 @@ on:
       - '**.ts'
       - '**.js'
       - '.github/workflows/tests_provider.yml'
-      - '**.json'
-    paths-ignore:
-      - 'protocol'
+      - 'packages/**.json'
+      - 'dev/**.json'
 
 env:
   CARGO_TERM_COLOR: always
@@ -53,6 +52,11 @@ jobs:
 
       - run: ls -lah
 
+      # pin npm as later version (9.7.X) causes an issue with npm ls -ap
+      #      npm ERR! code ELSPROBLEMS
+      #      npm ERR! invalid: @pm2/pm2-version-check@1.0.4 .../captcha/node_modules/@pm2/pm2-version-check
+      - run: npm install -g npm@8.9
+
       - run: npm install
 
       # Checks if the git hash of packages is the same after running linting by comparing the git tree hash before
@@ -76,7 +80,7 @@ jobs:
         # Next few lines should contain the number of packages that provider depends on (check tsconfig.json)
         run: |
           echo $(npx tsc --version)
-          cd dev && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
+          cd dev/scripts && echo $(pwd) && echo $(git rev-parse HEAD) && npm run build
           cp env.test .env.test
           echo "NODE_ENV=test" >> $GITHUB_ENV
           echo $NODE_ENV
@@ -87,7 +91,7 @@ jobs:
           npm run deploy_protocol
           npm run deploy_dapp
           git status | head -n 1
-          cd dev
+          cd dev/scripts
           git status | head -n 1
           docker container ls
           cat .env.test
@@ -107,8 +111,8 @@ jobs:
         run: |
           cp demos/client-example-server/env.development demos/client-example-server/.env.test
           cp demos/client-example/env.development demos/client-example/.env.test
-          cp dev/env.test dev/.env.test
-          cp dev/env.test packages/cli/.env.test
+          cp dev/scripts/env.test dev/scripts/.env.test
+          cp dev/scripts/env.test packages/cli/.env.test
           NODE_ENV=test npm run deploy_protocol
           NODE_ENV=test npm run deploy_dapp
           NODE_ENV=test npm run setup

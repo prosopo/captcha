@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export { default as i18n } from './i18n'
-export * from './react'
-export * from './node'
+export { default as i18n } from './i18n.js'
+export * from './react/index.js'
+export * from './node/index.js'
 export {
     TFunctionParams,
     TranslationKey,
@@ -21,12 +21,12 @@ export {
     trimProviderUrl,
     reverseHexString,
     snakeToCamelCase,
-} from './utils'
-export * from './custom'
-export * from './error'
-export * from './logger'
-export * from './cli'
-export * from './array'
-export * from './hash'
-export * from './asyncFactory'
-export * from './string'
+} from './utils.js'
+export * from './custom.js'
+export * from './error.js'
+export * from './logger.js'
+export * from './cli/index.js'
+export * from './array.js'
+export * from './hash.js'
+export * from './asyncFactory.js'
+export * from './string.js'

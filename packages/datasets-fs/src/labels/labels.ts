@@ -1,4 +1,4 @@
-import { Args } from './args'
+import { Args } from './args.js'
 import { LabelledDataSchema, LabelledItem } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import fs from 'fs'

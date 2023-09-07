@@ -7,7 +7,7 @@ import type { Signer, SignerResult } from '@polkadot/api/types'
 
 import { objectSpread } from '@polkadot/util'
 
-//import { lockAccount } from '../util';
+//import { lockAccount } from '../util.js';
 
 let id = 0
 

@@ -3,11 +3,13 @@
   "version": "0.1.17",
   "description": "Backend for client-example",
   "main": "dist/app.js",
+  "type": "module",
   "scripts": {
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/app.ts",
-    "start": "node ./dist/prosopo_client_example_server.main.bundle.js",
-    "build": "webpack build",
-    "build:dev": "webpack build --mode=development",
+    "dev": "vite serve --mode=development --config ./vite.config.ts --host",
+    "start": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
+    "build": "npm run build:prod",
+    "build:prod": "vite build --mode=production --config ./vite.config.ts",
+    "build:dev": "vite build --mode=development --config ./vite.config.ts",
     "clean": "tsc --build --clean",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint:fix": "npx eslint . --fix"
@@ -41,6 +43,7 @@
   "devDependencies": {
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.1",
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "vite": "^4.4.9"
   }
 }

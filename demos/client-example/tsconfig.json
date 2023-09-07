@@ -7,11 +7,12 @@
       "dom"
     ],
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "allowSyntheticDefaultImports": true,
     "composite": true,
     "jsx": "react-jsx",
-    "types": ["cypress", "@cypress/xpath", "node"]
+    "types": ["cypress", "@cypress/xpath", "node"],
+    "skipLibCheck": true
   },
   "ts-node": {
     // these options are overrides used only by ts-node
@@ -23,9 +24,18 @@
   "include": [
     "src"
   ],
+  "exclude": [
+    "node_modules"
+  ],
   "references": [
     {
       "path": "../../packages/procaptcha-react"
+    },
+    {
+      "path": "../../packages/cli"
+    },
+    {
+      "path": "../../dev/config"
     }
   ]
 }
