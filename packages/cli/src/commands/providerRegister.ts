@@ -1,24 +1,26 @@
 import * as z from 'zod'
 import { CommandModule } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevelSchema, Logger, getLogger } from '@prosopo/common'
+import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { Payee, ProsopoConfig } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { stringToU8a } from '@polkadot/util'
 import { validateFee, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
+import { ArgumentsCamelCase, Argv } from 'yargs'
+
 const providerRegisterArgsParser = z.object({
     url: z.string(),
     fee: z.number(),
     payee: z.nativeEnum(Payee),
 })
 export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevelSchema.Values.Info, 'cli.provider_register')
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_register')
     return {
         command: 'provider_register',
         describe: 'Register a Provider',
-        builder: (yargs) =>
+        builder: (yargs: Argv) =>
             yargs
                 .option('url', {
                     type: 'string' as const,
@@ -35,7 +37,7 @@ export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: L
                     demand: true,
                     desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                 } as const),
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
             try {
                 const parsedArgs = providerRegisterArgsParser.parse(argv)
                 const env = new ProviderEnvironment(pair, config)

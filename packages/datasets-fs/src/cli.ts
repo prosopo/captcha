@@ -9,8 +9,9 @@ import process from 'process'
 import relocate from './relocate/cli.js'
 import scale from './scale/cli.js'
 import yargs from 'yargs'
+import { Argv } from 'yargs'
 const dirname = process.cwd()
-const logger = getLogger(LogLevelSchema.enum.Info, `${dirname}`)
+const logger = getLogger(LogLevel.enum.info, `${dirname}`)
 
 const main = async () => {
     await yargs(hideBin(process.argv))
@@ -21,7 +22,7 @@ const main = async () => {
             default: LogLevel.enum.info,
             description: 'The log level',
         })
-        .middleware((argv) => {
+        .middleware((argv: any) => {
             logger.setLogLevel(argv.logLevel)
         })
         .command(generate({ logger }))

@@ -1,17 +1,20 @@
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevelSchema, Logger, getLogger } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { LogLevel, Logger, UrlConverter, getLogger } from '@prosopo/common'
+import { Payee, ProsopoConfig } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { validateAddress, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
+import { ArgumentsCamelCase, Argv } from 'yargs'
+import { z } from 'zod'
+
 export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevelSchema.Values.Info, 'cli.provider_update')
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_update')
 
     return {
         command: 'provider_update',
         describe: 'Update a Provider',
-        builder: (yargs) =>
+        builder: (yargs: Argv) =>
             yargs
                 .option('url', {
                     type: 'string' as const,
@@ -33,24 +36,34 @@ export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: L
                     demand: false,
                     desc: 'The value to stake in the contract',
                 } as const),
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
             try {
                 const env = new ProviderEnvironment(pair, config)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const provider = (await tasks.contract.query.getProvider(argv.address, {})).value.unwrap().unwrap()
-                if (provider && (argv.url || argv.fee || argv.payee || argv.value)) {
+                const { url, fee, payee, value, address } = z
+                    .object({
+                        url: z.string().optional(),
+                        fee: z.number().optional(),
+                        payee: z.nativeEnum(Payee).optional(),
+                        value: z.number().optional(),
+                        address: z.string(),
+                    })
+                    .parse(argv)
+                const provider = (await tasks.contract.query.getProvider(address, {})).value.unwrap().unwrap()
+                if (provider && (url || fee || payee || value)) {
+                    const urlConverted = url ? Array.from(new UrlConverter().encode(url.toString())) : provider.url
                     await wrapQuery(tasks.contract.query.providerUpdate, tasks.contract.query)(
-                        argv.url ? argv.url.toString() : provider.url,
-                        argv.fee || provider.fee,
-                        argv.payee || provider.payee,
-                        { value: argv.value || 0 }
+                        urlConverted,
+                        fee || provider.fee,
+                        payee || provider.payee,
+                        { value: value || 0 }
                     )
                     const result = await tasks.contract.tx.providerUpdate(
-                        argv.url || provider.url,
-                        argv.fee || provider.fee,
-                        argv.payee || provider.payee,
-                        { value: argv.value || 0 }
+                        urlConverted,
+                        fee || provider.fee,
+                        payee || provider.payee,
+                        { value: value || 0 }
                     )
 
                     logger.info(JSON.stringify(result, null, 2))
