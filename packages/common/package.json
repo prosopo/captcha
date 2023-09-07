@@ -10,7 +10,7 @@
         "build": "tsc --build --verbose",
         "test": "NODE_ENV=test vitest 'tests/**/*.test.ts'",
         "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix"
+        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
 
     "author": "Prosopo Limited",

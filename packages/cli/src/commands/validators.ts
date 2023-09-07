@@ -36,6 +36,14 @@ export const validateValue = (argv) => {
     return { value }
 }
 
+export const validateFee = (argv) => {
+    if (typeof argv.fee !== 'number') {
+        throw new ProsopoEnvError('CLI.PARAMETER_ERROR', validateValue.name, {}, argv.fee)
+    }
+    const fee: Compact<u128> = argv.fee as Compact<u128>
+    return { fee }
+}
+
 export const validateScheduleExpression = (argv) => {
     if (typeof argv.schedule === 'string') {
         const result = parser.parseString(argv.schedule as string)
