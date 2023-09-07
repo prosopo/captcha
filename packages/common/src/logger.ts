@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ProsopoEnvError } from './error.js'
 import { z } from 'zod'
-import consola, { LogLevels as ConsolaLogLevels, LogLevel as ConsolaLogLevel } from 'consola/browser'
+import consola, { LogLevels as ConsolaLogLevels } from 'consola/browser'
 
 export interface Logger {
     log(message: unknown, ...args: unknown[]): void
@@ -62,13 +62,20 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
         getLogLevel: () => {
             const logLevel = logger.level
             switch (logLevel) {
-                case ConsolaLogLevels.trace: return LogLevel.enum.trace;
-                case ConsolaLogLevels.debug: return LogLevel.enum.debug;
-                case ConsolaLogLevels.info: return LogLevel.enum.info;
-                case ConsolaLogLevels.warn: return LogLevel.enum.warn;
-                case ConsolaLogLevels.error: return LogLevel.enum.error;
-                case ConsolaLogLevels.fatal: return LogLevel.enum.fatal;
-                default: throw new Error('LOG.INVALID_LOG_LEVEL')
+                case ConsolaLogLevels.trace:
+                    return LogLevel.enum.trace
+                case ConsolaLogLevels.debug:
+                    return LogLevel.enum.debug
+                case ConsolaLogLevels.info:
+                    return LogLevel.enum.info
+                case ConsolaLogLevels.warn:
+                    return LogLevel.enum.warn
+                case ConsolaLogLevels.error:
+                    return LogLevel.enum.error
+                case ConsolaLogLevels.fatal:
+                    return LogLevel.enum.fatal
+                default:
+                    throw new Error('LOG.INVALID_LOG_LEVEL')
             }
         },
     }

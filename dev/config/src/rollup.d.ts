@@ -1,1 +1,1 @@
-declare module 'rollup-plugin-import-css';
+declare module 'rollup-plugin-import-css'

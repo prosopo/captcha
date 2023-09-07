@@ -15,10 +15,10 @@ import { Captcha, CaptchaSolution, ScheduledTaskNames, ScheduledTaskStatus } fro
 import { Database } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import { arrayJoin } from '@prosopo/common'
+import { at } from '@prosopo/util'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import pl from 'nodejs-polars'
-import { at, get } from '@prosopo/util'
 
 export function encodeStringAddress(address: string) {
     try {
@@ -32,8 +32,8 @@ export function encodeStringAddress(address: string) {
 export function shuffleArray<T>(array: T[]): T[] {
     for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
         const randIndex = Math.floor(Math.random() * (arrayIndex + 1))
-        const tmp = at(array, randIndex, { allowUndefined: true})
-        array[randIndex] = at(array, arrayIndex, { allowUndefined: true})
+        const tmp = at(array, randIndex, { allowUndefined: true })
+        array[randIndex] = at(array, arrayIndex, { allowUndefined: true })
         array[arrayIndex] = tmp
     }
     return array
@@ -99,7 +99,9 @@ export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], lo
             try {
                 const captchaSolutions = [
                     // TODO is below correct? 'solution' is not in the type
-                    ...(solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId))) as any)['solution'].values(),
+                    ...(solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId))) as any)[
+                        'solution'
+                    ].values(),
                 ]
                 if (captchaSolutions.length > 0) {
                     captcha.solution = captchaSolutions[0]

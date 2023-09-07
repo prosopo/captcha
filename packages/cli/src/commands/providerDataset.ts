@@ -1,8 +1,8 @@
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { Logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { writeJSONFile } from '../files.js'
-import { ArgumentsCamelCase, Argv } from 'yargs'
 import { z } from 'zod'
 
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
@@ -25,10 +25,12 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
-                const parsed = z.object({
-                    datasetId: z.string().optional(),
-                    file: z.string()
-                }).parse(argv)
+                const parsed = z
+                    .object({
+                        datasetId: z.string().optional(),
+                        file: z.string(),
+                    })
+                    .parse(argv)
                 const { file } = parsed
                 let { datasetId } = parsed
                 if (datasetId === undefined) {

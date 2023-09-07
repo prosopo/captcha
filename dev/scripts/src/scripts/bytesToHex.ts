@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { at } from "@prosopo/util"
+import { at } from '@prosopo/util'
 
 const arg = at(process.argv.slice(2), 0).trim()
 console.log(`arg          : ${arg}`)

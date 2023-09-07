@@ -15,8 +15,8 @@ import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput }
 import { LogLevel } from '@prosopo/common'
 import { ProcapchaEventNames, ProcaptchaCallbacks, ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { Procaptcha } from '@prosopo/procaptcha-react'
-import { createRoot } from 'react-dom/client'
 import { at } from '@prosopo/util'
+import { createRoot } from 'react-dom/client'
 import React from 'react'
 
 function getConfig(siteKey?: string): ProcaptchaConfigOptional {
@@ -70,7 +70,7 @@ function getParentForm(element: Element): HTMLFormElement | null {
 
 export function render(callbacks?: ProcaptchaCallbacks) {
     const elements: Element[] = Array.from(document.getElementsByClassName('procaptcha'))
-    const siteKey = at(elements,0).getAttribute('data-sitekey') || undefined
+    const siteKey = at(elements, 0).getAttribute('data-sitekey') || undefined
     const config = getConfig(siteKey)
     if (!callbacks) {
         callbacks = {}

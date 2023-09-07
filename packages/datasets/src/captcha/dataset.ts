@@ -67,7 +67,7 @@ export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
                 captchaContentId: at(contentTree.leaves, index).hash,
                 datasetId: solutionTree.root?.hash,
                 datasetContentId: contentTree.root?.hash,
-            } as Captcha)
+            }) as Captcha
     )
     dataset.solutionTree = solutionTree.layers
     dataset.contentTree = contentTree.layers

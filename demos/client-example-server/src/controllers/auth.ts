@@ -13,16 +13,16 @@
 // limitations under the License.
 import { ApiParams } from '@prosopo/types'
 import { Connection } from 'mongoose'
+import { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
 import { ProsopoServer } from '@prosopo/server'
 import { UserInterface } from '../models/user.js'
+import { at } from '@prosopo/util'
 import { blake2b } from '@noble/hashes/blake2b'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { u8aToHex } from '@polkadot/util'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
-import { Request, Response, NextFunction } from 'express'
-import { at } from '@prosopo/util'
 
 const SubscribeBodySpec = ProcaptchaResponse.merge(
     z.object({
@@ -35,7 +35,13 @@ function hashPassword(password: string): string {
     return u8aToHex(blake2b(password))
 }
 
-const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Request, res: Response, next: NextFunction) => {
+const signup = async (
+    mongoose: Connection,
+    prosopoServer: ProsopoServer,
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
         const User = mongoose.model<UserInterface>('User')
         // checks if email exists

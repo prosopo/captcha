@@ -57,4 +57,4 @@ export default () =>
                 accounts: [],
             },
         },
-    } as ProsopoServerConfig)
+    }) as ProsopoServerConfig

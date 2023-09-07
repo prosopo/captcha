@@ -41,16 +41,16 @@ import {
     parseAndSortCaptchaSolutions,
     parseCaptchaDataset,
 } from '@prosopo/datasets'
+import { ContractPromise } from '@polkadot/api-contract'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoCaptchaContract, getBlockNumber, wrapQuery } from '@prosopo/contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { SubmittableResult } from '@polkadot/api'
+import { at } from '@prosopo/util'
 import { hexToU8a, stringToHex } from '@polkadot/util'
 import { randomAsHex, signatureVerify } from '@polkadot/util-crypto'
 import { shuffleArray } from '../util.js'
-import { at } from '@prosopo/util'
-import { ContractPromise } from '@polkadot/api-contract'
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -286,7 +286,7 @@ export class Tasks {
                 captchas
             )
         }
-        if (!storedCaptchas.every((captcha) => captcha.datasetId === at(storedCaptchas,0).datasetId)) {
+        if (!storedCaptchas.every((captcha) => captcha.datasetId === at(storedCaptchas, 0).datasetId)) {
             throw new ProsopoEnvError(
                 'CAPTCHA.DIFFERENT_DATASET_IDS',
                 this.validateReceivedCaptchasAgainstStoredCaptchas.name,

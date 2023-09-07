@@ -1,11 +1,11 @@
+import { ArgumentsCamelCase } from 'yargs'
 import { Compact, u128 } from '@polkadot/types'
 import { PayeeSchema } from '@prosopo/types'
 import { ProsopoEnvError } from '@prosopo/common'
 import { encodeStringAddress } from '@prosopo/provider'
-import parser from 'cron-parser'
-import { ArgumentsCamelCase, Argv } from 'yargs'
-import z from 'zod'
 import { lodash } from '@prosopo/util'
+import parser from 'cron-parser'
+import z from 'zod'
 
 export const validateAddress = (argv: ArgumentsCamelCase): { address: string } => {
     const address = encodeStringAddress(argv.address as string)

@@ -106,7 +106,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
     const [timeout, setTimeout] = useRefAsState<NodeJS.Timeout | undefined>(undefined)
     const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(undefined)
-    
+
     return [
         // the state
         {

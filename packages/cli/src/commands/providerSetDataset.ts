@@ -1,8 +1,8 @@
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { Logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { loadJSONFile } from '../files.js'
-import { ArgumentsCamelCase, Argv } from 'yargs'
 import { z } from 'zod'
 
 export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
@@ -18,9 +18,11 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                 desc: 'The file path of a JSON dataset file',
             } as const),
         handler: async (argv: ArgumentsCamelCase) => {
-            const { file } = z.object({
-                file: z.string(),
-            }).parse(argv)
+            const { file } = z
+                .object({
+                    file: z.string(),
+                })
+                .parse(argv)
             try {
                 const jsonFile = loadJSONFile(file, logger) as JSON
                 logger.info(`Loaded JSON from ${file}`)

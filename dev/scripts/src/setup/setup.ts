@@ -19,12 +19,12 @@ import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { defaultConfig, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
 import { generateMnemonic, wrapQuery } from '@prosopo/contract'
+import { get } from '@prosopo/util'
 import { getEnvFile } from '@prosopo/cli'
 import { registerProvider } from './provider.js'
 import { setupDapp } from './dapp.js'
 import fse from 'fs-extra'
 import path from 'path'
-import { get } from '@prosopo/util'
 
 const logger = getLogger(LogLevel.enum.info, 'setup')
 const __dirname = path.resolve()

@@ -14,11 +14,11 @@
 import { Box, Button, ThemeProvider, Typography } from '@mui/material'
 import { CaptchaWidget } from './CaptchaWidget.js'
 import { GetCaptchaResponse } from '@prosopo/api'
+import { at } from '@prosopo/util'
 import { useTranslation } from '@prosopo/common'
 import React from 'react'
 import addDataAttr from '../util/index.js'
 import theme from './theme.js'
-import { at } from '@prosopo/util'
 
 export interface CaptchaComponentProps {
     challenge: GetCaptchaResponse
@@ -99,7 +99,7 @@ const CaptchaComponent = (props: CaptchaComponentProps) => {
                                     fontSize: theme.typography.h6.fontSize,
                                 }}
                             >
-                                {`${at(props.challenge.captchas,props.index).captcha.target}`}
+                                {`${at(props.challenge.captchas, props.index).captcha.target}`}
                             </Typography>
                         </Box>
 

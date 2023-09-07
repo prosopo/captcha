@@ -1,10 +1,10 @@
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { CalculateSolutionsTask } from '@prosopo/provider'
 import { Logger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { cwd } from 'process'
 import { validateScheduleExpression } from './validators.js'
 import pm2 from 'pm2'
-import { ArgumentsCamelCase, Argv } from 'yargs'
 
 export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || env.logger

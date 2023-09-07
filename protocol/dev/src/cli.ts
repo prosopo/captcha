@@ -19,7 +19,7 @@ import { stdin } from 'process'
 import fs from 'fs'
 import path from 'path'
 import process from 'process'
-import yargs, { Arguments, ArgumentsCamelCase, Argv } from 'yargs'
+import yargs, { ArgumentsCamelCase, Argv } from 'yargs'
 
 const contractSrcFileExtension = '.rs'
 const dir = path.resolve()

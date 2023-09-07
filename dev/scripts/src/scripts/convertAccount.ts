@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { at } from '@prosopo/util'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex, u8aToHex } from '@polkadot/util'
 import { isAddress } from '@polkadot/util-crypto'
-import { at } from "@prosopo/util"
 
 const ss58Format = 42
 

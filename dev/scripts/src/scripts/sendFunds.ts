@@ -13,11 +13,11 @@
 // limitations under the License.
 import { BN } from '@polkadot/util'
 import { Environment } from '@prosopo/env'
+import { at } from '@prosopo/util'
 import { config } from 'dotenv'
 import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
 import { getPair } from '@prosopo/common'
 import { sendFunds } from '../setup/index.js'
-import { at } from '@prosopo/util'
 
 config()
 

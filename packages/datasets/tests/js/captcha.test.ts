@@ -22,7 +22,7 @@ import {
     Item,
     MerkleProof,
 } from '@prosopo/types'
-import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '@prosopo/datasets'
+import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../..'
 import { beforeAll, describe, expect, test } from 'vitest'
 import {
     compareCaptchaSolutions,
@@ -35,7 +35,7 @@ import {
     parseCaptchaDataset,
     sortAndComputeHashes,
     verifyProof,
-} from '@prosopo/datasets'
+} from '../..'
 import path from 'path'
 
 describe('CAPTCHA FUNCTIONS', async function () {

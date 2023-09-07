@@ -1,8 +1,8 @@
 import { Glob } from 'glob'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
+import { at } from '@prosopo/util'
 import child_process from 'child_process'
 import util from 'util'
-import { at } from '@prosopo/util'
 const logger = getLogger(`Info`, `config.dependencies.js`)
 /**
  * Get the dependencies for a package
@@ -38,7 +38,7 @@ export async function getDependencies(packageName?: string): Promise<string[]> {
     // for each line, split on "/" and take the last part
     stdout.split('\n').forEach((line) => {
         const parts = line.split('node_modules/')
-        deps.push(at(parts,parts.length - 1))
+        deps.push(at(parts, parts.length - 1))
     })
     return deps
 }

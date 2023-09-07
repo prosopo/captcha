@@ -13,6 +13,7 @@
 // limitations under the License.
 import { blake2AsHex, blake2AsU8a, keccakAsHex, keccakAsU8a } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
+import { get } from '@prosopo/util'
 import {
     hexToBn,
     hexToString,
@@ -25,7 +26,6 @@ import {
     u8aToHex,
     u8aToString,
 } from '@polkadot/util'
-import { get } from '@prosopo/util'
 
 function main() {
     const fns: {

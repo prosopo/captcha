@@ -14,9 +14,9 @@
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
+import { get } from '@prosopo/util'
 import { getPair } from '@prosopo/common'
 import dotenv from 'dotenv'
-import { get } from '@prosopo/util'
 
 dotenv.config()
 

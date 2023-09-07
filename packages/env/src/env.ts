@@ -174,5 +174,4 @@ export class Environment implements ProsopoEnvironment {
             )
         }
     }
-
 }
