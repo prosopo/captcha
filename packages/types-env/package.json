@@ -25,6 +25,7 @@
         "@polkadot/types": "10.9.1",
         "@prosopo/common": "^0.1.17",
         "@prosopo/types": "^0.1.17",
+        "@prosopo/contract": "^0.1.17",
         "@prosopo/types-database": "^0.1.17"
     },
     "devDependencies": {
