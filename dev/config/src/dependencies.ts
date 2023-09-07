@@ -50,13 +50,13 @@ export async function getDependencies(
             //  │ │ │   ├── UNMET OPTIONAL DEPENDENCY bufferutil@^4.0.1
             const parts = line.match(peerDepsRegex)
             if (parts && parts.length > 1) {
-                peerDeps.push(parts[1])
+                peerDeps.push(at(parts,1))
             }
         } else {
             //  │ │ │ ├─┬ mongodb-memory-server-core@8.15.1
             const parts = line.match(depsRegex)
             if (parts && parts.length > 1) {
-                deps.push(parts[1])
+                deps.push(at(parts,1))
             }
         }
     })
