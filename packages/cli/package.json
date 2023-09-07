@@ -20,6 +20,9 @@
     "@prosopo/env": "^0.1.17",
     "@prosopo/provider": "^0.1.17",
     "@prosopo/types": "^0.1.17",
+    "@prosopo/types-env": "^0.1.17",
+    "@prosopo/util": "^0.1.17",
+    "@prosopo/contract": "^0.1.17",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "es-main": "^1.2.0"
