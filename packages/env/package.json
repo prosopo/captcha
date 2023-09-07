@@ -16,6 +16,7 @@
         "@prosopo/contract": "^0.1.17",
         "@prosopo/database": "^0.1.17",
         "@prosopo/types": "^0.1.17",
+        "@prosopo/util": "^0.1.17",
         "@prosopo/types-database": "^0.1.17",
         "@prosopo/types-env": "^0.1.17",
         "dotenv": "^16.0.1"
