@@ -62,12 +62,10 @@ export default async function (
         ...optionalPeerDependencies,
     ]
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
-    const alias = isProduction
-        ? getAliases(dir)
-        : ([](
-              // Required to print RegExp in console (e.g. alias keys)
-              RegExp.prototype as any
-          )['toJSON'] = RegExp.prototype.toString)
+    const alias = isProduction ? getAliases(dir) : []
+
+    // Required to print RegExp in console (e.g. alias keys)
+    (RegExp.prototype as any)['toJSON'] = RegExp.prototype.toString
     logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     return {
