@@ -28,6 +28,8 @@
         "@polkadot/types": "10.9.1",
         "@prosopo/api": "^0.1.17",
         "@prosopo/contract": "^0.1.17",
+        "@prosopo/common": "^0.1.17",
+        "@prosopo/util": "^0.1.17",
         "@prosopo/procaptcha": "^0.1.17",
         "@prosopo/types": "^0.1.17"
     },
