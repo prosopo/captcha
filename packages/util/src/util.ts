@@ -94,15 +94,19 @@ export function* permutations(
 
 // Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null
 // Note undefined's are not allowed due to arrays returning undefined when accessing an out of bounds index
-export const at = <T>(arr: T[], i: number, options: {
-    allowUndefined?: boolean // whether to allow undefined elements in the array
-    checkBounds?: boolean // whether to check the index against the bounds of the array
-    wrap?: boolean // whether to wrap the index around the bounds of the array
-} = {
+export const at = <T>(
+    arr: T[],
+    i: number,
+    options: {
+        allowUndefined?: boolean // whether to allow undefined elements in the array
+        checkBounds?: boolean // whether to check the index against the bounds of the array
+        wrap?: boolean // whether to wrap the index around the bounds of the array
+    } = {
         allowUndefined: false,
         checkBounds: true,
         wrap: false,
-    }): T => {
+    }
+): T => {
     if (options.wrap) {
         i = Math.abs(i)
         if (arr.length !== 0) {
@@ -126,9 +130,13 @@ export type GetOptions = {
 }
 export function get<T>(obj: T, key: unknown, options?: GetOptions): Exclude<T[keyof T], undefined>
 export function get<V>(obj: unknown, key: unknown, options?: GetOptions): V
-export function get<T, V>(obj: T, key: unknown, options: GetOptions = {
-	required: true
-}): V {
+export function get<T, V>(
+    obj: T,
+    key: unknown,
+    options: GetOptions = {
+        required: true,
+    }
+): V {
     const value = obj[key as unknown as keyof T]
     if (options.required && value === undefined) {
         throw new Error(`Object key ${String(key)} is undefined`)
