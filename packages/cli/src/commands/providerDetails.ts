@@ -1,10 +1,10 @@
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProsopoConfig } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { validateAddress } from './validators.js'
-import { ArgumentsCamelCase, Argv } from 'yargs'
 import { z } from 'zod'
 
 export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
@@ -23,7 +23,9 @@ export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: L
                 const env = new ProviderEnvironment(pair, config)
                 await env.isReady()
                 const tasks = new Tasks(env)
-                const result = (await tasks.contract.query.getProvider(z.string().parse(argv.address), {})).value.unwrap().unwrap()
+                const result = (await tasks.contract.query.getProvider(z.string().parse(argv.address), {})).value
+                    .unwrap()
+                    .unwrap()
                 logger.info(JSON.stringify(result, null, 2))
             } catch (err) {
                 logger.error(err)

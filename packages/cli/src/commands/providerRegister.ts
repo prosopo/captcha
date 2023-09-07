@@ -1,4 +1,5 @@
 import * as z from 'zod'
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { CommandModule } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
@@ -8,7 +9,6 @@ import { Tasks } from '@prosopo/provider'
 import { stringToU8a } from '@polkadot/util'
 import { validateFee, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
-import { ArgumentsCamelCase, Argv } from 'yargs'
 
 const providerRegisterArgsParser = z.object({
     url: z.string(),

@@ -1,3 +1,4 @@
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, UrlConverter, getLogger } from '@prosopo/common'
 import { Payee, ProsopoConfig } from '@prosopo/types'
@@ -5,7 +6,6 @@ import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { validateAddress, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
-import { ArgumentsCamelCase, Argv } from 'yargs'
 import { z } from 'zod'
 
 export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {

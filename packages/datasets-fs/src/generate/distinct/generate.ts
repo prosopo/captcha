@@ -12,12 +12,12 @@ import {
     RawSolution,
 } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { at, get, lodash, setSeedGlobal } from '@prosopo/util'
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { checkDuplicates } from '../util.js'
 import bcrypt from 'bcrypt'
 import cliProgress from 'cli-progress'
 import fs from 'fs'
-import { at, get, lodash, setSeedGlobal } from '@prosopo/util'
 
 export default async (args: Args, logger?: Logger) => {
     logger = logger || getLoggerDefault()

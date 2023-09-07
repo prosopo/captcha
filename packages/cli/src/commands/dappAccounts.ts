@@ -1,9 +1,9 @@
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProsopoConfig } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { ArgumentsCamelCase, Argv } from 'yargs'
 
 export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_accounts')

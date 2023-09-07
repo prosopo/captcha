@@ -36,7 +36,7 @@
         "populate-data": "npm -w @prosopo/provider run populate-data",
         "test": "npm -w @prosopo/scripts run test",
         "test:all": "npm run --workspaces --if-present test",
-        "lint": "npm --workspaces exec eslint -- '**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
+        "lint": "npm --workspaces exec eslint -- . --no-error-on-unmatched-pattern",
         "lint:fix": "npm run lint -- --fix"
     },
     "private": true,

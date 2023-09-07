@@ -9,7 +9,6 @@ import process from 'process'
 import relocate from './relocate/cli.js'
 import scale from './scale/cli.js'
 import yargs from 'yargs'
-import { Argv } from 'yargs'
 const dirname = process.cwd()
 const logger = getLogger(LogLevel.enum.info, `${dirname}`)
 
