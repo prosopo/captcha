@@ -32,7 +32,7 @@
     "rollup-plugin-import-css": "^3.3.1",
     "rollup-plugin-natives": "^0.7.6",
     "tslib": "^2.5.2",
-    "typescript": "^5.2.2",
+    "typescript": "^5.1.6",
     "vite-plugin-dts": "^3.5.2",
     "vite-plugin-node": "^3.0.2",
     "vite-tsconfig-paths": "^4.2.0",

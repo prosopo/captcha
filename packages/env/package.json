@@ -22,7 +22,7 @@
     },
     "devDependencies": {
         "tslib": "^2.5.2",
-        "typescript": "^5.2.2"
+        "typescript": "^5.1.6"
     },
     "author": "Prosopo",
     "license": "Apache-2.0",

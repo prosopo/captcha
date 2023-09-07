@@ -43,7 +43,7 @@
         "rollup-plugin-cleanup": "^3.2.1",
         "tsconfig-paths": "^4.2.0",
         "tslib": "^2.5.2",
-        "typescript": "^5.2.2",
+        "typescript": "^5.1.6",
         "vite": "^4.4.9",
         "vite-bundle-visualizer": "^0.10.0",
         "vite-tsconfig-paths": "^4.2.0"
