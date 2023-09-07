@@ -45,8 +45,6 @@ module.exports = {
     ignorePatterns: [
         '**/artifacts/*',
         '**/dist/*',
-        'demos/**/scripts/*',
-        'demos/**/next.config.js',
         '**/*bundle*.js',
         '**/typechain/*',
     ],
