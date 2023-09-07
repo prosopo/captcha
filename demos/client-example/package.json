@@ -35,7 +35,7 @@
         "test": "ts-node src/test",
         "cypress:open": "cypress open",
         "cypress:run": "cypress run",
-        "lint:fix": "npx eslint . --fix"
+        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "eslintConfig": {
         "extends": [

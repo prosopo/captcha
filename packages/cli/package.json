@@ -12,7 +12,7 @@
     "cli": "node ./dist/cli.js",
     "start": "node ./dist/start.js --api",
     "lint": "npx eslint .",
-    "lint:fix": "npx eslint . --fix"
+    "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
   },
   "dependencies": {
     "@polkadot/util-crypto": "12.3.2",

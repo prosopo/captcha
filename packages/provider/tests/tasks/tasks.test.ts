@@ -191,7 +191,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(result?.isError).to.be.false
     }, 8000)
 
-    test('Provider add dataset', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Provider add dataset', async ({ env }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providersWithStake)
 
         const tasks = await getSignedTasks(env, providerAccount)
@@ -244,7 +244,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }
     })
 
-    test('Provider approve', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Provider approve', async ({ env, pairType, ss58Format }): Promise<void> => {
         const { dappUserAccount, captchaSolutions, providerAccount, dappContractAccount, userSignature } =
             await createMockCaptchaSolutionsAndRequestHash(env, pairType, ss58Format)
         const tasks = await getSignedTasks(env, dappUserAccount)
@@ -291,7 +291,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }
     })
 
-    test('Provider disapprove', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Provider disapprove', async ({ env, pairType, ss58Format }): Promise<void> => {
         const { dappUserAccount, captchaSolutions, providerAccount, dappContractAccount, userSignature } =
             await createMockCaptchaSolutionsAndRequestHash(env, pairType, ss58Format)
 
@@ -331,7 +331,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         })
     })
 
-    test('Timestamps check', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Timestamps check', async ({ env, pairType, ss58Format }): Promise<void> => {
         const salt = randomAsHex()
 
         const tree = new CaptchaMerkleTree()
@@ -387,7 +387,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(Number.parseInt(lastCorrectCaptcha.before.toString())).to.be.above(0)
     })
 
-    test('Provider details', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Provider details', async ({ env }): Promise<void> => {
         try {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
             const tasks = await getSignedTasks(env, providerAccount)
@@ -401,7 +401,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }
     })
 
-    test('Provider accounts', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Provider accounts', async ({ env }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
         const tasks = await getSignedTasks(env, providerAccount)
@@ -411,7 +411,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(result).to.be.an('array')
     })
 
-    test('Dapp registration', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Dapp registration', async ({ env, providerStakeThreshold }): Promise<void> => {
         const newAccount = env.createAccountAndAddToKeyring() || ['', '']
         const tasks = await getSignedTasks(env, newAccount)
         const stakeAmount = getStakeAmount(env, providerStakeThreshold)
@@ -440,7 +440,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(dapp.owner).to.equal(accountAddress(newAccount))
     })
 
-    test('Dapp is active', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Dapp is active', async ({ env }): Promise<void> => {
         const dappAccount = await getUser(env, AccountKey.dappsWithStake)
 
         const tasks = await getSignedTasks(env, dappAccount)
@@ -450,7 +450,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(result).to.equal(true)
     })
 
-    test('Dapp details', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Dapp details', async ({ env }): Promise<void> => {
         const dappAccount = await getUser(env, AccountKey.dapps)
 
         const tasks = await getSignedTasks(env, dappAccount)
@@ -460,7 +460,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(result).to.have.a.property('status')
     })
 
-    test('Dapp fund', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Dapp fund', async ({ env }): Promise<void> => {
         const dappAccount = await getUser(env, AccountKey.dappsWithStake)
         const tasks = await getSignedTasks(env, dappAccount)
         const value = createType(env.contractInterface.abi.registry, 'u128', '10')
@@ -485,11 +485,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     //     expect(result).to.be.an('array')
     // })
 
-    test('Captchas are correctly formatted before being passed to the API layer', async ({
-        env,
-        pairType,
-        ss58Format,
-    }): Promise<void> => {
+    test('Captchas are correctly formatted before being passed to the API layer', async ({ env }): Promise<void> => {
         const dappUserAccount = await getUser(env, AccountKey.dappUsers)
         const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
@@ -549,7 +545,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         const commitment = (await providerTasks.contract.query.getCommit(commitmentId)).value.unwrap().unwrap()
 
         // next part contains internal contract calls that must be run by provider
-        const blockHash = await env.api.rpc.chain.getBlockHash(commitment.completedAt)
+        await env.api.rpc.chain.getBlockHash(commitment.completedAt)
         const result: DappUserSolutionResult = await providerTasks.dappUserSolution(
             accountAddress(dappUserAccount),
             accountContract(dappContractAccount),
@@ -658,12 +654,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
     //     expect(result!.length).to.be.eq(0);
     // });
 
-    test('Validates the received captchas length', async ({
-        env,
-        pairType,
-        ss58Format,
-        providerStakeThreshold,
-    }): Promise<void> => {
+    test('Validates the received captchas length', async ({ env, pairType, ss58Format }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
         const { captchaSolutions } = await createMockCaptchaSolutionsAndRequestHash(env, pairType, ss58Format)
@@ -676,12 +667,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }).to.not.throw()
     })
 
-    test('Builds the tree and gets the commitment', async ({
-        env,
-        pairType,
-        ss58Format,
-        providerStakeThreshold,
-    }): Promise<void> => {
+    test('Builds the tree and gets the commitment', async ({ env, pairType, ss58Format }): Promise<void> => {
         try {
             const { captchaSolutions, dappUserAccount, userSignature } = await createMockCaptchaSolutionsAndRequestHash(
                 env,
@@ -771,8 +757,11 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         pairType,
         ss58Format,
     }): Promise<void> => {
-        const { dappUserAccount, captchaSolutions, providerAccount, blockNumber } =
-            await createMockCaptchaSolutionsAndRequestHash(env, pairType, ss58Format)
+        const { dappUserAccount, captchaSolutions, blockNumber } = await createMockCaptchaSolutionsAndRequestHash(
+            env,
+            pairType,
+            ss58Format
+        )
 
         const tasks = await getSignedTasks(env, dappUserAccount)
 
@@ -799,12 +788,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(valid).to.be.true
     })
 
-    test('Get random captchas and request hash', async ({
-        env,
-        pairType,
-        ss58Format,
-        providerStakeThreshold,
-    }): Promise<void> => {
+    test('Get random captchas and request hash', async ({ env }): Promise<void> => {
         try {
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -821,7 +805,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
             const dappUserAccount = await getUser(env, AccountKey.dappUsers)
             const dappAccount = await getUser(env, AccountKey.dappsWithStake)
             // there must be at least one provider in the contract and db
-            const _unused = await getUser(env, AccountKey.providersWithStakeAndDataset)
+            await getUser(env, AccountKey.providersWithStakeAndDataset)
 
             const dappUserTasks = await getSignedTasks(env, dappUserAccount)
             const solvedCaptchaCount = env.config.captchas.solved.count
@@ -848,12 +832,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         }
     })
 
-    test('Validate provided captcha dataset', async ({
-        env,
-        pairType,
-        ss58Format,
-        providerStakeThreshold,
-    }): Promise<void> => {
+    test('Validate provided captcha dataset', async ({ env }): Promise<void> => {
         const dappAccount = await getUser(env, AccountKey.dappsWithStake)
 
         const tasks = await getSignedTasks(env, dappAccount)
@@ -886,12 +865,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(valid).to.be.true
     })
 
-    test('Validate provided captcha dataset - fail', async ({
-        env,
-        pairType,
-        ss58Format,
-        providerStakeThreshold,
-    }): Promise<void> => {
+    test('Validate provided captcha dataset - fail', async ({ env, providerStakeThreshold }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providers)
 
         const tasks = await getSignedTasks(env, providerAccount)
@@ -942,7 +916,7 @@ describe.sequential('CONTRACT TASKS', async function (): Promise<void> {
         expect(valid).to.be.false
     })
 
-    test('Provider deregister', async ({ env, pairType, ss58Format, providerStakeThreshold }): Promise<void> => {
+    test('Provider deregister', async ({ env }): Promise<void> => {
         const providerAccount = await getUser(env, AccountKey.providersWithStake)
 
         const tasks = await getSignedTasks(env, providerAccount)
