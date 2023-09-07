@@ -40,7 +40,7 @@ export default defineConfig(function ({ command, mode }) {
         define,
         build: { lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' } },
         plugins: [
-            react(),
+            react.default(),
             // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
             // mode, in which case we don't want to close the bundler because it will close the server
             command !== 'serve' ? ClosePlugin() : undefined,
