@@ -25,10 +25,12 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                 } as const),
         handler: async (argv: ArgumentsCamelCase) => {
             try {
-                let { datasetId, file } = z.object({
+                const parsed = z.object({
                     datasetId: z.string().optional(),
                     file: z.string()
                 }).parse(argv)
+                const { file } = parsed
+                let { datasetId } = parsed
                 if (datasetId === undefined) {
                     const providerAddress = env.config.account.address
                     const provider = (await tasks.contract.query.getProvider(providerAddress)).value.unwrap().unwrap()
