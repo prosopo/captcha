@@ -43,10 +43,6 @@ module.exports = {
         'prettier/prettier': ['error'],
     },
     ignorePatterns: [
-        '**/*.d.ts',
-        '**/*.js',
-        '**/artifacts/*',
-        '**/dist/*',
         '**/*bundle*.js',
         '**/typechain/*',
     ],
