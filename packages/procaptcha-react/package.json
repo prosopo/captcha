@@ -25,6 +25,8 @@
         "@polkadot/extension-inject": "0.46.5",
         "@polkadot/types": "10.9.1",
         "@prosopo/common": "^0.1.17",
+        "@prosopo/util": "^0.1.17",
+        "@prosopo/api": "^0.1.17",
         "@prosopo/procaptcha": "^0.1.17",
         "i18next": "^21.9.2",
         "react": "^18.2.0",
