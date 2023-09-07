@@ -12,7 +12,7 @@ import {
     RawSolution,
 } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
-import { at, get, lodash, setSeedGlobal } from '@prosopo/util'
+import { blake2AsHex } from '@polkadot/util-crypto'
 import { checkDuplicates } from '../util.js'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
@@ -186,7 +186,7 @@ export default async (args: Args, logger?: Logger) => {
                 return item.post // return the index in the shuffled array
             })
 
-        const salt = bcrypt.genSaltSync(saltRounds)
+        const salt = blake2AsHex(bcrypt.genSaltSync(saltRounds))
         // create the captcha
         const captcha: CaptchaWithoutId = {
             salt,

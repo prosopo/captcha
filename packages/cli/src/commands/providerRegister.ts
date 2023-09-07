@@ -1,21 +1,24 @@
-import { ArgumentsCamelCase, Argv } from 'yargs'
-import { Logger } from '@prosopo/common'
-import { Payee } from '@prosopo/types'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import * as z from 'zod'
+import { CommandModule } from 'yargs'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevelSchema, Logger, getLogger } from '@prosopo/common'
+import { Payee, ProsopoConfig } from '@prosopo/types'
+import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
-import { get } from '@prosopo/util'
 import { stringToU8a } from '@polkadot/util'
-import { validatePayee } from './validators.js'
+import { validateFee, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
-import { z } from 'zod'
-
-export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || env.logger
-
+const providerRegisterArgsParser = z.object({
+    url: z.string(),
+    fee: z.number(),
+    payee: z.nativeEnum(Payee),
+})
+export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevelSchema.Values.Info, 'cli.provider_register')
     return {
         command: 'provider_register',
-        decription: 'Register a Provider',
-        builder: (yargs: Argv) =>
+        describe: 'Register a Provider',
+        builder: (yargs) =>
             yargs
                 .option('url', {
                     type: 'string' as const,
@@ -32,27 +35,28 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     demand: true,
                     desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                 } as const),
-        handler: async (argv: ArgumentsCamelCase) => {
-            const { url, fee, payee } = z
-                .object({
-                    url: z.string(),
-                    fee: z.number(),
-                    payee: z.string(),
-                })
-                .parse(argv)
-            const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
-                Array.from(stringToU8a(url)),
-                fee,
-                get(Payee, payee),
-                {
-                    value: 0,
-                },
-            ]
-            await wrapQuery(tasks.contract.query.providerRegister, tasks.contract.query)(...providerRegisterArgs)
-            const result = await tasks.contract.tx.providerRegister(...providerRegisterArgs)
+        handler: async (argv) => {
+            try {
+                const parsedArgs = providerRegisterArgsParser.parse(argv)
+                const env = new ProviderEnvironment(pair, config)
+                await env.isReady()
+                const tasks = new Tasks(env)
+                const providerRegisterArgs: Parameters<typeof tasks.contract.query.providerRegister> = [
+                    Array.from(stringToU8a(parsedArgs.url)),
+                    parsedArgs.fee,
+                    parsedArgs.payee,
+                    {
+                        value: 0,
+                    },
+                ]
+                await wrapQuery(tasks.contract.query.providerRegister, tasks.contract.query)(...providerRegisterArgs)
+                const result = await tasks.contract.tx.providerRegister(...providerRegisterArgs)
 
-            logger.info(JSON.stringify(result, null, 2))
+                logger.info(JSON.stringify(result, null, 2))
+            } catch (err) {
+                logger.error(err)
+            }
         },
-        middlewares: [validatePayee],
-    }
+        middlewares: [validatePayee, validateFee],
+    } as CommandModule
 }

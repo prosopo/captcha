@@ -33,12 +33,10 @@ async function main() {
 
     log.info(`Contract address: ${process.env.PROTOCOL_CONTRACT_ADDRESS}`)
 
-    const env = new ProviderEnvironment(pair, config)
-
-    await env.isReady()
-
-    const processedArgs = await processArgs(process.argv, env)
+    const processedArgs = await processArgs(process.argv, pair, config)
     if (processedArgs.api) {
+        const env = new ProviderEnvironment(pair, config)
+        await env.isReady()
         log.info('Starting API')
         await start(env)
     } else {

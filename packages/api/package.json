@@ -8,7 +8,7 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix"
+        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "repository": {
         "type": "git",

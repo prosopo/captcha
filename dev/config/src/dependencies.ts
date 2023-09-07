@@ -4,29 +4,37 @@ import { at } from '@prosopo/util'
 import child_process from 'child_process'
 import util from 'util'
 const logger = getLogger(`Info`, `config.dependencies.js`)
+const exec = util.promisify(child_process.exec)
+
+const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w-/._]+)@/
+const depsRegex = /\s+(@*[\w-/._]+)@/
+async function getPackageDir(packageName: string): Promise<string> {
+    let pkg = packageName
+    if (packageName && !packageName.startsWith('@prosopo/')) {
+        pkg = `@prosopo/${packageName}`
+    }
+    const pkgCommand = `npm list ${pkg} -ap`
+    logger.info(`Running command ${pkgCommand}`)
+    // get package directory
+    const { stdout: packageDir, stderr } = await exec(pkgCommand)
+    if (stderr) {
+        throw new ProsopoEnvError(new Error(stderr))
+    }
+    return packageDir.trim()
+}
+
 /**
  * Get the dependencies for a package
- * @param dir
  * @param packageName
  */
-export async function getDependencies(packageName?: string): Promise<string[]> {
-    let cmd = 'npm ls --pa'
-    const exec = util.promisify(child_process.exec)
+export async function getDependencies(
+    packageName?: string
+): Promise<{ dependencies: string[]; optionalPeerDependencies: string[] }> {
+    let cmd = 'npm ls -a'
 
     if (packageName) {
-        let pkg = packageName
-        if (packageName && !packageName.startsWith('@prosopo/')) {
-            pkg = `@prosopo/${packageName}`
-        }
-        const pkgCommand = `npm list ${pkg} -ap`
-        logger.info(`Running command ${pkgCommand}`)
-        // get package directory
-        const { stdout: packageDir, stderr } = await exec(pkgCommand)
-        console.log('packageDir', packageDir)
-        if (stderr) {
-            throw new ProsopoEnvError(new Error(stderr))
-        }
-        cmd = `cd ${packageDir.trim()} && npm ls --pa`
+        const packageDir = await getPackageDir(packageName)
+        cmd = `cd ${packageDir.trim()} && ${cmd}`
         logger.info(`Running command ${cmd} in ${packageDir}`)
     }
 
@@ -35,17 +43,34 @@ export async function getDependencies(packageName?: string): Promise<string[]> {
         throw new ProsopoEnvError(new Error(stderr))
     }
     const deps: string[] = []
-    // for each line, split on "/" and take the last part
+    const peerDeps: string[] = []
+    // for each line, check if there is an unmet optional dependency
     stdout.split('\n').forEach((line) => {
-        const parts = line.split('node_modules/')
-        deps.push(at(parts, parts.length - 1))
+        if (line.includes('UNMET OPTIONAL DEPENDENCY')) {
+            //  │ │ │   ├── UNMET OPTIONAL DEPENDENCY bufferutil@^4.0.1
+            const parts = line.match(peerDepsRegex)
+            if (parts && parts.length > 1) {
+                peerDeps.push(parts[1])
+            }
+        } else {
+            //  │ │ │ ├─┬ mongodb-memory-server-core@8.15.1
+            const parts = line.match(depsRegex)
+            if (parts && parts.length > 1) {
+                deps.push(parts[1])
+            }
+        }
     })
-    return deps
+    // dedupe and return deps and peer deps
+    return {
+        dependencies: deps.filter((x, i) => i === deps.indexOf(x)),
+        optionalPeerDependencies: peerDeps.filter((x, i) => i === peerDeps.indexOf(x)),
+    }
 }
 
 /**
  * Filter out the dependencies we don't want
  * @param deps
+ * @param filters
  */
 export function filterDependencies(deps: string[], filters: string[]): { internal: string[]; external: string[] } {
     const depsDeduped = deps.filter((x, i) => i === deps.indexOf(x))

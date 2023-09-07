@@ -14,7 +14,7 @@
         "build:dev": "npm run build && vite build --mode development --debug",
         "build:prod": "npm run build && vite build --mode production",
         "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix"
+        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"

@@ -8,7 +8,7 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix"
+        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "repository": {
         "type": "git",
@@ -24,7 +24,7 @@
         "@prosopo/common": "^0.1.17",
         "@prosopo/types": "^0.1.17",
         "@prosopo/types-database": "^0.1.17",
-        "mongodb": "5.6.0",
+        "mongodb": "5.8.0",
         "mongodb-memory-server": "^8.7.2",
         "mongoose": "^7.3.3",
         "zod": "^3.17.9"

@@ -113,6 +113,11 @@ export class Tasks {
         }
 
         await this.db?.storeDataset(dataset)
+        // catch any errors before running the tx
+        await wrapQuery(this.contract.query.providerSetDataset, this.contract.query)(
+            dataset.datasetId,
+            dataset.datasetContentId
+        )
         const txResult = await this.contract.methods.providerSetDataset(dataset.datasetId, dataset.datasetContentId, {
             value: 0,
         })

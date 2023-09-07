@@ -186,3 +186,7 @@ export const choice = <T>(
         indices,
     }
 }
+
+export function getCurrentFileDirectory(url: string) {
+    return new URL(url).pathname.split('/').slice(0, -1).join('/')
+}
