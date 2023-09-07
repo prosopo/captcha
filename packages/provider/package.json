@@ -15,7 +15,7 @@
         "coverage": "npx c8 npm run test",
         "populate-data": "ts-node ./tests/dataUtils/populateDatabase.ts",
         "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix"
+        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "dependencies": {
         "@polkadot/api": "10.9.1",
@@ -36,7 +36,6 @@
         "express": "^4.18.1",
         "jsonwebtoken": "^9.0.1",
         "nodejs-polars": "^0.6.0",
-        "pm2": "^5.3.0",
         "yargs": "^17.5.1",
         "yargs-parser": "^21.0.1"
     },

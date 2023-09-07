@@ -9,7 +9,8 @@ import process from 'process'
 import relocate from './relocate/cli.js'
 import scale from './scale/cli.js'
 import yargs from 'yargs'
-const logger = getLogger(LogLevelSchema.enum.Info, `${__dirname}/${__filename}`)
+const dirname = process.cwd()
+const logger = getLogger(LogLevelSchema.enum.Info, `${dirname}`)
 
 const main = async () => {
     await yargs(hideBin(process.argv))
