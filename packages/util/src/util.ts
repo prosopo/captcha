@@ -108,9 +108,11 @@ export const at = <T>(
     }
 ): T => {
     if (options.wrap) {
-        i = Math.abs(i)
         if (arr.length !== 0) {
             i %= arr.length
+        }
+        if (i < 0) {
+            i += arr.length
         }
     }
     if (options.checkBounds) {
@@ -119,7 +121,7 @@ export const at = <T>(
         }
     }
     const item = arr[i]
-    if (options.allowUndefined || item === undefined) {
+    if (!options.allowUndefined && item === undefined) {
         throw new Error(`Array item at index ${i} is undefined for array of length ${arr.length}`)
     }
     return item

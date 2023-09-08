@@ -12,9 +12,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
-import { permutations, rng, seedLodash } from '../src/util'
+import { at, permutations, rng, seedLodash } from '../src/util'
 
 describe('util', () => {
+    describe('at', () => {
+        test('throw on empty array', () => {
+            expect(() => at([], 0)).to.throw()
+        })
+
+        test('throw on index out of bounds high', () => {
+            expect(() => at([1, 2, 3], 3)).to.throw()
+        })
+
+        test('throw on index out of bounds low', () => {
+            expect(() => at([1, 2, 3], -1)).to.throw()
+        })
+
+        test('returns correct value', () => {
+            expect(at([1, 2, 3], 0)).to.equal(1)
+            expect(at([1, 2, 3], 1)).to.equal(2)
+            expect(at([1, 2, 3], 2)).to.equal(3)
+        })
+
+        test('wraps index high', () => {
+            expect(at([1, 2, 3], 3, { wrap: true })).to.equal(1)
+            expect(at([1, 2, 3], 4, { wrap: true })).to.equal(2)
+            expect(at([1, 2, 3], 5, { wrap: true })).to.equal(3)
+        })
+
+        test('wraps index low', () => {
+            expect(at([1, 2, 3], -1, { wrap: true })).to.equal(3)
+            expect(at([1, 2, 3], -2, { wrap: true })).to.equal(2)
+            expect(at([1, 2, 3], -3, { wrap: true })).to.equal(1)
+            expect(at([1, 2, 3], -4, { wrap: true })).to.equal(3)
+            expect(at([1, 2, 3], -5, { wrap: true })).to.equal(2)
+            expect(at([1, 2, 3], -6, { wrap: true })).to.equal(1)
+        })
+
+        test('allow undefined in bounds', () => {
+            expect(at([undefined, undefined, undefined], 0, { allowUndefined: true })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 1, { allowUndefined: true })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 2, { allowUndefined: true })).to.equal(undefined)
+        })
+
+        test('allow undefined out of bounds', () => {
+            expect(at([undefined, undefined, undefined], 3, { allowUndefined: true, checkBounds: false })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], -1, { allowUndefined: true, checkBounds: false })).to.equal(undefined)
+        })
+    })
+
     describe('permutations', () => {
         test('handles empty array', () => {
             expect([...permutations([])]).to.deep.equal([])
