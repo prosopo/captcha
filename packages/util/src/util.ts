@@ -117,31 +117,23 @@ export const at = <T>(
     }
     if (options.checkBounds) {
         if (i >= arr.length || i < 0) {
-            throw new Error(`Array index ${i} is out of bounds for array of length ${arr.length}`)
+            throw new Error(`Array index ${i} is out of bounds for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`)
         }
     }
-    try {
-        return get<T>(arr, i, options)
-    } catch (e) {
-        throw new Error(`Array item at index ${i} is undefined for array of length ${arr.length}`)
+    const el = arr[i]
+    if (options.required && el === undefined) {
+        throw new Error(`Array item at index ${i} is undefined for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`)
     }
+    return el as T
 }
 
-export type GetOptions = {
-    required?: boolean
-}
-export function get<T>(obj: T, key: unknown, options?: GetOptions): Exclude<T[keyof T], undefined>
-export function get<V>(obj: unknown, key: unknown, options?: GetOptions): V
-export function get<T, V>(
-    obj: T,
-    key: unknown,
-    options: GetOptions = {
-        required: true,
-    }
-): V {
+export function get<T>(obj: T, key: unknown, required?: true): Exclude<T[keyof T], undefined>
+export function get<T>(obj: T, key: unknown, required: false): T[keyof T] | undefined
+export function get<V>(obj: unknown, key: unknown, required?: true): V
+export function get<T, V>(obj: T, key: unknown, required = true): V {
     const value = obj[key as unknown as keyof T]
-    if (options.required && value === undefined) {
-        throw new Error(`Object key ${String(key)} is undefined`)
+    if (required && value === undefined) {
+        throw new Error(`Object has no property '${String(key)}': ${JSON.stringify(obj, null, 2)}`)
     }
     return value as V
 }
