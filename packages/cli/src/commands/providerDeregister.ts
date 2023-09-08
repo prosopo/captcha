@@ -5,6 +5,7 @@ import { ProsopoConfig } from '@prosopo/types'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { validateAddress } from './validators.js'
+import { ProsopoEnvError } from '@prosopo/common'
 
 export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
     const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_deregister')
@@ -27,7 +28,9 @@ export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: L
                 // TODO provider deregister does not accept params... it should?
                 // await tasks.contract.tx.providerDeregister(argv.address)
 
-                logger.info('Provider registered')
+                // logger.info('Provider registered')
+
+                throw new ProsopoEnvError('GENERAL.NOT_IMPLEMENTED')
             } catch (err) {
                 logger.error(err)
             }
