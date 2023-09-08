@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
-import SourceMapExclude from './vite-plugin-source-map-exclude.js'
+import VitePluginSourcemapExclude from './vite-plugin-sourcemap-exclude.js'
 
 export default function () {
     return defineConfig({
@@ -21,6 +21,6 @@ export default function () {
             maxThreads: 1,
             watchExclude: ['**/node_modules/**', '**/dist/**'],
         },
-        plugins: [SourceMapExclude({ excludeNodeModules: true })],
+        plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true })],
     })
 }

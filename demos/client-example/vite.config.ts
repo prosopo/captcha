@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { ClosePlugin } from '@prosopo/config/dist'
+import { VitePluginCloseAndCopy } from '@prosopo/config'
 import { defineConfig } from 'vite'
 import { getLogger } from '@prosopo/common'
 import { loadEnv } from '@prosopo/cli'
@@ -36,14 +36,17 @@ export default defineConfig(function ({ command, mode }) {
         'process.env.REACT_APP_SERVER_URL': JSON.stringify(process.env.REACT_APP_SERVER_URL),
         'process.env.REACT_APP_PORT': JSON.stringify(process.env.REACT_APP_PORT),
     }
+
     return {
         define,
         build: { lib: { entry: path.resolve(__dirname, './index.html'), name: 'client_example' } },
         plugins: [
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             react(),
             // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
             // mode, in which case we don't want to close the bundler because it will close the server
-            command !== 'serve' ? ClosePlugin() : undefined,
+            command !== 'serve' ? VitePluginCloseAndCopy() : undefined,
         ],
     }
 })

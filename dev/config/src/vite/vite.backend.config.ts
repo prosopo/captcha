@@ -1,11 +1,12 @@
 import { AliasOptions, UserConfig } from 'vite'
-import { default as ClosePlugin } from './vite-plugin-close.js'
+import { default as ClosePlugin } from './vite-plugin-close-and-copy.js'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getLogger } from '@prosopo/common'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { wasm } from '@rollup/plugin-wasm'
+import VitePluginFixAbsoluteImports from './vite-plugin-fix-absolute-imports.js'
 import css from 'rollup-plugin-import-css'
 import nativePlugin from 'rollup-plugin-natives'
 import path from 'path'
@@ -29,7 +30,8 @@ const nodeJsPolarsDeps = [
     'nodejs-polars.linux-arm-gnueabihf.node',
 ]
 
-const nodeJsPolarsResolve: AliasOptions = [
+const aliasOptions: AliasOptions = [
+    // Replace the nodejs-polars dependency with the copied .node file to avoid complaints when bundling
     ...nodeJsPolarsDeps.map((dep) => ({
         find: `./${dep}`,
         replacement: 'nodejs-polars.linux-x64-gnu.node',
@@ -86,7 +88,7 @@ export default async function (
 
     return {
         resolve: {
-            alias: nodeJsPolarsResolve,
+            alias: aliasOptions,
         },
         ssr: {
             noExternal: internal,
@@ -156,11 +158,19 @@ export default async function (
             },
         },
         plugins: [
-            command !== 'serve' ? ClosePlugin() : undefined,
-
+            // plugin to replace stuff like import blah from string_encoder/lib/string_encoder.js with import blah from string_encoder
+            VitePluginFixAbsoluteImports(),
             replace.default([
                 // nodejs-polars is not being transformed by commonjsOptions (above) so we need to do a manual replace of
                 // __dirname here
+                {
+                    filter: ['node_modules/nodejs-polars/bin/native-polars.js'],
+                    replace: {
+                        from: '__dirname',
+                        to: "new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')",
+                    },
+                },
+                // replace this import
                 {
                     filter: ['node_modules/nodejs-polars/bin/native-polars.js'],
                     replace: {
@@ -178,6 +188,8 @@ export default async function (
                     },
                 ],
             }),
+            // plugin to close the bundle after build if not in serve mode
+            command !== 'serve' ? ClosePlugin() : undefined,
         ],
     }
 }

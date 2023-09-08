@@ -1,6 +1,6 @@
-import { ClosePlugin } from './index.js'
-import { ClosePluginOptions } from './vite-plugin-close.js'
+import { ClosePluginOptions } from './vite-plugin-close-and-copy.js'
 import { UserConfig } from 'vite'
+import { VitePluginCloseAndCopy } from './index.js'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getAliases } from '../polkadot/index.js'
@@ -140,7 +140,7 @@ export default async function (
             viteCommonjs(),
             // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
             // mode, in which case we don't want to close the bundler because it will close the server
-            command !== 'serve' ? ClosePlugin(copyOptions) : undefined,
+            command !== 'serve' ? VitePluginCloseAndCopy(copyOptions) : undefined,
             // Means we can specify index.tsx instead of index.jsx in the index.html file
             viteTsconfigPaths({ projects: tsConfigPaths }),
         ],
