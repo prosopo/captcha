@@ -3,31 +3,27 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
-        "lib": [
-          "dom",
-          "dom.iterable",
-          "esnext"
-        ]
+        "lib": ["dom", "dom.iterable", "esnext"]
     },
     "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
-    {
-      "path": "../../packages/api"
-    },
-    {
-      "path": "../../packages/cli"
-    },
-    {
-      "path": "../../packages/contract"
-    },
-    {
-      "path": "../../packages/procaptcha"
-    },
-    {
-      "path": "../../packages/server"
-    },
-    {
-      "path": "../../packages/types"
-    }
-  ]
+        {
+            "path": "../../packages/api"
+        },
+        {
+            "path": "../../packages/cli"
+        },
+        {
+            "path": "../../packages/contract"
+        },
+        {
+            "path": "../../packages/procaptcha"
+        },
+        {
+            "path": "../../packages/server"
+        },
+        {
+            "path": "../../packages/types"
+        }
+    ]
 }

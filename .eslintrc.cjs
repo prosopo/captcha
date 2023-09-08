@@ -5,7 +5,7 @@ module.exports = {
         node: true,
     },
     extends: [
-        "plugin:yaml/recommended",
+        'plugin:yaml/recommended',
         'plugin:json/recommended',
         'plugin:workspaces/recommended',
         'eslint:recommended',

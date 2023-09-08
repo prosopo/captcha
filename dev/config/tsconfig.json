@@ -7,11 +7,11 @@
     },
     "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
-    {
-      "path": "../../packages/common"
-    },
-    {
-      "path": "../../packages/types"
-    }
-  ]
+        {
+            "path": "../../packages/common"
+        },
+        {
+            "path": "../../packages/types"
+        }
+    ]
 }
