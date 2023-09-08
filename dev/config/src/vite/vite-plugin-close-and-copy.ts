@@ -12,7 +12,7 @@ export interface ClosePluginOptions {
  *   description: Closes Vite after the bundle has been build. Optionally copies the bundle to a different directory.
  *   @param { ClosePluginOptions } options - The options object
  **/
-export default function ClosePlugin(options?: ClosePluginOptions): Plugin {
+export default function VitePluginCloseAndCopy(options?: ClosePluginOptions): Plugin {
     const __dirname = path.resolve()
     return {
         name: 'close-plugin', // required, will show up in warnings and errors
