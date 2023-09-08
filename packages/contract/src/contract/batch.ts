@@ -20,6 +20,8 @@ import { ProsopoContractError } from '../handlers.js'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers.js'
 import { oneUnit } from '../balances/index.js'
+import { at } from '@prosopo/util'
+
 /**
  * Batch commits an array of transactions to the contract
  * @param contract
@@ -67,20 +69,14 @@ export async function batch(
             const extrinsicSuccess = result.events.filter((e) => e.event.method === 'ExtrinsicSuccess')
             if (tooManyCallsEvent.length > 0) {
                 logger.error('Too many calls')
-                const item = tooManyCallsEvent[0]
-                if (item === undefined) {
-                    throw new Error('Too many calls event is undefined')
-                }
+                const item = at(tooManyCallsEvent, 0)
                 const message = formatEvent(item.event)
                 reject(new ProsopoContractError(message))
             }
 
             if (batchInterruptedEvent.length > 0) {
                 logger.error('Batch interrupted')
-                const item = batchInterruptedEvent[0]
-                if (item === undefined) {
-                    throw new Error('Batch interrupted event is undefined')
-                }
+                const item = at(batchInterruptedEvent, 0)
                 const message = formatBatchInterruptedEvent(item.event)
                 reject(new ProsopoContractError(message))
             }
@@ -88,10 +84,7 @@ export async function batch(
             if (result.status.isFinalized || result.status.isInBlock) {
                 unsub()
                 const events = filterAndDecodeContractEvents(result, contract.abi, logger)
-                const item = extrinsicSuccess[0]
-                if (item === undefined) {
-                    throw new Error('Extrinsic success event is undefined')
-                }
+                const item = at(extrinsicSuccess, 0)
                 logger.debug('extrinsicSuccess', JSON.stringify(item.toHuman(), null, 4))
                 logger.debug('block number', result.blockNumber?.toString())
                 logger.debug('events', events)
