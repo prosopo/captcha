@@ -12,7 +12,7 @@
         "about:cmd": "perform string substitution on the command and then execute it. Make sure to use --, e.g. npm run cmd -- my args here",
         "cmd": "f() { cmd=$1; shift; cmd=$(printf \"$cmd\" $@); echo exec: $cmd; echo; eval $cmd; }; f",
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
-        "build:all": "npm run --workspaces build",
+        "build:all": "npm run --workspaces --if-present build",
         "rebuild": "f() { npm run cmd -- \"npm run clean %s\" $@ ; npm run cmd -- \"npm run build %s\" $@ ;}; f",
         "rebuild:npm": "npm run clean:npm && npm i",
         "clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
