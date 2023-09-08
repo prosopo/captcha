@@ -16,10 +16,10 @@ import { AbiMetadata, AbiStorageField } from '@prosopo/types'
 import { AccountId, PortableType, StorageEntryMetadataLatest } from '@polkadot/types/interfaces'
 import { ApiPromise } from '@polkadot/api'
 import { ProsopoContractError } from '../handlers.js'
+import { at, get } from '@prosopo/util'
 import { firstValueFrom } from 'rxjs'
 import { hexToNumber } from '@polkadot/util'
 import { reverseHexString } from '@prosopo/common'
-import { at, get } from '@prosopo/util'
 
 const primitivesSizeInBytes: {
     [key: string]: number
