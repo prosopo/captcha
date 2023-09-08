@@ -37,7 +37,7 @@
         "test": "npm -w @prosopo/scripts run test",
         "test:all": "npm run --workspaces --if-present test",
         "lint": "npm --workspaces exec eslint -- . --no-error-on-unmatched-pattern",
-        "lint:fix": "npm --workspaces exec eslint -- '**/*.{js,ts,cts,mts,tsx,jsx,json}' --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --no-error-on-unmatched-pattern --fix"
+        "lint:fix": "npm --workspaces exec eslint -- '**/*.{js,cjs,mjs,ts,cts,mts,tsx,jsx,json}' --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --no-error-on-unmatched-pattern --fix && npx eslint '*.{js,cjs,mjs,ts,cts,mts,tsx,jsx,json}' --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --no-error-on-unmatched-pattern --fix"
     },
     "private": true,
     "engines": {
