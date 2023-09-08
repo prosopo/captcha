@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
-import { at, permutations, rng, seedLodash } from '../src/util'
+import { at, get, permutations, rng, seedLodash } from '../src/util'
 
 describe('util', () => {
     describe('at', () => {
@@ -50,14 +50,32 @@ describe('util', () => {
         })
 
         test('allow undefined in bounds', () => {
-            expect(at([undefined, undefined, undefined], 0, { allowUndefined: true })).to.equal(undefined)
-            expect(at([undefined, undefined, undefined], 1, { allowUndefined: true })).to.equal(undefined)
-            expect(at([undefined, undefined, undefined], 2, { allowUndefined: true })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 0, { required: false })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 1, { required: false })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 2, { required: false })).to.equal(undefined)
         })
 
         test('allow undefined out of bounds', () => {
-            expect(at([undefined, undefined, undefined], 3, { allowUndefined: true, checkBounds: false })).to.equal(undefined)
-            expect(at([undefined, undefined, undefined], -1, { allowUndefined: true, checkBounds: false })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 3, { required: false, checkBounds: false })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], -1, { required: false, checkBounds: false })).to.equal(undefined)
+        })
+    })
+
+    describe('get', () => {
+        test('throw on undefined field string', () => {
+            expect(() => get({ a: 1 }, 'b')).to.throw()
+        })
+
+        test('throw on undefined field number', () => {
+            expect(() => get({ a: 1 }, 1)).to.throw()
+        })
+
+        test('get correct field string', () => {
+            expect(get({ a: 1 }, 'a')).to.equal(1)
+        })
+
+        test('get correct field number', () => {
+            expect(get({ 1: 1 }, 1)).to.equal(1)
         })
     })
 

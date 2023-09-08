@@ -98,11 +98,11 @@ export const at = <T>(
     arr: T[],
     i: number,
     options: {
-        allowUndefined?: boolean // whether to allow undefined elements in the array
+        required?: boolean // whether to allow undefined elements in the array
         checkBounds?: boolean // whether to check the index against the bounds of the array
         wrap?: boolean // whether to wrap the index around the bounds of the array
     } = {
-        allowUndefined: false,
+        required: true,
         checkBounds: true,
         wrap: false,
     }
@@ -120,11 +120,11 @@ export const at = <T>(
             throw new Error(`Array index ${i} is out of bounds for array of length ${arr.length}`)
         }
     }
-    const item = arr[i]
-    if (!options.allowUndefined && item === undefined) {
+    try {
+        return get<T>(arr, i, options)
+    } catch (e) {
         throw new Error(`Array item at index ${i} is undefined for array of length ${arr.length}`)
     }
-    return item
 }
 
 export type GetOptions = {
