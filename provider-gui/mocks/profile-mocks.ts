@@ -18,7 +18,7 @@ export const environmentMock = {
     PROVIDER_ADDRESS: 'PROVIDER_ADDRESS',
     PROVIDER_MNEMONIC: 'a list of about 20 words',
     NODE_ENV: 'development',
-    LOG_LEVEL: 'Debug',
+    LOG_LEVEL: 'debug',
 }
 
 export const actionsMock = {
