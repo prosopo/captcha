@@ -5,10 +5,12 @@ on:
     branches:
       - 'main'
     paths:
+      - 'dev/**'
       - 'packages/**'
   pull_request:
     branches: [ main ]
     paths:
+      - 'dev/**'
       - 'packages/**'
       - '.github/workflows/image_provider.yml'
 
