@@ -32,8 +32,8 @@ export function encodeStringAddress(address: string) {
 export function shuffleArray<T>(array: T[]): T[] {
     for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
         const randIndex = Math.floor(Math.random() * (arrayIndex + 1))
-        const tmp = at(array, randIndex, { allowUndefined: true })
-        array[randIndex] = at(array, arrayIndex, { allowUndefined: true })
+        const tmp = at(array, randIndex, { required: false })
+        array[randIndex] = at(array, arrayIndex, { required: false })
         array[arrayIndex] = tmp
     }
     return array
