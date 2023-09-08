@@ -9,12 +9,12 @@
         "url": "git+https://github.com/prosopo/captcha.git"
     },
     "scripts": {
-        "cmd": "e() { $@ ;}; f() { cmd=\"$1\"; shift; for arg in $@; do str=$(printf \"$cmd\" \"$arg\"); echo exec: $str; echo; e $str || exit 1; done ;}; f",
-        "build": "npm run --silent cmd \"npm run --silent -w @prosopo/%s build\"",
+        "cmd": "f() { cmd=$1; shift; cmd=$(printf \"$cmd\" $@); echo exec: $cmd; echo; eval $cmd; }; f",
+        "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
         "build:all": "npm run --workspaces build",
-        "rebuild": "f() { npm run --silent cmd \"npm run clean %s\" $@ ; npm run --silent cmd \"npm run build %s\" $@ ;}; f",
+        "rebuild": "f() { npm run cmd -- \"npm run clean %s\" $@ ; npm run cmd -- \"npm run build %s\" $@ ;}; f",
         "rebuild:npm": "npm run clean:npm && npm i",
-        "clean": "npm run --silent cmd \"npm run --silent -w @prosopo/%s clean\"",
+        "clean": "npm run cmd -- \"npm run -w @prosopo/%s clean\"",
         "clean:npm": "find . -name \"node_modules\" -type d -prune -exec rm -rf '{}' + && find . -name \"package-lock.json\" -type f -delete ",
         "clean:all": "npm run clean:npm && npm run clean:ts",
         "clean:reset": "npm run clean:all && npm run clean:npm",
@@ -36,12 +36,12 @@
         "populate-data": "npm -w @prosopo/provider run populate-data",
         "test": "npm -w @prosopo/scripts run test",
         "test:all": "npm run --workspaces --if-present test",
-        "prettier": "f() { npm run --silent cmd \"npx prettier '**/*' '**/.*' --ext .js --ext .jsx --ext .cjs --ext .mjs --ext .ts --ext .d.ts --ext .cts --ext .mts --ext .tsx --ext .json --config $(pwd)/.prettierrc.js --ignore-path $(pwd)/.gitignore --check %s\" $@ ; npm run --silent cmd \"npm --workspaces exec prettier -- '**/*' '**/.*' --ext .js --ext .jsx --ext .cjs --ext .mjs --ext .ts --ext .d.ts --ext .cts --ext .mts --ext .tsx --ext .json --config $(pwd)/.prettierrc.js --ignore-path $(pwd)/.gitignore --no-error-on-unmatched-pattern --check %s\" $@ ;}; f",
-        "prettier:fix": "npm run --silent prettier -- --fix",
-        "eslint": "f() { npm run --silent cmd \"npx prettier '**/*' '**/.*' --ext .js --ext .jsx --ext .cjs --ext .mjs --ext .ts --ext .d.ts --ext .cts --ext .mts --ext .tsx --ext .json --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --check %s\" $@ ; npm run --silent cmd \"npm --workspaces exec prettier -- '**/*' '**/.*' --ext .js --ext .jsx --ext .cjs --ext .mjs --ext .ts --ext .d.ts --ext .cts --ext .mts --ext .tsx --ext .json --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --no-error-on-unmatched-pattern --check %s\" $@ ;}; f",
-        "eslint:fix": "npm run --silent eslint -- --fix",
-        "lint": "npm run --silent eslint && npm run --silent prettier",
-        "lint:fix": "npm run --silent eslint:fix && npm run --silent prettier:fix"
+        "prettier": "f() { npm run cmd -- \"npx prettier '**/*' '**/.*' --ext .js --ext .jsx --ext .cjs --ext .mjs --ext .ts --ext .d.ts --ext .cts --ext .mts --ext .tsx --ext .json --config $(pwd)/.prettierrc.js --ignore-path $(pwd)/.gitignore --check %s\" $@ ; npm run cmd -- \"npm --workspaces exec prettier -- '**/*' '**/.*' --ext .js --ext .jsx --ext .cjs --ext .mjs --ext .ts --ext .d.ts --ext .cts --ext .mts --ext .tsx --ext .json --config $(pwd)/.prettierrc.js --ignore-path $(pwd)/.gitignore --no-error-on-unmatched-pattern --check %s\" $@ ;}; f",
+        "prettier:fix": "npm run prettier -- --fix",
+        "eslint": "f() { npm run cmd -- \"npx eslint '**/*' '**/.*' --ext .js --ext .jsx --ext .cjs --ext .mjs --ext .ts --ext .d.ts --ext .cts --ext .mts --ext .tsx --ext .json --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --check %s\" $@ ; npm run cmd -- \"npm --workspaces exec eslint -- '**/*' '**/.*' --ext .js --ext .jsx --ext .cjs --ext .mjs --ext .ts --ext .d.ts --ext .cts --ext .mts --ext .tsx --ext .json --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --no-error-on-unmatched-pattern --check %s\" $@ ;}; f",
+        "eslint:fix": "npm run eslint -- --fix",
+        "lint": "npm run eslint && npm run prettier",
+        "lint:fix": "npm run eslint:fix && npm run prettier:fix"
     },
     "private": true,
     "engines": {
