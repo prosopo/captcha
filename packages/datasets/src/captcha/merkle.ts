@@ -70,10 +70,7 @@ export class CaptchaMerkleTree {
             if (leftChild === undefined) {
                 throw new Error('leftChild undefined')
             }
-            const rightChild = leafIndex + 1 < numLeaves ? leaves[leafIndex + 1] : leftChild
-            if (rightChild === undefined) {
-                throw new Error('rightChild undefined')
-            }
+            const rightChild = leafIndex + 1 < numLeaves ? at(leaves, leafIndex + 1) : leftChild
             const parentNode = this.createParent(leftChild, rightChild)
             newLayer.push(parentNode.hash)
             parents.push(parentNode)
