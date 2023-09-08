@@ -11,8 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect, test } from 'vitest'
 import { at, get, permutations, rng, seedLodash } from '../src/util'
+import { describe, expect, test } from 'vitest'
 
 describe('util', () => {
     describe('at', () => {
@@ -56,8 +56,12 @@ describe('util', () => {
         })
 
         test('allow undefined out of bounds', () => {
-            expect(at([undefined, undefined, undefined], 3, { required: false, checkBounds: false })).to.equal(undefined)
-            expect(at([undefined, undefined, undefined], -1, { required: false, checkBounds: false })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 3, { required: false, checkBounds: false })).to.equal(
+                undefined
+            )
+            expect(at([undefined, undefined, undefined], -1, { required: false, checkBounds: false })).to.equal(
+                undefined
+            )
         })
     })
 

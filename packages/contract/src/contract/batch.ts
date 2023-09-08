@@ -18,9 +18,9 @@ import { IKeyringPair, SignatureOptions } from '@polkadot/types/types'
 import { Logger } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers.js'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
+import { at } from '@prosopo/util'
 import { filterAndDecodeContractEvents, formatEvent, getDispatchError } from './helpers.js'
 import { oneUnit } from '../balances/index.js'
-import { at } from '@prosopo/util'
 
 /**
  * Batch commits an array of transactions to the contract
