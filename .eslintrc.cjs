@@ -47,5 +47,4 @@ module.exports = {
             },
         ],
     },
-    ignorePatterns: ['**/*bundle*.js', '**/typechain/*'],
 }
