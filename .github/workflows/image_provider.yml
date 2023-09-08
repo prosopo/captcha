@@ -1,18 +1,18 @@
 name: image_provider
 
 on:
-  push:
-    branches:
-      - 'main'
-    paths:
-      - 'dev/**'
-      - 'packages/**'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'dev/**'
-      - 'packages/**'
-      - '.github/workflows/image_provider.yml'
+    push:
+        branches:
+            - 'main'
+        paths:
+            - 'dev/**'
+            - 'packages/**'
+    pull_request:
+        branches: [main]
+        paths:
+            - 'dev/**'
+            - 'packages/**'
+            - '.github/workflows/image_provider.yml'
 
 env:
     CARGO_TERM_COLOR: always
