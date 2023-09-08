@@ -12,71 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel } from 'consola'
-import { LogLevelSchema, getLogLevelKeys, getLogLevelValues, getLogger } from '../../src/logger.js'
+import { LogLevel, getLogger } from '../../src/logger.js'
 import { describe, expect, test } from 'vitest'
 
 describe('logging', () => {
-    test('has correct log level names', () => {
-        expect([...getLogLevelKeys()].sort()).to.deep.equal(
-            ['Silent', 'Error', 'Warn', 'Log', 'Info', 'Debug', 'Trace', 'Verbose'].sort()
-        )
-    })
-
-    test('has correct log level values', () => {
-        expect([...getLogLevelValues()].sort()).to.deep.equal(
-            [
-                LogLevelSchema.Values.Error,
-                LogLevelSchema.Values.Warn,
-                LogLevelSchema.Values.Log,
-                LogLevelSchema.Values.Info,
-                LogLevelSchema.Values.Debug,
-                LogLevelSchema.Values.Trace,
-                LogLevelSchema.Values.Silent,
-                LogLevelSchema.Values.Verbose,
-            ].sort()
-        )
-    })
-
     test('set any valid log level', () => {
-        const logger = getLogger('Verbose', 'test')
-        for (const level of getLogLevelKeys()) {
-            const logLevel = LogLevelSchema.Values[level as keyof typeof LogLevel]
+        const logger = getLogger('verbose', 'test')
+        for (const level of LogLevel.options) {
             logger.setLogLevel(level)
             const result = logger.getLogLevel()
-            expect(result).to.equal(logLevel)
+            expect(result).to.equal(level)
         }
     })
 
     test('accepts string log level', () => {
-        const logger = getLogger('Verbose', 'test')
-        for (const level of getLogLevelKeys()) {
-            const logLevel = LogLevelSchema.Values[level as keyof typeof LogLevel]
+        const logger = getLogger('verbose', 'test')
+        for (const logLevel of LogLevel.options) {
+            const level = logLevel.toString()
             logger.setLogLevel(level)
             expect(logger.getLogLevel()).to.equal(logLevel)
         }
     })
 
-    test('accepts number log level', () => {
-        const logger = getLogger('Verbose', 'test')
-        const values = [...getLogLevelValues()].filter((lvl) => !Number.isNaN(parseInt(lvl.toString())))
-        for (const level of values) {
-            const levelNum = parseInt(level.toString())
-            logger.setLogLevel(levelNum)
-            expect(logger.getLogLevel()).to.equal(level)
-        }
+    test('throws error for invalid string log level', () => {
+        expect(() => getLogger('xerbose', 'test')).to.throw()
     })
-
-    // TODO these aren't picked up by vitest
-    // test.only('throws error for invalid string log level', () => {
-    //     const logger = getLogger('xerbose', 'test')
-    //     expect(() => logger.getLogLevel()).to.throw()
-    // })
-    //
-    // test.only('throws error for invalid number log level', () => {
-    //     const logger = getLogger(-1, 'test')
-    //     expect(() => logger.getLogLevel()).toThrowError(ProsopoBaseError)
-    // })
 
     test('handles varying casing of string log level', function () {
         const logger = getLogger('Verbose', 'test')
@@ -86,15 +46,14 @@ describe('logging', () => {
         console.log(len)
 
         for (let i = 0; i < len; i++) {
-            for (const level of getLogLevelKeys()) {
-                const logLevel = LogLevelSchema.Values[level as keyof typeof LogLevel]
+            for (const level of LogLevel.options) {
                 for (let j = 0; j < Math.max(i, 3); j++) {
                     let levelCased = level.toLowerCase()
                     levelCased =
                         levelCased.slice(0, j) + levelCased.slice(j, j + 1).toUpperCase() + levelCased.slice(j + 1)
                     logger.setLogLevel(level)
-                    expect(logger.getLogLevel()).to.equal(logLevel)
-                    logger.setLogLevel(i == 0 ? 'Info' : 'Silent')
+                    expect(logger.getLogLevel()).to.equal(level)
+                    logger.setLogLevel(i == 0 ? 'info' : 'silent')
                 }
             }
         }
