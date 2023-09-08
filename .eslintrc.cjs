@@ -9,7 +9,7 @@ module.exports = {
         'plugin:workspaces/recommended',
         'eslint:recommended',
         'plugin:@typescript-eslint/recommended',
-        'plugin:prettier/recommended',
+        'plugin:prettier/recommended', // must be last!
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
