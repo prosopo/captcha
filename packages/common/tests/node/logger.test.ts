@@ -17,7 +17,7 @@ import { describe, expect, test } from 'vitest'
 
 describe('logging', () => {
     test('set any valid log level', () => {
-        const logger = getLogger('verbose', 'test')
+        const logger = getLogger('info', 'test')
         for (const level of LogLevel.options) {
             logger.setLogLevel(level)
             const result = logger.getLogLevel()
@@ -26,7 +26,7 @@ describe('logging', () => {
     })
 
     test('accepts string log level', () => {
-        const logger = getLogger('verbose', 'test')
+        const logger = getLogger('info', 'test')
         for (const logLevel of LogLevel.options) {
             const level = logLevel.toString()
             logger.setLogLevel(level)
@@ -39,7 +39,7 @@ describe('logging', () => {
     })
 
     test('handles varying casing of string log level', function () {
-        const logger = getLogger('Verbose', 'test')
+        const logger = getLogger('info', 'test')
         const len = Object.keys(LogLevel).reduce((acc, level, i) => {
             return Math.max(acc, level.length)
         }, 0)
@@ -53,7 +53,7 @@ describe('logging', () => {
                         levelCased.slice(0, j) + levelCased.slice(j, j + 1).toUpperCase() + levelCased.slice(j + 1)
                     logger.setLogLevel(level)
                     expect(logger.getLogLevel()).to.equal(level)
-                    logger.setLogLevel(i == 0 ? 'info' : 'silent')
+                    logger.setLogLevel(i == 0 ? 'info' : 'debug')
                 }
             }
         }

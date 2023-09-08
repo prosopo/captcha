@@ -28,6 +28,8 @@ export interface Logger {
 
     error(message: unknown, ...args: unknown[]): void
 
+    fatal(message: unknown, ...args: unknown[]): void
+
     setLogLevel(level: LogLevel | string): void
 
     getLogLevel(): LogLevel
@@ -49,6 +51,7 @@ export function getLoggerDefault(): Logger {
 const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     const logger = consola.create({}).withTag(scope)
+    let currentLevel = logLevel
     const result = {
         log: logger.log,
         info: logger.info,
@@ -56,27 +59,37 @@ const getLoggerAdapterConsola = (logLevel: LogLevel, scope: string): Logger => {
         trace: logger.trace,
         warn: logger.warn,
         error: logger.error,
+        fatal: logger.fatal,
         setLogLevel: (level: LogLevel | string) => {
-            logger.level = ConsolaLogLevels[logLevel]
-        },
-        getLogLevel: () => {
-            const logLevel = logger.level
-            switch (logLevel) {
-                case ConsolaLogLevels.trace:
-                    return LogLevel.enum.trace
-                case ConsolaLogLevels.debug:
-                    return LogLevel.enum.debug
-                case ConsolaLogLevels.info:
-                    return LogLevel.enum.info
-                case ConsolaLogLevels.warn:
-                    return LogLevel.enum.warn
-                case ConsolaLogLevels.error:
-                    return LogLevel.enum.error
-                case ConsolaLogLevels.fatal:
-                    return LogLevel.enum.fatal
+            let logLevel = NaN
+            level = getLogLevel(level) // sanitise
+            switch (level) {
+                case LogLevel.enum.trace:
+                    logLevel = ConsolaLogLevels.trace
+                    break
+                case LogLevel.enum.debug:
+                    logLevel = ConsolaLogLevels.debug
+                    break
+                case LogLevel.enum.info:
+                    logLevel = ConsolaLogLevels.info
+                    break
+                case LogLevel.enum.warn:
+                    logLevel = ConsolaLogLevels.warn
+                    break
+                case LogLevel.enum.error:
+                    logLevel = ConsolaLogLevels.error
+                    break
+                case LogLevel.enum.fatal:
+                    logLevel = ConsolaLogLevels.fatal
+                    break
                 default:
                     throw new Error('LOG.INVALID_LOG_LEVEL')
             }
+            logger.level = logLevel
+            currentLevel = level
+        },
+        getLogLevel: () => {
+            return currentLevel
         },
     }
     result.setLogLevel(logLevel)
