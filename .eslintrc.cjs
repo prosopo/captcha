@@ -4,7 +4,13 @@ module.exports = {
         es2022: true,
         node: true,
     },
-    extends: ['plugin:json/recommended', 'plugin:workspaces/recommended', 'eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended', 'prettier'],
+    extends: [
+        'plugin:json/recommended',
+        'plugin:workspaces/recommended',
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        'plugin:prettier/recommended',
+    ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 'latest',
@@ -40,10 +46,6 @@ module.exports = {
                 memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
             },
         ],
-        'prettier/prettier': ['error'],
     },
-    ignorePatterns: [
-        '**/*bundle*.js',
-        '**/typechain/*',
-    ],
+    ignorePatterns: ['**/*bundle*.js', '**/typechain/*'],
 }
