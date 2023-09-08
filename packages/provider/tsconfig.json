@@ -6,32 +6,32 @@
     },
     "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
-    {
-      "path": "../common"
-    },
-    {
-      "path": "../contract"
-    },
-    {
-      "path": "../database"
-    },
-    {
-      "path": "../datasets"
-    },
-    {
-      "path": "../env"
-    },
-    {
-      "path": "../types"
-    },
-    {
-      "path": "../types-database"
-    },
-    {
-      "path": "../types-env"
-    },
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../contract"
+        },
+        {
+            "path": "../database"
+        },
+        {
+            "path": "../datasets"
+        },
+        {
+            "path": "../env"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../types-database"
+        },
+        {
+            "path": "../types-env"
+        },
         {
             "path": "../util"
         }
-  ]
+    ]
 }

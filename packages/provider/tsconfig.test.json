@@ -7,29 +7,29 @@
     "include": ["./src/**/*.ts", "./src/*.ts"],
     "exclude": ["**/*.test.ts"],
     "references": [
-    {
-      "path": "../common"
-    },
-    {
-      "path": "../contract"
-    },
-    {
-      "path": "../database"
-    },
-    {
-      "path": "../datasets"
-    },
-    {
-      "path": "../env"
-    },
-    {
-      "path": "../types"
-    },
-    {
-      "path": "../types-database"
-    },
-    {
-      "path": "../types-env"
-    }
-  ]
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../contract"
+        },
+        {
+            "path": "../database"
+        },
+        {
+            "path": "../datasets"
+        },
+        {
+            "path": "../env"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../types-database"
+        },
+        {
+            "path": "../types-env"
+        }
+    ]
 }

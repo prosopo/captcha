@@ -3,25 +3,18 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
-        "lib": [
-            "es6",
-            "dom"
-        ],
+        "lib": ["es6", "dom"]
     },
-  "include": [
-    "src/index.tsx",
-    "src/index.html"
-  ],
-  "references": [
-    {
-      "path": "../../dev/config"
-    },
-    {
-
-      "path": "../procaptcha-react"
-    },
+    "include": ["src/index.tsx", "src/index.html"],
+    "references": [
+        {
+            "path": "../../dev/config"
+        },
+        {
+            "path": "../procaptcha-react"
+        },
         {
             "path": "../util"
         }
-  ]
+    ]
 }
