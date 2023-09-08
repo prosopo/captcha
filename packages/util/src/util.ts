@@ -171,7 +171,7 @@ export const choice = <T>(
         // without replacement == don't allow duplicates
         if (options.withReplacement || indicesSet.add(index)) {
             indices.push(index)
-            choices.push(at(items, index, { allowUndefined: true }))
+            choices.push(at(items, index, { required: false }))
         }
     }
 
