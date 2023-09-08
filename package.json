@@ -9,6 +9,7 @@
         "url": "git+https://github.com/prosopo/captcha.git"
     },
     "scripts": {
+        "about:cmd": "perform string substitution on the command and then execute it. Make sure to use --, e.g. npm run cmd -- my args here",
         "cmd": "f() { cmd=$1; shift; cmd=$(printf \"$cmd\" $@); echo exec: $cmd; echo; eval $cmd; }; f",
         "build": "npm run cmd -- \"npm run -w @prosopo/%s build\"",
         "build:all": "npm run --workspaces build",
@@ -36,9 +37,11 @@
         "populate-data": "npm -w @prosopo/provider run populate-data",
         "test": "npm -w @prosopo/scripts run test",
         "test:all": "npm run --workspaces --if-present test",
-        "prettier": "f() { npm run cmd -- \"npx prettier '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}' --config $(pwd)/.prettierrc.js --ignore-path $(pwd)/.gitignore --ignore-path $(pwd)/.eslintignore --check %s\" $@ ; npm run cmd -- \"npm --workspaces exec prettier -- '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}'  --config $(pwd)/.prettierrc.js --ignore-path $(pwd)/.gitignore --ignore-path $(pwd)/.eslintignore --no-error-on-unmatched-pattern --check %s\" $@ ;}; f",
+        "about:prettier": "echo run prettier on all top-level configs files, settings files, and workflow files, then each workspace",
+        "prettier": "f() { npm run cmd -- \"npx prettier 'tsconfig*.json' '.*.{js,cjs,mjs,json}' '*.{js,cjs,mjs,json}' '.vscode/**/*.json' '.github/workflows/*.{yaml,yml}' --config $(pwd)/.prettierrc.js --ignore-path $(pwd)/.gitignore --ignore-path $(pwd)/.eslintignore --check %s\" $@ ; npm run cmd -- \"npm --workspaces exec prettier -- '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}'  --config $(pwd)/.prettierrc.js --ignore-path $(pwd)/.gitignore --ignore-path $(pwd)/.eslintignore --no-error-on-unmatched-pattern --check %s\" $@ ;}; f",
         "prettier:fix": "npm run prettier -- --fix",
-        "eslint": "f() { npm run cmd -- \"npx eslint '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}'  --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --ignore-path $(pwd)/.eslintignore --check %s\" $@ ; npm run cmd -- \"npm --workspaces exec eslint -- '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}'  --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --ignore-path $(pwd)/.eslintignore --no-error-on-unmatched-pattern --check %s\" $@ ;}; f",
+        "about:eslint": "echo run eslint on all top-level configs files, settings files, and workflow files, then each workspace",
+        "eslint": "f() { npm run cmd -- \"npx eslint 'tsconfig*.json' '.*.{js,cjs,mjs,json}' '*.{js,cjs,mjs,json}' '.vscode/**/*.json' '.github/workflows/*.{yaml,yml}' --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --ignore-path $(pwd)/.eslintignore --check %s\" $@ ; npm run cmd -- \"npm --workspaces exec eslint -- '**/*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}' '**/.*.{js,jsx,cjs,mjs,ts,tsx,cts,mts,d.ts,json}'  --config $(pwd)/.eslintrc.cjs --ignore-path $(pwd)/.gitignore --ignore-path $(pwd)/.eslintignore --no-error-on-unmatched-pattern --check %s\" $@ ;}; f",
         "eslint:fix": "npm run eslint -- --fix",
         "lint": "npm run eslint && npm run prettier",
         "lint:fix": "npm run eslint:fix && npm run prettier:fix"
@@ -69,6 +72,7 @@
         "eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
         "eslint-plugin-unused-imports": "^2.0.0",
         "eslint-plugin-workspaces": "^0.9.0",
+        "eslint-plugin-yaml": "^0.5.0",
         "node-loader": "^2.0.0",
         "npm-check-updates": "^15.3.4",
         "prettier": "^3.0.3",
