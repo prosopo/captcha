@@ -108,7 +108,6 @@ export class CaptchaMerkleTree {
                 partnerIndex = leafIndex
             }
             const pair: MerkleLeaf[] = [leafHash]
-            check(pair, 2)
             // determine whether the leaf sits on the left or the right of its partner
             const partner = at(layer, partnerIndex)
             if (partnerIndex > leafIndex) {
@@ -122,17 +121,6 @@ export class CaptchaMerkleTree {
         }
         const last = at(this.layers, this.layers.length - 1)
         return [...proofTree, [at(last, 0)]]
-    }
-}
-
-const check = <T>(arr: T[], len: number) => {
-    if (arr.length < len) {
-        throw new Error(`Array length should be at least ${len}`)
-    }
-    for (const item of arr) {
-        if (item === undefined) {
-            throw new Error('item undefined')
-        }
     }
 }
 

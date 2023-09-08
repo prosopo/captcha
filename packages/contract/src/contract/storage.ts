@@ -19,6 +19,7 @@ import { ProsopoContractError } from '../handlers.js'
 import { firstValueFrom } from 'rxjs'
 import { hexToNumber } from '@polkadot/util'
 import { reverseHexString } from '@prosopo/common'
+import { at, get } from '@prosopo/util'
 
 const primitivesSizeInBytes: {
     [key: string]: number
@@ -48,11 +49,7 @@ export const getPrimitiveTypes = function (abiJson: AbiMetadata): PrimitiveTypes
             return true
         } else if (type.type.path && type.type.path.length > 0) {
             const path = Array.from(type.type.path) as string[]
-            const item = path[0]
-            if (item === undefined) {
-                throw new Error('Invalid type path')
-            }
-            return item.indexOf('primitive') > -1 && path[1] === 'types'
+            return at(path, 0).indexOf('primitive') > -1 && at(path, 1) === 'types'
         }
         return false
     })
@@ -86,15 +83,9 @@ export const getPrimitiveStorageFields = (
         if (storageField.layout && storageField.layout.leaf && storageField.layout.leaf.ty !== undefined) {
             const type = storageField.layout.leaf.ty
             if (primitiveStorageTypes[type]) {
-                const typeNameAny = primitiveStorageTypes[type]
-                if (typeNameAny === undefined) {
-                    throw new Error('Invalid storage type')
-                }
+                const typeNameAny = get(primitiveStorageTypes, type)
                 const typeName: string = typeNameAny.toString()
-                const size = primitivesSizeInBytes[typeName]
-                if (size === undefined) {
-                    throw new Error('Invalid storage type')
-                }
+                const size = get(primitivesSizeInBytes, typeName)
                 filteredStorageFields[storageName] = {
                     storageType: typeName,
                     index: primitiveStorageIndex,
@@ -150,10 +141,7 @@ export function getStorageKeyAndType(
         }
 
         const rootKeyReversed = reverseHexString(rootKey.slice(2))
-        const item = abi.registry.lookup.types[storage.layout.leaf.ty]
-        if (item === undefined) {
-            throw new Error('Invalid storage type')
-        }
+        const item = get(abi.registry.lookup.types, storage.layout.leaf.ty)
         return {
             storageType: item,
             storageKey: rootKeyReversed,
@@ -205,10 +193,7 @@ export async function getPrimitiveStorageValue<T>(
     // Remove first 4 bytes (0x00016101) - not sure what it is
     const trimmedStorageBytes = storageBytes.slice(4, storageBytes.length)
     // Extract the relevant bytes from the storageBytes
-    const storage = primitiveStorage[name]
-    if (storage === undefined) {
-        throw new Error('Invalid storage type')
-    }
+    const storage = get(primitiveStorage, name)
     const startBytes = storage.startBytes
     const endBytes = startBytes + storage.lengthBytes
     const primitiveBytes = trimmedStorageBytes.slice(startBytes, endBytes)

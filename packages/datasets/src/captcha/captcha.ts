@@ -27,6 +27,7 @@ import {
 import { ProsopoEnvError, hexHash, hexHashArray } from '@prosopo/common'
 import { downloadImage } from './util.js'
 import { isHex } from '@polkadot/util'
+import { at } from '@prosopo/util'
 
 export const NO_SOLUTION_VALUE = 'NO_SOLUTION'
 
@@ -87,10 +88,7 @@ export function sortAndComputeHashes(
     stored.sort(captchaSort)
 
     return stored.map(({ salt, items = [], target = '', captchaId, solved }, index) => {
-        const item = received[index]
-        if (item === undefined) {
-            throw new ProsopoEnvError('CAPTCHA.ID_MISMATCH')
-        }
+        const item = at(received, index)
         if (captchaId != item.captchaId) {
             throw new ProsopoEnvError('CAPTCHA.ID_MISMATCH')
         }
