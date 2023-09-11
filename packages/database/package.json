@@ -21,9 +21,9 @@
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
     "dependencies": {
-        "@prosopo/common": "^0.1.17",
-        "@prosopo/types": "^0.1.17",
-        "@prosopo/types-database": "^0.1.17",
+        "@prosopo/common": "^0.1.18",
+        "@prosopo/types": "^0.1.18",
+        "@prosopo/types-database": "^0.1.18",
         "mongodb": "5.8.0",
         "mongodb-memory-server": "^8.7.2",
         "mongoose": "^7.3.3",
