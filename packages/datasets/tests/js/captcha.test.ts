@@ -23,6 +23,7 @@ import {
     MerkleProof,
 } from '@prosopo/types'
 import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../../src/captcha/index.js'
+import { at, get } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
 import {
     compareCaptchaSolutions,
@@ -37,7 +38,6 @@ import {
     verifyProof,
 } from '../../src/captcha/index.js'
 import path from 'path'
-import { at, get } from '@prosopo/util'
 
 describe('CAPTCHA FUNCTIONS', async function () {
     let MOCK_ITEMS: Item[]
@@ -169,12 +169,13 @@ describe('CAPTCHA FUNCTIONS', async function () {
         const dataset = { ...DATASET }
         dataset.captchas = await Promise.all(
             dataset.captchas.map(
-                async (captcha): Promise<Captcha> => ({
-                    ...captcha,
-                    items: await Promise.all(
-                        captcha.items.map(async (item): Promise<HashedItem> => await computeItemHash(item))
-                    ),
-                } as Captcha)
+                async (captcha): Promise<Captcha> =>
+                    ({
+                        ...captcha,
+                        items: await Promise.all(
+                            captcha.items.map(async (item): Promise<HashedItem> => await computeItemHash(item))
+                        ),
+                    }) as Captcha
             )
         )
 
@@ -237,7 +238,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
     })
 
     test('Captcha solutions are correctly sorted and computed - non matching order', () => {
-        const idsAndHashes = sortAndComputeHashes(RECEIVED, [at(STORED,1), at(STORED,0)])
+        const idsAndHashes = sortAndComputeHashes(RECEIVED, [at(STORED, 1), at(STORED, 0)])
 
         expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true
     })
@@ -249,10 +250,10 @@ describe('CAPTCHA FUNCTIONS', async function () {
     test('Non-matching captcha solutions are correctly compared, throwing an error', () => {
         const stored = [
             {
-                ...at(STORED,0),
+                ...at(STORED, 0),
                 captchaId: '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
             },
-            at(STORED,1),
+            at(STORED, 1),
         ]
 
         expect(() => compareCaptchaSolutions(RECEIVED, stored)).to.throw()
@@ -277,7 +278,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
                 target: '',
                 solved: true,
             },
-            at(STORED,0),
+            at(STORED, 0),
         ]
 
         expect(compareCaptchaSolutions(received, stored)).to.be.false

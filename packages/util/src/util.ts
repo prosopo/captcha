@@ -117,12 +117,16 @@ export const at = <T>(
     }
     if (options.checkBounds) {
         if (i >= arr.length || i < 0) {
-            throw new Error(`Array index ${i} is out of bounds for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`)
+            throw new Error(
+                `Array index ${i} is out of bounds for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
+            )
         }
     }
     const el = arr[i]
     if (options.required && el === undefined) {
-        throw new Error(`Array item at index ${i} is undefined for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`)
+        throw new Error(
+            `Array item at index ${i} is undefined for array of length ${arr.length}: ${JSON.stringify(arr, null, 2)}`
+        )
     }
     return el as T
 }
