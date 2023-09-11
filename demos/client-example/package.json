@@ -1,24 +1,23 @@
 {
     "name": "@prosopo/client-example",
-    "version": "0.1.17",
+    "version": "0.1.18",
     "private": true,
     "type": "module",
     "dependencies": {
         "@emotion/react": "^11.9.3",
         "@emotion/styled": "^11.9.3",
         "@mui/material": "^5.9.1",
-        "@prosopo/procaptcha-react": "^0.1.17",
+        "@prosopo/procaptcha-react": "^0.1.18",
         "@types/react-dom": "^18.2.4",
         "electron": "25.5.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-
         "web-vitals": "^2.1.4"
     },
     "devDependencies": {
         "@cypress/xpath": "^2.0.3",
-        "@prosopo/cli": "^0.1.17",
-        "@prosopo/config": "^0.1.17",
+        "@prosopo/cli": "^0.1.18",
+        "@prosopo/config": "^0.1.18",
         "@types/node": "^20.3.1",
         "css-loader": "^6.8.1",
         "cypress": "^12.14.0",
