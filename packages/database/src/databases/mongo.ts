@@ -733,7 +733,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         status: ScheduledTaskStatus
     ): Promise<ScheduledTaskRecord | undefined> {
         const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler
-            ?.find({ taskId: taskId, status: status })
+            ?.findOne({ taskId: taskId, status: status })
             .lean()
         return cursor ? cursor : undefined
     }
