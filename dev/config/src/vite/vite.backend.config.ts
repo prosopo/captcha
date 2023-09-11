@@ -86,6 +86,15 @@ export default async function (
 
     logger.info(`Defined vars ${JSON.stringify(define, null, 2)}`)
 
+    const entryAbsolute = path.resolve(packageDir, entry)
+
+    const packageNameShort = packageName.replace('@prosopo/', '')
+
+    const filterEntry = `^${baseDir}/packages/(?!${packageNameShort}/src/${entry.replace(
+        './src/',
+        ''
+    )}$)(?!.*/node_modules/.*$).*$`
+
     return {
         resolve: {
             alias: aliasOptions,
@@ -114,7 +123,7 @@ export default async function (
             target: 'node16',
 
             lib: {
-                entry: path.resolve(packageDir, entry),
+                entry: entryAbsolute,
                 name: bundleName,
                 fileName: `${bundleName}.[name].bundle.js`,
                 formats: ['es'],
@@ -176,6 +185,14 @@ export default async function (
                     replace: {
                         from: '__dirname',
                         to: "new URL(import.meta.url).pathname.split('/').slice(0,-1).join('/')",
+                    },
+                },
+                // replace any references to main process where we are not expecting it
+                {
+                    filter: new RegExp(filterEntry),
+                    replace: {
+                        from: 'esMain(import.meta)',
+                        to: 'false',
                     },
                 },
             ]),
