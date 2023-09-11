@@ -1,3 +1,3 @@
-export * from './generate'
-export * from './cli'
-export * from './args'
+export * from './generate.js'
+export * from './cli.js'
+export * from './args.js'

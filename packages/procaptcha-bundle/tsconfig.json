@@ -17,6 +17,10 @@
   ],
   "references": [
     {
+      "path": "../../dev/config"
+    },
+    {
+
       "path": "../procaptcha-react"
     }
   ]

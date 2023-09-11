@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { TranslationKey, i18n as i18next, translationKeys } from './index'
+import { TranslationKey, i18n as i18next, translationKeys } from './index.js'
 
 export type TOptions = Record<string, string>
 

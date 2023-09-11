@@ -3,8 +3,10 @@
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
-        "module": "commonjs",
+        "module": "esnext",
         "target": "esnext",
+        "moduleResolution": "node",
+        "resolveJsonModule": true
     },
     "include": [
         "./src/**/*.ts",
@@ -14,6 +16,9 @@
         "./src/prosopo.config.ts",
     ],
     "references": [
+        {
+            "path": "../../dev/config"
+        },
         {
             "path": "../common"
         },

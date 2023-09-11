@@ -3,7 +3,7 @@
   "compilerOptions": {
     "rootDirs": ["./src", "./tests"],
     "outDir": "./dist",
-    "module": "commonjs",
+    "module": "esnext",
     "target": "esnext",
     "noEmit": true
   },

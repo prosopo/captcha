@@ -13,8 +13,8 @@
 // limitations under the License.
 // [object Object]
 // SPDX-License-Identifier: Apache-2.0
-import { BatchCommitmentsTask } from './batch/commitments'
-import { CalculateSolutionsTask } from './tasks/calculateSolutions'
+import { BatchCommitmentsTask } from './batch/commitments.js'
+import { CalculateSolutionsTask } from './tasks/calculateSolutions.js'
 import { CronJob } from 'cron'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { ProsopoConfig } from '@prosopo/types'

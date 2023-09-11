@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Account } from '../types'
+import { Account } from '../types/index.js'
 import { ApiPromise, Keyring } from '@polkadot/api'
 import { InjectedAccount } from '@polkadot/extension-inject/types'
 import { InjectedExtension } from '@polkadot/extension-inject/types'
@@ -21,11 +21,11 @@ import { ProcaptchaClientConfig } from '@prosopo/types'
 import { WsProvider } from '@polkadot/rpc-provider/ws'
 import { cryptoWaitReady, decodeAddress, encodeAddress } from '@polkadot/util-crypto'
 import { entropyToMnemonic } from '@polkadot/util-crypto/mnemonic/bip39'
-import { getNetwork } from '../modules/Manager'
+import { getNetwork } from '../modules/Manager.js'
 import { hexHash } from '@prosopo/common'
-import { picassoCanvas } from '../modules/canvas'
+import { picassoCanvas } from '../modules/canvas.js'
 import { stringToU8a, u8aToHex } from '@polkadot/util'
-import Extension from './Extension'
+import Extension from './Extension.js'
 import FingerprintJS, { hashComponents } from '@fingerprintjs/fingerprintjs'
 import Signer from '@polkadot/extension-base/page/Signer'
 

@@ -1,14 +1,16 @@
-name: Provider Docker Image
+name: image_provider
 
 on:
   push:
     branches:
       - 'main'
     paths:
+      - 'dev/**'
       - 'packages/**'
   pull_request:
     branches: [ main ]
     paths:
+      - 'dev/**'
       - 'packages/**'
       - '.github/workflows/image_provider.yml'
 
@@ -21,20 +23,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checkout the repo
-      - name: Clone captcha
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
-          repository: prosopo/captcha
-          path: captcha
-          submodules: recursive
+      - uses: actions/checkout@v3
+
 
       # Get the provider image version from the root package.json and the latest package version from npm
       - name: Get provider image version
         run: |
-          cd captcha
           echo "PROVIDER_IMAGE_VERSION=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
           echo "LATEST_PROVIDER_VERSION=$(npm view @prosopo/provider version)" >> $GITHUB_ENV
+
+      - run: mkdir -p protocol/cargo-cache
+      - run: mkdir -p protocol/target
+      - run: mkdir -p node_modules
+      - run: mkdir -p .cache/Cypress
+
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        with:
+            path: |
+                protocol/cargo-cache
+                protocol/target
+                node_modules
+                .cache/Cypress
+            # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+            # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+            # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+            key: some-unused-cache-key
+            restore-keys: |
+                project-cache-${{ runner.os }}-${{ runner.arch }}-
 
       # Check if the provider image version is greater than the latest version on the npm package @prosopo/provider
       # For example, if the provider image version is 0.1.7 and the latest npm version is 0.1.6, then the provider image
@@ -52,31 +68,25 @@ jobs:
               exit 1
           fi
 
-      # npm install
-      - name: Npm install
-        run: |
-          cd captcha
-          npm install
+      - run: npm install
 
       # build the packages
       - name: Build packages
         run: |
-          cd captcha/dev
+          cd dev/scripts
           npm run build
       
 
       # build the cli production bundle
       - name: Build cli production bundle
         run: |
-          cd captcha
-          cp ./dev/env.rococo ./packages/cli/.env.rococo
-          NODE_ENV=rococo npm run -w @prosopo/cli build:webpack:prod
+          cp ./dev/scripts/env.rococo ./packages/cli/.env.production
+          NODE_ENV=production npm run -w @prosopo/cli build:prod
 
       # create the provider image
       - name: Build provider image
         run: |
           echo "Building Image Version ${{ env.PROVIDER_IMAGE_VERSION }}"
-          cd captcha
           docker build -f ./docker/images/provider.dockerfile . -t prosopo/provider:${{ env.PROVIDER_IMAGE_VERSION }}
 
       # Push the provider image to docker hub, if the push target is `main`
@@ -90,9 +100,8 @@ jobs:
       - name: Create new procaptcha JS bundle
         run: |
           if [ "${{ github.ref }}" != "refs/heads/main" ]; then exit 0; fi
-          cd captcha
-          cp ./dev/env.rococo ./packages/cli/.env.rococo
-          NODE_ENV=rococo npm run -w @prosopo/procaptcha-bundle build:webpack:prod
+          cp ./dev/scripts/env.rococo ./packages/cli/.env.production
+          NODE_ENV=production npm run -w @prosopo/procaptcha-bundle build:prod
           docker build -f ./docker/images/js.server.dockerfile . -t prosopo/js_server:latest
           docker push prosopo/js_server:latest
           docker tag prosopo/js_server:latest prosopo/js_server:${{ env.PROVIDER_IMAGE_VERSION }}

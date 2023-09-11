@@ -1,4 +1,4 @@
-import { Args } from './args'
+import { Args } from './args.js'
 import {
     CaptchaTypes,
     CaptchaWithoutId,
@@ -12,9 +12,11 @@ import {
     RawSolution,
 } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
-import { checkDuplicates } from '../util'
+import { blake2AsHex } from '@polkadot/util-crypto'
+import { checkDuplicates } from '../util.js'
 import { lodash, setSeedGlobal } from '@prosopo/util'
 import bcrypt from 'bcrypt'
+import cliProgress from 'cli-progress'
 import fs from 'fs'
 
 export default async (args: Args, logger?: Logger) => {
@@ -92,8 +94,14 @@ export default async (args: Args, logger?: Logger) => {
 
     // generate n solved captchas
     const solvedCaptchas: CaptchaWithoutId[] = []
+    // create a new progress bar instance and use shades_classic theme
+    const barSolved = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+
+    logger.info(`Generating ${solved} solved captchas...`)
+    barSolved.start(solved, 0)
     for (let i = 0; i < solved; i++) {
-        logger.info(`generating solved captcha ${i + 1} of ${solved}`)
+        // update the current value in your application..
+        barSolved.update(i + 1)
 
         if (targets.length <= 1) {
             throw new ProsopoEnvError(
@@ -158,7 +166,7 @@ export default async (args: Args, logger?: Logger) => {
                 return item.post // return the index in the shuffled array
             })
 
-        const salt = bcrypt.genSaltSync(saltRounds)
+        const salt = blake2AsHex(bcrypt.genSaltSync(saltRounds))
         // create the captcha
         const captcha: CaptchaWithoutId = {
             salt,
@@ -168,10 +176,15 @@ export default async (args: Args, logger?: Logger) => {
         }
         solvedCaptchas.push(captcha)
     }
+    barSolved.stop()
+    logger.info(`Generating ${unsolved} unsolved captchas...`)
+    // create a new progress bar instance and use shades_classic theme
+    const barUnsolved = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
+    barUnsolved.start(unsolved, 0)
     // generate n unsolved captchas
     const unsolvedCaptchas: CaptchaWithoutId[] = []
     for (let i = 0; i < unsolved; i++) {
-        logger.info(`generating unsolved captcha ${i + 1} of ${unsolved}`)
+        barUnsolved.update(i + 1)
         if (unlabelled.length <= size) {
             throw new ProsopoEnvError(
                 new Error(`unlabelled map file does not contain enough data: ${unlabelledMapFile}`),
@@ -202,7 +215,7 @@ export default async (args: Args, logger?: Logger) => {
                 type: item.type,
             }
         })
-        const salt = bcrypt.genSaltSync(saltRounds)
+        const salt = blake2AsHex(bcrypt.genSaltSync(saltRounds))
         // create the captcha
         const captcha: CaptchaWithoutId = {
             salt,
@@ -211,6 +224,7 @@ export default async (args: Args, logger?: Logger) => {
         }
         unsolvedCaptchas.push(captcha)
     }
+    barUnsolved.stop()
     // write to file
     const output: Captchas = {
         captchas: [...solvedCaptchas, ...unsolvedCaptchas],

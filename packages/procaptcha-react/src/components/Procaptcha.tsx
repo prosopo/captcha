@@ -24,16 +24,16 @@ import {
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
 import { Alert, Backdrop, CircularProgress } from '@mui/material'
+import { Box, Checkbox, Link, Typography } from '@mui/material'
 import { css } from '@emotion/react'
 import { useRef, useState } from 'react'
-import Box from '@mui/material/Box'
-import CaptchaComponent from './CaptchaComponent'
-import Checkbox from '@mui/material/Checkbox'
-import Link from '@mui/material/Link'
-import Typography from '@mui/material/Typography'
+import CaptchaComponent from './CaptchaComponent.js'
+// import Box from '@mui/material/Box/Box.js'
+// import Checkbox from '@mui/material/Checkbox/Checkbox.js'
+// import Link from '@mui/material/Link/Link.js'
+// import Typography from '@mui/material/Typography/Typography.js'
 
 const logoStyle = css`
-    display: none;
     align-items: center;
     justify-content: flex-end;
     display: flex;
@@ -166,7 +166,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
     const manager = Manager(config, state, updateState, callbacks)
-
+    const configSx = config.sx || { maxWidth: '400px', minWidth: '200px' }
     return (
         <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
             <Backdrop open={state.showModal} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
@@ -185,7 +185,8 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                 )}
             </Backdrop>
 
-            <Box p={1} sx={{ maxWidth: '400px', minWidth: '200px' }} data-cy={'button-human'}>
+            <Box p={1} sx={[...(Array.isArray(configSx) ? configSx : [configSx])]} data-cy={'button-human'}>
+                {' '}
                 <Box
                     p={1}
                     border={1}

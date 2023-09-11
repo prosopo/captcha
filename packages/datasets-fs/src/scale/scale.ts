@@ -1,4 +1,4 @@
-import { Args } from './args'
+import { Args } from './args.js'
 import { Data, DataSchema, Item } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import { blake2b } from '@noble/hashes/blake2b'
@@ -10,6 +10,9 @@ export default async (args: Args, logger?: Logger) => {
     logger = logger || getLoggerDefault()
 
     logger.debug(args, 'scaling...')
+
+    const size = args.size
+    const square = args.square ?? false
 
     const mapFile: string = args.data
     if (!fs.existsSync(mapFile)) {
@@ -35,7 +38,13 @@ export default async (args: Args, logger?: Logger) => {
         // read the file
         const img = fs.readFileSync(inputItem.data)
         // resize the image
-        const resized = await sharp(img).resize(128).png()
+        const resized = await sharp(img)
+            .resize({
+                width: size,
+                height: size,
+                fit: square ? 'fill' : 'inside',
+            })
+            .png()
         const tmpFilePath = `${imgDir}/tmp.png`
         await resized.toFile(tmpFilePath)
         // read the resized image

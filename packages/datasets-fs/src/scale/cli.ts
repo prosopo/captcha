@@ -30,6 +30,11 @@ export default (cmdArgs?: { logger?: Logger }) => {
                     description:
                         'The dimension (height/width) of the scaled image. If the image is not square, the other dimension will be scaled to maintain the aspect ratio.',
                 })
+                .option('square', {
+                    type: 'boolean',
+                    description:
+                        'If true, the image will be cropped to a square before scaling. If false, the image will be scaled to the given size, maintaining the aspect ratio.',
+                })
         },
         handler: async (argv: ArgumentsCamelCase) => {
             await scale(argsSchema.parse(argv), cmdArgs?.logger)

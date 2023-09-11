@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
-import { CaptchaMerkleTree } from './merkle'
+import { CaptchaMerkleTree } from './merkle.js'
 import { ProsopoEnvError } from '@prosopo/common'
-import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha'
+import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha.js'
 
 export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
     return datasetRaw.captchas.map(async (captcha) => {

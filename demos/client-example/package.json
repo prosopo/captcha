@@ -2,42 +2,40 @@
     "name": "@prosopo/client-example",
     "version": "0.1.17",
     "private": true,
+    "type": "module",
     "dependencies": {
         "@emotion/react": "^11.9.3",
         "@emotion/styled": "^11.9.3",
         "@mui/material": "^5.9.1",
         "@prosopo/procaptcha-react": "^0.1.17",
-        "@testing-library/jest-dom": "^5.16.4",
         "@types/react-dom": "^18.2.4",
-        "bootstrap": "^5.2.2",
-        "electron": "25.0.1",
+        "electron": "25.5.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "react-scripts": "5.0.1",
-        "typescript": "^4.7.4",
+
         "web-vitals": "^2.1.4"
     },
     "devDependencies": {
         "@cypress/xpath": "^2.0.3",
+        "@prosopo/cli": "^0.1.17",
+        "@prosopo/config": "^0.1.17",
         "@types/node": "^20.3.1",
         "css-loader": "^6.8.1",
         "cypress": "^12.14.0",
         "cypress-promise": "^1.1.0",
         "eslint-config-react-app": "^7.0.1",
-        "html-loader": "^4.2.0",
-        "html-webpack-plugin": "^5.5.3",
-        "interpolate-html-plugin": "^4.0.0",
-        "mini-css-extract-plugin": "^2.7.6"
+        "typescript": "^4.9.5"
     },
     "scripts": {
-        "start": "webpack serve --config webpack.config.base.js",
-        "build": "webpack build --config webpack.config.production.js",
+        "start": "tsc --build --verbose && vite serve --mode=development --config vite.config.ts --port 9230 --host --force",
+        "build": "npm run build:prod",
+        "build:prod": "tsc --build --verbose && vite build --mode=production --config vite.config.ts --outDir dist --emptyOutDir",
+        "build:dev": "tsc --build --verbose && vite build --mode=development --config vite.config.ts --outDir dist --emptyOutDir",
         "clean": "tsc --build --clean",
         "test": "ts-node src/test",
-        "eject": "react-scripts eject",
         "cypress:open": "cypress open",
         "cypress:run": "cypress run",
-        "lint:fix": "npx eslint . --fix"
+        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "eslintConfig": {
         "extends": [

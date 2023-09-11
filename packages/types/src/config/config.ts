@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevel } from '@prosopo/common'
+import { LogLevelSchema } from '@prosopo/common'
+import { SxProps } from '@mui/material/styles'
 import { z } from 'zod'
 
 export const DatabaseTypes = z.enum(['mongo', 'mongoMemory'])
@@ -48,7 +49,7 @@ export type BatchCommitConfig = z.infer<typeof BatchCommitConfigSchema>
 export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 
 export const ProsopoBaseConfigSchema = z.object({
-    logLevel: z.nativeEnum(LogLevel),
+    logLevel: LogLevelSchema,
     defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.development),
     // The account with which to query the contract and sign transactions
     account: z.object({
@@ -64,7 +65,7 @@ export const NetworkConfigSchema = z.object({
         address: z.string(),
         name: z.string(),
     }),
-    accounts: z.array(z.string()),
+    accounts: z.array(z.string()).optional(),
 })
 
 export type NetworkConfig = z.infer<typeof NetworkConfigSchema>
@@ -76,7 +77,7 @@ export const ProsopoNetworksSchema = z.record(NetworkNamesSchema, NetworkConfigS
             address: '',
             name: '',
         },
-        accounts: [''],
+        accounts: [],
     },
 })
 
@@ -116,14 +117,11 @@ export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
         web2: z.boolean(),
         solutionThreshold: z.number().positive().max(100),
         dappName: z.string(),
-    })
-)
-
-export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
-    z.object({
         serverUrl: z.string().url(),
     })
 )
+
+export const ProsopoServerConfigSchema = ProsopoClientConfigSchema
 
 export type ProsopoServerConfig = z.infer<typeof ProsopoServerConfigSchema>
 
@@ -142,9 +140,11 @@ export const AccountCreatorConfigSchema = z.object({
 
 export type ProsopoClientConfig = z.infer<typeof ProsopoClientConfigSchema>
 
+const SxProps = z.record(z.string(), z.string())
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.merge(
     z.object({
         accountCreator: AccountCreatorConfigSchema.optional(),
+        sx: SxProps.optional(),
     })
 )
 

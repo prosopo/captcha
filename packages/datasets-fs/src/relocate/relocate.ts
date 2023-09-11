@@ -1,4 +1,4 @@
-import { Args } from './args'
+import { Args } from './args.js'
 import { Logger, getLoggerDefault } from '@prosopo/common'
 import fs from 'fs'
 

@@ -11,6 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from './ExtensionWeb3'
-export * from './ExtensionWeb2'
-export * from './HttpClientBase'
+export * from './ExtensionWeb3.js'
+export * from './ExtensionWeb2.js'
+export * from './HttpClientBase.js'

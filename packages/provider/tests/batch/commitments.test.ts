@@ -12,25 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { AccountKey } from '../dataUtils/DatabaseAccounts'
+import { AccountKey } from '../dataUtils/DatabaseAccounts.js'
 import { ApiPromise } from '@polkadot/api'
-import { ArgumentTypes, CaptchaSolution, CaptchaStatus, ProsopoConfigSchema, ScheduledTaskNames } from '@prosopo/types'
+import { ArgumentTypes, CaptchaSolution, CaptchaStatus, ScheduledTaskNames } from '@prosopo/types'
 import { BN, BN_THOUSAND, BN_TWO, bnMin, stringToHex } from '@polkadot/util'
-import { BatchCommitmentsTask } from '../../src/batch'
+import { BatchCommitmentsTask } from '../../src/batch/commitments.js'
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { MockEnvironment } from '@prosopo/env'
 import { ProsopoEnvError, getPair } from '@prosopo/common'
+import { ReturnNumber } from '@727-ventures/typechain-types'
 import { UserCommitmentRecord } from '@prosopo/types-database'
-import { accountAddress, accountContract, accountMnemonic } from '../accounts'
-import { getSignedTasks } from '../accounts'
-import { getUser } from '../getUser'
+import { ViteTestContext } from '@prosopo/env/mockenv.js'
+import { accountAddress, accountContract, accountMnemonic, getSignedTasks } from '../accounts.js'
+import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { getUser } from '../getUser.js'
 import { randomAsHex } from '@polkadot/util-crypto'
-import { sleep } from '../tasks/tasks.test'
-import chai from 'chai'
-import chaiAsPromised from 'chai-as-promised'
-chai.should()
-chai.use(chaiAsPromised)
-const expect = chai.expect
+import { sleep } from '../tasks/tasks.test.js'
+import { testConfig } from '@prosopo/config'
+import { wrapQuery } from '@prosopo/contract'
 
 // Some chains incorrectly use these, i.e. it is set to values such as 0 or even 2
 // Use a low minimum validity threshold to check these against
@@ -58,32 +57,37 @@ function calcInterval(api: ApiPromise): BN {
                   DEFAULT_TIME)
     )
 }
+declare module 'vitest' {
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    export interface TestContext extends ViteTestContext {}
+}
 
 describe('BATCH TESTS', function () {
-    let ss58Format: number
-    let pairType: KeypairType
-    let env: MockEnvironment
-
-    beforeEach(async function () {
-        ss58Format = 42
-        pairType = 'sr25519' as KeypairType
-        const alicePair = await getPair(pairType, ss58Format, '//Alice')
-        const config = ProsopoConfigSchema.parse(JSON.parse(process.env.config ? process.env.config : '{}'))
-        env = new MockEnvironment(alicePair, config)
+    beforeEach(async function (context) {
+        context.ss58Format = 42
+        context.pairType = 'sr25519' as KeypairType
+        const alicePair = await getPair(context.pairType, context.ss58Format, '//Alice')
+        console.log(testConfig)
+        context.env = new MockEnvironment(alicePair, testConfig)
         try {
-            await env.isReady()
+            await context.env.isReady()
         } catch (e) {
             throw new ProsopoEnvError(e, 'isReady')
         }
+        const promiseStakeDefault: Promise<ReturnNumber> = wrapQuery(
+            context.env.contractInterface.query.getProviderStakeThreshold,
+            context.env.contractInterface.query
+        )()
+        context.providerStakeThreshold = new BN((await promiseStakeDefault).toNumber())
     })
 
-    afterEach(async (): Promise<void> => {
-        await env.db?.close()
+    afterEach(async ({ env }): Promise<void> => {
+        if (env && 'db' in env) await env.db?.close()
     })
 
     const commitmentCount = 50
 
-    it(`Batches ~${commitmentCount} commitments on-chain`, async () => {
+    test(`Batches ~${commitmentCount} commitments on-chain`, async ({ env, pairType, ss58Format }) => {
         if (env.db) {
             const providerAccount = await getUser(env, AccountKey.providersWithStakeAndDataset)
 
@@ -261,5 +265,5 @@ describe('BATCH TESTS', function () {
                 }
             }
         }
-    })
+    }, 24000)
 })
