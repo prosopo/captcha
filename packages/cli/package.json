@@ -1,6 +1,6 @@
 {
   "name": "@prosopo/cli",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "CLI for Prosopo Provider",
   "main": "dist/index.js",
   "type": "module",
