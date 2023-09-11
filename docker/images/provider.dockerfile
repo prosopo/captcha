@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 COPY ./packages/cli/dist/bundle/ ./
 
-CMD echo '{ "type": "module" }' > package.json
+RUN echo '{ "type": "module" }' > /usr/src/app/package.json
 
 EXPOSE 9229 80 443
 
