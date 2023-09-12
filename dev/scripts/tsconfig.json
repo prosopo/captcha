@@ -1,27 +1,11 @@
 {
-    "extends": "../../tsconfig.build.json",
+    "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./dist",
-        "module": "esnext",
-        "target": "esnext",
-        "types": [
-            "mocha"
-        ],
-        "lib": [
-            "esnext",
-            "dom"
-        ],
+        "lib": ["dom", "dom.iterable", "esnext"]
     },
-    "include": [
-        "./src/**/*.ts", "./src/*.ts"
-    ],
-    "ts-node": {
-        "moduleTypes": {
-            "*.ts": "cjs"
-        }
-    },
-
+    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
         {
             "path": "../../packages/api"

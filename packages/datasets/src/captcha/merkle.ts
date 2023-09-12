@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { MerkleLayer, MerkleLeaf, MerkleNodeInterface, MerkleProof, MerkleProofLayer } from '@prosopo/types'
+import { at } from '@prosopo/util'
 import { hexHashArray } from '@prosopo/common'
 
 class MerkleNode implements MerkleNodeInterface {
@@ -19,7 +20,7 @@ class MerkleNode implements MerkleNodeInterface {
 
     parent: string | null
 
-    constructor(hash) {
+    constructor(hash: string) {
         this.hash = hash
         this.parent = null
     }
@@ -49,15 +50,15 @@ export class CaptchaMerkleTree {
             layerZero.push(node.hash)
         }
         this.layers.push(layerZero)
-        this.root = this.buildMerkleTree(this.leaves)
+        this.root = this.buildMerkleTree(this.leaves)[0]
     }
 
-    buildMerkleTree(leaves: MerkleNode[]) {
+    buildMerkleTree(leaves: MerkleNode[]): MerkleNode[] {
         // Builds the Merkle tree from a list of leaves. In case of an odd number of leaves, the last leaf is duplicated.
 
         const numLeaves = leaves.length
         if (numLeaves === 1) {
-            return leaves[0]
+            return leaves
         }
 
         const parents: MerkleNode[] = []
@@ -66,7 +67,10 @@ export class CaptchaMerkleTree {
         const newLayer: string[] = []
         while (leafIndex < numLeaves) {
             const leftChild = leaves[leafIndex]
-            const rightChild = leafIndex + 1 < numLeaves ? leaves[leafIndex + 1] : leftChild
+            if (leftChild === undefined) {
+                throw new Error('leftChild undefined')
+            }
+            const rightChild = leafIndex + 1 < numLeaves ? at(leaves, leafIndex + 1) : leftChild
             const parentNode = this.createParent(leftChild, rightChild)
             newLayer.push(parentNode.hash)
             parents.push(parentNode)
@@ -77,10 +81,10 @@ export class CaptchaMerkleTree {
         return this.buildMerkleTree(parents)
     }
 
-    createParent(leftChild, rightChild): MerkleNode {
+    createParent(leftChild: MerkleNode, rightChild: MerkleNode): MerkleNode {
         const parent = new MerkleNode(hexHashArray([leftChild.hash, rightChild.hash]))
-        leftChild.parent = parent
-        rightChild.parent = parent
+        leftChild.parent = parent.hash
+        rightChild.parent = parent.hash
         return parent
     }
 
@@ -88,41 +92,47 @@ export class CaptchaMerkleTree {
         const proofTree: MerkleProofLayer[] = []
         let layerNum = 0
         while (layerNum < this.layers.length - 1) {
-            const leafIndex = this.layers[layerNum].indexOf(leafHash)
+            const layer = this.layers[layerNum]
+            if (layer === undefined) {
+                throw new Error('layer undefined')
+            }
+            const leafIndex = layer.indexOf(leafHash)
             // if layer 0 leaf index is 3, it should be partnered with 2: [L0,L1],[L2,L3],[L3,L4],...
             // layer one pairs looks like [L0L1, L2L3], [L3L4, L5L6],...etc
             let partnerIndex = leafIndex % 2 && leafIndex > 0 ? leafIndex - 1 : leafIndex + 1
             // if there are an odd number of leaves in the layer, the last leaf is duplicated
-            if (partnerIndex > this.layers[layerNum].length - 1) {
+            if (partnerIndex > layer.length - 1) {
                 partnerIndex = leafIndex
             }
             const pair: MerkleLeaf[] = [leafHash]
-            const layer = this.layers[layerNum]
             // determine whether the leaf sits on the left or the right of its partner
+            const partner = at(layer, partnerIndex)
             if (partnerIndex > leafIndex) {
-                pair.push(layer[partnerIndex])
+                pair.push(partner)
             } else {
-                pair.unshift(layer[partnerIndex])
+                pair.unshift(partner)
             }
-            proofTree.push([pair[0], pair[1]])
+            proofTree.push([at(pair, 0), at(pair, 1)])
             layerNum += 1
             leafHash = hexHashArray(pair)
         }
-        return [...proofTree, [this.layers[this.layers.length - 1][0]]]
+        const last = at(this.layers, this.layers.length - 1)
+        return [...proofTree, [at(last, 0)]]
     }
 }
 
 export function verifyProof(leaf: MerkleLeaf, proof: MerkleProof): boolean {
     try {
-        if (proof[0].indexOf(leaf) === -1) {
+        if (at(proof, 0).indexOf(leaf) === -1) {
             return false
         }
         for (const [layerIndex, layer] of proof.entries()) {
             leaf = hexHashArray(layer)
-            if (proof[layerIndex + 1].indexOf(leaf) === -1) {
+            if (at(proof, layerIndex + 1).indexOf(leaf) === -1) {
                 return false
             }
-            if (leaf === proof[proof.length - 1][0]) {
+            const last = at(proof, proof.length - 1)
+            if (leaf === at(last, 0)) {
                 return true
             }
         }

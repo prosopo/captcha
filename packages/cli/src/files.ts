@@ -19,7 +19,7 @@ export function loadJSONFile(filePath: string, logger?: any) {
     try {
         return JSON.parse(fs.readFileSync(filePath, 'utf8'))
     } catch (err) {
-        throw new ProsopoEnvError(err, 'GENERAL.JSON_LOAD_FAILED', {}, filePath)
+        throw new ProsopoEnvError(err as Error, 'GENERAL.JSON_LOAD_FAILED', {}, filePath)
     }
 }
 
@@ -44,7 +44,7 @@ export function writeJSONFile(filePath: string, jsonData: Record<string, any>) {
     })
 }
 
-export async function readFile(filePath): Promise<Buffer> {
+export async function readFile(filePath: string): Promise<Buffer> {
     // const parsedFilePath = handleFileProtocol(filePath, undefined)
     return new Promise((resolve, reject) => {
         fs.readFile(filePath, (err, data) => {

@@ -17,8 +17,7 @@ export default function () {
         test: {
             include: ['../../packages/*/tests/**/*.test.ts'],
             exclude: ['../../demos/**/*'], // '../!packages/**/*'],
-            minThreads: 1,
-            maxThreads: 1,
+            singleThread: true,
             watchExclude: ['**/node_modules/**', '**/dist/**'],
         },
         plugins: [VitePluginSourcemapExclude({ excludeNodeModules: true })],

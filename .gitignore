@@ -131,3 +131,6 @@ protocol/target
 /.database_accounts.json
 
 chain-data
+
+# ignore vite config timestamps
+vite.config.ts.timestamp*

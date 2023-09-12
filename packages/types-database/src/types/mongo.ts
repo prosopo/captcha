@@ -243,7 +243,7 @@ export interface Database {
 
     getAllDappUserSolutions(captchaId: string[]): Promise<UserSolutionRecord[] | undefined>
 
-    getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string>
+    getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount: number): Promise<string>
 
     getRandomSolvedCaptchasFromSingleDataset(datasetId: string, size: number): Promise<CaptchaSolution[]>
 

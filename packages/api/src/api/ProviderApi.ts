@@ -74,7 +74,10 @@ export default class ProviderApi extends HttpClientBase {
     }
 
     public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
-        const payload = { user: userAccount }
+        const payload: {
+            user: string
+            commitmentId?: string
+        } = { user: userAccount }
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
         }

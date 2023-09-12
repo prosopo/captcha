@@ -24,7 +24,7 @@ import { wrapQuery } from '@prosopo/contract'
 
 export async function registerProvider(env: ProviderEnvironment, account: IProviderAccount, force?: boolean) {
     try {
-        const provider = (await env.contractInterface.query.getProvider(account.address)).value.unwrap().unwrap()
+        const provider = (await env.getContractInterface().query.getProvider(account.address)).value.unwrap().unwrap()
         if (provider.status.toString() === 'Active' && !force) {
             env.logger.info('Provider exists and is active, skipping registration.')
             return
@@ -38,8 +38,8 @@ export async function registerProvider(env: ProviderEnvironment, account: IProvi
         account.address = providerKeyringPair.address
 
         const result: ReturnNumber = await wrapQuery(
-            env.contractInterface.query.getProviderStakeThreshold,
-            env.contractInterface.query
+            env.getContractInterface().query.getProviderStakeThreshold,
+            env.getContractInterface().query
         )()
         const stakeAmount = result.rawNumber
 

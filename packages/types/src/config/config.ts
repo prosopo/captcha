@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevelSchema } from '@prosopo/common'
+import { LogLevel } from '@prosopo/common'
 import { SxProps } from '@mui/material/styles'
 import { z } from 'zod'
 
@@ -49,7 +49,7 @@ export type BatchCommitConfig = z.infer<typeof BatchCommitConfigSchema>
 export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>
 
 export const ProsopoBaseConfigSchema = z.object({
-    logLevel: LogLevelSchema,
+    logLevel: LogLevel,
     defaultEnvironment: EnvironmentTypesSchema.default(EnvironmentTypesSchema.Values.development),
     // The account with which to query the contract and sign transactions
     account: z.object({
