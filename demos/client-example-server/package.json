@@ -41,6 +41,7 @@
         "zod": "^3.17.9"
     },
     "devDependencies": {
+        "@types/jsonwebtoken": "^9.0.2",
         "nodemon": "^2.0.22",
         "ts-loader": "^9.4.3",
         "ts-node": "^10.9.1",
