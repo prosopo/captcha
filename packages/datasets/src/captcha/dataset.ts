@@ -13,8 +13,10 @@
 // limitations under the License.
 import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
 import { CaptchaMerkleTree } from './merkle.js'
-import { ProsopoEnvError } from '@prosopo/common'
+import { ProsopoEnvError, getLogger } from '@prosopo/common'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha.js'
+
+const logger = getLogger(`Info`, `dataset.ts`)
 
 export async function hashDatasetItems(datasetRaw: Dataset | DatasetRaw): Promise<Promise<Captcha>[]> {
     return datasetRaw.captchas.map(async (captcha) => {
@@ -54,8 +56,9 @@ export async function validateDatasetContent(datasetOriginal: Dataset): Promise<
 }
 
 export async function buildDataset(datasetRaw: DatasetRaw): Promise<Dataset> {
+    logger.info(`Adding solution hashes to dataset`)
     const dataset = await addSolutionHashesToDataset(datasetRaw)
-
+    logger.info(`Building dataset merkle trees`)
     const contentTree = await buildCaptchaTree(dataset, false, false, true)
     const solutionTree = await buildCaptchaTree(dataset, true, true, false)
     dataset.captchas = dataset.captchas.map(
