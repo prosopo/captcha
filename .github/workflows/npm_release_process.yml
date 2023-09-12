@@ -57,19 +57,27 @@ jobs:
                   echo "PROVIDER_IMAGE_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
                   echo "LATEST_PROVIDER_VERSION=${{ env.LATEST_PROVIDER_VERSION }}"
 
-                  # Condition 1: If less than or equal
+                  # Condition 1: If version is less than or equal, exit with error
                   if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" || "${{ env.PROVIDER_IMAGE_VERSION }}" < "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
-                      echo "less than or equal"
+                      echo "Version bump required, exiting with error"
                       exit 1
                   fi
 
-                  # Condition 2: If ends in beta
+                  # Condition 2: If version ends in beta, exit successfully
                   if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == *"-beta" ]]; then
-                      echo "beta"
+                      echo "beta version detected, exiting successfully"
                       exit 0
                   fi
 
                   # Condition 3: If greater
                   if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" > "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
-                      echo "greater"
+                      echo "Version bump and non beta version detected, continuing..."
+
+                      if [[ "${GITHUB_ACTIONS}" == "true" && "${{ secrets.IS_GITHUB_RUN }}" == "true" ]]; then
+                        echo "Running on GitHub Actions"
+                        echo "Publishing to npm..."
+                        # npm publish
+                      else
+                        echo "Running locally via act, skipping npm publish."
+                      fi
                   fi
