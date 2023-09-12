@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError } from '@prosopo/common'
+import { Readable } from 'stream'
 import fs, { WriteStream, createWriteStream } from 'fs'
 
 export function loadJSONFile(filePath: string, logger?: any) {
@@ -22,20 +23,11 @@ export function loadJSONFile(filePath: string, logger?: any) {
     }
 }
 
-export function writeJSONFile(filePath: string, jsonData) {
+export function writeJSONFile(filePath: string, jsonData: Record<string, any>) {
     return new Promise((resolve, reject) => {
         const writeStream: WriteStream = createWriteStream(filePath)
 
         writeStream.setDefaultEncoding('utf-8')
-
-        writeStream.on('open', () => {
-            writeStream.write(JSON.stringify(jsonData), (err) => {
-                if (err) {
-                    reject(err)
-                }
-                writeStream.end()
-            })
-        })
 
         writeStream.on('finish', () => {
             resolve(true)
@@ -44,6 +36,11 @@ export function writeJSONFile(filePath: string, jsonData) {
         writeStream.on('error', (err) => {
             reject(err)
         })
+
+        // https://stackoverflow.com/questions/64585940/writestream-nodejs-out-memory
+        const readable = Readable.from(JSON.stringify(jsonData))
+
+        readable.pipe(writeStream)
     })
 }
 
