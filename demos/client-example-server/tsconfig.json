@@ -1,50 +1,29 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "target": "esnext",
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    // "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    // "isolatedModules": true,
-    // "noEmit": true,
-    "jsx": "react-jsx"
-  },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.js"
-  ],
-  "exclude": ["node_modules", "dist"],
-  "references": [
-    {
-      "path": "../../packages/api"
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": ["dom", "dom.iterable", "esnext"]
     },
-    {
-      "path": "../../packages/cli"
-    },
-    {
-      "path": "../../packages/contract"
-    },
-    {
-      "path": "../../packages/procaptcha"
-    },
-    {
-      "path": "../../packages/server"
-    },
-    {
-      "path": "../../packages/types"
-    }
-  ]
+    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "references": [
+        {
+            "path": "../../packages/api"
+        },
+        {
+            "path": "../../packages/cli"
+        },
+        {
+            "path": "../../packages/contract"
+        },
+        {
+            "path": "../../packages/procaptcha"
+        },
+        {
+            "path": "../../packages/server"
+        },
+        {
+            "path": "../../packages/types"
+        }
+    ]
 }

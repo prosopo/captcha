@@ -1,5 +1,6 @@
 import { Glob } from 'glob'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
+import { at } from '@prosopo/util'
 import child_process from 'child_process'
 import util from 'util'
 const logger = getLogger(`Info`, `config.dependencies.js`)
@@ -49,13 +50,13 @@ export async function getDependencies(
             //  │ │ │   ├── UNMET OPTIONAL DEPENDENCY bufferutil@^4.0.1
             const parts = line.match(peerDepsRegex)
             if (parts && parts.length > 1) {
-                peerDeps.push(parts[1])
+                peerDeps.push(at(parts, 1))
             }
         } else {
             //  │ │ │ ├─┬ mongodb-memory-server-core@8.15.1
             const parts = line.match(depsRegex)
             if (parts && parts.length > 1) {
-                deps.push(parts[1])
+                deps.push(at(parts, 1))
             }
         }
     })
@@ -103,7 +104,7 @@ export function filterDependencies(deps: string[], filters: string[]): { interna
  * // [ '/home/.../node_modules/@polkadot/types/interfaces/bytes/bytes.js',
  * // '/home/.../node_modules/@polkadot/types/interfaces/bytes/bytes.d.ts']
  * */
-export function getFilesInDirs(startDir, includePatterns: string[] = [], excludePatterns: string[] = []) {
+export function getFilesInDirs(startDir: string, includePatterns: string[] = [], excludePatterns: string[] = []) {
     const files: string[] = []
     logger.info(`getFilesInDirs: ${startDir} excluding ${includePatterns} including ${excludePatterns}`)
     const ignorePatterns = excludePatterns.map((pattern) => `${startDir}/**/${pattern}`)

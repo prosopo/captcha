@@ -14,11 +14,11 @@
 // import {ProsopoConfig} from './types';
 
 import { EnvironmentTypesSchema, ProsopoServerConfig } from '@prosopo/types'
-import { LogLevelSchema } from '@prosopo/common'
+import { LogLevel } from '@prosopo/common'
 
 export default () =>
     ({
-        logLevel: process.env.LOG_LEVEL || LogLevelSchema.enum.Debug,
+        logLevel: process.env.LOG_LEVEL || LogLevel.enum.debug,
         defaultEnvironment: process.env.DEFAULT_ENVIRONMENT || EnvironmentTypesSchema.enum.development, // enviromental variables
         web2: process.env.REACT_APP_WEB2 || true,
         serverUrl:
@@ -57,4 +57,4 @@ export default () =>
                 accounts: [],
             },
         },
-    } as ProsopoServerConfig)
+    }) as ProsopoServerConfig

@@ -18,8 +18,16 @@
 // https://create-react-app.dev/docs/adding-custom-environment-variables/
 
 import { EnvironmentTypesSchema } from '@prosopo/types'
-import { LogLevelSchema } from '@prosopo/common'
+import { LogLevel } from '@prosopo/common'
 import { ProsopoClientConfig } from '@prosopo/types'
+import { z } from 'zod'
+
+const { REACT_APP_PROSOPO_CONTRACT_ADDRESS, REACT_APP_SUBSTRATE_ENDPOINT } = z
+    .object({
+        REACT_APP_PROSOPO_CONTRACT_ADDRESS: z.string(),
+        REACT_APP_SUBSTRATE_ENDPOINT: z.string(),
+    })
+    .parse(process.env)
 
 const config: ProsopoClientConfig = {
     account: {
@@ -29,12 +37,12 @@ const config: ProsopoClientConfig = {
     solutionThreshold: 80,
     web2: process.env.REACT_APP_WEB2 === 'true',
     defaultEnvironment: EnvironmentTypesSchema.enum.development,
-    logLevel: LogLevelSchema.enum.Info,
+    logLevel: LogLevel.enum.info,
     networks: {
         development: {
-            endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
+            endpoint: REACT_APP_SUBSTRATE_ENDPOINT,
             contract: {
-                address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+                address: REACT_APP_PROSOPO_CONTRACT_ADDRESS,
                 name: 'prosopo',
             },
             accounts: [],

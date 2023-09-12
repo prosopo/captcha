@@ -14,11 +14,12 @@
 import { Abi, CodePromise } from '@polkadot/api-contract'
 import { ApiPromise } from '@polkadot/api'
 import { BN, BN_ZERO } from '@polkadot/util'
+import { BlueprintOptions } from '@polkadot/api-contract/types'
 import { CodeSubmittableResult } from '@polkadot/api-contract/base'
 import { ContractSubmittableResult } from '@polkadot/api-contract/base/Contract'
 import { ISubmittableResult } from '@polkadot/types/types'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevel, LogLevelSchema, Logger, getLogger } from '@prosopo/common'
+import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProsopoContractError } from '../handlers.js'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { UseWeight } from '@prosopo/types'
@@ -41,7 +42,7 @@ export class ContractDeployer {
     private readonly constructorIndex: number
     private readonly value: number
     private readonly logger: Logger
-    private readonly salt?: string
+    private readonly salt: string | undefined
 
     constructor(
         api: ApiPromise,
@@ -62,7 +63,7 @@ export class ContractDeployer {
         this.constructorIndex = constructorIndex
         this.value = value
         this.salt = salt
-        this.logger = getLogger(logLevel || LogLevelSchema.enum.Info, 'ContractDeployer')
+        this.logger = getLogger(logLevel || LogLevel.enum.info, 'ContractDeployer')
         this.code = new CodePromise(api, abi, wasm)
     }
 
@@ -138,9 +139,13 @@ export async function dryRunDeploy(
     const accountId = pair.address
     let contract: SubmittableExtrinsic<'promise'> | null = null
     let error: string | null = null
+    const saltOrNull = salt ? salt : null
 
     try {
         const message = contractAbi?.constructors[constructorIndex]
+        if (message === undefined) {
+            throw new Error('Unable to find constructor')
+        }
         const method = message.method
         if (code && message && accountId) {
             const dryRunParams: Parameters<typeof api.call.contractsApi.instantiate> = [
@@ -156,18 +161,20 @@ export async function dryRunDeploy(
             ]
 
             const dryRunResult = await api.call.contractsApi.instantiate(...dryRunParams)
-            contract = code.tx[method](
-                {
-                    gasLimit: dryRunResult.gasRequired,
-                    storageDepositLimit: dryRunResult.storageDeposit.isCharge
-                        ? dryRunResult.storageDeposit.asCharge
-                        : null,
-                    //storageDepositLimit: null,
-                    value: message.isPayable ? value : undefined,
-                    salt,
-                },
-                ...params
-            )
+            const func = code.tx[method]
+            if (func === undefined) {
+                throw new Error('Unable to find method')
+            }
+            const options: BlueprintOptions = {
+                gasLimit: dryRunResult.gasRequired,
+                storageDepositLimit: dryRunResult.storageDeposit.isCharge ? dryRunResult.storageDeposit.asCharge : null,
+                //storageDepositLimit: null,
+                salt: saltOrNull,
+            }
+            if (value !== undefined) {
+                options.value = value
+            }
+            contract = func(options, ...params)
         }
     } catch (e) {
         error = (e as Error).message

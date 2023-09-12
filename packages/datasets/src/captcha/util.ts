@@ -20,6 +20,7 @@ export async function downloadImage(url: string): Promise<Uint8Array> {
             (await client.default.get<ArrayBuffer>(url, { url, method: 'GET', responseType: 'arraybuffer' })).data
         )
     } catch (error) {
-        throw new ProsopoEnvError(error, downloadImage.name)
+        // TODO fix/improve error handling
+        throw new ProsopoEnvError(error as Error)
     }
 }

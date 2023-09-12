@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { CaptchaItemTypes, CaptchaTypes, Dataset, RawSolution } from '@prosopo/types'
-import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '@prosopo/datasets'
+import { CaptchaMerkleTree, computeCaptchaHash, computeItemHash, matchItemsToSolutions } from '../..'
 import { beforeAll, describe, expect, test } from 'vitest'
 import { hexHashArray } from '@prosopo/common'
 

@@ -19,7 +19,7 @@ import { stdin } from 'process'
 import fs from 'fs'
 import path from 'path'
 import process from 'process'
-import yargs, { Arguments, Argv } from 'yargs'
+import yargs, { ArgumentsCamelCase, Argv } from 'yargs'
 
 const contractSrcFileExtension = '.rs'
 const dir = path.resolve()
@@ -197,7 +197,7 @@ export async function processArgs(args: string[]) {
         })
     }
 
-    const execCargo = async (argv: Arguments<{}>, cmd: string, dir?: string) => {
+    const execCargo = async (argv: ArgumentsCamelCase, cmd: string, dir?: string) => {
         const rest = argv._.slice(1).join(' ') // remove the first arg (the command) to get the rest of the args
         const toolchain = argv.toolchain ? `+${argv.toolchain}` : ''
         const relDir = path.relative(repoDir, dir || '..')

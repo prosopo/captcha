@@ -29,13 +29,23 @@ type NestedKeyOf<ObjectType extends object> = {
         : `${Key}`
 }[keyof ObjectType & (string | number)]
 
-function getLeafFieldPath(obj: object | string): string[] {
+type Node =
+    | {
+          [key: string]: Node | string
+      }
+    | string
+
+function getLeafFieldPath(obj: Node): string[] {
     if (typeof obj === 'string') {
         return [obj]
     }
 
     return Object.keys(obj).reduce((arr, key) => {
-        const children = getLeafFieldPath(obj[key])
+        const value = obj[key]
+        if (value === undefined) {
+            throw new Error(`Undefined value for key ${key}`)
+        }
+        const children = getLeafFieldPath(value)
 
         return arr.concat(
             children.map((child) => {

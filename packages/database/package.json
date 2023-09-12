@@ -30,7 +30,8 @@
         "zod": "^3.17.9"
     },
     "devDependencies": {
-        "typescript": "^4.9.5"
+        "tslib": "^2.6.2",
+        "typescript": "^5.1.6"
     },
     "sideEffects": false
 }

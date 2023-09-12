@@ -1,20 +1,10 @@
 {
-    "extends": "../../tsconfig.build.json",
+    "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist",
-        "module": "esnext",
-        "target": "esnext",
-        "moduleResolution": "node",
-        "resolveJsonModule": true
+        "outDir": "./dist"
     },
-    "include": [
-        "./src/**/*.ts",
-        "./src/*.ts"
-    ],
-    "files": [
-        "./src/prosopo.config.ts",
-    ],
+    "include": ["./src/**/*.ts", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
         {
             "path": "../../dev/config"
@@ -31,5 +21,8 @@
         {
             "path": "../types"
         },
+        {
+            "path": "../util"
+        }
     ]
 }

@@ -1,18 +1,21 @@
+import { ArgumentsCamelCase, Argv } from 'yargs'
+import { DappPayee, ProsopoConfig } from '@prosopo/types'
 import { KeyringPair } from '@polkadot/keyring/types'
-import { LogLevelSchema, Logger, getLogger } from '@prosopo/common'
-import { ProsopoConfig } from '@prosopo/types'
+import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
+import { get } from '@prosopo/util'
 import { validateContract, validatePayee } from './validators.js'
 import { wrapQuery } from '@prosopo/contract'
+import { z } from 'zod'
 
 export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || getLogger(LogLevelSchema.Values.Info, 'cli.dapp_update')
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.dapp_update')
 
     return {
         command: 'dapp_update',
         describe: 'Register a Dapp',
-        builder: (yargs) =>
+        builder: (yargs: Argv) =>
             yargs
                 .option('contract', {
                     type: 'string' as const,
@@ -24,16 +27,16 @@ export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: L
                     demand: true,
                     desc: 'The person who receives the fee (`Provider` or `Dapp`)',
                 } as const),
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
             try {
                 const env = new ProviderEnvironment(pair, config)
                 await env.isReady()
                 const tasks = new Tasks(env)
                 const stakeThreshold = (await tasks.contract.query.getDappStakeThreshold({})).value.unwrap()
                 const dappRegisterArgs: Parameters<typeof tasks.contract.query.dappUpdate> = [
-                    argv.contract,
-                    argv.payee,
-                    argv.owner,
+                    z.string().parse(argv.contract),
+                    get(DappPayee, z.string().parse(argv.payee)),
+                    z.string().parse(argv.owner),
                     {
                         value: stakeThreshold.toNumber(),
                     },
