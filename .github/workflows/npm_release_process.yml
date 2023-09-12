@@ -1,12 +1,11 @@
-name: image_provider
+name: npm_release_process
 
 on:
     push:
         branches:
             - 'main'
         paths:
-            - 'dev/**'
-            - 'packages/**'
+            - 'package.json'
 
 env:
     CARGO_TERM_COLOR: always
