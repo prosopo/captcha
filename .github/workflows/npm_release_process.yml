@@ -72,7 +72,7 @@ jobs:
                   if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" > "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
                       echo "Version bump and non beta version detected, continuing..."
 
-                      if [[ "${{ secrets.IS_GITHUB_RUN }}" == true ]]; then
+                      if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
                         echo "Running on GitHub Actions"
                         # Write the npm token to ~/.npmrc
                         echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
