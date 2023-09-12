@@ -180,3 +180,15 @@ export const choice = <T>(
 export function getCurrentFileDirectory(url: string) {
     return new URL(url).pathname.split('/').slice(0, -1).join('/')
 }
+
+export const flattenObj = (obj: object, prefix = ''): Record<string, unknown> => {
+    const flattenedObj: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(obj)) {
+        if (value instanceof Object) {
+            Object.assign(flattenedObj, flattenObj(value, prefix + '.' + key))
+        } else {
+            flattenedObj[prefix + '.' + key] = value
+        }
+    }
+    return flattenedObj
+}
