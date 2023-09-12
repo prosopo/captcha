@@ -13,8 +13,8 @@
 // limitations under the License.
 import { Captcha, CaptchaWithoutId, Dataset, DatasetRaw } from '@prosopo/types'
 import { CaptchaMerkleTree } from './merkle.js'
-import { at } from '@prosopo/util'
 import { ProsopoEnvError, getLogger } from '@prosopo/common'
+import { at } from '@prosopo/util'
 import { computeCaptchaHash, computeItemHash, matchItemsToSolutions } from './captcha.js'
 
 const logger = getLogger(`Info`, `dataset.ts`)
