@@ -1,5 +1,5 @@
 {
-  "compilerOptions": {
-    "sourceMap": false
-  }
+    "compilerOptions": {
+        "sourceMap": false
+    }
 }
