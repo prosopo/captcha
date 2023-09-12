@@ -104,7 +104,8 @@
         "anti-spam",
         "frontend-security",
         "open-source",
-        "free"
+        "free",
+        "captcha-alternative"
     ],
     "license": "Apache-2.0"
 }
