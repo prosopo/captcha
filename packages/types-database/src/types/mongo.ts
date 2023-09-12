@@ -87,6 +87,8 @@ export const CaptchaRecordSchema = new Schema<Captcha>({
         required: true,
     },
 })
+// Set an index on the captchaId field, ascending
+CaptchaRecordSchema.index({ captchaId: 1 })
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     userAccount: { type: String, required: true },
@@ -101,6 +103,8 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
     processed: { type: Boolean, required: true },
     batched: { type: Boolean, required: true },
 })
+// Set an index on the commitment id field, descending
+UserCommitmentRecordSchema.index({ id: -1 })
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({
     contentTree: { type: [[String]], required: true },
@@ -109,6 +113,8 @@ export const DatasetRecordSchema = new Schema<DatasetWithIds>({
     format: { type: String, required: true },
     solutionTree: { type: [[String]], required: true },
 })
+// Set an index on the datasetId field, ascending
+DatasetRecordSchema.index({ datasetId: 1 })
 
 export const SolutionRecordSchema = new Schema<SolutionRecord>({
     captchaId: { type: String, required: true },
@@ -118,6 +124,8 @@ export const SolutionRecordSchema = new Schema<SolutionRecord>({
     salt: { type: String, required: true },
     solution: { type: [String], required: true },
 })
+// Set an index on the captchaId field, ascending
+SolutionRecordSchema.index({ captchaId: 1 })
 
 export const UserSolutionSchema = CaptchaSolutionSchema.extend({
     processed: z.boolean(),
@@ -135,6 +143,8 @@ export const UserSolutionRecordSchema = new Schema<UserSolutionRecord>(
     },
     { _id: false }
 )
+// Set an index on the captchaId field, ascending
+UserSolutionRecordSchema.index({ captchaId: 1 })
 
 export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
     captchas: z.array(UserSolutionSchema),
@@ -150,6 +160,8 @@ export const PendingRecordSchema = new Schema<PendingCaptchaRequest>({
     deadlineTimestamp: { type: Number, required: true }, // unix timestamp
     requestedAtBlock: { type: Number, required: true },
 })
+// Set an index on the requestHash field, descending
+PendingRecordSchema.index({ requestHash: -1 })
 
 export const ScheduledTaskSchema = z.object({
     taskId: z.string(),
