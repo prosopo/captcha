@@ -103,7 +103,8 @@
         "web-security",
         "anti-spam",
         "frontend-security",
-        "open-source"
+        "open-source",
+        "free"
     ],
     "license": "Apache-2.0"
 }
