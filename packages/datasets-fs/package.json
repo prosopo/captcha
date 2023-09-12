@@ -17,9 +17,9 @@
     "types": "./dist/index.d.ts",
     "dependencies": {
         "@polkadot/util": "^12.3.2",
+        "@prosopo/common": "^0.1.18",
         "@prosopo/types": "^0.1.18",
         "@prosopo/util": "^0.1.18",
-        "@prosopo/common": "^0.1.18",
         "bcrypt": "^5.1.0",
         "cli-progress": "^3.12.0",
         "es-main": "^1.2.0",
@@ -34,7 +34,8 @@
     },
     "devDependencies": {
         "@types/mocha": "^10.0.0",
-        "typescript": "^4.9.5"
+        "tslib": "^2.6.2",
+        "typescript": "^5.1.6"
     },
     "repository": {
         "type": "git",
