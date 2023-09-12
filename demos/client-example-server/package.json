@@ -47,6 +47,7 @@
         "ts-node": "^10.9.1",
         "tslib": "^2.6.2",
         "typescript": "^5.1.6",
-        "vite": "^4.4.9"
+        "vite": "^4.4.9",
+        "@prosopo/config": "^0.1.18"
     }
 }
