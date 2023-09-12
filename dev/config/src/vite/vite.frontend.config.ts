@@ -65,7 +65,8 @@ export default async function (
     const alias = isProduction ? getAliases(dir) : []
 
     // Required to print RegExp in console (e.g. alias keys)
-    RegExp.prototype['toJSON'] = RegExp.prototype.toString
+    const proto = RegExp.prototype as any
+    proto['toJSON'] = RegExp.prototype.toString
     logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     return {

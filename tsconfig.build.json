@@ -1,104 +1,28 @@
 {
-  "exclude": [
-    "node_modules",
-    "build"
-  ],
-  "include": [
-    "**/src/**/*"
-  ],
-  "compilerOptions": {
-    "target": "es6",
-    "module": "esnext",
-    "moduleResolution": "nodenext",
-    "composite": true,
-    "allowJs": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "forceConsistentCasingInFileNames": true,
-    "strictPropertyInitialization": false,
-    "useUnknownInCatchVariables": false,
-    "resolveJsonModule": true,
-    "noImplicitAny": false,
-    "noImplicitOverride": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strict": true,
-    "importHelpers": true,
-    "skipLibCheck": true,
-    "types": [
-      "node"
-    ],
-    "lib": [
-      "esnext"
-    ],
-    "baseUrl": "./packages",
-    "paths": {
-      "@prosopo/api": [
-        "api/src"
-      ],
-      "@prosopo/api/*": [
-        "api/src/*"
-      ],
-      "@prosopo/cli": [
-        "cli/src"
-      ],
-      "@prosopo/cli/*": [
-        "cli/src/*"
-      ],
-      "@prosopo/common": [
-        "common/src"
-      ],
-      "@prosopo/common/*": [
-        "common/src/*"
-      ],
-      "@prosopo/contract/*": [
-        "contract/src/*"
-      ],
-      "@prosopo/database/*": [
-        "database/src/*"
-      ],
-      "@prosopo/datasets/*": [
-        "datasets/src/*"
-      ],
-      "@prosopo/env/*": [
-        "env/src/*"
-      ],
-      "@prosopo/procaptcha/*": [
-        "procaptcha/src/*"
-      ],
-      "@prosopo/procaptcha-react/*": [
-        "procaptcha-react/src/*"
-      ],
-      "@prosopo/provider": [
-        "provider/src"
-      ],
-      "@prosopo/provider/*": [
-        "provider/src/*"
-      ],
-      "@prosopo/server/*": [
-        "server/src/*"
-      ],
-      "@prosopo/types/*": [
-        "types/src/*"
-      ],
-      "@prosopo/types/contract/typechain/captcha/types-arguments": [
-        "types/src/contract/typechain/captcha/types-arguments/index.ts"
-      ],
-      "@prosopo/types-database/*": [
-        "types-database/src/*"
-      ],
-      "@prosopo/types-env/*": [
-        "types-env/src/*"
-      ]
+    "compilerOptions": {
+        "noPropertyAccessFromIndexSignature": false,
+        "exactOptionalPropertyTypes": false,
+        "noUncheckedIndexedAccess": true,
+        "allowUnusedLabels": false,
+        "strict": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "resolveJsonModule": true,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "allowJs": true,
+        "checkJs": true,
+        "disableSizeLimit": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "composite": true,
+        "skipLibCheck": true,
+        "noErrorTruncation": true,
+        "importHelpers": true,
+        "useUnknownInCatchVariables": true,
+        "jsx": "react-jsx"
     }
-  }
 }

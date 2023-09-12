@@ -1,24 +1,22 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "module": "esnext",
-    "target": "esnext"
-  },
-  "include": [
-    "./src/**/*.ts",
-    "./src/*.ts",
-  ],
-  "references": [
-    {
-      "path": "../common"
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
     },
-    {
-      "path": "../types"
-    },
-    {
-      "path": "../types-database"
-    }
-  ]
+    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "references": [
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../types-database"
+        },
+        {
+            "path": "../util"
+        }
+    ]
 }

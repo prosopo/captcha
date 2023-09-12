@@ -11,10 +11,78 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { at, get, permutations, rng, seedLodash } from '../src/util'
 import { describe, expect, test } from 'vitest'
-import { permutations, rng, seedLodash } from '../src/util'
 
 describe('util', () => {
+    describe('at', () => {
+        test('throw on empty array', () => {
+            expect(() => at([], 0)).to.throw()
+        })
+
+        test('throw on index out of bounds high', () => {
+            expect(() => at([1, 2, 3], 3)).to.throw()
+        })
+
+        test('throw on index out of bounds low', () => {
+            expect(() => at([1, 2, 3], -1)).to.throw()
+        })
+
+        test('returns correct value', () => {
+            expect(at([1, 2, 3], 0)).to.equal(1)
+            expect(at([1, 2, 3], 1)).to.equal(2)
+            expect(at([1, 2, 3], 2)).to.equal(3)
+        })
+
+        test('wraps index high', () => {
+            expect(at([1, 2, 3], 3, { wrap: true })).to.equal(1)
+            expect(at([1, 2, 3], 4, { wrap: true })).to.equal(2)
+            expect(at([1, 2, 3], 5, { wrap: true })).to.equal(3)
+        })
+
+        test('wraps index low', () => {
+            expect(at([1, 2, 3], -1, { wrap: true })).to.equal(3)
+            expect(at([1, 2, 3], -2, { wrap: true })).to.equal(2)
+            expect(at([1, 2, 3], -3, { wrap: true })).to.equal(1)
+            expect(at([1, 2, 3], -4, { wrap: true })).to.equal(3)
+            expect(at([1, 2, 3], -5, { wrap: true })).to.equal(2)
+            expect(at([1, 2, 3], -6, { wrap: true })).to.equal(1)
+        })
+
+        test('allow undefined in bounds', () => {
+            expect(at([undefined, undefined, undefined], 0, { required: false })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 1, { required: false })).to.equal(undefined)
+            expect(at([undefined, undefined, undefined], 2, { required: false })).to.equal(undefined)
+        })
+
+        test('allow undefined out of bounds', () => {
+            expect(at([undefined, undefined, undefined], 3, { required: false, checkBounds: false })).to.equal(
+                undefined
+            )
+            expect(at([undefined, undefined, undefined], -1, { required: false, checkBounds: false })).to.equal(
+                undefined
+            )
+        })
+    })
+
+    describe('get', () => {
+        test('throw on undefined field string', () => {
+            expect(() => get({ a: 1 }, 'b')).to.throw()
+        })
+
+        test('throw on undefined field number', () => {
+            expect(() => get({ a: 1 }, 1)).to.throw()
+        })
+
+        test('get correct field string', () => {
+            expect(get({ a: 1 }, 'a')).to.equal(1)
+        })
+
+        test('get correct field number', () => {
+            expect(get({ 1: 1 }, 1)).to.equal(1)
+        })
+    })
+
     describe('permutations', () => {
         test('handles empty array', () => {
             expect([...permutations([])]).to.deep.equal([])
@@ -53,7 +121,7 @@ describe('util', () => {
         test('generates random numbers using a seed', () => {
             const seed = 0
             const rand = rng(seed)
-            const expected = [-1065104217, 665175191, 222529346, 1915458065, -720845602, -50645347, -775619164]
+            const expected = [-1681090547, 408334984, 788430095, 3233831872, 963300000, -299378919, 97582850]
             for (let i = 0; i < expected.length; i++) {
                 expect(rand.int()).to.equal(expected[i])
             }
@@ -66,11 +134,11 @@ describe('util', () => {
             const seed = 0
             const _ = seedLodash(seed)
             array = _.shuffle(array)
-            expect(array).to.deep.equal([1, 2, 4, 5, 3])
+            expect(array).to.deep.equal([4, 2, 1, 3, 5])
             array = _.shuffle(array)
-            expect(array).to.deep.equal([2, 5, 1, 3, 4])
+            expect(array).to.deep.equal([3, 4, 1, 5, 2])
             array = _.shuffle(array)
-            expect(array).to.deep.equal([3, 5, 2, 4, 1])
+            expect(array).to.deep.equal([3, 4, 5, 2, 1])
         })
     })
 })

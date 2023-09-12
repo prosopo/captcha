@@ -23,11 +23,12 @@ import { ProsopoBasicConfig } from '@prosopo/types'
 import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { WsProvider } from '@polkadot/rpc-provider'
+import { get } from '@prosopo/util'
 
 export class Environment implements ProsopoEnvironment {
     config: ProsopoBasicConfig
     db: Database | undefined
-    contractInterface: ProsopoCaptchaContract
+    contractInterface: ProsopoCaptchaContract | undefined
     contractAddress: string
     defaultEnvironment: EnvironmentTypes
     contractName: string
@@ -37,7 +38,7 @@ export class Environment implements ProsopoEnvironment {
     wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair
-    api: ApiPromise
+    api: ApiPromise | undefined
 
     constructor(pair: KeyringPair, config: ProsopoBasicConfig) {
         this.config = config
@@ -74,10 +75,7 @@ export class Environment implements ProsopoEnvironment {
     }
 
     async getSigner(): Promise<void> {
-        if (!this.api) {
-            this.api = await ApiPromise.create({ provider: this.wsProvider })
-        }
-        await this.api.isReadyOrError
+        await this.getApi().isReadyOrError
         try {
             this.pair = this.keyring.addPair(this.pair)
         } catch (err) {
@@ -85,22 +83,37 @@ export class Environment implements ProsopoEnvironment {
         }
     }
 
+    getContractInterface(): ProsopoCaptchaContract {
+        if (this.contractInterface === undefined) {
+            throw new ProsopoEnvError(new Error('contractInterface not setup! Please call isReady() first'))
+        }
+        return this.contractInterface
+    }
+
+    getApi(): ApiPromise {
+        if (this.api === undefined) {
+            throw new ProsopoEnvError(new Error('api not setup! Please call isReady() first'))
+        }
+        return this.api
+    }
+
     async changeSigner(pair: KeyringPair): Promise<void> {
-        await this.api.isReadyOrError
+        await this.getApi().isReadyOrError
         this.pair = pair
         await this.getSigner()
         this.contractInterface = await this.getContractApi()
     }
 
     async getContractApi(): Promise<ProsopoCaptchaContract> {
-        const nonce = await this.api.rpc.system.accountNextIndex(this.pair.address)
+        const nonce = await this.getApi().rpc.system.accountNextIndex(this.pair.address)
         this.contractInterface = new ProsopoCaptchaContract(
-            this.api,
+            this.getApi(),
             this.abi,
             this.contractAddress,
             this.pair,
             this.contractName,
-            nonce.toNumber(),
+            // TODO can't find .toNumber() on Index type?
+            parseInt(nonce.toString()),
             this.config.logLevel as unknown as LogLevel
         )
         return this.contractInterface
@@ -128,7 +141,8 @@ export class Environment implements ProsopoEnvironment {
             }
         } catch (err) {
             this.logger.error(err)
-            throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
+            // TODO fix / improve error handling
+            throw new ProsopoEnvError(err as Error, 'GENERAL.ENVIRONMENT_NOT_READY')
         }
     }
 
@@ -137,7 +151,7 @@ export class Environment implements ProsopoEnvironment {
             if (this.config.database) {
                 const dbConfig = this.config.database[this.defaultEnvironment]
                 if (dbConfig) {
-                    const ProsopoDatabase = Databases[dbConfig.type]
+                    const ProsopoDatabase = get(Databases, dbConfig.type)
                     this.db = await ProsopoDatabase.create(
                         dbConfig.endpoint,
                         dbConfig.dbname,
@@ -147,8 +161,9 @@ export class Environment implements ProsopoEnvironment {
                 }
             }
         } catch (err) {
+            // TODO fix/improve error handling
             throw new ProsopoEnvError(
-                err,
+                err as Error,
                 'DATABASE.DATABASE_IMPORT_FAILED',
                 {},
                 this.config.database

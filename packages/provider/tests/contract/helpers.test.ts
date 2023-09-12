@@ -15,7 +15,7 @@ import { AbiMessage, DecodedMessage } from '@polkadot/api-contract/types'
 import { BN, hexToU8a } from '@polkadot/util'
 import { ContractSelector } from '@polkadot/types/interfaces'
 import { KeypairType } from '@polkadot/util-crypto/types'
-import { LogLevelSchema, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
+import { LogLevel, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
 import { MockEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { TypeDefInfo } from '@polkadot/types-create'
@@ -30,7 +30,7 @@ declare module 'vitest' {
 }
 
 describe('CONTRACT HELPERS', function () {
-    const log = getLogger(LogLevelSchema.enum.Debug, 'TEST')
+    const log = getLogger(LogLevel.enum.info, 'TEST')
 
     beforeEach(async function (context) {
         context.ss58Format = 42
