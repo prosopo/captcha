@@ -86,6 +86,24 @@
         "url": "https://github.com/prosopo/captcha/issues"
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
-    "keywords": [],
+    "keywords": [
+        "captcha",
+        "prosopo",
+        "privacy",
+        "security",
+        "reCAPTCHA",
+        "anti-bot",
+        "authentication",
+        "verification",
+        "user-verification",
+        "privacy-focused",
+        "bot-detection",
+        "human-verification",
+        "form-security",
+        "web-security",
+        "anti-spam",
+        "frontend-security",
+        "open-source"
+    ],
     "license": "Apache-2.0"
 }
