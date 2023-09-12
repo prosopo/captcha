@@ -138,6 +138,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async storeDataset(dataset: DatasetWithIdsAndTree): Promise<void> {
         try {
+            this.logger.info(`Storing dataset in database`)
             const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset)
             const datasetDoc = {
                 datasetId: parsedDataset.datasetId,
@@ -161,6 +162,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 solved: !!solution?.length,
             }))
 
+            this.logger.info(`Inserting captcha records`)
             // create a bulk upsert operation and execute
             if (captchaDocs.length) {
                 await this.tables?.captcha.bulkWrite(
@@ -186,6 +188,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     datasetContentId: parsedDataset.datasetContentId,
                 }))
 
+            this.logger.info(`Inserting solution records`)
             // create a bulk upsert operation and execute
             if (captchaSolutionDocs.length) {
                 await this.tables?.solution.bulkWrite(
@@ -198,6 +201,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     }))
                 )
             }
+            this.logger.info(`Dataset stored in database`)
         } catch (err) {
             throw new ProsopoEnvError(err, 'DATABASE.DATASET_LOAD_FAILED')
         }
