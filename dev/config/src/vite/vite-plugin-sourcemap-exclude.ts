@@ -4,7 +4,7 @@ interface SourcemapExclude {
     excludeNodeModules?: boolean
 }
 // Taken from https://github.com/vitejs/vite/issues/2433#issuecomment-1487472995 to prevent memory leaks
-export default function SourceMapExclude(opts?: SourcemapExclude): Plugin {
+export default function VitePluginSourcemapExclude(opts?: SourcemapExclude): Plugin {
     return {
         name: 'sourcemap-exclude',
         transform(code: string, id: string) {

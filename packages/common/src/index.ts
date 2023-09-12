@@ -14,14 +14,8 @@
 export { default as i18n } from './i18n.js'
 export * from './react/index.js'
 export * from './node/index.js'
-export {
-    TFunctionParams,
-    TranslationKey,
-    translationKeys,
-    trimProviderUrl,
-    reverseHexString,
-    snakeToCamelCase,
-} from './utils.js'
+export { translationKeys, trimProviderUrl, reverseHexString, snakeToCamelCase } from './utils.js'
+export type { TFunctionParams, TranslationKey } from './utils.js'
 export * from './custom.js'
 export * from './error.js'
 export * from './logger.js'
@@ -30,3 +24,4 @@ export * from './array.js'
 export * from './hash.js'
 export * from './asyncFactory.js'
 export * from './string.js'
+export * from './node/UrlConverter.js'

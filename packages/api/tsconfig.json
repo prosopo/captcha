@@ -1,22 +1,16 @@
 {
-    "extends": "../../tsconfig.build.json",
+    "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./dist",
-        "module": "esnext",
-        "target": "esnext",
-        "lib": [
-            "esnext",
-            "dom"
-        ],
+        "outDir": "./dist"
     },
-    "include": [
-        "./src/**/*.ts",
-        "./src/*.ts"
-    ],
+    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
         {
             "path": "../types"
+        },
+        {
+            "path": "../util"
         }
     ]
 }

@@ -13,7 +13,7 @@
 // limitations under the License.
 import { Captcha, CaptchaItemTypes, CaptchaSolution, CaptchaTypes, Dataset, Item } from '@prosopo/types'
 import { beforeAll, describe, expect, test } from 'vitest'
-import { computeItemHash, matchItemsToSolutions } from '@prosopo/datasets'
+import { computeItemHash, matchItemsToSolutions } from '../..'
 import { validateDatasetContent } from '../../src'
 import path from 'path'
 

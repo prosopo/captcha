@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LogLevelSchema, getLogger } from '@prosopo/common'
+import { LogLevel, getLogger } from '@prosopo/common'
 import { generateMnemonic } from '@prosopo/contract'
 
-const logger = getLogger(LogLevelSchema.enum.Info, 'generateMnemonic')
+const logger = getLogger(LogLevel.enum.info, 'generateMnemonic')
 
 async function mnemonic() {
     const [mnemonic, address] = await generateMnemonic()

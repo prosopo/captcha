@@ -27,7 +27,7 @@ import {
     ScheduledTaskResult,
     ScheduledTaskStatus,
 } from '@prosopo/types'
-import { AsyncFactory, Logger, ProsopoEnvError } from '@prosopo/common'
+import { AsyncFactory, Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import {
     CaptchaRecordSchema,
     Database,
@@ -67,6 +67,13 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     dbname: string
     connection?: Connection
     logger: Logger
+
+    constructor() {
+        super()
+        this.url = ''
+        this.dbname = ''
+        this.logger = getLoggerDefault()
+    }
 
     public async init(url: string, dbname: string, logger: Logger, authSource?: string) {
         const authSourceString = authSource ? `?authSource=${authSource}` : ''
@@ -138,6 +145,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async storeDataset(dataset: DatasetWithIdsAndTree): Promise<void> {
         try {
+            this.logger.info(`Storing dataset in database`)
             const parsedDataset = DatasetWithIdsAndTreeSchema.parse(dataset)
             const datasetDoc = {
                 datasetId: parsedDataset.datasetId,
@@ -161,6 +169,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 solved: !!solution?.length,
             }))
 
+            this.logger.info(`Inserting captcha records`)
             // create a bulk upsert operation and execute
             if (captchaDocs.length) {
                 await this.tables?.captcha.bulkWrite(
@@ -186,6 +195,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     datasetContentId: parsedDataset.datasetContentId,
                 }))
 
+            this.logger.info(`Inserting solution records`)
             // create a bulk upsert operation and execute
             if (captchaSolutionDocs.length) {
                 await this.tables?.solution.bulkWrite(
@@ -198,8 +208,10 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     }))
                 )
             }
+            this.logger.info(`Dataset stored in database`)
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.DATASET_LOAD_FAILED')
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.DATASET_LOAD_FAILED')
         }
     }
 
@@ -218,7 +230,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
 
             const solutions: SolutionRecord[] = (await this.tables?.solution.find({ datasetId }).lean()) || []
 
-            const solutionsKeyed = {}
+            const solutionsKeyed: {
+                [key: string]: SolutionRecord
+            } = {}
             for (const solution of solutions) {
                 solutionsKeyed[solution.captchaId] = solution
             }
@@ -226,18 +240,19 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 datasetId,
                 datasetContentId,
                 format,
-                contentTree,
-                solutionTree,
+                contentTree: contentTree || [],
+                solutionTree: solutionTree || [],
                 captchas: captchas.map((captchaDoc) => {
                     const { captchaId, captchaContentId, items, target, salt, solved } = captchaDoc
+                    const solution = solutionsKeyed[captchaId]
                     return {
                         captchaId,
                         captchaContentId,
-                        solved,
+                        solved: !!solved,
                         salt,
                         items,
                         target,
-                        solution: solved && solutionsKeyed[captchaId] ? solutionsKeyed[captchaId].solution : null,
+                        solution: solved && solution ? solution.solution : ([] as string[]),
                     }
                 }),
             }
@@ -321,7 +336,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         try {
             await this.tables?.captcha.updateOne({ datasetId }, { $set: captcha }, { upsert: false })
         } catch (err) {
-            throw new ProsopoEnvError(err, this.updateCaptcha.name, {}, datasetId)
+            // TODO need to improve error handling
+            throw new ProsopoEnvError(err as Error)
         }
     }
 
@@ -523,7 +539,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         throw new ProsopoEnvError('DATABASE.SOLUTION_GET_FAILED')
     }
 
-    async getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount): Promise<string> {
+    async getDatasetIdWithSolvedCaptchasOfSizeN(solvedCaptchaCount: number): Promise<string> {
         const cursor = this.tables?.solution.aggregate([
             {
                 $match: {},
@@ -645,7 +661,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 )
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.SOLUTION_APPROVE_FAILED', {}, commitmentId)
         }
     }
 
@@ -659,7 +676,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 ?.updateMany({ captchaId: { $in: captchaIds } }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.SOLUTION_FLAG_FAILED', {}, captchaIds)
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.SOLUTION_FLAG_FAILED', {}, captchaIds)
         }
     }
 
@@ -674,7 +692,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { processed: true } }, { upsert: false })
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
         }
     }
 
@@ -689,7 +708,8 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 ?.updateMany({ id: { $in: distinctCommitmentIds } }, { $set: { batched: true } }, { upsert: false })
                 .lean()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
+            // TODO should not cast error here, improve error handling
+            throw new ProsopoEnvError(err as Error, 'DATABASE.COMMITMENT_FLAG_FAILED', {}, commitmentIds)
         }
     }
 
@@ -717,7 +737,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         status: ScheduledTaskStatus
     ): Promise<ScheduledTaskRecord | undefined> {
         const cursor: ScheduledTaskRecord | undefined | null = await this.tables?.scheduler
-            ?.find({ taskId: taskId, status: status })
+            ?.findOne({ taskId: taskId, status: status })
             .lean()
         return cursor ? cursor : undefined
     }
@@ -729,7 +749,10 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
         task: ScheduledTaskNames,
         status?: ScheduledTaskStatus
     ): Promise<ScheduledTaskRecord | undefined> {
-        const lookup = { processName: task }
+        const lookup: {
+            processName: ScheduledTaskNames
+            status?: ScheduledTaskStatus
+        } = { processName: task }
         if (status) {
             lookup['status'] = status
         }
