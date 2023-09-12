@@ -81,7 +81,7 @@
         "tslib": "^2.5.2",
         "typescript": "5.1.6"
     },
-    "description": "Integrates prosopo packages for development purposes",
+    "description": "Prosopo Captcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes",
     "bugs": {
         "url": "https://github.com/prosopo/captcha/issues"
     },
