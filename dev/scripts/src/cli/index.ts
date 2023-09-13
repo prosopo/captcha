@@ -147,7 +147,7 @@ export async function processArgs(args: string[]) {
             describe: 'Update all contracts into the contract package.',
             builder: (yargs) => yargs,
             handler: async (argv) => {
-                const contracts = ['captcha', 'proxy']
+                const contracts = ['captcha', 'proxy', 'common']
                 for (const contract of contracts) {
                     const inDir = `${paths.protocolDist}/${contract}`
                     await exec(
