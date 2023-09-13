@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/types-env",
-    "version": "0.1.18-beta",
+    "version": "0.1.18",
     "description": "Types for prosopo environment",
     "main": "dist/index.js",
     "type": "module",

@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/client-example",
-    "version": "0.1.18-beta",
+    "version": "0.1.18",
     "private": true,
     "type": "module",
     "dependencies": {
