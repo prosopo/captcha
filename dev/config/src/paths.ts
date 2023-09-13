@@ -37,12 +37,12 @@ export type Paths = {
 
 export const getPaths = (): Paths => {
     const root = new URL('../../../', import.meta.url)
-    const dev = new URL('/dev', root)
-    const packages = new URL('/packages', root)
-    const protocol = new URL('/protocol', root)
-    const demos = new URL('/demos', root)
-    const contract = new URL('/contract', packages)
-    const types = new URL('/types', packages)
+    const dev = new URL('dev', root)
+    const packages = new URL('packages', root)
+    const protocol = new URL('protocol', root)
+    const demos = new URL('demos', root)
+    const contract = new URL('contract', packages)
+    const types = new URL('types', packages)
 
     return {
         root: root.pathname,
@@ -51,33 +51,33 @@ export const getPaths = (): Paths => {
         contract: contract.pathname,
         protocol: protocol.pathname,
         packages: packages.pathname,
-        config: new URL('/config', dev).pathname,
-        scripts: new URL('/scripts', dev).pathname,
-        protocolCli: new URL('/dev', protocol).pathname,
-        protocolDist: new URL('/target/ink', protocol).pathname,
-        clientExample: new URL('/client-example', demos).pathname,
-        clientExampleServer: new URL('/client-example-server', demos).pathname,
-        clientBundleExample: new URL('/client-bundle-example', demos).pathname,
-        dappExample: new URL('/dapp-example', demos).pathname,
-        common: new URL('/common', packages).pathname,
-        commonFs: new URL('/common-fs', packages).pathname,
-        api: new URL('/api', packages).pathname,
-        cli: new URL('/cli', packages).pathname,
-        contractTypechain: new URL('/src/typechain', contract).pathname,
-        util: new URL('/util', packages).pathname,
-        database: new URL('/database', packages).pathname,
-        datasets: new URL('/datasets', packages).pathname,
-        datasetsFs: new URL('/datasets-fs', packages).pathname,
-        env: new URL('/env', packages).pathname,
-        fileServer: new URL('/file-server', packages).pathname,
-        procaptcha: new URL('/procaptcha', packages).pathname,
-        procaptchaReact: new URL('/procaptcha-react', packages).pathname,
-        procaptchaBundle: new URL('/procaptcha-bundle', packages).pathname,
-        provider: new URL('/provider', packages).pathname,
-        server: new URL('/server', packages).pathname,
-        typesDatabase: new URL('/types-database', packages).pathname,
-        typesEnv: new URL('/types-env', packages).pathname,
+        config: new URL('config', dev).pathname,
+        scripts: new URL('scripts', dev).pathname,
+        protocolCli: new URL('dev', protocol).pathname,
+        protocolDist: new URL('target/ink', protocol).pathname,
+        clientExample: new URL('client-example', demos).pathname,
+        clientExampleServer: new URL('client-example-server', demos).pathname,
+        clientBundleExample: new URL('client-bundle-example', demos).pathname,
+        dappExample: new URL('dapp-example', demos).pathname,
+        common: new URL('common', packages).pathname,
+        commonFs: new URL('common-fs', packages).pathname,
+        api: new URL('api', packages).pathname,
+        cli: new URL('cli', packages).pathname,
+        contractTypechain: new URL('src/typechain', contract).pathname,
+        util: new URL('util', packages).pathname,
+        database: new URL('database', packages).pathname,
+        datasets: new URL('datasets', packages).pathname,
+        datasetsFs: new URL('datasets-fs', packages).pathname,
+        env: new URL('env', packages).pathname,
+        fileServer: new URL('file-server', packages).pathname,
+        procaptcha: new URL('procaptcha', packages).pathname,
+        procaptchaReact: new URL('procaptcha-react', packages).pathname,
+        procaptchaBundle: new URL('procaptcha-bundle', packages).pathname,
+        provider: new URL('provider', packages).pathname,
+        server: new URL('server', packages).pathname,
+        typesDatabase: new URL('types-database', packages).pathname,
+        typesEnv: new URL('types-env', packages).pathname,
         types: types.pathname,
-        typesTypechain: new URL('/types-typechain', types).pathname,
+        typesTypechain: new URL('types-typechain', types).pathname,
     }
 }
