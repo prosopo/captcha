@@ -62,7 +62,7 @@ jobs:
               run: |
                   echo "PROVIDER_IMAGE_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
                   echo "LATEST_PROVIDER_VERSION=${{ env.LATEST_PROVIDER_VERSION }}"
-                  if [ "${{ env.PROVIDER_IMAGE_VERSION }}" < "${{ env.LATEST_PROVIDER_VERSION }}" ]; then
+                  if [[ $(echo -e "${{ env.PROVIDER_IMAGE_VERSION }}\n${{ env.LATEST_PROVIDER_VERSION }}" | sort -V | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
                       echo "Provider image version is less than the latest npm version. Please update the provider image version in the root package.json"
                       exit 1
                   fi
