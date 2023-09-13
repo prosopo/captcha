@@ -8,10 +8,6 @@ on:
             - 'package.json'
     workflow_dispatch:
 
-env:
-    CARGO_TERM_COLOR: always
-    GH_TOKEN: ${{ github.token }}
-
 jobs:
     build:
         runs-on: ubuntu-latest
@@ -57,21 +53,21 @@ jobs:
                   echo "PROVIDER_IMAGE_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
                   echo "LATEST_PROVIDER_VERSION=${{ env.LATEST_PROVIDER_VERSION }}"
 
-                  # Condition 1: If version is less than or equal, exit with error
-                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" || "${{ env.PROVIDER_IMAGE_VERSION }}" < "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
+                  # Condition 1: If version is less than the npm version, exit with error
+                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" < "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
                       echo "Version bump required, exiting with error"
                       exit 1
                   fi
 
                   # Condition 2: If version ends in beta, exit successfully
-                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == *"-beta" ]]; then
-                      echo "beta version detected, exiting successfully"
+                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
+                      echo "Current npm version detected, exiting successfully"
                       exit 0
                   fi
 
-                  # Condition 3: If greater
+                  # Condition 3: If greater than npm version, release to npm if running on GitHub Actions
                   if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" > "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
-                      echo "Version bump and non beta version detected, continuing..."
+                      echo "Version bump detected, continuing..."
 
                       if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
                         echo "Running on GitHub Actions"
