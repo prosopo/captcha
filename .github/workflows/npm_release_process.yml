@@ -8,10 +8,6 @@ on:
             - 'package.json'
     workflow_dispatch:
 
-env:
-    CARGO_TERM_COLOR: always
-    GH_TOKEN: ${{ github.token }}
-
 jobs:
     build:
         runs-on: ubuntu-latest
@@ -30,6 +26,9 @@ jobs:
             - run: mkdir -p node_modules
             - run: mkdir -p .cache/Cypress
 
+            - name: Set versions string
+              run: echo "VERSIONS_TO_COMPARE=${{ env.PROVIDER_IMAGE_VERSION }}\\n${{ env.LATEST_PROVIDER_VERSION }}" >> $GITHUB_ENV
+
             - name: Restore cache
               uses: actions/cache/restore@v3
               with:
@@ -45,33 +44,29 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            # Check if the provider image version is greater than the latest version on the npm package @prosopo/provider
-            # For example, if the provider image version is 0.1.7 and the latest npm version is 0.1.6, then the provider image
-            # version is greater. If the provider image version is 0.1.6 and the latest npm version is 0.1.6, then the provider
-            # image version is not greater, and the workflow will not continue unless the provider image version is updated in
-            # the root package.json. Technically, this check doesn't cover the case where the provider image version is lower
-            # than the latest npm version, but that should never happen.
             - name: Check provider image version
               id: check_provider_image_version
               run: |
                   echo "PROVIDER_IMAGE_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
                   echo "LATEST_PROVIDER_VERSION=${{ env.LATEST_PROVIDER_VERSION }}"
 
-                  # Condition 1: If version is less than or equal, exit with error
-                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" || "${{ env.PROVIDER_IMAGE_VERSION }}" < "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
+                  # Condition 1: If version is equal to the npm version, exit successfully
+                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
+                      echo "Current npm version detected, exiting successfully"
+                      exit 0
+                  fi
+
+                  # Condition 2: If version is less than the npm version, exit with error
+                  # Technically this is less than or equal, but we have checked for equality above
+                  if [[ $(echo -e "${{ env.VERSIONS_TO_COMPARE }}" | sort -V | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
                       echo "Version bump required, exiting with error"
                       exit 1
                   fi
 
-                  # Condition 2: If version ends in beta, exit successfully
-                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == *"-beta" ]]; then
-                      echo "beta version detected, exiting successfully"
-                      exit 0
-                  fi
-
-                  # Condition 3: If greater
-                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" > "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
-                      echo "Version bump and non beta version detected, continuing..."
+                  # Condition 3: If greater than npm version, release to npm if running on GitHub Actions
+                  # Reverse the versions list, then get the first element
+                  if [[ $(echo -e "${{ env.VERSIONS_TO_COMPARE }}" | sort -Vr | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
+                      echo "Version bump detected, continuing..."
 
                       if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
                         echo "Running on GitHub Actions"
