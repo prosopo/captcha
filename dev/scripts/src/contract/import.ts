@@ -13,12 +13,15 @@
 // limitations under the License.
 import { ExecOutput, exec } from '../util/index.js'
 import fs from 'fs'
+import path from 'path'
 
-async function importContract(relPathToABIs: string, relPathToOutput: string): Promise<ExecOutput> {
+async function importContract(pathToAbis: string, pathToOutput: string): Promise<ExecOutput> {
+    pathToAbis = path.relative(process.cwd(), pathToAbis)
+    pathToOutput = path.relative(process.cwd(), pathToOutput)
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
-    if (!fs.existsSync(relPathToABIs)) throw new Error(`Path to ABIs does not exist: ${relPathToABIs}`)
-    await exec(`mkdir -p ${relPathToOutput}`)
-    const cmd = `npx @727-ventures/typechain-polkadot --in ${relPathToABIs} --out ${relPathToOutput}`
+    if (!fs.existsSync(pathToAbis)) throw new Error(`Path to ABIs does not exist: ${pathToAbis}`)
+    await exec(`mkdir -p ${pathToOutput}`)
+    const cmd = `npx @727-ventures/typechain-polkadot --in ${pathToAbis} --out ${pathToOutput}`
     return exec(cmd)
 }
 
