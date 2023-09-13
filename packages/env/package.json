@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/env",
-    "version": "0.1.18",
+    "version": "0.1.18-beta",
     "description": "Path env prosopo environment",
     "main": "dist/index.js",
     "type": "module",
