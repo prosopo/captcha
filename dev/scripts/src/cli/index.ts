@@ -139,13 +139,6 @@ export async function processArgs(args: string[]) {
                         desc: 'The path to the output directory',
                     }),
             handler: async (argv) => {
-                const abiPath = path.resolve(argv.in)
-                const cwd = path.resolve('.')
-                if (!fs.existsSync(abiPath)) {
-                    throw new Error(`abiPath ${abiPath} does not exist. The command is running relative to ${cwd}`)
-                }
-                const outPath = path.resolve(argv.out)
-                // pass in relative path as typechain will resolve it relative to the cwd
                 await importContract(argv.in, argv.out)
             },
         })
@@ -157,16 +150,11 @@ export async function processArgs(args: string[]) {
                 const contracts = ['captcha', 'proxy']
                 for (const contract of contracts) {
                     const inDir = `${paths.protocolDist}/${contract}`
-                    const outDir = `${paths.contractTypechain}/${contract}`
-                    await exec(`mkdir -p ${outDir}`)
-                    await exec(`mkdir -p ${inDir}`)
-                    await exec(`node dist/cli/index.js import_contract --in=${inDir} --out=${outDir}`)
-                    await exec(`mkdir -p ${paths.typesTypechain}/${contract}`)
                     await exec(
-                        `cp -rv ${paths.contractTypechain}/${contract}/types-arguments ${paths.typesTypechain}/${contract}`
+                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.contractTypechain}/${contract}`
                     )
                     await exec(
-                        `cp -rv ${paths.contractTypechain}/${contract}/types-returns ${paths.typesTypechain}/${contract}`
+                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.typesTypechain}/${contract}`
                     )
                 }
             },

@@ -35,7 +35,7 @@ export type Paths = {
 }
 
 export const getPaths = (): Paths => {
-    const root = new URL('../../../', import.meta.url).pathname
+    const root = new URL('../../..', import.meta.url).pathname
     const dev = `${root}/dev`
     const packages = `${root}/packages`
     const protocol = `${packages}/protocol`
