@@ -23,7 +23,9 @@ import { updateEnvFiles } from '../util/index.js'
 import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
+import { getPaths } from '@prosopo/config'
 
+const paths = getPaths()
 const rootDir = path.resolve('.')
 
 loadEnv(rootDir)
@@ -154,21 +156,17 @@ export async function processArgs(args: string[]) {
             handler: async (argv) => {
                 const contracts = ['captcha', 'proxy']
                 for (const contract of contracts) {
-                    const inDir = `../protocol/target/ink/${contract}`
-                    const outDir = `../packages/contract/src/typechain/${contract}`
+                    const inDir = `${paths.protocolDist}/${contract}`
+                    const outDir = `${paths.contractTypechain}/${contract}`
                     await exec(`mkdir -p ${outDir}`)
                     await exec(`mkdir -p ${inDir}`)
-                    // console.log(`${outDir}`)
-                    // console.log(`${inDir}`)
                     await exec(`node dist/cli/index.js import_contract --in=${inDir} --out=${outDir}`)
-                    // console.log(`${path.resolve('../packages/contract/src/typechain/captcha/types-arguments')}`)
-                    // console.log(`${path.resolve('../packages/types/src/contract/typechain/captcha/types-arguments')}`)
-                    await exec(`mkdir -p ../packages/types/src/contract/typechain/captcha`)
+                    await exec(`mkdir -p ${paths.typesTypechain}/${contract}`)
                     await exec(
-                        `cp -rv ../packages/contract/src/typechain/captcha/types-arguments ../packages/types/src/contract/typechain/captcha`
+                        `cp -rv ${paths.contractTypechain}/${contract}/types-arguments ${paths.typesTypechain}/${contract}`
                     )
                     await exec(
-                        `cp -rv ../packages/contract/src/typechain/captcha/types-returns ../packages/types/src/contract/typechain/captcha`
+                        `cp -rv ${paths.contractTypechain}/${contract}/types-returns ${paths.typesTypechain}/${contract}`
                     )
                 }
             },
