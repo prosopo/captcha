@@ -36,21 +36,21 @@ export type Paths = {
 }
 
 export const getPaths = (): Paths => {
-    const root = new URL('../../../', import.meta.url).pathname
-    const dev = new URL('/dev', root).pathname
-    const packages = new URL('/packages', root).pathname
-    const protocol = new URL('/protocol', root).pathname
-    const demos = new URL('/demos', root).pathname
-    const contract = new URL('/contract', packages).pathname
-    const types = new URL('/types', packages).pathname
+    const root = new URL('../../../', import.meta.url)
+    const dev = new URL('/dev', root)
+    const packages = new URL('/packages', root)
+    const protocol = new URL('/protocol', root)
+    const demos = new URL('/demos', root)
+    const contract = new URL('/contract', packages)
+    const types = new URL('/types', packages)
 
     return {
-        root,
-        dev,
-        demos,
-        contract,
-        protocol,
-        packages,
+        root: root.pathname,
+        dev: dev.pathname,
+        demos: demos.pathname,
+        contract: contract.pathname,
+        protocol: protocol.pathname,
+        packages: packages.pathname,
         config: new URL('/config', dev).pathname,
         scripts: new URL('/scripts', dev).pathname,
         protocolCli: new URL('/dev', protocol).pathname,
@@ -77,7 +77,7 @@ export const getPaths = (): Paths => {
         server: new URL('/server', packages).pathname,
         typesDatabase: new URL('/types-database', packages).pathname,
         typesEnv: new URL('/types-env', packages).pathname,
-        types,
+        types: types.pathname,
         typesTypechain: new URL('/types-typechain', types).pathname,
     }
 }
