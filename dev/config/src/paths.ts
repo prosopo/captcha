@@ -14,7 +14,6 @@ export type Paths = {
     clientBundleExample: string
     dappExample: string
     common: string
-    commonFs: string
     api: string
     cli: string
     contractTypechain: string
@@ -36,48 +35,73 @@ export type Paths = {
 }
 
 export const getPaths = (): Paths => {
-    const root = new URL('../../../', import.meta.url)
-    const dev = new URL('dev', root)
-    const packages = new URL('packages', root)
-    const protocol = new URL('protocol', root)
-    const demos = new URL('demos', root)
-    const contract = new URL('contract', packages)
-    const types = new URL('types', packages)
+    const root = new URL('../../../', import.meta.url).pathname
+    const dev = `${root}/dev`
+    const packages = `${root}/packages`
+    const protocol = `${packages}/protocol`
+    const demos = `${root}/demos`
+    const contract = `${packages}/contract`
+    const types = `${packages}/types`
+    const config = `${dev}/config`
+    const scripts = `${dev}/scripts`
+    const protocolCli = `${protocol}/dist/cli`
+    const protocolDist = `${protocol}/target/ink`
+    const clientExample = `${demos}/client-example`
+    const clientExampleServer = `${demos}/client-example-server`
+    const clientBundleExample = `${demos}/client-bundle-example`
+    const dappExample = `${demos}/dapp-example`
+    const common = `${packages}/common`
+    const api = `${packages}/api`
+    const cli = `${packages}/cli`
+    const contractTypechain = `${contract}/src/typechain`
+    const util = `${packages}/util`
+    const database = `${packages}/database`
+    const datasets = `${packages}/datasets`
+    const datasetsFs = `${packages}/datasets-fs`
+    const env = `${packages}/env`
+    const fileServer = `${packages}/file-server`
+    const procaptcha = `${packages}/procaptcha`
+    const procaptchaReact = `${packages}/procaptcha-react`
+    const procaptchaBundle = `${packages}/procaptcha-bundle`
+    const provider = `${packages}/provider`
+    const server = `${packages}/server`
+    const typesDatabase = `${packages}/types-database`
+    const typesEnv = `${packages}/types-env`
+    const typesTypechain = `${types}/types-typechain`
 
     return {
-        root: root.pathname,
-        dev: dev.pathname,
-        demos: demos.pathname,
-        contract: contract.pathname,
-        protocol: protocol.pathname,
-        packages: packages.pathname,
-        config: new URL('config', dev).pathname,
-        scripts: new URL('scripts', dev).pathname,
-        protocolCli: new URL('dev', protocol).pathname,
-        protocolDist: new URL('target/ink', protocol).pathname,
-        clientExample: new URL('client-example', demos).pathname,
-        clientExampleServer: new URL('client-example-server', demos).pathname,
-        clientBundleExample: new URL('client-bundle-example', demos).pathname,
-        dappExample: new URL('dapp-example', demos).pathname,
-        common: new URL('common', packages).pathname,
-        commonFs: new URL('common-fs', packages).pathname,
-        api: new URL('api', packages).pathname,
-        cli: new URL('cli', packages).pathname,
-        contractTypechain: new URL('src/typechain', contract).pathname,
-        util: new URL('util', packages).pathname,
-        database: new URL('database', packages).pathname,
-        datasets: new URL('datasets', packages).pathname,
-        datasetsFs: new URL('datasets-fs', packages).pathname,
-        env: new URL('env', packages).pathname,
-        fileServer: new URL('file-server', packages).pathname,
-        procaptcha: new URL('procaptcha', packages).pathname,
-        procaptchaReact: new URL('procaptcha-react', packages).pathname,
-        procaptchaBundle: new URL('procaptcha-bundle', packages).pathname,
-        provider: new URL('provider', packages).pathname,
-        server: new URL('server', packages).pathname,
-        typesDatabase: new URL('types-database', packages).pathname,
-        typesEnv: new URL('types-env', packages).pathname,
-        types: types.pathname,
-        typesTypechain: new URL('types-typechain', types).pathname,
+        root,
+        dev,
+        demos,
+        contract,
+        protocol,
+        packages,
+        config,
+        scripts,
+        protocolCli,
+        protocolDist,
+        clientExample,
+        clientExampleServer,
+        clientBundleExample,
+        dappExample,
+        common,
+        api,
+        cli,
+        contractTypechain,
+        util,
+        database,
+        datasets,
+        datasetsFs,
+        env,
+        fileServer,
+        procaptcha,
+        procaptchaReact,
+        procaptchaBundle,
+        provider,
+        server,
+        typesDatabase,
+        typesEnv,
+        types,
+        typesTypechain,
     }
 }
