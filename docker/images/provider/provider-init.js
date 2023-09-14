@@ -19,7 +19,7 @@ async function main() {
     try {
         console.log('Check provider command executed.')
         const currentProvider = await execShellCommand(
-            'node provider_cli_bundle.main.bundle.js provider_details --address 5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV'
+            `node provider_cli_bundle.main.bundle.js provider_details --address ${process.env.PROVIDER_ADDRESS}`
         )
         console.log('Raw output:', currentProvider)
 
