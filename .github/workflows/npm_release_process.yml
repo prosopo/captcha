@@ -44,6 +44,9 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
+            - name: Build the packages
+              run: npm run build:all
+
             - name: Check provider image version
               id: check_provider_image_version
               run: |
