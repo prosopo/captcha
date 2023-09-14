@@ -114,7 +114,7 @@ export default async function (
                 },
 
                 plugins: [
-                    css(),
+                    css.default(),
                     wasm(),
                     nodeResolve({
                         browser: true,
