@@ -160,7 +160,7 @@ export default async function (
                         // If the target is ESM, so we can't use `require` (and .node is not supported in `import` anyway), we will need to use `createRequire` instead.
                         targetEsm: true,
                     }),
-                    css(),
+                    css.default(),
                     wasm(),
                     nodeResolve(),
                 ],
