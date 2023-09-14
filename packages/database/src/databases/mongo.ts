@@ -76,9 +76,13 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     }
 
     public async init(url: string, dbname: string, logger: Logger, authSource?: string) {
-        const authSourceString = authSource ? `?authSource=${authSource}` : ''
-        const separator = url.slice(-1) === '/' ? '' : '/'
-        this.url = `${url || DEFAULT_ENDPOINT}${separator}${dbname}${authSourceString}`
+        const baseEndpoint = url || DEFAULT_ENDPOINT
+        const parsedUrl = new URL(baseEndpoint)
+        parsedUrl.pathname = dbname
+        if (authSource) {
+            parsedUrl.searchParams.set('authSource', authSource)
+        }
+        this.url = parsedUrl.toString()
         this.dbname = dbname
         this.logger = logger
         return this
@@ -160,6 +164,9 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 { $set: datasetDoc },
                 { upsert: true }
             )
+
+            this.logger.info('parsedDataset.captchas', parsedDataset.captchas)
+
             // put the dataset id on each of the captcha docs and remove the solution
             const captchaDocs = parsedDataset.captchas.map(({ solution, ...captcha }, index) => ({
                 ...captcha,
