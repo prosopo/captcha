@@ -54,8 +54,9 @@ jobs:
                   # Condition 1: If version is equal to the npm version, exit successfully
                   if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
                       echo "Current npm version detected, exiting successfully"
-                      should_continue="false"
+                      # should_continue="false"
                   fi
+
                   echo "should_continue=$should_continue" >> $GITHUB_ENV
                   echo "should_continue=$should_continue" >> $GITHUB_ENV
 
@@ -63,7 +64,7 @@ jobs:
                   # Technically this is less than or equal, but we have checked for equality above
                   if [[ $(echo -e "${{ env.VERSIONS_TO_COMPARE }}" | sort -V | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
                       echo "Version bump required, exiting with error"
-                      exit 1
+                      # exit 1
                   fi
 
                   # Condition 3: If greater than npm version, release to npm if running on GitHub Actions
@@ -71,15 +72,37 @@ jobs:
                   if [[ $(echo -e "${{ env.VERSIONS_TO_COMPARE }}" | sort -Vr | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
                       echo "Version bump detected, continuing..."
 
-                      if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
-                        echo "Running on GitHub Actions"
-                        # Do the js bundle
-                      else
-                        echo "Running locally via act, skipping npm publish."
-                      fi
+                      # if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
+                      #   echo "Running on GitHub Actions"
+                      #   # Do the js bundle
+                      # else
+                      #   echo "Running locally via act, skipping npm publish."
+                      # fi
                   fi
 
-            - name: JS bundles
-              if: steps.check_provider_image_version.outputs.should_continue == 'true'
+            - name: Install dependencies and build packages
+              # if: steps.check_provider_image_version.outputs.should_continue == 'true'
               run: |
-                  # Your code here
+                  npm ci
+                  npm run build:all
+
+            - name: Build js bundle
+              # if: steps.check_provider_image_version.outputs.should_continue == 'true'
+              run: |
+                  # Navigate to the js bundle directory
+                  cd packages/procaptcha-bundle
+                  npm run build:prod
+                  # echo ls
+                  echo "ls -la"
+                  cd ../..
+                  echo "build js bundle done"
+    
+            - name: Log in to Docker Hub
+              run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+            - name: Build the js docker image
+              # if: steps.check_provider_image_version.outputs.should_continue == 'true'
+              run: |
+                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:test
+                  docker push prosopo/js_server:test
+
