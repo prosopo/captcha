@@ -67,6 +67,7 @@ jobs:
                   if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
                       echo "Current npm version detected, exiting successfully"
                       exit 0
+                  fi
 
                   # Condition 2: If version is less than the npm version, exit with error
                   if [[ $(echo -e "${{ env.PROVIDER_IMAGE_VERSION }}\n${{ env.LATEST_PROVIDER_VERSION }}" | sort -V | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
