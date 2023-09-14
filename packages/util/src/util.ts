@@ -104,7 +104,7 @@ export const at = <T>(
     } = {
         required: true,
         checkBounds: true,
-        wrap: false,
+        wrap: true,
     }
 ): T => {
     if (options.wrap) {
