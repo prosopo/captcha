@@ -159,11 +159,11 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                 solutionTree: parsedDataset.solutionTree,
             }
 
-            await this.tables?.dataset
-                .updateOne({ datasetId: parsedDataset.datasetId }, { $set: datasetDoc }, { upsert: true })
-                .catch((err) => {
-                    this.logger.error(err)
-                })
+            await this.tables?.dataset.updateOne(
+                { datasetId: parsedDataset.datasetId },
+                { $set: datasetDoc },
+                { upsert: true }
+            )
 
             this.logger.info('parsedDataset.captchas', parsedDataset.captchas)
 
