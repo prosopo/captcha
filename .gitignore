@@ -132,3 +132,6 @@ protocol/target
 
 chain-data
 128_target_generated.json
+
+# ignore vite config timestamps
+vite.config.ts.timestamp*

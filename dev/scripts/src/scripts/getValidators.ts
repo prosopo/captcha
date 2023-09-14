@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise, WsProvider } from '@polkadot/api'
+import { get } from '@prosopo/util'
 
 const providers = {
     kusama: { endpoint: 'wss://kusama-rpc.polkadot.io/' },
@@ -21,7 +22,7 @@ const providers = {
 async function run() {
     // Construct
     for (const provider in providers) {
-        const wsProvider = new WsProvider(providers[provider].endpoint)
+        const wsProvider = new WsProvider(get(providers, provider).endpoint)
         const api = await ApiPromise.create({ provider: wsProvider })
 
         // Do something

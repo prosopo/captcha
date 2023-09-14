@@ -1,31 +1,23 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "module": "esnext",
-    "target": "esnext",
-    "lib": [
-      "es6",
-      "dom"
-    ],
-    "jsx": "react-jsx"
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/*.ts",
-    "src/**/*.tsx"
-  ],
-  "references": [
-    {
-      "path": "../api"
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": ["es6", "dom"]
     },
-    {
-      "path": "../common"
-    },
-    {
-      "path": "../procaptcha"
-    }
-
-  ]
+    "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
+    "references": [
+        {
+            "path": "../api"
+        },
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../procaptcha"
+        },
+        {
+            "path": "../util"
+        }
+    ]
 }

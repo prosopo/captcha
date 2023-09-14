@@ -22,7 +22,8 @@ import {
     Item,
     MerkleProof,
 } from '@prosopo/types'
-import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '@prosopo/datasets'
+import { NO_SOLUTION_VALUE, getSolutionValueToHash } from '../../src/captcha/index.js'
+import { at, get } from '@prosopo/util'
 import { beforeAll, describe, expect, test } from 'vitest'
 import {
     compareCaptchaSolutions,
@@ -35,7 +36,7 @@ import {
     parseCaptchaDataset,
     sortAndComputeHashes,
     verifyProof,
-} from '@prosopo/datasets'
+} from '../../src/captcha/index.js'
 import path from 'path'
 
 describe('CAPTCHA FUNCTIONS', async function () {
@@ -49,6 +50,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
                 computeItemHash({
                     data: path.join('http://localhost', `/tests/js/mocks/data/img/01.0${i + 1}.jpeg`),
                     type: CaptchaItemTypes.Text,
+                    hash: '',
                 })
             )
         )
@@ -167,19 +169,20 @@ describe('CAPTCHA FUNCTIONS', async function () {
         const dataset = { ...DATASET }
         dataset.captchas = await Promise.all(
             dataset.captchas.map(
-                async (captcha): Promise<Captcha> => ({
-                    ...captcha,
-                    items: await Promise.all(
-                        captcha.items.map(async (item): Promise<HashedItem> => await computeItemHash(item))
-                    ),
-                })
+                async (captcha): Promise<Captcha> =>
+                    ({
+                        ...captcha,
+                        items: await Promise.all(
+                            captcha.items.map(async (item): Promise<HashedItem> => await computeItemHash(item))
+                        ),
+                    }) as Captcha
             )
         )
 
         const captchaHashes = dataset.captchas.map((captcha) => computeCaptchaHash(captcha, true, true, false))
-        expect(captchaHashes[0]).to.equal('captchaId' in dataset.captchas[0] ? dataset.captchas[0].captchaId : '')
-        expect(captchaHashes[1]).to.equal('captchaId' in dataset.captchas[1] ? dataset.captchas[1].captchaId : '')
-        expect(captchaHashes[0]).to.not.equal(captchaHashes[1])
+        expect(at(captchaHashes, 0)).to.equal(get(at(dataset.captchas, 0), 'captchaId', false) ?? '')
+        expect(captchaHashes[1]).to.equal(get(at(dataset.captchas, 1), 'captchaId', false) ?? '')
+        expect(at(captchaHashes, 0)).to.not.equal(at(captchaHashes, 1))
     })
 
     test('Captcha solutions are successfully parsed', () => {
@@ -235,7 +238,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
     })
 
     test('Captcha solutions are correctly sorted and computed - non matching order', () => {
-        const idsAndHashes = sortAndComputeHashes(RECEIVED, [STORED[1], STORED[0]])
+        const idsAndHashes = sortAndComputeHashes(RECEIVED, [at(STORED, 1), at(STORED, 0)])
 
         expect(idsAndHashes.every(({ hash, captchaId }) => hash === captchaId)).to.be.true
     })
@@ -247,10 +250,10 @@ describe('CAPTCHA FUNCTIONS', async function () {
     test('Non-matching captcha solutions are correctly compared, throwing an error', () => {
         const stored = [
             {
-                ...STORED[0],
+                ...at(STORED, 0),
                 captchaId: '0xe8cc1f7a69f8a073db20ab3a391f38014d299298c2f5b881628592b48df7fbeb',
             },
-            STORED[1],
+            at(STORED, 1),
         ]
 
         expect(() => compareCaptchaSolutions(RECEIVED, stored)).to.throw()
@@ -275,7 +278,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
                 target: '',
                 solved: true,
             },
-            STORED[0],
+            at(STORED, 0),
         ]
 
         expect(compareCaptchaSolutions(received, stored)).to.be.false
@@ -400,7 +403,7 @@ describe('CAPTCHA FUNCTIONS', async function () {
         expect(verification).to.be.false
     })
     test('Returns sorted solutions', () => {
-        const emptyArraySolution = []
+        const emptyArraySolution: number[] = []
         expect(getSolutionValueToHash(emptyArraySolution)).to.deep.equal([])
         const hashSolutions = ['0x3', '0x2', '0x1']
         expect(getSolutionValueToHash(hashSolutions)).to.deep.equal(['0x1', '0x2', '0x3'])

@@ -1,13 +1,13 @@
 {
     "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
-    "editor.formatOnPaste": true, // required
-    "editor.formatOnType": true, // required
-    "editor.formatOnSave": true, // optional
-    "editor.formatOnSaveMode": "file", // required to format on save
-    "files.autoSave": "onFocusChange", // optional but recommended
-    "vs-code-prettier-eslint.prettierLast": "false", // set as "true" to run 'prettier' last not first
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": true,
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "files.autoSave": "onFocusChange",
+    "vs-code-prettier-eslint.prettierLast": "false",
     "[rust]": {
-        "editor.defaultFormatter": "rust-lang.rust-analyzer", // install the rust-analyzer extension first!
+        "editor.defaultFormatter": "rust-lang.rust-analyzer",
         "editor.formatOnSave": true
     },
     "[json]": {

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-class UrlConverter {
+export class UrlConverter {
     private readonly symbols = [
         '', // empty string == termination symbol / noop. This may occur at the end of a byte array where the first 2 bits are used in the final symbol and the remaining 6 bits are ignored. But, because of the spacing, the remaining 6 bits appear to be a symbol. These 6 bits will be set to 000000. Thus we map 000000 (decimal number 0) to the empty string here.
         '0',
@@ -182,6 +182,9 @@ class UrlConverter {
             // symbol 4 uses the last 6 bits of the third byte
             const numIndex = (bitCount / this.symbolNBits) | 0
             const num = nums[numIndex]
+            if (num === undefined) {
+                throw new Error(`Could not find number at index ${numIndex} of '${nums}'`)
+            }
             const byteIndex = (bitCount / this.byteNBits) | 0
             const usedBitsInByte = bitCount % this.byteNBits
             const unusedBitsInByte = this.byteNBits - usedBitsInByte
@@ -221,6 +224,9 @@ class UrlConverter {
         for (let bitCount = 0; bitCount < nBits; ) {
             const byteIndex = (bitCount / this.byteNBits) | 0
             const byte = bytes[byteIndex]
+            if (byte === undefined) {
+                throw new Error(`Could not find byte at index ${byteIndex} of '${bytes}'`)
+            }
             const usedBitsInByte = bitCount % this.byteNBits
             const unusedBitsInByte = this.byteNBits - usedBitsInByte
             // unused bits correspond to the current symbol, so consume up to 6 bits
