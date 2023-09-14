@@ -162,10 +162,10 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
             await this.tables?.dataset
                 .updateOne({ datasetId: parsedDataset.datasetId }, { $set: datasetDoc }, { upsert: true })
                 .catch((err) => {
-                    console.log(err)
+                    this.logger.error(err)
                 })
 
-            console.log('parsedDataset.captchas', parsedDataset.captchas)
+            this.logger.info('parsedDataset.captchas', parsedDataset.captchas)
 
             // put the dataset id on each of the captcha docs and remove the solution
             const captchaDocs = parsedDataset.captchas.map(({ solution, ...captcha }, index) => ({
@@ -189,8 +189,6 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
                     }))
                 )
             }
-
-            console.log('parsedDataset.captchas', parsedDataset.captchas)
 
             // insert any captcha solutions into the solutions collection
             const captchaSolutionDocs = parsedDataset.captchas
