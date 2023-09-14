@@ -62,7 +62,7 @@ jobs:
               run: |
                   echo "PROVIDER_IMAGE_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
                   echo "LATEST_PROVIDER_VERSION=${{ env.LATEST_PROVIDER_VERSION }}"
-                  
+
                   # Condition 1: If version is equal to the npm version, exit successfully
                   if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
                       echo "Current npm version detected, exiting successfully"
