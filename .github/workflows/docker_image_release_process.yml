@@ -106,3 +106,16 @@ jobs:
                   docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:test
                   docker push prosopo/js_server:test
 
+            - name: Build the provider bundle
+              # if: steps.check_provider_image_version.outputs.should_continue == 'true'
+              run: |
+                  # Navigate to the provider directory
+                  cd packages/cli
+                  npm run build:prod
+                  cd ../..
+
+            - name: Build the provider image
+              # if: steps.check_provider_image_version.outputs.should_continue == 'true'
+              run: |
+                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:test
+                  docker push prosopo/provider:test
