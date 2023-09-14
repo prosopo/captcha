@@ -23,7 +23,7 @@ import { updateEnvFiles } from '../util/index.js'
 import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
-import { getPaths } from '@prosopo/config'
+import { getPaths, getContractNames } from '@prosopo/config'
 
 const paths = getPaths()
 const rootDir = path.resolve('.')
@@ -147,7 +147,7 @@ export async function processArgs(args: string[]) {
             describe: 'Update all contracts into the contract package.',
             builder: (yargs) => yargs,
             handler: async (argv) => {
-                const contracts = ['captcha', 'proxy', 'common']
+                const contracts = getContractNames()
                 for (const contract of contracts) {
                     const inDir = `${paths.protocolDist}/${contract}`
                     await exec(

@@ -1,3 +1,7 @@
+export const getContractNames = () => {
+    return ['captcha', 'common', 'proxy']
+}
+
 export type Paths = {
     root: string
     dev: string
