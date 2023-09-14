@@ -19,14 +19,14 @@ async function main() {
     try {
         console.log('Check provider command executed.')
         const currentProvider = await execShellCommand(
-            `node provider_cli_bundle.main.bundle.js provider_details --address ${process.env.PROVIDER_ADDRESS}`
+            `node provider.cli.bundle.js provider_details --address ${process.env.PROVIDER_ADDRESS}`
         )
         console.log('Raw output:', currentProvider)
 
         if (!currentProvider.includes('"status": "Active"')) {
             console.log('Registration command executed.')
             const registration = await execShellCommand(
-                `node provider_cli_bundle.main.bundle.js provider_register --url ${process.env.API_BASE_URL} --fee 0 --payee Provider`
+                `node provider.cli.bundle.js provider_register --url ${process.env.API_BASE_URL} --fee 0 --payee Provider`
             )
             console.log(registration)
         } else {
@@ -35,11 +35,11 @@ async function main() {
 
         console.log('Set data command executed.')
         const dataSet = await execShellCommand(
-            'node provider_cli_bundle.main.bundle.js provider_set_data_set --file ./128_target_generated.json'
+            'node provider.cli.bundle.js provider_set_data_set --file ./128_target_generated.json'
         )
         console.log(dataSet)
 
-        await execShellCommand('node provider_cli_bundle.main.bundle.js --api')
+        await execShellCommand('node provider.cli.bundle.js --api')
         console.log('API command executed.')
     } catch (error) {
         console.error('Error:', error)
