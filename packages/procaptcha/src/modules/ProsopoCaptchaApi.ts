@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { AxiosError } from 'axios'
 import {
     CaptchaMerkleTree,
     computeCaptchaHash,
@@ -28,6 +29,7 @@ import { ProviderApi } from '@prosopo/api'
 import { RandomProvider } from '@prosopo/types'
 import { Signer } from '@polkadot/api/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
+import { at } from '@prosopo/util'
 import { stringToHex } from '@polkadot/util'
 
 export class ProsopoCaptchaApi {
@@ -60,16 +62,19 @@ export class ProsopoCaptchaApi {
             this.verifyCaptchaChallengeContent(this.provider, captchaChallenge)
             return captchaChallenge
         } catch (e) {
-            throw new ProsopoEnvError(e)
+            // TODO fix/improve error handling
+            throw new ProsopoEnvError(e as Error)
         }
     }
 
     public verifyCaptchaChallengeContent(provider: RandomProvider, captchaChallenge: GetCaptchaResponse): void {
         // TODO make sure root is equal to root on the provider
-        const proofLength = captchaChallenge.captchas[0].proof.length
+        const first = at(captchaChallenge.captchas, 0)
+        const proofLength = first.proof.length
         console.log(provider.provider)
 
-        if (provider.provider.datasetIdContent.toString() !== captchaChallenge.captchas[0].proof[proofLength - 1][0]) {
+        const last = at(first.proof, proofLength - 1)
+        if (provider.provider.datasetIdContent.toString() !== at(last, 0)) {
             throw new ProsopoEnvError('CAPTCHA.INVALID_DATASET_CONTENT_ID')
         }
 
@@ -130,7 +135,8 @@ export class ProsopoCaptchaApi {
                 signature
             )
         } catch (err) {
-            throw new ProsopoApiError(err)
+            // TODO fix/improve error handling
+            throw new ProsopoApiError(err as AxiosError<unknown, any>)
         }
 
         return [result, commitmentId, tx]
@@ -160,7 +166,7 @@ async function verifyCaptchaData(captchaWithProof: CaptchaWithProof): Promise<bo
         return false
     }
     // Check that the captcha content id is present in the first layer of the proof
-    return proof[0].indexOf(captchaHash) !== -1
+    return at(proof, 0).indexOf(captchaHash) !== -1
 }
 
 export default ProsopoCaptchaApi

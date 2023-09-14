@@ -11,9 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { at } from '@prosopo/util'
 import { hexToU8a } from '@polkadot/util'
 
-const arg = process.argv.slice(2)[0].trim()
+const arg = at(process.argv.slice(2), 0).trim()
 console.log(`arg          : ${arg}`)
 
 console.log(hexToU8a(arg))

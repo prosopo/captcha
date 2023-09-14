@@ -1,49 +1,18 @@
 version: '3.8'
 services:
   provider:
-    image: prosopo/provider:${PROVIDER_IMAGE_VERSION}
+    image: prosopo/fluxprovider:${PROVIDER_IMAGE_VERSION}
     build:
       context: ..
-      dockerfile: ./docker/images/provider.dockerfile
+      dockerfile: ./docker/images/provider/flux-provider.dockerfile
     env_file:
       - ../.env.rococo
     ports:
       - "9229:9229"
     tty: true
-    depends_on:
-      - database
     networks:
       - internal
       - external
-  database:
-    image: mongo:5.0.4
-    volumes:
-      - /data/db:/data/db
-    ports:
-      - "27017:27017"
-    env_file:
-      - ../.env.rococo
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-    networks:
-      - internal
-  substrate:
-    image: prosopo/substrate-contracts-node:v0.29
-    ports:
-      - "9615:9615"
-      - "9944:9944"
-      - "9933:9933"
-      - "30333:30333"
-    deploy:
-      # replicas: 1
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
 networks:
     internal:
         name: internal

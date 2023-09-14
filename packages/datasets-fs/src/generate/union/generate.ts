@@ -12,9 +12,9 @@ import {
     RawSolution,
 } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { at, get, lodash, setSeedGlobal } from '@prosopo/util'
 import { blake2AsHex } from '@polkadot/util-crypto'
 import { checkDuplicates } from '../util.js'
-import { lodash, setSeedGlobal } from '@prosopo/util'
 import bcrypt from 'bcrypt'
 import fs from 'fs'
 
@@ -78,8 +78,9 @@ export default async (args: Args, logger?: Logger) => {
     // split the labelled data by label
     const labelToImages: { [label: string]: Item[] } = {}
     for (const entry of labelled) {
-        labelToImages[entry.label] = labelToImages[entry.label] || []
-        labelToImages[entry.label].push(entry)
+        const arr = labelToImages[entry.label] || []
+        arr.push(entry)
+        labelToImages[entry.label] = arr
     }
     const targets = Object.keys(labelToImages)
     // load the labels from file
@@ -105,7 +106,7 @@ export default async (args: Args, logger?: Logger) => {
         }
 
         // uniformly sample targets
-        const target = targets[i % targets.length]
+        const target = at(targets, i % targets.length)
         const notTargets = targets.filter((t) => t !== target)
         // how many labelled images should be in the captcha?
         const nLabelled = _.random(minLabelled, maxLabelled)
@@ -115,8 +116,8 @@ export default async (args: Args, logger?: Logger) => {
         const nIncorrect = nLabelled - nCorrect
         const nUnlabelled = size - nLabelled
 
-        const targetItems = labelToImages[target]
-        const notTargetItems: Item[] = notTargets.map((notTarget) => labelToImages[notTarget]).flat()
+        const targetItems = get(labelToImages, target)
+        const notTargetItems: Item[] = notTargets.map((notTarget) => get(labelToImages, notTarget)).flat()
 
         if (nUnlabelled > unlabelled.length) {
             throw new ProsopoEnvError(new Error(`not enough unlabelled data`), 'DATASET.NOT_ENOUGH_IMAGES')
@@ -144,14 +145,14 @@ export default async (args: Args, logger?: Logger) => {
         const unlabelledItems = new Set<Item>()
         while (unlabelledItems.size < size - nLabelled) {
             // get a random image from the unlabelled data
-            const image = unlabelled[_.random(0, unlabelled.length - 1)]
+            const image = at(unlabelled, _.random(0, unlabelled.length - 1))
             unlabelledItems.add(image)
         }
 
         let items: Item[] = [...correctItems, ...incorrectItems, ...unlabelledItems]
         let indices: number[] = [...Array(items.length).keys()]
         indices = _.shuffle(indices)
-        items = indices.map((i) => items[i])
+        items = indices.map((i) => at(items, i))
         items = items.map((item) => {
             return {
                 data: item.data,
