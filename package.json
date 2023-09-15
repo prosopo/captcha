@@ -81,11 +81,31 @@
         "tslib": "^2.5.2",
         "typescript": "5.1.6"
     },
-    "description": "Integrates prosopo packages for development purposes",
+    "description": "Prosopo Captcha is a privacy-focused, secure alternative to reCAPTCHA. This repository integrates prosopo packages for development purposes",
     "bugs": {
         "url": "https://github.com/prosopo/captcha/issues"
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
-    "keywords": [],
+    "keywords": [
+        "captcha",
+        "prosopo",
+        "privacy",
+        "security",
+        "reCAPTCHA",
+        "anti-bot",
+        "authentication",
+        "verification",
+        "user-verification",
+        "privacy-focused",
+        "bot-detection",
+        "human-verification",
+        "form-security",
+        "web-security",
+        "anti-spam",
+        "frontend-security",
+        "open-source",
+        "free",
+        "captcha-alternative"
+    ],
     "license": "Apache-2.0"
 }

@@ -9,6 +9,7 @@ on:
             - '.github/workflows/tests_provider.yml'
             - 'packages/**.json'
             - 'dev/**.json'
+    workflow_dispatch:
 
 env:
     CARGO_TERM_COLOR: always

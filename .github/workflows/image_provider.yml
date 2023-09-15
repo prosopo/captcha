@@ -13,6 +13,7 @@ on:
             - 'dev/**'
             - 'packages/**'
             - '.github/workflows/image_provider.yml'
+    workflow_dispatch:
 
 env:
     CARGO_TERM_COLOR: always
@@ -51,19 +52,26 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            # Check if the provider image version is greater than the latest version on the npm package @prosopo/provider
-            # For example, if the provider image version is 0.1.7 and the latest npm version is 0.1.6, then the provider image
-            # version is greater. If the provider image version is 0.1.6 and the latest npm version is 0.1.6, then the provider
-            # image version is not greater, and the workflow will not continue unless the provider image version is updated in
-            # the root package.json. Technically, this check doesn't cover the case where the provider image version is lower
-            # than the latest npm version, but that should never happen.
+            # Check if the provider image version is not less than the latest version on the npm package @prosopo/provider
+            # For example, if the provider image version is 0.1.7 and the latest npm version is 0.1.7, then the provider image
+            # version is equal. If the provider image version is 0.1.6 and the latest npm version is 0.1.7, then the provider
+            # image version is not less, and the workflow will not continue unless the provider image version is updated in
+            # the root package.json
             - name: Check provider image version
               id: check_provider_image_version
               run: |
                   echo "PROVIDER_IMAGE_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
                   echo "LATEST_PROVIDER_VERSION=${{ env.LATEST_PROVIDER_VERSION }}"
-                  if [ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]; then
-                      echo "Provider image version is not greater than the latest npm version. Please update the provider image version in the root package.json"
+
+                  # Condition 1: If version is equal to the npm version, exit successfully
+                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
+                      echo "Current npm version detected, exiting successfully"
+                      exit 0
+                  fi
+
+                  # Condition 2: If version is less than the npm version, exit with error
+                  if [[ $(echo -e "${{ env.PROVIDER_IMAGE_VERSION }}\n${{ env.LATEST_PROVIDER_VERSION }}" | sort -V | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
+                      echo "Provider image version is less than the latest npm version. Please update the provider image version in the root package.json"
                       exit 1
                   fi
 
