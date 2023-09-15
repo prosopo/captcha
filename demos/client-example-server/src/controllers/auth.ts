@@ -13,9 +13,11 @@
 // limitations under the License.
 import { ApiParams } from '@prosopo/types'
 import { Connection } from 'mongoose'
+import { NextFunction, Request, Response } from 'express'
 import { ProcaptchaResponse } from '@prosopo/types'
 import { ProsopoServer } from '@prosopo/server'
-import { UserInterface } from '../models/user'
+import { UserInterface } from '../models/user.js'
+import { at } from '@prosopo/util'
 import { blake2b } from '@noble/hashes/blake2b'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { u8aToHex } from '@polkadot/util'
@@ -33,7 +35,13 @@ function hashPassword(password: string): string {
     return u8aToHex(blake2b(password))
 }
 
-const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, res, next) => {
+const signup = async (
+    mongoose: Connection,
+    prosopoServer: ProsopoServer,
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
     try {
         const User = mongoose.model<UserInterface>('User')
         // checks if email exists
@@ -72,11 +80,11 @@ const signup = async (mongoose: Connection, prosopoServer: ProsopoServer, req, r
         }
     } catch (err) {
         console.error('error', err)
-        res.status(500).json({ message: err.message || 'internal server error' })
+        res.status(500).json({ message: (err as Error).message || 'internal server error' })
     }
 }
 
-const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, res) => {
+const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req: Request, res: Response) => {
     const User = mongoose.model<UserInterface>('User')
     await prosopoServer.isReady()
     // checks if email exists
@@ -85,7 +93,7 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
     })
         .then(async (dbUser) => {
             if (!dbUser) {
-                return res.status(404).json({ message: 'user not found' })
+                res.status(404).json({ message: 'user not found' })
             } else {
                 const payload = SubscribeBodySpec.parse(req.body)
 
@@ -110,18 +118,18 @@ const login = async (mongoose: Connection, prosopoServer: ProsopoServer, req, re
         })
 }
 
-const isAuth = (req, res) => {
-    const authHeader = req.get('Authorization')
+const isAuth = (req: Request, res: Response) => {
+    const authHeader = req.get('Authorization') || ''
     if (!authHeader) {
-        return res.status(401).json({ message: 'not authenticated' })
+        res.status(401).json({ message: 'not authenticated' })
     }
 
-    const token = authHeader.split(' ')[1]
+    const token = at(authHeader.split(' '), 1)
     let decodedToken
     try {
         decodedToken = jwt.verify(token, 'secret')
     } catch (err) {
-        return res.status(500).json({ message: err.message || 'could not decode the token' })
+        res.status(500).json({ message: (err as Error).message || 'could not decode the token' })
     }
 
     if (!decodedToken) {

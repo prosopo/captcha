@@ -64,7 +64,8 @@ export class CalculateSolutionsTask extends Tasks {
                             `There are ${solutionsToUpdate.rows().length} CAPTCHA challenges to update with solutions`
                         )
                         try {
-                            const captchaIdsToUpdate = [...solutionsToUpdate['captchaId'].values()]
+                            // TODO polars doesn't have the captchaId field in the type
+                            const captchaIdsToUpdate = [...(solutionsToUpdate as any)['captchaId'].values()]
                             const commitmentIds = solutions
                                 .filter((s) => captchaIdsToUpdate.indexOf(s.captchaId) > -1)
                                 .map((s) => s.commitmentId)
@@ -91,7 +92,8 @@ export class CalculateSolutionsTask extends Tasks {
             }
             return 0
         } catch (error) {
-            throw new ProsopoEnvError(error, 'GENERAL.CALCULATE_CAPTCHA_SOLUTION')
+            // TODO fix error handling
+            throw new ProsopoEnvError(error as Error, 'GENERAL.CALCULATE_CAPTCHA_SOLUTION')
         }
     }
 }

@@ -11,12 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { at } from '@prosopo/util'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex, u8aToHex } from '@polkadot/util'
 import { isAddress } from '@polkadot/util-crypto'
 
 const ss58Format = 42
-const arg = process.argv.slice(2)[0].trim()
+
+const arg = at(process.argv.slice(2), 0).trim()
 
 let bytes: Uint8Array | undefined = undefined
 let hex: string | undefined = undefined

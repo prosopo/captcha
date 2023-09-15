@@ -14,6 +14,7 @@
 import { Box, Button, ThemeProvider, Typography } from '@mui/material'
 import { CaptchaWidget } from './CaptchaWidget.js'
 import { GetCaptchaResponse } from '@prosopo/api'
+import { at } from '@prosopo/util'
 import { useTranslation } from '@prosopo/common'
 import React from 'react'
 import addDataAttr from '../util/index.js'
@@ -32,8 +33,8 @@ export interface CaptchaComponentProps {
 const CaptchaComponent = (props: CaptchaComponentProps) => {
     const { t } = useTranslation()
     const { challenge, index, solutions, onSubmit, onCancel, onClick, onNext } = props
-    const captcha = challenge.captchas[index]
-    const solution = solutions[index]
+    const captcha = at(challenge.captchas, index)
+    const solution = at(solutions, index)
 
     return (
         <ThemeProvider theme={theme}>
@@ -98,7 +99,7 @@ const CaptchaComponent = (props: CaptchaComponentProps) => {
                                     fontSize: theme.typography.h6.fontSize,
                                 }}
                             >
-                                {`${props.challenge.captchas[props.index].captcha.target}`}
+                                {`${at(props.challenge.captchas, props.index).captcha.target}`}
                             </Typography>
                         </Box>
 

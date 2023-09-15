@@ -13,6 +13,7 @@
 // limitations under the License.
 import { blake2AsHex, blake2AsU8a, keccakAsHex, keccakAsU8a } from '@polkadot/util-crypto'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
+import { get } from '@prosopo/util'
 import {
     hexToBn,
     hexToString,
@@ -55,7 +56,7 @@ function main() {
 
     const max = Object.keys(fns).reduce((max, key) => Math.max(max, key.length), 0)
     for (const fnName in fns) {
-        const fn = fns[fnName]
+        const fn = get(fns, fnName)
         let result = ''
         try {
             result = fn(arg)

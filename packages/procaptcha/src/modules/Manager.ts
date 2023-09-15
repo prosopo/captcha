@@ -19,6 +19,7 @@ import {
     ProcaptchaState,
     ProcaptchaStateUpdateFn,
 } from '../types/manager.js'
+import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise, Keyring } from '@polkadot/api'
 import {
     CaptchaSolution,
@@ -32,6 +33,7 @@ import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
 import { WsProvider } from '@polkadot/rpc-provider'
+import { at } from '@prosopo/util'
 import { randomAsHex } from '@polkadot/util-crypto'
 import { sleep } from '../utils/utils.js'
 import { stringToU8a } from '@polkadot/util'
@@ -60,9 +62,7 @@ const buildUpdateState = (state: ProcaptchaState, onStateUpdate: ProcaptchaState
     const updateCurrentState = (nextState: Partial<ProcaptchaState>) => {
         // mutate the current state. Note that this is in order of properties in the nextState object.
         // e.g. given {b: 2, c: 3, a: 1}, b will be set, then c, then a. This is because JS stores fields in insertion order by default, unless you override it with a class or such by changing the key enumeration order.
-        for (const key in nextState) {
-            state[key] = nextState[key]
-        }
+        Object.assign(state, nextState)
         // then call the update function for the frontend to do the same
         onStateUpdate(nextState)
 
@@ -91,15 +91,16 @@ export function Manager(
 ) {
     // events are emitted at various points during the captcha process. These each have default behaviours below which can be overridden by the frontend using callbacks.
 
+    const alertError = (error: Error) => {
+        console.log(error)
+        alert(error.message)
+    }
+
     const events: ProcaptchaEvents = Object.assign(
         {
-            onAccountNotFound: (address) => {
-                alert(`Account ${address} not found`)
-            },
-            onError: (error) => {
-                alert(`${error?.message ?? 'An unexpected error occurred'}, please try again`)
-            },
-            onHuman: (output) => {
+            onAccountNotFound: alertError,
+            onError: alertError,
+            onHuman: (output: { user: string; dapp: string; commitmentId?: string; providerUrl?: string }) => {
                 console.log('onHuman event triggered', output)
             },
             onExtensionNotFound: () => {
@@ -115,12 +116,13 @@ export function Manager(
         callbacks
     )
 
-    // mapping of type of error to relevant event callback
-    const errorToEventMap = {
-        AccountNotFoundError: events.onAccountNotFound,
-        ExtensionNotFoundError: events.onExtensionNotFound,
-        Error: events.onError,
-        ExpiredError: events.onExpired,
+    const dispatchErrorEvent = (err: unknown) => {
+        const error = err instanceof Error ? err : new Error(String(err))
+        if (error instanceof AccountNotFoundError) {
+            events.onAccountNotFound(error.message)
+        } else {
+            events.onError(error)
+        }
     }
 
     // get the state update mechanism
@@ -146,12 +148,24 @@ export function Manager(
         return config
     }
 
+    const fallable = async (fn: () => Promise<void>) => {
+        try {
+            await fn()
+        } catch (err) {
+            console.error(err)
+            // dispatch relevant error event
+            dispatchErrorEvent(err)
+            // hit an error, disallow user's claim to be human
+            updateState({ isHuman: false, showModal: false, loading: false })
+        }
+    }
+
     /**
      * Called on start of user verification. This is when the user ticks the box to claim they are human.
      */
     const start = async () => {
         console.log('Starting procaptcha')
-        try {
+        await fallable(async () => {
             if (state.loading) {
                 console.log('Procaptcha already loading')
                 return
@@ -274,18 +288,11 @@ export function Manager(
                 timeout,
                 blockNumber,
             })
-        } catch (err) {
-            console.error(err)
-            // dispatch relevant error event
-            const event = errorToEventMap[err.constructor] || events.onError
-            event(err)
-            // hit an error, disallow user's claim to be human
-            updateState({ isHuman: false, showModal: false, loading: false })
-        }
+        })
     }
 
     const submit = async () => {
-        try {
+        await fallable(async () => {
             console.log('submitting solutions')
             // disable the time limit, user has submitted their solution in time
             clearTimeout()
@@ -302,7 +309,7 @@ export function Manager(
 
             // append solution to each captcha in the challenge
             const captchaSolution: CaptchaSolution[] = state.challenge.captchas.map((captcha, index) => {
-                const solution = state.solutions[index]
+                const solution = at(state.solutions, index)
                 return {
                     captchaId: captcha.captcha.captchaId,
                     captchaContentId: captcha.captcha.captchaContentId,
@@ -315,7 +322,8 @@ export function Manager(
             const blockNumber = getBlockNumber()
             const signer = account.extension.signer
 
-            if (!challenge.captchas[0].captcha.datasetId) {
+            const first = at(challenge.captchas, 0)
+            if (!first.captcha.datasetId) {
                 throw new Error('No datasetId set for challenge')
             }
 
@@ -325,7 +333,7 @@ export function Manager(
             const submission: TCaptchaSubmitResult = await captchaApi.submitCaptchaSolution(
                 signer,
                 challenge.requestHash,
-                challenge.captchas[0].captcha.datasetId,
+                first.captcha.datasetId,
                 captchaSolution,
                 salt
             )
@@ -356,13 +364,7 @@ export function Manager(
                     blockNumber,
                 })
             }
-        } catch (err) {
-            // dispatch relevant error event
-            const event = errorToEventMap[err.constructor] || events.onError
-            event(err)
-            // hit an error, disallow user's claim to be human
-            updateState({ isHuman: false, showModal: false, loading: false })
-        }
+        })
     }
 
     const cancel = async () => {
@@ -386,7 +388,7 @@ export function Manager(
         }
         const index = state.index
         const solutions = state.solutions
-        const solution = solutions[index]
+        const solution = at(solutions, index)
         if (solution.includes(hash)) {
             console.log('deselecting', hash)
             // remove the hash from the solution
