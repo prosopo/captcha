@@ -149,9 +149,7 @@ export async function processArgs(args: string[]) {
                 const contracts = getContractNames()
                 for (const contract of contracts) {
                     const inDir = `${paths.protocolDist}/${contract}`
-                    await exec(
-                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.typechain}/src/${contract}`
-                    )
+                    await exec(`node dist/cli/index.js import_contract --in=${inDir} --out=${paths.typechain}/src`)
                 }
             },
         }).argv
