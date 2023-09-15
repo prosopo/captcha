@@ -34,12 +34,10 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             } else if (filePath.endsWith('.ts')) {
                 // replace the relative imports with .js extension applied
                 // eslint-disable-next-line no-useless-escape
-                const regex = /import\s+(.+?)\s+from\s+(["']\..*["'])/gm
+                const regex = /(import(?:(?!from).)+from\s+)(['"][.\/a-zA-Z0-9-_]+?['"])(\s+assert\s+{[^}]*})?/gms
                 const fileContents = fs.readFileSync(filePath, 'utf8')
-                let replaced = fileContents.replace(regex, (match, p1, p2) => {
-                    // skip anything that has the json assertion
-                    if (match.match(/assert\s+{\s*type:\s*['"]json["']\s*}/gm)) return match
-                    const name = p1.toString()
+                let replaced = fileContents.replace(regex, (match, p1, p2, p3) => {
+                    const start = p1.toString()
                     const srcQuoted = p2.toString()
                     const src = getPath(srcQuoted)
                     const extension = getExtension(src)
@@ -47,19 +45,21 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     if (extension === 'js') {
                         // already has .js extension
                         return match
-                    } else if (extension === 'json') {
+                    } else if (extension === 'json' && !(p3 ?? '').includes('assert')) {
                         // needs json assertion
-                        result = `import ${name} from '${src}' assert { type: 'json' }`
+                        result = `${start}'${src}' assert { type: 'json' }`
                     } else {
                         // needs .js extension
-                        result = `import ${name} from '${src}.js'`
+                        result = `${start}'${src}.js'`
                     }
                     console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return `${result}`
                 })
                 // eslint-disable-next-line no-useless-escape
-                replaced = replaced.replace(/(^(?!\s*\/\/\s*eslint).*)\n+(\s*)\/\/\s*@ts-ignore/gm, (match, p1, p2) => {
-                    const result = `${p1}\n${p2}// eslint-disable-next-line @typescript-eslint/ban-ts-comment\n${p2}// @ts-ignore`
+                replaced = replaced.replace(/\n(.*)\n(\s*)\/\/\s*@ts-ignore/gm, (match, p1, p2) => {
+                    // don't replace if already ignored by eslint
+                    if (p1.includes('eslint-disable-next-line')) return match
+                    const result = `\n${p1}\n${p2}// eslint-disable-next-line @typescript-eslint/ban-ts-comment\n${p2}// @ts-ignore`
                     console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return result
                 })
