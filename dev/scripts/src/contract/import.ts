@@ -71,6 +71,11 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
 }
 
 const getExtension = (str: string) => {
+    const i = str.indexOf('assert')
+    if (i >= 0) {
+        // discard everything including and after assert
+        str = str.slice(0, i)
+    }
     const arr = str.split('.')
     if (arr.length <= 1) {
         return ''
