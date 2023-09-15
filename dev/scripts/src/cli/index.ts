@@ -14,16 +14,15 @@
 import { LogLevel, getLogger } from '@prosopo/common'
 import { deployDapp, deployProtocol } from '../contract/deploy/index.js'
 import { exec } from '../util/index.js'
+import { getContractNames, getPaths } from '@prosopo/config'
 import { getLogLevel } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import { importContract } from '../contract/index.js'
 import { loadEnv } from '@prosopo/cli'
 import { setup } from '../setup/index.js'
 import { updateEnvFiles } from '../util/index.js'
-import fs from 'fs'
 import path from 'path'
 import yargs from 'yargs'
-import { getPaths, getContractNames } from '@prosopo/config'
 
 const paths = getPaths()
 const rootDir = path.resolve('.')
