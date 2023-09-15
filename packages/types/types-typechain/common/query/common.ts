@@ -8,7 +8,8 @@ import { queryJSON, queryOkJSON, handleReturnType } from '@727-ventures/typechai
 import type * as ArgumentTypes from '../types-arguments/common.js'
 import type * as ReturnTypes from '../types-returns/common.js'
 import type BN from 'bn.js';
-//@ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import {ReturnNumber} from '@727-ventures/typechain-types';
 import {getTypeDescription} from './../shared/utils.js'
 import DATA_TYPE_DESCRIPTIONS from '../data/common.json' assert { type: 'json' }

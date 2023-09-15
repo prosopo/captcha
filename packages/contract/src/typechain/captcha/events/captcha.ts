@@ -22,6 +22,7 @@ export default class EventsClass {
 		callback : (args: any[], event: any) => void,
 		filter : (eventName: string) => boolean = () => true
 	) {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
 		return this.__api.query.system.events((events) => {
 			events.forEach((record: any) => {

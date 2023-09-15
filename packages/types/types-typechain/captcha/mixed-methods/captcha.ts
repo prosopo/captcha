@@ -10,9 +10,11 @@ import { txSignAndSend } from '@727-ventures/typechain-types';
 import type * as ArgumentTypes from '../types-arguments/captcha.js'
 import type * as ReturnTypes from '../types-returns/captcha.js'
 import type BN from 'bn.js';
-//@ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import {ReturnNumber} from '@727-ventures/typechain-types';
 import {getTypeDescription} from './../shared/utils.js'
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import type {EventRecord} from "@polkadot/api/submittable";
 import {decodeEvents} from '../shared/utils.js'
@@ -436,7 +438,7 @@ export default class Methods {
 		threshold: (number | string | BN),
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<boolean, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "dappOperatorIsHumanUser", [userAccount, threshold], __options, (result) => { return handleReturnType(result, getTypeDescription(44, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "dappOperatorIsHumanUser", [userAccount, threshold], __options, (result) => { return handleReturnType(result, getTypeDescription(45, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -449,7 +451,7 @@ export default class Methods {
 		userAccount: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.LastCorrectCaptcha, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "dappOperatorLastCorrectCaptcha", [userAccount], __options, (result) => { return handleReturnType(result, getTypeDescription(47, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "dappOperatorLastCorrectCaptcha", [userAccount], __options, (result) => { return handleReturnType(result, getTypeDescription(48, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -462,7 +464,7 @@ export default class Methods {
 		datasetId: ArgumentTypes.Hash,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.CaptchaData, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getCaptchaData", [datasetId], __options, (result) => { return handleReturnType(result, getTypeDescription(50, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getCaptchaData", [datasetId], __options, (result) => { return handleReturnType(result, getTypeDescription(51, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -475,7 +477,7 @@ export default class Methods {
 		userAccount: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.User, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getUser", [userAccount], __options, (result) => { return handleReturnType(result, getTypeDescription(53, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getUser", [userAccount], __options, (result) => { return handleReturnType(result, getTypeDescription(54, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -488,7 +490,7 @@ export default class Methods {
 		commitId: ArgumentTypes.Hash,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.Commit, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getCommit", [commitId], __options, (result) => { return handleReturnType(result, getTypeDescription(56, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getCommit", [commitId], __options, (result) => { return handleReturnType(result, getTypeDescription(57, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -501,7 +503,7 @@ export default class Methods {
 		providerAccounts: Array<ArgumentTypes.AccountId>,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<Array<ReturnTypes.Provider>, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "listProvidersByAccounts", [providerAccounts], __options, (result) => { return handleReturnType(result, getTypeDescription(58, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "listProvidersByAccounts", [providerAccounts], __options, (result) => { return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -514,7 +516,7 @@ export default class Methods {
 		statuses: Array<ArgumentTypes.GovernanceStatus>,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<Array<ReturnTypes.Provider>, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "listProvidersByStatus", [statuses], __options, (result) => { return handleReturnType(result, getTypeDescription(58, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "listProvidersByStatus", [statuses], __options, (result) => { return handleReturnType(result, getTypeDescription(59, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -529,7 +531,7 @@ export default class Methods {
 		dappContract: ArgumentTypes.AccountId,
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<ReturnTypes.RandomProvider, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getRandomActiveProvider", [userAccount, dappContract], __options, (result) => { return handleReturnType(result, getTypeDescription(61, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getRandomActiveProvider", [userAccount, dappContract], __options, (result) => { return handleReturnType(result, getTypeDescription(62, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
@@ -540,7 +542,7 @@ export default class Methods {
 	"getAllProviderAccounts" (
 		__options: GasLimit,
 	): Promise< QueryReturnType< Result<Result<Array<ReturnTypes.AccountId>, ReturnTypes.Error>, ReturnTypes.LangError> > >{
-		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getAllProviderAccounts", [], __options, (result) => { return handleReturnType(result, getTypeDescription(64, DATA_TYPE_DESCRIPTIONS)); });
+		return queryOkJSON( this.__apiPromise, this.__nativeContract, this.__callerAddress, "getAllProviderAccounts", [], __options, (result) => { return handleReturnType(result, getTypeDescription(65, DATA_TYPE_DESCRIPTIONS)); });
 	}
 
 	/**
