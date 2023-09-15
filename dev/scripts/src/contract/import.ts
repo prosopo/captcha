@@ -78,35 +78,32 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     walk(pathToOutput)
 
     const _ = lodash()
-    const writeIndexJsFiles = (src: string) => {
+    
+    const writeIndexJsFiles = (src: string, parentName: string = '') => {
         // find all files in dir
         const files = fs.readdirSync(src)
         let str = ''
         // for each file, add an export
         files.forEach((file) => {
-            if (file === 'index.ts') {
+            if(file === 'index.ts') {
                 return
             }
             const filePath = `${src}/${file}`
             const isDir = fs.lstatSync(filePath).isDirectory()
-            let ext = ''
-            if (file.endsWith('.ts')) {
-                ext = '.js'
-            } else if (isDir) {
-                ext = '/index.js'
-            }
             const parts = file.split('.')
             const fileName = parts[0]
             const camel = _.camelCase(fileName)
             const name = _.upperFirst(camel)
-            if (file.endsWith('.json')) {
-                str += `export { default as ${name} } from './${file}'\n`
+            if(file.endsWith('.json')) {
+                str += `export { default as ${name}${parentName} } from './${file}'\n`
+            } else if(!isDir) {
+                str += `export * as ${name}${parentName} from './${fileName}.js'\n`
             } else {
-                str += `export * as ${name} from './${fileName}${ext}'\n`
+                str += `export * from './${fileName}/index.js'\n`
             }
             // if directory, recurse
             if (isDir) {
-                writeIndexJsFiles(filePath)
+                writeIndexJsFiles(filePath, name)
             }
         })
         // write the index file
