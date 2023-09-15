@@ -17,6 +17,7 @@ import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { SyntheticEvent, useEffect, useState } from 'react'
 import { useTranslation } from '@prosopo/common'
 import { web3AccountsSubscribe, web3Enable } from '@polkadot/extension-dapp'
+import React from 'react'
 // import Autocomplete from '@mui/material/Autocomplete/Autocomplete.js'
 // import TextField from '@mui/material/TextField/TextField.js'
 

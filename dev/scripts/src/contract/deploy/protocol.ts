@@ -15,7 +15,7 @@ import { Abi } from '@polkadot/api-contract'
 import { AbiJSON, Wasm } from '../../util/index.js'
 import { AccountId, EventRecord } from '@polkadot/types/interfaces'
 import { ContractDeployer } from '@prosopo/contract'
-import { LogLevelSchema, getLogger, reverseHexString } from '@prosopo/common'
+import { LogLevel, getLogger, reverseHexString } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { defaultConfig, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
 import { getPair } from '@prosopo/common'
@@ -23,7 +23,7 @@ import { loadEnv } from '@prosopo/cli'
 import { randomAsHex } from '@polkadot/util-crypto'
 import path from 'path'
 
-const log = getLogger(LogLevelSchema.enum.Info, 'dev.deploy')
+const log = getLogger(LogLevel.enum.info, 'dev.deploy')
 
 async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
     const pairType = getPairType()
@@ -33,12 +33,12 @@ async function deploy(wasm: Uint8Array, abi: Abi, deployerPrefix?: string) {
     const config = defaultConfig()
     const env = new ProviderEnvironment(pair, config)
     await env.isReady()
-    log.debug(reverseHexString(env.api.createType('u16', 10).toHex().toString()), 'max_user_history_len')
-    log.debug(reverseHexString(env.api.createType('BlockNumber', 32).toHex().toString()), 'max_user_history_age')
-    log.debug(reverseHexString(env.api.createType('u16', 1).toHex().toString()), 'min_num_active_providers')
-    const params = []
+    log.debug(reverseHexString(env.getApi().createType('u16', 10).toHex().toString()), 'max_user_history_len')
+    log.debug(reverseHexString(env.getApi().createType('BlockNumber', 32).toHex().toString()), 'max_user_history_age')
+    log.debug(reverseHexString(env.getApi().createType('u16', 1).toHex().toString()), 'min_num_active_providers')
+    const params: any[] = []
 
-    const deployer = new ContractDeployer(env.api, abi, wasm, env.pair, params, 0, 0, randomAsHex())
+    const deployer = new ContractDeployer(env.getApi(), abi, wasm, env.pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()
 }
 
@@ -53,7 +53,7 @@ export async function run(wasmPath: string, abiPath: string, deployer?: string):
         (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
     )
     log.info('instantiateEvent', instantiateEvent?.toHuman())
-    return instantiateEvent?.event.data['contract'].toString()
+    return (instantiateEvent?.event.data as any)['contract'].toString()
 }
 // run the script if the main process is running this file
 if (typeof require !== 'undefined' && require.main === module) {

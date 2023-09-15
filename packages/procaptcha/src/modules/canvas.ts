@@ -12,89 +12,90 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoEnvError } from '@prosopo/common'
+import { at } from '@prosopo/util'
 
-function x64Add(m, n) {
-    m = [m[0] >>> 16, m[0] & 0xffff, m[1] >>> 16, m[1] & 0xffff]
-    n = [n[0] >>> 16, n[0] & 0xffff, n[1] >>> 16, n[1] & 0xffff]
-    const o = [0, 0, 0, 0]
-    o[3] += m[3] + n[3]
-    o[2] += o[3] >>> 16
+function x64Add(m: number[], n: number[]) {
+    m = [at(m, 0) >>> 16, at(m, 0) & 0xffff, at(m, 1) >>> 16, at(m, 1) & 0xffff]
+    n = [at(n, 0) >>> 16, at(n, 0) & 0xffff, at(n, 1) >>> 16, at(n, 1) & 0xffff]
+    const o: number[] = [0, 0, 0, 0]
+    o[3] += at(m, 3) + at(n, 3)
+    o[2] += at(o, 3) >>> 16
     o[3] &= 0xffff
-    o[2] += m[2] + n[2]
-    o[1] += o[2] >>> 16
+    o[2] += at(m, 2) + at(n, 2)
+    o[1] += at(o, 2) >>> 16
     o[2] &= 0xffff
-    o[1] += m[1] + n[1]
-    o[0] += o[1] >>> 16
+    o[1] += at(m, 1) + at(n, 1)
+    o[0] += at(o, 1) >>> 16
     o[1] &= 0xffff
-    o[0] += m[0] + n[0]
+    o[0] += at(m, 0) + at(n, 0)
     o[0] &= 0xffff
-    return [(o[0] << 16) | o[1], (o[2] << 16) | o[3]]
+    return [(at(o, 0) << 16) | at(o, 1), (at(o, 2) << 16) | at(o, 3)]
 }
 
-function x64Multiply(m, n) {
-    m = [m[0] >>> 16, m[0] & 0xffff, m[1] >>> 16, m[1] & 0xffff]
-    n = [n[0] >>> 16, n[0] & 0xffff, n[1] >>> 16, n[1] & 0xffff]
-    const o = [0, 0, 0, 0]
-    o[3] += m[3] * n[3]
-    o[2] += o[3] >>> 16
+function x64Multiply(m: number[], n: number[]) {
+    m = [at(m, 0) >>> 16, at(m, 0) & 0xffff, at(m, 1) >>> 16, at(m, 1) & 0xffff]
+    n = [at(n, 0) >>> 16, at(n, 0) & 0xffff, at(n, 1) >>> 16, at(n, 1) & 0xffff]
+    const o: number[] = [0, 0, 0, 0]
+    o[3] += at(m, 3) * at(n, 3)
+    o[2] += at(o, 3) >>> 16
     o[3] &= 0xffff
-    o[2] += m[2] * n[3]
-    o[1] += o[2] >>> 16
+    o[2] += at(m, 2) * at(n, 3)
+    o[1] += at(o, 2) >>> 16
     o[2] &= 0xffff
-    o[2] += m[3] * n[2]
-    o[1] += o[2] >>> 16
+    o[2] += at(m, 3) * at(n, 2)
+    o[1] += at(o, 2) >>> 16
     o[2] &= 0xffff
-    o[1] += m[1] * n[3]
-    o[0] += o[1] >>> 16
+    o[1] += at(m, 1) * at(n, 3)
+    o[0] += at(o, 1) >>> 16
     o[1] &= 0xffff
-    o[1] += m[2] * n[2]
-    o[0] += o[1] >>> 16
+    o[1] += at(m, 2) * at(n, 2)
+    o[0] += at(o, 1) >>> 16
     o[1] &= 0xffff
-    o[1] += m[3] * n[1]
-    o[0] += o[1] >>> 16
+    o[1] += at(m, 3) * at(n, 1)
+    o[0] += at(o, 1) >>> 16
     o[1] &= 0xffff
-    o[0] += m[0] * n[3] + m[1] * n[2] + m[2] * n[1] + m[3] * n[0]
+    o[0] += at(m, 0) * at(n, 3) + at(m, 1) * at(n, 2) + at(m, 2) * at(n, 1) + at(m, 3) * at(n, 0)
     o[0] &= 0xffff
-    return [(o[0] << 16) | o[1], (o[2] << 16) | o[3]]
+    return [(at(o, 0) << 16) | at(o, 1), (at(o, 2) << 16) | at(o, 3)]
 }
 
-function x64Rotl(m, n) {
+function x64Rotl(m: number[], n: number) {
     n %= 64
     if (n === 32) {
-        return [m[1], m[0]]
+        return [at(m, 1), at(m, 0)]
     } else if (n < 32) {
-        return [(m[0] << n) | (m[1] >>> (32 - n)), (m[1] << n) | (m[0] >>> (32 - n))]
+        return [(at(m, 0) << n) | (at(m, 1) >>> (32 - n)), (at(m, 1) << n) | (at(m, 0) >>> (32 - n))]
     } else {
         n -= 32
-        return [(m[1] << n) | (m[0] >>> (32 - n)), (m[0] << n) | (m[1] >>> (32 - n))]
+        return [(at(m, 1) << n) | (at(m, 0) >>> (32 - n)), (at(m, 0) << n) | (at(m, 1) >>> (32 - n))]
     }
 }
 
-function x64LeftShift(m, n) {
+function x64LeftShift(m: number[], n: number) {
     n %= 64
     if (n === 0) {
         return m
     } else if (n < 32) {
-        return [(m[0] << n) | (m[1] >>> (32 - n)), m[1] << n]
+        return [(at(m, 0) << n) | (at(m, 1) >>> (32 - n)), at(m, 1) << n]
     } else {
-        return [m[1] << (n - 32), 0]
+        return [at(m, 1) << (n - 32), 0]
     }
 }
 
-function x64Xor(m, n) {
-    return [m[0] ^ n[0], m[1] ^ n[1]]
+function x64Xor(m: number[], n: number[]) {
+    return [at(m, 0) ^ at(n, 0), at(m, 1) ^ at(n, 1)]
 }
 
-function x64Fmix(h) {
-    h = x64Xor(h, [0, h[0] >>> 1])
+function x64Fmix(h: number[]) {
+    h = x64Xor(h, [0, at(h, 0) >>> 1])
     h = x64Multiply(h, [0xff51afd7, 0xed558ccd])
-    h = x64Xor(h, [0, h[0] >>> 1])
+    h = x64Xor(h, [0, at(h, 0) >>> 1])
     h = x64Multiply(h, [0xc4ceb9fe, 0x1a85ec53])
-    h = x64Xor(h, [0, h[0] >>> 1])
+    h = x64Xor(h, [0, at(h, 0) >>> 1])
     return h
 }
 
-function x64hash128(key, seed) {
+function x64hash128(key: string, seed: number) {
     key = key || ''
     seed = seed || 0
     const remainder = key.length % 16
@@ -207,20 +208,32 @@ function x64hash128(key, seed) {
     h1 = x64Add(h1, h2)
     h2 = x64Add(h2, h1)
     return (
-        ('00000000' + (h1[0] >>> 0).toString(16)).slice(-8) +
-        ('00000000' + (h1[1] >>> 0).toString(16)).slice(-8) +
-        ('00000000' + (h2[0] >>> 0).toString(16)).slice(-8) +
-        ('00000000' + (h2[1] >>> 0).toString(16)).slice(-8)
+        ('00000000' + (at(h1, 0) >>> 0).toString(16)).slice(-8) +
+        ('00000000' + (at(h1, 1) >>> 0).toString(16)).slice(-8) +
+        ('00000000' + (at(h2, 0) >>> 0).toString(16)).slice(-8) +
+        ('00000000' + (at(h2, 1) >>> 0).toString(16)).slice(-8)
     )
 }
 
-export function picassoCanvas(roundNumber, seed, params) {
+type Area = { width: number; height: number }
+
+export function picassoCanvas(
+    roundNumber: number,
+    seed: number,
+    params: {
+        area: Area
+        offsetParameter: number
+        multiplier: number
+        fontSizeFactor: number
+        maxShadowBlur: number
+    }
+) {
     const { area, offsetParameter, multiplier, fontSizeFactor, maxShadowBlur } = params
 
     class Prng {
         currentNumber: number
 
-        constructor(seed) {
+        constructor(seed: number) {
             this.currentNumber = seed % offsetParameter
             if (this.currentNumber <= 0) {
                 this.currentNumber += offsetParameter
@@ -233,7 +246,7 @@ export function picassoCanvas(roundNumber, seed, params) {
         }
     }
 
-    function adaptRandomNumberToContext(randomNumber, maxBound, floatAllowed) {
+    function adaptRandomNumberToContext(randomNumber: number, maxBound: number, floatAllowed: boolean | undefined) {
         randomNumber = (randomNumber - 1) / offsetParameter
         if (floatAllowed) {
             return randomNumber * maxBound
@@ -242,7 +255,7 @@ export function picassoCanvas(roundNumber, seed, params) {
         return Math.floor(randomNumber * maxBound)
     }
 
-    function addRandomCanvasGradient(prng, context, area) {
+    function addRandomCanvasGradient(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
         const canvasGradient = context.createRadialGradient(
             adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
             adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
@@ -251,12 +264,12 @@ export function picassoCanvas(roundNumber, seed, params) {
             adaptRandomNumberToContext(prng.getNext(), area.height, undefined),
             adaptRandomNumberToContext(prng.getNext(), area.width, undefined)
         )
-        canvasGradient.addColorStop(0, colors[adaptRandomNumberToContext(prng.getNext(), colors.length, undefined)])
-        canvasGradient.addColorStop(1, colors[adaptRandomNumberToContext(prng.getNext(), colors.length, undefined)])
+        canvasGradient.addColorStop(0, at(colors, adaptRandomNumberToContext(prng.getNext(), colors.length, undefined)))
+        canvasGradient.addColorStop(1, at(colors, adaptRandomNumberToContext(prng.getNext(), colors.length, undefined)))
         context.fillStyle = canvasGradient
     }
 
-    function generateRandomWord(prng, wordLength) {
+    function generateRandomWord(prng: Prng, wordLength: number) {
         const minAscii = 65
         const maxAscii = 126
         const wordGenerated: string[] = []
@@ -268,11 +281,11 @@ export function picassoCanvas(roundNumber, seed, params) {
         return wordGenerated.join('')
     }
 
-    if (!window.CanvasRenderingContext2D) {
+    if (window.CanvasRenderingContext2D) {
         return 'unknown'
     }
 
-    const colors = [
+    const colors: string[] = [
         '#FF6633',
         '#FFB399',
         '#FF33FF',
@@ -326,7 +339,7 @@ export function picassoCanvas(roundNumber, seed, params) {
     ]
 
     const primitives = [
-        function arc(prng, context, area) {
+        function arc(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
             context.beginPath()
             context.arc(
                 adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
@@ -337,7 +350,7 @@ export function picassoCanvas(roundNumber, seed, params) {
             )
             context.stroke()
         },
-        function text(prng, context, area) {
+        function text(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
             const wordLength = Math.max(1, adaptRandomNumberToContext(prng.getNext(), 5, undefined))
             const textToStroke = generateRandomWord(prng, wordLength)
             context.font = `${area.height / fontSizeFactor}px aafakefontaa`
@@ -349,7 +362,7 @@ export function picassoCanvas(roundNumber, seed, params) {
                 adaptRandomNumberToContext(prng.getNext(), area.width, undefined)
             )
         },
-        function bezierCurve(prng, context, area) {
+        function bezierCurve(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
             context.beginPath()
             context.moveTo(
                 adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
@@ -365,7 +378,7 @@ export function picassoCanvas(roundNumber, seed, params) {
             )
             context.stroke()
         },
-        function quadraticCurve(prng, context, area) {
+        function quadraticCurve(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
             context.beginPath()
             context.moveTo(
                 adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
@@ -379,7 +392,7 @@ export function picassoCanvas(roundNumber, seed, params) {
             )
             context.stroke()
         },
-        function ellipse(prng, context, area) {
+        function ellipse(prng: Prng, context: CanvasRenderingContext2D, area: Area) {
             context.beginPath()
             context.ellipse(
                 adaptRandomNumberToContext(prng.getNext(), area.width, undefined),
@@ -406,9 +419,11 @@ export function picassoCanvas(roundNumber, seed, params) {
             for (let i = 0; i < roundNumber; i++) {
                 addRandomCanvasGradient(prng, context, area)
                 context.shadowBlur = adaptRandomNumberToContext(prng.getNext(), maxShadowBlur, undefined)
-                context.shadowColor = colors[adaptRandomNumberToContext(prng.getNext(), colors.length, undefined)]
-                const randomPrimitive =
-                    primitives[adaptRandomNumberToContext(prng.getNext(), primitives.length, undefined)]
+                context.shadowColor = at(colors, adaptRandomNumberToContext(prng.getNext(), colors.length, undefined))
+                const randomPrimitive = at(
+                    primitives,
+                    adaptRandomNumberToContext(prng.getNext(), primitives.length, undefined)
+                )
                 randomPrimitive(prng, context, area)
                 context.fill()
             }
@@ -416,6 +431,7 @@ export function picassoCanvas(roundNumber, seed, params) {
         return x64hash128(canvasElt.toDataURL(), seed)
     } catch (e) {
         console.log(e)
-        throw new ProsopoEnvError(e)
+        // TODO fix / improve error handling
+        throw new ProsopoEnvError(e as Error)
     }
 }

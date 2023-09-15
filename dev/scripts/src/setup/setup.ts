@@ -14,18 +14,19 @@
 import { ArgumentTypes } from '@prosopo/types'
 import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
-import { LogLevelSchema, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
+import { LogLevel, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { defaultConfig, getPairType, getSecret, getSs58Format } from '@prosopo/cli'
 import { generateMnemonic, wrapQuery } from '@prosopo/contract'
+import { get } from '@prosopo/util'
 import { getEnvFile } from '@prosopo/cli'
 import { registerProvider } from './provider.js'
 import { setupDapp } from './dapp.js'
 import fse from 'fs-extra'
 import path from 'path'
 
-const logger = getLogger(LogLevelSchema.enum.Info, 'setup')
+const logger = getLogger(LogLevel.enum.info, 'setup')
 const __dirname = path.resolve()
 
 // Take the root dir from the environment or assume it's the root of this package
@@ -90,7 +91,7 @@ async function updateEnvFile(vars: Record<string, string>) {
     let readEnvFile = await fse.readFile(envFile, 'utf8')
 
     for (const key in vars) {
-        readEnvFile = updateEnvFileVar(readEnvFile, key, vars[key])
+        readEnvFile = updateEnvFileVar(readEnvFile, key, get(vars, key))
     }
 
     await fse.writeFile(envFile, readEnvFile)
@@ -128,8 +129,8 @@ export async function setup(force: boolean) {
         await env.isReady()
 
         const result: ReturnNumber = await wrapQuery(
-            env.contractInterface.query.getDappStakeThreshold,
-            env.contractInterface.query
+            env.getContractInterface().query.getDappStakeThreshold,
+            env.getContractInterface().query
         )()
         const stakeAmount = result.rawNumber
         let fundAmount: BN = new BN(0)

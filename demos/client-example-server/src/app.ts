@@ -14,14 +14,14 @@
 import { KeypairType } from '@polkadot/util-crypto/types'
 import { ProsopoServer } from '@prosopo/server'
 import { getPair } from '@prosopo/common'
-import connectionFactory from './utils/connection'
+import connectionFactory from './utils/connection.js'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
-import memoryServerSetup from './utils/database'
+import memoryServerSetup from './utils/database.js'
 import path from 'path'
-import prosopoConfig from './prosopo.config'
-import routesFactory from './routes/routes'
+import prosopoConfig from './prosopo.config.js'
+import routesFactory from './routes/routes.js'
 
 export function loadEnv() {
     dotenv.config({ path: getEnvFile() })

@@ -30,7 +30,7 @@ async function deploy(wasm: Uint8Array, abi: Abi) {
     await env.isReady()
     // initialSupply, faucetAmount, prosopoAccount, humanThreshold, recencyThreshold
     const params = ['1000000000000000', 1000, process.env.PROTOCOL_CONTRACT_ADDRESS, 50, 1000000]
-    const deployer = new ContractDeployer(env.api, abi, wasm, env.pair, params, 0, 0, randomAsHex())
+    const deployer = new ContractDeployer(env.getApi(), abi, wasm, env.pair, params, 0, 0, randomAsHex())
     return await deployer.deploy()
 }
 export async function run(): Promise<AccountId> {
@@ -42,7 +42,7 @@ export async function run(): Promise<AccountId> {
         (event) => event.event.section === 'contracts' && event.event.method === 'Instantiated'
     )
     console.log('instantiateEvent', instantiateEvent?.toHuman())
-    return instantiateEvent?.event.data['contract'].toString()
+    return (instantiateEvent?.event.data as any)['contract'].toString()
 }
 // run the script if the main process is running this file
 if (typeof require !== 'undefined' && require.main === module) {

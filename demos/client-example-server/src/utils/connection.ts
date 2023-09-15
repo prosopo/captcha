@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { AutoIncrementID, AutoIncrementIDOptions } from '@typegoose/auto-increment'
-import UserSchema from '../models/user'
+import UserSchema from '../models/user.js'
 import mongoose, { Connection } from 'mongoose'
 
 function connectionFactory(uri: string): Connection {

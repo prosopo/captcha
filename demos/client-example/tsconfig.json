@@ -1,41 +1,20 @@
 {
-  "compilerOptions": {
-    "module": "esnext",
-    "target": "esnext",
-    "lib": [
-      "es6",
-      "dom"
-    ],
-    "resolveJsonModule": true,
-    "moduleResolution": "node16",
-    "allowSyntheticDefaultImports": true,
-    "composite": true,
-    "jsx": "react-jsx",
-    "types": ["cypress", "@cypress/xpath", "node"],
-    "skipLibCheck": true
-  },
-  "ts-node": {
-    // these options are overrides used only by ts-node
-    // same as the --compilerOptions flag and the TS_NODE_COMPILER_OPTIONS environment variable
+    "extends": "../../tsconfig.esm.json",
     "compilerOptions": {
-      "module": "commonjs"
-    }
-  },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
-  "references": [
-    {
-      "path": "../../packages/procaptcha-react"
+        "rootDir": "./src",
+        "outDir": "./dist",
+        "lib": ["dom", "dom.iterable", "esnext"]
     },
-    {
-      "path": "../../packages/cli"
-    },
-    {
-      "path": "../../dev/config"
-    }
-  ]
+    "include": ["src"],
+    "references": [
+        {
+            "path": "../../packages/procaptcha-react"
+        },
+        {
+            "path": "../../packages/cli"
+        },
+        {
+            "path": "../../dev/config"
+        }
+    ]
 }

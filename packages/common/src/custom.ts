@@ -19,7 +19,7 @@ declare module 'i18next' {
         <
             TKeys extends TranslationKey,
             TDefaultResult extends TFunctionResult | React.ReactNode = string,
-            TInterpolationMap extends object = StringMap
+            TInterpolationMap extends object = StringMap,
         >(
             key: TKeys | TKeys[],
             options?: TOptions<TInterpolationMap> | string
@@ -27,7 +27,7 @@ declare module 'i18next' {
         <
             TKeys extends TranslationKey,
             TDefaultResult extends TFunctionResult | React.ReactNode = string,
-            TInterpolationMap extends object = StringMap
+            TInterpolationMap extends object = StringMap,
         >(
             key: TKeys | TKeys[],
             defaultValue?: string,
