@@ -150,10 +150,7 @@ export async function processArgs(args: string[]) {
                 for (const contract of contracts) {
                     const inDir = `${paths.protocolDist}/${contract}`
                     await exec(
-                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.contractTypechain}/${contract}`
-                    )
-                    await exec(
-                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.typesTypechain}/${contract}`
+                        `node dist/cli/index.js import_contract --in=${inDir} --out=${paths.typechain}/src/${contract}`
                     )
                 }
             },
