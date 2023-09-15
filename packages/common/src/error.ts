@@ -34,7 +34,7 @@ export function translateOrFallback(
 
 export abstract class ProsopoBaseError extends Error {
     protected tKey: TranslationKey | undefined
-    protected tParams: Record<string, string>
+    protected tParams: Record<string, string> | undefined
 
     getTranslated(i18n: typeof i18next): string {
         return translateOrFallback(this.tKey, this.tParams, this.message, i18n)
@@ -42,6 +42,7 @@ export abstract class ProsopoBaseError extends Error {
 }
 
 export class ProsopoEnvError extends ProsopoBaseError {
+    cause: Error | undefined
     constructor(error: ProsopoBaseError)
     constructor(error: Error, context?: TranslationKey, options?: TOptions, ...params: any[])
     constructor(error: TranslationKey, context?: string, options?: TOptions, ...params: any[])
@@ -76,7 +77,7 @@ export class ProsopoEnvError extends ProsopoBaseError {
 }
 
 export class ProsopoApiError extends ProsopoEnvError {
-    code?: number
+    code: number
     constructor(error: Error | TranslationKey, context?: string, code?: number, ...params: any[]) {
         const isError = error instanceof Error
         super(isError ? (error.message as TranslationKey) : error)

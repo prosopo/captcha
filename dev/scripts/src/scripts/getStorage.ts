@@ -14,6 +14,7 @@
 import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { defaultConfig, getPairType, getSs58Format } from '@prosopo/cli'
+import { get } from '@prosopo/util'
 import { getPair } from '@prosopo/common'
 import dotenv from 'dotenv'
 
@@ -24,7 +25,9 @@ async function main() {
     const env = new ProviderEnvironment(pair, defaultConfig())
     await env.isReady()
     const tasks = new Tasks(env)
-    const dappAccounts = await tasks.contract['dappAccounts']()
+    const contract = tasks.contract
+    const fn: any = get(contract, 'dappAccounts')
+    const dappAccounts = await fn()
     console.log(dappAccounts.toHuman())
     process.exit()
 }

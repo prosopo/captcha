@@ -1,4 +1,4 @@
-import { LogLevel, LogLevelSchema, getLogger } from '@prosopo/common'
+import { LogLevel, getLogger } from '@prosopo/common'
 import { hideBin } from 'yargs/helpers'
 import esMain from 'es-main'
 import flatten from './flatten/cli.js'
@@ -9,19 +9,20 @@ import process from 'process'
 import relocate from './relocate/cli.js'
 import scale from './scale/cli.js'
 import yargs from 'yargs'
-const logger = getLogger(LogLevelSchema.enum.Info, `${__dirname}/${__filename}`)
+const dirname = process.cwd()
+const logger = getLogger(LogLevel.enum.info, `${dirname}`)
 
 const main = async () => {
     await yargs(hideBin(process.argv))
         .help()
         .option('log-level', {
             type: 'string',
-            choices: Object.values(LogLevelSchema.enum),
-            default: LogLevelSchema.enum.Info,
+            choices: Object.values(LogLevel.options),
+            default: LogLevel.enum.info,
             description: 'The log level',
         })
-        .middleware((argv) => {
-            logger.setLogLevel(argv.logLevel as LogLevel)
+        .middleware((argv: any) => {
+            logger.setLogLevel(argv.logLevel)
         })
         .command(generate({ logger }))
         .command(flatten({ logger }))

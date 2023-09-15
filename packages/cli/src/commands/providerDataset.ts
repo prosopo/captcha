@@ -1,14 +1,18 @@
-import { Logger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
+import { ArgumentsCamelCase, Argv } from 'yargs'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel, Logger, getLogger } from '@prosopo/common'
+import { ProsopoConfig } from '@prosopo/types'
+import { ProviderEnvironment } from '@prosopo/env'
 import { Tasks } from '@prosopo/provider'
 import { writeJSONFile } from '../files.js'
-export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || env.logger
+import { z } from 'zod'
 
+export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.provider_dataset')
     return {
         command: 'provider_dataset',
-        description: 'Exports a dataset from the provider database',
-        builder: (yargs) =>
+        describe: 'Exports a dataset from the provider database',
+        builder: (yargs: Argv) =>
             yargs
                 .option('dataset-id', {
                     type: 'string' as const,
@@ -20,9 +24,12 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                     demand: true,
                     desc: 'The file path to export the dataset to',
                 } as const),
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
             try {
-                let datasetId = argv.datasetId
+                const env = new ProviderEnvironment(pair, config)
+                await env.isReady()
+                const tasks = new Tasks(env)
+                let datasetId = z.string().parse(argv.datasetId)
                 if (datasetId === undefined) {
                     const providerAddress = env.config.account.address
                     const provider = (await tasks.contract.query.getProvider(providerAddress)).value.unwrap().unwrap()
@@ -32,7 +39,7 @@ export default (env: ProviderEnvironment, tasks: Tasks, cmdArgs?: { logger?: Log
                 // get the dataset from the provider database
                 const result = await tasks.getProviderDataset(datasetId)
                 // export the result to file
-                await writeJSONFile(argv.file, result)
+                await writeJSONFile(z.string().parse(argv.file), result)
             } catch (err) {
                 logger.error(err)
             }

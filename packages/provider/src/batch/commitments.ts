@@ -91,13 +91,14 @@ export class BatchCommitmentsTask {
                         )
                     }
                 } catch (e) {
+                    const err = e as Error
                     this.logger.error(e)
                     await this.db.storeScheduledTaskStatus(
                         taskId,
                         ScheduledTaskNames.BatchCommitment,
                         ScheduledTaskStatus.Failed,
                         {
-                            error: JSON.stringify(e && e.message ? e.message : e),
+                            error: JSON.stringify(e && err.message ? err.message : e),
                         }
                     )
                 }

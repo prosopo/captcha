@@ -1,14 +1,11 @@
 {
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "importHelpers": true,
-    "jsx": "react-jsx",
-    "module": "commonjs",
-    "skipLibCheck": true,
-    "target": "esnext",
-    "lib": [
-      "es6",
-      "dom"
-    ]
-  }
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "importHelpers": true,
+        "jsx": "react-jsx",
+        "module": "commonjs",
+        "skipLibCheck": true,
+        "target": "esnext",
+        "lib": ["es6", "dom"]
+    }
 }

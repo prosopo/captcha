@@ -1,16 +1,17 @@
-import { Argv } from 'yargs'
+import { ArgumentsCamelCase, Argv } from 'yargs'
 import { CalculateSolutionsTask } from '@prosopo/provider'
-import { Logger } from '@prosopo/common'
-import { ProviderEnvironment } from '@prosopo/types-env'
-import { cwd } from 'process'
+import { KeyringPair } from '@polkadot/keyring/types'
+import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
+import { ProsopoConfig } from '@prosopo/types'
+import { ProviderEnvironment } from '@prosopo/env'
 import { validateScheduleExpression } from './validators.js'
-import pm2 from 'pm2'
-export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
-    const logger = cmdArgs?.logger || env.logger
+
+export default (pair: KeyringPair, config: ProsopoConfig, cmdArgs?: { logger?: Logger }) => {
+    const logger = cmdArgs?.logger || getLogger(LogLevel.enum.info, 'cli.calculate_captcha_solutions')
 
     return {
         command: 'calculate_captcha_solutions',
-        description: 'Calculate captcha solutions',
+        describe: 'Calculate captcha solutions',
         builder: (yargs: Argv) => {
             return yargs.option('schedule', {
                 type: 'string' as const,
@@ -18,32 +19,11 @@ export default (env: ProviderEnvironment, cmdArgs?: { logger?: Logger }) => {
                 desc: 'A Recurring schedule expression',
             } as const)
         },
-        handler: async (argv) => {
+        handler: async (argv: ArgumentsCamelCase) => {
+            const env = new ProviderEnvironment(pair, config)
+            await env.isReady()
             if (argv.schedule) {
-                pm2.connect((err) => {
-                    if (err) {
-                        console.error(err)
-                        process.exit(2)
-                    }
-
-                    pm2.start(
-                        {
-                            script: `ts-node scheduler.js ${JSON.stringify(argv.schedule)}`,
-                            name: 'scheduler',
-                            cwd: cwd() + '/dist/src',
-                        },
-                        (err, apps) => {
-                            if (err) {
-                                console.error(err)
-
-                                return pm2.disconnect()
-                            }
-
-                            logger.info(apps)
-                            process.exit()
-                        }
-                    )
-                })
+                throw new ProsopoEnvError('GENERAL.NOT_IMPLEMENTED')
             } else {
                 const calculateSolutionsTask = new CalculateSolutionsTask(env)
                 const result = await calculateSolutionsTask.run()

@@ -1,6 +1,6 @@
 {
     "name": "@prosopo/procaptcha-react",
-    "version": "0.1.17",
+    "version": "0.1.18",
     "author": "PROSOPO LIMITED <info@prosopo.io>",
     "license": "Apache-2.0",
     "main": "./dist/index.js",
@@ -11,7 +11,7 @@
         "clean": "tsc --build --clean",
         "build": "tsc --build --verbose",
         "lint": "npx eslint .",
-        "lint:fix": "npx eslint . --fix"
+        "lint:fix": "npx eslint . --fix --config ../../.eslintrc.js"
     },
     "browserslist": [
         "> 0.5%, last 2 versions, not dead"
@@ -24,15 +24,16 @@
         "@polkadot/extension-dapp": "0.46.5",
         "@polkadot/extension-inject": "0.46.5",
         "@polkadot/types": "10.9.1",
-        "@prosopo/common": "^0.1.17",
-        "@prosopo/procaptcha": "^0.1.17",
+        "@prosopo/common": "^0.1.18",
+        "@prosopo/procaptcha": "^0.1.18",
         "i18next": "^21.9.2",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "zod": "^3.17.9"
     },
     "devDependencies": {
-        "typescript": "^4.9.5"
+        "tslib": "^2.6.2",
+        "typescript": "^5.1.6"
     },
     "repository": {
         "type": "git",

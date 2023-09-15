@@ -11,7 +11,7 @@ export function excludePolkadot() {
     return ['./kusama.js', './westend.js', './cjs/bytes.js']
 }
 
-export function getAliases(dir): Alias[] {
+export function getAliases(dir: string): Alias[] {
     const polkadotFilesToAlias = excludePolkadot()
     const alias: Alias[] = []
     // TODO Is there a way to determine this path by importing mock.js?

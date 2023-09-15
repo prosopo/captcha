@@ -15,7 +15,7 @@ import './App.css'
 import { Alert, Box, Button, FormControl, FormGroup, Stack, TextField, Typography } from '@mui/material'
 import { ApiParams, EnvironmentTypes, EnvironmentTypesSchema, ProcaptchaOutput } from '@prosopo/types'
 import { ExtensionAccountSelect, Procaptcha } from '@prosopo/procaptcha-react/dist/components'
-import { LogLevelSchema } from '@prosopo/common'
+import { LogLevel } from '@prosopo/common'
 import { ProcaptchaConfigOptional } from '@prosopo/procaptcha'
 import { useState } from 'react'
 
@@ -39,10 +39,10 @@ function App() {
     const [procaptchaOutput, setProcaptchaOutput] = useState<ProcaptchaOutput | undefined>(undefined)
 
     const config: ProcaptchaConfigOptional = {
-        logLevel: LogLevelSchema.enum.Info,
+        logLevel: LogLevel.enum.info,
         userAccountAddress: account,
         account: {
-            address: process.env.REACT_APP_DAPP_SITE_KEY || undefined,
+            address: process.env.REACT_APP_DAPP_SITE_KEY || '',
         },
         web2: process.env.REACT_APP_WEB2 === 'true',
         dappName: 'client-example',
@@ -59,9 +59,9 @@ function App() {
         },
         networks: {
             development: {
-                endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT,
+                endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || '',
                 contract: {
-                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || '',
                     name: 'prosopo',
                 },
                 accounts: [],
@@ -69,7 +69,7 @@ function App() {
             rococo: {
                 endpoint: process.env.REACT_APP_SUBSTRATE_ENDPOINT || 'wss://rococo-contracts-rpc.polkadot.io:443',
                 contract: {
-                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS,
+                    address: process.env.REACT_APP_PROSOPO_CONTRACT_ADDRESS || '',
                     name: 'prosopo',
                 },
                 accounts: [],
@@ -82,7 +82,7 @@ function App() {
     const label = isLogin ? 'Login' : 'Sign up'
     const urlPath = isLogin ? 'login' : 'signup'
 
-    const onLoggedIn = (token) => {
+    const onLoggedIn = (token: string) => {
         console.log('getting private resource with token ', token)
         fetch(`${config.serverUrl}/private`, {
             method: 'GET',

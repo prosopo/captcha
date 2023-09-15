@@ -12,8 +12,9 @@ import {
     RawSolution,
 } from '@prosopo/types'
 import { Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
+import { at, get, lodash, setSeedGlobal } from '@prosopo/util'
+import { blake2AsHex } from '@polkadot/util-crypto'
 import { checkDuplicates } from '../util.js'
-import { lodash, setSeedGlobal } from '@prosopo/util'
 import bcrypt from 'bcrypt'
 import cliProgress from 'cli-progress'
 import fs from 'fs'
@@ -75,8 +76,9 @@ export default async (args: Args, logger?: Logger) => {
     // split the labelled data by label
     const labelToImages: { [label: string]: Item[] } = {}
     for (const entry of labelled) {
-        labelToImages[entry.label] = labelToImages[entry.label] || []
-        labelToImages[entry.label].push(entry)
+        const arr = labelToImages[entry.label] || []
+        arr.push(entry)
+        labelToImages[entry.label] = arr
     }
     const targets = Object.keys(labelToImages)
 
@@ -110,7 +112,7 @@ export default async (args: Args, logger?: Logger) => {
         }
 
         // uniformly sample targets
-        const target = targets[i % targets.length]
+        const target = at(targets, i % targets.length)
         const notTargets = targets.filter((t) => t !== target)
 
         // how many correct items should be in the captcha?
@@ -118,8 +120,8 @@ export default async (args: Args, logger?: Logger) => {
         // how many incorrect items should be in the captcha?
         const nIncorrect = size - nCorrect
 
-        const targetItems: Item[] = labelToImages[target]
-        const notTargetItems: Item[] = notTargets.map((notTarget) => labelToImages[notTarget]).flat()
+        const targetItems: Item[] = get(labelToImages, target)
+        const notTargetItems: Item[] = notTargets.map((notTarget) => get(labelToImages, notTarget)).flat()
 
         if (targetItems.length < nCorrect) {
             throw new ProsopoEnvError(
@@ -143,7 +145,7 @@ export default async (args: Args, logger?: Logger) => {
         let items: Item[] = [...correctItems, ...incorrectItems]
         let indices: number[] = [...Array(items.length).keys()]
         indices = _.shuffle(indices)
-        items = indices.map((i) => items[i])
+        items = indices.map((i) => at(items, i))
         items = items.map((item) => {
             return {
                 data: item.data,
@@ -165,7 +167,7 @@ export default async (args: Args, logger?: Logger) => {
                 return item.post // return the index in the shuffled array
             })
 
-        const salt = bcrypt.genSaltSync(saltRounds)
+        const salt = blake2AsHex(bcrypt.genSaltSync(saltRounds))
         // create the captcha
         const captcha: CaptchaWithoutId = {
             salt,
@@ -199,14 +201,14 @@ export default async (args: Args, logger?: Logger) => {
             )
         }
         const index = _.random(0, labels.length - 1)
-        const target = labels[index]
+        const target = at(labels, index)
         // randomly pick images from the unlabelled data
         const itemSet: Item[] = _.sampleSize(unlabelled, size)
         // shuffle the items
         let items: Item[] = [...itemSet]
         let indices: number[] = [...Array(items.length).keys()]
         indices = _.shuffle(indices)
-        items = indices.map((i) => items[i])
+        items = indices.map((i) => at(items, i))
         items = items.map((item) => {
             return {
                 data: item.data,
@@ -214,7 +216,7 @@ export default async (args: Args, logger?: Logger) => {
                 type: item.type,
             }
         })
-        const salt = bcrypt.genSaltSync(saltRounds)
+        const salt = blake2AsHex(bcrypt.genSaltSync(saltRounds))
         // create the captcha
         const captcha: CaptchaWithoutId = {
             salt,

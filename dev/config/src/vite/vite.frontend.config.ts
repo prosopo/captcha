@@ -1,6 +1,6 @@
-import { ClosePlugin } from './index.js'
-import { ClosePluginOptions } from './vite-plugin-close.js'
+import { ClosePluginOptions } from './vite-plugin-close-and-copy.js'
 import { UserConfig } from 'vite'
+import { VitePluginCloseAndCopy } from './index.js'
 import { builtinModules } from 'module'
 import { filterDependencies, getDependencies } from '../dependencies.js'
 import { getAliases } from '../polkadot/index.js'
@@ -49,18 +49,24 @@ export default async function (
     logger.info(`Env vars: ${JSON.stringify(define, null, 4)}`)
 
     // Get all dependencies of the current package
-    const deps = await getDependencies(packageName)
+    const { dependencies: deps, optionalPeerDependencies } = await getDependencies(packageName)
 
     // Get rid of any dependencies we don't want to bundle
     const { external, internal } = filterDependencies(deps, ['pm2', 'nodejs-polars', 'aws', 'webpack', 'vite'])
 
     // Add the node builtins (path, fs, os, etc.) to the external list
-    const allExternal = [...builtinModules, ...builtinModules.map((m) => `node:${m}`), ...external]
+    const allExternal = [
+        ...builtinModules,
+        ...builtinModules.map((m) => `node:${m}`),
+        ...external,
+        ...optionalPeerDependencies,
+    ]
     logger.info(`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`)
     const alias = isProduction ? getAliases(dir) : []
 
     // Required to print RegExp in console (e.g. alias keys)
-    RegExp.prototype['toJSON'] = RegExp.prototype.toString
+    const proto = RegExp.prototype as any
+    proto['toJSON'] = RegExp.prototype.toString
     logger.info(`aliases ${JSON.stringify(alias, null, 2)}`)
 
     return {
@@ -88,7 +94,7 @@ export default async function (
             lib: {
                 entry: path.resolve(dir, entry),
                 name: bundleName,
-                fileName: `${bundleName}.[name].bundle`,
+                fileName: `${bundleName}.bundle.js`,
                 // sets the bundle to an instantly invoked function expression (IIFE)
                 formats: ['iife'],
             },
@@ -104,6 +110,7 @@ export default async function (
                 watch: false,
                 output: {
                     dir: path.resolve(dir, 'dist/bundle'),
+                    entryFileNames: `${bundleName}.bundle.js`,
                 },
 
                 plugins: [
@@ -133,7 +140,7 @@ export default async function (
             viteCommonjs(),
             // Closes the bundler and copies the bundle to the client-bundle-example project unless we're in serve
             // mode, in which case we don't want to close the bundler because it will close the server
-            command !== 'serve' ? ClosePlugin(copyOptions) : undefined,
+            command !== 'serve' ? VitePluginCloseAndCopy(copyOptions) : undefined,
             // Means we can specify index.tsx instead of index.jsx in the index.html file
             viteTsconfigPaths({ projects: tsConfigPaths }),
         ],

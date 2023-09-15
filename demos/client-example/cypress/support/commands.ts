@@ -15,6 +15,7 @@
 /// <reference types="cypress-promise/register" />
 
 declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Cypress {
         interface Chainable {
             clickIAmHuman(): Cypress.Chainable<any[]>

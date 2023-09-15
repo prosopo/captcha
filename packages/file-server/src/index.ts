@@ -1,10 +1,14 @@
-import { getLogger } from '@prosopo/common'
+import { dirname } from 'path'
+import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 import esMain from 'es-main'
-import express from 'express'
+import express, { Request, Response } from 'express'
 import fetch from 'node-fetch'
 import sharp from 'sharp'
 import stream from 'stream'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 const parseArray = (value: string) => {
     try {
@@ -38,11 +42,10 @@ const getEnv = () => {
 
 const main = async () => {
     const env = getEnv()
-    const logger = getLogger(env.logLevel, `${__dirname}/${__filename}`)
 
     const app = express()
 
-    env.paths.forEach((loc) => {
+    env.paths.forEach((loc: string) => {
         // allow local filesystem lookup at each location
         // http://localhost:3000/a.jpg
         // serve path set to /
@@ -50,28 +53,28 @@ const main = async () => {
         // serve path set to /img
         // url: pronode1.duckdns.org/a.jpg`
         app.use('/', express.static(loc))
-        logger.info(`Serving files from ${loc}`)
+        console.info(`Serving files from ${loc}`)
     })
 
-    app.get('*', async (req, res) => {
+    app.get('*', async (req: Request, res: Response) => {
         for (const remote of env.remotes) {
-            logger.info('trying', remote, req.url)
+            console.info('trying', remote, req.url)
             let img
             try {
                 const result = await fetch(`${remote}${req.url}`)
                 if (result.status !== 200) {
-                    logger.warn('not found', remote, req.url, req.statusCode)
+                    console.warn('not found', remote, req.url, req.statusCode)
                     continue
                 }
-                logger.info('found', remote, req.url)
+                console.info('found', remote, req.url)
                 img = await result.arrayBuffer()
                 img = Buffer.from(img)
             } catch (error) {
-                logger.warn('error', remote, req.url, error)
+                console.warn('error', remote, req.url, error)
                 continue
             }
             if (env.resize) {
-                logger.info('resizing', remote, req.url, env.resize)
+                console.info('resizing', remote, req.url, env.resize)
                 img = await sharp(img)
                     .resize({
                         width: env.resize,
@@ -89,7 +92,7 @@ const main = async () => {
 
     // only run server if locations have been specified
     app.listen(env.port, () => {
-        logger.info(`File server running on port ${env.port}`)
+        console.info(`File server running on port ${env.port}`)
     })
 }
 

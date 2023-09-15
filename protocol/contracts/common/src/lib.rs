@@ -65,14 +65,12 @@ macro_rules! lazy {
 #[ink::contract]
 pub mod common {
 
-    use ink::prelude::vec::Vec;
-
     pub mod config {
         use super::*;
 
         /// Get the git commit id from when this contract was built
         pub fn get_git_commit_id() -> [u8; 20] {
-            let env_git_commit_id: [u8; 20] = [32, 237, 216, 190, 163, 221, 41, 23, 48, 161, 24, 86, 14, 92, 200, 21, 250, 80, 161, 64, ];
+            let env_git_commit_id: [u8; 20] = [247, 15, 86, 37, 67, 132, 91, 243, 44, 114, 47, 0, 153, 63, 44, 240, 57, 194, 66, 240, ];
             env_git_commit_id
         }
 
@@ -152,7 +150,6 @@ pub mod common {
         CommitAlreadyExists,
         /// Returned if the caller is not the author
         NotAuthor,
-        Sr25519VerifyFailed,
     }
 
     /// get the account id in byte array format
@@ -200,17 +197,6 @@ pub mod common {
         #[ink(message)]
         pub fn get_git_commit_id(&self) -> [u8; 20] {
             config::get_git_commit_id()
-        }
-
-        #[ink(message)]
-        pub fn sr25519_verify(
-            &self,
-            sig: [u8; 64],
-            msg: Vec<u8>,
-            acc: AccountId,
-        ) -> Result<(), Error> {
-            ink::env::sr25519_verify(&sig, &msg[..], account_id_bytes(&acc))
-                .map_err(|_| Error::Sr25519VerifyFailed)
         }
     }
 

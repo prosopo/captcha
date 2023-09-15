@@ -24,7 +24,8 @@
         "CANT_FIND_KEYRINGPAIR": "Keyringpair nije pronađen za {{address}}",
         "ENVIRONMENT_NOT_READY": "Environment not ready",
         "INVALID_SIGNATURE": "Invalid signature",
-        "PAIR_TYPE_UNDEFINED" : "Pair type undefined"
+        "PAIR_TYPE_UNDEFINED": "Pair type undefined",
+        "NOT_IMPLEMENTED": "Ne sprovodi"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Nevažeća metoda ugovora",
