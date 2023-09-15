@@ -11,7 +11,7 @@ import type BN from 'bn.js';
 // @ts-ignore
 import type {EventRecord} from "@polkadot/api/submittable";
 import {decodeEvents} from '../shared/utils.js';
-import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/captcha.json.js';
+import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/captcha.json' assert { type: 'json' };
 
 
 export default class Methods {

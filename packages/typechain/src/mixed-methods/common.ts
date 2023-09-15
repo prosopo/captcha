@@ -18,8 +18,8 @@ import {getTypeDescription} from './../shared/utils.js';
 // @ts-ignore
 import type {EventRecord} from "@polkadot/api/submittable";
 import {decodeEvents} from '../shared/utils.js';
-import DATA_TYPE_DESCRIPTIONS from '../data/common.json.js';
-import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/common.json.js';
+import DATA_TYPE_DESCRIPTIONS from '../data/common.json' assert { type: 'json' };
+import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/common.json' assert { type: 'json' };
 
 
 export default class Methods {

@@ -1,7 +1,7 @@
 import type * as EventTypes from '../event-types/common.js';
 import type {ContractPromise} from "@polkadot/api-contract";
 import type {ApiPromise} from "@polkadot/api";
-import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/common.json.js';
+import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/common.json' assert { type: 'json' };
 import {getEventTypeDescription} from '../shared/utils.js';
 import {handleEventReturn} from "@727-ventures/typechain-types";
 

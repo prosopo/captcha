@@ -41,11 +41,18 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     const srcQuoted = p2.toString()
                     const src = getPath(srcQuoted)
                     const extension = getExtension(src)
+                    console.log(`src: ${src}`)
+                    console.log(`extension: ${extension}`)
+                    console.log('p3: ', p3)
                     let result = ''
                     if (extension === 'js') {
                         // already has .js extension
                         return match
-                    } else if (extension === 'json' && !(p3 ?? '').includes('assert')) {
+                    } else if (extension === 'json') {
+                        if ((p3 ?? '').includes('assert')) {
+                            // already has assert
+                            return match
+                        }
                         // needs json assertion
                         result = `${start}'${src}' assert { type: 'json' }`
                     } else {
