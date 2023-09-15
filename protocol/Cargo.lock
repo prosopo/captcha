@@ -94,13 +94,11 @@ checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
 
 [[package]]
 name = "captcha"
-version = "4.2.0"
+version = "0.1.17"
 dependencies = [
  "common",
  "disable_macro",
- "inject_self_macro",
  "ink",
- "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
 ]
@@ -119,8 +117,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "common"
-version = "0.3.0"
+version = "0.1.17"
 dependencies = [
+ "disable_macro",
  "ink",
  "parity-scale-codec",
  "scale-info",
@@ -226,7 +225,7 @@ dependencies = [
 
 [[package]]
 name = "disable_macro"
-version = "0.3.0"
+version = "0.1.17"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -718,13 +717,11 @@ dependencies = [
 
 [[package]]
 name = "proxy"
-version = "4.0.0"
+version = "0.1.17"
 dependencies = [
  "common",
  "disable_macro",
- "inject_self_macro",
  "ink",
- "named_functions_macro",
  "parity-scale-codec",
  "scale-info",
 ]

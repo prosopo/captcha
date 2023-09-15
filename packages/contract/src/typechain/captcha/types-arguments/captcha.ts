@@ -90,8 +90,7 @@ export type Commit = {
 	providerAccount: AccountId,
 	requestedAt: (number | string | BN),
 	completedAt: (number | string | BN),
-	userSignaturePart1: Array<(number | string | BN)>,
-	userSignaturePart2: Array<(number | string | BN)>
+	userSignature: Array<(number | string | BN)>
 }
 
 export enum CaptchaStatus {
