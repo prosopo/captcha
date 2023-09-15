@@ -1,4 +1,4 @@
-import fs from 'fs.js';
+import fs from "fs";
 import type {ContractPromise} from "@polkadot/api-contract";
 import {handleEventReturn} from "@727-ventures/typechain-types";
 
