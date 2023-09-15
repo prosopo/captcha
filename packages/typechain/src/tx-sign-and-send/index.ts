@@ -1,3 +1,3 @@
-export * as Captcha from './captcha.js'
-export * as Common from './common.js'
-export * as Proxy from './proxy.js'
+export * as CaptchaTxSignAndSend from './captcha.js'
+export * as CommonTxSignAndSend from './common.js'
+export * as ProxyTxSignAndSend from './proxy.js'

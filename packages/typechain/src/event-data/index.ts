@@ -1,3 +1,3 @@
-export { default as Captcha } from './captcha.json'
-export { default as Common } from './common.json'
-export { default as Proxy } from './proxy.json'
+export { default as CaptchaEventData } from './captcha.json'
+export { default as CommonEventData } from './common.json'
+export { default as ProxyEventData } from './proxy.json'

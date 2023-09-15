@@ -1,3 +1,3 @@
-export * as Captcha from './captcha.js'
-export * as Common from './common.js'
-export * as Proxy from './proxy.js'
+export * as CaptchaBuildExtrinsic from './captcha.js'
+export * as CommonBuildExtrinsic from './common.js'
+export * as ProxyBuildExtrinsic from './proxy.js'
