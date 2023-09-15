@@ -1,0 +1,12 @@
+name: create_diagram
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+jobs:
+  get_data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: githubocto/repo-visualizer@main
