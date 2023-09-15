@@ -35,7 +35,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             } else if (filePath.endsWith('.ts')) {
                 // replace the relative imports with .js extension applied
                 // eslint-disable-next-line no-useless-escape
-                const regex = /(import(?:(?!from).)+from\s+)(['"][.\/a-zA-Z0-9-_]+?['"])(\s+assert\s+{[^}]*})?/gms
+                const regex = /(import(?:(?!from).)+from\s+)(['"]\.[.\/a-zA-Z0-9-_]+?['"])(\s+assert\s+{[^}]*})?/gms
                 const fileContents = fs.readFileSync(filePath, 'utf8')
                 let replaced = fileContents.replace(regex, (match, p1, p2, p3) => {
                     const start = p1.toString()
