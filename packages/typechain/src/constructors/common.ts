@@ -44,6 +44,7 @@ export default class Constructors {
 
 		return {
 			result: response as SignAndSendSuccessResponse,
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			address: (response as SignAndSendSuccessResponse)!.result!.contract.address.toString(),
 		};

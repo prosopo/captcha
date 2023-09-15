@@ -7,6 +7,7 @@ import type { GasLimit, GasLimitAndRequiredValue, Result } from '@727-ventures/t
 import { txSignAndSend } from '@727-ventures/typechain-types';
 import type * as ArgumentTypes from '../types-arguments/proxy.js';
 import type BN from 'bn.js';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import type {EventRecord} from "@polkadot/api/submittable";
 import {decodeEvents} from '../shared/utils.js';
