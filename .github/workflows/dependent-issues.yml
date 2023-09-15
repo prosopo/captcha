@@ -52,9 +52,8 @@ jobs:
 
                   # (Optional) A custom comment body. It supports `{{ dependencies }}` token.
                   comment: >
-                    :hourglass_flowing_sand: Blocked by: {{ dependencies }}.
+                      :hourglass_flowing_sand: Blocked by: {{ dependencies }}.
 
-                    :bell: I'll update this comment when the blocking issues/PRs are closed.
+                      :bell: I'll update this comment when the blocking issues/PRs are closed.
 
-                    :thought_balloon: From [Dependent Issues (:robot:)](https://github.com/z0al/dependent-issues)
-
+                      :thought_balloon: From [Dependent Issues (:robot:)](https://github.com/z0al/dependent-issues)
