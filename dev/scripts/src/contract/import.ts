@@ -19,8 +19,6 @@ import path from 'path'
 async function importContract(pathToAbis: string, pathToOutput: string) {
     pathToAbis = path.relative(process.cwd(), pathToAbis)
     pathToOutput = path.relative(process.cwd(), pathToOutput)
-    const parent = pathToOutput
-    pathToOutput = `${pathToOutput}/${path.basename(pathToAbis)}`
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
     if (!fs.existsSync(pathToAbis)) throw new Error(`Path to ABIs does not exist: ${pathToAbis}`)
     await exec(`mkdir -p ${pathToOutput}`)
@@ -79,51 +77,51 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     }
     walk(pathToOutput)
 
-    const writeIndexJsFiles = (src: string) => {
-        // loop through all contracts
-        const contracts = fs.readdirSync(src).filter((file) => {
-            return fs.lstatSync(`${src}/${file}`).isDirectory()
-        })
-        // for each contract, go through each subdir (e.g. build-extrinsic, events, etc) and generate an export
-        const contractExports: string[] = []
-        contracts.forEach((contract) => {
-            const contractDir = `${src}/${contract}`
-            const dirs = fs.readdirSync(contractDir).filter((file) => {
-                return fs.lstatSync(`${contractDir}/${file}`).isDirectory()
-            })
-            // exports for the index.js file for this contract
-            const exports: string[] = []
-            dirs.forEach((dir) => {
-                const name = _.upperFirst(_.camelCase(dir.toString()))
-                // export everything for each file
-                const files = fs.readdirSync(`${contractDir}/${dir}`).filter((file) => {
-                    return fs.lstatSync(`${contractDir}/${dir}/${file}`).isFile()
-                })
-                files.forEach((file) => {
-                    const parts = file.split('.')
-                    const ext = parts.pop() || ''
-                    if (ext === 'ts') {
-                        // rename extension from ts to js
-                        parts.push('js')
-                        file = parts.join('.')
-                        exports.push(`export * as ${name} from './${dir}/${file}'`)
-                    } else if (ext === 'json') {
-                        // export json as a default as un-named
-                        exports.push(`export { default as ${name} } from './${dir}/${file}'`)
-                    } else {
-                        throw new Error(`Unknown file extension ${ext}`)
-                    }
-                })
-            })
-            // write the index.js file for this contract
-            fs.writeFileSync(`${contractDir}/index.ts`, exports.join('\n'))
-            contractExports.push(`export * as ${_.capitalize(contract)}Contract from './${contract}/index.js'`)
-        })
-        // write the index.js file for the root
-        fs.writeFileSync(`${src}/index.ts`, contractExports.join('\n'))
-    }
+    // const writeIndexJsFiles = (src: string) => {
+    //     // loop through all contracts
+    //     const contracts = fs.readdirSync(src).filter((file) => {
+    //         return fs.lstatSync(`${src}/${file}`).isDirectory()
+    //     })
+    //     // for each contract, go through each subdir (e.g. build-extrinsic, events, etc) and generate an export
+    //     const contractExports: string[] = []
+    //     contracts.forEach((contract) => {
+    //         const contractDir = `${src}/${contract}`
+    //         const dirs = fs.readdirSync(contractDir).filter((file) => {
+    //             return fs.lstatSync(`${contractDir}/${file}`).isDirectory()
+    //         })
+    //         // exports for the index.js file for this contract
+    //         const exports: string[] = []
+    //         dirs.forEach((dir) => {
+    //             const name = _.upperFirst(_.camelCase(dir.toString()))
+    //             // export everything for each file
+    //             const files = fs.readdirSync(`${contractDir}/${dir}`).filter((file) => {
+    //                 return fs.lstatSync(`${contractDir}/${dir}/${file}`).isFile()
+    //             })
+    //             files.forEach((file) => {
+    //                 const parts = file.split('.')
+    //                 const ext = parts.pop() || ''
+    //                 if (ext === 'ts') {
+    //                     // rename extension from ts to js
+    //                     parts.push('js')
+    //                     file = parts.join('.')
+    //                     exports.push(`export * as ${name} from './${dir}/${file}'`)
+    //                 } else if (ext === 'json') {
+    //                     // export json as a default as un-named
+    //                     exports.push(`export { default as ${name} } from './${dir}/${file}'`)
+    //                 } else {
+    //                     throw new Error(`Unknown file extension ${ext}`)
+    //                 }
+    //             })
+    //         })
+    //         // write the index.js file for this contract
+    //         fs.writeFileSync(`${contractDir}/index.ts`, exports.join('\n'))
+    //         contractExports.push(`export * as ${_.capitalize(contract)}Contract from './${contract}/index.js'`)
+    //     })
+    //     // write the index.js file for the root
+    //     fs.writeFileSync(`${src}/index.ts`, contractExports.join('\n'))
+    // }
 
-    writeIndexJsFiles(parent)
+    // writeIndexJsFiles(parent)
 }
 
 const getExtension = (str: string) => {
