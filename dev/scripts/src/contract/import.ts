@@ -19,6 +19,8 @@ import path from 'path'
 async function importContract(pathToAbis: string, pathToOutput: string) {
     pathToAbis = path.relative(process.cwd(), pathToAbis)
     pathToOutput = path.relative(process.cwd(), pathToOutput)
+    const parent = pathToOutput
+    pathToOutput = `${pathToOutput}/${path.basename(pathToAbis)}`
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
     if (!fs.existsSync(pathToAbis)) throw new Error(`Path to ABIs does not exist: ${pathToAbis}`)
     await exec(`mkdir -p ${pathToOutput}`)
@@ -77,40 +79,51 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     }
     walk(pathToOutput)
 
-    const _ = lodash()
-    
-    const writeIndexJsFiles = (src: string, parentName: string = '') => {
-        // find all files in dir
-        const files = fs.readdirSync(src)
-        let str = ''
-        // for each file, add an export
-        files.forEach((file) => {
-            if(file === 'index.ts') {
-                return
-            }
-            const filePath = `${src}/${file}`
-            const isDir = fs.lstatSync(filePath).isDirectory()
-            const parts = file.split('.')
-            const fileName = parts[0]
-            const camel = _.camelCase(fileName)
-            const name = _.upperFirst(camel)
-            if(file.endsWith('.json')) {
-                str += `export { default as ${name}${parentName} } from './${file}'\n`
-            } else if(!isDir) {
-                str += `export * as ${name}${parentName} from './${fileName}.js'\n`
-            } else {
-                str += `export * from './${fileName}/index.js'\n`
-            }
-            // if directory, recurse
-            if (isDir) {
-                writeIndexJsFiles(filePath, name)
-            }
+    const writeIndexJsFiles = (src: string) => {
+        // loop through all contracts
+        const contracts = fs.readdirSync(src).filter((file) => {
+            return fs.lstatSync(`${src}/${file}`).isDirectory()
         })
-        // write the index file
-        fs.writeFileSync(`${src}/index.ts`, str)
+        // for each contract, go through each subdir (e.g. build-extrinsic, events, etc) and generate an export
+        const contractExports: string[] = []
+        contracts.forEach((contract) => {
+            const contractDir = `${src}/${contract}`
+            const dirs = fs.readdirSync(contractDir).filter((file) => {
+                return fs.lstatSync(`${contractDir}/${file}`).isDirectory()
+            })
+            // exports for the index.js file for this contract
+            const exports: string[] = []
+            dirs.forEach((dir) => {
+                const name = _.upperFirst(_.camelCase(dir.toString()))
+                // export everything for each file
+                const files = fs.readdirSync(`${contractDir}/${dir}`).filter((file) => {
+                    return fs.lstatSync(`${contractDir}/${dir}/${file}`).isFile()
+                })
+                files.forEach((file) => {
+                    const parts = file.split('.')
+                    const ext = parts.pop() || ''
+                    if (ext === 'ts') {
+                        // rename extension from ts to js
+                        parts.push('js')
+                        file = parts.join('.')
+                        exports.push(`export * as ${name} from './${dir}/${file}'`)
+                    } else if (ext === 'json') {
+                        // export json as a default as un-named
+                        exports.push(`export { default as ${name} } from './${dir}/${file}'`)
+                    } else {
+                        throw new Error(`Unknown file extension ${ext}`)
+                    }
+                })
+            })
+            // write the index.js file for this contract
+            fs.writeFileSync(`${contractDir}/index.ts`, exports.join('\n'))
+            contractExports.push(`export * as ${_.capitalize(contract)} from './${contract}/index.js'`)
+        })
+        // write the index.js file for the root
+        fs.writeFileSync(`${src}/index.ts`, contractExports.join('\n'))
     }
 
-    writeIndexJsFiles(pathToOutput)
+    writeIndexJsFiles(parent)
 }
 
 const getExtension = (str: string) => {
