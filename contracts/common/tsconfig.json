@@ -6,11 +6,5 @@
     },
     "include": ["./src/**/*.ts", "./src/**/*.json", "./src/**/*.d.ts", "./src/**/*.tsx"],
     "references": [
-        {
-            "path": "../types"
-        },
-        {
-            "path": "../util"
-        }
     ]
 }

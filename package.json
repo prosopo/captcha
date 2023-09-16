@@ -54,7 +54,8 @@
         "packages/*",
         "demos/*",
         "dev/*",
-        "protocol/dev"
+        "protocol/dev",
+        "contracts/*"
     ],
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
