@@ -117,7 +117,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             })
             // write the index.js file for this contract
             fs.writeFileSync(`${contractDir}/index.ts`, exports.join('\n'))
-            contractExports.push(`export * as ${_.capitalize(contract)} from './${contract}/index.js'`)
+            contractExports.push(`export * as ${_.capitalize(contract)}Contract from './${contract}/index.js'`)
         })
         // write the index.js file for the root
         fs.writeFileSync(`${src}/index.ts`, contractExports.join('\n'))
