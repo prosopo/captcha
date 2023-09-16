@@ -16,6 +16,27 @@ import { lodash } from '@prosopo/util'
 import fs from 'fs'
 import path from 'path'
 
+type TypeChainDir = {
+    dir: string
+    defaultExportName?: string
+    exports?: {
+        name: string
+        alias?: string
+    }[]
+}
+
+type ExportType = {
+    name: string
+    category: string
+}
+
+const replaceExtension = (file: string, ext: string): string => {
+    const parts = file.split('.')
+    parts.pop()
+    parts.push(ext)
+    return parts.join('.')
+}
+
 async function importContract(pathToAbis: string, pathToOutput: string) {
     pathToAbis = path.relative(process.cwd(), pathToAbis)
     pathToOutput = path.relative(process.cwd(), pathToOutput)
@@ -77,51 +98,140 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
     }
     walk(pathToOutput)
 
-    // const writeIndexJsFiles = (src: string) => {
-    //     // loop through all contracts
-    //     const contracts = fs.readdirSync(src).filter((file) => {
-    //         return fs.lstatSync(`${src}/${file}`).isDirectory()
-    //     })
-    //     // for each contract, go through each subdir (e.g. build-extrinsic, events, etc) and generate an export
-    //     const contractExports: string[] = []
-    //     contracts.forEach((contract) => {
-    //         const contractDir = `${src}/${contract}`
-    //         const dirs = fs.readdirSync(contractDir).filter((file) => {
-    //             return fs.lstatSync(`${contractDir}/${file}`).isDirectory()
-    //         })
-    //         // exports for the index.js file for this contract
-    //         const exports: string[] = []
-    //         dirs.forEach((dir) => {
-    //             const name = _.upperFirst(_.camelCase(dir.toString()))
-    //             // export everything for each file
-    //             const files = fs.readdirSync(`${contractDir}/${dir}`).filter((file) => {
-    //                 return fs.lstatSync(`${contractDir}/${dir}/${file}`).isFile()
-    //             })
-    //             files.forEach((file) => {
-    //                 const parts = file.split('.')
-    //                 const ext = parts.pop() || ''
-    //                 if (ext === 'ts') {
-    //                     // rename extension from ts to js
-    //                     parts.push('js')
-    //                     file = parts.join('.')
-    //                     exports.push(`export * as ${name} from './${dir}/${file}'`)
-    //                 } else if (ext === 'json') {
-    //                     // export json as a default as un-named
-    //                     exports.push(`export { default as ${name} } from './${dir}/${file}'`)
-    //                 } else {
-    //                     throw new Error(`Unknown file extension ${ext}`)
-    //                 }
-    //             })
-    //         })
-    //         // write the index.js file for this contract
-    //         fs.writeFileSync(`${contractDir}/index.ts`, exports.join('\n'))
-    //         contractExports.push(`export * as ${_.capitalize(contract)}Contract from './${contract}/index.js'`)
-    //     })
-    //     // write the index.js file for the root
-    //     fs.writeFileSync(`${src}/index.ts`, contractExports.join('\n'))
-    // }
+    const _ = lodash()
 
-    // writeIndexJsFiles(parent)
+    const writeIndexJsFiles = (src: string) => {
+        // loop through all dirs
+        const typeChainDirs = fs.readdirSync(src).filter((file) => {
+            return fs.lstatSync(`${src}/${file}`).isDirectory()
+        })
+        let rootExports: string[] = []
+        // for each dir (e.g. build-extrinsic, constructors, etc) generate an index.js file with exports for each contract
+        // need to do specific exports per dir as it depends on the typechain export as to how we want to name the index.js export
+        const typeChainExports: TypeChainDir[] = [
+            {
+                dir: 'build-extrinsic',
+                defaultExportName: 'extrinsics',
+            },
+            {
+                dir: 'constructors',
+            },
+            {
+                dir: 'contract-info',
+                exports: [
+                    {
+                        name: 'ContractAbi',
+                        alias: 'Abi',
+                    },
+                    {
+                        name: 'ContractFile',
+                        alias: 'File',
+                    },
+                ],
+            },
+            {
+                dir: 'contracts',
+                defaultExportName: '', // we're renaming with CaptchaContract prefix, so '' is the name otherwise it would be CaptchaContractContract
+            },
+            {
+                dir: 'data',
+            },
+            {
+                dir: 'event-data',
+            },
+            // { // no events used so this is empty - not sure about structure so left out
+            //     dir: 'event-types'
+            // },
+            {
+                dir: 'events',
+            },
+            {
+                dir: 'mixed-methods',
+                defaultExportName: 'methods',
+            },
+            {
+                dir: 'query',
+                defaultExportName: 'query',
+            },
+            {
+                dir: 'tx-sign-and-send',
+                defaultExportName: 'tx',
+            },
+        ]
+        let file = ''
+        // for each typechain dir, generate exports
+        typeChainExports.forEach((typeChainExport) => {
+            const dirPath = `${src}/${typeChainExport.dir}`
+            // there will be a single file named after the contract
+            const files = fs.readdirSync(dirPath)
+            if (files.length !== 1) {
+                throw new Error(`Expected 1 file in ${dirPath}, found ${files.length}`)
+            }
+            file = files[0] || ''
+            if (file === '') {
+                throw new Error(`No file found in ${dirPath}`)
+            }
+            if (file.endsWith('.ts')) {
+                // rename extension from ts to js
+                file = replaceExtension(file, 'js')
+            }
+
+            // process default export, if any
+            if (typeChainExport.defaultExportName !== undefined) {
+                const name = _.upperFirst(_.camelCase(typeChainExport.defaultExportName || typeChainExport.dir))
+                rootExports.push(`export { default as ${name} } from './${typeChainExport.dir}/${file}'`)
+            }
+            // process named exports, if any
+            if (typeChainExport.exports !== undefined) {
+                typeChainExport.exports.forEach((namedExport) => {
+                    const alias = namedExport.alias ? ` as ${namedExport.alias}` : ''
+                    rootExports.push(`export { ${namedExport.name}${alias} } from './${typeChainExport.dir}/${file}'`)
+                })
+            }
+        })
+
+        // shared dir is special, contains util fns. Export all
+        rootExports.push(`export * from './shared/utils.js'`)
+
+        // type-arguments and type-returns often have duplicate types. We want to export only a single type for each type, so go through and detect duplicates
+        const regex = /export\s+([a-z]+)\s+([A-Za-z0-9_]+)/gm
+        const fileTs = replaceExtension(file, 'ts')
+        const typesArgumentsFileContent = fs.readFileSync(`${src}/types-arguments/${fileTs}`, 'utf8')
+        const typesReturnsFileContent = fs.readFileSync(`${src}/types-returns/${fileTs}`, 'utf8')
+        const argumentTypes: ExportType[] = Array.from(typesArgumentsFileContent.matchAll(regex)).map((match) => {
+            return {
+                name: match[2] || '',
+                category: match[1] || '',
+            }
+        })
+        const returnTypes: ExportType[] = Array.from(typesReturnsFileContent.matchAll(regex)).map((match) => {
+            return {
+                name: match[2] || '',
+                category: match[1] || '',
+            }
+        })
+        const argumentTypeNames = argumentTypes.map((entry) => entry.name)
+        const uniqueTypes = [...argumentTypes]
+        const locations: string[] = [...argumentTypes.map(() => 'types-arguments')]
+        returnTypes.forEach((entry) => {
+            if (!argumentTypeNames.includes(entry.name)) {
+                uniqueTypes.push(entry)
+                locations.push('types-arguments')
+            } else {
+                locations.push('types-returns')
+            }
+        })
+        uniqueTypes.forEach((entry, i) => {
+            const location = locations[i]
+            const prefix = entry.category === 'type' ? ' type' : ''
+            rootExports.push(`export${prefix} { ${entry.name} } from './${location}/${file}'`)
+        })
+
+        // write the index.js file for the root
+        fs.writeFileSync(`${src}/index.ts`, rootExports.join('\n'))
+    }
+
+    writeIndexJsFiles(pathToOutput)
 }
 
 const getExtension = (str: string) => {
