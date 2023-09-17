@@ -131,7 +131,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
             },
             {
                 dir: 'contracts',
-                defaultExportName: '', // we're renaming with CaptchaContract prefix, so '' is the name otherwise it would be CaptchaContractContract
+                defaultExportName: 'contract',
             },
             {
                 dir: 'data',

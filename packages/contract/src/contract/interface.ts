@@ -15,7 +15,7 @@ import { AbiMetaDataSpec, AbiMetadata, ContractAbi } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api'
 import { BN } from '@polkadot/util'
 import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
-import { Contracts } from '@prosopo/captcha-contract'
+import { Contract } from '@prosopo/captcha-contract'
 import { ContractPromise } from '@polkadot/api-contract'
 import { Error, LangError } from '@prosopo/captcha-contract'
 import { KeyringPair } from '@polkadot/keyring/types'
@@ -65,7 +65,7 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
     }
 }
 
-export class ProsopoCaptchaContract extends Contracts {
+export class ProsopoCaptchaContract extends Contract {
     api: ApiPromise
     contractName: string
     contract: ContractPromise

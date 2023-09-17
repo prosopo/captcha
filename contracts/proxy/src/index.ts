@@ -1,7 +1,7 @@
 export { default as Extrinsics } from './build-extrinsic/proxy.js'
 export { ContractAbi as Abi } from './contract-info/proxy.js'
 export { ContractFile as File } from './contract-info/proxy.js'
-export { default as Contracts } from './contracts/proxy.js'
+export { default as Contract } from './contracts/proxy.js'
 export { default as Methods } from './mixed-methods/proxy.js'
 export { default as Query } from './query/proxy.js'
 export { default as Tx } from './tx-sign-and-send/proxy.js'

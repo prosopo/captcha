@@ -1,7 +1,7 @@
 export { default as Extrinsics } from './build-extrinsic/common.js'
 export { ContractAbi as Abi } from './contract-info/common.js'
 export { ContractFile as File } from './contract-info/common.js'
-export { default as Contracts } from './contracts/common.js'
+export { default as Contract } from './contracts/common.js'
 export { default as Methods } from './mixed-methods/common.js'
 export { default as Query } from './query/common.js'
 export { default as Tx } from './tx-sign-and-send/common.js'
