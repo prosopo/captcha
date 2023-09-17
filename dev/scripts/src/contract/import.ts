@@ -221,7 +221,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
         })
         uniqueTypes.forEach((entry, i) => {
             const location = locations[i]
-            const prefix = entry.category === 'type' ? ' type' : ''
+            const prefix = entry.category === 'type' || entry.category === 'interface' ? ' type' : ''
             rootExports.push(`export${prefix} { ${entry.name} } from './${location}/${file}'`)
         })
 
