@@ -26,10 +26,11 @@ import {
     ContractAbi,
     ProcaptchaClientConfig,
     ProsopoClientConfig,
-    RandomProvider,
 } from '@prosopo/types'
+import { 
+    RandomProvider, ContractAbi as abiJson} from '@prosopo/captcha-contract'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
-import { ProsopoCaptchaContract, abiJson, wrapQuery } from '@prosopo/contract'
+import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
 import { WsProvider } from '@polkadot/rpc-provider'
@@ -252,7 +253,7 @@ export function Manager(
                 contract.query.getRandomActiveProvider,
                 contract.query
             )(account.account.address, config.account.address)
-            const blockNumber = getRandomProviderResponse.blockNumber
+            const blockNumber = parseInt(getRandomProviderResponse.blockNumber.toString())
             console.log('provider', getRandomProviderResponse)
             const providerUrl = trimProviderUrl(getRandomProviderResponse.provider.url.toString())
             // get the provider api inst
@@ -520,7 +521,7 @@ export function Manager(
         const keyring = new Keyring({ type, ss58Format: api.registry.chainSS58 })
         return new ProsopoCaptchaContract(
             api,
-            abiJson as ContractAbi,
+            JSON.parse(abiJson),
             network.contract.address,
             keyring.addFromAddress(getAccount().account.address),
             'prosopo',

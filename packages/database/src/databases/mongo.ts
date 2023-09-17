@@ -13,11 +13,9 @@
 // limitations under the License.
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
-    ArgumentTypes,
     Captcha,
     CaptchaSolution,
     CaptchaStates,
-    CaptchaStatus,
     DatasetBase,
     DatasetWithIds,
     DatasetWithIdsAndTree,
@@ -27,6 +25,10 @@ import {
     ScheduledTaskResult,
     ScheduledTaskStatus,
 } from '@prosopo/types'
+import {
+    CaptchaStatus,
+    Hash
+} from '@prosopo/captcha-contract'
 import { AsyncFactory, Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import {
     CaptchaRecordSchema,
@@ -275,7 +277,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      */
     async getRandomCaptcha(
         solved: boolean,
-        datasetId: ArgumentTypes.Hash,
+        datasetId: Hash,
         size?: number
     ): Promise<Captcha[] | undefined> {
         if (!isHex(datasetId)) {
@@ -336,7 +338,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param {Captcha}  captcha
      * @param {string}   datasetId  the id of the data set
      */
-    async updateCaptcha(captcha: Captcha, datasetId: ArgumentTypes.Hash): Promise<void> {
+    async updateCaptcha(captcha: Captcha, datasetId: Hash): Promise<void> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.updateCaptcha.name, {}, datasetId)
         }
@@ -358,7 +360,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
     /**
      * @description Get a dataset by Id
      */
-    async getDatasetDetails(datasetId: ArgumentTypes.Hash): Promise<DatasetBase> {
+    async getDatasetDetails(datasetId: Hash): Promise<DatasetBase> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getDatasetDetails.name, {}, datasetId)
         }
@@ -677,7 +679,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag a dapp user's solutions as used by calculated solution
      * @param {string[]} captchaIds
      */
-    async flagProcessedDappUserSolutions(captchaIds: ArgumentTypes.Hash[]): Promise<void> {
+    async flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void> {
         try {
             await this.tables?.usersolution
                 ?.updateMany({ captchaId: { $in: captchaIds } }, { $set: { processed: true } }, { upsert: false })
@@ -692,7 +694,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag dapp users' commitments as used by calculated solution
      * @param {string[]} commitmentIds
      */
-    async flagProcessedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+    async flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
         try {
             const distinctCommitmentIds = [...new Set(commitmentIds)]
             await this.tables?.commitment
@@ -708,7 +710,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @description Flag dapp users' commitments as used by calculated solution
      * @param {string[]} commitmentIds
      */
-    async flagBatchedDappUserCommitments(commitmentIds: ArgumentTypes.Hash[]): Promise<void> {
+    async flagBatchedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
         try {
             const distinctCommitmentIds = [...new Set(commitmentIds)]
             await this.tables?.commitment

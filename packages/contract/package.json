@@ -44,8 +44,8 @@
         "@polkadot/util-crypto": "12.3.2",
         "@prosopo/common": "^0.1.18",
         "@prosopo/types": "^0.1.18",
-        "@prosopo/util": "^0.1.18",
         "@prosopo/captcha-contract": "^0.1.18",
+        "@prosopo/util": "^0.1.18",
         "rxjs": "^7.8.1"
     },
     "devDependencies": {

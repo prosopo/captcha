@@ -1,5 +1,6 @@
 import { ArgumentsCamelCase, Argv } from 'yargs'
-import { DappPayee, ProsopoConfig } from '@prosopo/types'
+import { ProsopoConfig } from '@prosopo/types'
+import { DappPayee } from '@prosopo/captcha-contract'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'

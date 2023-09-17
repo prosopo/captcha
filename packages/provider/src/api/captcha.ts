@@ -15,11 +15,11 @@ import {
     ApiParams,
     ApiPaths,
     CaptchaSolutionBody,
-    CaptchaStatus,
     CaptchaWithProof,
     DappUserSolutionResult,
     VerifySolutionBody,
 } from '@prosopo/types'
+import { CaptchaStatus } from '@prosopo/captcha-contract'
 import { CaptchaRequestBody } from '@prosopo/types'
 import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types'
 import { ProsopoApiError } from '@prosopo/common'

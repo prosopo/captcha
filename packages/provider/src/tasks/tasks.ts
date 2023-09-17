@@ -12,14 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
-    ArgumentTypes,
     Captcha,
     CaptchaConfig,
     CaptchaSolution,
     CaptchaSolutionConfig,
-    CaptchaStatus,
     CaptchaWithProof,
-    Dapp,
     DappUserSolutionResult,
     DatasetBase,
     DatasetRaw,
@@ -27,10 +24,9 @@ import {
     Hash,
     PendingCaptchaRequest,
     ProsopoConfig,
-    Provider,
     ProviderRegistered,
-    RandomProvider,
 } from '@prosopo/types'
+import { Provider, RandomProvider, Dapp, CaptchaStatus } from '@prosopo/captcha-contract'
 import { BlockHash, Header, RuntimeDispatchInfoV1, SignedBlock } from '@polkadot/types/interfaces'
 import {
     CaptchaMerkleTree,
@@ -133,7 +129,7 @@ export class Tasks {
      * @param {number}   size       the number of records to be returned
      */
     async getCaptchaWithProof(
-        datasetId: ArgumentTypes.Hash,
+        datasetId: Hash,
         solved: boolean,
         size: number
     ): Promise<CaptchaWithProof[]> {
@@ -526,7 +522,7 @@ export class Tasks {
         const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(userAccount)
         if (dappUserSolutions.length > 0) {
             for (const dappUserSolution of dappUserSolutions) {
-                if (dappUserSolution.status === ArgumentTypes.CaptchaStatus.approved) {
+                if (dappUserSolution.status === CaptchaStatus.approved) {
                     return dappUserSolution
                 }
             }

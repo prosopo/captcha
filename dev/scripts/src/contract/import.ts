@@ -121,11 +121,9 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                 exports: [
                     {
                         name: 'ContractAbi',
-                        alias: 'Abi',
                     },
                     {
                         name: 'ContractFile',
-                        alias: 'File',
                     },
                 ],
             },

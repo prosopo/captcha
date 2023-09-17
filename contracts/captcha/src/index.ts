@@ -1,6 +1,6 @@
 export { default as Extrinsics } from './build-extrinsic/captcha.js'
-export { ContractAbi as Abi } from './contract-info/captcha.js'
-export { ContractFile as File } from './contract-info/captcha.js'
+export { ContractAbi } from './contract-info/captcha.js'
+export { ContractFile } from './contract-info/captcha.js'
 export { default as Contract } from './contracts/captcha.js'
 export { default as Methods } from './mixed-methods/captcha.js'
 export { default as Query } from './query/captcha.js'

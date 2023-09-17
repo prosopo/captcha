@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Hash } from '@prosopo/captcha-contract'
 import { Captcha, CaptchaTypes, CaptchaWithoutId, CaptchasSchema, SelectAllCaptchaSchema } from './captcha.js'
 import { z } from 'zod'
+import { Hash } from '@prosopo/captcha-contract'
 
 export type DatasetBase = {
     datasetId?: Hash

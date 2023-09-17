@@ -11,16 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { AccountId, Hash } from '@prosopo/types'
 import {
-    AccountId,
     ApiPaths,
     CaptchaSolution,
     CaptchaSolutionBody,
     CaptchaSolutionBodyType,
-    Provider,
-    RandomProvider,
     VerifySolutionBodyType,
 } from '@prosopo/types'
+import { Provider, RandomProvider } from '@prosopo/captcha-contract'
 import {
     CaptchaSolutionResponse,
     GetCaptchaResponse,
