@@ -25,6 +25,7 @@
         "@prosopo/common": "^0.1.18",
         "@prosopo/config": "^0.1.18",
         "@prosopo/contract": "^0.1.18",
+        "@prosopo/captcha-contract": "^0.1.18",
         "@prosopo/database": "^0.1.18",
         "@prosopo/datasets": "^0.1.18",
         "@prosopo/datasets-fs": "^0.1.18",

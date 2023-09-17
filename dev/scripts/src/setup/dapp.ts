@@ -11,7 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Dapp, DappPayee, IDappAccount } from '@prosopo/types'
+import { IDappAccount } from '@prosopo/types'
+import { Dapp, DappPayee } from '@prosopo/captcha-contract'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '@prosopo/provider'
 import { wrapQuery } from '@prosopo/contract'

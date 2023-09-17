@@ -51,11 +51,11 @@
         "node": ">=14.0.0"
     },
     "workspaces": [
-        "packages/*",
-        "demos/*",
-        "dev/*",
         "protocol/dev",
-        "contracts/*"
+        "contracts/*",
+        "dev/*",
+        "packages/*",
+        "demos/*"
     ],
     "devDependencies": {
         "@eslint/eslintrc": "^2.0.3",
