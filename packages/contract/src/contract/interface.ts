@@ -15,11 +15,14 @@ import { AbiMetaDataSpec, AbiMetadata, ContractAbi } from '@prosopo/types'
 import { ApiPromise } from '@polkadot/api'
 import { BN } from '@polkadot/util'
 import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
+import { Contracts } from '@prosopo/captcha-contract'
 import { ContractPromise } from '@polkadot/api-contract'
-import { Error, LangError } from '../typechain/captcha/types-returns/captcha.js'
+import { Error, LangError } from '@prosopo/captcha-contract'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
+import { Methods } from '@prosopo/captcha-contract'
 import { ProsopoContractError } from '../handlers.js'
+import { Query } from '@prosopo/captcha-contract'
 import { QueryReturnType, Result } from '@727-ventures/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
 import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
@@ -31,16 +34,13 @@ import {
     getStorageKeyAndType,
 } from './storage.js'
 import { useWeightImpl } from './useWeight.js'
-import Contract from '../typechain/captcha/contracts/captcha.js'
-import MixedMethods from '../typechain/captcha/mixed-methods/captcha.js'
-import QueryMethods from '../typechain/captcha/query/captcha.js'
 import type { ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
 
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
 
 export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnType>(
     fn: (...args: QueryFunctionArgs) => QueryFunctionReturnType,
-    queryMethods: QueryMethods
+    queryMethods: Query
 ) => {
     return async (...args: QueryFunctionArgs): Promise<QueryReturnTypeInner<QueryFunctionReturnType>> => {
         let result: QueryReturnType<Result<Result<QueryReturnTypeInner<QueryFunctionReturnType>, Error>, LangError>>
@@ -65,7 +65,7 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
     }
 }
 
-export class ProsopoCaptchaContract extends Contract {
+export class ProsopoCaptchaContract extends Contracts {
     api: ApiPromise
     contractName: string
     contract: ContractPromise
@@ -121,7 +121,7 @@ export class ProsopoCaptchaContract extends Contract {
      */
     async queryAtBlock<T>(blockHash: BlockHash, methodName: string, args?: any[]): Promise<T> {
         const api = (await this.api.at(blockHash)) as ApiPromise
-        const methods: any = new MixedMethods(api, this.contract, this.signer)
+        const methods: any = new Methods(api, this.contract, this.signer)
         if (args) {
             return (await methods[methodName](...args)).value.unwrap().unwrap() as T
         } else {
