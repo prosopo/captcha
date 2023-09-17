@@ -20,7 +20,20 @@
         "url": "https://github.com/prosopo/captcha/issues"
     },
     "homepage": "https://github.com/prosopo/captcha#readme",
-    "dependencies": {},
+    "dependencies": {
+        "@727-ventures/typechain-polkadot": "1.1.1",
+        "@727-ventures/typechain-types": "1.1.2",
+        "@polkadot/api": "10.9.1",
+        "@polkadot/api-contract": "10.9.1",
+        "@polkadot/types": "10.9.1",
+        "@polkadot/types-codec": "10.9.1",
+        "@polkadot/keyring": "12.3.2",
+        "@polkadot/rpc-provider": "10.9.1",
+        "@polkadot/typegen": "10.9.1",
+        "@polkadot/types-create": "10.9.1",
+        "@polkadot/util": "12.3.2",
+        "@polkadot/util-crypto": "12.3.2"
+    },
     "devDependencies": {
         "tslib": "^2.6.2",
         "typescript": "^5.1.6"
