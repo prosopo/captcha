@@ -19,9 +19,9 @@ import {
     DappUserSolutionResult,
     VerifySolutionBody,
 } from '@prosopo/types'
-import { CaptchaStatus } from '@prosopo/captcha-contract'
 import { CaptchaRequestBody } from '@prosopo/types'
 import { CaptchaSolutionBodyType, VerifySolutionBodyType } from '@prosopo/types'
+import { CaptchaStatus } from '@prosopo/captcha-contract'
 import { ProsopoApiError } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/types-env'
 import { Tasks } from '../tasks/tasks.js'

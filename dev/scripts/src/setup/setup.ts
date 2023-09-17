@@ -11,10 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { Payee } from '@prosopo/captcha-contract'
 import { BN } from '@polkadot/util'
 import { IDappAccount, IProviderAccount } from '@prosopo/types'
 import { LogLevel, ProsopoEnvError, getLogger, getPair } from '@prosopo/common'
+import { Payee } from '@prosopo/captcha-contract'
 import { ProviderEnvironment } from '@prosopo/env'
 import { ReturnNumber } from '@727-ventures/typechain-types'
 import { defaultConfig, getPairType, getSecret, getSs58Format } from '@prosopo/cli'

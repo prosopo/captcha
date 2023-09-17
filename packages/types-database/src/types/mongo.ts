@@ -21,16 +21,10 @@ import {
     DatasetWithIds,
     Item,
 } from '@prosopo/types'
-import {
-    Hash,
-    AccountId
-} from '@prosopo/types'
-import {
-    Commit,
-    CaptchaStatus
-} from '@prosopo/captcha-contract'
+import { CaptchaStatus, Commit } from '@prosopo/captcha-contract'
 import { Connection, Model, Schema } from 'mongoose'
 import { DeleteResult } from 'mongodb'
+import { Hash } from '@prosopo/types'
 import { Logger } from '@prosopo/common'
 import { PendingCaptchaRequest } from '@prosopo/types'
 import { ScheduledTaskNames, ScheduledTaskResult, ScheduledTaskStatus } from '@prosopo/types'
@@ -218,11 +212,7 @@ export interface Database {
 
     getDataset(datasetId: string): Promise<DatasetWithIds>
 
-    getRandomCaptcha(
-        solved: boolean,
-        datasetId: Hash | string,
-        size?: number
-    ): Promise<Captcha[] | undefined>
+    getRandomCaptcha(solved: boolean, datasetId: Hash | string, size?: number): Promise<Captcha[] | undefined>
 
     getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>
 

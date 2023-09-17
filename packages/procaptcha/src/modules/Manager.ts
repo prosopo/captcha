@@ -21,16 +21,10 @@ import {
 } from '../types/manager.js'
 import { AccountNotFoundError } from '../api/errors.js'
 import { ApiPromise, Keyring } from '@polkadot/api'
-import {
-    CaptchaSolution,
-    ContractAbi,
-    ProcaptchaClientConfig,
-    ProsopoClientConfig,
-} from '@prosopo/types'
-import { 
-    RandomProvider, ContractAbi as abiJson} from '@prosopo/captcha-contract'
+import { CaptchaSolution, ProcaptchaClientConfig, ProsopoClientConfig } from '@prosopo/types'
 import { GetCaptchaResponse, ProviderApi } from '@prosopo/api'
 import { ProsopoCaptchaContract, wrapQuery } from '@prosopo/contract'
+import { RandomProvider, ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { SignerPayloadRaw } from '@polkadot/types/types'
 import { TCaptchaSubmitResult } from '../types/client.js'
 import { WsProvider } from '@polkadot/rpc-provider'

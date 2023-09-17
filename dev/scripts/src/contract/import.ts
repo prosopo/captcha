@@ -105,7 +105,7 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
         const typeChainDirs = fs.readdirSync(src).filter((file) => {
             return fs.lstatSync(`${src}/${file}`).isDirectory()
         })
-        let rootExports: string[] = []
+        const rootExports: string[] = []
         // for each dir (e.g. build-extrinsic, constructors, etc) generate an index.js file with exports for each contract
         // need to do specific exports per dir as it depends on the typechain export as to how we want to name the index.js export
         const typeChainExports: TypeChainDir[] = [

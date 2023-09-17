@@ -21,9 +21,9 @@ import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, ProsopoEnvError, getLogger } from '@prosopo/common'
 import { ProsopoBasicConfig } from '@prosopo/types'
 import { ProsopoCaptchaContract } from '@prosopo/contract'
-import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { ProsopoEnvironment } from '@prosopo/types-env'
 import { WsProvider } from '@polkadot/rpc-provider'
+import { ContractAbi as abiJson } from '@prosopo/captcha-contract'
 import { get } from '@prosopo/util'
 
 export class Environment implements ProsopoEnvironment {

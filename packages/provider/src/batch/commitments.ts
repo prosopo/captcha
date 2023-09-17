@@ -12,17 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
-import {
-    BatchCommitConfig,
-    ExtrinsicBatch,
-    ScheduledTaskNames,
-    ScheduledTaskStatus,
-} from '@prosopo/types'
-import {
-    Commit,
-    Hash,
-} from '@prosopo/captcha-contract'
 import { BN } from '@polkadot/util'
+import { BatchCommitConfig, ExtrinsicBatch, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
+import { Commit, Hash } from '@prosopo/captcha-contract'
 import { Database, UserCommitmentRecord } from '@prosopo/types-database'
 import { Logger } from '@prosopo/common'
 import { ProsopoCaptchaContract, ProsopoContractError, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'

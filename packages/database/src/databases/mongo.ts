@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { AsyncFactory, Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import {
     Captcha,
     CaptchaSolution,
@@ -25,11 +26,6 @@ import {
     ScheduledTaskResult,
     ScheduledTaskStatus,
 } from '@prosopo/types'
-import {
-    CaptchaStatus,
-    Hash
-} from '@prosopo/captcha-contract'
-import { AsyncFactory, Logger, ProsopoEnvError, getLoggerDefault } from '@prosopo/common'
 import {
     CaptchaRecordSchema,
     Database,
@@ -48,6 +44,7 @@ import {
     UserSolutionRecordSchema,
     UserSolutionSchema,
 } from '@prosopo/types-database'
+import { CaptchaStatus, Hash } from '@prosopo/captcha-contract'
 import { DeleteResult, ServerApiVersion } from 'mongodb'
 import { isHex } from '@polkadot/util'
 import mongoose, { Connection } from 'mongoose'
@@ -275,11 +272,7 @@ export class ProsopoDatabase extends AsyncFactory implements Database {
      * @param {string}   datasetId  the id of the data set
      * @param {number}   size       the number of records to be returned
      */
-    async getRandomCaptcha(
-        solved: boolean,
-        datasetId: Hash,
-        size?: number
-    ): Promise<Captcha[] | undefined> {
+    async getRandomCaptcha(solved: boolean, datasetId: Hash, size?: number): Promise<Captcha[] | undefined> {
         if (!isHex(datasetId)) {
             throw new ProsopoEnvError('DATABASE.INVALID_HASH', this.getRandomCaptcha.name, {}, datasetId)
         }
