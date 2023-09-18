@@ -1,0 +1,5 @@
+# https://github.com/release-drafter/release-drafter
+template: |
+  ## What’s Changed
+
+  $CHANGES
