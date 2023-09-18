@@ -174,15 +174,15 @@ pub mod captcha {
     #[derive(PartialEq, Debug, Eq, Clone, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Commit {
-        id: Hash,                       // the commitment id
-        user_account: AccountId,        // the user who submitted the commitment
-        dataset_id: Hash,               // the dataset id
-        status: CaptchaStatus,          // the status of the commitment
-        dapp_contract: AccountId,       // the dapp which the user completed the captcha on
-        provider_account: AccountId,    // the provider who supplied the challenge
-        requested_at: BlockNumber,      // the block number at which the captcha was requested
-        completed_at: BlockNumber,      // the block number at which the captcha was completed
-        user_signature: [u8; 64], // the user's signature of the commitment
+        id: Hash,                    // the commitment id
+        user_account: AccountId,     // the user who submitted the commitment
+        dataset_id: Hash,            // the dataset id
+        status: CaptchaStatus,       // the status of the commitment
+        dapp_contract: AccountId,    // the dapp which the user completed the captcha on
+        provider_account: AccountId, // the provider who supplied the challenge
+        requested_at: BlockNumber,   // the block number at which the captcha was requested
+        completed_at: BlockNumber,   // the block number at which the captcha was completed
+        user_signature: [u8; 64],    // the user's signature of the commitment
     }
 
     /// DApps are distributed apps who want their users to be verified by Providers, either paying
