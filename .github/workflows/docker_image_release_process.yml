@@ -115,8 +115,6 @@ jobs:
             - name: Build JS Bundle and Publish to Docker Hub
               # Build JS bundle and publish to Docker Hub if publish_dockerhub_js_bundle is true
               if: steps.check_provider_image_version.outputs.publish_dockerhub_js_bundle == 'true'
-              env:
-                  DOCKER_JS_IMAGE_TAG: latest # You can change this as needed
               run: |
                   # Navigate to the JS bundle directory and build
                   echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
@@ -129,15 +127,13 @@ jobs:
 
                   # Build and push the JS Docker image
                   echo "Building Docker image for JS bundle..."
-                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${DOCKER_JS_IMAGE_TAG}
+                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${env.PROVIDER_IMAGE_VERSION}
                   echo "Pushing Docker image for JS bundle..."
-                  docker push prosopo/js_server:${DOCKER_JS_IMAGE_TAG}
+                  docker push prosopo/js_server:${env.PROVIDER_IMAGE_VERSION}
 
             - name: Build and Push the Provider Bundle
               # Build and push the provider bundle to Docker Hub if publish_dockerhub_provider is true
               if: steps.check_provider_image_version.outputs.publish_dockerhub_provider == 'true'
-              env:
-                  DOCKER_IMAGE_TAG: latest # Change this as needed
               run: |
                   # Navigate to the provider CLI directory and build
                   echo "Navigating to 'packages/cli' and building..."
@@ -150,6 +146,6 @@ jobs:
 
                   # Build and push the Docker image
                   echo "Building Docker image..."
-                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${DOCKER_IMAGE_TAG}
+                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${env.PROVIDER_IMAGE_VERSION}
                   echo "Pushing Docker image..."
-                  docker push prosopo/provider:${DOCKER_IMAGE_TAG}
+                  docker push prosopo/provider:${env.PROVIDER_IMAGE_VERSION}
