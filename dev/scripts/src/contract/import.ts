@@ -92,6 +92,26 @@ async function importContract(pathToAbis: string, pathToOutput: string) {
                     console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
                     return result
                 })
+
+                // replace EventRecord with EventRecord[]
+                // eslint-disable-next-line no-useless-escape
+                replaced = replaced.replace(/EventRecord/gm, (match) => {
+                    const result = `EventRecord[]`
+                    console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
+                    return result
+                })
+
+                // replace EventRecord incorrect imports
+                // eslint-disable-next-line no-useless-escape
+                replaced = replaced.replace(
+                    /import\s+type\s+\{\s*EventRecord\s*\}\s+from\s+['"]@polkadot\/api\/submittable["']/gm,
+                    (match) => {
+                        const result = `import type { EventRecord } from '@polkadot/types/interfaces'`
+                        console.log(`Replacing \n\t${match}\nwith\n\t${result}\nin ${filePath}`)
+                        return result
+                    }
+                )
+
                 fs.writeFileSync(filePath, replaced)
             }
         }
