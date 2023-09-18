@@ -1,0 +1,151 @@
+name: npm_release_process
+
+on:
+    push:
+        branches:
+            - 'main'
+        paths:
+            - 'package.json'
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            # Checkout the repo
+            - uses: actions/checkout@v3
+
+            # Get the provider image version from the root package.json and the latest package version from npm
+            - name: Get provider image version
+              run: |
+                  echo "PROVIDER_IMAGE_VERSION=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
+                  echo "LATEST_PROVIDER_VERSION=$(npm view @prosopo/provider version)" >> $GITHUB_ENV
+
+            - run: mkdir -p protocol/cargo-cache
+            - run: mkdir -p protocol/target
+            - run: mkdir -p node_modules
+            - run: mkdir -p .cache/Cypress
+
+            - name: Set versions string
+              run: echo "VERSIONS_TO_COMPARE=${{ env.PROVIDER_IMAGE_VERSION }}\\n${{ env.LATEST_PROVIDER_VERSION }}" >> $GITHUB_ENV
+
+            - name: Restore cache
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      protocol/cargo-cache
+                      protocol/target
+                      node_modules
+                      .cache/Cypress
+                  # note that restoring a cache in github is a pain. The trailing '-' matches any string after the '-', therefore 'abc-' would match a cache named 'abc-1234' or 'abc-5678', etc.
+                  # the problem is 'abc-' will not match a cache named 'abc'! So if you're using wildcard cache name selectors like this, you need a field that changes as the suffix to become the wildcard
+                  # here we're setting the key to an unused cache key so it falls back to the wildcard selector in `restore-keys`
+                  key: some-unused-cache-key
+                  restore-keys: |
+                      project-cache-${{ runner.os }}-${{ runner.arch }}-
+
+            - name: Check Provider Image Version
+              id: check_provider_image_version
+              run: |
+                  echo "Checking provider image version..."
+                  echo "PROVIDER_IMAGE_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
+                  echo "LATEST_PROVIDER_VERSION=${{ env.LATEST_PROVIDER_VERSION }}"
+
+                  # Initialize flags for publishing to Docker Hub
+                  publish_dockerhub_provider="true"
+                  publish_dockerhub_js_bundle="true"
+
+                  # Condition 1: If version is equal to the npm version, exit successfully
+                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
+                    echo "Condition 1: Current npm version detected. No action needed."
+                    publish_dockerhub_provider="false"
+                    publish_dockerhub_js_bundle="false"
+                    exit 0
+                  fi
+
+                  # Condition 2: If version is less than the npm version, exit with error
+                  # Note: This is technically less than or equal, but equality is checked above
+                  if [[ $(echo -e "${{ env.VERSIONS_TO_COMPARE }}" | sort -V | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
+                    echo "Condition 2: Version bump required. Exiting with error."
+                    publish_dockerhub_provider="false"
+                    publish_dockerhub_js_bundle="false"
+                    exit 1
+                  fi
+
+                  # Condition 3: If greater than npm version, consider for Docker Hub publishing
+                  if [[ $(echo -e "${{ env.VERSIONS_TO_COMPARE }}" | sort -Vr | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
+                    echo "Condition 3: Version bump detected. Preparing for Docker Hub publish."
+
+                    # Check if running on GitHub Actions
+                    if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
+                      echo "Running on GitHub Actions. Continuing with Docker Hub publish."
+                    else
+                      echo "Running locally via act. Skipping Docker Hub publish."
+                      publish_dockerhub_provider="false"
+                      publish_dockerhub_js_bundle="false"
+                    fi
+                  fi
+
+                  # Update GitHub environment variables
+                  echo "Setting environment flags..."
+                  echo "publish_dockerhub_provider=$publish_dockerhub_provider" >> $GITHUB_ENV
+                  echo "publish_dockerhub_js_bundle=$publish_dockerhub_js_bundle" >> $GITHUB_ENV
+
+            - name: Install dependencies and build packages
+              # Install dependencies and build packages if either provider or JS bundle needs to be published
+              if: >-
+                  steps.check_provider_image_version.outputs.publish_dockerhub_provider == 'true' ||
+                  steps.check_provider_image_version.outputs.publish_dockerhub_js_bundle == 'true'
+              run: |
+                  set -e  # Exit immediately if a command exits with a non-zero status.
+                  echo "Installing dependencies..."
+                  npm ci
+                  echo "Building packages..."
+                  npm run build:all
+
+            - name: Log in to Docker Hub
+              # Only log in if either provider or JS bundle needs to be published
+              if: >-
+                  steps.check_provider_image_version.outputs.publish_dockerhub_provider == 'true' ||
+                  steps.check_provider_image_version.outputs.publish_dockerhub_js_bundle == 'true'
+              run: |
+                  echo "Logging into Docker Hub."
+                  echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin 2> /dev/null
+
+            - name: Build JS Bundle and Publish to Docker Hub
+              # Build JS bundle and publish to Docker Hub if publish_dockerhub_js_bundle is true
+              if: steps.check_provider_image_version.outputs.publish_dockerhub_js_bundle == 'true'
+              run: |
+                  # Navigate to the JS bundle directory and build
+                  echo "Navigating to 'packages/procaptcha-bundle' and building JS bundle..."
+                  cd packages/procaptcha-bundle
+                  npm run build:prod
+
+                  # Navigate back to the project root
+                  echo "Navigating back to project root..."
+                  cd ../..
+
+                  # Build and push the JS Docker image
+                  echo "Building Docker image for JS bundle..."
+                  docker build --file ./docker/images/js.server.dockerfile . -t prosopo/js_server:${env.PROVIDER_IMAGE_VERSION}
+                  echo "Pushing Docker image for JS bundle..."
+                  docker push prosopo/js_server:${env.PROVIDER_IMAGE_VERSION}
+
+            - name: Build and Push the Provider Bundle
+              # Build and push the provider bundle to Docker Hub if publish_dockerhub_provider is true
+              if: steps.check_provider_image_version.outputs.publish_dockerhub_provider == 'true'
+              run: |
+                  # Navigate to the provider CLI directory and build
+                  echo "Navigating to 'packages/cli' and building..."
+                  cd packages/cli
+                  npm run build:prod
+
+                  # Navigate back to the project root
+                  echo "Navigating back to project root..."
+                  cd ../..
+
+                  # Build and push the Docker image
+                  echo "Building Docker image..."
+                  docker build --file ./docker/images/provider.dockerfile . -t prosopo/provider:${env.PROVIDER_IMAGE_VERSION}
+                  echo "Pushing Docker image..."
+                  docker push prosopo/provider:${env.PROVIDER_IMAGE_VERSION}
