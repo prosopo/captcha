@@ -26,7 +26,7 @@ import { Logger } from '@prosopo/common'
 import { ProsopoCaptchaContract, ProsopoContractError, batch, encodeStringArgs, oneUnit } from '@prosopo/contract'
 import { SubmittableExtrinsic } from '@polkadot/api/types'
 import { WeightV2 } from '@polkadot/types/interfaces'
-import { checkIfTaskIsRunning } from '../util'
+import { checkIfTaskIsRunning } from '../util.js'
 import { randomAsHex } from '@polkadot/util-crypto'
 
 const BN_TEN_THOUSAND = new BN(10_000)
@@ -91,13 +91,14 @@ export class BatchCommitmentsTask {
                         )
                     }
                 } catch (e) {
+                    const err = e as Error
                     this.logger.error(e)
                     await this.db.storeScheduledTaskStatus(
                         taskId,
                         ScheduledTaskNames.BatchCommitment,
                         ScheduledTaskStatus.Failed,
                         {
-                            error: JSON.stringify(e && e.message ? e.message : e),
+                            error: JSON.stringify(e && err.message ? err.message : e),
                         }
                     )
                 }

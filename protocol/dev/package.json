@@ -1,11 +1,13 @@
 {
     "name": "@prosopo/protocol-dev",
-    "version": "0.1.17",
+    "version": "0.1.18",
     "description": "Dev tools for working with prosopo contracts",
     "main": "dist/index.js",
+    "type": "module",
     "scripts": {
         "build": "tsc",
-        "cli": "ts-node src/cli.ts"
+        "cli": "f() { ts-node --esm src/cli.ts -- -- $@ ;}; f",
+        "clean": "tsc --build --clean"
     },
     "author": "Prosopo Limited",
     "license": "Apache-2.0",
@@ -25,6 +27,7 @@
         "@types/node": "^20.1.2",
         "@types/yargs": "^17.0.24",
         "ts-node": "^10.9.1",
-        "tslib": "^2.5.3"
+        "tslib": "^2.6.2",
+        "typescript": "^5.1.6"
     }
 }

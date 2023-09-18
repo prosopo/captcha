@@ -11,8 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { BlueprintOptions } from '@polkadot/api-contract/types'
 import { CodePromise } from '@polkadot/api-contract'
-import { ContractFile } from '../contract-info/captcha'
+import { ContractFile } from '../contract-info/captcha.js'
 import { SignAndSendSuccessResponse, _genValidGasLimitAndValue, _signAndSend } from '@727-ventures/typechain-types'
 import type { ApiPromise } from '@polkadot/api'
 import type { ConstructorOptions } from '@727-ventures/typechain-types'
@@ -38,7 +39,14 @@ export default class Constructors {
         const gasLimit = (await _genValidGasLimitAndValue(this.nativeAPI, __options)).gasLimit as WeightV2
 
         const storageDepositLimit = __options?.storageDepositLimit
-        const tx = code.tx['new']!({ gasLimit, storageDepositLimit, value: __options?.value })
+        const options: BlueprintOptions = {
+            gasLimit,
+            storageDepositLimit: storageDepositLimit === undefined ? null : storageDepositLimit,
+        }
+        if (__options?.value !== undefined) {
+            options.value = __options.value
+        }
+        const tx = code.tx['new']!(options)
         let response
 
         try {

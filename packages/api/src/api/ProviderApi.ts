@@ -21,9 +21,14 @@ import {
     RandomProvider,
     VerifySolutionBodyType,
 } from '@prosopo/types'
-import { CaptchaSolutionResponse, GetCaptchaResponse, ProviderRegistered, VerificationResponse } from '../types'
+import {
+    CaptchaSolutionResponse,
+    GetCaptchaResponse,
+    ProviderRegistered,
+    VerificationResponse,
+} from '../types/index.js'
 import { NetworkConfig } from '@prosopo/types'
-import HttpClientBase from './HttpClientBase'
+import HttpClientBase from './HttpClientBase.js'
 
 export default class ProviderApi extends HttpClientBase {
     private network: NetworkConfig
@@ -69,7 +74,10 @@ export default class ProviderApi extends HttpClientBase {
     }
 
     public verifyDappUser(userAccount: string, commitmentId?: string): Promise<VerificationResponse> {
-        const payload = { user: userAccount }
+        const payload: {
+            user: string
+            commitmentId?: string
+        } = { user: userAccount }
         if (commitmentId) {
             payload['commitmentId'] = commitmentId
         }

@@ -13,7 +13,7 @@
 // limitations under the License.
 import { Connection } from 'mongoose'
 import { ProsopoServer } from '@prosopo/server'
-import { isAuth, login, signup } from '../controllers/auth'
+import { isAuth, login, signup } from '../controllers/auth.js'
 import express from 'express'
 
 const router = express.Router()

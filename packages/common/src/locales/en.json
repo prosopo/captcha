@@ -24,7 +24,8 @@
         "CANT_FIND_KEYRINGPAIR": "Can't find the keyringpair for {{address}}",
         "ENVIRONMENT_NOT_READY": "Environment not ready",
         "INVALID_SIGNATURE": "Invalid signature",
-        "PAIR_TYPE_UNDEFINED": "Pair type undefined"
+        "PAIR_TYPE_UNDEFINED": "Pair type undefined",
+        "NOT_IMPLEMENTED": "Not implemented"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Invalid contract method",
@@ -46,7 +47,8 @@
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Unknown environment requested",
         "INVALID_CAPTCHA_NUMBER": "Please configure captchas configurations correctly",
-        "CONFIGURATIONS_LOAD_FAILED": "Prosopo configurations load failed"
+        "CONFIGURATIONS_LOAD_FAILED": "Prosopo configurations load failed",
+        "INVALID_LOG_LEVEL": "Invalid log level"
     },
     "DATASET": {
         "PARSE_ERROR": "Error parsing dataset",

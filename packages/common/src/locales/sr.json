@@ -24,7 +24,8 @@
         "CANT_FIND_KEYRINGPAIR": "Keyringpair nije pronađen za {{address}}",
         "ENVIRONMENT_NOT_READY": "Environment not ready",
         "INVALID_SIGNATURE": "Invalid signature",
-        "PAIR_TYPE_UNDEFINED" : "Pair type undefined"
+        "PAIR_TYPE_UNDEFINED": "Pair type undefined",
+        "NOT_IMPLEMENTED": "Ne sprovodi"
     },
     "CONTRACT": {
         "INVALID_METHOD": "Nevažeća metoda ugovora",
@@ -46,7 +47,8 @@
     "CONFIG": {
         "UNKNOWN_ENVIRONMENT": "Zatraženo je nepoznato okruženje",
         "INVALID_CAPTCHA_NUMBER": "Molimo vas da ispravno podesite captcha konfiguracije",
-        "CONFIGURATIONS_LOAD_FAILED": "Učitavanje Prosopo konfiguracija nije uspelo"
+        "CONFIGURATIONS_LOAD_FAILED": "Učitavanje Prosopo konfiguracija nije uspelo",
+        "INVALID_LOG_LEVEL": "Nevažeći nivo evidencije"
     },
     "DATASET": {
         "PARSE_ERROR": "Greška pri parsiranju skupa podataka",

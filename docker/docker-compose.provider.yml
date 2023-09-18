@@ -15,6 +15,7 @@ services:
     networks:
       - internal
       - external
+
   database:
     image: mongo:5.0.4
     volumes:

@@ -13,11 +13,13 @@
 // limitations under the License.
 import { LogLevel, getLogger, getPair } from '@prosopo/common'
 import { ProviderEnvironment } from '@prosopo/env'
-import { getConfig, getPairType, getSecret, getSs58Format } from './process.env'
-import { loadEnv } from './env'
-import { processArgs } from './argv'
-import { start } from './start'
-const log = getLogger(LogLevel.Info, 'cli')
+import { getConfig, getPairType, getSecret, getSs58Format } from './process.env.js'
+import { loadEnv } from './env.js'
+import { processArgs } from './argv.js'
+import { start } from './start.js'
+import esMain from 'es-main'
+import process from 'process'
+const log = getLogger(LogLevel.enum.info, 'cli')
 async function main() {
     loadEnv()
 
@@ -31,12 +33,10 @@ async function main() {
 
     log.info(`Contract address: ${process.env.PROTOCOL_CONTRACT_ADDRESS}`)
 
-    const env = new ProviderEnvironment(pair, config)
-
-    await env.isReady()
-
-    const processedArgs = await processArgs(process.argv.slice(2), env)
+    const processedArgs = await processArgs(process.argv, pair, config)
     if (processedArgs.api) {
+        const env = new ProviderEnvironment(pair, config)
+        await env.isReady()
         log.info('Starting API')
         await start(env)
     } else {
@@ -44,8 +44,8 @@ async function main() {
     }
 }
 
-// if main node process
-if (typeof require !== 'undefined' && require.main === module) {
+//if main process
+if (esMain(import.meta)) {
     main()
         .then(() => {
             log.info('Running main process...')

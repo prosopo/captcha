@@ -16,20 +16,25 @@ import { ApiPromise } from '@polkadot/api'
 import { BN } from '@polkadot/util'
 import { BlockHash, StorageDeposit } from '@polkadot/types/interfaces'
 import { ContractPromise } from '@polkadot/api-contract'
-import { Error, LangError } from '../typechain/captcha/types-returns/captcha'
+import { Error, LangError } from '../typechain/captcha/types-returns/captcha.js'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger, snakeToCamelCase } from '@prosopo/common'
-import { ProsopoContractError } from '../handlers'
+import { ProsopoContractError } from '../handlers.js'
 import { QueryReturnType, Result } from '@727-ventures/typechain-types'
 import { SubmittableExtrinsic } from '@polkadot/api/promise/types'
-import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers'
+import { encodeStringArgs, getExpectedBlockTime, getOptions, handleContractCallOutcomeErrors } from './helpers.js'
 import { firstValueFrom } from 'rxjs'
-import { getPrimitiveStorageFields, getPrimitiveStorageValue, getPrimitiveTypes, getStorageKeyAndType } from './storage'
-import { useWeightImpl } from './useWeight'
-import Contract from '../typechain/captcha/contracts/captcha'
-import MixedMethods from '../typechain/captcha/mixed-methods/captcha'
-import QueryMethods from '../typechain/captcha/query/captcha'
-import type { ContractOptions } from '@polkadot/api-contract/types'
+import {
+    getPrimitiveStorageFields,
+    getPrimitiveStorageValue,
+    getPrimitiveTypes,
+    getStorageKeyAndType,
+} from './storage.js'
+import { useWeightImpl } from './useWeight.js'
+import Contract from '../typechain/captcha/contracts/captcha.js'
+import MixedMethods from '../typechain/captcha/mixed-methods/captcha.js'
+import QueryMethods from '../typechain/captcha/query/captcha.js'
+import type { ContractCallOutcome, ContractOptions } from '@polkadot/api-contract/types'
 
 export type QueryReturnTypeInner<T> = T extends QueryReturnType<Result<Result<infer U, Error>, LangError>> ? U : never
 
@@ -43,7 +48,7 @@ export const wrapQuery = <QueryFunctionArgs extends any[], QueryFunctionReturnTy
             result = (await fn.bind(queryMethods)(...args)) as QueryReturnType<
                 Result<Result<QueryReturnTypeInner<QueryFunctionReturnType>, Error>, LangError>
             >
-        } catch (e) {
+        } catch (e: any) {
             throw new ProsopoContractError(e._asError, fn.name, undefined, {
                 args: args,
             })
@@ -65,7 +70,7 @@ export class ProsopoCaptchaContract extends Contract {
     contractName: string
     contract: ContractPromise
     pair: KeyringPair
-    options: ContractOptions
+    options: ContractOptions | undefined
     nonce: number
     logger: Logger
     json: AbiMetadata
@@ -86,7 +91,7 @@ export class ProsopoCaptchaContract extends Contract {
         this.pair = pair
         this.contractName = contractName
         this.nonce = currentNonce
-        this.logger = getLogger(logLevel || LogLevel.Info, `${ProsopoCaptchaContract.name}.${contractName}`)
+        this.logger = getLogger(logLevel || LogLevel.enum.info, `${ProsopoCaptchaContract.name}.${contractName}`)
         this.json = AbiMetaDataSpec.parse(this.abi.json)
         this.createStorageGetters()
     }
@@ -98,7 +103,10 @@ export class ProsopoCaptchaContract extends Contract {
         if (this.json.storage.root.layout.struct) {
             for (const storageField of this.json.storage.root.layout.struct.fields) {
                 const functionName = `${snakeToCamelCase(storageField.name)}`
-                ProsopoCaptchaContract.prototype[functionName] = () => {
+                const proto = ProsopoCaptchaContract.prototype as unknown as {
+                    [key: string]: () => any
+                }
+                proto[functionName] = () => {
                     return this.getStorage(storageField.name)
                 }
             }
@@ -113,7 +121,7 @@ export class ProsopoCaptchaContract extends Contract {
      */
     async queryAtBlock<T>(blockHash: BlockHash, methodName: string, args?: any[]): Promise<T> {
         const api = (await this.api.at(blockHash)) as ApiPromise
-        const methods = new MixedMethods(api, this.contract, this.signer)
+        const methods: any = new MixedMethods(api, this.contract, this.signer)
         if (args) {
             return (await methods[methodName](...args)).value.unwrap().unwrap() as T
         } else {
@@ -137,25 +145,39 @@ export class ProsopoCaptchaContract extends Contract {
         const weight = await useWeightImpl(this.api as ApiPromise, expectedBlockTime, new BN(1))
         const gasLimit = weight.isWeightV2 ? weight.weightV2 : weight.isEmpty ? -1 : weight.weight
         this.logger.debug('Sending address: ', this.pair.address)
-        const initialOptions = {
-            value,
+        const initialOptions: ContractOptions = {
             gasLimit,
             storageDepositLimit: null,
         }
-        const extrinsic = this.contract.query[message.method](this.pair.address, initialOptions, ...encodedArgs)
+        if (value !== undefined) {
+            initialOptions.value = value
+        }
+        const func = this.contract.query[message.method]
+        if (func === undefined) {
+            throw new RangeError(`Method ${contractMethodName} does not exist on contract ${this.contractName}`)
+        }
+        const extrinsic = func(this.pair.address, initialOptions, ...encodedArgs)
 
-        const response = await extrinsic
+        const response = (await extrinsic) as unknown as ContractCallOutcome
         if (response.result.isOk) {
             let options = getOptions(this.api, message.isMutating, value, response.gasRequired, response.storageDeposit)
-            const extrinsicTx = this.contract.tx[contractMethodName](options, ...encodedArgs)
+            let method = this.contract.tx[contractMethodName]
+            if (method === undefined) {
+                throw new RangeError(`Method ${contractMethodName} does not exist on contract ${this.contractName}`)
+            }
+            const extrinsicTx = method(options, ...encodedArgs)
             // paymentInfo is larger than gasRequired returned by query so use paymentInfo
             const paymentInfo = await extrinsicTx.paymentInfo(this.pair.address)
             this.logger.debug('Payment info: ', paymentInfo.partialFee.toHuman())
             // increase the gas limit to make sure the tx succeeds
             options = getOptions(this.api, message.isMutating, value, paymentInfo.weight, response.storageDeposit, true)
             handleContractCallOutcomeErrors(response, contractMethodName)
+            method = this.contract.tx[contractMethodName]
+            if (method === undefined) {
+                throw new RangeError(`Method ${contractMethodName} does not exist on contract ${this.contractName}`)
+            }
             return {
-                extrinsic: this.contract.tx[contractMethodName](options, ...encodedArgs),
+                extrinsic: method(options, ...encodedArgs),
                 options,
                 storageDeposit: response.storageDeposit,
             }

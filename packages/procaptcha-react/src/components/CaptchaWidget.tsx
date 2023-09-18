@@ -11,17 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Box, Fade, useTheme } from '@mui/material'
 import { CaptchaResponseCaptcha } from '@prosopo/procaptcha'
-import { Theme, useTheme } from '@mui/material'
-import Box from '@mui/material/Box'
-import CheckIcon from '@mui/icons-material/Check'
-import Fade from '@mui/material/Fade'
+import { default as CheckIcon } from '@mui/icons-material/Check.js'
+import { SvgIcon, Theme } from '@mui/material'
+import React from 'react'
 
 export interface CaptchaWidgetProps {
     challenge: CaptchaResponseCaptcha
     solution: string[]
     onClick: (hash: string) => void
 }
+
+const normalizeIcon = (Icon: typeof SvgIcon) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    return ((Icon as any).default ? (Icon as any).default : Icon) as typeof SvgIcon
+}
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore https://github.com/mui/material-ui/issues/35535
+const CheckIconNormalized = normalizeIcon(CheckIcon)
 
 const getHash = (item: any) => {
     if (!item.hash) {
@@ -30,7 +39,7 @@ const getHash = (item: any) => {
     return item.hash
 }
 
-export const CaptchaWidget = (props: CaptchaWidgetProps) => {
+export function CaptchaWidget(props: CaptchaWidgetProps) {
     // env
     const { challenge, solution, onClick } = props
     const items = challenge.captcha.items
@@ -40,6 +49,7 @@ export const CaptchaWidget = (props: CaptchaWidgetProps) => {
     return (
         <>
             <Box
+                component="div"
                 pr={0.5}
                 pb={0.5}
                 sx={{
@@ -121,7 +131,7 @@ export const CaptchaWidget = (props: CaptchaWidgetProps) => {
                                                 backgroundColor: 'rgba(0,0,0,0.5)',
                                             }}
                                         >
-                                            <CheckIcon
+                                            <CheckIconNormalized
                                                 htmlColor={theme.palette.background.default}
                                                 sx={{
                                                     // img must be displayed as block otherwise get's a bottom whitespace border
@@ -143,4 +153,4 @@ export const CaptchaWidget = (props: CaptchaWidgetProps) => {
     )
 }
 
-export default CaptchaWidget
+//export default CaptchaWidget

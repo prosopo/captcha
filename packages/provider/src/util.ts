@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { Captcha, CaptchaSolution, ScheduledTaskNames, ScheduledTaskStatus } from '@prosopo/types'
-import { Database } from '@prosopo/types-database/types'
+import { Database } from '@prosopo/types-database'
 import { Logger, ProsopoEnvError } from '@prosopo/common'
 import { arrayJoin } from '@prosopo/common'
+import { at } from '@prosopo/util'
 import { decodeAddress, encodeAddress } from '@polkadot/keyring'
 import { hexToU8a, isHex } from '@polkadot/util'
 import pl from 'nodejs-polars'
@@ -23,14 +24,17 @@ export function encodeStringAddress(address: string) {
     try {
         return encodeAddress(isHex(address) ? hexToU8a(address) : decodeAddress(address))
     } catch (error) {
-        throw new ProsopoEnvError(error, 'CONTRACT.INVALID_ADDRESS', {}, address)
+        // TODO fix error handling
+        throw new ProsopoEnvError(error as Error, 'CONTRACT.INVALID_ADDRESS', {}, address)
     }
 }
 
 export function shuffleArray<T>(array: T[]): T[] {
     for (let arrayIndex = array.length - 1; arrayIndex > 0; arrayIndex--) {
         const randIndex = Math.floor(Math.random() * (arrayIndex + 1))
-        ;[array[arrayIndex], array[randIndex]] = [array[randIndex], array[arrayIndex]]
+        const tmp = at(array, randIndex, { required: false })
+        array[randIndex] = at(array, arrayIndex, { required: false })
+        array[arrayIndex] = tmp
     }
     return array
 }
@@ -80,8 +84,10 @@ export function calculateNewSolutions(solutions: CaptchaSolution[], winningNumbe
     let df = pl.readRecords(solutionsNoEmptyArrays)
     df = df.drop('salt')
     const group = df.groupBy(['captchaId', 'solutionKey']).agg(pl.count('captchaContentId').alias('count'))
-    const filtered = group.filter(pl.col('count').gt(winningNumberOfSolutions))
-    return filtered.withColumn(filtered['solutionKey'].str.split(',').rename('solution'))
+    const filtered: pl.DataFrame = group.filter(pl.col('count').gt(winningNumberOfSolutions))
+    // TODO is below correct? 'solutionKey' does not exist in the type
+    const key = (filtered as any)['solutionKey']
+    return filtered.withColumn(key.str.split(',').rename('solution'))
 }
 
 export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], logger: Logger): Captcha[] {
@@ -92,7 +98,10 @@ export function updateSolutions(solutions: pl.DataFrame, captchas: Captcha[], lo
         if (!captcha.solution) {
             try {
                 const captchaSolutions = [
-                    ...solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId)))['solution'].values(),
+                    // TODO is below correct? 'solution' is not in the type
+                    ...(solutions.filter(pl.col('captchaId').eq(pl.lit(captcha.captchaId))) as any)[
+                        'solution'
+                    ].values(),
                 ]
                 if (captchaSolutions.length > 0) {
                     captcha.solution = captchaSolutions[0]

@@ -24,16 +24,16 @@ import {
     TCaptchaSubmitResult,
 } from '@prosopo/procaptcha'
 import { Alert, Backdrop, CircularProgress } from '@mui/material'
+import { Box, Checkbox, Link, Typography } from '@mui/material'
 import { css } from '@emotion/react'
 import { useRef, useState } from 'react'
-import Box from '@mui/material/Box'
-import CaptchaComponent from './CaptchaComponent'
-import Checkbox from '@mui/material/Checkbox'
-import Link from '@mui/material/Link'
-import Typography from '@mui/material/Typography'
+import CaptchaComponent from './CaptchaComponent.js'
+// import Box from '@mui/material/Box/Box.js'
+// import Checkbox from '@mui/material/Checkbox/Checkbox.js'
+// import Link from '@mui/material/Link/Link.js'
+// import Typography from '@mui/material/Typography/Typography.js'
 
 const logoStyle = css`
-    display: none;
     align-items: center;
     justify-content: flex-end;
     display: flex;
@@ -96,7 +96,7 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
 
     const [isHuman, setIsHuman] = useState(false)
     const [index, setIndex] = useState(-1)
-    const [solutions, setSolutions] = useState([])
+    const [solutions, setSolutions] = useState([] as string[][])
     const [captchaApi, setCaptchaApi] = useRefAsState<ProsopoCaptchaApi | undefined>(undefined)
     const [showModal, setShowModal] = useState(false)
     const [challenge, setChallenge] = useState<GetCaptchaResponse | undefined>(undefined)
@@ -106,22 +106,6 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
     const [submission, setSubmission] = useRefAsState<TCaptchaSubmitResult | undefined>(undefined)
     const [timeout, setTimeout] = useRefAsState<NodeJS.Timeout | undefined>(undefined)
     const [blockNumber, setBlockNumber] = useRefAsState<number | undefined>(undefined)
-
-    const map = {
-        isHuman: setIsHuman,
-        index: setIndex,
-        solutions: setSolutions,
-        captchaApi: setCaptchaApi,
-        showModal: setShowModal,
-        challenge: setChallenge,
-        loading: setLoading,
-        account: setAccount,
-        dappAccount: setDappAccount,
-        submission: setSubmission,
-        timeout: setTimeout,
-        blockNumber: setBlockNumber,
-        // don't provide method for updating config, should remain constant
-    }
 
     return [
         // the state
@@ -141,19 +125,21 @@ const useProcaptcha = (): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
         },
         // and method to update the state
         (nextState: Partial<ProcaptchaState>) => {
-            if (nextState.solutions) {
-                // force a copy of the array to ensure a re-render
-                // nutshell: react doesn't look inside an array for changes, hence changes to the array need to result in a fresh array
-                nextState.solutions = nextState.solutions.slice()
-            }
-
-            for (const key in nextState) {
-                const setter = map[key]
-                if (!setter) {
-                    throw new Error(`Unknown key ${key}, cannot set state`)
-                }
-                setter(nextState[key])
-            }
+            if (nextState.account !== undefined) setAccount(nextState.account)
+            if (nextState.isHuman !== undefined) setIsHuman(nextState.isHuman)
+            if (nextState.index !== undefined) setIndex(nextState.index)
+            // force a copy of the array to ensure a re-render
+            // nutshell: react doesn't look inside an array for changes, hence changes to the array need to result in a fresh array
+            if (nextState.solutions !== undefined) setSolutions(nextState.solutions.slice())
+            if (nextState.captchaApi !== undefined) setCaptchaApi(nextState.captchaApi)
+            if (nextState.showModal !== undefined) setShowModal(nextState.showModal)
+            if (nextState.challenge !== undefined) setChallenge(nextState.challenge)
+            if (nextState.loading !== undefined) setLoading(nextState.loading)
+            if (nextState.showModal !== undefined) setShowModal(nextState.showModal)
+            if (nextState.dappAccount !== undefined) setDappAccount(nextState.dappAccount)
+            if (nextState.submission !== undefined) setSubmission(nextState.submission)
+            if (nextState.timeout !== undefined) setTimeout(nextState.timeout)
+            if (nextState.blockNumber !== undefined) setBlockNumber(nextState.blockNumber)
         },
     ]
 }
@@ -166,7 +152,7 @@ export const Procaptcha = (props: ProcaptchaProps) => {
     const [state, updateState] = useProcaptcha()
     console.log('state', state)
     const manager = Manager(config, state, updateState, callbacks)
-
+    const configSx = config.sx || { maxWidth: '400px', minWidth: '200px' }
     return (
         <Box sx={{ maxWidth: '100%', maxHeight: '100%', overflowX: 'auto' }}>
             <Backdrop open={state.showModal} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
@@ -185,7 +171,8 @@ export const Procaptcha = (props: ProcaptchaProps) => {
                 )}
             </Backdrop>
 
-            <Box p={1} sx={{ maxWidth: '400px', minWidth: '200px' }} data-cy={'button-human'}>
+            <Box p={1} sx={[...(Array.isArray(configSx) ? configSx : [configSx])]} data-cy={'button-human'}>
+                {' '}
                 <Box
                     p={1}
                     border={1}

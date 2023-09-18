@@ -1,40 +1,35 @@
 {
-  "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "rootDirs": ["./src", "./tests"],
-    "outDir": "./dist",
-    "module": "commonjs",
-    "target": "esnext",
-    "noEmit": true
-  },
-  "include": [
-    "./src/**/*.ts",
-    "./tests/**/*.ts"
-  ],
-  "references": [
-    {
-      "path": "../common"
+    "extends": "../../tsconfig.esm.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "outDir": "./dist"
     },
-    {
-      "path": "../contract"
-    },
-    {
-      "path": "../database"
-    },
-    {
-      "path": "../datasets"
-    },
-    {
-      "path": "../env"
-    },
-    {
-      "path": "../types"
-    },
-    {
-      "path": "../types-database"
-    },
-    {
-      "path": "../types-env"
-    }
-  ]
+    "include": ["./src/**/*.ts", "./src/*.ts"],
+    "exclude": ["**/*.test.ts"],
+    "references": [
+        {
+            "path": "../common"
+        },
+        {
+            "path": "../contract"
+        },
+        {
+            "path": "../database"
+        },
+        {
+            "path": "../datasets"
+        },
+        {
+            "path": "../env"
+        },
+        {
+            "path": "../types"
+        },
+        {
+            "path": "../types-database"
+        },
+        {
+            "path": "../types-env"
+        }
+    ]
 }

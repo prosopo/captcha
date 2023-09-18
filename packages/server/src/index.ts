@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ApiPromise } from '@polkadot/api'
-import { BlockHash } from '@polkadot/types/interfaces/chain/index'
-import { ContractAbi, NetworkConfig, ProsopoServerConfig, RandomProvider } from '@prosopo/types'
+import { BlockHash } from '@polkadot/types/interfaces'
+import { ContractAbi, NetworkConfig, NetworkNamesSchema, ProsopoServerConfig, RandomProvider } from '@prosopo/types'
 import { Keyring } from '@polkadot/keyring'
 import { KeyringPair } from '@polkadot/keyring/types'
 import { LogLevel, Logger, getLogger } from '@prosopo/common'
@@ -22,10 +22,11 @@ import { ProsopoCaptchaContract, abiJson } from '@prosopo/contract'
 import { ProsopoEnvError, trimProviderUrl } from '@prosopo/common'
 import { ProviderApi } from '@prosopo/api'
 import { WsProvider } from '@polkadot/rpc-provider'
+import { get } from '@prosopo/util'
 
 export class ProsopoServer {
     config: ProsopoServerConfig
-    contract: ProsopoCaptchaContract
+    contract: ProsopoCaptchaContract | undefined
     prosopoContractAddress: string
     dappContractAddress: string
     defaultEnvironment: string
@@ -35,7 +36,7 @@ export class ProsopoServer {
     wsProvider: WsProvider
     keyring: Keyring
     pair: KeyringPair
-    api: ApiPromise
+    api: ApiPromise | undefined
     network: NetworkConfig
 
     constructor(pair: KeyringPair, config: ProsopoServerConfig) {
@@ -46,11 +47,12 @@ export class ProsopoServer {
             Object.prototype.hasOwnProperty.call(this.config.networks, this.config.defaultEnvironment)
         ) {
             this.defaultEnvironment = this.config.defaultEnvironment
-            this.network = this.config.networks[this.defaultEnvironment]
-            this.wsProvider = new WsProvider(this.config.networks[this.defaultEnvironment].endpoint)
-            this.prosopoContractAddress = this.config.networks[this.defaultEnvironment].contract.address
+            const networkName = NetworkNamesSchema.parse(this.defaultEnvironment)
+            this.network = get(this.config.networks, networkName)
+            this.wsProvider = new WsProvider(this.network.endpoint)
+            this.prosopoContractAddress = this.network.contract.address
             this.dappContractAddress = this.config.account.address
-            this.contractName = this.config.networks[this.defaultEnvironment].contract.name
+            this.contractName = this.network.contract.name
             this.logger = getLogger(this.config.logLevel as unknown as LogLevel, '@prosopo/server')
             this.keyring = new Keyring({
                 type: 'sr25519', // TODO get this from the chain
@@ -76,7 +78,7 @@ export class ProsopoServer {
             await this.getSigner()
             await this.getContractApi()
         } catch (err) {
-            throw new ProsopoEnvError(err, 'GENERAL.ENVIRONMENT_NOT_READY')
+            throw new ProsopoEnvError(err as Error, 'GENERAL.ENVIRONMENT_NOT_READY')
         }
     }
 
@@ -92,12 +94,26 @@ export class ProsopoServer {
         }
     }
 
+    getApi(): ApiPromise {
+        if (this.api === undefined) {
+            throw new ProsopoEnvError(new Error('api undefined'))
+        }
+        return this.api
+    }
+
+    getContract(): ProsopoCaptchaContract {
+        if (this.contract === undefined) {
+            throw new ProsopoEnvError(new Error('contract undefined'))
+        }
+        return this.contract
+    }
+
     public async isVerified(payload: ProcaptchaOutput): Promise<boolean> {
         const { user, dapp, providerUrl, commitmentId, blockNumber } = payload
         // first check if the provider was actually chosen at blockNumber
         const contractApi = await this.getContractApi()
-        const block = (await this.api.rpc.chain.getBlockHash(blockNumber)) as BlockHash
-        const getRandomProviderResponse = await this.contract.queryAtBlock<RandomProvider>(
+        const block = (await this.getApi().rpc.chain.getBlockHash(blockNumber)) as BlockHash
+        const getRandomProviderResponse = await this.getContract().queryAtBlock<RandomProvider>(
             block,
             'getRandomActiveProvider',
             [user, dapp]
@@ -121,7 +137,7 @@ export class ProsopoServer {
 
     public async getContractApi(): Promise<ProsopoCaptchaContract> {
         this.contract = new ProsopoCaptchaContract(
-            this.api,
+            this.getApi(),
             this.abi,
             this.prosopoContractAddress,
             this.pair,

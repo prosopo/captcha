@@ -11,9 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { Payee } from '../contract/typechain/index.js'
 import { z } from 'zod'
-enum ProsopoPayee {
-    Provider = 'Provider',
-    Dapp = 'Dapp',
-}
-export const PayeeSchema = z.nativeEnum(ProsopoPayee)
+
+export const PayeeSchema = z.nativeEnum(Payee)
