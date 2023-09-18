@@ -9,7 +9,7 @@ import type * as ArgumentTypes from '../types-arguments/common.js';
 import type BN from 'bn.js';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-import type {EventRecord[]} from "@polkadot/api/submittable";
+import type { EventRecord } from '@polkadot/types/interfaces';
 import {decodeEvents} from '../shared/utils.js';
 import EVENT_DATA_TYPE_DESCRIPTIONS from '../event-data/common.json' assert { type: 'json' };
 
