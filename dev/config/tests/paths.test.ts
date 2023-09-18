@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, test } from 'vitest'
+import { flattenObj } from '@prosopo/util/src/util.js'
 import { getPaths } from '../../../packages/common/src/index.js'
 import fs from 'fs'
-import { flattenObj } from '@prosopo/util/src/util.js'
 
 describe('paths', () => {
-    
     test('paths exist', () => {
         const paths = getPaths()
         const flat = flattenObj(paths)
