@@ -3,6 +3,8 @@ name: rustfmt
 on:
     pull_request:
         branches: [main]
+        paths:
+            - '**.rs'
     workflow_dispatch:
 
 env:
