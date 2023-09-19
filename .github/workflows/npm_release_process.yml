@@ -12,22 +12,12 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            # Checkout the repo
             - uses: actions/checkout@v3
-
-            # Get the provider image version from the root package.json and the latest package version from npm
-            - name: Get provider image version
-              run: |
-                  echo "PROVIDER_IMAGE_VERSION=$(cat package.json | jq -r '.version')" >> $GITHUB_ENV
-                  echo "LATEST_PROVIDER_VERSION=$(npm view @prosopo/provider version)" >> $GITHUB_ENV
 
             - run: mkdir -p protocol/cargo-cache
             - run: mkdir -p protocol/target
             - run: mkdir -p node_modules
             - run: mkdir -p .cache/Cypress
-
-            - name: Set versions string
-              run: echo "VERSIONS_TO_COMPARE=${{ env.PROVIDER_IMAGE_VERSION }}\\n${{ env.LATEST_PROVIDER_VERSION }}" >> $GITHUB_ENV
 
             - name: Restore cache
               uses: actions/cache/restore@v3
@@ -44,43 +34,48 @@ jobs:
                   restore-keys: |
                       project-cache-${{ runner.os }}-${{ runner.arch }}-
 
-            - name: Install dependencies
-              run: npm ci
+            - run: npm install
 
-            - name: Build the packages
-              run: npm run build:all
+            - run: npm run build:all
 
-            - name: Check provider image version
-              id: check_provider_image_version
+            # Get the provider image version from the root package.json and the latest package version from npm
+            - name: Check provider version bump
+              id: bump_provider_version
               run: |
-                  echo "PROVIDER_IMAGE_VERSION=${{ env.PROVIDER_IMAGE_VERSION }}"
-                  echo "LATEST_PROVIDER_VERSION=${{ env.LATEST_PROVIDER_VERSION }}"
-
-                  # Condition 1: If version is equal to the npm version, exit successfully
-                  if [[ "${{ env.PROVIDER_IMAGE_VERSION }}" == "${{ env.LATEST_PROVIDER_VERSION }}" ]]; then
-                      echo "Current npm version detected, exiting successfully"
-                      exit 0
+                  # get the next provider version number from the package.json
+                  NEXT=$(cat package.json | jq -r '.version'
+                  # get the current provider version number from npm
+                  CURRENT=$(npm view @prosopo/provider version)
+                  NEXT_MAJOR=$(echo $NEXT | cut -d '.' -f 1)
+                  NEXT_MINOR=$(echo $NEXT | cut -d '.' -f 2)
+                  NEXT_PATCH=$(echo $NEXT | cut -d '.' -f 3)
+                  CURRENT_MAJOR=$(echo $CURRENT | cut -d '.' -f 1)
+                  CURRENT_MINOR=$(echo $CURRENT | cut -d '.' -f 2)
+                  CURRENT_PATCH=$(echo $CURRENT | cut -d '.' -f 3)
+                  # compare major versions for bump
+                  if [[ $NEXT_MAJOR -gt $CURRENT_MAJOR ]]; then
+                    echo "major version bump detected"
+                    echo "BUMP=true" >> $GITHUB_OUTPUT
+                  elif [[ $NEXT_MINOR -gt $CURRENT_MINOR ]]; then
+                    echo "minor version bump detected"
+                    echo "BUMP=true" >> $GITHUB_OUTPUT
+                  elif [[ $NEXT_PATCH -gt $CURRENT_PATCH ]]; then
+                    echo "patch version bump detected"
+                    echo "BUMP=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "no version bump detected"
+                    echo "BUMP=false" >> $GITHUB_OUTPUT
                   fi
 
-                  # Condition 2: If version is less than the npm version, exit with error
-                  # Technically this is less than or equal, but we have checked for equality above
-                  if [[ $(echo -e "${{ env.VERSIONS_TO_COMPARE }}" | sort -V | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
-                      echo "Version bump required, exiting with error"
-                      exit 1
-                  fi
-
-                  # Condition 3: If greater than npm version, release to npm if running on GitHub Actions
-                  # Reverse the versions list, then get the first element
-                  if [[ $(echo -e "${{ env.VERSIONS_TO_COMPARE }}" | sort -Vr | head -n 1) == "${{ env.PROVIDER_IMAGE_VERSION }}" ]]; then
-                      echo "Version bump detected, continuing..."
-
-                      if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
-                        echo "Running on GitHub Actions"
-                        # Write the npm token to ~/.npmrc
-                        echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-                        echo "Publishing to npm..."
-                        npx --workspaces npm publish
-                      else
-                        echo "Running locally via act, skipping npm publish."
-                      fi
-                  fi
+            - name: Npm publish
+              if: steps.bump_provider_version.outputs.BUMP == 'true'
+              run: |
+                if [[ "${{ vars.HOST_GITHUB_ACTIONS }}" == true ]]; then
+                  echo "Running on GitHub Actions"
+                  # Write the npm token to ~/.npmrc
+                  echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+                  echo "Publishing to npm..."
+                  npx --workspaces npm publish
+                else
+                  echo "Running locally via act, skipping npm publish."
+                fi
