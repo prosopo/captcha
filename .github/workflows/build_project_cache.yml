@@ -51,16 +51,6 @@ jobs:
 
             - run: npm install
 
-            - name: Rust formatting check
-              run: |
-                  cd protocol/dev
-                  npm run cli -- fmt --all --verbose --check --docker
-
-            - name: Clippy
-              run: |
-                  cd protocol/dev
-                  npm run cli -- clippy --docker -- -- -D warnings
-
             - name: Build contracts
               run: |
                   cd protocol/dev
