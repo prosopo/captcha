@@ -9,7 +9,6 @@ on:
             - '.github/workflows/tests_provider.yml'
             - 'packages/**.json'
             - 'dev/**.json'
-    workflow_dispatch:
 
 env:
     CARGO_TERM_COLOR: always
@@ -17,7 +16,7 @@ env:
     GH_TOKEN: ${{ github.token }}
 
 jobs:
-    build:
+    check:
         runs-on: ubuntu-latest
         steps:
             # Checkout the repo
