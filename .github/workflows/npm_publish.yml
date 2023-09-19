@@ -1,4 +1,4 @@
-name: npm_release_process
+name: npm_publish
 
 on:
     push:
