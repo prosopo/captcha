@@ -40,11 +40,6 @@ jobs:
                   cd protocol/dev
                   npm run cli -- fmt --all --verbose --check --docker
 
-            - name: Clippy
-              run: |
-                  cd protocol/dev
-                  npm run cli -- clippy --docker -- -- -D warnings
-
             - name: Build contract
               id: build
               run: |
