@@ -26,6 +26,7 @@ import yargs from 'yargs'
 
 const rootDir = path.resolve('.')
 
+
 loadEnv(rootDir)
 
 export async function processArgs(args: string[]) {
