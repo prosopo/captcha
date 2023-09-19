@@ -6,11 +6,6 @@ on:
     push:
         branches:
             - 'main'
-        paths:
-            - 'protocol/**'
-            - '**/package.json'
-            - '**/package-lock.json'
-            - '.github/workflows/**'
     workflow_dispatch:
 
 env:
