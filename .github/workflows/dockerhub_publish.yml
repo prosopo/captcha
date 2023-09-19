@@ -1,4 +1,4 @@
-name: npm_release_process
+name: dockerhub_publish
 
 on:
     push:
