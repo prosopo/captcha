@@ -16,6 +16,7 @@ import { ExecOutput, exec } from '../util/index.js'
 async function importContract(relPathToABIs: string, relPathToOutput: string): Promise<ExecOutput> {
     //TODO import typechain when it's working https://github.com/Brushfam/typechain-polkadot/issues/73
     const cmd = `npx @727-ventures/typechain-polkadot --in ${relPathToABIs} --out ${relPathToOutput}`
+    console.log('tmp')
     return exec(cmd)
 }
 
